@@ -1,0 +1,202 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom Scrollbar */
+.custom-scroll::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Hierarchy Lines */
+.tree-line {
+  position: absolute;
+  left: 11px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #e2e8f0;
+  z-index: 0;
+}
+
+/* Token/Chip Styling */
+.token {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.token:hover {
+  opacity: 0.8;
+}
+
+.token-project {
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #dbeafe;
+}
+
+.token-subprocess {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #ffedd5;
+}
+
+.token-dynamic {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.token-static {
+  background: #fefce8;
+  color: #854d0e;
+  border-color: #fef08a;
+}
+
+/* Animation */
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* TipTap Editor Styles */
+.ProseMirror {
+  outline: none;
+  min-height: 100px;
+}
+
+.ProseMirror p {
+  margin: 0.5em 0;
+}
+
+.ProseMirror .mention {
+  @apply token;
+}
+
+.ProseMirror .mention[data-mode="dynamic"] {
+  @apply token-dynamic;
+}
+
+.ProseMirror .mention[data-mode="static"] {
+  @apply token-static;
+}
+
+/* Mention Dropdown */
+.mention-dropdown {
+  @apply bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden;
+  min-width: 280px;
+  max-width: 400px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.mention-dropdown-item {
+  @apply px-3 py-2.5 cursor-pointer hover:bg-slate-50 flex items-center gap-2 transition-colors;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.mention-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.mention-dropdown-item.is-selected {
+  @apply bg-blue-50;
+}
+
+/* Tippy theme for mention dropdown */
+.tippy-box[data-theme~='mention-dropdown'] {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.tippy-box[data-theme~='mention-dropdown'] .tippy-content {
+  padding: 0;
+}
+
+/* Mention chip variants */
+.mention-hash {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.mention-hash.token-static {
+  background: #fefce8;
+  color: #854d0e;
+  border-color: #fef08a;
+}
+
+.mention-at {
+  background: #faf5ff;
+  color: #7c3aed;
+  border-color: #ede9fe;
+}
+
+.mention-at.token-static {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+/* Drift warning state */
+.token-drift {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 1px #fbbf24;
+}
+
+/* Placeholder styling */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #94a3b8;
+  pointer-events: none;
+  height: 0;
+}

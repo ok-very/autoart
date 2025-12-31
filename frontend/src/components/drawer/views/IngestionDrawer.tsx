@@ -1,0 +1,365 @@
+import { useState, useEffect, useRef } from 'react';
+import { Upload, FileText, Play, Check, AlertCircle } from 'lucide-react';
+import { useUIStore } from '../../../stores/uiStore';
+import { useHierarchyStore } from '../../../stores/hierarchyStore';
+import { useIngestionParsers, useIngestionPreview, useRunIngestion } from '../../../api/hooks';
+
+export function IngestionDrawer() {
+  const { closeDrawer } = useUIStore();
+  const { selectProject } = useHierarchyStore();
+
+  // Data state
+  const [rawData, setRawData] = useState('');
+  const [selectedParser, setSelectedParser] = useState<string>('monday');
+  const [parserConfig, setParserConfig] = useState<Record<string, unknown>>({});
+
+  // API hooks
+  const { data: parsers, isLoading: parsersLoading } = useIngestionParsers();
+  const preview = useIngestionPreview();
+  const runImport = useRunIngestion();
+
+  // Debounce timer
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Get current parser config fields
+  const currentParser = parsers?.find(p => p.name === selectedParser);
+
+  // Initialize config from parser defaults
+  useEffect(() => {
+    if (currentParser) {
+      const defaults: Record<string, unknown> = {};
+      currentParser.configFields.forEach(field => {
+        defaults[field.key] = field.defaultValue;
+      });
+      setParserConfig(defaults);
+    }
+  }, [currentParser]);
+
+  // Auto-preview on data or config change
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    if (rawData.trim() && selectedParser) {
+      debounceRef.current = setTimeout(() => {
+        preview.mutate({
+          parserName: selectedParser,
+          rawData,
+          config: parserConfig,
+        });
+      }, 500);
+    }
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [rawData, selectedParser, parserConfig]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setRawData(event.target?.result as string || '');
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleConfigChange = (key: string, value: string) => {
+    setParserConfig(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleImport = async () => {
+    if (!rawData.trim()) return;
+
+    try {
+      const result = await runImport.mutateAsync({
+        parserName: selectedParser,
+        rawData,
+        config: parserConfig,
+      });
+
+      // Select the new project
+      selectProject(result.projectId);
+      closeDrawer();
+    } catch (err) {
+      console.error('Import failed:', err);
+    }
+  };
+
+  if (parsersLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin w-6 h-6 border-2 border-slate-300 border-t-blue-500 rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-full max-h-[70vh]">
+      {/* Left Panel: Configuration */}
+      <div className="w-96 border-r border-slate-200 flex flex-col bg-white shrink-0">
+        <div className="h-12 border-b border-slate-100 flex items-center px-4 bg-slate-50">
+          <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+            Input & Logic
+          </h2>
+        </div>
+
+        <div className="flex-1 overflow-y-auto custom-scroll">
+          {/* Section 1: Data Source */}
+          <div className="p-5 border-b border-slate-200">
+            <label className="text-xs font-bold text-slate-800 uppercase mb-3 flex justify-between">
+              <span>1. Data Source</span>
+              <span className="text-[10px] font-normal text-slate-400 lowercase">csv, xlsx, json</span>
+            </label>
+
+            {/* File Upload */}
+            <div
+              className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:bg-slate-50 transition-colors cursor-pointer mb-4 group"
+              onClick={() => document.getElementById('file-upload')?.click()}
+            >
+              <input
+                type="file"
+                id="file-upload"
+                className="hidden"
+                accept=".csv,.txt,.json"
+                onChange={handleFileUpload}
+              />
+              <Upload className="w-6 h-6 text-slate-400 mx-auto mb-2 group-hover:text-blue-500 transition-colors" />
+              <div className="text-xs font-medium text-slate-600 group-hover:text-blue-600">
+                Click to Upload File
+              </div>
+              <div className="text-[10px] text-slate-400">or drag and drop here</div>
+            </div>
+
+            {/* Paste Area */}
+            <div className="flex items-center gap-2 mb-2">
+              <span className="h-px bg-slate-200 flex-1" />
+              <span className="text-[10px] text-slate-400 font-bold uppercase">OR PASTE RAW DATA</span>
+              <span className="h-px bg-slate-200 flex-1" />
+            </div>
+
+            <textarea
+              value={rawData}
+              onChange={(e) => setRawData(e.target.value)}
+              className="w-full h-24 p-2 text-[10px] font-mono border border-slate-300 rounded bg-slate-50 focus:outline-none focus:border-blue-500 resize-none transition-all focus:bg-white"
+              placeholder="Paste content here..."
+            />
+          </div>
+
+          {/* Section 2: Parser Modules */}
+          <div className="p-5 bg-slate-50/50 flex-1">
+            <div className="flex justify-between items-center mb-3">
+              <label className="text-xs font-bold text-slate-800 uppercase">
+                2. Parser Module
+              </label>
+              <span className="text-[10px] text-slate-400">Logic for interpretation</span>
+            </div>
+
+            <div className="space-y-3">
+              {parsers?.map((parser) => (
+                <div
+                  key={parser.name}
+                  onClick={() => setSelectedParser(parser.name)}
+                  className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                    selectedParser === parser.name
+                      ? 'bg-blue-50 border-blue-500 shadow-sm'
+                      : 'bg-white border-slate-200 opacity-70 hover:opacity-100 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded flex items-center justify-center text-sm font-bold ${
+                        parser.name === 'monday'
+                          ? 'bg-indigo-100 text-indigo-600 border border-indigo-200'
+                          : 'bg-yellow-100 text-yellow-600 border border-yellow-200'
+                      }`}>
+                        {parser.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className={`text-sm font-bold ${selectedParser === parser.name ? 'text-blue-900' : 'text-slate-700'}`}>
+                          {parser.name === 'monday' ? 'Monday.com v2' : 'Airtable Grid'}
+                        </div>
+                        <div className={`text-[10px] ${selectedParser === parser.name ? 'text-blue-600' : 'text-slate-400'}`}>
+                          {parser.description}
+                        </div>
+                      </div>
+                    </div>
+                    {selectedParser === parser.name && (
+                      <div className="w-2 h-2 rounded-full bg-blue-500 shadow-sm ring-2 ring-blue-100" />
+                    )}
+                  </div>
+
+                  {/* Config Fields (only for selected parser) */}
+                  {selectedParser === parser.name && parser.configFields.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-blue-200/60 space-y-3">
+                      {parser.configFields.map((field) => (
+                        <div key={field.key}>
+                          <label className="text-[10px] text-blue-500 font-bold block mb-1">
+                            {field.label}
+                          </label>
+                          <input
+                            type="text"
+                            value={String(parserConfig[field.key] || field.defaultValue)}
+                            onChange={(e) => handleConfigChange(field.key, e.target.value)}
+                            className="w-full text-[10px] font-mono border border-blue-200 rounded px-2 py-1.5 text-slate-600 focus:border-blue-500 focus:outline-none bg-white"
+                          />
+                          {field.description && (
+                            <div className="text-[10px] text-slate-400 mt-1">{field.description}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel: Preview */}
+      <div className="flex-1 flex flex-col bg-slate-50">
+        {/* Preview Header */}
+        <div className="h-10 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 shadow-sm">
+          <span className="text-xs font-bold text-slate-500 uppercase">Live Output Preview</span>
+          <div className="flex gap-3">
+            {preview.data && (
+              <>
+                <span className="text-[10px] text-slate-500">
+                  <span className="font-bold text-slate-800">{preview.data.stageCount}</span> Stages
+                </span>
+                <span className="text-[10px] text-slate-500">
+                  <span className="font-bold text-slate-800">{preview.data.taskCount}</span> Tasks
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Preview Content */}
+        <div className="flex-1 overflow-y-auto p-6 custom-scroll">
+          {preview.isPending && (
+            <div className="flex items-center justify-center h-full">
+              <div className="animate-spin w-6 h-6 border-2 border-slate-300 border-t-blue-500 rounded-full" />
+            </div>
+          )}
+
+          {preview.isError && (
+            <div className="flex items-center justify-center h-full text-red-500">
+              <AlertCircle className="w-5 h-5 mr-2" />
+              <span className="text-sm">Failed to parse data</span>
+            </div>
+          )}
+
+          {preview.data && !preview.isPending && (
+            <div className="space-y-4">
+              {/* Project Card */}
+              <div className="bg-white border border-purple-200 rounded-lg p-4 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-purple-500" />
+                <div className="flex items-start gap-3">
+                  <span className="text-[10px] font-bold text-purple-600 uppercase bg-purple-50 px-2 py-1 rounded border border-purple-100">
+                    Project Record
+                  </span>
+                </div>
+                <h2 className="text-lg font-bold text-slate-800 mt-2">
+                  {preview.data.parsedData.projectTitle}
+                </h2>
+                {Object.keys(preview.data.parsedData.projectMeta).length > 0 && (
+                  <div className="flex gap-6 mt-2 text-sm">
+                    {Object.entries(preview.data.parsedData.projectMeta).map(([key, value]) => (
+                      <div key={key}>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">{key}</span>
+                        <div className="font-medium text-slate-700">{String(value)}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Nodes Tree */}
+              {preview.data.parsedData.nodes.map((node) => (
+                <div
+                  key={node.tempId}
+                  className={`p-3 rounded border-l-4 ${
+                    node.type === 'process' ? 'border-purple-400 bg-purple-50' :
+                    node.type === 'stage' ? 'border-yellow-400 bg-yellow-50' :
+                    node.type === 'subprocess' ? 'border-orange-400 bg-orange-50' :
+                    'border-blue-400 bg-white'
+                  }`}
+                  style={{ marginLeft: getNodeIndent(node.type) }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                      node.type === 'process' ? 'bg-purple-100 text-purple-600' :
+                      node.type === 'stage' ? 'bg-yellow-100 text-yellow-600' :
+                      node.type === 'subprocess' ? 'bg-orange-100 text-orange-600' :
+                      'bg-blue-100 text-blue-600'
+                    }`}>
+                      {node.type}
+                    </span>
+                    <span className="text-sm font-medium text-slate-800">{node.title}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!rawData && !preview.data && (
+            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+              <FileText className="w-12 h-12 mb-3" />
+              <p className="text-sm font-medium">No data to preview</p>
+              <p className="text-xs">Upload a file or paste data to see the preview</p>
+            </div>
+          )}
+        </div>
+
+        {/* Action Bar */}
+        <div className="p-4 border-t border-slate-200 bg-white flex justify-between items-center">
+          <button
+            onClick={closeDrawer}
+            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleImport}
+            disabled={!rawData.trim() || runImport.isPending || !preview.data}
+            className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          >
+            {runImport.isPending ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Importing...
+              </>
+            ) : runImport.isSuccess ? (
+              <>
+                <Check size={16} />
+                Success!
+              </>
+            ) : (
+              <>
+                <Play size={16} />
+                Run Import
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getNodeIndent(type: string): number {
+  switch (type) {
+    case 'process': return 0;
+    case 'stage': return 16;
+    case 'subprocess': return 32;
+    case 'task': return 48;
+    default: return 0;
+  }
+}

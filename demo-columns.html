@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoArt Horizontal Data Browser</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #0f172a; height: 100vh; overflow: hidden; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Horizontal Scroll Container */
+        .miller-container {
+            display: flex;
+            height: calc(100vh - 3.5rem); /* Full height minus header */
+            overflow-x: auto;
+            scroll-behavior: smooth;
+        }
+
+        /* Column Standard Styling */
+        .column {
+            flex-shrink: 0;
+            width: 320px;
+            border-right: 1px solid #e2e8f0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.2s;
+        }
+
+        /* Interactive Items */
+        .item-row {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.15s;
+        }
+        .item-row:hover { background-color: #f8fafc; }
+        
+        /* Active State (Selected) */
+        .item-row.active {
+            background-color: #eff6ff; /* Blue 50 */
+            border-left: 3px solid #3b82f6; /* Blue 500 */
+        }
+        .item-row.active .arrow { opacity: 1; color: #3b82f6; }
+        
+        /* Arrow Indicator */
+        .arrow { opacity: 0.3; transition: opacity 0.2s; }
+
+        /* Custom Scrollbars */
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="flex flex-col h-full">
+
+    <!-- HEADER -->
+    <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 z-20 shadow-sm relative">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-slate-900 rounded flex items-center justify-center text-white font-bold">A</div>
+            <span class="font-bold text-slate-700">AutoArt Data Browser</span>
+            <span class="text-xs text-slate-400 border border-slate-200 rounded px-2 py-0.5 bg-slate-50">Miller Column View</span>
+        </div>
+        <div class="flex gap-3">
+             <div class="text-xs text-slate-500 flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Live Data
+             </div>
+        </div>
+    </header>
+
+    <!-- MILLER COLUMNS CONTAINER -->
+    <div class="miller-container custom-scroll" id="column-wrapper">
+
+        <!-- COLUMN 1: PROJECTS (Root Level) -->
+        <div class="column">
+            <!-- Col Header -->
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded bg-blue-100 text-blue-600 flex items-center justify-center text-xs">P</span>
+                    <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Projects</span>
+                </div>
+                <button class="text-slate-400 hover:text-blue-600 text-xs">+</button>
+            </div>
+            <!-- List -->
+            <div class="flex-1 overflow-y-auto custom-scroll">
+                <!-- Item 1 -->
+                <div class="item-row active" onclick="selectProject('proj1', this)">
+                    <div>
+                        <div class="text-sm font-semibold text-slate-800">Downtown Mural</div>
+                        <div class="text-[10px] text-slate-400">ID: P-2025-01</div>
+                    </div>
+                    <span class="arrow text-lg">›</span>
+                </div>
+                <!-- Item 2 -->
+                <div class="item-row" onclick="selectProject('proj2', this)">
+                    <div>
+                        <div class="text-sm font-semibold text-slate-800">Gallery Retrospective</div>
+                        <div class="text-[10px] text-slate-400">ID: P-2025-02</div>
+                    </div>
+                    <span class="arrow text-lg">›</span>
+                </div>
+                 <!-- Item 3 -->
+                 <div class="item-row" onclick="selectProject('proj3', this)">
+                    <div>
+                        <div class="text-sm font-semibold text-slate-800">Community Sculptures</div>
+                        <div class="text-[10px] text-slate-400">ID: P-2024-88</div>
+                    </div>
+                    <span class="arrow text-lg">›</span>
+                </div>
+            </div>
+            <!-- Footer Stats -->
+            <div class="p-2 border-t border-slate-100 text-[10px] text-slate-400 text-center">
+                3 Projects Active
+            </div>
+        </div>
+
+        <!-- COLUMN 2: PROCESSES (Level 2) -->
+        <div class="column" id="col-processes">
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded bg-purple-100 text-purple-600 flex items-center justify-center text-xs">M</span>
+                    <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Methodology</span>
+                </div>
+                <button class="text-slate-400 hover:text-purple-600 text-xs">Clone</button>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scroll">
+                 <!-- Populated by JS -->
+                 <div class="item-row active" onclick="selectProcess('proc1', this)">
+                    <div>
+                        <div class="text-sm font-semibold text-slate-800">Standard Commission</div>
+                        <div class="text-[10px] text-purple-600 bg-purple-50 px-1 rounded inline-block">Active Workflow</div>
+                    </div>
+                    <span class="arrow text-lg">›</span>
+                </div>
+                <div class="item-row" onclick="selectProcess('proc2', this)">
+                    <div>
+                        <div class="text-sm font-semibold text-slate-800 opacity-60">Archive Process</div>
+                        <div class="text-[10px] text-slate-400">Read-only</div>
+                    </div>
+                    <span class="arrow text-lg">›</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 3: STAGES (Level 3 - Folders) -->
+        <div class="column" id="col-stages">
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded bg-yellow-100 text-yellow-600 flex items-center justify-center text-xs">F</span>
+                    <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Stages (Folders)</span>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scroll">
+                <div class="item-row active" onclick="selectStage('stg1', this)">
+                    <div class="flex items-center gap-2">
+                        <span class="text-yellow-500">📂</span>
+                        <div class="text-sm font-medium text-slate-800">1. Feasibility</div>
+                    </div>
+                    <span class="arrow text-lg">›</span>
+                </div>
+                <div class="item-row" onclick="selectStage('stg2', this)">
+                    <div class="flex items-center gap-2">
+                        <span class="text-yellow-500 opacity-50">📂</span>
+                        <div class="text-sm font-medium text-slate-800">2. Design</div>
+                    </div>
+                    <span class="arrow text-lg">›</span>
+                </div>
+                <div class="item-row" onclick="selectStage('stg3', this)">
+                    <div class="flex items-center gap-2">
+                        <span class="text-yellow-500 opacity-50">📂</span>
+                        <div class="text-sm font-medium text-slate-800">3. Fabrication</div>
+                    </div>
+                    <span class="arrow text-lg">›</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 4: SUBPROCESSES (Level 4 - Records) -->
+        <div class="column" id="col-subprocesses">
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded bg-orange-100 text-orange-600 flex items-center justify-center text-xs">S</span>
+                    <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Subprocesses</span>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scroll">
+                <div class="item-row active" onclick="selectSub('sub1', this)">
+                    <div>
+                        <div class="text-sm font-semibold text-slate-800">Site Survey</div>
+                        <div class="flex gap-1 mt-1">
+                            <span class="text-[10px] bg-emerald-50 text-emerald-600 px-1 rounded border border-emerald-100">Live</span>
+                            <span class="text-[10px] text-slate-400">4 Tasks</span>
+                        </div>
+                    </div>
+                    <span class="arrow text-lg">›</span>
+                </div>
+                <div class="item-row" onclick="selectSub('sub2', this)">
+                    <div>
+                        <div class="text-sm font-semibold text-slate-800">Budget Approval</div>
+                        <div class="flex gap-1 mt-1">
+                            <span class="text-[10px] text-slate-400">2 Tasks</span>
+                        </div>
+                    </div>
+                    <span class="arrow text-lg">›</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 5: TASKS (Level 5 - Leaf Nodes) -->
+        <div class="column" id="col-tasks">
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded bg-slate-200 text-slate-600 flex items-center justify-center text-xs">T</span>
+                    <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Tasks</span>
+                </div>
+                <button class="text-blue-600 hover:text-blue-700 text-xs font-bold">+ Add</button>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scroll">
+                <div class="item-row active" onclick="selectTask('tsk1', this)">
+                    <div class="w-full">
+                        <div class="flex justify-between items-start">
+                            <div class="text-sm font-semibold text-slate-800">Check GPS Bounds</div>
+                            <input type="checkbox" class="ml-2 accent-blue-600">
+                        </div>
+                        <div class="text-[10px] text-slate-500 mt-1 truncate">
+                            Ensure coordinates match <span class="text-blue-600">#proj:loc</span>
+                        </div>
+                    </div>
+                    <span class="arrow text-lg ml-2">›</span>
+                </div>
+                <div class="item-row" onclick="selectTask('tsk2', this)">
+                    <div class="w-full">
+                        <div class="flex justify-between items-start">
+                            <div class="text-sm font-semibold text-slate-800">Upload PDF Report</div>
+                            <input type="checkbox" class="ml-2 accent-blue-600">
+                        </div>
+                        <div class="text-[10px] text-slate-500 mt-1">
+                            Due: Tomorrow
+                        </div>
+                    </div>
+                    <span class="arrow text-lg ml-2">›</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMN 6: INSPECTOR (The Editor) -->
+        <div class="column" style="width: 400px; border-right: none; background-color: #f8fafc;">
+            <div class="p-4 border-b border-slate-200 bg-white h-[57px] flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Inspector</span>
+                <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded border border-slate-200">
+                    <span id="inspector-type">Task Record</span>
+                </span>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto custom-scroll p-6">
+                <!-- Inspector Content -->
+                <div id="inspector-content" class="space-y-6">
+                    
+                    <!-- Title Input -->
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Title</label>
+                        <input type="text" value="Check GPS Bounds" class="w-full text-lg font-bold text-slate-800 bg-transparent border-b border-slate-300 focus:border-blue-500 focus:outline-none pb-1">
+                    </div>
+
+                    <!-- UUID Badge -->
+                    <div class="flex items-center gap-3">
+                        <div class="bg-white border border-slate-200 rounded px-2 py-1 flex items-center gap-2 cursor-pointer hover:border-blue-300 group transition-colors">
+                            <span class="text-[10px] text-slate-400 font-mono">UUID:</span>
+                            <span class="text-xs font-mono text-slate-700">tsk-88a9-b2</span>
+                            <span class="text-[10px] text-blue-500 opacity-0 group-hover:opacity-100">📋</span>
+                        </div>
+                        <span class="text-[10px] text-emerald-600 font-medium bg-emerald-50 px-2 py-1 rounded">Active</span>
+                    </div>
+
+                    <!-- Fields (Dynamic) -->
+                    <div class="space-y-4 pt-4 border-t border-slate-200">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase">Record Fields</h4>
+                            <button class="text-[10px] text-blue-600 hover:underline">Edit Schema</button>
+                        </div>
+
+                        <!-- Smart Description Field -->
+                        <div class="space-y-1">
+                            <label class="text-xs font-medium text-slate-500">Description</label>
+                            <div class="p-3 bg-white border border-slate-200 rounded shadow-sm text-sm text-slate-700">
+                                Verify the GPS coordinates for <span class="bg-blue-50 text-blue-700 px-1 py-0.5 rounded text-xs border border-blue-100 cursor-help" title="Dynamic Link">#project:location</span> match the city filing.
+                            </div>
+                        </div>
+
+                        <!-- Generic Fields -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-medium text-slate-500">Assigned To</label>
+                                <div class="mt-1 flex items-center gap-2">
+                                    <div class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold">SJ</div>
+                                    <span class="text-sm text-slate-700">Sarah J.</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs font-medium text-slate-500">Due Date</label>
+                                <input type="date" class="mt-1 block w-full text-sm text-slate-700 bg-transparent border-b border-slate-200 focus:border-blue-500 focus:outline-none" value="2025-10-12">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email Integration Box -->
+                    <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 mt-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-blue-500">✉️</span>
+                            <span class="text-xs font-bold text-blue-800">Incoming Emails (0)</span>
+                        </div>
+                        <p class="text-[10px] text-blue-600/80 mb-2">
+                            Send to <span class="font-mono bg-white/50 px-1 rounded">task+88a9@autoart.app</span>
+                        </p>
+                        <div class="text-center py-4 border-2 border-dashed border-blue-200 rounded bg-white/50">
+                            <span class="text-xs text-blue-300">No emails yet</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!-- Inspector Footer -->
+            <div class="p-3 border-t border-slate-200 bg-slate-50 text-right">
+                <button class="bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded hover:bg-blue-700 shadow-sm transition-colors">Save Changes</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Simple Interaction Logic for the Prototype
+        
+        function clearActive(colId) {
+            const col = document.getElementById(colId);
+            const items = col.querySelectorAll('.item-row');
+            items.forEach(i => i.classList.remove('active'));
+        }
+
+        // --- Selection Handlers ---
+        // These mimic loading new data into the next column
+        
+        function selectProject(id, el) {
+            // 1. Highlight
+            const col = el.parentElement.parentElement; // Get .column
+            col.querySelectorAll('.item-row').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+
+            // 2. Update Inspector Context
+            updateInspector('Project', 'Downtown Mural', 'proj-2025');
+
+            // 3. In a real app, this would fetch data for Column 2. 
+            // Here we assume Col 2 is already populated for the demo.
+        }
+
+        function selectProcess(id, el) {
+            clearActive('col-processes');
+            el.classList.add('active');
+            updateInspector('Process', 'Standard Commission', 'proc-001');
+        }
+
+        function selectStage(id, el) {
+            clearActive('col-stages');
+            el.classList.add('active');
+            updateInspector('Stage', 'Feasibility Phase', 'stg-001');
+        }
+
+        function selectSub(id, el) {
+            clearActive('col-subprocesses');
+            el.classList.add('active');
+            updateInspector('Subprocess', 'Site Survey', 'sub-104');
+        }
+
+        function selectTask(id, el) {
+            clearActive('col-tasks');
+            el.classList.add('active');
+            updateInspector('Task', 'Check GPS Bounds', 'tsk-88a9-b2');
+        }
+
+        // --- Inspector Updater ---
+        function updateInspector(type, title, uuid) {
+            document.getElementById('inspector-type').innerText = type + ' Record';
+            
+            // Update Title Input
+            const titleInput = document.querySelector('#inspector-content input[type="text"]');
+            if(titleInput) titleInput.value = title;
+
+            // Update UUID
+            const uuidDisplay = document.querySelector('#inspector-content .font-mono.text-xs');
+            if(uuidDisplay) uuidDisplay.innerText = uuid;
+        }
+
+        // Init: Scroll to start
+        window.onload = function() {
+            // Ensure first items are selected for the demo look
+            // (Classes are already hardcoded in HTML for initial load)
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2025-01-15T10:30:00Z",
+  "description": "Example UI state save - can be loaded to restore workspace layout",
+  "ui": {
+    "sidebarWidth": 280,
+    "inspectorWidth": 380,
+    "sidebarCollapsed": false,
+    "inspectorCollapsed": false,
+    "viewMode": "workflow",
+    "inspectorMode": "record",
+    "theme": "light"
+  },
+  "hierarchy": {
+    "selectedProjectId": null,
+    "selectedNodeId": null,
+    "expandedIds": []
+  },
+  "viewport": {
+    "scrollPosition": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "filters": {
+    "recordDefinitionId": null,
+    "searchQuery": ""
+  }
+}

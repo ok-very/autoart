@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoArt Ingestion Configurator</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; height: 100vh; overflow: hidden; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Syntax Highlighting for the Tree */
+        .node-stage { border-left: 4px solid #fbbf24; background-color: #fffbeb; }
+        .node-task { border-left: 4px solid #3b82f6; background-color: #ffffff; }
+        .node-subtask { border-left: 4px solid #cbd5e1; background-color: #f8fafc; }
+
+        /* Module Card Styles */
+        .module-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .module-card.active {
+            background-color: #eff6ff; /* Indigo 50 */
+            border-color: #6366f1; /* Indigo 500 */
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.1);
+        }
+        .module-card:not(.active):hover {
+            border-color: #cbd5e1;
+            background-color: #f8fafc;
+        }
+
+        .parsed-field:focus {
+            background-color: #fff;
+            box-shadow: 0 0 0 2px #3b82f6;
+            outline: none;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-full">
+
+    <!-- HEADER -->
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
+        <div class="flex items-center gap-4">
+            <div class="w-8 h-8 bg-slate-900 rounded flex items-center justify-center text-white font-bold">A</div>
+            <div>
+                <h1 class="text-lg font-bold text-slate-800">Data Ingestion Engine</h1>
+                <div class="text-xs text-slate-500">Workspace: <span class="font-bold text-slate-700">Project Migration 2025</span></div>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+             <div class="text-xs text-slate-500 text-right hidden md:block">
+                 <div>Parsed: <span class="font-bold text-slate-800" id="stat-stages">0</span> Stages</div>
+                 <div><span class="font-bold text-slate-800" id="stat-tasks">0</span> Tasks</div>
+             </div>
+             <div class="h-8 w-px bg-slate-200 hidden md:block"></div>
+             <button onclick="confirmImport()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-6 py-2 rounded shadow transition-colors flex items-center gap-2">
+                <span>Run Import</span>
+                <span class="text-indigo-200 text-xs">→</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- WORKSPACE -->
+    <div class="flex flex-1 overflow-hidden">
+
+        <!-- LEFT DRAWER: CONFIGURATION -->
+        <aside class="w-[380px] bg-white border-r border-slate-200 flex flex-col shrink-0 z-10 shadow-lg">
+            
+            <!-- Drawer Title -->
+            <div class="h-12 border-b border-slate-100 flex items-center px-4 bg-slate-50">
+                <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wide">Input & Logic</h2>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scroll">
+                
+                <!-- SECTION 1: DATA SOURCE -->
+                <div class="p-5 border-b border-slate-200">
+                    <label class="text-xs font-bold text-slate-800 uppercase mb-3 block flex justify-between">
+                        1. Data Source
+                        <span class="text-[10px] font-normal text-slate-400 lowercase">csv, xlsx, json</span>
+                    </label>
+                    
+                    <!-- File Upload Dropzone -->
+                    <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:bg-slate-50 transition-colors cursor-pointer mb-4 group relative overflow-hidden" onclick="document.getElementById('file-upload').click()">
+                        <input type="file" id="file-upload" class="hidden" onchange="handleFileUpload(this)">
+                        <div class="relative z-10">
+                            <div class="text-slate-400 text-2xl mb-1 group-hover:scale-110 transition-transform">📄</div>
+                            <div class="text-xs font-medium text-slate-600 group-hover:text-indigo-600">Click to Upload File</div>
+                            <div class="text-[10px] text-slate-400">or drag and drop here</div>
+                        </div>
+                    </div>
+
+                    <!-- Paste Area Toggle -->
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="h-px bg-slate-200 flex-1"></span>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">OR PASTE RAW DATA</span>
+                        <span class="h-px bg-slate-200 flex-1"></span>
+                    </div>
+                    
+                    <div class="relative">
+                        <textarea id="csv-input" class="w-full h-24 p-2 text-[10px] font-mono border border-slate-300 rounded bg-slate-50 focus:outline-none focus:border-indigo-500 resize-none transition-all focus:bg-white" placeholder="Paste content here..." oninput="debounceReparse()"></textarea>
+                        <button onclick="resetData()" class="absolute top-1 right-1 text-[10px] text-slate-400 hover:text-red-500 px-1 rounded bg-white border border-slate-200">Clear</button>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: PARSER MODULES -->
+                <div class="p-5 bg-slate-50/50 flex-1 min-h-[400px]">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="text-xs font-bold text-slate-800 uppercase block">2. Parser Module</label>
+                        <span class="text-[10px] text-slate-400">Logic for interpretation</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        
+                        <!-- MODULE 1: MONDAY (ACTIVE) -->
+                        <div class="module-card active p-3 border rounded-lg cursor-pointer relative group" onclick="selectModule('monday')">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold border border-indigo-200">M</div>
+                                    <div>
+                                        <div class="text-sm font-bold text-indigo-900">Monday.com v2</div>
+                                        <div class="text-[10px] text-indigo-600 font-medium">Standard Export Parser</div>
+                                    </div>
+                                </div>
+                                <div class="w-2 h-2 rounded-full bg-indigo-500 shadow-sm ring-2 ring-indigo-100"></div>
+                            </div>
+                            
+                            <!-- Context Config (Regex) - Only visible when active -->
+                            <div id="config-monday" class="mt-3 pt-3 border-t border-indigo-200/60 space-y-3 animate-fade-in">
+                                <div>
+                                    <label class="text-[10px] text-indigo-500 font-bold block mb-1">Developer Regex (Row 2)</label>
+                                    <input type="text" id="regex-client" value="Developer:\s*(.*?)(?:\n|$)" onkeyup="reparse()" class="w-full text-[10px] font-mono border border-indigo-200 rounded px-2 py-1.5 text-slate-600 focus:border-indigo-500 focus:outline-none bg-white">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-indigo-500 font-bold block mb-1">Budget Regex (Row 2)</label>
+                                    <input type="text" id="regex-budget" value="Total Budget:\s*([$0-9,]+)" onkeyup="reparse()" class="w-full text-[10px] font-mono border border-indigo-200 rounded px-2 py-1.5 text-slate-600 focus:border-indigo-500 focus:outline-none bg-white">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MODULE 2: AIRTABLE (INACTIVE) -->
+                        <div class="module-card p-3 border border-slate-200 bg-white rounded-lg cursor-pointer opacity-70 hover:opacity-100 hover:border-slate-300 transition-all" onclick="selectModule('airtable')">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded bg-yellow-100 text-yellow-600 flex items-center justify-center text-sm font-bold border border-yellow-200">A</div>
+                                    <div>
+                                        <div class="text-sm font-bold text-slate-700">Airtable Grid</div>
+                                        <div class="text-[10px] text-slate-400">Flat Table Mapping</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Hidden config placeholder -->
+                            <div id="config-airtable" class="hidden mt-3 pt-3 border-t border-slate-100">
+                                <p class="text-[10px] text-slate-400 italic">This module requires a flat CSV structure.</p>
+                            </div>
+                        </div>
+
+                        <!-- UPLOAD NEW MODULE -->
+                        <div class="border border-dashed border-slate-300 rounded-lg p-3 flex items-center justify-center gap-2 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 transition-colors cursor-pointer group" onclick="document.getElementById('module-upload').click()">
+                            <input type="file" id="module-upload" class="hidden" accept=".py,.js,.json">
+                            <span class="text-lg font-light group-hover:scale-110 transition-transform">+</span>
+                            <span class="text-xs font-bold">Upload Module Script (.py)</span>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+        <!-- RIGHT PANEL: PREVIEW TREE -->
+        <main class="flex-1 flex flex-col bg-slate-50 relative">
+            
+            <!-- Output Header -->
+            <div class="h-10 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 shadow-sm z-10">
+                <span class="text-xs font-bold text-slate-500 uppercase">Live Output Preview</span>
+                <div class="flex gap-3">
+                    <span class="flex items-center gap-1 text-[10px] text-slate-500">
+                        <span class="w-2 h-2 rounded-full bg-yellow-400"></span> Stage
+                    </span>
+                    <span class="flex items-center gap-1 text-[10px] text-slate-500">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> Task
+                    </span>
+                    <span class="flex items-center gap-1 text-[10px] text-slate-500">
+                        <span class="w-2 h-2 rounded-full bg-slate-400"></span> Subtask
+                    </span>
+                </div>
+            </div>
+
+            <!-- PREVIEW CONTAINER -->
+            <div class="flex-1 overflow-y-auto custom-scroll p-8" id="preview-container">
+                <!-- Content injected via JS -->
+            </div>
+            
+            <!-- Floating Parse Status Toast -->
+            <div id="parse-toast" class="absolute bottom-4 right-4 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg text-xs font-medium opacity-0 transition-opacity">
+                Parser Updated
+            </div>
+
+        </main>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- 1. DEFAULT DATA ---
+        const DEFAULT_CSV = `Avisina - Broadview Village - P1,,,,,,,,,,,
+"Developer: Avisina 
+Project Address: 1234 Broadview St
+Total Budget: $50,000
+Artwork Budget: $5,000
+Consultant Fee: $2,500",,,,,,,,,,,
+,,,,,,,,,,,
+Stage 1: Project Initiation - Fee Proposal and Project Research,,,,,,,,,,,
+Name,Subitems,PM,Task Status,Target Date,Priority,Notes,Files,Timeline - Start,Timeline - End,Key Personnel,link to BFA Project Template Vancouver
+Project Introduction,"Project Introduction Meeting with Client,Project Documentation Request,Project Billing Information Request",,Executed,,,,https://sharepoint.link,,,,Vancouver Template
+Subitems,Name,People,Status,Target Date,Notes,Priority,Email Template,Files,,,
+,Project Introduction Meeting with Client,,Not Started,,,,,,,,
+,Project Documentation Request,,Not Started,,,,,,,,
+BFA Fee Proposal,"Review City Policy,Calculate Fee,Submit Fee",,Not Started,,,,,,,,Vancouver Template`;
+
+        // --- 2. PARSER LOGIC ---
+        function parseCSV(text) {
+            const rows = [];
+            let currentRow = [];
+            let currentCell = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const nextChar = text[i + 1];
+
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        currentCell += '"'; 
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    currentRow.push(currentCell);
+                    currentCell = '';
+                } else if ((char === '\r' || char === '\n') && !inQuotes) {
+                    if (char === '\r' && nextChar === '\n') i++;
+                    currentRow.push(currentCell);
+                    rows.push(currentRow);
+                    currentRow = [];
+                    currentCell = '';
+                } else {
+                    currentCell += char;
+                }
+            }
+            if (currentCell) currentRow.push(currentCell);
+            if (currentRow.length > 0) rows.push(currentRow);
+            return rows;
+        }
+
+        function runParser() {
+            const rawText = document.getElementById('csv-input').value || "";
+            const rows = parseCSV(rawText);
+            
+            const projectMeta = {
+                title: rows[0] ? rows[0][0] : "Unknown Project",
+                fields: {}
+            };
+            const structure = [];
+            let currentStage = null;
+            let currentTask = null;
+
+            // Metadata Regex
+            if (rows.length > 1 && rows[1][0]) {
+                const blob = rows[1][0];
+                try {
+                    const clientRegex = new RegExp(document.getElementById('regex-client').value, 'i');
+                    const budgetRegex = new RegExp(document.getElementById('regex-budget').value, 'i');
+
+                    const clientMatch = blob.match(clientRegex);
+                    const budgetMatch = blob.match(budgetRegex);
+
+                    if(clientMatch) projectMeta.fields['Client'] = clientMatch[1].trim();
+                    if(budgetMatch) projectMeta.fields['Budget'] = budgetMatch[1].trim();
+                } catch(e) {
+                    // Regex error handling silently for demo
+                }
+            }
+
+            // Parsing Loop
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || row.length === 0) continue;
+                
+                const col0 = (row[0] || "").trim();
+                const col1 = (row[1] || "").trim();
+
+                if (col0.match(/^Stage\s+\d+:/) || col0 === "Project Files") {
+                    currentStage = { name: col0, tasks: [] };
+                    structure.push(currentStage);
+                    currentTask = null;
+                    continue;
+                }
+
+                if (col0 === "Name" && col1 === "Subitems") continue;
+                if (col0 === "Subitems" && col1 === "Name") continue;
+
+                // Subtask
+                if (col0 === "" && col1 !== "") {
+                    if (currentTask) {
+                        currentTask.subtasks.push({ name: col1, rowIdx: i });
+                    }
+                    continue;
+                }
+
+                // Task
+                if (currentStage && col0 !== "") {
+                    const newTask = {
+                        name: col0,
+                        status: row[3] || "Not Started",
+                        subtasks: [],
+                        rowIdx: i
+                    };
+                    currentStage.tasks.push(newTask);
+                    currentTask = newTask;
+                }
+            }
+
+            renderPreview(projectMeta, structure);
+            showToast();
+        }
+
+        // --- 3. RENDERING ---
+        function renderPreview(meta, structure) {
+            const container = document.getElementById('preview-container');
+            container.innerHTML = '';
+
+            // Meta Card
+            const metaHtml = `
+                <div class="bg-white border border-purple-200 rounded-lg p-5 mb-8 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="text-[10px] font-bold text-purple-600 uppercase bg-purple-50 px-2 py-1 rounded border border-purple-100">Project Record</span>
+                            <h2 class="text-xl font-bold text-slate-800 mt-2 parsed-field" contenteditable="true">${meta.title}</h2>
+                        </div>
+                    </div>
+                    <div class="flex gap-6 mt-2">
+                        ${Object.entries(meta.fields).map(([k, v]) => `
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase">${k}</label>
+                                <div class="text-sm font-medium text-slate-700 parsed-field px-2 py-1 -ml-2 rounded hover:bg-slate-50" contenteditable="true">${v}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML += metaHtml;
+
+            // Structure
+            let stageCount = 0;
+            let taskCount = 0;
+
+            structure.forEach(stage => {
+                stageCount++;
+                let tasksHtml = '';
+                
+                stage.tasks.forEach(task => {
+                    taskCount++;
+                    const subtasksHtml = task.subtasks.map(sub => `
+                        <div class="ml-6 mt-1 p-2 rounded node-subtask flex justify-between items-center group">
+                            <div class="flex items-center gap-2 w-full">
+                                <span class="text-slate-300 text-xs">↳</span>
+                                <input type="text" value="${sub.name}" class="text-xs text-slate-600 bg-transparent w-full focus:outline-none parsed-field px-1 py-0.5">
+                            </div>
+                        </div>
+                    `).join('');
+
+                    tasksHtml += `
+                        <div class="mb-3 pl-4 relative">
+                            <div class="absolute left-0 top-4 w-4 h-px bg-slate-200"></div>
+                            <div class="p-3 rounded node-task shadow-sm border border-slate-100 flex justify-between items-center group relative z-10">
+                                <div class="flex-1">
+                                    <input type="text" value="${task.name}" class="text-sm font-bold text-slate-800 bg-transparent w-full focus:outline-none parsed-field px-1 mb-1">
+                                    <div class="flex gap-2">
+                                        <span class="text-[10px] bg-slate-50 text-slate-500 px-1.5 py-0.5 rounded border border-slate-100">${task.status}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            ${subtasksHtml}
+                        </div>
+                    `;
+                });
+
+                const stageHtml = `
+                    <div class="mb-8">
+                        <div class="p-2 rounded node-stage border-b border-yellow-100 mb-2 flex justify-between items-center shadow-sm">
+                            <span class="text-xs font-bold text-yellow-800 uppercase tracking-wide px-2">${stage.name}</span>
+                            <span class="text-[10px] bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-bold">${stage.tasks.length} Tasks</span>
+                        </div>
+                        <div class="pl-2 border-l-2 border-slate-100 ml-3">
+                            ${tasksHtml}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += stageHtml;
+            });
+
+            document.getElementById('stat-stages').innerText = stageCount;
+            document.getElementById('stat-tasks').innerText = taskCount;
+        }
+
+        // --- 4. INTERACTIONS ---
+        
+        // File Upload Handler
+        function handleFileUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('csv-input').value = e.target.result;
+                    runParser();
+                };
+                reader.readAsText(input.files[0]);
+            }
+        }
+
+        // Module Selection UI
+        function selectModule(moduleId) {
+            // Reset cards
+            document.querySelectorAll('.module-card').forEach(el => {
+                el.classList.remove('active');
+                el.classList.add('bg-white', 'opacity-70', 'hover:opacity-100');
+            });
+            
+            // Activate selected
+            const activeCard = document.querySelector(`.module-card[onclick="selectModule('${moduleId}')"]`);
+            if (activeCard) {
+                activeCard.classList.add('active');
+                activeCard.classList.remove('bg-white', 'opacity-70');
+            }
+
+            // Show/Hide Configs
+            document.getElementById('config-monday').style.display = (moduleId === 'monday') ? 'block' : 'none';
+            document.getElementById('config-airtable').classList.toggle('hidden', moduleId !== 'airtable');
+            
+            // Re-run parser (in real app, this would swap logic functions)
+            runParser();
+        }
+
+        // Debounce for Text Input
+        let debounceTimer;
+        function debounceReparse() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(runParser, 500);
+        }
+        function reparse() { runParser(); }
+        
+        function resetData() {
+            document.getElementById('csv-input').value = DEFAULT_CSV;
+            runParser();
+        }
+
+        function showToast() {
+            const toast = document.getElementById('parse-toast');
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 1500);
+        }
+
+        function confirmImport() {
+            // Visual feedback
+            const btn = document.querySelector('button[onclick="confirmImport()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<span class="animate-spin">⟳</span> Processing...`;
+            btn.classList.add('opacity-75');
+            setTimeout(() => {
+                btn.innerHTML = `✓ Success`;
+                btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'opacity-75');
+                    btn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+                }, 2000);
+            }, 1000);
+        }
+
+        // Init
+        window.onload = function() {
+            document.getElementById('csv-input').value = DEFAULT_CSV;
+            runParser();
+        }
+
+    </script>
+</body>
+</html>

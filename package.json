@@ -1,0 +1,25 @@
+{
+  "name": "autoart",
+  "version": "1.0.0",
+  "description": "AutoArt Process Management System",
+  "private": true,
+  "scripts": {
+    "dev": "powershell -ExecutionPolicy Bypass -File scripts/dev.ps1",
+    "backup": "powershell -ExecutionPolicy Bypass -File scripts/backup.ps1",
+    "db:verify": "powershell -ExecutionPolicy Bypass -File scripts/db-verify.ps1",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "migrate": "cd backend && npm run migrate",
+    "migrate:down": "cd backend && npm run migrate:down",
+    "seed": "cd backend && npm run seed",
+    "seed:dev": "cd backend && npm run seed:dev",
+    "seed:reset": "cd backend && npm run seed:reset",
+    "db:rebuild": "cd backend && npm run db:rebuild",
+    "start:backend": "cd backend && npm run dev",
+    "start:frontend": "cd frontend && npm run dev",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build"
+  },
+  "keywords": ["process-management", "workflow", "postgres", "fastify", "react"],
+  "author": "",
+  "license": "MIT"
+}
