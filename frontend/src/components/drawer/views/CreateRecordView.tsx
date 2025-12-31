@@ -1,25 +1,31 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, FolderTree, X } from 'lucide-react';
 import { useUIStore } from '../../../stores/uiStore';
+import { useHierarchyStore } from '../../../stores/hierarchyStore';
 import {
   useRecordDefinition,
   useCreateRecord,
+  useProjectTree,
 } from '../../../api/hooks';
 import { RichTextInput } from '../../editor/RichTextInput';
-import type { FieldDef } from '../../../types';
+import type { FieldDef, HierarchyNode } from '../../../types';
 
 interface CreateRecordViewProps {
   definitionId: string;
   classificationNodeId?: string;
 }
 
-export function CreateRecordView({ definitionId, classificationNodeId }: CreateRecordViewProps) {
+export function CreateRecordView({ definitionId, classificationNodeId: initialNodeId }: CreateRecordViewProps) {
   const { closeDrawer, inspectRecord } = useUIStore();
+  const { selectedProjectId } = useHierarchyStore();
   const { data: definition, isLoading } = useRecordDefinition(definitionId);
+  const { data: projectNodes } = useProjectTree(selectedProjectId);
   const createRecord = useCreateRecord();
 
   const [uniqueName, setUniqueName] = useState('');
   const [fieldValues, setFieldValues] = useState<Record<string, unknown>>({});
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(initialNodeId || null);
+  const [showNodePicker, setShowNodePicker] = useState(false);
 
   if (isLoading) {
     return (
@@ -52,7 +58,7 @@ export function CreateRecordView({ definitionId, classificationNodeId }: CreateR
         definition_id: definitionId,
         unique_name: uniqueName.trim(),
         data: fieldValues,
-        classification_node_id: classificationNodeId || null,
+        classification_node_id: selectedNodeId,
       });
 
       // Open the newly created record in inspector
@@ -64,6 +70,34 @@ export function CreateRecordView({ definitionId, classificationNodeId }: CreateR
       console.error('Failed to create record:', err);
     }
   };
+
+  // Build node options for the picker
+  const getNodeLabel = (node: HierarchyNode): string => {
+    return node.title || node.type;
+  };
+
+  const getNodePath = (nodeId: string): string => {
+    if (!projectNodes) return '';
+    const node = projectNodes.find((n) => n.id === nodeId);
+    if (!node) return '';
+
+    const path: string[] = [node.title];
+    let current = node;
+    while (current.parent_id) {
+      const parent = projectNodes.find((n) => n.id === current.parent_id);
+      if (parent) {
+        path.unshift(parent.title);
+        current = parent;
+      } else {
+        break;
+      }
+    }
+    return path.join(' > ');
+  };
+
+  const selectedNode = selectedNodeId && projectNodes
+    ? projectNodes.find((n) => n.id === selectedNodeId)
+    : null;
 
   const icon = definition.styling?.icon;
   const color = definition.styling?.color || 'slate';
@@ -99,6 +133,84 @@ export function CreateRecordView({ definitionId, classificationNodeId }: CreateR
             className="w-full text-sm border border-slate-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             autoFocus
           />
+        </div>
+
+        {/* Classification Node Selector */}
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">
+            <div className="flex items-center gap-1">
+              <FolderTree size={12} />
+              Classify Under
+            </div>
+          </label>
+
+          {selectedNode ? (
+            <div className="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-md">
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-slate-700 truncate">
+                  {getNodeLabel(selectedNode)}
+                </div>
+                <div className="text-xs text-slate-400 truncate">
+                  {getNodePath(selectedNode.id)}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedNodeId(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowNodePicker(!showNodePicker)}
+              className="w-full text-left px-3 py-2 border border-slate-300 rounded-md text-sm text-slate-500 hover:border-slate-400 hover:bg-slate-50 transition-colors"
+            >
+              Select a project/task to classify under (optional)
+            </button>
+          )}
+
+          {/* Node Picker Dropdown */}
+          {showNodePicker && projectNodes && (
+            <div className="mt-2 max-h-48 overflow-y-auto border border-slate-200 rounded-md bg-white shadow-lg">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedNodeId(null);
+                  setShowNodePicker(false);
+                }}
+                className="w-full text-left px-3 py-2 text-sm text-slate-500 hover:bg-slate-50 border-b border-slate-100"
+              >
+                No classification
+              </button>
+              {projectNodes
+                .filter((n) => ['project', 'subprocess', 'task'].includes(n.type))
+                .map((node) => (
+                  <button
+                    key={node.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedNodeId(node.id);
+                      setShowNodePicker(false);
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-blue-50 transition-colors"
+                  >
+                    <div className="text-sm font-medium text-slate-700">
+                      {getNodeLabel(node)}
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      {node.type} - {getNodePath(node.id)}
+                    </div>
+                  </button>
+                ))}
+            </div>
+          )}
+
+          <p className="text-[10px] text-slate-400 mt-1">
+            Optionally tag this record to a project, subprocess, or task.
+          </p>
         </div>
 
         {/* Fields */}

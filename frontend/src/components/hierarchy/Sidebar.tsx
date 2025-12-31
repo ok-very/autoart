@@ -90,31 +90,47 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Quick Create Records */}
+      {/* Quick Create Records - Only shows pinned definitions */}
       <div className="p-3 border-t border-slate-200 bg-slate-50">
         <div className="text-[10px] font-bold text-slate-400 uppercase mb-2">Quick Create</div>
         <div className="flex flex-wrap gap-2">
           {definitions && definitions.length > 0 ? (
-            definitions
-              .filter((def) => !['project', 'process', 'stage', 'subprocess', 'task'].includes(def.name.toLowerCase()))
-              .slice(0, 8) // Limit to 8 buttons
-              .map((def) => {
+            (() => {
+              // Filter to only pinned definitions (exclude hierarchy types)
+              const pinnedDefs = definitions.filter(
+                (def) =>
+                  def.pinned &&
+                  !['project', 'process', 'stage', 'subprocess', 'task'].includes(def.name.toLowerCase())
+              );
+
+              if (pinnedDefs.length === 0) {
+                return (
+                  <span className="text-xs text-slate-400 italic">
+                    No pinned record types. Pin types in the Schema tab.
+                  </span>
+                );
+              }
+
+              return pinnedDefs.slice(0, 8).map((def) => {
                 const icon = def.styling?.icon;
                 const color = def.styling?.color || 'slate';
                 return (
                   <button
                     key={def.id}
-                    onClick={() => openDrawer('create-record', {
-                      definitionId: def.id,
-                      classificationNodeId: selectedNodeId || undefined,
-                    })}
+                    onClick={() =>
+                      openDrawer('create-record', {
+                        definitionId: def.id,
+                        classificationNodeId: selectedNodeId || undefined,
+                      })
+                    }
                     className={`w-8 h-8 rounded bg-${color}-50 border border-${color}-200 flex items-center justify-center shadow-sm cursor-pointer hover:border-${color}-400 hover:bg-${color}-100 transition-colors text-sm`}
                     title={`Create ${def.name}`}
                   >
                     {icon || def.name.charAt(0).toUpperCase()}
                   </button>
                 );
-              })
+              });
+            })()
           ) : (
             <span className="text-xs text-slate-400 italic">No record types defined</span>
           )}

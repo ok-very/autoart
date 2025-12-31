@@ -64,7 +64,7 @@ export function Header() {
   };
 
   return (
-    <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 z-20 shadow-sm">
+    <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 relative z-[60] shadow-sm">
       <div className="flex items-center gap-3">
         {/* Logo */}
         <Link to="/" className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold hover:bg-slate-800 transition-colors">
@@ -96,10 +96,12 @@ export function Header() {
           </Link>
         </nav>
 
-        <div className="h-6 w-px bg-slate-200 mx-1"></div>
+        {!isRecordsPage && (
+          <>
+            <div className="h-6 w-px bg-slate-200 mx-1"></div>
 
-        {/* Project Selector Dropdown */}
-        <div className="relative" ref={dropdownRef}>
+            {/* Project Selector Dropdown */}
+            <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-2 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-slate-200"
@@ -193,14 +195,16 @@ export function Header() {
           )}
         </div>
 
-        {/* Edit button when project selected */}
-        {selectedProject && (
-          <button
-            onClick={() => inspectNode(selectedProject.id)}
-            className="text-xs text-slate-400 hover:text-blue-600 transition-colors"
-          >
-            Edit
-          </button>
+            {/* Edit button when project selected */}
+            {selectedProject && (
+              <button
+                onClick={() => inspectNode(selectedProject.id)}
+                className="text-xs text-slate-400 hover:text-blue-600 transition-colors"
+              >
+                Edit
+              </button>
+            )}
+          </>
         )}
       </div>
 
@@ -225,6 +229,16 @@ export function Header() {
           }`}
         >
           Columns
+        </button>
+        <button
+          onClick={() => setViewMode('project-list')}
+          className={`px-3 py-1 text-xs font-medium rounded ${
+            viewMode === 'project-list'
+              ? 'bg-white text-slate-800 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          Project List
         </button>
         <button
           onClick={() => setViewMode('grid')}

@@ -147,65 +147,97 @@ export async function deleteNode(nodeId: string): Promise<void> {
 }
 
 export async function moveNode(nodeId: string, input: MoveNodeInput): Promise<HierarchyNode> {
-  const node = await getNodeById(nodeId);
-  if (!node) {
-    throw new NotFoundError('Node', nodeId);
-  }
-
-  let newRootProjectId = node.root_project_id;
-
-  if (input.newParentId) {
-    const newParent = await getNodeById(input.newParentId);
-    if (!newParent) {
-      throw new NotFoundError('New parent node', input.newParentId);
-    }
-
-    // Validate hierarchy rules
-    const expectedParentType = VALID_PARENTS[node.type];
-    if (expectedParentType !== newParent.type) {
-      throw new ValidationError(`Cannot move ${node.type} under ${newParent.type}`);
-    }
-
-    // Prevent circular reference
-    const descendants = await getDescendantIds(nodeId);
-    if (descendants.includes(input.newParentId)) {
-      throw new ValidationError('Cannot move a node under its own descendant');
-    }
-
-    newRootProjectId = newParent.root_project_id || newParent.id;
-  } else if (node.type !== 'project') {
-    throw new ValidationError(`A ${node.type} must have a parent`);
-  }
-
-  // Update position if specified
-  let position = input.position;
-  if (position === undefined) {
-    const maxPos = await db
+  // Wrap in transaction to ensure atomic move with descendant updates
+  return await db.transaction().execute(async (trx) => {
+    const node = await trx
       .selectFrom('hierarchy_nodes')
-      .select(sql<number>`COALESCE(MAX(position), -1)`.as('max_pos'))
-      .where('parent_id', input.newParentId ? '=' : 'is', input.newParentId)
+      .selectAll()
+      .where('id', '=', nodeId)
       .executeTakeFirst();
-    position = (maxPos?.max_pos ?? -1) + 1;
-  }
 
-  // Update node and all descendants' root_project_id
-  if (newRootProjectId !== node.root_project_id) {
-    await updateDescendantsRootProject(nodeId, newRootProjectId);
-  }
+    if (!node) {
+      throw new NotFoundError('Node', nodeId);
+    }
 
-  const updated = await db
-    .updateTable('hierarchy_nodes')
-    .set({
-      parent_id: input.newParentId,
-      root_project_id: newRootProjectId,
-      position,
-      updated_at: new Date(),
-    })
-    .where('id', '=', nodeId)
-    .returningAll()
-    .executeTakeFirstOrThrow();
+    let newRootProjectId = node.root_project_id;
 
-  return updated;
+    if (input.newParentId) {
+      const newParent = await trx
+        .selectFrom('hierarchy_nodes')
+        .selectAll()
+        .where('id', '=', input.newParentId)
+        .executeTakeFirst();
+
+      if (!newParent) {
+        throw new NotFoundError('New parent node', input.newParentId);
+      }
+
+      // Validate hierarchy rules
+      const expectedParentType = VALID_PARENTS[node.type];
+      if (expectedParentType !== newParent.type) {
+        throw new ValidationError(`Cannot move ${node.type} under ${newParent.type}`);
+      }
+
+      // Prevent circular reference
+      const descendantResult = await sql<{ id: string }>`
+        WITH RECURSIVE descendants AS (
+          SELECT id FROM hierarchy_nodes WHERE parent_id = ${nodeId}
+          UNION ALL
+          SELECT h.id FROM hierarchy_nodes h
+          INNER JOIN descendants d ON h.parent_id = d.id
+        )
+        SELECT id FROM descendants
+      `.execute(trx);
+
+      const descendants = descendantResult.rows.map(r => r.id);
+      if (descendants.includes(input.newParentId)) {
+        throw new ValidationError('Cannot move a node under its own descendant');
+      }
+
+      newRootProjectId = newParent.root_project_id || newParent.id;
+    } else if (node.type !== 'project') {
+      throw new ValidationError(`A ${node.type} must have a parent`);
+    }
+
+    // Update position if specified
+    let position = input.position;
+    if (position === undefined) {
+      const maxPos = await trx
+        .selectFrom('hierarchy_nodes')
+        .select(sql<number>`COALESCE(MAX(position), -1)`.as('max_pos'))
+        .where('parent_id', input.newParentId ? '=' : 'is', input.newParentId)
+        .executeTakeFirst();
+      position = (maxPos?.max_pos ?? -1) + 1;
+    }
+
+    // Update node and all descendants' root_project_id
+    if (newRootProjectId !== node.root_project_id) {
+      await sql`
+        WITH RECURSIVE descendants AS (
+          SELECT id FROM hierarchy_nodes WHERE id = ${nodeId}
+          UNION ALL
+          SELECT h.id FROM hierarchy_nodes h
+          INNER JOIN descendants d ON h.parent_id = d.id
+        )
+        UPDATE hierarchy_nodes SET root_project_id = ${newRootProjectId}
+        WHERE id IN (SELECT id FROM descendants)
+      `.execute(trx);
+    }
+
+    const updated = await trx
+      .updateTable('hierarchy_nodes')
+      .set({
+        parent_id: input.newParentId,
+        root_project_id: newRootProjectId,
+        position,
+        updated_at: new Date(),
+      })
+      .where('id', '=', nodeId)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    return updated;
+  });
 }
 
 async function getDescendantIds(nodeId: string): Promise<string[]> {
@@ -336,43 +368,53 @@ export async function deepCloneNode(input: CloneNodeInput, userId?: string): Pro
     };
   });
 
-  // Bulk insert cloned nodes
-  await db
-    .insertInto('hierarchy_nodes')
-    .values(insertValues)
-    .execute();
-
-  // Clone task references for all cloned nodes (only tasks)
-  const sourceNodeIds = Array.from(idMap.keys());
-  const refs = await db
-    .selectFrom('task_references')
-    .selectAll()
-    .where('task_id', 'in', sourceNodeIds)
-    .execute();
-
-  if (refs.length > 0) {
-    const refInserts = refs.map(ref => ({
-      task_id: idMap.get(ref.task_id)!,
-      source_record_id: ref.source_record_id,
-      target_field_key: ref.target_field_key,
-      mode: ref.mode,
-      snapshot_value: ref.snapshot_value,
-    }));
-
-    await db
-      .insertInto('task_references')
-      .values(refInserts)
+  // Wrap core cloning operations in a transaction to ensure atomicity
+  // This includes: node insert, reference clone, and root_project_id update
+  await db.transaction().execute(async (trx) => {
+    // Bulk insert cloned nodes
+    await trx
+      .insertInto('hierarchy_nodes')
+      .values(insertValues)
       .execute();
-  }
 
-  // If cloning a project, update root_project_id for all cloned nodes
+    // Clone task references for all cloned nodes (only tasks)
+    const sourceNodeIds = Array.from(idMap.keys());
+    const refs = await trx
+      .selectFrom('task_references')
+      .selectAll()
+      .where('task_id', 'in', sourceNodeIds)
+      .execute();
+
+    if (refs.length > 0) {
+      const refInserts = refs.map(ref => ({
+        task_id: idMap.get(ref.task_id)!,
+        source_record_id: ref.source_record_id,
+        target_field_key: ref.target_field_key,
+        mode: ref.mode,
+        snapshot_value: ref.snapshot_value,
+      }));
+
+      await trx
+        .insertInto('task_references')
+        .values(refInserts)
+        .execute();
+    }
+
+    // If cloning a project, update root_project_id for all cloned nodes
+    if (sourceNode.type === 'project') {
+      const newRootId = idMap.get(input.sourceNodeId)!;
+      await trx
+        .updateTable('hierarchy_nodes')
+        .set({ root_project_id: newRootId })
+        .where('id', 'in', Array.from(idMap.values()))
+        .execute();
+    }
+  });
+
+  // Template and record cloning happens outside the core transaction
+  // These are considered secondary operations that can be retried independently
   if (sourceNode.type === 'project') {
     const newRootId = idMap.get(input.sourceNodeId)!;
-    await db
-      .updateTable('hierarchy_nodes')
-      .set({ root_project_id: newRootId })
-      .where('id', 'in', Array.from(idMap.values()))
-      .execute();
 
     // Clone template definitions if requested
     if (input.includeTemplates) {

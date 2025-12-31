@@ -44,6 +44,8 @@ coverage/
 tmp/
 temp/
 *.tmp
+.gemini/
+.claude/
 
 # SSL Certificates (keep example configs)
 certs/

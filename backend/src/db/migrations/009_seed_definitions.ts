@@ -77,20 +77,7 @@ const NODE_TYPE_DEFINITIONS: NodeTypeDefinition[] = [
 ];
 
 export async function up(db: Kysely<unknown>): Promise<void> {
-  // First, add a unique constraint on name if it doesn't exist
-  // This enables idempotent inserts
-  await sql`
-    DO $$
-    BEGIN
-      IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'record_definitions_name_unique'
-      ) THEN
-        ALTER TABLE record_definitions ADD CONSTRAINT record_definitions_name_unique UNIQUE (name);
-      END IF;
-    END $$
-  `.execute(db);
-
-  // Insert default definitions (idempotent)
+  // Insert default definitions (idempotent via unique constraint on name)
   for (const def of NODE_TYPE_DEFINITIONS) {
     await sql`
       INSERT INTO record_definitions (name, schema_config, styling)

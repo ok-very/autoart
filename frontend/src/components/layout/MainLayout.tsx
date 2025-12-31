@@ -4,6 +4,7 @@ import { Header } from './Header';
 import { Sidebar } from '../hierarchy/Sidebar';
 import { Workspace } from './Workspace';
 import { MillerColumnsView } from './MillerColumnsView';
+import { ProjectListView } from './ProjectListView';
 import { RecordInspector } from '../inspector/RecordInspector';
 import { BottomDrawer } from '../drawer/BottomDrawer';
 import { ResizeHandle } from '../common/ResizeHandle';
@@ -75,6 +76,19 @@ export function MainLayout() {
         <Header />
         <div className="flex flex-1 flex-col overflow-hidden">
           <MillerColumnsView />
+          <BottomDrawer />
+        </div>
+      </div>
+    );
+  }
+
+  // Project List view
+  if (viewMode === 'project-list') {
+    return (
+      <div className="flex flex-col h-full">
+        <Header />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <ProjectListView />
           <BottomDrawer />
         </div>
       </div>

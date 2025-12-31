@@ -53,6 +53,7 @@ export interface RecordDefinition {
   project_id: string | null; // If set, belongs to a project's template library
   is_template: boolean; // Marks as reusable template
   clone_excluded: boolean; // If true, not included when cloning projects
+  pinned: boolean; // If true, appears in quick create menu
   schema_config: { fields: FieldDef[] };
   styling: { color?: string; icon?: string };
   created_at: string;

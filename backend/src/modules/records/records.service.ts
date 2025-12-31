@@ -59,6 +59,7 @@ export async function updateDefinition(id: string, input: UpdateDefinitionInput)
   if (input.styling !== undefined) updates.styling = JSON.stringify(input.styling);
   if (input.projectId !== undefined) updates.project_id = input.projectId;
   if (input.isTemplate !== undefined) updates.is_template = input.isTemplate;
+  if (input.pinned !== undefined) updates.pinned = input.pinned;
 
   const def = await db
     .updateTable('record_definitions')
@@ -491,33 +492,36 @@ export async function bulkClassifyRecords(
 }
 
 /**
- * Delete multiple records at once
+ * Delete multiple records at once.
+ * Wrapped in a transaction to ensure atomic deletion of records, links, and references.
  */
 export async function bulkDeleteRecords(recordIds: string[]): Promise<number> {
   if (recordIds.length === 0) return 0;
 
-  // First delete any links involving these records
-  await db
-    .deleteFrom('record_links')
-    .where((eb) =>
-      eb.or([
-        eb('source_record_id', 'in', recordIds),
-        eb('target_record_id', 'in', recordIds),
-      ])
-    )
-    .execute();
+  return await db.transaction().execute(async (trx) => {
+    // First delete any links involving these records
+    await trx
+      .deleteFrom('record_links')
+      .where((eb) =>
+        eb.or([
+          eb('source_record_id', 'in', recordIds),
+          eb('target_record_id', 'in', recordIds),
+        ])
+      )
+      .execute();
 
-  // Then delete task references pointing to these records
-  await db
-    .deleteFrom('task_references')
-    .where('source_record_id', 'in', recordIds)
-    .execute();
+    // Then delete task references pointing to these records
+    await trx
+      .deleteFrom('task_references')
+      .where('source_record_id', 'in', recordIds)
+      .execute();
 
-  // Finally delete the records
-  const result = await db
-    .deleteFrom('records')
-    .where('id', 'in', recordIds)
-    .execute();
+    // Finally delete the records
+    const result = await trx
+      .deleteFrom('records')
+      .where('id', 'in', recordIds)
+      .execute();
 
-  return result.reduce((sum, r) => sum + Number(r.numDeletedRows), 0);
+    return result.reduce((sum, r) => sum + Number(r.numDeletedRows), 0);
+  });
 }
