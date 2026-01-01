@@ -6,6 +6,7 @@ import {
   useResolveReference,
   useCreateReference,
   useDeleteReference,
+  useRecord,
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
 import type { SearchResult } from '../../types';
@@ -15,8 +16,10 @@ interface LinkFieldInputProps {
   value: string;
   /** The field key for this link field */
   fieldKey: string;
-  /** The task ID this field belongs to */
-  taskId: string;
+  /** The task ID this field belongs to (Required for References) */
+  taskId?: string;
+  /** The Record ID this field belongs to (Required for Direct Links) */
+  currentRecordId?: string;
   /** Callback when the field value changes (reference ID or empty) */
   onChange: (value: string) => void;
   /** Whether the field is read-only */
@@ -29,6 +32,7 @@ export function LinkFieldInput({
   value,
   fieldKey,
   taskId,
+  currentRecordId,
   onChange,
   readOnly,
   targetDefinitionId,
@@ -41,8 +45,33 @@ export function LinkFieldInput({
   const createReference = useCreateReference();
   const deleteReference = useDeleteReference();
 
-  // Resolve the reference if we have one
-  const { data: resolved, isLoading } = useResolveReference(value || null);
+  // Determine mode
+  const isReferenceMode = !!taskId;
+
+  // Reference Mode: Resolve the reference ID
+  const { data: resolvedRef, isLoading: isLoadingRef } = useResolveReference(
+    isReferenceMode && value ? value : null
+  );
+
+  // Direct Link Mode: Resolve the target record ID directly
+  const { data: targetRecord, isLoading: isLoadingRecord } = useRecord(
+    !isReferenceMode && value ? value : null
+  );
+
+  // Unified resolved data
+  const resolved = isReferenceMode
+    ? resolvedRef
+    : targetRecord
+    ? {
+        value: targetRecord.unique_name,
+        label: targetRecord.unique_name,
+        sourceRecordId: targetRecord.id,
+        mode: 'direct',
+        drift: false,
+      }
+    : null;
+
+  const isLoading = isReferenceMode ? isLoadingRef : isLoadingRecord;
 
   const handleOpenSearch = useCallback(() => {
     if (readOnly) return;
@@ -61,33 +90,38 @@ export function LinkFieldInput({
       setShowSearch(false);
 
       try {
-        // Create a reference to this record
-        const result = await createReference.mutateAsync({
-          taskId,
-          sourceRecordId: item.id,
-          targetFieldKey: selectedFieldKey || fieldKey,
-          mode: 'dynamic',
-        });
-
-        // Update the field value to the new reference ID
-        onChange(result.reference.id);
+        if (isReferenceMode && taskId) {
+          // Create a reference to this record (Task -> Record)
+          const result = await createReference.mutateAsync({
+            taskId,
+            sourceRecordId: item.id,
+            targetFieldKey: selectedFieldKey || fieldKey,
+            mode: 'dynamic',
+          });
+          onChange(result.reference.id);
+        } else {
+          // Direct Link (Record -> Record) - just store the ID
+          onChange(item.id);
+        }
       } catch (err) {
         console.error('Failed to create link:', err);
       }
     },
-    [taskId, fieldKey, onChange, createReference]
+    [taskId, fieldKey, onChange, createReference, isReferenceMode]
   );
 
   const handleClear = useCallback(async () => {
     if (!value) return;
 
     try {
-      await deleteReference.mutateAsync(value);
+      if (isReferenceMode) {
+        await deleteReference.mutateAsync(value);
+      }
       onChange('');
     } catch (err) {
       console.error('Failed to remove link:', err);
     }
-  }, [value, onChange, deleteReference]);
+  }, [value, onChange, deleteReference, isReferenceMode]);
 
   const handleOpenRecord = useCallback(() => {
     if (resolved?.sourceRecordId) {

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoArt Nested Grid</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Sticky Columns Logic */
+        .sticky-left {
+            position: sticky;
+            left: 0;
+            z-index: 30;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .header-cell {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background-color: white;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .header-cell.sticky-left {
+            z-index: 50;
+        }
+
+        /* Nested Header (The "Level 2" Header) */
+        .nested-header-row {
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .nested-header-cell {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #64748b;
+            letter-spacing: 0.05em;
+            padding: 4px 8px;
+            text-align: center;
+        }
+
+        /* Status Pills */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            min-height: 32px;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+        }
+
+        .status-pill:hover {
+            filter: brightness(105%);
+        }
+
+        .st-done {
+            background-color: #00c875;
+        }
+
+        .st-working {
+            background-color: #fdab3d;
+        }
+
+        .st-stuck {
+            background-color: #e2445c;
+        }
+
+        .st-empty {
+            background-color: #c4c4c4;
+        }
+
+        /* Subprocess Connector Visuals */
+        .connector-line {
+            position: absolute;
+            left: 24px;
+            top: -15px;
+            bottom: 18px;
+            width: 2px;
+            background-color: #cbd5e1;
+            z-index: 10;
+        }
+
+        .connector-elbow {
+            position: absolute;
+            left: 24px;
+            top: 50%;
+            width: 12px;
+            height: 2px;
+            background-color: #cbd5e1;
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col h-full">
+
+    <!-- APP HEADER -->
+    <header
+        class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 z-50 shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center text-white font-bold shadow-sm">A
+            </div>
+            <div>
+                <h1 class="text-sm font-bold text-slate-800">Broadview Village - P1</h1>
+                <div class="text-[10px] text-slate-500">Project Workflow Grid</div>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="flex bg-slate-100 p-0.5 rounded text-xs font-medium">
+                <button class="px-3 py-1 bg-white text-slate-800 shadow-sm rounded">Main Table</button>
+                <button class="px-3 py-1 text-slate-500 hover:text-slate-800">Kanban</button>
+                <button class="px-3 py-1 text-slate-500 hover:text-slate-800">Gantt</button>
+            </div>
+            <button
+                class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded transition-colors">
+                + New Item
+            </button>
+        </div>
+    </header>
+
+    <!-- GRID WORKSPACE -->
+    <main class="flex-1 overflow-auto custom-scroll bg-white relative" id="grid-container">
+
+        <!-- ==========================
+             MAIN TABLE HEADER
+             ========================== -->
+        <div class="flex h-10 w-min min-w-full">
+            <!-- Sticky Columns -->
+            <div
+                class="w-10 header-cell sticky-left flex items-center justify-center border-r border-slate-200 bg-white">
+                <input type="checkbox" class="rounded border-slate-300 text-blue-600">
+            </div>
+            <div
+                class="w-[360px] header-cell sticky-left flex items-center px-4 border-r border-slate-200 bg-white shadow-[4px_0_12px_-4px_rgba(0,0,0,0.1)]">
+                <span class="text-xs font-bold text-slate-600 uppercase">Item Name</span>
+            </div>
+
+            <!-- Scrollable Columns -->
+            <div class="w-32 header-cell flex items-center justify-center border-r border-slate-100">
+                <span class="text-xs font-bold text-slate-600 uppercase">Status</span>
+            </div>
+            <div class="w-24 header-cell flex items-center justify-center border-r border-slate-100">
+                <span class="text-xs font-bold text-slate-600 uppercase">Owner</span>
+            </div>
+            <div class="w-32 header-cell flex items-center justify-center border-r border-slate-100">
+                <span class="text-xs font-bold text-slate-600 uppercase">Timeline / Date</span>
+            </div>
+            <div class="w-48 header-cell flex items-center justify-center border-r border-slate-100">
+                <span class="text-xs font-bold text-slate-600 uppercase">Context / Details</span>
+            </div>
+            <div class="w-24 header-cell flex items-center justify-center border-r border-slate-100">
+                <span class="text-xs font-bold text-slate-600 uppercase">Files</span>
+            </div>
+            <div class="flex-1 header-cell min-w-[50px]"></div>
+        </div>
+
+
+        <!-- ==========================
+             STAGE GROUP 1
+             ========================== -->
+        <div class="group-section">
+
+            <!-- Group Header -->
+            <div
+                class="sticky top-10 z-30 bg-white/95 backdrop-blur pt-4 pb-2 px-4 flex items-center gap-2 border-b border-slate-100">
+                <button class="text-blue-500 hover:text-blue-700 transition-transform">▼</button>
+                <h2 class="text-lg font-bold text-blue-600">Stage 1: Project Initiation</h2>
+                <div class="h-px bg-blue-100 flex-1 ml-2"></div>
+            </div>
+
+            <!-- TASK 1: PROJECT INTRODUCTION (Parent) -->
+            <div class="task-group mb-1">
+
+                <!-- PARENT ROW -->
+                <div class="flex h-10 w-min min-w-full hover:bg-slate-50 transition-colors group/row border-b border-slate-100"
+                    id="row-parent-1">
+                    <div
+                        class="w-10 sticky-left bg-white group-hover/row:bg-slate-50 border-r border-slate-200 flex items-center justify-center">
+                        <input type="checkbox" class="rounded border-slate-300">
+                    </div>
+                    <div
+                        class="w-[360px] sticky-left bg-white group-hover/row:bg-slate-50 border-r border-slate-200 flex items-center px-2 relative shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)]">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div> <!-- Color Bar -->
+                        <button onclick="toggleSubitems('sub-1', this)"
+                            class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-700 mr-1 transition-transform transform rotate-0">
+                            ▼
+                        </button>
+                        <input type="text" value="Project Introduction"
+                            class="w-full bg-transparent border-none text-sm font-semibold text-slate-800 focus:ring-0">
+                    </div>
+
+                    <!-- Parent Columns -->
+                    <div class="w-32 border-r border-slate-100 p-1 bg-white group-hover/row:bg-slate-50">
+                        <div class="status-pill st-done" onclick="cycleStatus(this)">Done</div>
+                    </div>
+                    <div
+                        class="w-24 border-r border-slate-100 flex items-center justify-center bg-white group-hover/row:bg-slate-50">
+                        <div
+                            class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 text-[10px] font-bold flex items-center justify-center border border-white shadow-sm">
+                            SJ</div>
+                    </div>
+                    <div
+                        class="w-32 border-r border-slate-100 flex items-center justify-center text-xs bg-white group-hover/row:bg-slate-50">
+                        Oct 12 - 15
+                    </div>
+                    <div
+                        class="w-48 border-r border-slate-100 flex items-center justify-center px-4 bg-white group-hover/row:bg-slate-50">
+                        <!-- Parent Timeline Bar -->
+                        <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-emerald-500 w-full"></div>
+                        </div>
+                    </div>
+                    <div
+                        class="w-24 border-r border-slate-100 flex items-center justify-center bg-white group-hover/row:bg-slate-50">
+                        <span class="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">3 Files</span>
+                    </div>
+                    <div class="flex-1 bg-white group-hover/row:bg-slate-50 min-w-[50px]"></div>
+                </div>
+
+                <!-- SUBPROCESS CONTAINER (Collapsible) -->
+                <div id="sub-1" class="bg-slate-50/50">
+
+                    <!-- === NESTED HEADER ROW (The Requirement) === -->
+                    <div class="flex h-8 w-min min-w-full nested-header-row">
+                        <div class="w-10 sticky-left bg-slate-50 border-r border-slate-200"></div>
+                        <div
+                            class="w-[360px] sticky-left bg-slate-50 border-r border-slate-200 flex items-center pl-10 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)]">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Subprocess
+                                Steps</span>
+                        </div>
+                        <!-- Re-defined Columns -->
+                        <div class="w-32 nested-header-cell border-r border-slate-200">Task Status</div>
+                        <div class="w-24 nested-header-cell border-r border-slate-200">Assignee</div>
+                        <div class="w-32 nested-header-cell border-r border-slate-200">Target Date</div>
+                        <div class="w-48 nested-header-cell border-r border-slate-200 bg-yellow-50 text-yellow-700">
+                            Email Template</div> <!-- Divergent Column -->
+                        <div class="w-24 nested-header-cell border-r border-slate-200">Outputs</div>
+                        <div class="flex-1 bg-slate-50 min-w-[50px]"></div>
+                    </div>
+
+                    <!-- Subitem 1 -->
+                    <div
+                        class="flex h-9 w-min min-w-full hover:bg-slate-100 transition-colors group/sub border-b border-slate-100/50">
+                        <div class="w-10 sticky-left bg-slate-50/50 border-r border-slate-200"></div>
+                        <div
+                            class="w-[360px] sticky-left bg-slate-50/50 border-r border-slate-200 flex items-center pl-10 relative shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)]">
+                            <!-- Visual Tree Connectors -->
+                            <div class="connector-line"></div>
+                            <div class="connector-elbow"></div>
+
+                            <input type="text" value="Intro Meeting with Client"
+                                class="w-full bg-transparent border-none text-xs text-slate-600 focus:ring-0">
+                        </div>
+
+                        <!-- Columns -->
+                        <div class="w-32 border-r border-slate-200 p-1">
+                            <div class="status-pill st-done" onclick="cycleStatus(this)">Done</div>
+                        </div>
+                        <div class="w-24 border-r border-slate-200 flex items-center justify-center">
+                            <div
+                                class="w-5 h-5 rounded-full bg-gray-200 text-gray-500 text-[9px] font-bold flex items-center justify-center">
+                                ?</div>
+                        </div>
+                        <div
+                            class="w-32 border-r border-slate-200 flex items-center justify-center text-xs text-slate-500">
+                            Oct 12
+                        </div>
+                        <div class="w-48 border-r border-slate-200 px-2 flex items-center bg-yellow-50/30">
+                            <span class="text-[10px] font-mono text-slate-500 truncate">tmpl_intro_client_v2</span>
+                        </div>
+                        <div class="w-24 border-r border-slate-200"></div>
+                        <div class="flex-1 min-w-[50px]"></div>
+                    </div>
+
+                    <!-- Subitem 2 -->
+                    <div
+                        class="flex h-9 w-min min-w-full hover:bg-slate-100 transition-colors group/sub border-b border-slate-100/50">
+                        <div class="w-10 sticky-left bg-slate-50/50 border-r border-slate-200"></div>
+                        <div
+                            class="w-[360px] sticky-left bg-slate-50/50 border-r border-slate-200 flex items-center pl-10 relative shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)]">
+                            <div class="connector-line"></div>
+                            <div class="connector-elbow"></div>
+                            <input type="text" value="Documentation Request"
+                                class="w-full bg-transparent border-none text-xs text-slate-600 focus:ring-0">
+                        </div>
+
+                        <div class="w-32 border-r border-slate-200 p-1">
+                            <div class="status-pill st-working" onclick="cycleStatus(this)">Working</div>
+                        </div>
+                        <div class="w-24 border-r border-slate-200 flex items-center justify-center">
+                            <div
+                                class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 text-[9px] font-bold flex items-center justify-center">
+                                SJ</div>
+                        </div>
+                        <div
+                            class="w-32 border-r border-slate-200 flex items-center justify-center text-xs text-slate-500">
+                            Oct 13
+                        </div>
+                        <div class="w-48 border-r border-slate-200 px-2 flex items-center bg-yellow-50/30">
+                            <span class="text-[10px] font-mono text-slate-500 truncate">tmpl_doc_req_formal</span>
+                        </div>
+                        <div class="w-24 border-r border-slate-200"></div>
+                        <div class="flex-1 min-w-[50px]"></div>
+                    </div>
+
+                    <!-- Subitem 3 -->
+                    <div
+                        class="flex h-9 w-min min-w-full hover:bg-slate-100 transition-colors group/sub border-b border-slate-200">
+                        <div class="w-10 sticky-left bg-slate-50/50 border-r border-slate-200"></div>
+                        <div
+                            class="w-[360px] sticky-left bg-slate-50/50 border-r border-slate-200 flex items-center pl-10 relative shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)]">
+                            <div class="connector-line h-[50%]"></div> <!-- Stop line halfway -->
+                            <div class="connector-elbow"></div>
+                            <input type="text" value="Billing Info Request"
+                                class="w-full bg-transparent border-none text-xs text-slate-600 focus:ring-0">
+                        </div>
+
+                        <div class="w-32 border-r border-slate-200 p-1">
+                            <div class="status-pill st-stuck" onclick="cycleStatus(this)">Stuck</div>
+                        </div>
+                        <div class="w-24 border-r border-slate-200 flex items-center justify-center">
+                            <div
+                                class="w-5 h-5 rounded-full bg-pink-100 text-pink-600 text-[9px] font-bold flex items-center justify-center">
+                                MR</div>
+                        </div>
+                        <div
+                            class="w-32 border-r border-slate-200 flex items-center justify-center text-xs text-red-500 font-bold">
+                            Oct 14
+                        </div>
+                        <div class="w-48 border-r border-slate-200 px-2 flex items-center bg-yellow-50/30">
+                            <span class="text-[10px] font-mono text-slate-500 truncate">tmpl_billing_v1</span>
+                        </div>
+                        <div class="w-24 border-r border-slate-200"></div>
+                        <div class="flex-1 min-w-[50px]"></div>
+                    </div>
+
+                    <!-- Add Subitem Row -->
+                    <div class="flex h-8 w-min min-w-full bg-slate-50 border-b border-slate-200">
+                        <div class="w-10 sticky-left bg-slate-50 border-r border-slate-200"></div>
+                        <div
+                            class="w-[360px] sticky-left bg-slate-50 border-r border-slate-200 flex items-center pl-12 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)]">
+                            <input type="text" placeholder="+ Add Subprocess"
+                                class="text-xs text-slate-400 placeholder-slate-400 bg-transparent border-none focus:ring-0 w-full hover:text-slate-600 cursor-pointer">
+                        </div>
+                        <div class="flex-1"></div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- TASK 2: FEE PROPOSAL (Collapsed Example) -->
+            <div class="task-group mb-1">
+                <div
+                    class="flex h-10 w-min min-w-full hover:bg-slate-50 transition-colors group/row border-b border-slate-100">
+                    <div class="w-10 sticky-left bg-white border-r border-slate-200 flex items-center justify-center">
+                        <input type="checkbox" class="rounded border-slate-300">
+                    </div>
+                    <div
+                        class="w-[360px] sticky-left bg-white border-r border-slate-200 flex items-center px-2 relative shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)]">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
+                        <button onclick="toggleSubitems('sub-2', this)"
+                            class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-slate-700 mr-1 transition-transform transform -rotate-90">
+                            ▼
+                        </button>
+                        <input type="text" value="BFA Fee Proposal"
+                            class="w-full bg-transparent border-none text-sm font-semibold text-slate-800 focus:ring-0">
+                    </div>
+                    <!-- Columns -->
+                    <div class="w-32 border-r border-slate-100 p-1">
+                        <div class="status-pill st-empty" onclick="cycleStatus(this)"></div>
+                    </div>
+                    <div class="w-24 border-r border-slate-100"></div>
+                    <div class="w-32 border-r border-slate-100"></div>
+                    <div class="w-48 border-r border-slate-100"></div>
+                    <div class="w-24 border-r border-slate-100"></div>
+                    <div class="flex-1 min-w-[50px]"></div>
+                </div>
+
+                <!-- Hidden Container -->
+                <div id="sub-2" class="hidden bg-slate-50/50 border-b border-slate-200">
+                    <div class="p-4 text-center text-xs text-slate-400 italic">3 hidden subprocess steps...</div>
+                </div>
+            </div>
+
+            <!-- FOOTER SUMMARY (Progress Widget) -->
+            <div class="flex h-12 w-min min-w-full bg-white border-b border-slate-300 shadow-inner">
+                <div class="w-10 sticky-left bg-white border-r border-slate-200"></div>
+                <div
+                    class="w-[360px] sticky-left bg-white border-r border-slate-200 flex items-center justify-end px-4 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)]">
+                    <span class="text-xs font-bold text-slate-400 uppercase">Total Progress</span>
+                </div>
+
+                <!-- THE INTERACTIVE PROGRESS BAR -->
+                <div class="w-32 border-r border-slate-200 flex items-center justify-center px-2">
+                    <div class="w-full h-6 flex rounded overflow-hidden shadow-sm bg-slate-200" id="progress-container">
+                        <div id="prog-done" class="bg-[#00c875] h-full transition-all duration-500" style="width: 25%">
+                        </div>
+                        <div id="prog-working" class="bg-[#fdab3d] h-full transition-all duration-500"
+                            style="width: 25%"></div>
+                        <div id="prog-stuck" class="bg-[#e2445c] h-full transition-all duration-500" style="width: 25%">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-24 border-r border-slate-200"></div>
+                <div class="flex-1"></div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        // --- LOGIC ---
+
+        function toggleSubitems(id, btn) {
+            const el = document.getElementById(id);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                btn.style.transform = 'rotate(0deg)';
+            } else {
+                el.classList.add('hidden');
+                btn.style.transform = 'rotate(-90deg)';
+            }
+        }
+
+        const STATUS_TYPES = ['st-done', 'st-working', 'st-stuck', 'st-empty'];
+        const STATUS_TEXTS = ['Done', 'Working', 'Stuck', ''];
+
+        function cycleStatus(pill) {
+            // Find current index
+            let currentClass = STATUS_TYPES.find(c => pill.classList.contains(c)) || 'st-empty';
+            let idx = STATUS_TYPES.indexOf(currentClass);
+
+            // Next
+            let nextIdx = (idx + 1) % STATUS_TYPES.length;
+
+            // Apply
+            pill.className = `status-pill ${STATUS_TYPES[nextIdx]}`;
+            pill.innerText = STATUS_TEXTS[nextIdx];
+
+            updateProgressBar();
+        }
+
+        function updateProgressBar() {
+            // Scan all pills in the grid
+            const pills = document.querySelectorAll('.status-pill');
+            const total = pills.length;
+            const counts = { 'st-done': 0, 'st-working': 0, 'st-stuck': 0, 'st-empty': 0 };
+
+            pills.forEach(p => {
+                STATUS_TYPES.forEach(type => {
+                    if (p.classList.contains(type)) counts[type]++;
+                });
+            });
+
+            // Calculate Percentages
+            const pDone = (counts['st-done'] / total) * 100;
+            const pWork = (counts['st-working'] / total) * 100;
+            const pStuck = (counts['st-stuck'] / total) * 100;
+
+            // Apply widths
+            document.getElementById('prog-done').style.width = `${pDone}%`;
+            document.getElementById('prog-working').style.width = `${pWork}%`;
+            document.getElementById('prog-stuck').style.width = `${pStuck}%`;
+        }
+
+        // Init
+        updateProgressBar();
+
+    </script>
+</body>
+
+</html>

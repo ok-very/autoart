@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { clsx } from 'clsx';
 import { useSearch } from '../../api/hooks';
-import { useHierarchyStore } from '../../stores/hierarchyStore';
+import { useUIStore } from '../../stores/uiStore';
 import { fuzzySearch } from '../../utils/fuzzySearch';
 import type { SearchResult } from '../../types';
 
@@ -17,8 +17,8 @@ export interface MentionSuggestionRef {
 
 export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggestionProps>(
   ({ query, triggerChar, onSelect }, ref) => {
-    const { selectedProjectId } = useHierarchyStore();
-    const { data: results, isLoading } = useSearch(query, selectedProjectId || undefined);
+    const { activeProjectId } = useUIStore();
+    const { data: results, isLoading } = useSearch(query, activeProjectId || undefined);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [selectedItem, setSelectedItem] = useState<SearchResult | null>(null);
     const [showFields, setShowFields] = useState(false);

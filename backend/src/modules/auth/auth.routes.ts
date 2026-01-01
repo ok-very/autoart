@@ -117,4 +117,17 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
     return reply.send({ user });
   });
+
+  // Search users (for @mentions)
+  fastify.get('/users/search', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest<{ Querystring: { q?: string; limit?: string } }>, reply: FastifyReply) => {
+    const query = request.query.q || '';
+    const limit = Math.min(parseInt(request.query.limit || '10', 10), 50);
+
+    if (query.length < 1) {
+      return reply.send({ users: [] });
+    }
+
+    const users = await authService.searchUsers(query, limit);
+    return reply.send({ users });
+  });
 }

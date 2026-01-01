@@ -1,150 +1,121 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { Selection, UIPanels, InspectorMode, DrawerConfig } from '../types/ui';
+import { deriveUIPanels } from '../utils/uiComposition';
 
-/**
- * Inspector Tab Mode - determines which view is shown in the inspector panel
- */
-export type InspectorTabMode = 'record' | 'schema' | 'references' | 'links';
+// Re-export for compatibility if needed, or prefer importing from types/ui
+export type { Selection, UIPanels, InspectorMode };
 
-/**
- * Typed Inspector State - discriminated union for type-safe inspector state.
- * This ensures the inspector always has consistent state for what's being inspected.
- */
-export type InspectorState =
-  | { type: 'none' }
-  | { type: 'node'; nodeId: string; tabMode: InspectorTabMode }
-  | { type: 'record'; recordId: string; tabMode: InspectorTabMode };
-
-type ViewMode = 'workflow' | 'grid' | 'calendar' | 'columns' | 'project-list';
+type ViewMode = 'workflow' | 'grid' | 'calendar' | 'columns';
+type Theme = 'light' | 'dark';
 
 interface UIState {
-  // Inspector - legacy fields (kept for backwards compatibility, derived from inspectorState)
-  inspectorMode: InspectorTabMode;
-  inspectedRecordId: string | null;
-  inspectedNodeId: string | null;
+  // Core State
+  selection: Selection;
+  activeProjectId: string | null;
+  viewMode: ViewMode;
+  inspectorTabMode: string; // 'record', 'schema', 'references', etc.
 
-  // Inspector - new typed state
-  inspectorState: InspectorState;
-
-  // Layout
+  // Layout Geometry
   sidebarWidth: number;
   inspectorWidth: number;
   sidebarCollapsed: boolean;
   inspectorCollapsed: boolean;
+  drawerHeight: number;
 
-  // View
-  viewMode: ViewMode;
+  // Drawer State
+  activeDrawer: DrawerConfig | null;
 
   // Theme
-  theme: 'light' | 'dark';
-
-  // Bottom Drawer
-  drawerHeight: number;
-  activeDrawer: { type: string; props: Record<string, unknown> } | null;
+  theme: Theme;
 
   // Actions
-  setInspectorMode: (mode: InspectorTabMode) => void;
-  setInspectorTabMode: (mode: InspectorTabMode) => void; // New alias for clarity
-  inspectRecord: (id: string | null) => void;
-  inspectNode: (id: string | null) => void;
-  clearInspector: () => void;
-  setSidebarWidth: (width: number) => void;
-  setInspectorWidth: (width: number) => void;
+  setSelection: (selection: Selection) => void;
+  setActiveProject: (id: string | null) => void;
+  setInspectorTab: (tab: string) => void;
+
   toggleSidebar: () => void;
   toggleInspector: () => void;
+  setSidebarWidth: (width: number) => void;
+  setInspectorWidth: (width: number) => void;
+
   setViewMode: (mode: ViewMode) => void;
-  setTheme: (theme: 'light' | 'dark') => void;
+  setTheme: (theme: Theme) => void;
 
   // Drawer Actions
-  setDrawerHeight: (height: number) => void;
   openDrawer: (type: string, props?: Record<string, unknown>) => void;
   closeDrawer: () => void;
+  setDrawerHeight: (height: number) => void;
+
+  // Legacy compatibility - derived from selection
+  readonly inspectedNodeId: string | null;
+  readonly inspectedRecordId: string | null;
+  readonly inspectorMode: string;
+  setInspectorMode: (mode: string) => void;
+  inspectRecord: (recordId: string) => void;
+  inspectNode: (nodeId: string) => void;
+  clearInspection: () => void;
 }
 
 export const useUIStore = create<UIState>()(
   persist(
-    (set) => ({
-      // Legacy inspector fields
-      inspectorMode: 'record',
-      inspectedRecordId: null,
-      inspectedNodeId: null,
-
-      // New typed inspector state
-      inspectorState: { type: 'none' },
+    (set, get) => ({
+      selection: null,
+      activeProjectId: null,
+      viewMode: 'workflow',
+      inspectorTabMode: 'record',
 
       sidebarWidth: 280,
       inspectorWidth: 380,
       sidebarCollapsed: false,
       inspectorCollapsed: false,
-      viewMode: 'workflow',
+      drawerHeight: 300,
+
+      activeDrawer: null,
       theme: 'light',
 
-      drawerHeight: 300,
-      activeDrawer: null,
+      setSelection: (selection) => set({ selection }),
+      setActiveProject: (id) => set({ activeProjectId: id }),
+      setInspectorTab: (tab) => set({ inspectorTabMode: tab }),
 
-      setInspectorMode: (mode) => set((state) => {
-        // Update both legacy and new state
-        const newInspectorState: InspectorState = state.inspectorState.type === 'none'
-          ? { type: 'none' }
-          : state.inspectorState.type === 'node'
-            ? { type: 'node', nodeId: state.inspectorState.nodeId, tabMode: mode }
-            : { type: 'record', recordId: state.inspectorState.recordId, tabMode: mode };
-
-        return {
-          inspectorMode: mode,
-          inspectorState: newInspectorState,
-        };
-      }),
-
-      setInspectorTabMode: (mode) => set((state) => {
-        // Alias for setInspectorMode with clearer naming
-        const newInspectorState: InspectorState = state.inspectorState.type === 'none'
-          ? { type: 'none' }
-          : state.inspectorState.type === 'node'
-            ? { type: 'node', nodeId: state.inspectorState.nodeId, tabMode: mode }
-            : { type: 'record', recordId: state.inspectorState.recordId, tabMode: mode };
-
-        return {
-          inspectorMode: mode,
-          inspectorState: newInspectorState,
-        };
-      }),
-
-      inspectRecord: (id) => set({
-        inspectedRecordId: id,
-        inspectedNodeId: null,
-        inspectorMode: 'record',
-        inspectorState: id
-          ? { type: 'record', recordId: id, tabMode: 'record' }
-          : { type: 'none' },
-      }),
-
-      inspectNode: (id) => set({
-        inspectedNodeId: id,
-        inspectedRecordId: null,
-        inspectorMode: 'record',
-        inspectorState: id
-          ? { type: 'node', nodeId: id, tabMode: 'record' }
-          : { type: 'none' },
-      }),
-
-      clearInspector: () => set({
-        inspectedRecordId: null,
-        inspectedNodeId: null,
-        inspectorMode: 'record',
-        inspectorState: { type: 'none' },
-      }),
-
-      setSidebarWidth: (width) => set({ sidebarWidth: Math.max(200, Math.min(400, width)) }),
-      setInspectorWidth: (width) => set({ inspectorWidth: Math.max(300, Math.min(500, width)) }),
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       toggleInspector: () => set((state) => ({ inspectorCollapsed: !state.inspectorCollapsed })),
-      setViewMode: (mode) => set({ viewMode: mode }),
+      setSidebarWidth: (width) => set({ sidebarWidth: Math.max(200, Math.min(400, width)) }),
+      setInspectorWidth: (width) => set({ inspectorWidth: Math.max(300, Math.min(500, width)) }),
+
+      setViewMode: (mode) => set((state) => {
+        // Clear selection when switching to views that may not support current selection
+        const shouldClearSelection =
+          mode === 'calendar' || // Calendar shows tasks with due dates only
+          (mode === 'columns' && state.viewMode !== 'columns'); // Miller columns has its own navigation
+
+        return {
+          viewMode: mode,
+          ...(shouldClearSelection ? { selection: null } : {}),
+        };
+      }),
       setTheme: (theme) => set({ theme }),
 
-      setDrawerHeight: (height) => set({ drawerHeight: Math.max(100, Math.min(600, height)) }),
       openDrawer: (type, props = {}) => set({ activeDrawer: { type, props } }),
       closeDrawer: () => set({ activeDrawer: null }),
+      setDrawerHeight: (height) => set({ drawerHeight: Math.max(100, Math.min(600, height)) }),
+
+      // Legacy compatibility getters - derived from selection
+      get inspectedNodeId() {
+        const sel = get().selection;
+        return sel?.type === 'node' ? sel.id : null;
+      },
+      get inspectedRecordId() {
+        const sel = get().selection;
+        return sel?.type === 'record' ? sel.id : null;
+      },
+      get inspectorMode() {
+        return get().inspectorTabMode;
+      },
+      setInspectorMode: (mode) => set({ inspectorTabMode: mode }),
+      inspectRecord: (recordId) => set({ selection: { type: 'record', id: recordId }, inspectorCollapsed: false }),
+      inspectNode: (nodeId) => set({ selection: { type: 'node', id: nodeId }, inspectorCollapsed: false }),
+      clearInspection: () => set({ selection: null }),
     }),
     {
       name: 'ui-storage',
@@ -156,32 +127,22 @@ export const useUIStore = create<UIState>()(
         viewMode: state.viewMode,
         theme: state.theme,
         drawerHeight: state.drawerHeight,
+        inspectorTabMode: state.inspectorTabMode,
+        activeProjectId: state.activeProjectId,
       }),
     }
   )
 );
 
-/**
- * Helper selector to get the current inspector context
- */
-export function getInspectorContext(state: UIState): {
-  itemId: string | null;
-  isNode: boolean;
-  tabMode: InspectorTabMode;
-} {
-  if (state.inspectorState.type === 'none') {
-    return { itemId: null, isNode: false, tabMode: 'record' };
-  }
-  if (state.inspectorState.type === 'node') {
-    return {
-      itemId: state.inspectorState.nodeId,
-      isNode: true,
-      tabMode: state.inspectorState.tabMode,
-    };
-  }
-  return {
-    itemId: state.inspectorState.recordId,
-    isNode: false,
-    tabMode: state.inspectorState.tabMode,
-  };
-}
+// Helper to get derived panels from the store state
+export const useUIPanels = (): UIPanels => {
+  const state = useUIStore();
+  return deriveUIPanels({
+    selection: state.selection,
+    viewMode: state.viewMode,
+    activeDrawer: state.activeDrawer,
+    inspectorCollapsed: state.inspectorCollapsed,
+    sidebarCollapsed: state.sidebarCollapsed,
+    inspectorTabMode: state.inspectorTabMode,
+  });
+};

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Copy, AlertCircle, Trash2, Pin } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Copy, AlertCircle, Trash2, Pin, Edit2, Check, X } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useUIStore } from '../../../stores/uiStore';
 import { EmojiPicker } from '../../common/EmojiPicker';
@@ -11,8 +11,10 @@ import {
   useUpdateDefinition,
   useCreateDefinition,
   useDeleteDefinition,
+  useUpdateNode,
 } from '../../../api/hooks';
-import type { NodeType, FieldDef, RecordDefinition } from '../../../types';
+import { DEFAULT_TASK_FIELDS } from '../../../utils/nodeMetadata';
+import type { NodeType, FieldDef, RecordDefinition, HierarchyNode } from '../../../types';
 
 const STYLE_COLORS = [
   { name: 'orange', class: 'bg-orange-500' },
@@ -40,6 +42,8 @@ interface SchemaEditorViewProps {
 export function SchemaEditorView({ itemId, isNode }: SchemaEditorViewProps) {
   const { openDrawer, setInspectorMode } = useUIStore();
   const [isCreatingDefinition, setIsCreatingDefinition] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
 
   const { data: node } = useNode(isNode ? itemId : null);
   const { data: record } = useRecord(isNode ? null : itemId);
@@ -47,12 +51,15 @@ export function SchemaEditorView({ itemId, isNode }: SchemaEditorViewProps) {
   const updateDefinition = useUpdateDefinition();
   const createDefinition = useCreateDefinition();
   const deleteDefinition = useDeleteDefinition();
+  const updateNode = useUpdateNode();
 
   const item = node || record;
   if (!item) return null;
 
   const nodeType = isNode ? (item as { type: NodeType }).type : 'record';
-  const definitionId = !isNode ? (item as { definition_id: string }).definition_id : null;
+  const definitionId = !isNode
+    ? (item as { definition_id: string }).definition_id
+    : (item as unknown as HierarchyNode).default_record_def_id;
 
   // Find definition for this item
   let definition: RecordDefinition | undefined;
@@ -64,7 +71,62 @@ export function SchemaEditorView({ itemId, isNode }: SchemaEditorViewProps) {
     definition = definitions.find((d) => d.name === typeName);
   }
 
-  const fields = definition?.schema_config?.fields || [];
+  const handleSaveName = async () => {
+    if (!definition || !editedName.trim()) return;
+
+    // If we are renaming a node definition that wasn't explicitly linked, link it now
+    if (isNode && !(item as unknown as HierarchyNode).default_record_def_id) {
+      await updateNode.mutateAsync({
+        id: item.id,
+        default_record_def_id: definition.id,
+      });
+    }
+
+    await updateDefinition.mutateAsync({
+      id: definition.id,
+      name: editedName,
+    });
+    setIsEditingName(false);
+  };
+
+  const startEditingName = () => {
+    if (definition) {
+      setEditedName(definition.name);
+      setIsEditingName(true);
+    }
+  };
+
+  // For Task type, merge default fields with custom definition fields
+  const fields = useMemo(() => {
+    const definitionFields = definition?.schema_config?.fields || [];
+
+    // For Task nodes, show defaults merged with any custom fields
+    if (nodeType === 'task') {
+      // Start with defaults converted to FieldDef (excluding title which is handled separately)
+      const defaultFields: FieldDef[] = DEFAULT_TASK_FIELDS
+        .filter((f) => f.key !== 'title')
+        .map((f) => {
+          // Check if this field is overridden in definition
+          const override = definitionFields.find((df) => df.key === f.key);
+          return override || {
+            key: f.key,
+            type: f.type,
+            label: f.label,
+            required: f.required,
+            options: f.options,
+          };
+        });
+
+      // Add any custom fields from definition that aren't in defaults
+      const defaultKeys = DEFAULT_TASK_FIELDS.map((f) => f.key);
+      const customFields = definitionFields.filter((f) => !defaultKeys.includes(f.key));
+
+      return [...defaultFields, ...customFields];
+    }
+
+    return definitionFields;
+  }, [definition?.schema_config?.fields, nodeType]);
+
   const currentColor = definition?.styling?.color || 'orange';
 
   // Auto-create definition for node types if it doesn't exist
@@ -175,8 +237,29 @@ export function SchemaEditorView({ itemId, isNode }: SchemaEditorViewProps) {
     });
   };
 
-  // System fields that can't be deleted
+  // System fields that can't be deleted (only truly required ones)
   const systemFields = ['title', 'name'];
+
+  // Default task fields - can be deleted but shown with indicator
+  const defaultTaskFieldKeys = DEFAULT_TASK_FIELDS.map((f) => f.key);
+
+  const handleDuplicateField = async (field: FieldDef) => {
+    if (!definition) return;
+
+    // Create a copy with a new key
+    const newKey = `${field.key}_copy`;
+    const newField: FieldDef = {
+      ...field,
+      key: newKey,
+      label: `${field.label} (Copy)`,
+    };
+
+    const updatedFields = [...(definition.schema_config?.fields || []), newField];
+    await updateDefinition.mutateAsync({
+      id: definition.id,
+      schemaConfig: { fields: updatedFields },
+    });
+  };
 
   return (
     <div className="fade-in space-y-6">
@@ -186,9 +269,48 @@ export function SchemaEditorView({ itemId, isNode }: SchemaEditorViewProps) {
             <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">
               Editing Class Definition
             </div>
-            <div className="text-lg font-bold capitalize">
-              {definition?.name || nodeType} Record
-            </div>
+            {isEditingName ? (
+              <div className="flex items-center gap-1">
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  className="bg-slate-700 text-white border border-slate-600 rounded px-2 py-0.5 text-lg font-bold capitalize w-48 focus:outline-none focus:border-blue-500"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveName();
+                    if (e.key === 'Escape') setIsEditingName(false);
+                  }}
+                />
+                <button
+                  onClick={handleSaveName}
+                  className="p-1 text-green-400 hover:bg-slate-700 rounded"
+                >
+                  <Check size={16} />
+                </button>
+                <button
+                  onClick={() => setIsEditingName(false)}
+                  className="p-1 text-slate-400 hover:bg-slate-700 rounded"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 group">
+                <div className="text-lg font-bold capitalize">
+                  {definition?.name || nodeType} Record
+                </div>
+                {definition && (
+                  <button
+                    onClick={startEditingName}
+                    className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-white transition-opacity"
+                    title="Rename definition"
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex gap-2">
             {definition && <CloneExcludedToggle definition={definition} theme="dark" />}
@@ -242,34 +364,48 @@ export function SchemaEditorView({ itemId, isNode }: SchemaEditorViewProps) {
         ) : (
           fields.map((field) => {
             const isSystem = systemFields.includes(field.key);
+            const isDefault = nodeType === 'task' && defaultTaskFieldKeys.includes(field.key);
             return (
               <div
                 key={field.key}
-                className={`flex items-center justify-between p-2 ${
-                  isSystem ? 'bg-slate-50' : 'bg-white'
-                } border border-slate-200 rounded hover:shadow-sm transition-all group`}
+                className={`flex items-center justify-between p-2 ${isSystem ? 'bg-slate-50' : isDefault ? 'bg-blue-50/50' : 'bg-white'
+                  } border border-slate-200 rounded hover:shadow-sm transition-all group`}
               >
                 <div className="flex items-center gap-2">
                   <span
-                    className={`text-xs font-mono ${
-                      field.type === 'link' ? 'text-blue-500' : 'text-slate-400'
-                    }`}
+                    className={`text-xs font-mono ${field.type === 'link' ? 'text-blue-500' : field.type === 'user' ? 'text-purple-500' : field.type === 'status' ? 'text-amber-500' : 'text-slate-400'
+                      }`}
                   >
                     {field.type}
                   </span>
                   <span className="text-sm font-semibold text-slate-700">{field.label}</span>
                   {field.required && <span className="text-[10px] text-red-500">*</span>}
+                  {isDefault && !isSystem && (
+                    <span className="text-[10px] text-blue-500 bg-blue-100 px-1.5 py-0.5 rounded">default</span>
+                  )}
                 </div>
-                {isSystem ? (
-                  <span className="text-[10px] text-slate-400">System Required</span>
-                ) : (
-                  <button
-                    onClick={() => confirmRemoveField(field.key)}
-                    className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity text-lg"
-                  >
-                    ×
-                  </button>
-                )}
+                <div className="flex items-center gap-1">
+                  {isSystem ? (
+                    <span className="text-[10px] text-slate-400">System Required</span>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleDuplicateField(field)}
+                        className="text-slate-300 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                        title="Duplicate field"
+                      >
+                        <Copy size={14} />
+                      </button>
+                      <button
+                        onClick={() => confirmRemoveField(field.key)}
+                        className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                        title="Delete field"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             );
           })
@@ -308,11 +444,10 @@ export function SchemaEditorView({ itemId, isNode }: SchemaEditorViewProps) {
                   <button
                     key={color.name}
                     onClick={() => handleColorChange(color.name)}
-                    className={`w-6 h-6 rounded ${color.class} cursor-pointer transition-all ${
-                      currentColor === color.name
-                        ? 'ring-2 ring-offset-1 ring-current opacity-100'
-                        : 'opacity-30 hover:opacity-100'
-                    }`}
+                    className={`w-6 h-6 rounded ${color.class} cursor-pointer transition-all ${currentColor === color.name
+                      ? 'ring-2 ring-offset-1 ring-current opacity-100'
+                      : 'opacity-30 hover:opacity-100'
+                      }`}
                     title={color.name}
                   />
                 ))}

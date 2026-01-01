@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Plus, FolderTree, X } from 'lucide-react';
 import { useUIStore } from '../../../stores/uiStore';
-import { useHierarchyStore } from '../../../stores/hierarchyStore';
 import {
   useRecordDefinition,
   useCreateRecord,
@@ -16,10 +15,9 @@ interface CreateRecordViewProps {
 }
 
 export function CreateRecordView({ definitionId, classificationNodeId: initialNodeId }: CreateRecordViewProps) {
-  const { closeDrawer, inspectRecord } = useUIStore();
-  const { selectedProjectId } = useHierarchyStore();
+  const { closeDrawer, activeProjectId, setSelection } = useUIStore();
   const { data: definition, isLoading } = useRecordDefinition(definitionId);
-  const { data: projectNodes } = useProjectTree(selectedProjectId);
+  const { data: projectNodes } = useProjectTree(activeProjectId);
   const createRecord = useCreateRecord();
 
   const [uniqueName, setUniqueName] = useState('');
@@ -64,7 +62,7 @@ export function CreateRecordView({ definitionId, classificationNodeId: initialNo
       // Open the newly created record in inspector
       if (result.record) {
         closeDrawer();
-        inspectRecord(result.record.id);
+        setSelection({ type: 'record', id: result.record.id });
       }
     } catch (err) {
       console.error('Failed to create record:', err);

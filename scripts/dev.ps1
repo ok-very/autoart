@@ -9,6 +9,8 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectDir = Split-Path -Parent $ScriptDir
 
+. "$ScriptDir\config.ps1"
+
 Set-Location $ProjectDir
 
 Write-Host ""
@@ -26,13 +28,7 @@ if (-not (Test-Path ".env")) {
 }
 
 # Load .env file
-if (Test-Path ".env") {
-    Get-Content ".env" | ForEach-Object {
-        if ($_ -match "^([^#=]+)=(.*)$") {
-            Set-Item -Path "env:$($matches[1].Trim())" -Value $matches[2].Trim()
-        }
-    }
-}
+Import-AutoArtEnv
 
 Write-Host "[*] Starting backend server..." -ForegroundColor Green
 $backendJob = Start-Job -Name "AutoArt-Backend" -ScriptBlock {
@@ -57,8 +53,8 @@ Write-Host "======================================" -ForegroundColor Green
 Write-Host "  AutoArt is running!" -ForegroundColor Green
 Write-Host "======================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "  Frontend: http://localhost:5173" -ForegroundColor White
-Write-Host "  Backend:  http://localhost:3001" -ForegroundColor White
+Write-Host "  Frontend: http://localhost:$($script:AutoArt.FrontendPort)" -ForegroundColor White
+Write-Host "  Backend:  http://localhost:$($script:AutoArt.BackendPort)" -ForegroundColor White
 Write-Host ""
 Write-Host "  Demo Login:" -ForegroundColor Gray
 Write-Host "    Email:    demo@autoart.local" -ForegroundColor Gray

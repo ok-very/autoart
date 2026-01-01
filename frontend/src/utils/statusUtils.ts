@@ -1,4 +1,4 @@
-export type StatusKey = 'done' | 'working' | 'stuck' | 'empty' | string;
+export type StatusKey = 'empty' | 'not-started' | 'in-progress' | 'blocked' | 'review' | 'done' | string;
 
 export interface StatusDistribution {
   status: string;
@@ -8,24 +8,28 @@ export interface StatusDistribution {
 }
 
 export const STATUS_COLORS: Record<string, string> = {
-  done: '#00c875',
-  working: '#fdab3d',
-  stuck: '#e2445c',
-  empty: '#c4c4c4',
+  empty: '#cbd5e1',
+  'not-started': '#94a3b8',
+  'in-progress': '#f59e0b',
+  blocked: '#ef4444',
+  review: '#a855f7',
+  done: '#10b981',
   default: '#c4c4c4'
 };
 
 export const STATUS_LABELS: Record<string, string> = {
-  done: 'Done',
-  working: 'Working',
-  stuck: 'Stuck',
-  empty: ''
+  empty: '',
+  'not-started': 'Not Started',
+  'in-progress': 'In Progress',
+  blocked: 'Blocked',
+  review: 'Review',
+  done: 'Done'
 };
 
 /**
  * Calculates the percentage distribution of statuses.
  * @param items Array of items to analyze
- * @param statusAccessor Function to extract status from an item (should return 'done', 'working', 'stuck', etc.)
+ * @param statusAccessor Function to extract status from an item (should return 'done', 'in-progress', 'blocked', etc.)
  */
 export function calculateStatusDistribution<T>(
   items: T[],
@@ -35,19 +39,21 @@ export function calculateStatusDistribution<T>(
 
   const counts: Record<string, number> = {
     done: 0,
-    working: 0,
-    stuck: 0,
+    review: 0,
+    blocked: 0,
+    'in-progress': 0,
+    'not-started': 0,
     empty: 0
   };
 
   // specific order for the bar segments
-  const displayOrder = ['done', 'working', 'stuck', 'empty'];
+  const displayOrder = ['done', 'review', 'blocked', 'in-progress', 'not-started', 'empty'];
   const otherStatuses: string[] = [];
 
   items.forEach(item => {
     const rawStatus = statusAccessor(item);
     const status = rawStatus ? rawStatus.toLowerCase() : 'empty';
-    
+
     if (displayOrder.includes(status)) {
       counts[status] = (counts[status] || 0) + 1;
     } else {

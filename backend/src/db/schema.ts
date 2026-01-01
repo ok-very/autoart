@@ -1,8 +1,49 @@
 import type { Generated, Insertable, Selectable, Updateable } from 'kysely';
 
-// Enums
-export type NodeType = 'project' | 'process' | 'stage' | 'subprocess' | 'task';
-export type RefMode = 'static' | 'dynamic';
+// Re-export shared types and schemas for use across the backend
+export {
+  // Types
+  type NodeType,
+  type RefMode,
+  type FieldType,
+  type FieldDef,
+  type SchemaConfig,
+  type Styling,
+  type ResolvedReference,
+  type SearchResult,
+
+  // Schemas for validation
+  NodeTypeSchema,
+  RefModeSchema,
+  FieldDefSchema,
+  SchemaConfigSchema,
+  StylingSchema,
+  CreateNodeInputSchema,
+  UpdateNodeInputSchema,
+  MoveNodeInputSchema,
+  CloneNodeInputSchema,
+  CreateDefinitionInputSchema,
+  UpdateDefinitionInputSchema,
+  CreateRecordInputSchema,
+  UpdateRecordInputSchema,
+  BulkClassifyInputSchema,
+  BulkDeleteInputSchema,
+  SaveToLibraryInputSchema,
+  ToggleCloneExcludedInputSchema,
+  CreateReferenceInputSchema,
+  UpdateReferenceModeInputSchema,
+  UpdateReferenceSnapshotInputSchema,
+  BulkResolveInputSchema,
+  LoginInputSchema,
+  RegisterInputSchema,
+  CreateLinkInputSchema,
+  SearchQueryInputSchema,
+} from '@autoart/shared';
+
+// ============================================
+// KYSELY TABLE DEFINITIONS
+// These are database-specific and include Generated<> types
+// ============================================
 
 // Users Table
 export interface UsersTable {
@@ -34,7 +75,7 @@ export interface HierarchyNodesTable {
   id: Generated<string>;
   parent_id: string | null;
   root_project_id: string | null;
-  type: NodeType;
+  type: 'project' | 'process' | 'stage' | 'subprocess' | 'task';
   title: string;
   description: unknown | null; // TipTap JSON document
   position: Generated<number>;
@@ -90,7 +131,7 @@ export interface TaskReferencesTable {
   task_id: string;
   source_record_id: string | null;
   target_field_key: string | null;
-  mode: Generated<RefMode>;
+  mode: Generated<'static' | 'dynamic'>;
   snapshot_value: unknown | null; // JSONB
   created_at: Generated<Date>;
 }

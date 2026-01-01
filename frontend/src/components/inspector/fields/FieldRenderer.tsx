@@ -1,12 +1,21 @@
 import { clsx } from 'clsx';
 import { RichTextInput } from '../../editor/RichTextInput';
 import { LinkFieldInput } from '../LinkFieldInput';
+import { UserMentionInput } from './UserMentionInput';
+import { TagsInput } from './TagsInput';
 import type { FieldDef } from '../../../types';
+import type { TaskStatus } from '../../../utils/nodeMetadata';
 
 /**
  * Field type registry - maps field types to their render components
  */
-type FieldType = 'text' | 'textarea' | 'number' | 'email' | 'url' | 'select' | 'checkbox' | 'date' | 'link';
+type FieldType = 'text' | 'textarea' | 'number' | 'email' | 'url' | 'select' | 'checkbox' | 'date' | 'link' | 'status' | 'percent' | 'user' | 'tags';
+
+// Status styling config - import from shared
+import { TASK_STATUS_CONFIG, TaskStatusSchema } from '../../../utils/nodeMetadata';
+
+// Get status options from schema
+const STATUS_OPTIONS = TaskStatusSchema.options;
 
 export interface FieldRendererProps {
   fieldKey: string;
@@ -36,15 +45,38 @@ export function FieldRenderer({
   const type = (fieldDef?.type || 'text') as FieldType;
 
   // Link field type - uses specialized LinkFieldInput
-  if (type === 'link' && taskId) {
+  if (type === 'link' && (taskId || currentRecordId)) {
     return (
       <LinkFieldInput
         value={String(value || '')}
         fieldKey={fieldKey}
         taskId={taskId}
+        currentRecordId={currentRecordId}
         onChange={(val) => onChange(val)}
         readOnly={readOnly}
         targetDefinitionId={(fieldDef as FieldDef & { targetDefinitionId?: string })?.targetDefinitionId}
+      />
+    );
+  }
+
+  // User field type - uses UserMentionInput with @mention support
+  if (type === 'user') {
+    return (
+      <UserMentionInput
+        value={value}
+        onChange={onChange}
+        readOnly={readOnly}
+      />
+    );
+  }
+
+  // Tags field type - uses TagsInput for array of strings
+  if (type === 'tags') {
+    return (
+      <TagsInput
+        value={value}
+        onChange={onChange}
+        readOnly={readOnly}
       />
     );
   }
@@ -115,6 +147,64 @@ export function FieldRenderer({
             {isChecked ? 'Yes' : 'No'}
           </span>
         </label>
+      </div>
+    );
+  }
+
+  // Status field - colored pill buttons matching workflow table
+  if (type === 'status') {
+    const currentStatus = (value as TaskStatus) || 'empty';
+    return (
+      <div className="flex gap-1 flex-wrap">
+        {STATUS_OPTIONS.map((status) => {
+          const cfg = TASK_STATUS_CONFIG[status];
+          const isSelected = status === currentStatus;
+          return (
+            <button
+              key={status}
+              type="button"
+              onClick={() => !readOnly && onChange(status)}
+              disabled={readOnly}
+              className={clsx(
+                'px-2 h-7 rounded text-xs font-semibold transition-all',
+                isSelected ? cfg.colorClass : 'bg-slate-100 text-slate-400 hover:bg-slate-200',
+                readOnly && 'cursor-default'
+              )}
+            >
+              {cfg.label || 'Empty'}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Percent field - slider with visual bar
+  if (type === 'percent') {
+    const percent = typeof value === 'number' ? value : parseInt(String(value || '0'), 10) || 0;
+    const clampedPercent = Math.max(0, Math.min(100, percent));
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={clampedPercent}
+            onChange={(e) => onChange(parseInt(e.target.value, 10))}
+            disabled={readOnly}
+            className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+          />
+          <span className="w-12 text-right text-sm font-medium text-slate-700 tabular-nums">
+            {clampedPercent}%
+          </span>
+        </div>
+        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-emerald-500 transition-all"
+            style={{ width: `${clampedPercent}%` }}
+          />
+        </div>
       </div>
     );
   }

@@ -3,8 +3,15 @@
   "version": "1.0.0",
   "description": "AutoArt Process Management System",
   "private": true,
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
   "scripts": {
+    "build:shared": "cd shared && npm run build",
     "dev": "powershell -ExecutionPolicy Bypass -File scripts/dev.ps1",
+    "dev:kill": "powershell -ExecutionPolicy Bypass -File scripts/kill-dev.ps1",
     "backup": "powershell -ExecutionPolicy Bypass -File scripts/backup.ps1",
     "db:verify": "powershell -ExecutionPolicy Bypass -File scripts/db-verify.ps1",
     "install:all": "cd backend && npm install && cd ../frontend && npm install",
@@ -19,7 +26,13 @@
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build"
   },
-  "keywords": ["process-management", "workflow", "postgres", "fastify", "react"],
+  "keywords": [
+    "process-management",
+    "workflow",
+    "postgres",
+    "fastify",
+    "react"
+  ],
   "author": "",
   "license": "MIT"
 }

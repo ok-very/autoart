@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { clsx } from 'clsx';
 import { Search, X, ArrowLeft } from 'lucide-react';
 import { useSearch } from '../../api/hooks';
-import { useHierarchyStore } from '../../stores/hierarchyStore';
+import { useUIStore } from '../../stores/uiStore';
 import { fuzzySearch } from '../../utils/fuzzySearch';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import type { SearchResult } from '../../types';
@@ -40,7 +40,7 @@ export function RecordSearchCombobox({
   excludeRecordId,
   parentRef,
 }: RecordSearchComboboxProps) {
-  const { selectedProjectId } = useHierarchyStore();
+  const { activeProjectId } = useUIStore();
   const [query, setQuery] = useState(initialQuery);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedItem, setSelectedItem] = useState<SearchResult | null>(null);
@@ -55,7 +55,7 @@ export function RecordSearchCombobox({
   const shouldShowFieldSelection = showFieldSelection ?? triggerChar === '#';
 
   // Search with API
-  const { data: results, isLoading } = useSearch(query, selectedProjectId || undefined, true);
+  const { data: results, isLoading } = useSearch(query, activeProjectId || undefined, true);
 
   // Apply fuzzy filtering on client-side
   const filteredItems = useMemo(() => {

@@ -11,8 +11,8 @@ interface TreeNodeProps {
 }
 
 export function TreeNode({ node, level }: TreeNodeProps) {
-  const { getChildren, expandedIds, toggleExpand, selectedNodeId, selectNode } = useHierarchyStore();
-  const { inspectNode, inspectedNodeId, openDrawer } = useUIStore();
+  const { getChildren, expandedIds, toggleExpand } = useHierarchyStore();
+  const { selection, setSelection, openDrawer } = useUIStore();
   const deleteNode = useDeleteNode();
   const moveNode = useMoveNode();
   const cloneNode = useCloneNode();
@@ -23,7 +23,8 @@ export function TreeNode({ node, level }: TreeNodeProps) {
 
   const hasChildren = children.length > 0;
   const isExpanded = expandedIds.has(node.id);
-  const isSelected = selectedNodeId === node.id;
+  
+  const isSelected = selection?.type === 'node' && selection.id === node.id;
 
   const isFolder = node.type === 'stage';
   const isSubprocess = node.type === 'subprocess';
@@ -35,10 +36,7 @@ export function TreeNode({ node, level }: TreeNodeProps) {
   const canMoveDown = validIndex && index < siblings.length - 1;
 
   const handleClick = () => {
-    selectNode(node.id);
-    if (isSubprocess) {
-      inspectNode(node.id);
-    }
+    setSelection({ type: 'node', id: node.id });
   };
 
   const handleToggle = (e: React.MouseEvent) => {
@@ -59,9 +57,9 @@ export function TreeNode({ node, level }: TreeNodeProps) {
       itemName: node.title,
       onConfirm: async () => {
         await deleteNode.mutateAsync(node.id);
-        // Clear inspection if this node was being inspected
-        if (inspectedNodeId === node.id) {
-          inspectNode(null);
+        // Clear selection if this node was selected
+        if (isSelected) {
+          setSelection(null);
         }
       },
     });
@@ -110,8 +108,6 @@ export function TreeNode({ node, level }: TreeNodeProps) {
   };
 
   // Determine if this node can be deleted/moved/cloned (not projects or processes at root)
-  // Assuming 'process' is also a root-ish thing that shouldn't be casually moved/deleted in this view?
-  // Original code: const canDelete = node.type !== 'project' && node.type !== 'process';
   const canModify = node.type !== 'project' && node.type !== 'process';
 
   return (

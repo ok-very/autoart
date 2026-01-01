@@ -8,10 +8,6 @@
  * - schema_config is JSONB containing field definitions
  * - derived_from_id enables schema inheritance/forking
  * - styling allows per-type visual customization
- * - project_id links a definition to a specific project's template library
- * - is_template marks definition as a reusable template
- * - clone_excluded when true, definition is NOT cloned when cloning projects
- * - pinned when true, definition appears in quick create menu
  *
  * Example schema_config:
  * {
@@ -42,11 +38,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('created_at', 'timestamptz', (col) =>
       col.notNull().defaultTo(sql`NOW()`)
     )
-    // Template/library columns (consolidated from migrations 011, 012, 014)
-    .addColumn('project_id', 'uuid') // FK added after hierarchy_nodes table exists
-    .addColumn('is_template', 'boolean', (col) => col.notNull().defaultTo(false))
-    .addColumn('clone_excluded', 'boolean', (col) => col.notNull().defaultTo(false))
-    .addColumn('pinned', 'boolean', (col) => col.notNull().defaultTo(false))
     .execute();
 
   // Index for finding derived definitions
@@ -55,11 +46,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .on('record_definitions')
     .column('derived_from_id')
     .execute();
-
-  // Unique constraint on name for idempotent inserts
-  await sql`
-    ALTER TABLE record_definitions ADD CONSTRAINT record_definitions_name_unique UNIQUE (name)
-  `.execute(db);
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {

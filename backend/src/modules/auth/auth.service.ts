@@ -123,3 +123,19 @@ export async function getUserById(userId: string) {
     .where('id', '=', userId)
     .executeTakeFirst();
 }
+
+export async function searchUsers(query: string, limit: number = 10) {
+  const searchPattern = `%${query.toLowerCase()}%`;
+
+  return db
+    .selectFrom('users')
+    .select(['id', 'email', 'name'])
+    .where((eb) =>
+      eb.or([
+        eb('email', 'ilike', searchPattern),
+        eb('name', 'ilike', searchPattern),
+      ])
+    )
+    .limit(limit)
+    .execute();
+}

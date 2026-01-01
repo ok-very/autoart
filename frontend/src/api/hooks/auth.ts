@@ -48,3 +48,12 @@ export function useCurrentUser() {
     staleTime: 5 * 60 * 1000,
   });
 }
+
+export function useSearchUsers(query: string, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['users', 'search', query],
+    queryFn: () => api.get<{ users: User[] }>(`/auth/users/search?q=${encodeURIComponent(query)}`).then(r => r.users),
+    enabled: enabled && query.length >= 1,
+    staleTime: 30 * 1000, // 30 seconds
+  });
+}

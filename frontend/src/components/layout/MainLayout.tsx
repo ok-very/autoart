@@ -4,11 +4,12 @@ import { Header } from './Header';
 import { Sidebar } from '../hierarchy/Sidebar';
 import { Workspace } from './Workspace';
 import { MillerColumnsView } from './MillerColumnsView';
-import { ProjectListView } from './ProjectListView';
+import { ProjectWorkflowView } from './ProjectWorkflowView';
+import { CalendarView } from './CalendarView';
 import { RecordInspector } from '../inspector/RecordInspector';
 import { BottomDrawer } from '../drawer/BottomDrawer';
 import { ResizeHandle } from '../common/ResizeHandle';
-import { useUIStore } from '../../stores/uiStore';
+import { useUIStore, useUIPanels } from '../../stores/uiStore';
 
 // Local error boundary for inspector to prevent full app crash
 interface InspectorErrorBoundaryState {
@@ -53,7 +54,8 @@ class InspectorErrorBoundary extends Component<{ children: ReactNode; width: num
 }
 
 export function MainLayout() {
-  const { sidebarWidth, inspectorWidth, setSidebarWidth, setInspectorWidth, viewMode } = useUIStore();
+  const { sidebarWidth, inspectorWidth, setSidebarWidth, setInspectorWidth } = useUIStore();
+  const panels = useUIPanels();
 
   const handleSidebarResize = useCallback(
     (delta: number) => {
@@ -69,46 +71,38 @@ export function MainLayout() {
     [inspectorWidth, setInspectorWidth]
   );
 
-  // Miller Columns view has its own layout
-  if (viewMode === 'columns') {
-    return (
-      <div className="flex flex-col h-full">
-        <Header />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <MillerColumnsView />
-          <BottomDrawer />
-        </div>
-      </div>
-    );
-  }
-
-  // Project List view
-  if (viewMode === 'project-list') {
-    return (
-      <div className="flex flex-col h-full">
-        <Header />
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <ProjectListView />
-          <BottomDrawer />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full">
       <Header />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar />
-          <ResizeHandle direction="right" onResize={handleSidebarResize} />
-          <Workspace />
-          <ResizeHandle direction="left" onResize={handleInspectorResize} />
-          <InspectorErrorBoundary width={inspectorWidth}>
-            <RecordInspector />
-          </InspectorErrorBoundary>
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar Slot */}
+        {panels.sidebar === 'projectTree' && (
+          <>
+            <Sidebar />
+            <ResizeHandle direction="right" onResize={handleSidebarResize} />
+          </>
+        )}
+
+        {/* Workspace Slot */}
+        <div className="flex-1 flex flex-col overflow-hidden relative">
+          {panels.workspace === 'millerColumns' && <MillerColumnsView />}
+          {panels.workspace === 'projectWorkflow' && <ProjectWorkflowView />}
+          {panels.workspace === 'calendar' && <CalendarView />}
+          {(panels.workspace === 'grid' || panels.workspace === 'details') && <Workspace />}
+
+          {/* Drawer Slot - positioned at bottom of workspace container for now or fixed */}
+          <BottomDrawer />
         </div>
-        <BottomDrawer />
+
+        {/* Inspector Slot */}
+        {panels.inspector && (
+          <>
+            <ResizeHandle direction="left" onResize={handleInspectorResize} />
+            <InspectorErrorBoundary width={inspectorWidth}>
+              <RecordInspector />
+            </InspectorErrorBoundary>
+          </>
+        )}
       </div>
     </div>
   );

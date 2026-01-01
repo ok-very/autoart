@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../client';
-import type { RecordDefinition } from '../../types';
+import type { RecordDefinition, CreateDefinitionInput, UpdateDefinitionInput } from '../../types';
 
 // ==================== RECORD DEFINITIONS ====================
 // Base CRUD operations
@@ -20,12 +20,6 @@ export function useRecordDefinition(id: string | null) {
   });
 }
 
-interface CreateDefinitionInput {
-  name: string;
-  schemaConfig: { fields: RecordDefinition['schema_config']['fields'] };
-  styling?: RecordDefinition['styling'];
-}
-
 export function useCreateDefinition() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -37,18 +31,10 @@ export function useCreateDefinition() {
   });
 }
 
-interface UpdateDefinitionInput {
-  id: string;
-  name?: string;
-  schemaConfig?: { fields: RecordDefinition['schema_config']['fields'] };
-  styling?: RecordDefinition['styling'];
-  pinned?: boolean;
-}
-
 export function useUpdateDefinition() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...data }: UpdateDefinitionInput) =>
+    mutationFn: ({ id, ...data }: { id: string } & UpdateDefinitionInput) =>
       api.patch<{ definition: RecordDefinition }>(`/records/definitions/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['definitions'] });

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../client';
-import type { DataRecord } from '../../types';
+import type { DataRecord, CreateRecordInput, UpdateRecordInput } from '../../types';
 
 // ==================== RECORDS DATA ====================
 
@@ -34,7 +34,7 @@ export function useRecord(id: string | null) {
 export function useCreateRecord() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<DataRecord>) =>
+    mutationFn: (data: CreateRecordInput) =>
       api.post<{ record: DataRecord }>('/records', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['records'] });
@@ -45,7 +45,7 @@ export function useCreateRecord() {
 export function useUpdateRecord() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: string } & Partial<DataRecord>) =>
+    mutationFn: ({ id, ...data }: { id: string } & UpdateRecordInput) =>
       api.patch<{ record: DataRecord }>(`/records/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['records'] });

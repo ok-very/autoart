@@ -228,6 +228,18 @@ Creates compressed backups in `backups/` with automatic cleanup of old files.
 
 Starts both backend and frontend servers.
 
+### Kill Existing Dev Servers
+If you hit `EADDRINUSE` (ports already in use), run:
+```powershell
+.\scripts\kill-dev.ps1
+```
+
+This stops any processes listening on the default dev ports (backend `3001`, frontend `5173`).
+
+### Shared Script Config
+PowerShell scripts under `scripts/` share common settings/helpers via:
+- `scripts/config.ps1`
+
 ---
 
 ## Migration System

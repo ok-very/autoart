@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Header } from '../components/layout/Header';
 import { RecordTypeSidebar } from '../components/records/RecordTypeSidebar';
-import { RecordGrid } from '../components/records/RecordGrid';
+import { UniversalTableView } from '../components/tables/UniversalTableView';
 import { RecordInspector } from '../components/inspector/RecordInspector';
 import { BottomDrawer } from '../components/drawer/BottomDrawer';
 import { ResizeHandle } from '../components/common/ResizeHandle';
@@ -11,7 +11,8 @@ import { useUIStore } from '../stores/uiStore';
  * Records workspace page for managing records (contacts, artworks, locations, etc.)
  * outside of the project hierarchy context.
  *
- * Layout: Left sidebar (definition types) | Main grid (records) | Right inspector
+ * Uses the UniversalTableView component for unified visualization of any record type.
+ * Layout: Left sidebar (definition types) | Main table (records) | Right inspector
  */
 export function RecordsPage() {
   const { inspectorWidth, setInspectorWidth } = useUIStore();
@@ -45,10 +46,18 @@ export function RecordsPage() {
           />
           <ResizeHandle direction="right" onResize={handleSidebarResize} />
 
-          {/* Main Grid Area */}
-          <RecordGrid
-            definitionId={selectedDefinitionId}
-          />
+          {/* Main Table Area - Using UniversalTableView for unified visualization */}
+          <div className="flex-1 overflow-hidden">
+            <UniversalTableView
+              definitionId={selectedDefinitionId}
+              onDefinitionChange={setSelectedDefinitionId}
+              showDefinitionSelector={false} // Using sidebar instead
+              allowCreate
+              allowBulkDelete
+              allowEdit
+              className="h-full"
+            />
+          </div>
 
           <ResizeHandle direction="left" onResize={handleInspectorResize} />
 

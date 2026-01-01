@@ -1,24 +1,16 @@
 import { z } from 'zod';
+import {
+  FieldDefSchema,
+  SchemaConfigSchema,
+  StylingSchema,
+} from '@autoart/shared';
 
-// Field definition schema for record definitions
-export const fieldDefSchema = z.object({
-  key: z.string().min(1),
-  type: z.enum(['text', 'number', 'email', 'url', 'textarea', 'select', 'date', 'checkbox', 'link']),
-  label: z.string().min(1),
-  required: z.boolean().optional(),
-  options: z.array(z.string()).optional(), // For select type
-  defaultValue: z.unknown().optional(),
-});
+// Re-export from shared for local use - SINGLE SOURCE OF TRUTH
+export const fieldDefSchema = FieldDefSchema;
+export const schemaConfigSchema = SchemaConfigSchema;
+export const stylingSchema = StylingSchema;
 
-export const schemaConfigSchema = z.object({
-  fields: z.array(fieldDefSchema),
-});
-
-export const stylingSchema = z.object({
-  color: z.string().optional(),
-  icon: z.string().optional(),
-});
-
+// Definition CRUD schemas
 export const createDefinitionSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   schemaConfig: schemaConfigSchema,
@@ -45,6 +37,7 @@ export const cloneDefinitionSchema = z.object({
   schemaOverrides: schemaConfigSchema.partial().optional(),
 });
 
+// Record CRUD schemas
 export const createRecordSchema = z.object({
   definitionId: z.string().uuid(),
   classificationNodeId: z.string().uuid().nullable().optional(),
@@ -66,6 +59,7 @@ export const listRecordsQuerySchema = z.object({
   offset: z.string().transform(Number).optional(),
 });
 
+// Type exports
 export type FieldDef = z.infer<typeof fieldDefSchema>;
 export type SchemaConfig = z.infer<typeof schemaConfigSchema>;
 export type CreateDefinitionInput = z.infer<typeof createDefinitionSchema>;

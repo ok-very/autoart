@@ -30,8 +30,12 @@ interface Tab {
  * - LinksView: Record-to-record links
  */
 export function RecordInspector() {
-  const { inspectedNodeId, inspectedRecordId, inspectorMode, setInspectorMode, inspectorWidth } =
-    useUIStore();
+  const { selection, inspectorTabMode, setInspectorMode, inspectorWidth } = useUIStore();
+
+  // Derive node/record IDs from selection
+  const inspectedNodeId = selection?.type === 'node' ? selection.id : null;
+  const inspectedRecordId = selection?.type === 'record' ? selection.id : null;
+  const inspectorMode = inspectorTabMode;
 
   const { data: node } = useNode(inspectedNodeId);
   const { data: record } = useRecord(inspectedRecordId);

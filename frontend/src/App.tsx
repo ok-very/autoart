@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useCurrentUser } from './api/hooks';
 import { useAuthStore } from './stores/authStore';
@@ -6,8 +7,19 @@ import { LoginPage } from './pages/LoginPage';
 import { RecordsPage } from './pages/RecordsPage';
 
 function App() {
-  const { isLoading, isError } = useCurrentUser();
+  const { isLoading, isError, isFetching } = useCurrentUser();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  // Show timeout message after 5 seconds of loading
+  useEffect(() => {
+    if (isLoading || isFetching) {
+      const timer = setTimeout(() => setLoadingTimeout(true), 5000);
+      return () => clearTimeout(timer);
+    } else {
+      setLoadingTimeout(false);
+    }
+  }, [isLoading, isFetching]);
 
   // Show loading state
   if (isLoading) {
@@ -18,6 +30,11 @@ function App() {
             A
           </div>
           <p className="text-slate-500">Loading...</p>
+          {loadingTimeout && (
+            <p className="text-xs text-slate-400 mt-2">
+              Taking longer than expected. Is the backend running?
+            </p>
+          )}
         </div>
       </div>
     );

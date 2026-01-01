@@ -3,17 +3,16 @@ import type { HierarchyNode } from '../types';
 
 interface HierarchyState {
   nodes: Record<string, HierarchyNode>;
-  selectedProjectId: string | null;
-  selectedNodeId: string | null;
   expandedIds: Set<string>;
+  selectedProjectId: string | null;
 
   // Actions
   setNodes: (nodes: HierarchyNode[]) => void;
-  selectProject: (id: string | null) => void;
-  selectNode: (id: string | null) => void;
+  updateNode: (node: HierarchyNode) => void;
   toggleExpand: (id: string) => void;
   expandAll: () => void;
   collapseAll: () => void;
+  selectProject: (id: string | null) => void;
 
   // Computed helpers
   getNode: (id: string) => HierarchyNode | undefined;
@@ -23,9 +22,8 @@ interface HierarchyState {
 
 export const useHierarchyStore = create<HierarchyState>((set, get) => ({
   nodes: {},
-  selectedProjectId: null,
-  selectedNodeId: null,
   expandedIds: new Set(),
+  selectedProjectId: null,
 
   setNodes: (nodeList) => {
     const nodes: Record<string, HierarchyNode> = {};
@@ -35,9 +33,9 @@ export const useHierarchyStore = create<HierarchyState>((set, get) => ({
     set({ nodes });
   },
 
-  selectProject: (id) => set({ selectedProjectId: id, selectedNodeId: null }),
-
-  selectNode: (id) => set({ selectedNodeId: id }),
+  updateNode: (node) => set((state) => ({
+    nodes: { ...state.nodes, [node.id]: node },
+  })),
 
   toggleExpand: (id) => set((state) => {
     const newExpanded = new Set(state.expandedIds);
@@ -54,6 +52,8 @@ export const useHierarchyStore = create<HierarchyState>((set, get) => ({
   })),
 
   collapseAll: () => set({ expandedIds: new Set() }),
+
+  selectProject: (id) => set({ selectedProjectId: id }),
 
   getNode: (id) => get().nodes[id],
 

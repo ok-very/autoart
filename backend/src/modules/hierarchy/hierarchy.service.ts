@@ -82,6 +82,27 @@ export async function createNode(input: CreateNodeInput, userId?: string): Promi
     position = (maxPos?.max_pos ?? -1) + 1;
   }
 
+  // Auto-link to default definition if available
+  let defaultRecordDefId: string | null = null;
+  const typeName = input.type.charAt(0).toUpperCase() + input.type.slice(1);
+  
+  const definition = await db
+    .selectFrom('record_definitions')
+    .select('id')
+    .where('name', '=', typeName)
+    .where((eb) =>
+      eb.or([
+        eb('project_id', '=', rootProjectId),
+        eb('project_id', 'is', null),
+      ])
+    )
+    .orderBy('project_id', 'desc') // Prefer project-specific over global
+    .executeTakeFirst();
+
+  if (definition) {
+    defaultRecordDefId = definition.id;
+  }
+
   const node = await db
     .insertInto('hierarchy_nodes')
     .values({
@@ -89,9 +110,10 @@ export async function createNode(input: CreateNodeInput, userId?: string): Promi
       root_project_id: rootProjectId,
       type: input.type,
       title: input.title,
-      description: input.description ? JSON.stringify(input.description) : null,
-      metadata: input.metadata ? JSON.stringify(input.metadata) : '{}',
+      description: input.description ?? null,
+      metadata: input.metadata ?? {},
       position,
+      default_record_def_id: defaultRecordDefId,
       created_by: userId || null,
     })
     .returningAll()
@@ -119,8 +141,8 @@ export async function updateNode(nodeId: string, input: UpdateNodeInput): Promis
   const updates: Record<string, unknown> = { updated_at: new Date() };
 
   if (input.title !== undefined) updates.title = input.title;
-  if (input.description !== undefined) updates.description = JSON.stringify(input.description);
-  if (input.metadata !== undefined) updates.metadata = JSON.stringify(input.metadata);
+  if (input.description !== undefined) updates.description = input.description;
+  if (input.metadata !== undefined) updates.metadata = input.metadata;
   if (input.position !== undefined) updates.position = input.position;
 
   const node = await db
@@ -352,6 +374,15 @@ export async function deepCloneNode(input: CloneNodeInput, userId?: string): Pro
       ? targetParentId
       : (node.parent_id && idMap.has(node.parent_id) ? idMap.get(node.parent_id)! : null);
 
+    // Handle metadata merging for cloned nodes
+    let clonedMetadata = node.metadata;
+    if (isRoot && input.overrides?.metadata) {
+      const existingMeta = typeof node.metadata === 'string'
+        ? JSON.parse(node.metadata || '{}')
+        : (node.metadata || {});
+      clonedMetadata = { ...existingMeta, ...input.overrides.metadata };
+    }
+
     return {
       id: newId,
       parent_id: newParentId,
@@ -360,9 +391,7 @@ export async function deepCloneNode(input: CloneNodeInput, userId?: string): Pro
       title: isRoot && input.overrides?.title ? input.overrides.title : node.title,
       description: node.description,
       position: isRoot ? rootPosition : node.position,
-      metadata: isRoot && input.overrides?.metadata
-        ? JSON.stringify({ ...JSON.parse(node.metadata as string || '{}'), ...input.overrides.metadata })
-        : node.metadata,
+      metadata: clonedMetadata,
       default_record_def_id: node.default_record_def_id,
       created_by: userId || null,
     };

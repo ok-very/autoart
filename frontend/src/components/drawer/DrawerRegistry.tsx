@@ -11,6 +11,7 @@ import { ProjectLibraryDrawer } from './views/ProjectLibraryDrawer';
 import { IngestionDrawer } from './views/IngestionDrawer';
 import { CreateRecordView } from './views/CreateRecordView';
 import { CreateDefinitionView } from './views/CreateDefinitionView';
+import { ClassifyRecordsView } from './views/ClassifyRecordsView';
 
 interface DrawerRegistryProps {
   type: string;
@@ -45,6 +46,8 @@ export function DrawerRegistry({ type, props }: DrawerRegistryProps) {
       return <CreateRecordView {...(props as { definitionId: string; classificationNodeId?: string })} />;
     case 'create-definition':
       return <CreateDefinitionView />;
+    case 'classify-records':
+      return <ClassifyRecordsView {...(props as { recordIds: string[]; onSuccess?: () => void })} />;
     default:
       return (
         <div className="p-4 text-slate-500">

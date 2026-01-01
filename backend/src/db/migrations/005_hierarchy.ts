@@ -92,39 +92,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .column('is_template')
     .where('is_template', '=', true)
     .execute();
-
-  // Add FK constraint for record_definitions.project_id -> hierarchy_nodes.id
-  // This must be done after hierarchy_nodes table exists
-  await sql`
-    ALTER TABLE record_definitions
-    ADD CONSTRAINT record_definitions_project_id_fkey
-    FOREIGN KEY (project_id) REFERENCES hierarchy_nodes(id) ON DELETE CASCADE
-  `.execute(db);
-
-  // Partial index for efficient template lookups by project
-  await db.schema
-    .createIndex('idx_definition_templates')
-    .on('record_definitions')
-    .columns(['project_id', 'is_template'])
-    .where(sql.ref('is_template'), '=', true)
-    .execute();
-
-  // Index for clone exclusion lookups
-  await db.schema
-    .createIndex('idx_definition_clone_excluded')
-    .on('record_definitions')
-    .column('clone_excluded')
-    .where(sql.ref('clone_excluded'), '=', true)
-    .execute();
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  // Drop indexes and FK on record_definitions first
-  await db.schema.dropIndex('idx_definition_clone_excluded').ifExists().execute();
-  await db.schema.dropIndex('idx_definition_templates').ifExists().execute();
-  await sql`
-    ALTER TABLE record_definitions DROP CONSTRAINT IF EXISTS record_definitions_project_id_fkey
-  `.execute(db);
-
   await db.schema.dropTable('hierarchy_nodes').ifExists().execute();
 }

@@ -9,14 +9,22 @@ import { Badge } from '../common/Badge';
 export function Header() {
   const location = useLocation();
   const { data: projects } = useProjects();
-  const { selectedProjectId, selectProject, getNode } = useHierarchyStore();
-  const { viewMode, setViewMode, inspectNode, openDrawer } = useUIStore();
+  const { getNode } = useHierarchyStore();
+  const { 
+    viewMode, 
+    setViewMode, 
+    activeProjectId, 
+    setActiveProject, 
+    setSelection, 
+    openDrawer 
+  } = useUIStore();
+  
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isRecordsPage = location.pathname === '/records';
 
-  const selectedProject = selectedProjectId ? getNode(selectedProjectId) : null;
+  const selectedProject = activeProjectId ? getNode(activeProjectId) : null;
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -30,7 +38,7 @@ export function Header() {
   }, []);
 
   const handleSelectProject = (projectId: string) => {
-    selectProject(projectId);
+    setActiveProject(projectId);
     setIsDropdownOpen(false);
   };
 
@@ -172,14 +180,14 @@ export function Header() {
                         key={project.id}
                         onClick={() => handleSelectProject(project.id)}
                         className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${
-                          project.id === selectedProjectId
+                          project.id === activeProjectId
                             ? 'bg-blue-50 text-blue-700'
                             : 'text-slate-700'
                         }`}
                       >
                         <FolderOpen size={16} className="shrink-0" />
                         <span className="truncate flex-1 text-left">{project.title}</span>
-                        {project.id === selectedProjectId && (
+                        {project.id === activeProjectId && (
                           <Check size={16} className="text-blue-600 shrink-0" />
                         )}
                       </button>
@@ -198,7 +206,7 @@ export function Header() {
             {/* Edit button when project selected */}
             {selectedProject && (
               <button
-                onClick={() => inspectNode(selectedProject.id)}
+                onClick={() => setSelection({ type: 'node', id: selectedProject.id })}
                 className="text-xs text-slate-400 hover:text-blue-600 transition-colors"
               >
                 Edit
@@ -229,16 +237,6 @@ export function Header() {
           }`}
         >
           Columns
-        </button>
-        <button
-          onClick={() => setViewMode('project-list')}
-          className={`px-3 py-1 text-xs font-medium rounded ${
-            viewMode === 'project-list'
-              ? 'bg-white text-slate-800 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          Project List
         </button>
         <button
           onClick={() => setViewMode('grid')}

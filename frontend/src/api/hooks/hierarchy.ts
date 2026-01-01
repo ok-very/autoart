@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../client';
 import type { HierarchyNode } from '../../types';
+import { useHierarchyStore } from '../../stores/hierarchyStore';
 
 // ==================== HIERARCHY ====================
 // Tree operations don't fit standard CRUD pattern - kept manual
@@ -51,12 +52,34 @@ export function useCreateNode() {
 
 export function useUpdateNode() {
   const queryClient = useQueryClient();
+  const storeUpdateNode = useHierarchyStore((state) => state.updateNode);
   return useMutation({
     mutationFn: ({ id, ...data }: { id: string } & Partial<HierarchyNode>) =>
       api.patch<{ node: HierarchyNode }>(`/hierarchy/nodes/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['hierarchy'] });
-      queryClient.invalidateQueries({ queryKey: ['node'] });
+    onSuccess: (result, variables) => {
+      const updated = result?.node;
+
+      if (updated) {
+        // Update Zustand store immediately for instant UI reactivity
+        storeUpdateNode(updated);
+
+        // Keep the inspected node query in sync.
+        queryClient.setQueryData(['node', variables.id], updated);
+
+        // Update any cached hierarchy trees in-place so views update immediately
+        // (instead of waiting for a refetch to complete).
+        queryClient.setQueriesData(
+          { queryKey: ['hierarchy'] },
+          (oldData: unknown) => {
+            if (!Array.isArray(oldData)) return oldData;
+            return oldData.map((n) => (n && typeof n === 'object' && (n as { id?: string }).id === updated.id ? updated : n));
+          }
+        );
+      }
+
+      // Note: We intentionally do NOT invalidate queries here to avoid a refetch
+      // race condition that could overwrite our direct store/cache updates with
+      // stale data. The store and cache are already updated above.
     },
   });
 }

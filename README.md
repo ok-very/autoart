@@ -2,17 +2,65 @@
 
 A powerful process management system with a 5-level hierarchy (Project → Process → Stage → Subprocess → Task), polymorphic records, and a hyperlink engine for `#record:field` references.
 
+## Core Architecture
+
+AutoArt is built on a robust, type-safe architecture that ensures data integrity across the entire stack.
+
+### 1. Shared Type System (Single Source of Truth)
+- **Zod Schemas**: All data structures (Nodes, Records, Definitions) are defined in a shared library (`@autoart/shared`).
+- **End-to-End Validation**: The exact same Zod schemas are used for:
+  - Database migrations and schema definitions.
+  - Backend API request validation.
+  - Frontend TypeScript types and form validation.
+- **Strict CRUD Mappings**: Frontend hooks use precise input types (`CreateRecordInput`, `CreateDefinitionInput`) derived directly from the API schema, preventing "silent failures" or incomplete data submissions.
+
+### 2. Hierarchy & Record Definitions (Strict Linkage)
+- **Explicit Linking**: Hierarchy Nodes (Projects, Processes, etc.) are explicitly linked to their Record Definitions via a unique UUID (`default_record_def_id`), rather than relying on fragile name-based matching.
+- **Auto-Association**: When a new Node is created, the system automatically resolves and links it to the correct Record Definition for its type.
+- **Robust Renaming**: Renaming a "Class Definition" (e.g., renaming "Subprocess" to "Phase") automatically updates the linkage for the current node, preserving the schema connection without breaking existing data.
+- **Schema-Driven Views**: The Inspector view strictly renders fields based on the active Record Definition. Deleting a field from the schema immediately removes it from the view, ensuring the UI always reflects the true state of the data model.
+
+### 3. Hyperlink Engine & Search
+- **Unified Resolution**: The search and reference system (`#record:field`) uses a unified recursive path resolution strategy rooted in the database hierarchy.
+- **ID-Based references**: All internal references rely on stable UUIDs, making the system resilient to name changes and structural moves.
+
+## Refactor Plan: Unified Record Architecture
+
+The long-term vision is to treat all hierarchy nodes (Tasks, Projects, etc.) as "System Level Records" to enable unified visualization and querying.
+
+### 1. Unified Data Model
+- **Goal**: Eliminate the artificial distinction between "Hierarchy Nodes" and "Data Records".
+- **Strategy**: 
+  - Ensure all System Types (Task, Project, Process) are backed by immutable `RecordDefinitions`.
+  - Migrate `hierarchy_nodes` to be a lightweight structural skeleton that points to a `records` entry for its data.
+  - This allows a "Task" to be fully polymorphic—it is just a position in the tree that holds a Record of type "Task".
+
+### 2. Renaming Propagation
+- **Current State**: Renaming a definition (e.g., "Task" -> "Ticket") works for the current node but requires ensuring all other nodes of that type are updated.
+- **Future State**: 
+  - Since all nodes will point to a `definition_id` (via the Unified Data Model), renaming the Definition is a single atomic operation.
+  - All "Task" instances will immediately reflect the new name "Ticket" and any schema changes (new columns/fields) globally.
+
+### 3. Unified Visualization (Universal Table)
+- **Goal**: "Visualize any kind of record and associated fields as columns."
+- **Implementation**:
+  - **UniversalTableView Component**: A generic React component that accepts a `definitionId`.
+  - **Dynamic Columns**: Columns are generated dynamically from the `definition.schema_config.fields`.
+  - **Data Fetching**: The component queries the `records` table (joined with `hierarchy_nodes` if necessary) to fetch all instances matching that Definition.
+  - **Result**: A powerful, spreadsheet-like interface where you can view "Tasks", "Clients", or "Invoices" side-by-side with identical sorting, filtering, and bulk editing capabilities.
+
 ## Features
 
-- **Deep Hierarchy**: Manage nested structures with Projects, Processes, Stages, Subprocesses, and Tasks
-- **Polymorphic Records**: Create custom record types with user-defined schemas
-- **Hyperlink Engine**: Reference records in task descriptions using `#recordname:fieldname` syntax
-- **Static/Dynamic References**: Choose between snapshot values or live-linked data
-- **Deep Cloning**: Clone entire project structures as templates
-- **Rich Text Editing**: TipTap-based editor with mention autocomplete
+- **Deep Hierarchy**: Manage nested structures with Projects, Processes, Stages, Subprocesses, and Tasks.
+- **Polymorphic Records**: Create custom record types with user-defined schemas.
+- **Hyperlink Engine**: Reference records in task descriptions using `#recordname:fieldname` syntax.
+- **Static/Dynamic References**: Choose between snapshot values or live-linked data.
+- **Deep Cloning**: Clone entire project structures as templates.
+- **Rich Text Editing**: TipTap-based editor with mention autocomplete.
 
 ## Tech Stack
 
+- **Shared**: Zod (Schema validation & Type inference)
 - **Backend**: Fastify + TypeScript + Kysely + PostgreSQL
 - **Frontend**: React + Vite + TailwindCSS + TipTap + Zustand + TanStack Query
 - **Infrastructure**: Docker + Nginx
@@ -66,6 +114,7 @@ After seeding the database (`npm run seed`):
 |---------|-------------|
 | `npm run dev` | Start development servers (Linux/macOS) |
 | `npm run dev:win` | Start development servers (Windows) |
+| `npm run dev:kill` | Kill dev servers (free ports) |
 | `npm run build` | Build for production |
 | `npm run deploy` | Deploy to production |
 | `npm run restart` | Restart production services |
@@ -81,13 +130,18 @@ After seeding the database (`npm run seed`):
 
 ```
 autoart_v02/
+├── shared/                  # Shared Zod schemas & types
+│   ├── src/
+│   │   ├── schemas/        # Source of truth for validation
+│   │   └── types.ts        # Inferred TypeScript types
+│
 ├── backend/                 # Fastify API
 │   ├── src/
 │   │   ├── config/         # Environment configuration
 │   │   ├── db/             # Database client & migrations
 │   │   ├── modules/        # Feature modules
 │   │   │   ├── auth/       # JWT authentication
-│   │   │   ├── hierarchy/  # Node CRUD & cloning
+│   │   │   ├── hierarchy/  # Node CRUD & cloning (Auto-linking)
 │   │   │   ├── records/    # Record definitions & instances
 │   │   │   ├── references/ # Static/dynamic links
 │   │   │   └── search/     # Full-text search
@@ -96,10 +150,10 @@ autoart_v02/
 │
 ├── frontend/                # React SPA
 │   ├── src/
-│   │   ├── api/            # API client & hooks
+│   │   ├── api/            # API client & hooks (Strict types)
 │   │   ├── components/     # React components
 │   │   ├── stores/         # Zustand state stores
-│   │   ├── types/          # TypeScript interfaces
+│   │   ├── types/          # Re-exported shared types
 │   │   └── pages/          # Route components
 │   └── Dockerfile
 │
@@ -130,7 +184,7 @@ autoart_v02/
 ### Hierarchy
 - `GET /api/hierarchy/projects` - List projects
 - `GET /api/hierarchy/:projectId` - Get project tree
-- `POST /api/hierarchy/nodes` - Create node
+- `POST /api/hierarchy/nodes` - Create node (Auto-links definition)
 - `PATCH /api/hierarchy/nodes/:id` - Update node
 - `DELETE /api/hierarchy/nodes/:id` - Delete node
 - `POST /api/hierarchy/clone` - Deep clone subtree
@@ -158,7 +212,7 @@ The system uses PostgreSQL with the following core tables:
 
 - `users` - User accounts
 - `sessions` - JWT refresh tokens
-- `hierarchy_nodes` - The 5-level tree structure
+- `hierarchy_nodes` - The 5-level tree structure (linked via `default_record_def_id`)
 - `record_definitions` - Schema definitions for record types
 - `records` - Actual record instances
 - `task_references` - Links between tasks and records (static/dynamic)

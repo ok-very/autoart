@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { useUIStore } from '../../../stores/uiStore';
 import {
@@ -11,7 +11,8 @@ import {
 } from '../../../api/hooks';
 import { RichTextEditor } from '../../editor/RichTextEditor';
 import { FieldRenderer } from '../fields/FieldRenderer';
-import type { NodeType, FieldDef } from '../../../types';
+import type { NodeType, FieldDef, HierarchyNode } from '../../../types';
+import { parseTaskMetadata, DEFAULT_TASK_FIELDS } from '../../../utils/nodeMetadata';
 
 interface RecordPropertiesViewProps {
   itemId: string;
@@ -28,7 +29,7 @@ interface RecordPropertiesViewProps {
  * - Auto-saves with debounce
  */
 export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewProps) {
-  const { inspectRecord, openDrawer } = useUIStore();
+  const { clearInspection, openDrawer } = useUIStore();
   const { data: node } = useNode(isNode ? itemId : null);
   const { data: record } = useRecord(isNode ? null : itemId);
   const updateNode = useUpdateNode();
@@ -57,11 +58,24 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
 
   const data = !isNode ? ((item as { data?: Record<string, unknown> }).data || {}) : {};
   const description = isNode ? (item as { description?: unknown }).description : null;
-  const definitionId = !isNode ? (item as { definition_id: string }).definition_id : null;
+  
+  const definitionId = !isNode 
+    ? (item as { definition_id: string }).definition_id 
+    : (item as unknown as HierarchyNode).default_record_def_id;
+
+  // Avoid stale closure issues inside debounced saves.
+  const latestMetadataRef = useRef<Record<string, unknown>>({});
+  const latestDataRef = useRef<Record<string, unknown>>({});
+  useEffect(() => {
+    latestMetadataRef.current = metadata;
+  }, [metadata]);
+  useEffect(() => {
+    latestDataRef.current = data;
+  }, [data]);
 
   // Find definition
   const definition = definitions?.find((d) => {
-    if (!isNode && definitionId) return d.id === definitionId;
+    if (definitionId) return d.id === definitionId;
     if (isNode) {
       const type = (item as { type: string }).type;
       const typeName = type.charAt(0).toUpperCase() + type.slice(1);
@@ -82,19 +96,48 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
   // Build fields list
   let fields: { key: string; value: unknown; def?: FieldDef }[] = [];
 
-  if (definition && definition.schema_config?.fields) {
+  // Special handling for task nodes: merge default task fields with custom definition fields
+  if (isNode && nodeType === 'task') {
+    const taskMeta = parseTaskMetadata(metadata);
+
+    // Start with default task field definitions (excluding title/description handled separately)
+    const defaultFieldDefs: FieldDef[] = DEFAULT_TASK_FIELDS
+      .filter((f) => f.key !== 'title' && f.key !== 'description')
+      .map((f) => ({
+        key: f.key,
+        type: f.type,
+        label: f.label,
+        required: f.required,
+        options: f.options,
+      }));
+
+    // Merge with custom fields from Task definition if it exists
+    const customFields: FieldDef[] = definition?.schema_config?.fields
+      ?.filter((f) => !defaultFieldDefs.find((df) => df.key === f.key))
+      ?.filter((f) => f.key !== 'title' && f.key !== 'description')
+      || [];
+
+    const allFieldDefs = [...defaultFieldDefs, ...customFields];
+
+    fields = allFieldDefs.map((fieldDef) => ({
+      key: fieldDef.key,
+      value: metadata[fieldDef.key] ?? taskMeta[fieldDef.key as keyof typeof taskMeta],
+      def: fieldDef,
+    }));
+
+    // Include any extra metadata keys not covered above so nothing is hidden
+    Object.entries(metadata).forEach(([key, value]) => {
+      if (key === 'percentComplete') return;
+      if (!fields.find((f) => f.key === key)) {
+        fields.push({ key, value, def: undefined });
+      }
+    });
+  } else if (definition && definition.schema_config?.fields) {
     fields = definition.schema_config.fields.map((fieldDef) => ({
       key: fieldDef.key,
       value: data[fieldDef.key],
       def: fieldDef,
     }));
-
-    // Add extra fields not in definition
-    Object.entries(data).forEach(([key, value]) => {
-      if (!fields.find((f) => f.key === key)) {
-        fields.push({ key, value, def: undefined });
-      }
-    });
   } else {
     // Fallback for nodes or records without definition
     fields = Object.entries(isNode ? metadata : data).map(([key, value]) => ({
@@ -127,14 +170,14 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
       if (isNode) {
         updateNode.mutate({
           id: item.id,
-          metadata: { ...metadata, [key]: value },
+          metadata: { ...latestMetadataRef.current, [key]: value },
         });
       } else {
         const recordItem = item as { data?: Record<string, unknown> };
         if (recordItem.data) {
           updateRecord.mutate({
             id: item.id,
-            data: { ...recordItem.data, [key]: value },
+            data: { ...latestDataRef.current, [key]: value },
           });
         }
       }
@@ -149,7 +192,7 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
       itemName: title,
       onConfirm: async () => {
         await deleteRecord.mutateAsync(item.id);
-        inspectRecord(null);
+        clearInspection();
       },
     });
   };

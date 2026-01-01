@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Library, Copy, Trash2, FileText, ExternalLink } from 'lucide-react';
 import { useUIStore } from '../../../stores/uiStore';
-import { useHierarchyStore } from '../../../stores/hierarchyStore';
 import { useProjectTemplates, useRemoveFromLibrary, useCreateDefinition } from '../../../api/hooks';
 import type { RecordDefinition } from '../../../types';
 
@@ -11,9 +10,8 @@ interface ProjectLibraryDrawerProps {
 }
 
 export function ProjectLibraryDrawer({ projectId, projectTitle }: ProjectLibraryDrawerProps) {
-  const { closeDrawer, openDrawer } = useUIStore();
-  const { selectedProjectId } = useHierarchyStore();
-  const effectiveProjectId = projectId || selectedProjectId;
+  const { closeDrawer, openDrawer, activeProjectId } = useUIStore();
+  const effectiveProjectId = projectId || activeProjectId;
 
   const { data: templates, isLoading } = useProjectTemplates(effectiveProjectId || null);
   const removeFromLibrary = useRemoveFromLibrary();
