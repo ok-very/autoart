@@ -4,10 +4,10 @@ import { useUIStore } from '../../stores/uiStore';
 import { useUpdateNode } from '../../api/hooks';
 import { Badge } from '../common/Badge';
 import { RichTextEditor } from '../editor/RichTextEditor';
-import { useState, useEffect, useMemo, Fragment } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ProgressBar } from '../common/ProgressBar';
 import { calculateStatusDistribution, StatusKey, STATUS_COLORS, STATUS_LABELS } from '../../utils/statusUtils';
-import type { HierarchyNode, NodeType } from '../../types'; // Import NodeType
+import type { HierarchyNode } from '../../types';
 import { parseTaskMetadata, deriveTaskStatus } from '../../utils/nodeMetadata';
 
 // Helper to safely parse metadata
@@ -230,7 +230,7 @@ function StageSection({ stage }: StageSectionProps) {
           </button>
         </div>
       </div>
-      {stage.description && <p className="text-sm text-slate-600 mt-2">{stage.description}</p>}
+      {stage.description ? <p className="text-sm text-slate-600 mt-2">{String(stage.description)}</p> : null}
 
       {isExpanded && (
         <div className="mt-6 space-y-6">
@@ -246,10 +246,7 @@ function StageSection({ stage }: StageSectionProps) {
 
 export function Workspace() {
   const { getChildren } = useHierarchyStore();
-  const { activeProjectId, selection } = useUIStore();
-
-  const selectedNodeId = selection?.type === 'node' ? selection.id : null;
-  const selectedNode = selectedNodeId ? getChildren(activeProjectId || null).find(node => node.id === selectedNodeId) : null;
+  const { activeProjectId } = useUIStore();
 
 
   // Filter hierarchy to get stages for the active project
@@ -300,7 +297,7 @@ export function Workspace() {
       {project && (
         <div className="px-6 py-4 border-b border-slate-100 bg-white flex-shrink-0">
           <h1 className="text-2xl font-bold text-slate-800">{project.title} Workflow</h1>
-          {project.description && <p className="text-sm text-slate-600">{project.description}</p>}
+          {project.description ? <p className="text-sm text-slate-600">{String(project.description)}</p> : null}
         </div>
       )}
 

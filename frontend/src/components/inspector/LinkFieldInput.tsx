@@ -32,7 +32,7 @@ export function LinkFieldInput({
   value,
   fieldKey,
   taskId,
-  currentRecordId,
+  currentRecordId: _currentRecordId,
   onChange,
   readOnly,
   targetDefinitionId,
@@ -62,14 +62,14 @@ export function LinkFieldInput({
   const resolved = isReferenceMode
     ? resolvedRef
     : targetRecord
-    ? {
+      ? {
         value: targetRecord.unique_name,
         label: targetRecord.unique_name,
         sourceRecordId: targetRecord.id,
-        mode: 'direct',
+        status: 'dynamic' as const,
         drift: false,
       }
-    : null;
+      : null;
 
   const isLoading = isReferenceMode ? isLoadingRef : isLoadingRecord;
 
@@ -198,16 +198,16 @@ export function LinkFieldInput({
           : resolved?.label || 'Unknown'}
       </button>
 
-      {/* Mode indicator */}
+      {/* Status indicator */}
       <span
         className={clsx(
           'text-[10px] font-medium uppercase px-1.5 py-0.5 rounded shrink-0',
-          resolved?.mode === 'static'
+          resolved?.status === 'static'
             ? 'bg-amber-100 text-amber-700'
             : 'bg-green-100 text-green-700'
         )}
       >
-        {resolved?.mode || 'dynamic'}
+        {resolved?.status || 'dynamic'}
       </span>
 
       {/* Drift indicator */}

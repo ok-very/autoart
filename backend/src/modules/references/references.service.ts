@@ -1,17 +1,23 @@
 import { db } from '../../db/client.js';
 import { NotFoundError } from '../../utils/errors.js';
 import type { CreateReferenceInput, UpdateReferenceModeInput } from './references.schemas.js';
-import type { TaskReference, RefMode } from '../../db/schema.js';
+import type { TaskReference } from '../../db/schema.js';
+import type { ResolvedReference, ReferenceStatus } from '@autoart/shared';
 
-interface ResolvedReference {
-  referenceId: string;
-  mode: RefMode;
-  value: unknown;
-  drift: boolean;
-  liveValue?: unknown;
-  sourceRecordId: string | null;
-  targetFieldKey: string | null;
-  label: string;
+/**
+ * Compute the reference status based on mode and resolution state
+ */
+function computeStatus(
+  mode: 'static' | 'dynamic',
+  sourceRecordId: string | null,
+  targetFieldKey: string | null
+): ReferenceStatus {
+  // Check if target is unresolved
+  if (!sourceRecordId || !targetFieldKey) {
+    return 'unresolved';
+  }
+  // Mode maps directly to status for resolved references
+  return mode;
 }
 
 export async function getReferenceById(id: string): Promise<TaskReference | null> {
@@ -197,15 +203,17 @@ export async function resolveReference(id: string): Promise<ResolvedReference> {
     ? `#${ref.unique_name}:${ref.target_field_key}`
     : '#unknown';
 
+  const status = computeStatus(ref.mode, ref.source_record_id, ref.target_field_key);
+
   return {
     referenceId: ref.referenceId,
-    mode: ref.mode,
+    status,
     value,
-    drift,
-    liveValue: drift ? liveValue : undefined,
+    label,
     sourceRecordId: ref.source_record_id,
     targetFieldKey: ref.target_field_key,
-    label,
+    drift: drift || undefined,
+    liveValue: drift ? liveValue : undefined,
   };
 }
 
@@ -252,15 +260,17 @@ export async function batchResolveReferences(referenceIds: string[]): Promise<Re
       ? `#${ref.unique_name}:${ref.target_field_key}`
       : '#unknown';
 
+    const status = computeStatus(ref.mode, ref.source_record_id, ref.target_field_key);
+
     result[ref.referenceId] = {
       referenceId: ref.referenceId,
-      mode: ref.mode,
+      status,
       value,
-      drift,
-      liveValue: drift ? liveValue : undefined,
+      label,
       sourceRecordId: ref.source_record_id,
       targetFieldKey: ref.target_field_key,
-      label,
+      drift: drift || undefined,
+      liveValue: drift ? liveValue : undefined,
     };
   }
 

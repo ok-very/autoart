@@ -90,9 +90,9 @@ export function RecordDataTable({
             const record = records.find((r) => r.id === recordId);
             if (!record) return;
 
-            // Special handling for unique_name
+            // Special handling for uniqueName
             if (key === 'unique_name') {
-                updateRecord.mutate({ id: recordId, unique_name: String(value) });
+                updateRecord.mutate({ id: recordId, uniqueName: String(value) });
                 return;
             }
 

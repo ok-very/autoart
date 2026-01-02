@@ -94,7 +94,7 @@ function ReferenceCard({ reference }: ReferenceCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
 
-  const currentMode = resolved?.mode ?? reference.mode ?? 'dynamic';
+  const currentMode = resolved?.status ?? reference.mode ?? 'dynamic';
   const hasDrift = resolved?.drift ?? false;
   const displayValue = resolved?.value;
   const fallbackLabel =

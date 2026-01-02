@@ -10,7 +10,7 @@ import type {
   UpdateRecordInput,
   ListRecordsQuery,
 } from './records.schemas.js';
-import type { RecordDefinition, DataRecord } from '../../db/schema.js';
+import type { RecordDefinition, DataRecord, NewRecordDefinition } from '../../db/schema.js';
 
 // ==================== DEFINITIONS ====================
 
@@ -32,15 +32,17 @@ export async function getDefinitionById(id: string): Promise<RecordDefinition | 
 }
 
 export async function createDefinition(input: CreateDefinitionInput): Promise<RecordDefinition> {
+  const values: NewRecordDefinition = {
+    name: input.name as string,
+    schema_config: JSON.stringify(input.schemaConfig),
+    styling: input.styling ? JSON.stringify(input.styling) : '{}',
+    project_id: (input.projectId as string | undefined) ?? null,
+    is_template: (input.isTemplate as boolean | undefined) ?? false,
+  };
+
   const def = await db
     .insertInto('record_definitions')
-    .values({
-      name: input.name,
-      schema_config: JSON.stringify(input.schemaConfig),
-      styling: input.styling ? JSON.stringify(input.styling) : '{}',
-      project_id: input.projectId || null,
-      is_template: input.isTemplate || false,
-    })
+    .values(values)
     .returningAll()
     .executeTakeFirstOrThrow();
 
@@ -86,14 +88,16 @@ export async function cloneDefinition(id: string, input: CloneDefinitionInput): 
     schemaConfig = JSON.stringify({ ...sourceSchema, ...input.schemaOverrides });
   }
 
+  const cloneValues: NewRecordDefinition = {
+    name: input.newName as string,
+    derived_from_id: id,
+    schema_config: schemaConfig,
+    styling: source.styling,
+  };
+
   const cloned = await db
     .insertInto('record_definitions')
-    .values({
-      name: input.newName,
-      derived_from_id: id,
-      schema_config: schemaConfig,
-      styling: source.styling,
-    })
+    .values(cloneValues)
     .returningAll()
     .executeTakeFirstOrThrow();
 
@@ -194,6 +198,11 @@ export async function cloneProjectTemplates(
   sourceProjectId: string,
   targetProjectId: string
 ): Promise<RecordDefinition[]> {
+  // Log deprecation warning
+  console.warn(
+    '[DEPRECATED] cloneProjectTemplates called. Use cloneProjectDefinitions instead.',
+    'Stack:', new Error().stack?.split('\n').slice(2, 4).join(' <- ')
+  );
   // Delegate to new function for backward compatibility
   return cloneProjectDefinitions(sourceProjectId, targetProjectId);
 }

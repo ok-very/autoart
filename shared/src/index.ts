@@ -17,9 +17,11 @@ export { z } from 'zod';
 export {
   NodeTypeSchema,
   RefModeSchema,
+  ReferenceStatusSchema,
   FieldTypeSchema,
   type NodeType,
   type RefMode,
+  type ReferenceStatus,
   type FieldType,
 } from './schemas/enums';
 

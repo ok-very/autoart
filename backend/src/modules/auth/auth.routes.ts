@@ -119,7 +119,10 @@ export async function authRoutes(fastify: FastifyInstance) {
   });
 
   // Search users (for @mentions)
-  fastify.get('/users/search', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest<{ Querystring: { q?: string; limit?: string } }>, reply: FastifyReply) => {
+  interface SearchUsersQuery {
+    Querystring: { q?: string; limit?: string };
+  }
+  fastify.get<SearchUsersQuery>('/users/search', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const query = request.query.q || '';
     const limit = Math.min(parseInt(request.query.limit || '10', 10), 50);
 

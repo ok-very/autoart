@@ -53,10 +53,10 @@ export function CreateRecordView({ definitionId, classificationNodeId: initialNo
 
     try {
       const result = await createRecord.mutateAsync({
-        definition_id: definitionId,
-        unique_name: uniqueName.trim(),
+        definitionId: definitionId,
+        uniqueName: uniqueName.trim(),
         data: fieldValues,
-        classification_node_id: selectedNodeId,
+        classificationNodeId: selectedNodeId,
       });
 
       // Open the newly created record in inspector

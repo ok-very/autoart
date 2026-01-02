@@ -85,7 +85,7 @@ export async function createNode(input: CreateNodeInput, userId?: string): Promi
   // Auto-link to default definition if available
   let defaultRecordDefId: string | null = null;
   const typeName = input.type.charAt(0).toUpperCase() + input.type.slice(1);
-  
+
   const definition = await db
     .selectFrom('record_definitions')
     .select('id')
@@ -447,7 +447,7 @@ export async function deepCloneNode(input: CloneNodeInput, userId?: string): Pro
 
     // Clone template definitions if requested
     if (input.includeTemplates) {
-      await recordsService.cloneProjectTemplates(input.sourceNodeId, newRootId);
+      await recordsService.cloneProjectDefinitions(input.sourceNodeId, newRootId);
     }
 
     // Clone associated records if requested

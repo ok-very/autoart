@@ -5,6 +5,15 @@
  * This ensures frontend and backend use identical type definitions.
  */
 
+// Re-export domain types from shared/domain subpath
+export type {
+  ReferenceStatus,
+  FieldViewModel,
+  EntityContext,
+  ProjectState,
+  FieldDefinition,
+} from '@autoart/shared/domain';
+
 // Re-export everything from shared package
 export {
   // Enums

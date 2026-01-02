@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { RefModeSchema } from './enums';
+import { RefModeSchema, ReferenceStatusSchema } from './enums';
 
 /**
  * Task Reference Schema
@@ -19,17 +19,32 @@ export type TaskReference = z.infer<typeof TaskReferenceSchema>;
 
 /**
  * Resolved Reference Schema
- * A reference with its current resolved value and drift status
+ * A reference with its current resolved value and status
  */
 export const ResolvedReferenceSchema = z.object({
   referenceId: z.string().uuid(),
-  mode: RefModeSchema,
+  /** Current resolution status - the authoritative state */
+  status: ReferenceStatusSchema,
+  /** The resolved value (if status is dynamic or static) */
   value: z.unknown(),
-  drift: z.boolean(),
-  liveValue: z.unknown().optional(),
-  sourceRecordId: z.string().uuid().nullable(),
-  targetFieldKey: z.string().nullable(),
+  /** Human-readable label for display */
   label: z.string(),
+  /** Source record ID (if resolvable) */
+  sourceRecordId: z.string().uuid().nullable(),
+  /** Target field key (if resolvable) */
+  targetFieldKey: z.string().nullable(),
+  /**
+   * @deprecated Use status instead. Kept for backward compatibility.
+   * True if static snapshot differs from live value.
+   */
+  drift: z.boolean().optional(),
+  /**
+   * The live value from source (for drift detection in static mode)
+   * Only populated when status is 'static' and drift detection is needed
+   */
+  liveValue: z.unknown().optional(),
+  /** Human-readable reason for the current status */
+  reason: z.string().optional(),
 });
 
 export type ResolvedReference = z.infer<typeof ResolvedReferenceSchema>;

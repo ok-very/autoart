@@ -8,9 +8,20 @@ export type NodeType = z.infer<typeof NodeTypeSchema>;
 
 /**
  * Reference mode enum - static vs dynamic references
+ * Used for input when creating/updating references
  */
 export const RefModeSchema = z.enum(['static', 'dynamic']);
 export type RefMode = z.infer<typeof RefModeSchema>;
+
+/**
+ * Reference status enum - the 4 possible states of a resolved reference
+ * - unresolved: Target record/field not set
+ * - dynamic: Live value from source
+ * - static: Fixed snapshot value
+ * - broken: Target record/field no longer exists
+ */
+export const ReferenceStatusSchema = z.enum(['unresolved', 'dynamic', 'static', 'broken']);
+export type ReferenceStatus = z.infer<typeof ReferenceStatusSchema>;
 
 /**
  * Field type enum - supported field types in record definitions

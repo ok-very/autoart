@@ -38,7 +38,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
   // Hooks
   // 1. Resolve via DB Reference if referenceId exists
   const { data: resolvedRef, refetch: refetchRef } = useResolveReference(referenceId);
-  
+
   // 2. Resolve via Direct Record ID if no referenceId
   const effectiveSourceId = resolvedRef?.sourceRecordId || recordId;
   const { data: sourceRecord } = useRecord(effectiveSourceId || null);
@@ -50,8 +50,8 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
 
   // Derived Logic
   const isDirect = !referenceId; // True if using direct recordId/fieldKey without DB reference task
-  const currentMode = isDirect ? mode : (resolvedRef?.mode ?? mode ?? 'dynamic');
-  
+  const currentMode = isDirect ? mode : (resolvedRef?.status ?? mode ?? 'dynamic');
+
   // Resolve Value
   const resolvedValue = useMemo(() => {
     if (isDirect) {
@@ -134,7 +134,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
   // Save edited value to source record
   const handleSaveEdit = useCallback(async () => {
     const targetKey = isDirect ? fieldKey : resolvedRef?.targetFieldKey;
-    
+
     if (!effectiveSourceId || !targetKey) {
       setIsEditing(false);
       return;
@@ -165,7 +165,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
   // Context menu actions
   const handleToggleMode = async () => {
     const newMode = currentMode === 'static' ? 'dynamic' : 'static';
-    
+
     if (isDirect) {
       // Direct mode: update attributes
       const attrs: any = { mode: newMode };
