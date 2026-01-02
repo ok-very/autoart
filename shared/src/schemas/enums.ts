@@ -1,9 +1,10 @@
 import { z } from 'zod';
 
 /**
- * Node type enum - defines the 5-level hierarchy
+ * Node type enum - defines the hierarchy levels
+ * Includes the 5-level project hierarchy plus subtask for nested tasks
  */
-export const NodeTypeSchema = z.enum(['project', 'process', 'stage', 'subprocess', 'task']);
+export const NodeTypeSchema = z.enum(['project', 'process', 'stage', 'subprocess', 'task', 'subtask']);
 export type NodeType = z.infer<typeof NodeTypeSchema>;
 
 /**
@@ -42,3 +43,46 @@ export const FieldTypeSchema = z.enum([
   'tags',
 ]);
 export type FieldType = z.infer<typeof FieldTypeSchema>;
+
+// ============================================================================
+// UI VIEW MODE SCHEMAS
+// ============================================================================
+
+/**
+ * Project view mode enum - views available when viewing a project
+ * - workflow: Kanban-style workflow view
+ * - columns: Miller columns hierarchical navigation
+ * - grid: Spreadsheet-style data grid
+ * - calendar: Calendar view for dated items
+ */
+export const ProjectViewModeSchema = z.enum(['workflow', 'columns', 'grid', 'calendar']);
+export type ProjectViewMode = z.infer<typeof ProjectViewModeSchema>;
+
+/**
+ * Records view mode enum - views available on the records page
+ * - list: Standard list/table view of records
+ * - ingest: Data ingestion/import interface
+ */
+export const RecordsViewModeSchema = z.enum(['list', 'ingest']);
+export type RecordsViewMode = z.infer<typeof RecordsViewModeSchema>;
+
+/**
+ * Combined view mode - union of all view modes
+ */
+export const ViewModeSchema = z.union([ProjectViewModeSchema, RecordsViewModeSchema]);
+export type ViewMode = z.infer<typeof ViewModeSchema>;
+
+/**
+ * View mode labels for UI display
+ */
+export const PROJECT_VIEW_MODE_LABELS: Record<ProjectViewMode, string> = {
+  workflow: 'Workflow',
+  columns: 'Columns',
+  grid: 'Data Grid',
+  calendar: 'Calendar',
+};
+
+export const RECORDS_VIEW_MODE_LABELS: Record<RecordsViewMode, string> = {
+  list: 'List',
+  ingest: 'Ingest',
+};

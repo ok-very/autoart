@@ -19,10 +19,19 @@ export {
   RefModeSchema,
   ReferenceStatusSchema,
   FieldTypeSchema,
+  // UI View Mode Schemas
+  ProjectViewModeSchema,
+  RecordsViewModeSchema,
+  ViewModeSchema,
+  PROJECT_VIEW_MODE_LABELS,
+  RECORDS_VIEW_MODE_LABELS,
   type NodeType,
   type RefMode,
   type ReferenceStatus,
   type FieldType,
+  type ProjectViewMode,
+  type RecordsViewMode,
+  type ViewMode,
 } from './schemas/enums';
 
 // Hierarchy
@@ -44,6 +53,8 @@ export {
 
 // Records & Definitions
 export {
+  StatusOptionConfigSchema,
+  StatusConfigSchema,
   FieldDefSchema,
   SchemaConfigSchema,
   StylingSchema,
@@ -65,6 +76,8 @@ export {
   RecordStatsResponseSchema,
   BulkOperationResponseSchema,
   getFieldAllowReferences,
+  type StatusOptionConfig,
+  type StatusConfig,
   type FieldDef,
   type SchemaConfig,
   type Styling,
@@ -145,6 +158,8 @@ export {
   deriveTaskStatus,
   coercePercentComplete,
   isActiveStatus,
+  getStatusConfig,
+  getStatusDisplay,
   type TaskStatus,
   type TaskMetadata,
   type TaskFieldDef,

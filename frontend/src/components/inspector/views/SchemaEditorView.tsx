@@ -13,7 +13,6 @@ import {
   useDeleteDefinition,
   useUpdateNode,
 } from '../../../api/hooks';
-import { DEFAULT_TASK_FIELDS } from '../../../utils/nodeMetadata';
 import type { NodeType, FieldDef, RecordDefinition, HierarchyNode } from '../../../types';
 
 const STYLE_COLORS = [
@@ -96,36 +95,10 @@ export function SchemaEditorView({ itemId, isNode }: SchemaEditorViewProps) {
     }
   };
 
-  // For Task type, merge default fields with custom definition fields
+  // Get fields from the definition - no more hardcoded defaults
   const fields = useMemo(() => {
-    const definitionFields = definition?.schema_config?.fields || [];
-
-    // For Task nodes, show defaults merged with any custom fields
-    if (nodeType === 'task') {
-      // Start with defaults converted to FieldDef (excluding title which is handled separately)
-      const defaultFields: FieldDef[] = DEFAULT_TASK_FIELDS
-        .filter((f) => f.key !== 'title')
-        .map((f) => {
-          // Check if this field is overridden in definition
-          const override = definitionFields.find((df) => df.key === f.key);
-          return override || {
-            key: f.key,
-            type: f.type,
-            label: f.label,
-            required: f.required,
-            options: f.options,
-          };
-        });
-
-      // Add any custom fields from definition that aren't in defaults
-      const defaultKeys = DEFAULT_TASK_FIELDS.map((f) => f.key);
-      const customFields = definitionFields.filter((f) => !defaultKeys.includes(f.key));
-
-      return [...defaultFields, ...customFields];
-    }
-
-    return definitionFields;
-  }, [definition?.schema_config?.fields, nodeType]);
+    return definition?.schema_config?.fields || [];
+  }, [definition?.schema_config?.fields]);
 
   const currentColor = definition?.styling?.color || 'orange';
 
@@ -239,9 +212,6 @@ export function SchemaEditorView({ itemId, isNode }: SchemaEditorViewProps) {
 
   // System fields that can't be deleted (only truly required ones)
   const systemFields = ['title', 'name'];
-
-  // Default task fields - can be deleted but shown with indicator
-  const defaultTaskFieldKeys = DEFAULT_TASK_FIELDS.map((f) => f.key);
 
   const handleDuplicateField = async (field: FieldDef) => {
     if (!definition) return;
@@ -364,11 +334,10 @@ export function SchemaEditorView({ itemId, isNode }: SchemaEditorViewProps) {
         ) : (
           fields.map((field) => {
             const isSystem = systemFields.includes(field.key);
-            const isDefault = nodeType === 'task' && defaultTaskFieldKeys.includes(field.key);
             return (
               <div
                 key={field.key}
-                className={`flex items-center justify-between p-2 ${isSystem ? 'bg-slate-50' : isDefault ? 'bg-blue-50/50' : 'bg-white'
+                className={`flex items-center justify-between p-2 ${isSystem ? 'bg-slate-50' : 'bg-white'
                   } border border-slate-200 rounded hover:shadow-sm transition-all group`}
               >
                 <div className="flex items-center gap-2">
@@ -380,9 +349,6 @@ export function SchemaEditorView({ itemId, isNode }: SchemaEditorViewProps) {
                   </span>
                   <span className="text-sm font-semibold text-slate-700">{field.label}</span>
                   {field.required && <span className="text-[10px] text-red-500">*</span>}
-                  {isDefault && !isSystem && (
-                    <span className="text-[10px] text-blue-500 bg-blue-100 px-1.5 py-0.5 rounded">default</span>
-                  )}
                 </div>
                 <div className="flex items-center gap-1">
                   {isSystem ? (

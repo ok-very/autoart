@@ -69,6 +69,12 @@ export {
 
   // Helper function
   getFieldAllowReferences,
+  getStatusConfig,
+  getStatusDisplay,
+
+  // Status config types
+  type StatusConfig,
+  type StatusOptionConfig,
 } from '@autoart/shared';
 
 // Re-export schemas for runtime validation in hooks

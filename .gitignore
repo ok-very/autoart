@@ -51,5 +51,4 @@ temp/
 certs/
 !certs/.gitkeep
 
-# Docker volumes (development)
 postgres_data/

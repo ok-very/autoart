@@ -3,22 +3,46 @@ import { FolderOpen, ChevronRight } from 'lucide-react';
 import { useUIStore } from '../../../stores/uiStore';
 import { useProjectTree, useBulkClassifyRecords } from '../../../api/hooks';
 import type { HierarchyNode } from '../../../types';
+import type { DrawerProps, ClassifyRecordsContext } from '../../../drawer/types';
 
-interface ClassifyRecordsViewProps {
+// Legacy props interface (deprecated - use DrawerProps)
+interface LegacyClassifyRecordsViewProps {
   recordIds: string[];
   onSuccess?: () => void;
 }
 
-export function ClassifyRecordsView({
-  recordIds,
-  onSuccess,
-}: ClassifyRecordsViewProps) {
+// New contract props
+type ClassifyRecordsViewProps = DrawerProps<ClassifyRecordsContext, { classified: boolean; nodeId: string | null }>;
+
+// Type guard to detect legacy vs new props
+function isDrawerProps(props: unknown): props is ClassifyRecordsViewProps {
+  return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props && 'onClose' in props;
+}
+
+export function ClassifyRecordsView(props: ClassifyRecordsViewProps | LegacyClassifyRecordsViewProps) {
+  // Handle both legacy and new contract
+  const isNewContract = isDrawerProps(props);
+  const recordIds = isNewContract ? props.context.recordIds : props.recordIds;
+  const legacyOnSuccess = !isNewContract ? props.onSuccess : undefined;
+  const contextOnSuccess = isNewContract ? props.context.onSuccess : undefined;
+  const onClose = isNewContract ? props.onClose : undefined;
+  const onSubmit = isNewContract ? props.onSubmit : undefined;
+
   const { closeDrawer, activeProjectId } = useUIStore();
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const { data: hierarchy } = useProjectTree(activeProjectId);
   const bulkClassify = useBulkClassifyRecords();
+
+  // Close handler that works with both contracts
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      closeDrawer();
+    }
+  };
 
   // Build a tree structure from flat hierarchy
   const buildTree = (nodes: HierarchyNode[] | undefined) => {
@@ -51,11 +75,30 @@ export function ClassifyRecordsView({
         recordIds,
         classificationNodeId: selectedNodeId,
       });
-      onSuccess?.();
-      closeDrawer();
+
+      if (onSubmit) {
+        // New contract: emit typed result
+        onSubmit({
+          success: true,
+          data: { classified: true, nodeId: selectedNodeId },
+          sideEffects: [{ type: 'classify', entityType: 'record' }],
+        });
+      } else {
+        // Legacy: call callback and close
+        legacyOnSuccess?.();
+        contextOnSuccess?.();
+        closeDrawer();
+      }
     } catch (err) {
       console.error('Classification failed:', err);
-      setError(err instanceof Error ? err.message : 'Classification failed. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Classification failed. Please try again.';
+      setError(errorMessage);
+      if (onSubmit) {
+        onSubmit({
+          success: false,
+          error: errorMessage,
+        });
+      }
     }
   };
 
@@ -66,11 +109,30 @@ export function ClassifyRecordsView({
         recordIds,
         classificationNodeId: null,
       });
-      onSuccess?.();
-      closeDrawer();
+
+      if (onSubmit) {
+        // New contract: emit typed result
+        onSubmit({
+          success: true,
+          data: { classified: true, nodeId: null },
+          sideEffects: [{ type: 'classify', entityType: 'record' }],
+        });
+      } else {
+        // Legacy: call callback and close
+        legacyOnSuccess?.();
+        contextOnSuccess?.();
+        closeDrawer();
+      }
     } catch (err) {
       console.error('Clear classification failed:', err);
-      setError(err instanceof Error ? err.message : 'Failed to clear classification.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to clear classification.';
+      setError(errorMessage);
+      if (onSubmit) {
+        onSubmit({
+          success: false,
+          error: errorMessage,
+        });
+      }
     }
   };
 
@@ -81,11 +143,10 @@ export function ClassifyRecordsView({
         <button
           type="button"
           onClick={() => setSelectedNodeId(node.id)}
-          className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center gap-2 ${
-            isSelected
-              ? 'bg-blue-100 text-blue-800 border border-blue-300'
-              : 'hover:bg-slate-100 text-slate-700'
-          }`}
+          className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center gap-2 ${isSelected
+            ? 'bg-blue-100 text-blue-800 border border-blue-300'
+            : 'hover:bg-slate-100 text-slate-700'
+            }`}
           style={{ paddingLeft: `${12 + depth * 16}px` }}
         >
           {node.children.length > 0 && (
@@ -147,7 +208,7 @@ export function ClassifyRecordsView({
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={closeDrawer}
+            onClick={handleClose}
             disabled={bulkClassify.isPending}
             className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 transition-colors"
           >

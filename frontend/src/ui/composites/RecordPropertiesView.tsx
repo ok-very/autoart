@@ -25,7 +25,7 @@ import { UserMentionInput } from './UserMentionInput';
 import { useRecordFieldViewModels } from './hooks/useDomain';
 import type { FieldViewModel } from '@autoart/shared/domain';
 import type { NodeType, FieldDef, HierarchyNode } from '../../types';
-import { parseTaskMetadata, DEFAULT_TASK_FIELDS } from '../../utils/nodeMetadata';
+import { parseTaskMetadata } from '../../utils/nodeMetadata';
 
 interface RecordPropertiesViewProps {
     itemId: string;
@@ -107,23 +107,20 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
 
     if (isNode && nodeType === 'task') {
         const taskMeta = parseTaskMetadata(metadata);
-        const defaultFieldDefs: FieldDef[] = DEFAULT_TASK_FIELDS
-            .filter((f) => f.key !== 'title' && f.key !== 'description')
-            .map((f) => ({
+
+        // Get Task definition fields from database (system definition)
+        const taskDefinition = definitions?.find((d) => d.name === 'Task');
+        const taskFieldDefs: FieldDef[] = taskDefinition?.schema_config?.fields
+            ?.filter((f) => f.key !== 'title' && f.key !== 'description')
+            ?.map((f) => ({
                 key: f.key,
                 type: f.type,
                 label: f.label,
                 required: f.required,
                 options: f.options,
-            }));
+            })) || [];
 
-        const customFields: FieldDef[] = definition?.schema_config?.fields
-            ?.filter((f) => !defaultFieldDefs.find((df) => df.key === f.key))
-            ?.filter((f) => f.key !== 'title' && f.key !== 'description')
-            || [];
-
-        const allFieldDefs = [...defaultFieldDefs, ...customFields];
-        nodeFields = allFieldDefs.map((fieldDef) => ({
+        nodeFields = taskFieldDefs.map((fieldDef) => ({
             key: fieldDef.key,
             value: metadata[fieldDef.key] ?? taskMeta[fieldDef.key as keyof typeof taskMeta],
             def: fieldDef,
@@ -155,6 +152,7 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
         stage: 'bg-slate-50 border-slate-100 text-slate-900',
         subprocess: 'bg-orange-50 border-orange-100 text-orange-900',
         task: 'bg-green-50 border-green-100 text-green-900',
+        subtask: 'bg-teal-50 border-teal-100 text-teal-900',
         record: 'bg-slate-50 border-slate-100 text-slate-900',
     }[nodeType];
 

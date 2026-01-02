@@ -190,24 +190,6 @@ export async function removeFromProjectLibrary(definitionId: string): Promise<Re
 }
 
 /**
- * Clone all template definitions from one project to another
- * Used when cloning a project with "include templates" option
- * @deprecated Use cloneProjectDefinitions instead
- */
-export async function cloneProjectTemplates(
-  sourceProjectId: string,
-  targetProjectId: string
-): Promise<RecordDefinition[]> {
-  // Log deprecation warning
-  console.warn(
-    '[DEPRECATED] cloneProjectTemplates called. Use cloneProjectDefinitions instead.',
-    'Stack:', new Error().stack?.split('\n').slice(2, 4).join(' <- ')
-  );
-  // Delegate to new function for backward compatibility
-  return cloneProjectDefinitions(sourceProjectId, targetProjectId);
-}
-
-/**
  * Clone all non-excluded definitions from one project to another
  * This is the new default behavior - all definitions are cloned unless explicitly excluded
  */

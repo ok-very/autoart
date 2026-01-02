@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FieldDefSchema } from './records';
+import { FieldDefSchema, type StatusConfig, type FieldDef } from './records';
 
 /**
  * Task Status Enum
@@ -16,8 +16,12 @@ export const TaskStatusSchema = z.enum([
 export type TaskStatus = z.infer<typeof TaskStatusSchema>;
 
 /**
- * Status display configuration
- * Provides label and styling for each status value
+ * Default workflow status configuration
+ * This is the fallback when a field's statusConfig is not defined.
+ * 
+ * @deprecated Prefer using field.statusConfig from the record definition.
+ * Status configuration is now stored per-field in the database.
+ * This constant remains for backwards compatibility and as a fallback.
  */
 export const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; colorClass: string }> = {
     'empty': { label: '', colorClass: 'bg-slate-100 text-slate-400' },
@@ -27,6 +31,32 @@ export const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; colorClass:
     'review': { label: 'Review', colorClass: 'bg-purple-100 text-purple-700' },
     'done': { label: 'Done', colorClass: 'bg-emerald-100 text-emerald-700' },
 };
+
+/**
+ * Get status configuration from a field definition.
+ * Falls back to TASK_STATUS_CONFIG if field.statusConfig is not defined.
+ */
+export function getStatusConfig(field: FieldDef): StatusConfig {
+    if (field.statusConfig) {
+        return field.statusConfig;
+    }
+    // Fallback to default config
+    return TASK_STATUS_CONFIG;
+}
+
+/**
+ * Get status display info for a specific status value.
+ * Uses field's statusConfig if available, otherwise falls back to defaults.
+ */
+export function getStatusDisplay(
+    status: string,
+    field?: FieldDef
+): { label: string; colorClass: string } {
+    const config = field ? getStatusConfig(field) : TASK_STATUS_CONFIG;
+    // Cast to Record<string, ...> since we have a fallback for unknown keys
+    const statusMap = config as Record<string, { label: string; colorClass: string }>;
+    return statusMap[status] ?? { label: status, colorClass: 'bg-slate-200 text-slate-600' };
+}
 
 /**
  * Task Metadata Schema

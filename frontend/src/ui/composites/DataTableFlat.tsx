@@ -19,9 +19,10 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { clsx } from 'clsx';
-import { ArrowUpDown, Columns, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowUpDown, Columns, ChevronUp, ChevronDown, Plus } from 'lucide-react';
 import { EditableCell } from '../molecules/EditableCell';
 import { DataFieldWidget, type DataFieldKind } from '../molecules/DataFieldWidget';
+import { StatusColumnSummary } from '../molecules/StatusColumnSummary';
 import { buildFieldViewModel, type FieldViewModel, type FieldDefinition, type ProjectState, type EntityContext } from '@autoart/shared/domain';
 import type { DataRecord, RecordDefinition, FieldDef } from '../../types';
 
@@ -63,6 +64,8 @@ export interface DataTableFlatProps {
     onCellChange?: (recordId: string, fieldKey: string, value: unknown) => void;
     /** Callback when selection changes (multi-select) */
     onSelectionChange?: (selectedIds: Set<string>) => void;
+    /** Callback to add a new record */
+    onAddRecord?: () => void;
     /** Column overrides/additions */
     columnOverrides?: Partial<Record<string, Partial<TableColumn>>>;
     /** Which columns to show (by key). If not provided, shows first 6 */
@@ -164,6 +167,7 @@ export function DataTableFlat({
     onRowSelect,
     onCellChange,
     onSelectionChange,
+    onAddRecord,
     columnOverrides = {},
     visibleColumns: visibleColumnsProp,
     editable = true,
@@ -196,28 +200,31 @@ export function DataTableFlat({
         };
 
         // Dynamic columns from schema
+        // Skip 'name' or 'unique_name' fields since they're already shown in the first column
         const fields = definition?.schema_config?.fields || [];
-        const fieldColumns = fields.map((field: FieldDef): TableColumn => {
-            let defaultWidth = 150;
-            if (field.type === 'text') defaultWidth = 180;
-            if (field.type === 'number' || field.type === 'percent') defaultWidth = 100;
-            if (field.type === 'date') defaultWidth = 120;
-            if (field.type === 'status' || field.type === 'select') defaultWidth = 130;
-            if (field.type === 'user') defaultWidth = 140;
-            if (field.type === 'tags') defaultWidth = 160;
+        const fieldColumns = fields
+            .filter((field: FieldDef) => field.key !== 'name' && field.key !== 'unique_name')
+            .map((field: FieldDef): TableColumn => {
+                let defaultWidth = 150;
+                if (field.type === 'text') defaultWidth = 180;
+                if (field.type === 'number' || field.type === 'percent') defaultWidth = 100;
+                if (field.type === 'date') defaultWidth = 120;
+                if (field.type === 'status' || field.type === 'select') defaultWidth = 130;
+                if (field.type === 'user') defaultWidth = 140;
+                if (field.type === 'tags') defaultWidth = 160;
 
-            return {
-                key: field.key,
-                label: field.label,
-                width: defaultWidth,
-                minWidth: 80,
-                field: field,
-                sortable: ['text', 'number', 'date', 'status', 'select'].includes(field.type),
-                editable: editable,
-                resizable: true,
-                ...columnOverrides[field.key],
-            };
-        });
+                return {
+                    key: field.key,
+                    label: field.label,
+                    width: defaultWidth,
+                    minWidth: 80,
+                    field: field,
+                    sortable: ['text', 'number', 'date', 'status', 'select'].includes(field.type),
+                    editable: editable,
+                    resizable: true,
+                    ...columnOverrides[field.key],
+                };
+            });
 
         // Updated at column
         const updatedColumn: TableColumn = {
@@ -543,8 +550,81 @@ export function DataTableFlat({
                             );
                         })}
                     </tbody>
+                    {/* Status column summary footer */}
+                    {displayColumns.some((col) => col.field?.type === 'status') && (
+                        <tfoot className="sticky bottom-0 z-10 bg-slate-50 border-t border-slate-200">
+                            <tr>
+                                {/* Checkbox column placeholder */}
+                                {multiSelect && <td className="px-3 py-2" />}
+
+                                {/* Data columns - show status counts only under status columns */}
+                                {displayColumns.map((col) => {
+                                    if (col.field?.type === 'status') {
+                                        // Calculate status counts for this column
+                                        const statusCounts: Record<string, number> = {};
+                                        for (const record of sortedRecords) {
+                                            const statusValue = String(record.data?.[col.key] || '');
+                                            if (statusValue) {
+                                                statusCounts[statusValue] = (statusCounts[statusValue] || 0) + 1;
+                                            }
+                                        }
+
+                                        const countsArray = Object.entries(statusCounts).map(([status, count]) => ({
+                                            status,
+                                            count,
+                                        }));
+
+                                        // Build color config from field statusConfig or use defaults
+                                        let colorConfig: Record<string, { bgClass: string }> | undefined;
+                                        const fieldWithConfig = col.field as (typeof col.field) & { statusConfig?: Record<string, { colorClass: string }> };
+                                        if (fieldWithConfig?.statusConfig) {
+                                            colorConfig = Object.fromEntries(
+                                                Object.entries(fieldWithConfig.statusConfig).map(([status, config]) => [
+                                                    status,
+                                                    { bgClass: config.colorClass || 'bg-slate-400' },
+                                                ])
+                                            );
+                                        }
+
+                                        return (
+                                            <td
+                                                key={col.key}
+                                                className="px-3 py-2"
+                                                style={{ width: col.width, minWidth: col.minWidth }}
+                                            >
+                                                <StatusColumnSummary
+                                                    counts={countsArray}
+                                                    colorConfig={colorConfig}
+                                                />
+                                            </td>
+                                        );
+                                    }
+
+                                    // Empty placeholder for non-status columns
+                                    return (
+                                        <td
+                                            key={col.key}
+                                            className="px-3 py-2"
+                                            style={{ width: col.width, minWidth: col.minWidth }}
+                                        />
+                                    );
+                                })}
+                            </tr>
+                        </tfoot>
+                    )}
                 </table>
             </div>
+
+            {/* Add Record button */}
+            {onAddRecord && (
+                <button
+                    onClick={onAddRecord}
+                    className="w-full flex items-center justify-center gap-2 py-2 text-sm text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors border-t border-slate-200"
+                >
+                    <Plus size={14} />
+                    <span>Add {definition?.name || 'Record'}</span>
+                </button>
+            )}
 
             {/* Footer */}
             {renderFooter ? (

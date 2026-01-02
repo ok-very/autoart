@@ -35,8 +35,8 @@ export function RecordTypeSidebar({
 
   const filteredDefinitions = searchQuery.trim()
     ? recordDefinitions.filter((def) =>
-        def.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      def.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : recordDefinitions;
 
   const getRecordCount = (definitionId: string): number => {
@@ -141,11 +141,11 @@ export function RecordTypeSidebar({
               const color = def.styling?.color || 'slate';
 
               return (
-                <button
+                <div
                   key={def.id}
                   onClick={() => onSelectDefinition(def.id)}
                   className={clsx(
-                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors group',
+                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors group cursor-pointer',
                     isSelected
                       ? `bg-${color}-100 text-${color}-800`
                       : 'hover:bg-slate-100 text-slate-600'
@@ -189,7 +189,7 @@ export function RecordTypeSidebar({
                   >
                     <Plus size={14} />
                   </button>
-                </button>
+                </div>
               );
             })}
           </div>

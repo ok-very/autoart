@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Settings, Plus, ChevronDown } from 'lucide-react';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
-import { useProjectTree, useRecordDefinitions } from '../../api/hooks';
+import { useProjectTree } from '../../api/hooks';
 import { TreeNode } from './TreeNode';
 import type { NodeType } from '../../types';
 
@@ -10,7 +10,6 @@ export function Sidebar() {
   const { setNodes, getChildren, getNode } = useHierarchyStore();
   const { activeProjectId, selection, setSelection, sidebarWidth, openDrawer } = useUIStore();
   const { data: nodes } = useProjectTree(activeProjectId);
-  const { data: definitions } = useRecordDefinitions();
 
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
   const [isProcessDropdownOpen, setIsProcessDropdownOpen] = useState(false);
@@ -38,7 +37,7 @@ export function Sidebar() {
   // Determine what type of node to create based on current selection
   const selectedNodeId = selection?.type === 'node' ? selection.id : null;
   const selectedNode = selectedNodeId ? getNode(selectedNodeId) : null;
-  
+
   const getCreateNodeConfig = (): { parentId: string; nodeType: Exclude<NodeType, 'project' | 'process'> } | null => {
     if (!selectedProcess) return null;
 
@@ -97,9 +96,8 @@ export function Sidebar() {
                       setSelectedProcessId(process.id);
                       setIsProcessDropdownOpen(false);
                     }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-slate-50 transition-colors ${
-                      process.id === selectedProcessId ? 'bg-purple-50 text-purple-700' : 'text-slate-700'
-                    }`}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-slate-50 transition-colors ${process.id === selectedProcessId ? 'bg-purple-50 text-purple-700' : 'text-slate-700'
+                      }`}
                   >
                     <Settings size={14} className="shrink-0" />
                     <span className="truncate">{process.title}</span>
@@ -138,53 +136,6 @@ export function Sidebar() {
             <Plus size={14} />
             New {createConfig?.nodeType === 'subprocess' ? 'Subprocess' : 'Stage'}
           </button>
-        </div>
-      </div>
-
-      {/* Quick Create Records - Only shows pinned definitions */}
-      <div className="p-3 border-t border-slate-200 bg-slate-50">
-        <div className="text-[10px] font-bold text-slate-400 uppercase mb-2">Quick Create</div>
-        <div className="flex flex-wrap gap-2">
-          {definitions && definitions.length > 0 ? (
-            (() => {
-              // Filter to only pinned definitions (exclude hierarchy types)
-              const pinnedDefs = definitions.filter(
-                (def) =>
-                  def.pinned &&
-                  !['project', 'process', 'stage', 'subprocess', 'task'].includes(def.name.toLowerCase())
-              );
-
-              if (pinnedDefs.length === 0) {
-                return (
-                  <span className="text-xs text-slate-400 italic">
-                    No pinned record types. Pin types in the Schema tab.
-                  </span>
-                );
-              }
-
-              return pinnedDefs.slice(0, 8).map((def) => {
-                const icon = def.styling?.icon;
-                const color = def.styling?.color || 'slate';
-                return (
-                  <button
-                    key={def.id}
-                    onClick={() =>
-                      openDrawer('create-record', {
-                        definitionId: def.id,
-                        classificationNodeId: selectedNodeId || undefined,
-                      })
-                    }
-                    className={`w-8 h-8 rounded bg-${color}-50 border border-${color}-200 flex items-center justify-center shadow-sm cursor-pointer hover:border-${color}-400 hover:bg-${color}-100 transition-colors text-sm`}
-                    title={`Create ${def.name}`}
-                  >
-                    {icon || def.name.charAt(0).toUpperCase()}
-                  </button>
-                );
-              });
-            })()
-          ) : (
-            <span className="text-xs text-slate-400 italic">No record types defined</span>
-          )}
         </div>
       </div>
     </aside>

@@ -3,36 +3,78 @@ import { Link2 } from 'lucide-react';
 import { useUIStore } from '../../../stores/uiStore';
 import { useCreateLink, useLinkTypes, useSearch } from '../../../api/hooks';
 import { useDebounce } from '../../../hooks/useDebounce';
+import type { DrawerProps, CreateLinkContext } from '../../../drawer/types';
 
-interface CreateLinkViewProps {
+// Legacy props interface (deprecated - use DrawerProps)
+interface LegacyCreateLinkViewProps {
   sourceRecordId: string;
 }
 
-export function CreateLinkView({ sourceRecordId }: CreateLinkViewProps) {
+// New contract props
+type CreateLinkViewProps = DrawerProps<CreateLinkContext, { linkId: string }>;
+
+// Type guard to detect legacy vs new props
+function isDrawerProps(props: unknown): props is CreateLinkViewProps {
+  return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props;
+}
+
+export function CreateLinkView(props: CreateLinkViewProps | LegacyCreateLinkViewProps) {
+  // Handle both legacy and new contract
+  const isNewContract = isDrawerProps(props);
+  const sourceRecordId = isNewContract ? props.context.sourceRecordId : props.sourceRecordId;
+  const onClose = isNewContract ? props.onClose : undefined;
+  const onSubmit = isNewContract ? props.onSubmit : undefined;
+
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounce(query, 300);
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
   const [linkType, setLinkType] = useState('related_to');
-  
+
   const { closeDrawer } = useUIStore();
   const createLink = useCreateLink();
   const { data: linkTypes } = useLinkTypes();
   const { data: searchResults, isLoading: isSearching } = useSearch(debouncedQuery, undefined, !!debouncedQuery && debouncedQuery.length > 1);
+
+  // Close handler that works with both contracts
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      closeDrawer();
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedTargetId) return;
 
     try {
-      await createLink.mutateAsync({
+      const result = await createLink.mutateAsync({
         sourceRecordId,
         targetRecordId: selectedTargetId,
         linkType,
         metadata: {} // Default empty metadata
       });
-      closeDrawer();
+
+      if (onSubmit) {
+        // New contract: emit typed result
+        onSubmit({
+          success: true,
+          data: { linkId: result.link?.id || '' },
+          sideEffects: [{ type: 'create', entityType: 'link' }],
+        });
+      } else {
+        // Legacy: close
+        closeDrawer();
+      }
     } catch (err) {
       console.error('Failed to create link:', err);
+      if (onSubmit) {
+        onSubmit({
+          success: false,
+          error: err instanceof Error ? err.message : 'Failed to create link',
+        });
+      }
     }
   };
 
@@ -53,11 +95,11 @@ export function CreateLinkView({ sourceRecordId }: CreateLinkViewProps) {
             Link Type
           </label>
           <select
-             value={linkType}
-             onChange={(e) => setLinkType(e.target.value)}
-             className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            value={linkType}
+            onChange={(e) => setLinkType(e.target.value)}
+            className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           >
-             {linkTypes?.map(t => <option key={t} value={t}>{t}</option>) || <option value="related_to">related_to</option>}
+            {linkTypes?.map(t => <option key={t} value={t}>{t}</option>) || <option value="related_to">related_to</option>}
           </select>
         </div>
 
@@ -73,44 +115,43 @@ export function CreateLinkView({ sourceRecordId }: CreateLinkViewProps) {
             className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
             autoFocus
           />
-          
+
           <div className="flex-1 overflow-y-auto border border-slate-200 rounded-md bg-slate-50 p-1 custom-scroll">
-             {isSearching ? (
-                 <div className="p-4 text-center text-slate-400 text-sm">Searching...</div>
-             ) : records.length === 0 ? (
-                 <div className="p-4 text-center text-slate-400 text-sm">
-                    {query.length < 2 ? 'Type at least 2 characters to search' : 'No records found'}
-                 </div>
-             ) : (
-                 <div className="space-y-1">
-                    {records.map(record => (
-                        <div 
-                           key={record.id}
-                           onClick={() => setSelectedTargetId(record.id)}
-                           className={`p-2 rounded cursor-pointer transition-colors flex items-center gap-2 ${
-                               selectedTargetId === record.id 
-                               ? 'bg-blue-100 border border-blue-300 text-blue-900' 
-                               : 'bg-white border border-slate-200 hover:border-blue-300'
-                           }`}
-                        >
-                            <Link2 size={14} className={selectedTargetId === record.id ? 'text-blue-500' : 'text-slate-400'} />
-                            <div>
-                                <div className="text-sm font-medium">{record.name}</div>
-                                {record.definitionName && (
-                                    <div className="text-xs text-slate-400">{record.definitionName}</div>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                 </div>
-             )}
+            {isSearching ? (
+              <div className="p-4 text-center text-slate-400 text-sm">Searching...</div>
+            ) : records.length === 0 ? (
+              <div className="p-4 text-center text-slate-400 text-sm">
+                {query.length < 2 ? 'Type at least 2 characters to search' : 'No records found'}
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {records.map(record => (
+                  <div
+                    key={record.id}
+                    onClick={() => setSelectedTargetId(record.id)}
+                    className={`p-2 rounded cursor-pointer transition-colors flex items-center gap-2 ${selectedTargetId === record.id
+                      ? 'bg-blue-100 border border-blue-300 text-blue-900'
+                      : 'bg-white border border-slate-200 hover:border-blue-300'
+                      }`}
+                  >
+                    <Link2 size={14} className={selectedTargetId === record.id ? 'text-blue-500' : 'text-slate-400'} />
+                    <div>
+                      <div className="text-sm font-medium">{record.name}</div>
+                      {record.definitionName && (
+                        <div className="text-xs text-slate-400">{record.definitionName}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <button
             type="button"
-            onClick={closeDrawer}
+            onClick={handleClose}
             className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
           >
             Cancel

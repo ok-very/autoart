@@ -2,13 +2,41 @@ import { useState } from 'react';
 import { useUIStore } from '../../../stores/uiStore';
 import { useHierarchyStore } from '../../../stores/hierarchyStore';
 import { useCreateNode } from '../../../api/hooks';
+import type { DrawerProps, CreateProjectContext } from '../../../drawer/types';
 
-export function CreateProjectView() {
+// Legacy props interface (deprecated - use DrawerProps)
+interface LegacyCreateProjectViewProps {
+  templateId?: string;
+}
+
+// New contract props
+type CreateProjectViewProps = DrawerProps<CreateProjectContext, { projectId: string }>;
+
+// Type guard to detect legacy vs new props
+function isDrawerProps(props: unknown): props is CreateProjectViewProps {
+  return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props;
+}
+
+export function CreateProjectView(props: CreateProjectViewProps | LegacyCreateProjectViewProps | Record<string, never> = {}) {
+  // Handle both legacy and new contract
+  const isNewContract = isDrawerProps(props);
+  const onClose = isNewContract ? props.onClose : undefined;
+  const onSubmit = isNewContract ? props.onSubmit : undefined;
+
   const [title, setTitle] = useState('');
   const [processName, setProcessName] = useState('Main Process');
   const { closeDrawer } = useUIStore();
   const { selectProject } = useHierarchyStore();
   const createNode = useCreateNode();
+
+  // Close handler that works with both contracts
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      closeDrawer();
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,15 +62,29 @@ export function CreateProjectView() {
           metadata: {},
         });
 
-        // Auto-select the newly created project
-        selectProject(projectResult.node.id);
+        if (onSubmit) {
+          // New contract: emit typed result
+          onSubmit({
+            success: true,
+            data: { projectId: projectResult.node.id },
+            sideEffects: [{ type: 'create', entityType: 'project' }],
+          });
+        } else {
+          // Legacy: auto-select and close
+          selectProject(projectResult.node.id);
+          setTitle('');
+          setProcessName('Main Process');
+          closeDrawer();
+        }
       }
-
-      setTitle('');
-      setProcessName('Main Process');
-      closeDrawer();
     } catch (err) {
       console.error('Failed to create project:', err);
+      if (onSubmit) {
+        onSubmit({
+          success: false,
+          error: err instanceof Error ? err.message : 'Failed to create project',
+        });
+      }
     }
   };
 
@@ -96,7 +138,7 @@ export function CreateProjectView() {
         <div className="flex justify-end gap-3 pt-4">
           <button
             type="button"
-            onClick={closeDrawer}
+            onClick={handleClose}
             className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
           >
             Cancel

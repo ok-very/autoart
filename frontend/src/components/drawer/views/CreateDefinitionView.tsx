@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus, Palette } from 'lucide-react';
 import { useUIStore } from '../../../stores/uiStore';
 import { useCreateDefinition } from '../../../api/hooks';
+import type { DrawerProps, CreateDefinitionContext } from '../../../drawer/types';
 
 const PRESET_COLORS = [
   { name: 'slate', bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-300' },
@@ -16,7 +17,25 @@ const PRESET_COLORS = [
 
 const PRESET_EMOJIS = ['📋', '📁', '👤', '🏢', '🎨', '📦', '🔧', '📝', '💼', '🏷️', '📊', '🎯'];
 
-export function CreateDefinitionView() {
+// Legacy props interface (deprecated - use DrawerProps)
+interface LegacyCreateDefinitionViewProps {
+  copyFromId?: string;
+}
+
+// New contract props
+type CreateDefinitionViewProps = DrawerProps<CreateDefinitionContext, { definitionId: string }>;
+
+// Type guard to detect legacy vs new props
+function isDrawerProps(props: unknown): props is CreateDefinitionViewProps {
+  return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props;
+}
+
+export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCreateDefinitionViewProps | Record<string, never> = {}) {
+  // Handle both legacy and new contract
+  const isNewContract = isDrawerProps(props);
+  const onClose = isNewContract ? props.onClose : undefined;
+  const onSubmit = isNewContract ? props.onSubmit : undefined;
+
   const { closeDrawer } = useUIStore();
   const createDefinition = useCreateDefinition();
 
@@ -25,12 +44,21 @@ export function CreateDefinitionView() {
   const [selectedEmoji, setSelectedEmoji] = useState('📋');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
+  // Close handler that works with both contracts
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      closeDrawer();
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
     try {
-      await createDefinition.mutateAsync({
+      const result = await createDefinition.mutateAsync({
         name: name.trim(),
         schemaConfig: {
           fields: [
@@ -43,9 +71,25 @@ export function CreateDefinitionView() {
         },
       });
 
-      closeDrawer();
+      if (onSubmit) {
+        // New contract: emit typed result
+        onSubmit({
+          success: true,
+          data: { definitionId: result.definition?.id || '' },
+          sideEffects: [{ type: 'create', entityType: 'definition' }],
+        });
+      } else {
+        // Legacy: close
+        closeDrawer();
+      }
     } catch (err) {
       console.error('Failed to create definition:', err);
+      if (onSubmit) {
+        onSubmit({
+          success: false,
+          error: err instanceof Error ? err.message : 'Failed to create definition',
+        });
+      }
     }
   };
 
@@ -105,11 +149,10 @@ export function CreateDefinitionView() {
                   key={color.name}
                   type="button"
                   onClick={() => setSelectedColor(color.name)}
-                  className={`w-8 h-8 rounded-lg ${color.bg} ${
-                    selectedColor === color.name
-                      ? `ring-2 ring-offset-1 ring-${color.name}-500`
-                      : 'hover:ring-1 hover:ring-slate-300'
-                  } transition-all`}
+                  className={`w-8 h-8 rounded-lg ${color.bg} ${selectedColor === color.name
+                    ? `ring-2 ring-offset-1 ring-${color.name}-500`
+                    : 'hover:ring-1 hover:ring-slate-300'
+                    } transition-all`}
                   title={color.name}
                 />
               ))}
@@ -141,9 +184,8 @@ export function CreateDefinitionView() {
                           setSelectedEmoji(emoji);
                           setShowEmojiPicker(false);
                         }}
-                        className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl hover:bg-slate-100 transition-colors ${
-                          selectedEmoji === emoji ? 'bg-blue-50 ring-1 ring-blue-300' : ''
-                        }`}
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl hover:bg-slate-100 transition-colors ${selectedEmoji === emoji ? 'bg-blue-50 ring-1 ring-blue-300' : ''
+                          }`}
                       >
                         {emoji}
                       </button>
@@ -195,7 +237,7 @@ export function CreateDefinitionView() {
         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <button
             type="button"
-            onClick={closeDrawer}
+            onClick={handleClose}
             className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
           >
             Cancel

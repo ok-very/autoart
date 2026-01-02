@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const nodeTypeSchema = z.enum(['project', 'process', 'stage', 'subprocess', 'task']);
+export const nodeTypeSchema = z.enum(['project', 'process', 'stage', 'subprocess', 'task', 'subtask']);
 
 export const createNodeSchema = z.object({
   parentId: z.string().uuid().nullable().optional(),

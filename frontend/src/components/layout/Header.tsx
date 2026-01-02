@@ -2,7 +2,12 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronDown, Plus, Copy, FolderOpen, Check, Library, Upload, Database } from 'lucide-react';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
-import { useUIStore } from '../../stores/uiStore';
+import {
+  useUIStore,
+  PROJECT_VIEW_MODE_LABELS,
+  RECORDS_VIEW_MODE_LABELS,
+} from '../../stores/uiStore';
+import type { ProjectViewMode, RecordsViewMode } from '@autoart/shared';
 import { useProjects } from '../../api/hooks';
 import { Badge } from '../common/Badge';
 
@@ -10,15 +15,15 @@ export function Header() {
   const location = useLocation();
   const { data: projects } = useProjects();
   const { getNode } = useHierarchyStore();
-  const { 
-    viewMode, 
-    setViewMode, 
-    activeProjectId, 
-    setActiveProject, 
-    setSelection, 
-    openDrawer 
+  const {
+    viewMode,
+    setViewMode,
+    activeProjectId,
+    setActiveProject,
+    setSelection,
+    openDrawer
   } = useUIStore();
-  
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -83,21 +88,19 @@ export function Header() {
         <nav className="flex items-center gap-1 ml-2">
           <Link
             to="/"
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-              !isRecordsPage
-                ? 'bg-slate-100 text-slate-800'
-                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-            }`}
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${!isRecordsPage
+              ? 'bg-slate-100 text-slate-800'
+              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+              }`}
           >
             Projects
           </Link>
           <Link
             to="/records"
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-              isRecordsPage
-                ? 'bg-slate-100 text-slate-800'
-                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-            }`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${isRecordsPage
+              ? 'bg-slate-100 text-slate-800'
+              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+              }`}
           >
             <Database size={14} />
             Records
@@ -110,98 +113,97 @@ export function Header() {
 
             {/* Project Selector Dropdown */}
             <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-2 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-slate-200"
-          >
-            {selectedProject ? (
-              <>
-                <Badge variant="project">Project</Badge>
-                <span className="font-semibold text-slate-700 max-w-[200px] truncate">
-                  {selectedProject.title}
-                </span>
-              </>
-            ) : (
-              <span className="text-slate-500">Select a project...</span>
-            )}
-            <ChevronDown
-              size={16}
-              className={`text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
-
-          {isDropdownOpen && (
-            <div className="absolute top-full left-0 mt-1 w-72 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden">
-              {/* Actions */}
-              <div className="p-2 border-b border-slate-100">
-                <button
-                  onClick={handleCreateProject}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
-                >
-                  <Plus size={16} />
-                  <span>New Project</span>
-                </button>
-                {selectedProject && (
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-slate-200"
+              >
+                {selectedProject ? (
                   <>
+                    <Badge variant="project">Project</Badge>
+                    <span className="font-semibold text-slate-700 max-w-[200px] truncate">
+                      {selectedProject.title}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-slate-500">Select a project...</span>
+                )}
+                <ChevronDown
+                  size={16}
+                  className={`text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute top-full left-0 mt-1 w-72 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                  {/* Actions */}
+                  <div className="p-2 border-b border-slate-100">
                     <button
-                      onClick={handleCloneProject}
+                      onClick={handleCreateProject}
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
                     >
-                      <Copy size={16} />
-                      <span>Clone Current Project</span>
+                      <Plus size={16} />
+                      <span>New Project</span>
                     </button>
-                    <button
-                      onClick={handleOpenLibrary}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-purple-50 hover:text-purple-700 rounded-md transition-colors"
-                    >
-                      <Library size={16} />
-                      <span>Template Library</span>
-                    </button>
-                    <button
-                      onClick={handleOpenIngestion}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-md transition-colors"
-                    >
-                      <Upload size={16} />
-                      <span>Import CSV</span>
-                    </button>
-                  </>
-                )}
-              </div>
+                    {selectedProject && (
+                      <>
+                        <button
+                          onClick={handleCloneProject}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                        >
+                          <Copy size={16} />
+                          <span>Clone Current Project</span>
+                        </button>
+                        <button
+                          onClick={handleOpenLibrary}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-purple-50 hover:text-purple-700 rounded-md transition-colors"
+                        >
+                          <Library size={16} />
+                          <span>Template Library</span>
+                        </button>
+                        <button
+                          onClick={handleOpenIngestion}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-md transition-colors"
+                        >
+                          <Upload size={16} />
+                          <span>Import CSV</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
 
-              {/* Project List */}
-              <div className="max-h-64 overflow-y-auto">
-                {projects && projects.length > 0 ? (
-                  <div className="py-1">
-                    <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Your Projects
-                    </div>
-                    {projects.map((project) => (
-                      <button
-                        key={project.id}
-                        onClick={() => handleSelectProject(project.id)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${
-                          project.id === activeProjectId
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-slate-700'
-                        }`}
-                      >
-                        <FolderOpen size={16} className="shrink-0" />
-                        <span className="truncate flex-1 text-left">{project.title}</span>
-                        {project.id === activeProjectId && (
-                          <Check size={16} className="text-blue-600 shrink-0" />
-                        )}
-                      </button>
-                    ))}
+                  {/* Project List */}
+                  <div className="max-h-64 overflow-y-auto">
+                    {projects && projects.length > 0 ? (
+                      <div className="py-1">
+                        <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          Your Projects
+                        </div>
+                        {projects.map((project) => (
+                          <button
+                            key={project.id}
+                            onClick={() => handleSelectProject(project.id)}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${project.id === activeProjectId
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'text-slate-700'
+                              }`}
+                          >
+                            <FolderOpen size={16} className="shrink-0" />
+                            <span className="truncate flex-1 text-left">{project.title}</span>
+                            {project.id === activeProjectId && (
+                              <Check size={16} className="text-blue-600 shrink-0" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="px-3 py-4 text-center text-sm text-slate-400">
+                        No projects yet. Create your first project!
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="px-3 py-4 text-center text-sm text-slate-400">
-                    No projects yet. Create your first project!
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
             {/* Edit button when project selected */}
             {selectedProject && (
@@ -216,48 +218,41 @@ export function Header() {
         )}
       </div>
 
-      {/* View Toggle */}
+      {/* View Toggle - Context-Aware */}
       <div className="flex bg-slate-100 p-0.5 rounded-lg">
-        <button
-          onClick={() => setViewMode('workflow')}
-          className={`px-3 py-1 text-xs font-medium rounded ${
-            viewMode === 'workflow'
-              ? 'bg-white text-slate-800 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          Workflow
-        </button>
-        <button
-          onClick={() => setViewMode('columns')}
-          className={`px-3 py-1 text-xs font-medium rounded ${
-            viewMode === 'columns'
-              ? 'bg-white text-slate-800 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          Columns
-        </button>
-        <button
-          onClick={() => setViewMode('grid')}
-          className={`px-3 py-1 text-xs font-medium rounded ${
-            viewMode === 'grid'
-              ? 'bg-white text-slate-800 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          Data Grid
-        </button>
-        <button
-          onClick={() => setViewMode('calendar')}
-          className={`px-3 py-1 text-xs font-medium rounded ${
-            viewMode === 'calendar'
-              ? 'bg-white text-slate-800 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
-          Calendar
-        </button>
+        {isRecordsPage ? (
+          // Records page view modes
+          <>
+            {(Object.entries(RECORDS_VIEW_MODE_LABELS) as [RecordsViewMode, string][]).map(([mode, label]) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                className={`px-3 py-1 text-xs font-medium rounded ${viewMode === mode
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+                  }`}
+              >
+                {label}
+              </button>
+            ))}
+          </>
+        ) : (
+          // Project page view modes
+          <>
+            {(Object.entries(PROJECT_VIEW_MODE_LABELS) as [ProjectViewMode, string][]).map(([mode, label]) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                className={`px-3 py-1 text-xs font-medium rounded ${viewMode === mode
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+                  }`}
+              >
+                {label}
+              </button>
+            ))}
+          </>
+        )}
       </div>
     </header>
   );

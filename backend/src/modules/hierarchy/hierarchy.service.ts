@@ -12,6 +12,7 @@ const VALID_PARENTS: Record<NodeType, NodeType | null> = {
   stage: 'process',
   subprocess: 'stage',
   task: 'subprocess',
+  subtask: 'task',
 };
 
 export async function getProjectTree(projectId: string): Promise<HierarchyNode[]> {

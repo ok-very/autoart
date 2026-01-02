@@ -2,6 +2,25 @@ import { z } from 'zod';
 import { FieldTypeSchema } from './enums';
 
 /**
+ * Status Option Config Schema
+ * Display configuration for a single status value
+ */
+export const StatusOptionConfigSchema = z.object({
+  label: z.string(),
+  colorClass: z.string(),
+});
+
+export type StatusOptionConfig = z.infer<typeof StatusOptionConfigSchema>;
+
+/**
+ * Status Config Schema
+ * Maps status values to their display configuration
+ */
+export const StatusConfigSchema = z.record(z.string(), StatusOptionConfigSchema);
+
+export type StatusConfig = z.infer<typeof StatusConfigSchema>;
+
+/**
  * Field Definition Schema
  * Defines a single field in a record definition's schema
  */
@@ -10,13 +29,18 @@ export const FieldDefSchema = z.object({
   type: FieldTypeSchema,
   label: z.string().min(1),
   required: z.boolean().optional(),
-  options: z.array(z.string()).optional(), // For select fields
+  options: z.array(z.string()).optional(), // For select/status fields - list of values
   defaultValue: z.unknown().optional(),
   /**
    * Whether this field allows # reference triggers.
    * Default: true for text/textarea, false for other types.
    */
   allowReferences: z.boolean().optional(),
+  /**
+   * Status display configuration (only for type: 'status').
+   * Maps each status value to its label and color class.
+   */
+  statusConfig: StatusConfigSchema.optional(),
 });
 
 export type FieldDef = z.infer<typeof FieldDefSchema>;
@@ -52,6 +76,8 @@ export const RecordDefinitionSchema = z.object({
   derived_from_id: z.string().uuid().nullable(),
   project_id: z.string().uuid().nullable(), // If set, belongs to project's template library
   is_template: z.boolean(),
+  is_system: z.boolean(), // System definitions (Task, Subtask, etc.) - cannot be deleted
+  parent_definition_id: z.string().uuid().nullable(), // For hierarchical types (e.g., Subtask under Task)
   clone_excluded: z.boolean(),
   pinned: z.boolean(),
   schema_config: SchemaConfigSchema,

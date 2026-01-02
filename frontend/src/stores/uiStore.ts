@@ -2,11 +2,30 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Selection, UIPanels, InspectorMode, DrawerConfig } from '../types/ui';
 import { deriveUIPanels } from '../utils/uiComposition';
+import type { ProjectViewMode, RecordsViewMode, ViewMode } from '@autoart/shared';
+import {
+  ProjectViewModeSchema,
+  RecordsViewModeSchema,
+  PROJECT_VIEW_MODE_LABELS,
+  RECORDS_VIEW_MODE_LABELS,
+} from '@autoart/shared';
 
 // Re-export for compatibility if needed, or prefer importing from types/ui
 export type { Selection, UIPanels, InspectorMode };
 
-type ViewMode = 'workflow' | 'grid' | 'calendar' | 'columns';
+// Re-export view mode types and utilities from shared schemas
+export type { ProjectViewMode, RecordsViewMode, ViewMode };
+export { PROJECT_VIEW_MODE_LABELS, RECORDS_VIEW_MODE_LABELS };
+
+// Type guards for view mode categories - use schema validation
+export function isProjectViewMode(mode: ViewMode): mode is ProjectViewMode {
+  return ProjectViewModeSchema.safeParse(mode).success;
+}
+
+export function isRecordsViewMode(mode: ViewMode): mode is RecordsViewMode {
+  return RecordsViewModeSchema.safeParse(mode).success;
+}
+
 type Theme = 'light' | 'dark';
 
 interface UIState {

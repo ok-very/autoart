@@ -57,3 +57,6 @@ export { DataTableHierarchy, type DataTableHierarchyProps, type HierarchyFieldDe
 export { RecordList } from './RecordList';
 export { ProjectView, type ProjectViewProps } from './ProjectView';
 export { MillerColumnsView, type MillerColumnsViewProps } from './MillerColumnsView';
+
+// Ingestion/Import View
+export { IngestionView } from './IngestionView';

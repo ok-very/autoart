@@ -176,9 +176,6 @@ const ViewDefinitionDrawer = lazy(() =>
 const ProjectLibraryDrawer = lazy(() =>
     import('../components/drawer/views/ProjectLibraryDrawer').then((m) => ({ default: m.ProjectLibraryDrawer }))
 );
-const IngestionDrawer = lazy(() =>
-    import('../components/drawer/views/IngestionDrawer').then((m) => ({ default: m.IngestionDrawer }))
-);
 
 // ==================== LOADING FALLBACK ====================
 
@@ -276,8 +273,6 @@ export function DrawerRegistry({ type, context, onClose, onResult }: DrawerRegis
                 return <ViewDefinitionDrawer {...(context as any)} />;
             case 'project-library':
                 return <ProjectLibraryDrawer {...(context as any)} />;
-            case 'ingestion':
-                return <IngestionDrawer />;
             default:
                 return (
                     <div className="p-4 text-slate-500">

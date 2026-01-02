@@ -21,6 +21,9 @@ export { TagsInput } from './TagsInput';
 
 // Table molecules
 export { EditableCell, type EditableCellProps } from './EditableCell';
+export { StatusColumnSummary, type StatusColumnSummaryProps, type StatusCount, type StatusColorConfig } from './StatusColumnSummary';
+export { TableSortHeader, type TableSortHeaderProps } from './TableSortHeader';
+export { TableAddRow, type TableAddRowProps } from './TableAddRow';
 
 // Layout molecules
 export { PropertySection, type PropertySectionProps } from './PropertySection';

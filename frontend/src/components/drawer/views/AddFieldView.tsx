@@ -1,10 +1,20 @@
 import { useState } from 'react';
 import { useUIStore } from '../../../stores/uiStore';
 import type { FieldDef } from '../../../types';
+import type { DrawerProps, AddFieldContext } from '../../../drawer/types';
 
-interface AddFieldViewProps {
+// Legacy props interface (deprecated - use DrawerProps)
+interface LegacyAddFieldViewProps {
   onSubmit: (field: FieldDef) => void;
   isPending?: boolean;
+}
+
+// New contract props
+type AddFieldViewProps = DrawerProps<AddFieldContext & { onFieldSubmit?: (field: FieldDef) => void; isPending?: boolean }, { field: FieldDef }>;
+
+// Type guard to detect legacy vs new props
+function isDrawerProps(props: unknown): props is AddFieldViewProps {
+  return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props && 'onClose' in props;
 }
 
 const FIELD_TYPES: { value: FieldDef['type']; label: string; description: string }[] = [
@@ -19,13 +29,29 @@ const FIELD_TYPES: { value: FieldDef['type']; label: string; description: string
   { value: 'link', label: 'Link', description: 'Reference to another record' },
 ];
 
-export function AddFieldView({ onSubmit, isPending }: AddFieldViewProps) {
+export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps) {
+  // Handle both legacy and new contract
+  const isNewContract = isDrawerProps(props);
+  const legacyOnSubmit = !isNewContract ? props.onSubmit : undefined;
+  const isPending = isNewContract ? props.context.isPending : props.isPending;
+  const onClose = isNewContract ? props.onClose : undefined;
+  const onSubmit = isNewContract ? props.onSubmit : undefined;
+
   const { closeDrawer } = useUIStore();
   const [key, setKey] = useState('');
   const [label, setLabel] = useState('');
   const [type, setType] = useState<FieldDef['type']>('text');
   const [required, setRequired] = useState(false);
   const [options, setOptions] = useState('');
+
+  // Close handler that works with both contracts
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      closeDrawer();
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,8 +68,18 @@ export function AddFieldView({ onSubmit, isPending }: AddFieldViewProps) {
       field.options = options.split(',').map((o) => o.trim()).filter(Boolean);
     }
 
-    onSubmit(field);
-    closeDrawer();
+    if (onSubmit) {
+      // New contract: emit typed result
+      onSubmit({
+        success: true,
+        data: { field },
+        sideEffects: [{ type: 'update', entityType: 'definition' }],
+      });
+    } else if (legacyOnSubmit) {
+      // Legacy: call callback and close
+      legacyOnSubmit(field);
+      closeDrawer();
+    }
   };
 
   // Auto-generate key from label
@@ -153,7 +189,7 @@ export function AddFieldView({ onSubmit, isPending }: AddFieldViewProps) {
         <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
           <button
             type="button"
-            onClick={closeDrawer}
+            onClick={handleClose}
             className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
           >
             Cancel

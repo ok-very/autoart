@@ -171,79 +171,134 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
     .execute();
 
   // Create tasks
+  const [confirmBoundaryTask] = await db
+    .insertInto('hierarchy_nodes')
+    .values({
+      parent_id: siteSurvey.id,
+      root_project_id: project.id,
+      type: 'task',
+      title: 'Confirm Location Boundary',
+      description: JSON.stringify({
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [{ type: 'text', text: 'Verify the GPS coordinates match the city filing.' }],
+          },
+        ],
+      }),
+      metadata: JSON.stringify({
+        tags: ['Engineering'],
+        status: 'in-progress',
+        owner: 'SJ',
+        dueDate: '2025-02-05',
+        percentComplete: 35,
+        completed: false,
+      }),
+      created_by: user.id,
+      position: 0,
+    })
+    .returning('id')
+    .execute();
+
+  const [submitReportTask] = await db
+    .insertInto('hierarchy_nodes')
+    .values({
+      parent_id: siteSurvey.id,
+      root_project_id: project.id,
+      type: 'task',
+      title: 'Submit Survey Report',
+      description: JSON.stringify({
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [{ type: 'text', text: 'Upload the final PDF before the deadline.' }],
+          },
+        ],
+      }),
+      metadata: JSON.stringify({
+        status: 'blocked',
+        owner: 'MR',
+        dueDate: '2025-02-10',
+        percentComplete: 10,
+        completed: false,
+      }),
+      created_by: user.id,
+      position: 1,
+    })
+    .returning('id')
+    .execute();
+
+  await db
+    .insertInto('hierarchy_nodes')
+    .values({
+      parent_id: siteSurvey.id,
+      root_project_id: project.id,
+      type: 'task',
+      title: 'Document Site Conditions',
+      description: JSON.stringify({
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [{ type: 'text', text: 'Take photos of current wall condition and surroundings.' }],
+          },
+        ],
+      }),
+      metadata: JSON.stringify({
+        tags: ['Documentation'],
+        status: 'done',
+        owner: 'SJ',
+        dueDate: '2025-02-03',
+        percentComplete: 100,
+        completed: true,
+      }),
+      created_by: user.id,
+      position: 2,
+    })
+    .execute();
+
+  console.log('  ✓ Created sample project hierarchy');
+
+  // Create subtasks under the "Confirm Location Boundary" task
   await db
     .insertInto('hierarchy_nodes')
     .values([
       {
-        parent_id: siteSurvey.id,
+        parent_id: confirmBoundaryTask.id,
         root_project_id: project.id,
-        type: 'task',
-        title: 'Confirm Location Boundary',
-        description: JSON.stringify({
-          type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [{ type: 'text', text: 'Verify the GPS coordinates match the city filing.' }],
-            },
-          ],
-        }),
+        type: 'subtask',
+        title: 'Pull property records from city archives',
         metadata: JSON.stringify({
-          tags: ['Engineering'],
-          status: 'in-progress',
+          status: 'done',
           owner: 'SJ',
-          dueDate: '2025-02-05',
-          percentComplete: 35,
-          completed: false,
+          completed: true,
         }),
         created_by: user.id,
         position: 0,
       },
       {
-        parent_id: siteSurvey.id,
+        parent_id: confirmBoundaryTask.id,
         root_project_id: project.id,
-        type: 'task',
-        title: 'Submit Survey Report',
-        description: JSON.stringify({
-          type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [{ type: 'text', text: 'Upload the final PDF before the deadline.' }],
-            },
-          ],
-        }),
+        type: 'subtask',
+        title: 'Cross-reference GPS with survey maps',
         metadata: JSON.stringify({
-          status: 'blocked',
-          owner: 'MR',
-          dueDate: '2025-02-10',
-          percentComplete: 10,
+          status: 'in-progress',
+          owner: 'SJ',
           completed: false,
         }),
         created_by: user.id,
         position: 1,
       },
       {
-        parent_id: siteSurvey.id,
+        parent_id: confirmBoundaryTask.id,
         root_project_id: project.id,
-        type: 'task',
-        title: 'Document Site Conditions',
-        description: JSON.stringify({
-          type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [{ type: 'text', text: 'Take photos of current wall condition and surroundings.' }],
-            },
-          ],
-        }),
+        type: 'subtask',
+        title: 'Get sign-off from property owner',
         metadata: JSON.stringify({
-          tags: ['Documentation'],
-          status: 'done',
-          owner: 'SJ',
-          dueDate: '2025-02-03',
-          percentComplete: 100,
-          completed: true,
+          status: 'not-started',
+          completed: false,
         }),
         created_by: user.id,
         position: 2,
@@ -251,7 +306,40 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
     ])
     .execute();
 
-  console.log('  ✓ Created sample project hierarchy');
+  // Create subtasks under the "Submit Survey Report" task
+  await db
+    .insertInto('hierarchy_nodes')
+    .values([
+      {
+        parent_id: submitReportTask.id,
+        root_project_id: project.id,
+        type: 'subtask',
+        title: 'Compile field notes into draft',
+        metadata: JSON.stringify({
+          status: 'done',
+          owner: 'MR',
+          completed: true,
+        }),
+        created_by: user.id,
+        position: 0,
+      },
+      {
+        parent_id: submitReportTask.id,
+        root_project_id: project.id,
+        type: 'subtask',
+        title: 'Review with engineering lead',
+        metadata: JSON.stringify({
+          status: 'blocked',
+          owner: 'MR',
+          completed: false,
+        }),
+        created_by: user.id,
+        position: 1,
+      },
+    ])
+    .execute();
+
+  console.log('  ✓ Created sample subtasks');
 
   // Create sample records
   await db

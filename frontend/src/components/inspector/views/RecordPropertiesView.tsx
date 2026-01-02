@@ -12,7 +12,7 @@ import {
 import { RichTextEditor } from '../../editor/RichTextEditor';
 import { FieldRenderer } from '../fields/FieldRenderer';
 import type { NodeType, FieldDef, HierarchyNode } from '../../../types';
-import { parseTaskMetadata, DEFAULT_TASK_FIELDS } from '../../../utils/nodeMetadata';
+import { parseTaskMetadata } from '../../../utils/nodeMetadata';
 
 interface RecordPropertiesViewProps {
   itemId: string;
@@ -58,9 +58,9 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
 
   const data = !isNode ? ((item as { data?: Record<string, unknown> }).data || {}) : {};
   const description = isNode ? (item as { description?: unknown }).description : null;
-  
-  const definitionId = !isNode 
-    ? (item as { definition_id: string }).definition_id 
+
+  const definitionId = !isNode
+    ? (item as { definition_id: string }).definition_id
     : (item as unknown as HierarchyNode).default_record_def_id;
 
   // Avoid stale closure issues inside debounced saves.
@@ -90,36 +90,30 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
     stage: 'bg-slate-50 border-slate-100 text-slate-900',
     subprocess: 'bg-orange-50 border-orange-100 text-orange-900',
     task: 'bg-green-50 border-green-100 text-green-900',
+    subtask: 'bg-teal-50 border-teal-100 text-teal-900',
     record: 'bg-slate-50 border-slate-100 text-slate-900',
   }[nodeType];
 
   // Build fields list
   let fields: { key: string; value: unknown; def?: FieldDef }[] = [];
 
-  // Special handling for task nodes: merge default task fields with custom definition fields
+  // Special handling for task nodes: use Task definition from database
   if (isNode && nodeType === 'task') {
     const taskMeta = parseTaskMetadata(metadata);
 
-    // Start with default task field definitions (excluding title/description handled separately)
-    const defaultFieldDefs: FieldDef[] = DEFAULT_TASK_FIELDS
-      .filter((f) => f.key !== 'title' && f.key !== 'description')
-      .map((f) => ({
+    // Get Task definition fields from database (system definition)
+    const taskDefinition = definitions?.find((d) => d.name === 'Task');
+    const taskFieldDefs: FieldDef[] = taskDefinition?.schema_config?.fields
+      ?.filter((f) => f.key !== 'title' && f.key !== 'description')
+      ?.map((f) => ({
         key: f.key,
         type: f.type,
         label: f.label,
         required: f.required,
         options: f.options,
-      }));
+      })) || [];
 
-    // Merge with custom fields from Task definition if it exists
-    const customFields: FieldDef[] = definition?.schema_config?.fields
-      ?.filter((f) => !defaultFieldDefs.find((df) => df.key === f.key))
-      ?.filter((f) => f.key !== 'title' && f.key !== 'description')
-      || [];
-
-    const allFieldDefs = [...defaultFieldDefs, ...customFields];
-
-    fields = allFieldDefs.map((fieldDef) => ({
+    fields = taskFieldDefs.map((fieldDef) => ({
       key: fieldDef.key,
       value: metadata[fieldDef.key] ?? taskMeta[fieldDef.key as keyof typeof taskMeta],
       def: fieldDef,

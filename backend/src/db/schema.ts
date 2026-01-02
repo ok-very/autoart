@@ -75,7 +75,7 @@ export interface HierarchyNodesTable {
   id: Generated<string>;
   parent_id: string | null;
   root_project_id: string | null;
-  type: 'project' | 'process' | 'stage' | 'subprocess' | 'task';
+  type: 'project' | 'process' | 'stage' | 'subprocess' | 'task' | 'subtask';
   title: string;
   description: unknown | null; // TipTap JSON document
   position: Generated<number>;
@@ -97,6 +97,8 @@ export interface RecordDefinitionsTable {
   derived_from_id: string | null;
   project_id: string | null; // If set, belongs to project's template library
   is_template: Generated<boolean>; // Marks as reusable template
+  is_system: Generated<boolean>; // System definitions (Task, Subtask, etc.) - cannot be deleted
+  parent_definition_id: string | null; // For hierarchical types (e.g., Subtask under Task)
   clone_excluded: Generated<boolean>; // If true, definition is NOT cloned when cloning projects
   pinned: Generated<boolean>; // If true, appears in quick create menu
   schema_config: unknown; // JSONB - field definitions

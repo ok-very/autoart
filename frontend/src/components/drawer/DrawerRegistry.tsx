@@ -8,7 +8,6 @@ import { CloneProjectView } from './views/CloneProjectView';
 import { ViewRecordDrawer } from './views/ViewRecordDrawer';
 import { ViewDefinitionDrawer } from './views/ViewDefinitionDrawer';
 import { ProjectLibraryDrawer } from './views/ProjectLibraryDrawer';
-import { IngestionDrawer } from './views/IngestionDrawer';
 import { CreateRecordView } from './views/CreateRecordView';
 import { CreateDefinitionView } from './views/CreateDefinitionView';
 import { ClassifyRecordsView } from './views/ClassifyRecordsView';
@@ -40,8 +39,6 @@ export function DrawerRegistry({ type, props }: DrawerRegistryProps) {
       return <ViewDefinitionDrawer {...(props as { recordId?: string; definitionId?: string })} />;
     case 'project-library':
       return <ProjectLibraryDrawer {...(props as { projectId?: string; projectTitle?: string })} />;
-    case 'ingestion':
-      return <IngestionDrawer />;
     case 'create-record':
       return <CreateRecordView {...(props as { definitionId: string; classificationNodeId?: string })} />;
     case 'create-definition':

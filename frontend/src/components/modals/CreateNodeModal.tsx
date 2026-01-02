@@ -23,7 +23,10 @@ export function CreateNodeModal({
     stage: 'Stage',
     subprocess: 'Subprocess',
     task: 'Task',
-  }[nodeType];
+    subtask: 'Subtask',
+    process: 'Process',
+    project: 'Project',
+  }[nodeType] ?? nodeType;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

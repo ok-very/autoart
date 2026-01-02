@@ -31,6 +31,7 @@ export function deriveUIPanels(state: CompositionState): UIPanels {
     switch (viewMode) {
         case 'columns':
             workspace = 'millerColumns';
+            sidebar = null; // Miller Columns has its own navigation
             break;
         case 'workflow':
             // Portmanteau view: merges left navigation + main workflow task table.

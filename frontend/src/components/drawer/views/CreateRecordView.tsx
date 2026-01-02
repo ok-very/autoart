@@ -8,17 +8,43 @@ import {
 } from '../../../api/hooks';
 import { RichTextInput } from '../../editor/RichTextInput';
 import type { FieldDef, HierarchyNode } from '../../../types';
+import type { DrawerProps, CreateRecordContext } from '../../../drawer/types';
 
-interface CreateRecordViewProps {
+// Legacy props interface (deprecated - use DrawerProps)
+interface LegacyCreateRecordViewProps {
   definitionId: string;
   classificationNodeId?: string;
 }
 
-export function CreateRecordView({ definitionId, classificationNodeId: initialNodeId }: CreateRecordViewProps) {
+// New contract props
+type CreateRecordViewProps = DrawerProps<CreateRecordContext, { recordId: string }>;
+
+// Type guard to detect legacy vs new props
+function isDrawerProps(props: unknown): props is CreateRecordViewProps {
+  return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props;
+}
+
+export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateRecordViewProps) {
+  // Handle both legacy and new contract
+  const isNewContract = isDrawerProps(props);
+  const definitionId = isNewContract ? props.context.definitionId : props.definitionId;
+  const initialNodeId = isNewContract ? props.context.classificationNodeId : props.classificationNodeId;
+  const onClose = isNewContract ? props.onClose : undefined;
+  const onSubmit = isNewContract ? props.onSubmit : undefined;
+
   const { closeDrawer, activeProjectId, setSelection } = useUIStore();
   const { data: definition, isLoading } = useRecordDefinition(definitionId);
   const { data: projectNodes } = useProjectTree(activeProjectId);
   const createRecord = useCreateRecord();
+
+  // Close handler that works with both contracts
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      closeDrawer();
+    }
+  };
 
   const [uniqueName, setUniqueName] = useState('');
   const [fieldValues, setFieldValues] = useState<Record<string, unknown>>({});
@@ -59,13 +85,29 @@ export function CreateRecordView({ definitionId, classificationNodeId: initialNo
         classificationNodeId: selectedNodeId,
       });
 
-      // Open the newly created record in inspector
+      // Handle result based on contract type
       if (result.record) {
-        closeDrawer();
-        setSelection({ type: 'record', id: result.record.id });
+        if (onSubmit) {
+          // New contract: emit typed result
+          onSubmit({
+            success: true,
+            data: { recordId: result.record.id },
+            sideEffects: [{ type: 'create', entityType: 'record' }],
+          });
+        } else {
+          // Legacy: close and select
+          closeDrawer();
+          setSelection({ type: 'record', id: result.record.id });
+        }
       }
     } catch (err) {
       console.error('Failed to create record:', err);
+      if (onSubmit) {
+        onSubmit({
+          success: false,
+          error: err instanceof Error ? err.message : 'Failed to create record',
+        });
+      }
     }
   };
 
@@ -232,7 +274,7 @@ export function CreateRecordView({ definitionId, classificationNodeId: initialNo
         <div className="flex justify-end gap-3 pt-6 mt-2 border-t border-slate-100">
           <button
             type="button"
-            onClick={closeDrawer}
+            onClick={handleClose}
             className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
           >
             Cancel

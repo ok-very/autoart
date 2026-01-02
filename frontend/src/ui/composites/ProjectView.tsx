@@ -20,7 +20,6 @@ import { DataTableHierarchy, type HierarchyFieldDef } from './DataTableHierarchy
 import { DataTableFlat } from './DataTableFlat';
 import type { HierarchyNode, DataRecord, RecordDefinition } from '../../types';
 import type { DataFieldKind } from '../molecules/DataFieldWidget';
-import { DEFAULT_TASK_FIELDS } from '../../utils/nodeMetadata';
 
 // ==================== TYPES ====================
 
@@ -81,57 +80,37 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
     // Fetch record definitions to get Task schema
     const { data: definitions } = useRecordDefinitions();
 
-    // Get Task definition fields - merge defaults with custom fields from definition
+    // Get Task definition fields directly from the database
     const taskFields = useMemo<HierarchyFieldDef[]>(() => {
         const taskDef = definitions?.find((d) => d.name === 'Task');
-
-        // Start with all default fields, converted to HierarchyFieldDef
-        const mergedFields = DEFAULT_TASK_FIELDS.map((defaultField): HierarchyFieldDef => {
-            const definitionField = taskDef?.schema_config?.fields?.find((f) => f.key === defaultField.key);
-            if (definitionField) {
-                return {
-                    key: definitionField.key,
-                    label: definitionField.label,
-                    type: definitionField.type,
-                    options: definitionField.options,
-                    renderAs: ((definitionField as { renderAs?: string }).renderAs || defaultField.renderAs || 'text') as DataFieldKind,
-                    showInCollapsed: defaultField.showInCollapsed,
-                    showInExpanded: defaultField.showInExpanded,
-                    width: defaultField.width,
-                };
-            }
-            return {
-                key: defaultField.key,
-                label: defaultField.label,
-                type: defaultField.type,
-                options: defaultField.options,
-                renderAs: (defaultField.renderAs || 'text') as DataFieldKind,
-                showInCollapsed: defaultField.showInCollapsed,
-                showInExpanded: defaultField.showInExpanded,
-                width: defaultField.width,
-            };
-        });
-
-        // Add custom fields from definition that aren't in defaults
-        if (taskDef?.schema_config?.fields) {
-            const defaultKeys = DEFAULT_TASK_FIELDS.map((f) => f.key);
-            const customFields = taskDef.schema_config.fields
-                .filter((f) => !defaultKeys.includes(f.key))
-                .map((field): HierarchyFieldDef => ({
-                    key: field.key,
-                    label: field.label,
-                    type: field.type,
-                    options: field.options,
-                    renderAs: ((field as { renderAs?: string }).renderAs || 'text') as DataFieldKind,
-                    showInCollapsed: false,
-                    showInExpanded: true,
-                    width: 'flex',
-                }));
-
-            mergedFields.push(...customFields);
+        if (!taskDef?.schema_config?.fields) {
+            return [];
         }
 
-        return mergedFields;
+        // Convert definition fields to HierarchyFieldDef format
+        return taskDef.schema_config.fields.map((field): HierarchyFieldDef => {
+            // Determine display properties based on field type
+            const isCollapsedField = ['title', 'status', 'owner', 'dueDate'].includes(field.key);
+            const width = field.key === 'title' ? 360 :
+                field.type === 'status' ? 128 :
+                    field.type === 'user' ? 96 :
+                        field.type === 'date' ? 160 : 'flex';
+
+            return {
+                key: field.key,
+                label: field.label,
+                type: field.type,
+                options: field.options,
+                renderAs: (field.type === 'status' ? 'status' :
+                    field.type === 'user' ? 'user' :
+                        field.type === 'date' ? 'date' :
+                            field.type === 'tags' ? 'tags' :
+                                field.type === 'textarea' ? 'description' : 'text') as DataFieldKind,
+                showInCollapsed: isCollapsedField,
+                showInExpanded: field.key !== 'title', // All except title show in expanded
+                width,
+            };
+        });
     }, [definitions]);
 
     // Ensure we still load the hierarchy even when the outer sidebar is hidden

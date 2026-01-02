@@ -7,30 +7,7 @@
 
 ## Active Legacy Items
 
-### 1. `cloneProjectTemplates` (Backend Service)
-
-| Field | Value |
-|-------|-------|
-| **Location** | `backend/src/modules/records/records.service.ts` |
-| **Date Identified** | 2026-01-01 |
-| **Replacement** | `cloneProjectDefinitions` |
-| **Replacement Commit** | (same file, already implemented) |
-| **Current Status** | Marked `@deprecated`, wrapper calls replacement |
-| **Active Callers** | `hierarchy.service.ts:cloneSubtree()` |
-| **Safe Removal Date** | 2026-02-01 (after 30 days with no direct calls) |
-| **Rollback Script** | N/A (function still exists as wrapper) |
-
-**Action Items:**
-- [x] Mark function with `@deprecated` JSDoc
-- [x] Function internally calls replacement
-- [ ] Update all callers to use `cloneProjectDefinitions` directly
-- [ ] Add runtime logging when deprecated function is called
-- [ ] Monitor for 14 days with no calls
-- [ ] Remove function
-
----
-
-### 2. `hierarchy_nodes.metadata.status` (String-Based Legacy)
+### 1. `hierarchy_nodes.metadata.status` (String-Based Legacy)
 
 | Field | Value |
 |-------|-------|
@@ -63,29 +40,15 @@
 
 ---
 
-### 3. `/modals/` Directory (Removed)
-
-| Field | Value |
-|-------|-------|
-| **Location** | `frontend/src/components/modals/` |
-| **Date Identified** | 2026-01-01 |
-| **Replacement** | Drawer system (`frontend/src/drawer/`) |
-| **Current Status** | ✅ **REMOVED** - Directory no longer exists |
-| **Safe Removal Date** | N/A (already removed) |
-
-**Verification:**
-```bash
-# Returns empty - no modal imports remain
-grep -r "modals/" frontend/src/
-```
-
----
-
 ## Completed Removals
 
 | Item | Removal Date | Commit | Notes |
 |------|--------------|--------|-------|
 | `/modals/` directory | 2026-01-01 | (Phase 3) | Replaced by drawer system |
+| `TaskDataTable.tsx` | 2026-01-01 | - | Replaced by DataTableHierarchy |
+| `RecordDataTable.tsx` | 2026-01-01 | - | Replaced by DataTableFlat |
+| `IngestionDrawer.tsx` | 2026-01-01 | - | Replaced by Ingest view mode on Records page |
+| `cloneProjectTemplates` | 2026-01-01 | - | Replaced by cloneProjectDefinitions |
 
 ---
 
@@ -99,23 +62,6 @@ Before removing any deprecated item:
 4. [ ] Rollback script exists and tested
 5. [ ] Full test suite passes
 6. [ ] Update this audit with removal date
-
----
-
-## Runtime Deprecation Logging
-
-To track usage of deprecated code paths, the following functions emit warnings:
-
-```typescript
-// Pattern for deprecated function logging
-function deprecatedFunction() {
-  console.warn('[DEPRECATED] functionName called. Use replacementName instead. Called from:', new Error().stack);
-  // ... call replacement
-}
-```
-
-**Logged Functions:**
-- `cloneProjectTemplates` → logs warning, calls `cloneProjectDefinitions`
 
 ---
 

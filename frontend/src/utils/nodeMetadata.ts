@@ -11,7 +11,6 @@ export {
     TaskMetadataSchema,
     TaskFieldDefSchema,
     TASK_STATUS_CONFIG,
-    DEFAULT_TASK_FIELDS,
     parseTaskMetadata,
     deriveTaskStatus,
     coercePercentComplete,
