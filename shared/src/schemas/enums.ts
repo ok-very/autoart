@@ -67,9 +67,17 @@ export const RecordsViewModeSchema = z.enum(['list', 'ingest']);
 export type RecordsViewMode = z.infer<typeof RecordsViewModeSchema>;
 
 /**
+ * Fields view mode enum - views available on the fields page
+ * - browse: Miller columns browser for field exploration
+ * - aggregate: Aggregated field statistics view
+ */
+export const FieldsViewModeSchema = z.enum(['browse', 'aggregate']);
+export type FieldsViewMode = z.infer<typeof FieldsViewModeSchema>;
+
+/**
  * Combined view mode - union of all view modes
  */
-export const ViewModeSchema = z.union([ProjectViewModeSchema, RecordsViewModeSchema]);
+export const ViewModeSchema = z.union([ProjectViewModeSchema, RecordsViewModeSchema, FieldsViewModeSchema]);
 export type ViewMode = z.infer<typeof ViewModeSchema>;
 
 /**
@@ -85,4 +93,9 @@ export const PROJECT_VIEW_MODE_LABELS: Record<ProjectViewMode, string> = {
 export const RECORDS_VIEW_MODE_LABELS: Record<RecordsViewMode, string> = {
   list: 'List',
   ingest: 'Ingest',
+};
+
+export const FIELDS_VIEW_MODE_LABELS: Record<FieldsViewMode, string> = {
+  browse: 'Browse',
+  aggregate: 'Aggregate',
 };

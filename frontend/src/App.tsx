@@ -5,6 +5,7 @@ import { useAuthStore } from './stores/authStore';
 import { MainLayout } from './components/layout/MainLayout';
 import { LoginPage } from './pages/LoginPage';
 import { RecordsPage } from './pages/RecordsPage';
+import { FieldsPage } from './pages/FieldsPage';
 
 function App() {
   const { isLoading, isError, isFetching } = useCurrentUser();
@@ -52,6 +53,7 @@ function App() {
 
   return (
     <Routes>
+      <Route path="/fields" element={<FieldsPage />} />
       <Route path="/" element={<MainLayout />} />
       <Route path="/project/:projectId" element={<MainLayout />} />
       <Route path="/records" element={<RecordsPage />} />

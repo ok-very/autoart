@@ -6,11 +6,11 @@
  * 2. Builds the available tabs based on context
  * 3. Routes to the appropriate view component
  *
- * The actual view logic is in the extracted composites:
+ * The actual view logic is in semantic components:
  * - RecordPropertiesView: Record/node field editing (uses domain)
- * - SchemaEditorView: Definition schema editing
+ * - SchemaEditor: Definition schema editing
  * - ReferencesManager: Task reference management
- * - LinksView: Record-to-record links
+ * - LinksManager: Record-to-record links
  */
 
 import { FileText, Link2, ExternalLink, Wrench } from 'lucide-react';
@@ -18,10 +18,7 @@ import { clsx } from 'clsx';
 import { useUIStore } from '../../stores/uiStore';
 import { useNode, useRecord } from '../../api/hooks';
 import { RecordPropertiesView } from './RecordPropertiesView';
-// TODO: Migrate these views to composites
-import { SchemaEditorView } from '../../components/inspector/views/SchemaEditorView';
-import { ReferencesManager } from '../../components/inspector/views/ReferencesManager';
-import { LinksView } from '../../components/inspector/views/LinksView';
+import { SchemaEditor, ReferencesManager, LinksManager } from '../semantic';
 
 type TabId = 'record' | 'references' | 'links' | 'schema';
 
@@ -79,7 +76,7 @@ export function RecordInspector() {
             case 'record':
                 return <RecordPropertiesView itemId={inspectedItem.id} isNode={isNode} />;
             case 'schema':
-                return <SchemaEditorView itemId={inspectedItem.id} isNode={isNode} />;
+                return <SchemaEditor itemId={inspectedItem.id} isNode={isNode} />;
             case 'references':
                 if (isTask) {
                     return <ReferencesManager taskId={inspectedItem.id} />;
@@ -88,7 +85,7 @@ export function RecordInspector() {
                 return <RecordPropertiesView itemId={inspectedItem.id} isNode={isNode} />;
             case 'links':
                 if (isRecord) {
-                    return <LinksView recordId={inspectedItem.id} />;
+                    return <LinksManager recordId={inspectedItem.id} />;
                 }
                 // Fallback to record view if links not available
                 return <RecordPropertiesView itemId={inspectedItem.id} isNode={isNode} />;

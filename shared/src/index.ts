@@ -22,17 +22,30 @@ export {
   // UI View Mode Schemas
   ProjectViewModeSchema,
   RecordsViewModeSchema,
+  FieldsViewModeSchema,
   ViewModeSchema,
   PROJECT_VIEW_MODE_LABELS,
   RECORDS_VIEW_MODE_LABELS,
+  FIELDS_VIEW_MODE_LABELS,
   type NodeType,
   type RefMode,
   type ReferenceStatus,
   type FieldType,
   type ProjectViewMode,
   type RecordsViewMode,
+  type FieldsViewMode,
   type ViewMode,
 } from './schemas/enums';
+
+// Fields
+export {
+  FieldDescriptorSchema,
+  FieldCategorySchema,
+  FieldIndexSchema,
+  type FieldDescriptor,
+  type FieldCategory,
+  type FieldIndex,
+} from './schemas/fields';
 
 // Hierarchy
 export {

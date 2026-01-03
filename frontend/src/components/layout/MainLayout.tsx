@@ -6,7 +6,7 @@ import { Workspace } from './Workspace';
 import { MillerColumnsView } from './MillerColumnsView';
 import { ProjectWorkflowView } from './ProjectWorkflowView';
 import { CalendarView } from './CalendarView';
-import { RecordInspector } from '../inspector/RecordInspector';
+import { RecordInspector } from '../../ui/composites';
 import { BottomDrawer } from '../drawer/BottomDrawer';
 import { ResizeHandle } from '../common/ResizeHandle';
 import { useUIStore, useUIPanels } from '../../stores/uiStore';

@@ -2,11 +2,10 @@ import { useCallback, useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header';
 import { RecordTypeSidebar } from '../components/records/RecordTypeSidebar';
 import { UniversalTableView } from '../components/tables/UniversalTableView';
-import { RecordInspector } from '../components/inspector/RecordInspector';
 import { BottomDrawer } from '../components/drawer/BottomDrawer';
 import { ResizeHandle } from '../components/common/ResizeHandle';
 import { useUIStore, isRecordsViewMode } from '../stores/uiStore';
-import { IngestionView } from '../ui/composites';
+import { IngestionView, RecordInspector } from '../ui/composites';
 
 /**
  * Records workspace page for managing records (contacts, artworks, locations, etc.)

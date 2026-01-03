@@ -25,8 +25,12 @@ const FIELD_TYPES: { value: FieldDef['type']; label: string; description: string
   { value: 'url', label: 'URL', description: 'Web link' },
   { value: 'date', label: 'Date', description: 'Calendar date' },
   { value: 'select', label: 'Select', description: 'Dropdown with options' },
+  { value: 'status', label: 'Status', description: 'Status with colored options' },
   { value: 'checkbox', label: 'Checkbox', description: 'True/false toggle' },
+  { value: 'percent', label: 'Percent', description: 'Progress percentage (0-100)' },
+  { value: 'tags', label: 'Tags', description: 'Multiple text tags' },
   { value: 'link', label: 'Link', description: 'Reference to another record' },
+  { value: 'user', label: 'User', description: 'User assignment' },
 ];
 
 export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps) {
@@ -64,7 +68,7 @@ export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps)
       required,
     };
 
-    if (type === 'select' && options.trim()) {
+    if ((type === 'select' || type === 'status') && options.trim()) {
       field.options = options.split(',').map((o) => o.trim()).filter(Boolean);
     }
 
@@ -153,19 +157,24 @@ export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps)
               </select>
             </div>
 
-            {type === 'select' && (
+            {(type === 'select' || type === 'status') && (
               <div>
                 <label htmlFor="options" className="block text-sm font-medium text-slate-700 mb-1">
-                  Options (comma-separated)
+                  {type === 'status' ? 'Status Options (comma-separated)' : 'Options (comma-separated)'}
                 </label>
                 <input
                   id="options"
                   type="text"
                   value={options}
                   onChange={(e) => setOptions(e.target.value)}
-                  placeholder="Option 1, Option 2, Option 3"
+                  placeholder={type === 'status' ? 'not_started, in_progress, complete' : 'Option 1, Option 2, Option 3'}
                   className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
+                {type === 'status' && (
+                  <p className="mt-1 text-xs text-slate-500">
+                    Status colors are automatically assigned based on option names
+                  </p>
+                )}
               </div>
             )}
 

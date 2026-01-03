@@ -23,8 +23,9 @@ import { useState, useMemo, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { Plus } from 'lucide-react';
 import { EditableCell } from '../molecules/EditableCell';
-import { DataFieldWidget, type DataFieldKind } from '../molecules/DataFieldWidget';
+import { type DataFieldKind } from '../molecules/DataFieldWidget';
 import { StatusColumnSummary } from '../molecules/StatusColumnSummary';
+import { StatusFieldEditor } from '../semantic/StatusFieldEditor';
 import type { FieldViewModel } from '@autoart/shared/domain';
 import type { HierarchyNode, FieldDef } from '../../types';
 
@@ -98,6 +99,14 @@ function parseNodeMetadata(node: HierarchyNode): Record<string, unknown> {
 }
 
 /**
+ * Check if a value looks like a valid date string (YYYY-MM-DD format)
+ */
+function isValidDateString(value: unknown): boolean {
+    if (typeof value !== 'string') return false;
+    return /^\d{4}-\d{2}-\d{2}/.test(value);
+}
+
+/**
  * Default value getter for hierarchy nodes
  */
 function defaultGetFieldValue(
@@ -113,6 +122,18 @@ function defaultGetFieldValue(
     // Metadata fields with fallback support
     const meta = parseNodeMetadata(node);
     const value = meta[fieldKey];
+
+    // Special handling for date fields - validate format
+    if (fieldKey === 'dueDate' || fieldKey.toLowerCase().includes('date')) {
+        if (isValidDateString(value)) {
+            return value;
+        }
+        // Try fallback if value is invalid
+        if (isValidDateString(fallbacks[fieldKey])) {
+            return fallbacks[fieldKey];
+        }
+        return null;
+    }
 
     // Return fallback if value is null/undefined
     if (value == null && fallbacks[fieldKey] != null) {
@@ -144,7 +165,6 @@ export function DataTableHierarchy({
     subtaskFields,
     onAddSubtask,
 }: DataTableHierarchyProps) {
-    const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
     // Track which parent nodes have their children (subtasks) visible
     const [expandedChildrenIds, setExpandedChildrenIds] = useState<Set<string>>(new Set());
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
@@ -155,12 +175,6 @@ export function DataTableHierarchy({
     // Filter fields for collapsed view (shown as columns)
     const collapsedFields = useMemo(
         () => fields.filter((f) => f.showInCollapsed !== false && f.key !== 'title'),
-        [fields]
-    );
-
-    // Filter fields for expanded view
-    const expandedFields = useMemo(
-        () => fields.filter((f) => f.showInExpanded && !f.showInCollapsed),
         [fields]
     );
 
@@ -223,19 +237,6 @@ export function DataTableHierarchy({
         });
     }, []);
 
-    // Handle row expansion toggle
-    const handleToggleExpand = useCallback((nodeId: string) => {
-        setExpandedIds((prev) => {
-            const next = new Set(prev);
-            if (next.has(nodeId)) {
-                next.delete(nodeId);
-            } else {
-                next.add(nodeId);
-            }
-            return next;
-        });
-    }, []);
-
     // Handle children (subtask) visibility toggle
     const handleToggleChildren = useCallback((nodeId: string) => {
         setExpandedChildrenIds((prev) => {
@@ -280,9 +281,6 @@ export function DataTableHierarchy({
     // Render header row
     const renderHeader = () => (
         <div className="flex h-8 items-center border-b border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase">
-            {/* Expand toggle column */}
-            {expandedFields.length > 0 && <div className="w-8 shrink-0" />}
-
             {/* Title column */}
             <div
                 className="w-[280px] min-w-[150px] shrink-0 px-3 cursor-pointer hover:bg-slate-100 flex items-center gap-1"
@@ -319,7 +317,6 @@ export function DataTableHierarchy({
     // Render a single row (can be recursively called for subtasks)
     const renderRow = (node: HierarchyNode, depth: number = 0, parentFields?: HierarchyFieldDef[]) => {
         const isSelected = node.id === selectedNodeId;
-        const isExpanded = expandedIds.has(node.id);
         const isChildrenExpanded = expandedChildrenIds.has(node.id);
         const status = getStatus(node);
         const nodeHasChildren = hasChildren(node.id);
@@ -327,6 +324,14 @@ export function DataTableHierarchy({
         const fieldsToUse = parentFields || collapsedFields;
         const isSubtask = depth > 0;
         const indentPx = depth * 24;
+
+        // Row click handler - selects row AND toggles children if has subtasks
+        const handleRowClick = () => {
+            onRowSelect?.(node.id);
+            if (nodeHasChildren) {
+                handleToggleChildren(node.id);
+            }
+        };
 
         return (
             <div key={node.id}>
@@ -337,23 +342,8 @@ export function DataTableHierarchy({
                         isSelected ? 'bg-blue-50' : 'hover:bg-slate-50',
                         isSubtask && 'bg-slate-50/50'
                     )}
-                    onClick={() => onRowSelect?.(node.id)}
+                    onClick={handleRowClick}
                 >
-                    {/* Expand toggle for field details */}
-                    {expandedFields.length > 0 && (
-                        <button
-                            className="w-8 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleToggleExpand(node.id);
-                            }}
-                        >
-                            <span className={clsx('transition-transform', isExpanded && 'rotate-90')}>
-                                ▶
-                            </span>
-                        </button>
-                    )}
-
                     {/* Title cell with nesting chevron and indentation */}
                     <div
                         className="w-[280px] min-w-[150px] shrink-0 px-3 py-2 flex items-center gap-1"
@@ -384,7 +374,7 @@ export function DataTableHierarchy({
                         <div className="flex-1 min-w-0">
                             <EditableCell
                                 viewModel={buildCellViewModel({ key: 'title', label: 'Title', type: 'text' }, node)}
-                                onSave={(value) => onCellChange?.(node.id, 'title', value)}
+                                onSave={(_fieldId, value) => onCellChange?.(node.id, 'title', value)}
                             />
                         </div>
                     </div>
@@ -394,15 +384,21 @@ export function DataTableHierarchy({
                         const width = typeof field.width === 'number' ? field.width : 130;
                         const viewModel = buildCellViewModel(field, node);
 
-                        // Special rendering for status with percent
-                        if (field.key === 'status' && status) {
-                            const percentValue = getFieldValue(node, 'percentComplete', fallbacks);
+                        // Status field - use StatusFieldEditor for inline editing
+                        if (field.key === 'status' || field.type === 'status') {
                             return (
-                                <div key={field.key} className="px-2 py-2 flex flex-col items-center gap-1" style={{ width }}>
-                                    <DataFieldWidget kind="status" value={status} />
-                                    {percentValue != null && (
-                                        <DataFieldWidget kind="percent" value={percentValue} />
-                                    )}
+                                <div
+                                    key={field.key}
+                                    className="px-2 py-2 flex items-center justify-center"
+                                    style={{ width }}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <StatusFieldEditor
+                                        value={status}
+                                        statusConfig={statusConfig}
+                                        onChange={(val) => onCellChange?.(node.id, 'status', val)}
+                                        compact
+                                    />
                                 </div>
                             );
                         }
@@ -411,7 +407,7 @@ export function DataTableHierarchy({
                             <div key={field.key} className="px-2 py-2" style={{ width }}>
                                 <EditableCell
                                     viewModel={viewModel}
-                                    onSave={(value) => onCellChange?.(node.id, field.key, value)}
+                                    onSave={(_fieldId, value) => onCellChange?.(node.id, field.key, value)}
                                 />
                             </div>
                         );
@@ -419,27 +415,6 @@ export function DataTableHierarchy({
 
                     <div className="flex-1" />
                 </div>
-
-                {/* Expanded content (field details) */}
-                {isExpanded && expandedFields.length > 0 && (
-                    <div className="px-12 py-3 bg-slate-50 border-b border-slate-200" style={{ marginLeft: `${indentPx}px` }}>
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                            {expandedFields.map((field) => {
-                                const value = getFieldValue(node, field.key, fallbacks);
-                                const renderAs = (field.renderAs || 'text') as DataFieldKind;
-
-                                return (
-                                    <div key={field.key}>
-                                        <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">
-                                            {field.label}
-                                        </div>
-                                        <DataFieldWidget kind={renderAs} value={value} />
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
 
                 {/* Children (subtasks) - rendered when expanded */}
                 {enableNesting && isChildrenExpanded && nodeChildren.length > 0 && (
@@ -491,9 +466,6 @@ export function DataTableHierarchy({
         return (
             <div className="sticky bottom-0 z-10 border-t border-slate-200 bg-slate-50">
                 <div className="flex h-10 items-center">
-                    {/* Expand toggle column placeholder */}
-                    {expandedFields.length > 0 && <div className="w-8 shrink-0" />}
-
                     {/* Title column - show total count */}
                     <div className="w-[280px] min-w-[150px] shrink-0 px-3">
                         <span className="text-xs font-semibold text-slate-600">

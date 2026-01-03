@@ -29,4 +29,10 @@ export { TableAddRow, type TableAddRowProps } from './TableAddRow';
 export { PropertySection, type PropertySectionProps } from './PropertySection';
 
 // Navigation molecules
-export { MillerColumn, type MillerColumnProps } from './MillerColumn';
+export {
+    MillerColumn,
+    type MillerColumnProps,
+    type MillerColumnItem,
+    type MillerColumnHierarchyProps,
+    type MillerColumnGenericProps,
+} from './MillerColumn';

@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, Plus, Copy, FolderOpen, Check, Library, Upload, Database } from 'lucide-react';
+import { ChevronDown, Plus, Copy, FolderOpen, Check, Library, Upload, Database, TableProperties } from 'lucide-react';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import {
   useUIStore,
   PROJECT_VIEW_MODE_LABELS,
   RECORDS_VIEW_MODE_LABELS,
+  FIELDS_VIEW_MODE_LABELS,
 } from '../../stores/uiStore';
-import type { ProjectViewMode, RecordsViewMode } from '@autoart/shared';
+import type { ProjectViewMode, RecordsViewMode, FieldsViewMode } from '@autoart/shared';
 import { useProjects } from '../../api/hooks';
 import { Badge } from '../common/Badge';
 
@@ -27,7 +28,8 @@ export function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const isRecordsPage = location.pathname === '/records';
+  const isRecordsPage = location.pathname.startsWith('/records');
+  const isFieldsPage = location.pathname.startsWith('/fields');
 
   const selectedProject = activeProjectId ? getNode(activeProjectId) : null;
 
@@ -105,9 +107,18 @@ export function Header() {
             <Database size={14} />
             Records
           </Link>
+          <Link
+            to="/fields"
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+              isFieldsPage ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            <TableProperties size={14} />
+            Fields
+          </Link>
         </nav>
 
-        {!isRecordsPage && (
+        {!isRecordsPage && !isFieldsPage && (
           <>
             <div className="h-6 w-px bg-slate-200 mx-1"></div>
 
@@ -224,6 +235,22 @@ export function Header() {
           // Records page view modes
           <>
             {(Object.entries(RECORDS_VIEW_MODE_LABELS) as [RecordsViewMode, string][]).map(([mode, label]) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                className={`px-3 py-1 text-xs font-medium rounded ${viewMode === mode
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+                  }`}
+              >
+                {label}
+              </button>
+            ))}
+          </>
+        ) : isFieldsPage ? (
+          // Fields page view modes
+          <>
+            {(Object.entries(FIELDS_VIEW_MODE_LABELS) as [FieldsViewMode, string][]).map(([mode, label]) => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}

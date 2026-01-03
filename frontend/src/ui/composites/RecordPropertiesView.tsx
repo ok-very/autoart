@@ -1,31 +1,29 @@
 /**
  * RecordPropertiesView - Composite for viewing/editing record properties
- * 
- * This composite:
- * - Uses domain hooks to build FieldViewModels
- * - Passes view models to FieldRenderer molecules
- * - Handles API mutations for field updates
- * - Provides callbacks for complex field types
+ *
+ * This composite follows the Semantic UI pattern:
+ * - For RECORDS: Uses FieldEditor semantic component (domain-aware, self-persisting)
+ * - For NODES: Uses NodeFieldEditor semantic component (same pattern)
+ * - Description field handled separately (RichTextEditor with debounced save)
+ *
+ * All CRUD logic is delegated to semantic components - this composite only
+ * handles layout and orchestration.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useRef, useMemo } from 'react';
 import { Trash2 } from 'lucide-react';
 import { useUIStore } from '../../stores/uiStore';
 import {
     useNode,
     useRecordDefinitions,
     useUpdateNode,
-    useUpdateRecord,
     useDeleteRecord,
 } from '../../api/hooks';
 import { RichTextEditor } from '../../components/editor/RichTextEditor';
-import { FieldRenderer, type FieldRendererCallbacks } from '../molecules/FieldRenderer';
-import { LinkFieldInput } from './LinkFieldInput';
-import { UserMentionInput } from './UserMentionInput';
+import { FieldEditor } from '../semantic/FieldEditor';
+import { NodeFieldEditor } from '../semantic/NodeFieldEditor';
 import { useRecordFieldViewModels } from './hooks/useDomain';
-import type { FieldViewModel } from '@autoart/shared/domain';
-import type { NodeType, FieldDef, HierarchyNode } from '../../types';
-import { parseTaskMetadata } from '../../utils/nodeMetadata';
+import type { NodeType, HierarchyNode } from '../../types';
 
 interface RecordPropertiesViewProps {
     itemId: string;
@@ -35,14 +33,13 @@ interface RecordPropertiesViewProps {
 /**
  * RecordPropertiesView - Displays and edits record/node properties
  *
- * For records: Uses domain hooks to build FieldViewModels
- * For nodes: Uses legacy field building (to be migrated)
+ * For records: Uses FieldEditor semantic component
+ * For nodes: Uses NodeFieldEditor semantic component
  */
 export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewProps) {
     const { clearInspection, openDrawer } = useUIStore();
     const { data: node } = useNode(isNode ? itemId : null);
     const updateNode = useUpdateNode();
-    const updateRecord = useUpdateRecord();
     const deleteRecord = useDeleteRecord();
     const { data: definitions } = useRecordDefinitions();
 
@@ -54,8 +51,6 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
     } = useRecordFieldViewModels(!isNode ? itemId : null);
 
     const descriptionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const fieldTimerRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-    const [editedFields, setEditedFields] = useState<Record<string, unknown>>({});
 
     // Determine which item we're working with
     const item = isNode ? node : record;
@@ -67,84 +62,49 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
         ? (item as { title: string }).title
         : (item as { unique_name: string }).unique_name;
 
-    // Node-specific data extraction
-    const rawMetadata = isNode
-        ? ((item as { metadata?: Record<string, unknown> | string }).metadata || {})
-        : {};
-    const metadata: Record<string, unknown> =
-        typeof rawMetadata === 'string' ? JSON.parse(rawMetadata) : rawMetadata;
-
-    const data = !isNode ? ((item as { data?: Record<string, unknown> }).data || {}) : {};
     const description = isNode ? (item as { description?: unknown }).description : null;
 
-    const definitionId = !isNode
-        ? (item as { definition_id: string }).definition_id
-        : (item as unknown as HierarchyNode).default_record_def_id;
+    // For nodes: compute the list of field keys to render
+    const nodeFieldKeys = useMemo(() => {
+        if (!isNode || !node) return [];
 
-    // Keep refs for debounced saves
-    const latestMetadataRef = useRef<Record<string, unknown>>({});
-    const latestDataRef = useRef<Record<string, unknown>>({});
-    useEffect(() => {
-        latestMetadataRef.current = metadata;
-    }, [metadata]);
-    useEffect(() => {
-        latestDataRef.current = data;
-    }, [data]);
+        // Parse metadata
+        const rawMetadata = node.metadata || {};
+        const metadata: Record<string, unknown> =
+            typeof rawMetadata === 'string' ? JSON.parse(rawMetadata) : rawMetadata;
 
-    // Find definition for node-specific logic
-    const definition = definitions?.find((d) => {
-        if (definitionId) return d.id === definitionId;
-        if (isNode) {
-            const type = (item as { type: string }).type;
-            const typeName = type.charAt(0).toUpperCase() + type.slice(1);
-            return d.name === typeName;
-        }
-        return false;
-    }) || null;
-
-    // Build legacy fields for nodes (will be migrated to domain later)
-    let nodeFields: { key: string; value: unknown; def?: FieldDef }[] = [];
-
-    if (isNode && nodeType === 'task') {
-        const taskMeta = parseTaskMetadata(metadata);
-
-        // Get Task definition fields from database (system definition)
-        const taskDefinition = definitions?.find((d) => d.name === 'Task');
-        const taskFieldDefs: FieldDef[] = taskDefinition?.schema_config?.fields
-            ?.filter((f) => f.key !== 'title' && f.key !== 'description')
-            ?.map((f) => ({
-                key: f.key,
-                type: f.type,
-                label: f.label,
-                required: f.required,
-                options: f.options,
-            })) || [];
-
-        nodeFields = taskFieldDefs.map((fieldDef) => ({
-            key: fieldDef.key,
-            value: metadata[fieldDef.key] ?? taskMeta[fieldDef.key as keyof typeof taskMeta],
-            def: fieldDef,
-        }));
-
-        Object.entries(metadata).forEach(([key, value]) => {
-            if (key === 'percentComplete') return;
-            if (!nodeFields.find((f) => f.key === key)) {
-                nodeFields.push({ key, value, def: undefined });
+        // Find the definition for this node type
+        const nodeTypeName = node.type.charAt(0).toUpperCase() + node.type.slice(1);
+        const definition = definitions?.find((d) => {
+            if ((node as HierarchyNode).default_record_def_id) {
+                return d.id === (node as HierarchyNode).default_record_def_id;
             }
+            return d.name === nodeTypeName;
         });
-    } else if (isNode && definition?.schema_config?.fields) {
-        nodeFields = definition.schema_config.fields.map((fieldDef) => ({
-            key: fieldDef.key,
-            value: metadata[fieldDef.key],
-            def: fieldDef,
-        }));
-    } else if (isNode) {
-        nodeFields = Object.entries(metadata).map(([key, value]) => ({
-            key,
-            value,
-            def: undefined,
-        }));
-    }
+
+        // Special handling for tasks
+        if (nodeType === 'task') {
+            const taskDef = definitions?.find((d) => d.name === 'Task');
+            const taskFieldKeys = taskDef?.schema_config?.fields
+                ?.filter((f) => f.key !== 'title' && f.key !== 'description')
+                ?.map((f) => f.key) || [];
+
+            // Add any extra metadata keys that aren't in the definition
+            const extraKeys = Object.keys(metadata).filter(
+                (key) => key !== 'percentComplete' && !taskFieldKeys.includes(key)
+            );
+
+            return [...taskFieldKeys, ...extraKeys];
+        }
+
+        // For other node types with definition
+        if (definition?.schema_config?.fields) {
+            return definition.schema_config.fields.map((f) => f.key);
+        }
+
+        // Fallback: show all metadata keys
+        return Object.keys(metadata);
+    }, [isNode, node, nodeType, definitions]);
 
     const bgColor = {
         project: 'bg-blue-50 border-blue-100 text-blue-900',
@@ -168,28 +128,6 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
         }, 1000);
     };
 
-    const handleFieldChange = useCallback((key: string, value: unknown) => {
-        setEditedFields((prev) => ({ ...prev, [key]: value }));
-
-        if (fieldTimerRef.current[key]) {
-            clearTimeout(fieldTimerRef.current[key]);
-        }
-
-        fieldTimerRef.current[key] = setTimeout(() => {
-            if (isNode) {
-                updateNode.mutate({
-                    id: item.id,
-                    metadata: { ...latestMetadataRef.current, [key]: value },
-                });
-            } else {
-                updateRecord.mutate({
-                    id: item.id,
-                    data: { ...latestDataRef.current, [key]: value },
-                });
-            }
-        }, 1000);
-    }, [isNode, item.id, updateNode, updateRecord]);
-
     const confirmDeleteRecord = () => {
         openDrawer('confirm-delete', {
             title: 'Delete Record',
@@ -201,43 +139,6 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
                 clearInspection();
             },
         });
-    };
-
-    const getFieldValue = (key: string, value: unknown): unknown => {
-        if (editedFields[key] !== undefined) {
-            return editedFields[key];
-        }
-        return value;
-    };
-
-    // Callbacks for complex field types in FieldRenderer
-    const fieldCallbacks: FieldRendererCallbacks = {
-        renderLinkField: (vm: FieldViewModel, onChange: (value: unknown) => void) => (
-            <LinkFieldInput
-                value={vm.value as string}
-                fieldKey={vm.fieldId}
-                taskId={isNode ? item.id : undefined}
-                currentRecordId={!isNode ? item.id : undefined}
-                onChange={onChange}
-                readOnly={!vm.editable}
-            />
-        ),
-        renderUserField: (vm: FieldViewModel, onChange: (value: unknown) => void) => (
-            <UserMentionInput
-                value={vm.value}
-                onChange={onChange}
-                readOnly={!vm.editable}
-            />
-        ),
-        renderRichText: (vm: FieldViewModel, onChange: (value: unknown) => void, _multiline: boolean) => (
-            <div className="border border-slate-200 rounded-md bg-white p-1 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
-                <RichTextEditor
-                    content={vm.value}
-                    taskId={item.id}
-                    onChange={onChange}
-                />
-            </div>
-        ),
     };
 
     // Determine which fields to render
@@ -292,65 +193,34 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
                     Record Fields
                 </h4>
 
-                {/* Records: Use domain-derived view models */}
-                {hasRecordViewModels && visibleViewModels.map((vm) => {
-                    // Apply local edits to the view model
-                    const displayVm = editedFields[vm.fieldId] !== undefined
-                        ? { ...vm, value: editedFields[vm.fieldId] }
-                        : vm;
-
-                    return (
-                        <div key={vm.fieldId}>
-                            <label className="block text-xs font-medium text-slate-500 mb-1">
-                                {vm.label}
-                                {vm.required && <span className="text-red-500 ml-1">*</span>}
-                            </label>
-                            <FieldRenderer
-                                viewModel={displayVm}
-                                onChange={(value) => handleFieldChange(vm.fieldId, value)}
-                                callbacks={fieldCallbacks}
-                            />
-                        </div>
-                    );
-                })}
+                {/* Records: Use Semantic FieldEditor */}
+                {hasRecordViewModels && visibleViewModels.map((vm) => (
+                    <FieldEditor
+                        key={vm.fieldId}
+                        recordId={item.id}
+                        fieldId={vm.fieldId}
+                        showLabel={true}
+                    />
+                ))}
 
                 {/* Records with no fields */}
                 {!isNode && !hasRecordViewModels && !recordLoading && (
                     <p className="text-sm text-slate-400 italic">No fields defined</p>
                 )}
 
-                {/* Nodes: Use legacy field rendering (to be migrated) */}
-                {isNode && nodeFields.length === 0 && (
+                {/* Nodes: Use semantic NodeFieldEditor */}
+                {isNode && nodeFieldKeys.length === 0 && (
                     <p className="text-sm text-slate-400 italic">No fields defined</p>
                 )}
 
-                {isNode && nodeFields.map(({ key, value, def }) => {
-                    // Create a simple FieldViewModel for nodes (legacy compatibility)
-                    const vm: FieldViewModel = {
-                        fieldId: key,
-                        label: def?.label || key.replace(/_/g, ' '),
-                        value: getFieldValue(key, value),
-                        type: def?.type || 'text',
-                        editable: true,
-                        visible: true,
-                        required: def?.required || false,
-                        options: def?.options,
-                    };
-
-                    return (
-                        <div key={key}>
-                            <label className="block text-xs font-medium text-slate-500 mb-1 capitalize">
-                                {vm.label}
-                                {vm.required && <span className="text-red-500 ml-1">*</span>}
-                            </label>
-                            <FieldRenderer
-                                viewModel={vm}
-                                onChange={(newValue) => handleFieldChange(key, newValue)}
-                                callbacks={fieldCallbacks}
-                            />
-                        </div>
-                    );
-                })}
+                {isNode && nodeFieldKeys.map((fieldKey) => (
+                    <NodeFieldEditor
+                        key={fieldKey}
+                        nodeId={item.id}
+                        fieldId={fieldKey}
+                        showLabel={true}
+                    />
+                ))}
             </div>
         </div>
     );

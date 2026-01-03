@@ -1,6 +1,7 @@
 import { clsx } from 'clsx';
 import type { FieldViewModel } from '@autoart/shared/domain';
 import { TagsInput } from './TagsInput';
+import { StatusFieldEditor } from '../semantic/StatusFieldEditor';
 
 /**
  * Status configuration for rendering status fields
@@ -174,31 +175,17 @@ export function FieldRenderer({
         );
     }
 
-    // Status field - colored pill buttons
-    if (type === 'status' && statusConfig && options) {
-        const currentStatus = String(value || '');
+    // Status field - use StatusFieldEditor semantic component
+    if (type === 'status') {
         return (
-            <div className={clsx('flex gap-1 flex-wrap', className)}>
-                {options.map((status) => {
-                    const cfg = statusConfig[status];
-                    const isSelected = status === currentStatus;
-                    return (
-                        <button
-                            key={status}
-                            type="button"
-                            onClick={() => !readOnly && onChange(status)}
-                            disabled={readOnly}
-                            className={clsx(
-                                'px-2 h-7 rounded text-xs font-semibold transition-all',
-                                isSelected && cfg ? cfg.colorClass : 'bg-slate-100 text-slate-400 hover:bg-slate-200',
-                                readOnly && 'cursor-default'
-                            )}
-                        >
-                            {cfg?.label || status}
-                        </button>
-                    );
-                })}
-            </div>
+            <StatusFieldEditor
+                value={String(value || '')}
+                options={options}
+                statusConfig={statusConfig}
+                onChange={(val) => onChange(val)}
+                readOnly={readOnly}
+                className={className}
+            />
         );
     }
 

@@ -42,7 +42,6 @@
 export * from './hooks';
 
 // Field Input Composites (use API hooks)
-export { LinkFieldInput, type LinkFieldInputProps } from './LinkFieldInput';
 export { UserMentionInput, type UserMentionInputProps } from './UserMentionInput';
 
 // View Composites (orchestrate molecules with domain data)
@@ -60,3 +59,7 @@ export { MillerColumnsView, type MillerColumnsViewProps } from './MillerColumnsV
 
 // Ingestion/Import View
 export { IngestionView } from './IngestionView';
+
+// Fields View Composites
+export { FieldsMillerColumnsView, type FieldsMillerColumnsViewProps } from './FieldsMillerColumnsView';
+
