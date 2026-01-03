@@ -12,6 +12,9 @@ import { referencesRoutes } from './modules/references/references.routes.js';
 import { searchRoutes } from './modules/search/search.routes.js';
 import { linksRoutes } from './modules/links/links.routes.js';
 import { ingestionRoutes } from './modules/ingestion/ingestion.routes.js';
+import { actionsRoutes } from './modules/actions/actions.routes.js';
+import { eventsRoutes } from './modules/events/events.routes.js';
+import { workflowRoutes } from './modules/events/workflow.routes.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -53,6 +56,11 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(searchRoutes, { prefix: '/api/search' });
   await fastify.register(linksRoutes, { prefix: '/api/links' });
   await fastify.register(ingestionRoutes, { prefix: '/api/ingestion' });
+
+  // Foundational model routes (Actions & Events)
+  await fastify.register(actionsRoutes, { prefix: '/api/actions' });
+  await fastify.register(eventsRoutes, { prefix: '/api/events' });
+  await fastify.register(workflowRoutes, { prefix: '/api/workflow' });
 
   // Global error handler
   fastify.setErrorHandler((error: Error & { validation?: unknown; statusCode?: number; code?: string }, _request, reply) => {

@@ -157,6 +157,48 @@ export type RecordLink = Selectable<RecordLinksTable>;
 export type NewRecordLink = Insertable<RecordLinksTable>;
 export type RecordLinkUpdate = Updateable<RecordLinksTable>;
 
+// ============================================
+// FOUNDATIONAL MODEL TABLES
+// Actions hold intent, Events hold truth
+// ============================================
+
+/** Context type for scoping actions and events */
+export type ContextType = 'subprocess' | 'stage' | 'process' | 'project' | 'record';
+
+// Actions Table - Intent Declarations
+// Actions declare that something should or could happen
+// NO status, progress, completed_at, or assignee - outcomes are derived from Events
+export interface ActionsTable {
+  id: Generated<string>;
+  context_id: string;
+  context_type: ContextType;
+  type: string;
+  field_bindings: Generated<unknown>; // JSONB - bindings to Field definitions
+  created_at: Generated<Date>;
+}
+
+export type Action = Selectable<ActionsTable>;
+export type NewAction = Insertable<ActionsTable>;
+// No ActionUpdate - Actions are immutable once created
+
+// Events Table - Immutable Fact Log
+// Events record what occurred, never what is
+// Append-only: NO UPDATE, NO DELETE
+export interface EventsTable {
+  id: Generated<string>;
+  context_id: string;
+  context_type: ContextType;
+  action_id: string | null;
+  type: string;
+  payload: Generated<unknown>; // JSONB - event-specific data
+  actor_id: string | null;
+  occurred_at: Generated<Date>;
+}
+
+export type Event = Selectable<EventsTable>;
+export type NewEvent = Insertable<EventsTable>;
+// No EventUpdate - Events are immutable (append-only)
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -166,4 +208,6 @@ export interface Database {
   records: RecordsTable;
   task_references: TaskReferencesTable;
   record_links: RecordLinksTable;
+  actions: ActionsTable;
+  events: EventsTable;
 }

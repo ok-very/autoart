@@ -10,7 +10,9 @@ import {
   CloneNodeInput,
 } from './hierarchy.schemas.js';
 import * as hierarchyService from './hierarchy.service.js';
+import * as interpreterService from '../interpreter/interpreter.service.js';
 import { AppError } from '../../utils/errors.js';
+import type { ActionViewType } from '../interpreter/interpreter.service.js';
 
 export async function hierarchyRoutes(fastify: FastifyInstance) {
   // List all projects
@@ -145,6 +147,102 @@ export async function hierarchyRoutes(fastify: FastifyInstance) {
       try {
         const node = await hierarchyService.deepCloneNode(parsed.data, request.user.userId);
         return reply.code(201).send({ node });
+      } catch (err) {
+        if (err instanceof AppError) {
+          return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+        }
+        throw err;
+      }
+    }
+  );
+
+  // ============================================================================
+  // ACTION VIEWS (Foundational Model - Non-Reified Projections)
+  // ============================================================================
+
+  /**
+   * GET /hierarchy/subprocess/:id/action-views
+   *
+   * Get interpreted ActionViews for a subprocess context.
+   * Views are computed on-demand from Actions + Events.
+   *
+   * Query params:
+   * - view: 'task-like' | 'kanban-card' | 'timeline-row' (default: 'task-like')
+   * - status: filter by derived status (pending, active, blocked, finished)
+   */
+  fastify.get<{
+    Params: { id: string };
+    Querystring: { view?: ActionViewType; status?: string };
+  }>(
+    '/subprocess/:id/action-views',
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { id } = request.params;
+      const { view = 'task-like', status } = request.query;
+
+      // Verify the subprocess exists
+      const node = await hierarchyService.getNodeById(id);
+      if (!node) {
+        return reply.code(404).send({ error: 'NOT_FOUND', message: 'Subprocess not found' });
+      }
+
+      if (node.type !== 'subprocess') {
+        return reply.code(400).send({
+          error: 'INVALID_CONTEXT',
+          message: `Expected subprocess, got ${node.type}`,
+        });
+      }
+
+      try {
+        let views;
+
+        if (status) {
+          // Filter by derived status
+          const derivedStatus = status as interpreterService.DerivedStatus;
+          views = await interpreterService.getActionViewsByStatus(id, 'subprocess', derivedStatus, view);
+        } else {
+          views = await interpreterService.getActionViews(id, 'subprocess', view);
+        }
+
+        return reply.send({ views });
+      } catch (err) {
+        if (err instanceof AppError) {
+          return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+        }
+        throw err;
+      }
+    }
+  );
+
+  /**
+   * GET /hierarchy/subprocess/:id/action-views/summary
+   *
+   * Get status summary (counts by derived status) for a subprocess.
+   */
+  fastify.get<{
+    Params: { id: string };
+  }>(
+    '/subprocess/:id/action-views/summary',
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { id } = request.params;
+
+      // Verify the subprocess exists
+      const node = await hierarchyService.getNodeById(id);
+      if (!node) {
+        return reply.code(404).send({ error: 'NOT_FOUND', message: 'Subprocess not found' });
+      }
+
+      if (node.type !== 'subprocess') {
+        return reply.code(400).send({
+          error: 'INVALID_CONTEXT',
+          message: `Expected subprocess, got ${node.type}`,
+        });
+      }
+
+      try {
+        const summary = await interpreterService.getStatusSummary(id, 'subprocess');
+        return reply.send({ summary });
       } catch (err) {
         if (err instanceof AppError) {
           return reply.code(err.statusCode).send({ error: err.code, message: err.message });

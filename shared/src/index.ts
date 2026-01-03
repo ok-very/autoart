@@ -177,3 +177,50 @@ export {
   type TaskMetadata,
   type TaskFieldDef,
 } from './schemas/tasks';
+
+// Actions & Events (Foundational Model)
+export {
+  // Context
+  ContextTypeSchema,
+  type ContextType,
+
+  // Event types
+  EventTypeSchema,
+  type EventType,
+
+  // Actions
+  FieldBindingSchema,
+  ActionSchema,
+  CreateActionInputSchema,
+  type FieldBinding,
+  type Action,
+  type CreateActionInput,
+
+  // Events
+  EventSchema,
+  CreateEventInputSchema,
+  type Event,
+  type CreateEventInput,
+
+  // Action Views (non-reified)
+  ActionViewTypeSchema,
+  DerivedStatusSchema,
+  TaskLikeViewPayloadSchema,
+  ActionViewSchema,
+  type ActionViewType,
+  type DerivedStatus,
+  type TaskLikeViewPayload,
+  type ActionView,
+
+  // API Responses
+  ActionResponseSchema,
+  ActionsResponseSchema,
+  EventResponseSchema,
+  EventsResponseSchema,
+  ActionViewsResponseSchema,
+  type ActionResponse,
+  type ActionsResponse,
+  type EventResponse,
+  type EventsResponse,
+  type ActionViewsResponse,
+} from './schemas/actions';
