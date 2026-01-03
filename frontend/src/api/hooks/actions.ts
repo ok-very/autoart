@@ -1,0 +1,366 @@
+/**
+ * Actions & Events API Hooks
+ *
+ * Hooks for the foundational model primitives:
+ * - Actions (intent declarations)
+ * - Events (immutable fact log)
+ * - ActionViews (non-reified projections)
+ * - Workflow operations (event emission helpers)
+ *
+ * Core principle: All mutations happen via event emission, not state changes.
+ */
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '../client';
+import type {
+  Action,
+  Event,
+  ActionView,
+  CreateActionInput,
+  CreateEventInput,
+  ContextType,
+  DerivedStatus,
+  ActionViewType,
+} from '@autoart/shared';
+
+// ============================================================================
+// ACTIONS
+// ============================================================================
+
+/**
+ * Get all actions for a context (subprocess, stage, etc.)
+ */
+export function useActions(contextId: string | null, contextType: ContextType) {
+  return useQuery({
+    queryKey: ['actions', contextId, contextType],
+    queryFn: () =>
+      api
+        .get<{ actions: Action[] }>(`/actions/context/${contextType}/${contextId}`)
+        .then((r) => r.actions),
+    enabled: !!contextId,
+  });
+}
+
+/**
+ * Get a single action by ID
+ */
+export function useAction(actionId: string | null) {
+  return useQuery({
+    queryKey: ['action', actionId],
+    queryFn: () =>
+      api.get<{ action: Action }>(`/actions/${actionId}`).then((r) => r.action),
+    enabled: !!actionId,
+  });
+}
+
+/**
+ * Create a new action (automatically emits ACTION_DECLARED event)
+ */
+export function useCreateAction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateActionInput) =>
+      api.post<{ action: Action }>('/actions', data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['actions', variables.contextId, variables.contextType],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['actionViews', variables.contextId],
+      });
+    },
+  });
+}
+
+// ============================================================================
+// EVENTS
+// ============================================================================
+
+/**
+ * Get all events for an action
+ */
+export function useActionEvents(actionId: string | null) {
+  return useQuery({
+    queryKey: ['events', 'action', actionId],
+    queryFn: () =>
+      api.get<{ events: Event[] }>(`/events/action/${actionId}`).then((r) => r.events),
+    enabled: !!actionId,
+  });
+}
+
+/**
+ * Get all events for a context
+ */
+export function useContextEvents(contextId: string | null, contextType: ContextType) {
+  return useQuery({
+    queryKey: ['events', 'context', contextId, contextType],
+    queryFn: () =>
+      api
+        .get<{ events: Event[] }>(`/events/context/${contextType}/${contextId}`)
+        .then((r) => r.events),
+    enabled: !!contextId,
+  });
+}
+
+/**
+ * Emit a new event (the ONLY write operation for the event-sourced system)
+ */
+export function useEmitEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateEventInput) =>
+      api.post<{ event: Event }>('/events', data),
+    onSuccess: (_, variables) => {
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({
+        queryKey: ['events', 'context', variables.contextId],
+      });
+      if (variables.actionId) {
+        queryClient.invalidateQueries({
+          queryKey: ['events', 'action', variables.actionId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['actionView', variables.actionId],
+        });
+      }
+      queryClient.invalidateQueries({
+        queryKey: ['actionViews', variables.contextId],
+      });
+    },
+  });
+}
+
+// ============================================================================
+// ACTION VIEWS (Non-Reified Projections)
+// ============================================================================
+
+/**
+ * Get interpreted ActionViews for a subprocess
+ */
+export function useActionViews(
+  subprocessId: string | null,
+  options?: {
+    view?: ActionViewType;
+    status?: DerivedStatus;
+  }
+) {
+  const { view = 'task-like', status } = options || {};
+
+  return useQuery({
+    queryKey: ['actionViews', subprocessId, view, status],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      params.set('view', view);
+      if (status) params.set('status', status);
+
+      return api
+        .get<{ views: ActionView[] }>(
+          `/hierarchy/subprocess/${subprocessId}/action-views?${params}`
+        )
+        .then((r) => r.views);
+    },
+    enabled: !!subprocessId,
+  });
+}
+
+/**
+ * Get a single action view by action ID
+ */
+export function useActionView(actionId: string | null) {
+  // This fetches the action and its events, then the backend interprets them
+  // For now, we'll use the events hook and derive locally
+  // Or we can add a dedicated endpoint later
+  return useQuery({
+    queryKey: ['actionView', actionId],
+    queryFn: async () => {
+      // Fetch action and events
+      const [actionRes, eventsRes] = await Promise.all([
+        api.get<{ action: Action }>(`/actions/${actionId}`),
+        api.get<{ events: Event[] }>(`/events/action/${actionId}`),
+      ]);
+
+      // The actual view would be computed server-side
+      // For now return the raw data
+      return {
+        action: actionRes.action,
+        events: eventsRes.events,
+      };
+    },
+    enabled: !!actionId,
+  });
+}
+
+/**
+ * Get status summary for a subprocess
+ */
+export function useActionViewsSummary(subprocessId: string | null) {
+  return useQuery({
+    queryKey: ['actionViews', 'summary', subprocessId],
+    queryFn: () =>
+      api
+        .get<{ summary: Record<DerivedStatus, number> }>(
+          `/hierarchy/subprocess/${subprocessId}/action-views/summary`
+        )
+        .then((r) => r.summary),
+    enabled: !!subprocessId,
+  });
+}
+
+// ============================================================================
+// WORKFLOW OPERATIONS (Event Emission Helpers)
+// ============================================================================
+
+interface WorkflowMutationOptions {
+  actionId: string;
+  payload?: Record<string, unknown>;
+}
+
+/**
+ * Start work on an action (emits WORK_STARTED event)
+ */
+export function useStartWork() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ actionId, payload }: WorkflowMutationOptions) =>
+      api.post<{ event: Event }>(`/workflow/actions/${actionId}/start`, { payload }),
+    onSuccess: (_, variables) => {
+      invalidateWorkflowQueries(queryClient, variables.actionId);
+    },
+  });
+}
+
+/**
+ * Stop work on an action (emits WORK_STOPPED event)
+ */
+export function useStopWork() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ actionId, payload }: WorkflowMutationOptions) =>
+      api.post<{ event: Event }>(`/workflow/actions/${actionId}/stop`, { payload }),
+    onSuccess: (_, variables) => {
+      invalidateWorkflowQueries(queryClient, variables.actionId);
+    },
+  });
+}
+
+/**
+ * Finish work on an action (emits WORK_FINISHED event)
+ */
+export function useFinishWork() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ actionId, payload }: WorkflowMutationOptions) =>
+      api.post<{ event: Event }>(`/workflow/actions/${actionId}/finish`, { payload }),
+    onSuccess: (_, variables) => {
+      invalidateWorkflowQueries(queryClient, variables.actionId);
+    },
+  });
+}
+
+/**
+ * Block work on an action (emits WORK_BLOCKED event)
+ */
+export function useBlockWork() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      actionId,
+      reason,
+      payload,
+    }: WorkflowMutationOptions & { reason?: string }) =>
+      api.post<{ event: Event }>(`/workflow/actions/${actionId}/block`, {
+        reason,
+        payload,
+      }),
+    onSuccess: (_, variables) => {
+      invalidateWorkflowQueries(queryClient, variables.actionId);
+    },
+  });
+}
+
+/**
+ * Unblock work on an action (emits WORK_UNBLOCKED event)
+ */
+export function useUnblockWork() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ actionId, payload }: WorkflowMutationOptions) =>
+      api.post<{ event: Event }>(`/workflow/actions/${actionId}/unblock`, { payload }),
+    onSuccess: (_, variables) => {
+      invalidateWorkflowQueries(queryClient, variables.actionId);
+    },
+  });
+}
+
+/**
+ * Assign work to a user (emits ASSIGNMENT_OCCURRED event)
+ */
+export function useAssignWork() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      actionId,
+      assigneeId,
+      assigneeName,
+      payload,
+    }: WorkflowMutationOptions & { assigneeId: string; assigneeName?: string }) =>
+      api.post<{ event: Event }>(`/workflow/actions/${actionId}/assign`, {
+        assigneeId,
+        assigneeName,
+        payload,
+      }),
+    onSuccess: (_, variables) => {
+      invalidateWorkflowQueries(queryClient, variables.actionId);
+    },
+  });
+}
+
+/**
+ * Unassign work (emits ASSIGNMENT_REMOVED event)
+ */
+export function useUnassignWork() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ actionId, payload }: WorkflowMutationOptions) =>
+      api.post<{ event: Event }>(`/workflow/actions/${actionId}/unassign`, { payload }),
+    onSuccess: (_, variables) => {
+      invalidateWorkflowQueries(queryClient, variables.actionId);
+    },
+  });
+}
+
+/**
+ * Record a field value (emits FIELD_VALUE_RECORDED event)
+ */
+export function useRecordFieldValue() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      actionId,
+      fieldKey,
+      value,
+      payload,
+    }: WorkflowMutationOptions & { fieldKey: string; value: unknown }) =>
+      api.post<{ event: Event }>(`/workflow/actions/${actionId}/field`, {
+        fieldKey,
+        value,
+        payload,
+      }),
+    onSuccess: (_, variables) => {
+      invalidateWorkflowQueries(queryClient, variables.actionId);
+    },
+  });
+}
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+function invalidateWorkflowQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+  actionId: string
+) {
+  queryClient.invalidateQueries({ queryKey: ['events', 'action', actionId] });
+  queryClient.invalidateQueries({ queryKey: ['actionView', actionId] });
+  queryClient.invalidateQueries({ queryKey: ['actionViews'] });
+}
