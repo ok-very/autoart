@@ -25,6 +25,9 @@ export interface CreateEventInput {
 /**
  * Emit a new event (append to the fact log).
  * This is the ONLY write operation for events - they are immutable.
+ *
+ * After inserting the event, this triggers a synchronous projection refresh
+ * to ensure read-after-write consistency for UI consumers.
  */
 export async function emitEvent(input: CreateEventInput): Promise<Event> {
   const newEvent: NewEvent = {
@@ -41,6 +44,20 @@ export async function emitEvent(input: CreateEventInput): Promise<Event> {
     .values(newEvent)
     .returningAll()
     .executeTakeFirstOrThrow();
+
+  // Synchronous projection refresh - await for consistency
+  // This ensures that reads immediately after emitEvent() return updated data
+  if (event.action_id) {
+    // Dynamically import to avoid circular dependency
+    const { refreshWorkflowSurface } = await import('../projections/workflow-surface.projector.js');
+    await refreshWorkflowSurface(event.context_id, event.context_type);
+  }
+
+  // Handle reference events - project to action_references table
+  if (event.type === 'ACTION_REFERENCE_ADDED' || event.type === 'ACTION_REFERENCE_REMOVED') {
+    const { projectActionReference } = await import('../projections/action-references.projector.js');
+    await projectActionReference(event);
+  }
 
   return event;
 }

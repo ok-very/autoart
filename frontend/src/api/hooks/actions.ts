@@ -15,12 +15,9 @@ import { api } from '../client';
 import type {
   Action,
   Event,
-  ActionView,
   CreateActionInput,
   CreateEventInput,
   ContextType,
-  DerivedStatus,
-  ActionViewType,
 } from '@autoart/shared';
 
 // ============================================================================
@@ -123,6 +120,51 @@ export function useEmitEvent() {
           queryKey: ['actionView', variables.actionId],
         });
       }
+      queryClient.invalidateQueries({
+        queryKey: ['actionViews', variables.contextId],
+      });
+    },
+  });
+}
+
+/**
+ * Emit multiple events for an action (batch operation for Composer)
+ * This is the preferred way to emit workflow events during action creation.
+ */
+export function useEmitActionEvents() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      actionId,
+      contextId,
+      contextType,
+      events,
+    }: {
+      actionId: string;
+      contextId: string;
+      contextType: ContextType;
+      events: Array<{ type: string; payload?: Record<string, unknown> }>;
+    }) => {
+      const results: Event[] = [];
+      for (const evt of events) {
+        const result = await api.post<{ event: Event }>('/events', {
+          contextId,
+          contextType,
+          actionId,
+          type: evt.type,
+          payload: evt.payload ?? {},
+        });
+        results.push(result.event);
+      }
+      return { events: results };
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['events', 'action', variables.actionId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['actionView', variables.actionId],
+      });
       queryClient.invalidateQueries({
         queryKey: ['actionViews', variables.contextId],
       });

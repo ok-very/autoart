@@ -104,6 +104,7 @@ export {
   useActionEvents,
   useContextEvents,
   useEmitEvent,
+  useEmitActionEvents,
   useStartWork,
   useStopWork,
   useFinishWork,
@@ -120,6 +121,28 @@ export {
   useActionView,
   useActionViewsSummary,
 } from './actionViews';
+
+// Workflow Surface (Materialized Projection)
+export {
+  useWorkflowSurfaceNodes,
+  useAddDependency,
+  useRemoveDependency,
+  useMoveWorkflowRow,
+  useRefreshWorkflowSurface,
+  buildChildrenMap,
+  getRootNodes,
+  getChildren,
+} from './workflowSurface';
+
+// Action References
+export {
+  useActionReferences,
+  useAddActionReference,
+  useRemoveActionReference,
+  useSetActionReferences,
+  type ActionReference,
+  type ReferenceInput,
+} from './actionReferences';
 
 // Composer (Task Builder on Actions + Events)
 export {

@@ -397,4 +397,155 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       return reply.status(201).send({ event });
     }
   );
+
+  // ============================================================================
+  // DEPENDENCY ROUTES (Workflow Surface)
+  // ============================================================================
+
+  /**
+   * POST /workflow/actions/:actionId/dependencies/add
+   * Emit DEPENDENCY_ADDED event
+   *
+   * Semantics:
+   * - "actionId is blocked by dependsOnActionId"
+   * - "dependsOnActionId must complete before actionId"
+   */
+  fastify.post<{
+    Params: { actionId: string };
+    Body: { dependsOnActionId: string; payload?: Record<string, unknown> };
+  }>(
+    '/actions/:actionId/dependencies/add',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          required: ['actionId'],
+          properties: {
+            actionId: { type: 'string', format: 'uuid' },
+          },
+        },
+        body: {
+          type: 'object',
+          required: ['dependsOnActionId'],
+          properties: {
+            dependsOnActionId: { type: 'string', format: 'uuid' },
+            payload: { type: 'object' },
+          },
+        },
+        response: {
+          201: { type: 'object', properties: { event: eventSchema } },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { actionId } = request.params;
+      const { dependsOnActionId, payload } = request.body;
+
+      const event = await workflowService.addDependency({
+        actionId,
+        dependsOnActionId,
+        actorId: (request as any).user?.id,
+        payload,
+      });
+
+      return reply.status(201).send({ event });
+    }
+  );
+
+  /**
+   * POST /workflow/actions/:actionId/dependencies/remove
+   * Emit DEPENDENCY_REMOVED event
+   */
+  fastify.post<{
+    Params: { actionId: string };
+    Body: { dependsOnActionId: string; payload?: Record<string, unknown> };
+  }>(
+    '/actions/:actionId/dependencies/remove',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          required: ['actionId'],
+          properties: {
+            actionId: { type: 'string', format: 'uuid' },
+          },
+        },
+        body: {
+          type: 'object',
+          required: ['dependsOnActionId'],
+          properties: {
+            dependsOnActionId: { type: 'string', format: 'uuid' },
+            payload: { type: 'object' },
+          },
+        },
+        response: {
+          201: { type: 'object', properties: { event: eventSchema } },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { actionId } = request.params;
+      const { dependsOnActionId, payload } = request.body;
+
+      const event = await workflowService.removeDependency({
+        actionId,
+        dependsOnActionId,
+        actorId: (request as any).user?.id,
+        payload,
+      });
+
+      return reply.status(201).send({ event });
+    }
+  );
+
+  /**
+   * POST /workflow/actions/:actionId/move
+   * Emit WORKFLOW_ROW_MOVED event
+   *
+   * @param surfaceType - The surface type (e.g., 'workflow_table')
+   * @param afterActionId - Position after this action, or null for first
+   */
+  fastify.post<{
+    Params: { actionId: string };
+    Body: { surfaceType?: string; afterActionId: string | null; payload?: Record<string, unknown> };
+  }>(
+    '/actions/:actionId/move',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          required: ['actionId'],
+          properties: {
+            actionId: { type: 'string', format: 'uuid' },
+          },
+        },
+        body: {
+          type: 'object',
+          required: ['afterActionId'],
+          properties: {
+            surfaceType: { type: 'string', default: 'workflow_table' },
+            afterActionId: { type: 'string', format: 'uuid', nullable: true },
+            payload: { type: 'object' },
+          },
+        },
+        response: {
+          201: { type: 'object', properties: { event: eventSchema } },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { actionId } = request.params;
+      const { surfaceType = 'workflow_table', afterActionId, payload } = request.body;
+
+      const event = await workflowService.moveWorkflowRow({
+        actionId,
+        surfaceType,
+        afterActionId,
+        actorId: (request as any).user?.id,
+        payload,
+      });
+
+      return reply.status(201).send({ event });
+    }
+  );
 }

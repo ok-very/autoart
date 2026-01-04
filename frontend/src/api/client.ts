@@ -75,8 +75,8 @@ class ApiClient {
     }
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ 
-        message: response.statusText || 'Request failed' 
+      const error = await response.json().catch(() => ({
+        message: response.statusText || 'Request failed'
       }));
       throw new Error(error.message || 'Request failed');
     }
@@ -105,6 +105,14 @@ class ApiClient {
     return this.fetch<T>(endpoint, {
       ...options,
       method: 'PATCH',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  }
+
+  put<T>(endpoint: string, body?: unknown, options?: FetchOptions): Promise<T> {
+    return this.fetch<T>(endpoint, {
+      ...options,
+      method: 'PUT',
       body: body ? JSON.stringify(body) : undefined,
     });
   }

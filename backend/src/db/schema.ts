@@ -221,6 +221,33 @@ export type Event = Selectable<EventsTable>;
 export type NewEvent = Insertable<EventsTable>;
 // No EventUpdate - Events are immutable (append-only)
 
+// ============================================
+// PROJECTION TABLES
+// Materialized views of interpreted data - NOT authoritative
+// ============================================
+
+// Workflow Surface Nodes Table - Materialized Projection
+// Re-computed from Actions + Events whenever events are emitted
+// The projector calls interpreter (pure) and writes only UI-facing cached fields
+export interface WorkflowSurfaceNodesTable {
+  id: Generated<string>;
+  surface_type: string;
+  context_id: string;
+  context_type: ContextType;
+  action_id: string;
+  parent_action_id: string | null;
+  depth: Generated<number>;
+  position: Generated<number>;
+  payload: Generated<unknown>; // JSONB - cached TaskLikeViewPayload
+  flags: Generated<unknown>; // JSONB - { cycleDetected, hasChildren }
+  rendered_at: Generated<Date>;
+  last_event_occurred_at: Generated<Date>;
+}
+
+export type WorkflowSurfaceNode = Selectable<WorkflowSurfaceNodesTable>;
+export type NewWorkflowSurfaceNode = Insertable<WorkflowSurfaceNodesTable>;
+export type WorkflowSurfaceNodeUpdate = Updateable<WorkflowSurfaceNodesTable>;
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -234,5 +261,6 @@ export interface Database {
   record_links: RecordLinksTable;
   actions: ActionsTable;
   events: EventsTable;
+  workflow_surface_nodes: WorkflowSurfaceNodesTable;
 }
 

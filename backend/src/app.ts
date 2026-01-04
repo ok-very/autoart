@@ -13,8 +13,10 @@ import { searchRoutes } from './modules/search/search.routes.js';
 import { linksRoutes } from './modules/links/links.routes.js';
 import { ingestionRoutes } from './modules/ingestion/ingestion.routes.js';
 import { actionsRoutes } from './modules/actions/actions.routes.js';
+import { actionReferencesRoutes } from './modules/actions/action-references.routes.js';
 import { eventsRoutes } from './modules/events/events.routes.js';
 import { workflowRoutes } from './modules/events/workflow.routes.js';
+import { workflowSurfaceRoutes } from './modules/projections/workflow-surface.routes.js';
 import { composerRoutes } from './modules/composer/composer.routes.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -60,8 +62,10 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Foundational model routes (Actions & Events)
   await fastify.register(actionsRoutes, { prefix: '/api/actions' });
+  await fastify.register(actionReferencesRoutes, { prefix: '/api/actions' });
   await fastify.register(eventsRoutes, { prefix: '/api/events' });
   await fastify.register(workflowRoutes, { prefix: '/api/workflow' });
+  await fastify.register(workflowSurfaceRoutes, { prefix: '/api/workflow' });
 
   // Composer - Task Builder on Actions + Events (replaces legacy task creation)
   await fastify.register(composerRoutes, { prefix: '/api/composer' });

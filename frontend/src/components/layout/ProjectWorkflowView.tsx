@@ -1,12 +1,23 @@
 import { useEffect, useMemo, useCallback, useState } from 'react';
 import { Plus, ChevronDown, Wand2 } from 'lucide-react';
-import { useProjectTree, useRecordDefinitions, useRecords, useUpdateNode } from '../../api/hooks';
+import {
+    useProjectTree,
+    useRecordDefinitions,
+    useRecords,
+    useUpdateNode,
+    useUpdateRecord,
+    useWorkflowSurfaceNodes,
+    useStartWork,
+    useFinishWork,
+    useRecordFieldValue,
+} from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
 import type { HierarchyNode, DataRecord, RecordDefinition } from '../../types';
+import type { DerivedStatus } from '@autoart/shared';
 import { DataTableHierarchy, type HierarchyFieldDef } from '../../ui/composites/DataTableHierarchy';
 import { DataTableFlat } from '../../ui/composites/DataTableFlat';
-import { useUpdateRecord } from '../../api/hooks';
+import { WorkflowSurfaceTable } from '../../ui/composites/WorkflowSurfaceTable';
 import { deriveTaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
 import { ActionComposer } from '../composer';
 
@@ -250,6 +261,67 @@ export function ProjectWorkflowView() {
         return getChildren(activeSubprocessId).filter((n) => n.type === 'task');
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSubprocessId, getChildren, storeNodes]);
+
+    // ========== WORKFLOW SURFACE (New Projection-Based System) ==========
+    // Feature flag to toggle between legacy hierarchy-based and new surface-based tables
+    const [useWorkflowSurface, setUseWorkflowSurface] = useState(true);
+
+    // Fetch workflow surface nodes for the active subprocess
+    const { data: surfaceNodes = [] } = useWorkflowSurfaceNodes(
+        useWorkflowSurface ? activeSubprocessId : null,
+        'subprocess'
+    );
+
+    // Mutations for workflow surface interactions
+    const startWork = useStartWork();
+    const finishWork = useFinishWork();
+    const recordFieldValue = useRecordFieldValue();
+
+    // Handle field changes on surface nodes (emits FIELD_VALUE_RECORDED event)
+    const handleSurfaceFieldChange = useCallback(
+        (actionId: string, fieldKey: string, value: unknown) => {
+            recordFieldValue.mutate({ actionId, fieldKey, value });
+        },
+        [recordFieldValue]
+    );
+
+    // Handle status changes on surface nodes (emits work events)
+    const handleSurfaceStatusChange = useCallback(
+        (actionId: string, status: DerivedStatus) => {
+            // Map status to appropriate work event
+            if (status === 'active') {
+                startWork.mutate({ actionId });
+            } else if (status === 'finished') {
+                finishWork.mutate({ actionId });
+            }
+            // Note: 'blocked' and 'pending' require different events
+            // For now, only active and finished are implemented
+        },
+        [startWork, finishWork]
+    );
+
+    // Handle row selection on surface nodes
+    const handleSurfaceRowSelect = useCallback(
+        (actionId: string) => {
+            setFocusedTableId('tasks');
+            setInspectorMode('record');
+            // For now, we need to find the corresponding hierarchy node if one exists
+            // This bridges the gap between surface nodes and the inspector
+            // In future, inspector should support viewing Actions directly
+            const matchingTask = tasks.find((task) => {
+                // Try to match by looking up action references or metadata
+                // Match task if its ID equals the action's context or if it has a matching actionId in metadata
+                const taskMeta = typeof task.metadata === 'string'
+                    ? JSON.parse(task.metadata || '{}')
+                    : (task.metadata || {});
+                return taskMeta.actionId === actionId || task.id === actionId;
+            });
+            if (matchingTask) {
+                inspectNode(matchingTask.id);
+            }
+        },
+        [tasks, setInspectorMode, inspectNode]
+    );
 
     // Fetch records classified under this subprocess (excluding tasks which are nodes)
     const { data: subprocessRecords = [] } = useRecords(
@@ -560,36 +632,71 @@ export function ProjectWorkflowView() {
 
                 <div className="flex-1 overflow-auto custom-scroll p-4">
                     <div className="min-w-[900px] space-y-4">
-                        {/* Task Table - using DataTableHierarchy composite */}
+                        {/* Task Table - Toggle between legacy hierarchy-based and new surface-based */}
                         <div onFocus={() => setFocusedTableId('tasks')} onClick={() => setFocusedTableId('tasks')}>
-                            <DataTableHierarchy
-                                nodes={tasks}
-                                fields={taskFields}
-                                fallbacks={{
-                                    owner: activeSubprocessLead,
-                                    dueDate: activeSubprocessDueDate,
-                                }}
-                                selectedNodeId={selectedNodeId}
-                                onRowSelect={(nodeId) => {
-                                    setFocusedTableId('tasks');
-                                    setInspectorMode('record');
-                                    inspectNode(nodeId);
-                                }}
-                                onCellChange={handleCellChange}
-                                onAddNode={
-                                    activeSubprocessId
-                                        ? () => openDrawer('create-node', { parentId: activeSubprocessId, nodeType: 'task' })
-                                        : undefined
-                                }
-                                // Enable subtask nesting
-                                enableNesting
-                                getChildren={(nodeId) => getChildren(nodeId).filter((n) => n.type === 'subtask')}
-                                onAddSubtask={(parentId) => openDrawer('create-node', { parentId, nodeType: 'subtask' })}
-                                deriveStatus={deriveNodeStatus}
-                                showStatusSummary
-                                statusConfig={statusConfig}
-                                emptyMessage="No tasks yet. Click + to add one."
-                            />
+                            {/* Toggle switch for development/testing */}
+                            <div className="flex items-center justify-end gap-2 mb-2 text-xs">
+                                <span className="text-slate-400">View Mode:</span>
+                                <button
+                                    onClick={() => setUseWorkflowSurface(false)}
+                                    className={`px-2 py-1 rounded ${!useWorkflowSurface ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'}`}
+                                >
+                                    Hierarchy
+                                </button>
+                                <button
+                                    onClick={() => setUseWorkflowSurface(true)}
+                                    className={`px-2 py-1 rounded ${useWorkflowSurface ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100'}`}
+                                >
+                                    Surface
+                                </button>
+                            </div>
+
+                            {useWorkflowSurface ? (
+                                /* New: Workflow Surface Table (projection-based) */
+                                <WorkflowSurfaceTable
+                                    nodes={surfaceNodes}
+                                    selectedActionId={null} // TODO: Track selected action
+                                    onRowSelect={handleSurfaceRowSelect}
+                                    onFieldChange={handleSurfaceFieldChange}
+                                    onStatusChange={handleSurfaceStatusChange}
+                                    onAddAction={
+                                        activeSubprocessId
+                                            ? () => setIsComposerOpen(true)
+                                            : undefined
+                                    }
+                                    emptyMessage="No actions yet. Use Composer to declare one."
+                                />
+                            ) : (
+                                /* Legacy: DataTableHierarchy (hierarchy node-based) */
+                                <DataTableHierarchy
+                                    nodes={tasks}
+                                    fields={taskFields}
+                                    fallbacks={{
+                                        owner: activeSubprocessLead,
+                                        dueDate: activeSubprocessDueDate,
+                                    }}
+                                    selectedNodeId={selectedNodeId}
+                                    onRowSelect={(nodeId) => {
+                                        setFocusedTableId('tasks');
+                                        setInspectorMode('record');
+                                        inspectNode(nodeId);
+                                    }}
+                                    onCellChange={handleCellChange}
+                                    onAddNode={
+                                        activeSubprocessId
+                                            ? () => openDrawer('create-node', { parentId: activeSubprocessId, nodeType: 'task' })
+                                            : undefined
+                                    }
+                                    // Enable subtask nesting
+                                    enableNesting
+                                    getChildren={(nodeId) => getChildren(nodeId).filter((n) => n.type === 'subtask')}
+                                    onAddSubtask={(parentId) => openDrawer('create-node', { parentId, nodeType: 'subtask' })}
+                                    deriveStatus={deriveNodeStatus}
+                                    showStatusSummary
+                                    statusConfig={statusConfig}
+                                    emptyMessage="No tasks yet. Click + to add one."
+                                />
+                            )}
                         </div>
 
                         {/* Floating Record Tables - Independent tables for each record definition */}

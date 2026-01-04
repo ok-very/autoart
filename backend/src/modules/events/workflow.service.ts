@@ -195,3 +195,104 @@ export async function recordFieldValue(
     actorId: input.actorId,
   });
 }
+
+// ============================================================================
+// DEPENDENCY EVENTS (Workflow Surface)
+// ============================================================================
+
+/**
+ * Emit DEPENDENCY_ADDED event.
+ * Indicates that an action depends on another action.
+ *
+ * Semantics:
+ * - "actionId is blocked by dependsOnActionId"
+ * - "dependsOnActionId must complete before actionId"
+ * - In tree: actionId is parent, dependsOnActionId is child
+ */
+export async function addDependency(
+  input: WorkflowEventInput & { dependsOnActionId: string }
+): Promise<Event> {
+  const action = await actionsService.getActionById(input.actionId);
+  if (!action) {
+    throw new Error(`Action not found: ${input.actionId}`);
+  }
+
+  // Validate dependency target exists
+  const dependsOn = await actionsService.getActionById(input.dependsOnActionId);
+  if (!dependsOn) {
+    throw new Error(`Dependency target not found: ${input.dependsOnActionId}`);
+  }
+
+  return eventsService.emitEvent({
+    contextId: action.context_id,
+    contextType: action.context_type as ContextType,
+    actionId: input.actionId,
+    type: 'DEPENDENCY_ADDED',
+    payload: {
+      dependsOnActionId: input.dependsOnActionId,
+      ...input.payload,
+    },
+    actorId: input.actorId,
+  });
+}
+
+/**
+ * Emit DEPENDENCY_REMOVED event.
+ * Indicates that a dependency has been removed.
+ */
+export async function removeDependency(
+  input: WorkflowEventInput & { dependsOnActionId: string }
+): Promise<Event> {
+  const action = await actionsService.getActionById(input.actionId);
+  if (!action) {
+    throw new Error(`Action not found: ${input.actionId}`);
+  }
+
+  return eventsService.emitEvent({
+    contextId: action.context_id,
+    contextType: action.context_type as ContextType,
+    actionId: input.actionId,
+    type: 'DEPENDENCY_REMOVED',
+    payload: {
+      dependsOnActionId: input.dependsOnActionId,
+      ...input.payload,
+    },
+    actorId: input.actorId,
+  });
+}
+
+/**
+ * Emit WORKFLOW_ROW_MOVED event.
+ * Indicates that a row's position in a workflow surface has changed.
+ *
+ * @param afterActionId - The action ID to position after, or null for first position
+ */
+export async function moveWorkflowRow(
+  input: WorkflowEventInput & { surfaceType: string; afterActionId: string | null }
+): Promise<Event> {
+  const action = await actionsService.getActionById(input.actionId);
+  if (!action) {
+    throw new Error(`Action not found: ${input.actionId}`);
+  }
+
+  // Validate afterActionId if provided
+  if (input.afterActionId) {
+    const afterAction = await actionsService.getActionById(input.afterActionId);
+    if (!afterAction) {
+      throw new Error(`After action not found: ${input.afterActionId}`);
+    }
+  }
+
+  return eventsService.emitEvent({
+    contextId: action.context_id,
+    contextType: action.context_type as ContextType,
+    actionId: input.actionId,
+    type: 'WORKFLOW_ROW_MOVED',
+    payload: {
+      surfaceType: input.surfaceType,
+      afterActionId: input.afterActionId,
+      ...input.payload,
+    },
+    actorId: input.actorId,
+  });
+}

@@ -53,6 +53,17 @@ export const EventTypeSchema = z.enum([
   // Assignment events
   'ASSIGNMENT_OCCURRED',  // Someone was assigned
   'ASSIGNMENT_REMOVED',   // Assignment was removed
+
+  // Dependency events (workflow surface)
+  'DEPENDENCY_ADDED',     // Action depends on another: payload { dependsOnActionId }
+  'DEPENDENCY_REMOVED',   // Dependency removed: payload { dependsOnActionId }
+
+  // Reference events (action-record links)
+  'ACTION_REFERENCE_ADDED',   // Action references a record: payload { sourceRecordId, targetFieldKey, snapshotValue? }
+  'ACTION_REFERENCE_REMOVED', // Reference removed: payload { sourceRecordId, targetFieldKey }
+
+  // Ordering events (workflow surface)
+  'WORKFLOW_ROW_MOVED',   // Row reordered: payload { surfaceType, afterActionId }
 ]);
 export type EventType = z.infer<typeof EventTypeSchema>;
 
@@ -218,3 +229,128 @@ export const ActionViewsResponseSchema = z.object({
   views: z.array(ActionViewSchema),
 });
 export type ActionViewsResponse = z.infer<typeof ActionViewsResponseSchema>;
+
+// ============================================================================
+// WORKFLOW SURFACE (Materialized Projection)
+// ============================================================================
+
+/**
+ * Surface node flags - display hints for UI
+ */
+export const WorkflowSurfaceNodeFlagsSchema = z.object({
+  cycleDetected: z.boolean().optional(),
+  hasChildren: z.boolean().optional(),
+});
+export type WorkflowSurfaceNodeFlags = z.infer<typeof WorkflowSurfaceNodeFlagsSchema>;
+
+/**
+ * Workflow surface node - materialized projection for tree display
+ *
+ * Dependency semantics:
+ * - DEPENDENCY_ADDED on Action A with { dependsOnActionId: B }
+ *   means "A is blocked by B" / "B must complete before A"
+ * - Tree representation: A is parent, B is child (B shown nested under A)
+ */
+export const WorkflowSurfaceNodeSchema = z.object({
+  id: z.string().uuid(),
+  surfaceType: z.string(),
+  contextId: z.string().uuid(),
+  contextType: ContextTypeSchema,
+  actionId: z.string().uuid(),
+  parentActionId: z.string().uuid().nullable(),
+  depth: z.number().int().min(0),
+  position: z.number().int().min(0),
+  payload: TaskLikeViewPayloadSchema,
+  flags: WorkflowSurfaceNodeFlagsSchema.optional(),
+  renderedAt: z.coerce.date(),
+  lastEventOccurredAt: z.coerce.date(),
+});
+export type WorkflowSurfaceNode = z.infer<typeof WorkflowSurfaceNodeSchema>;
+
+/**
+ * Workflow surface response
+ */
+export const WorkflowSurfaceResponseSchema = z.object({
+  nodes: z.array(WorkflowSurfaceNodeSchema),
+});
+export type WorkflowSurfaceResponse = z.infer<typeof WorkflowSurfaceResponseSchema>;
+
+// ============================================================================
+// DEPENDENCY EVENT PAYLOADS
+// ============================================================================
+
+/**
+ * Payload for DEPENDENCY_ADDED / DEPENDENCY_REMOVED events
+ */
+export const DependencyEventPayloadSchema = z.object({
+  dependsOnActionId: z.string().uuid(),
+});
+export type DependencyEventPayload = z.infer<typeof DependencyEventPayloadSchema>;
+
+/**
+ * Payload for WORKFLOW_ROW_MOVED events
+ */
+export const WorkflowRowMovedPayloadSchema = z.object({
+  surfaceType: z.string(),
+  afterActionId: z.string().uuid().nullable(),
+});
+export type WorkflowRowMovedPayload = z.infer<typeof WorkflowRowMovedPayloadSchema>;
+
+/**
+ * Input for adding/removing dependencies
+ */
+export const DependencyInputSchema = z.object({
+  dependsOnActionId: z.string().uuid(),
+});
+export type DependencyInput = z.infer<typeof DependencyInputSchema>;
+
+/**
+ * Input for moving workflow rows
+ */
+export const MoveWorkflowRowInputSchema = z.object({
+  surfaceType: z.string().default('workflow_table'),
+  afterActionId: z.string().uuid().nullable(),
+});
+export type MoveWorkflowRowInput = z.infer<typeof MoveWorkflowRowInputSchema>;
+
+// ============================================================================
+// ACTION REFERENCE EVENT PAYLOADS
+// ============================================================================
+
+/**
+ * Payload for ACTION_REFERENCE_ADDED events
+ */
+export const ActionReferenceAddedPayloadSchema = z.object({
+  sourceRecordId: z.string().uuid(),
+  targetFieldKey: z.string(),
+  snapshotValue: z.unknown().optional(),
+});
+export type ActionReferenceAddedPayload = z.infer<typeof ActionReferenceAddedPayloadSchema>;
+
+/**
+ * Payload for ACTION_REFERENCE_REMOVED events
+ */
+export const ActionReferenceRemovedPayloadSchema = z.object({
+  sourceRecordId: z.string().uuid(),
+  targetFieldKey: z.string(),
+});
+export type ActionReferenceRemovedPayload = z.infer<typeof ActionReferenceRemovedPayloadSchema>;
+
+/**
+ * Input for adding a reference
+ */
+export const AddActionReferenceInputSchema = z.object({
+  sourceRecordId: z.string().uuid(),
+  targetFieldKey: z.string(),
+  snapshotValue: z.unknown().optional(),
+});
+export type AddActionReferenceInput = z.infer<typeof AddActionReferenceInputSchema>;
+
+/**
+ * Input for removing a reference
+ */
+export const RemoveActionReferenceInputSchema = z.object({
+  sourceRecordId: z.string().uuid(),
+  targetFieldKey: z.string(),
+});
+export type RemoveActionReferenceInput = z.infer<typeof RemoveActionReferenceInputSchema>;

@@ -223,6 +223,32 @@ export {
   type TaskLikeViewPayload,
   type ActionView,
 
+  // Workflow Surface (materialized projection)
+  WorkflowSurfaceNodeFlagsSchema,
+  WorkflowSurfaceNodeSchema,
+  WorkflowSurfaceResponseSchema,
+  DependencyEventPayloadSchema,
+  WorkflowRowMovedPayloadSchema,
+  DependencyInputSchema,
+  MoveWorkflowRowInputSchema,
+  type WorkflowSurfaceNodeFlags,
+  type WorkflowSurfaceNode,
+  type WorkflowSurfaceResponse,
+  type DependencyEventPayload,
+  type WorkflowRowMovedPayload,
+  type DependencyInput,
+  type MoveWorkflowRowInput,
+
+  // Action Reference Events
+  ActionReferenceAddedPayloadSchema,
+  ActionReferenceRemovedPayloadSchema,
+  AddActionReferenceInputSchema,
+  RemoveActionReferenceInputSchema,
+  type ActionReferenceAddedPayload,
+  type ActionReferenceRemovedPayload,
+  type AddActionReferenceInput,
+  type RemoveActionReferenceInput,
+
   // API Responses
   ActionResponseSchema,
   ActionsResponseSchema,

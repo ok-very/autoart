@@ -190,6 +190,290 @@ export function interpretActionView(
 }
 
 // ============================================================================
+// DEPENDENCY INTERPRETATION (Pure Functions)
+// ============================================================================
+
+/**
+ * Extract current dependencies from events.
+ * Returns a Set of actionIds that this action depends on.
+ *
+ * Semantics:
+ * - DEPENDENCY_ADDED: Add edge
+ * - DEPENDENCY_REMOVED: Remove edge (tombstone)
+ * - Last-write-wins per edge (process chronologically)
+ */
+export function extractDependencies(events: Event[]): Set<string> {
+  const dependencies = new Set<string>();
+
+  // Sort events chronologically (oldest first)
+  const sortedEvents = events
+    .filter((e) => e.type === 'DEPENDENCY_ADDED' || e.type === 'DEPENDENCY_REMOVED')
+    .sort((a, b) => new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime());
+
+  for (const event of sortedEvents) {
+    const payload = event.payload as { dependsOnActionId?: string } | null;
+    const dependsOnId = payload?.dependsOnActionId;
+
+    if (!dependsOnId) continue;
+
+    if (event.type === 'DEPENDENCY_ADDED') {
+      dependencies.add(dependsOnId);
+    } else if (event.type === 'DEPENDENCY_REMOVED') {
+      dependencies.delete(dependsOnId);
+    }
+  }
+
+  return dependencies;
+}
+
+/**
+ * Extract row order from WORKFLOW_ROW_MOVED events.
+ * Returns a Map of actionId → position for a specific surface.
+ *
+ * Note: This builds positions based on "after" relationships.
+ * Actions without move events use their created_at order.
+ */
+export function extractRowOrder(
+  events: Event[],
+  surfaceType: string
+): Map<string, { afterActionId: string | null; timestamp: Date }> {
+  const moveMap = new Map<string, { afterActionId: string | null; timestamp: Date }>();
+
+  // Sort events chronologically (oldest first) - later events override
+  const sortedEvents = events
+    .filter((e) => e.type === 'WORKFLOW_ROW_MOVED')
+    .sort((a, b) => new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime());
+
+  for (const event of sortedEvents) {
+    const payload = event.payload as {
+      surfaceType?: string;
+      afterActionId?: string | null;
+    } | null;
+
+    if (payload?.surfaceType !== surfaceType) continue;
+
+    const actionId = event.action_id;
+    if (!actionId) continue;
+
+    moveMap.set(actionId, {
+      afterActionId: payload.afterActionId ?? null,
+      timestamp: new Date(event.occurred_at),
+    });
+  }
+
+  return moveMap;
+}
+
+// ============================================================================
+// WORKFLOW SURFACE TREE BUILDING (Pure Functions)
+// ============================================================================
+
+export interface WorkflowSurfaceNode {
+  actionId: string;
+  parentActionId: string | null;
+  depth: number;
+  position: number;
+  payload: TaskLikeViewPayload;
+  flags?: {
+    cycleDetected?: boolean;
+    hasChildren?: boolean;
+  };
+  renderedAt: Date;
+  lastEventOccurredAt: Date;
+}
+
+/**
+ * Build a workflow surface tree from actions and events.
+ * This is a pure function - deterministic, idempotent, side-effect free.
+ *
+ * Dependency semantics:
+ * - DEPENDENCY_ADDED on Action A with { dependsOnActionId: B }
+ *   means "A is blocked by B" / "B must complete before A"
+ * - Tree representation: A is parent, B is child (B shown nested under A)
+ *
+ * The tree is built by:
+ * 1. Computing ActionViews for each action
+ * 2. Building dependency graph from events
+ * 3. Building tree with DFS, detecting cycles
+ * 4. Sorting siblings by position (from WORKFLOW_ROW_MOVED or created_at)
+ */
+export function buildWorkflowSurfaceTree(
+  actions: Action[],
+  eventsByAction: Map<string, Event[]>,
+  surfaceType: string = 'workflow_table'
+): WorkflowSurfaceNode[] {
+  if (actions.length === 0) return [];
+
+  // 1. Collect all events for row ordering
+  const allEvents: Event[] = [];
+  for (const events of eventsByAction.values()) {
+    allEvents.push(...events);
+  }
+
+  // 2. Build dependency graph: blockedActionId -> Set<prerequisiteId>
+  // "A is blocked by B" means B is a child of A in the tree
+  const blockedBy = new Map<string, Set<string>>();
+
+  for (const action of actions) {
+    const events = eventsByAction.get(action.id) || [];
+    const deps = extractDependencies(events);
+    if (deps.size > 0) {
+      blockedBy.set(action.id, deps);
+    }
+  }
+
+  // 3. Build reverse lookup: prerequisiteId -> Set<blockedActionId>
+  // This tells us which actions are blocked by a given action
+  const blocks = new Map<string, Set<string>>();
+  for (const [blockedId, prereqs] of blockedBy) {
+    for (const prereqId of prereqs) {
+      if (!blocks.has(prereqId)) {
+        blocks.set(prereqId, new Set());
+      }
+      blocks.get(prereqId)!.add(blockedId);
+    }
+  }
+
+  // 4. Determine roots: actions that are not prerequisites of any other
+  // An action is a root if no other action is blocked by it,
+  // OR if it has no dependencies (standalone action)
+  const actionSet = new Set(actions.map((a) => a.id));
+  const isPrereq = new Set<string>();
+  for (const deps of blockedBy.values()) {
+    for (const dep of deps) {
+      if (actionSet.has(dep)) {
+        isPrereq.add(dep);
+      }
+    }
+  }
+
+  // Roots are actions that are not prerequisites of others within this context
+  const rootIds = actions.filter((a) => !isPrereq.has(a.id)).map((a) => a.id);
+
+  // 5. Extract row ordering
+  const rowOrder = extractRowOrder(allEvents, surfaceType);
+
+  // 6. Create action lookup and compute ActionViews
+  const actionById = new Map(actions.map((a) => [a.id, a]));
+  const viewByActionId = new Map<string, ActionView>();
+
+  for (const action of actions) {
+    const events = eventsByAction.get(action.id) || [];
+    viewByActionId.set(action.id, interpretActionView(action, events, 'task-like'));
+  }
+
+  // 7. Helper to get last event timestamp
+  function getLastEventTime(actionId: string): Date {
+    const events = eventsByAction.get(actionId) || [];
+    if (events.length === 0) {
+      const action = actionById.get(actionId);
+      return action ? new Date(action.created_at) : new Date();
+    }
+    return new Date(
+      Math.max(...events.map((e) => new Date(e.occurred_at).getTime()))
+    );
+  }
+
+  // 8. Sort function for siblings
+  function sortSiblings(ids: string[]): string[] {
+    return ids.sort((a, b) => {
+      const orderA = rowOrder.get(a);
+      const orderB = rowOrder.get(b);
+
+      // If both have explicit order, sort by afterActionId chain (complex)
+      // For simplicity, use timestamp of move event as tie-breaker
+      if (orderA && orderB) {
+        return orderA.timestamp.getTime() - orderB.timestamp.getTime();
+      }
+
+      // If only one has order, it comes after unordered items
+      if (orderA && !orderB) return 1;
+      if (!orderA && orderB) return -1;
+
+      // Default: sort by action created_at
+      const actionA = actionById.get(a);
+      const actionB = actionById.get(b);
+      if (actionA && actionB) {
+        return new Date(actionA.created_at).getTime() - new Date(actionB.created_at).getTime();
+      }
+      return 0;
+    });
+  }
+
+  // 9. Build tree with DFS
+  const result: WorkflowSurfaceNode[] = [];
+  const visited = new Set<string>();
+
+  function buildNode(
+    actionId: string,
+    parentActionId: string | null,
+    depth: number,
+    position: number,
+    pathSet: Set<string>
+  ): WorkflowSurfaceNode | null {
+    const action = actionById.get(actionId);
+    const view = viewByActionId.get(actionId);
+
+    if (!action || !view) return null;
+
+    // Cycle detection
+    const cycleDetected = pathSet.has(actionId);
+
+    // Get children (prerequisites that this action depends on)
+    const deps = blockedBy.get(actionId);
+    const childIds = deps ? Array.from(deps).filter((id) => actionSet.has(id)) : [];
+    const hasChildren = childIds.length > 0;
+
+    const node: WorkflowSurfaceNode = {
+      actionId,
+      parentActionId,
+      depth,
+      position,
+      payload: view.data,
+      flags: {
+        cycleDetected,
+        hasChildren,
+      },
+      renderedAt: new Date(),
+      lastEventOccurredAt: getLastEventTime(actionId),
+    };
+
+    result.push(node);
+
+    // If cycle detected, don't descend further
+    if (cycleDetected) {
+      return node;
+    }
+
+    // Mark as visited in current path
+    const newPathSet = new Set(pathSet);
+    newPathSet.add(actionId);
+
+    // Recursively build children
+    if (hasChildren) {
+      const sortedChildIds = sortSiblings(childIds);
+      let childPosition = 0;
+      for (const childId of sortedChildIds) {
+        buildNode(childId, actionId, depth + 1, childPosition, newPathSet);
+        childPosition++;
+      }
+    }
+
+    return node;
+  }
+
+  // 10. Build from roots
+  const sortedRootIds = sortSiblings(rootIds);
+  let rootPosition = 0;
+  for (const rootId of sortedRootIds) {
+    buildNode(rootId, null, 0, rootPosition, new Set());
+    rootPosition++;
+  }
+
+  return result;
+}
+
+// ============================================================================
 // SERVICE FUNCTIONS (with database access)
 // ============================================================================
 
