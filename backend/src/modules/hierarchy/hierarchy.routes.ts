@@ -251,4 +251,116 @@ export async function hierarchyRoutes(fastify: FastifyInstance) {
       }
     }
   );
+
+  /**
+   * GET /hierarchy/:contextType/:id/action-views
+   *
+   * Generic endpoint for stage/process action views.
+   * Supported types: stage, process
+   */
+  fastify.get<{
+    Params: { contextType: string; id: string };
+    Querystring: { view?: ActionViewType; status?: string };
+  }>(
+    '/:contextType/:id/action-views',
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { contextType, id } = request.params;
+      const { view = 'task-like', status } = request.query;
+
+      // Validate context type
+      if (!['stage', 'process'].includes(contextType)) {
+        // If it's subprocess, it should have been caught by the specific route above,
+        // but if not (e.g. route order), we can handle it or let it fall through.
+        // Since specific routes take precedence in Fastify if defined first,
+        // and we are defining this AFTER, it should be fine.
+        // However, to be safe and explicit:
+        if (contextType === 'subprocess') {
+          // Delegate to the specific handler logic or just allow it here too?
+          // Let's allow it here too for consistency if the specific route is removed later.
+        } else {
+          return reply.code(400).send({ error: 'INVALID_CONTEXT_TYPE', message: 'Invalid context type' });
+        }
+      }
+
+      // Verify the node exists
+      const node = await hierarchyService.getNodeById(id);
+      if (!node) {
+        return reply.code(404).send({ error: 'NOT_FOUND', message: 'Node not found' });
+      }
+
+      if (node.type !== contextType) {
+        return reply.code(400).send({
+          error: 'INVALID_CONTEXT',
+          message: `Expected ${contextType}, got ${node.type}`,
+        });
+      }
+
+      try {
+        let views;
+        // Cast contextType to ContextType
+        const type = contextType as 'stage' | 'process' | 'subprocess';
+
+        if (status) {
+          const derivedStatus = status as interpreterService.DerivedStatus;
+          views = await interpreterService.getActionViewsByStatus(id, type, derivedStatus, view);
+        } else {
+          views = await interpreterService.getActionViews(id, type, view);
+        }
+
+        return reply.send({ views });
+      } catch (err) {
+        if (err instanceof AppError) {
+          return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+        }
+        throw err;
+      }
+    }
+  );
+
+  /**
+   * GET /hierarchy/:contextType/:id/action-views/summary
+   *
+   * Generic endpoint for stage/process action views summary.
+   */
+  fastify.get<{
+    Params: { contextType: string; id: string };
+  }>(
+    '/:contextType/:id/action-views/summary',
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { contextType, id } = request.params;
+
+      // Validate context type
+      if (!['stage', 'process'].includes(contextType)) {
+        if (contextType !== 'subprocess') {
+          return reply.code(400).send({ error: 'INVALID_CONTEXT_TYPE', message: 'Invalid context type' });
+        }
+      }
+
+      // Verify the node exists
+      const node = await hierarchyService.getNodeById(id);
+      if (!node) {
+        return reply.code(404).send({ error: 'NOT_FOUND', message: 'Node not found' });
+      }
+
+      if (node.type !== contextType) {
+        return reply.code(400).send({
+          error: 'INVALID_CONTEXT',
+          message: `Expected ${contextType}, got ${node.type}`,
+        });
+      }
+
+      try {
+        const type = contextType as 'stage' | 'process' | 'subprocess';
+        const summary = await interpreterService.getStatusSummary(id, type);
+        return reply.send({ summary });
+      } catch (err) {
+        if (err instanceof AppError) {
+          return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+        }
+        throw err;
+      }
+    }
+  );
 }

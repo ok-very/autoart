@@ -1,0 +1,272 @@
+/**
+ * Composer Service Tests
+ *
+ * Tests for the Composer module - the Task Builder on Actions + Events.
+ * Tests cover:
+ * - Action creation with transaction atomicity
+ * - Event emission (ACTION_DECLARED, FIELD_VALUE_RECORDED)
+ * - ActionReference creation
+ * - Guardrails (rejecting legacy task types)
+ */
+
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { db } from '../../../db/client.js';
+import * as composerService from '../composer.service.js';
+import type { Event } from '@autoart/shared';
+import {
+    cleanupTestData,
+    generateTestPrefix,
+    createTestProject,
+    createTestRecord,
+} from '../../../test/setup.js';
+
+describe('composer.service', () => {
+    let testPrefix: string;
+
+    beforeAll(async () => {
+        // Verify database connection
+        await db.selectFrom('actions').select('id').limit(1).execute();
+    });
+
+    beforeEach(() => {
+        testPrefix = generateTestPrefix();
+    });
+
+    afterAll(async () => {
+        await cleanupTestData(db, '__test_');
+    });
+
+    describe('compose', () => {
+        it('should create an action with events atomically', async () => {
+            // Arrange: Create a subprocess context
+            const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
+
+            // Act: Compose a task
+            const result = await composerService.compose(
+                {
+                    action: {
+                        contextId: fixtures.subprocessId!,
+                        contextType: 'subprocess',
+                        type: 'TASK',
+                        fieldBindings: [
+                            { fieldKey: 'title' },
+                            { fieldKey: 'description' },
+                        ],
+                    },
+                    fieldValues: [
+                        { fieldName: 'title', value: 'Test Task' },
+                        { fieldName: 'description', value: 'Test Description' },
+                    ],
+                },
+                { actorId: null, skipView: true }
+            );
+
+            // Assert: Action was created
+            expect(result.action).toBeDefined();
+            expect(result.action.type).toBe('TASK');
+            expect(result.action.contextId).toBe(fixtures.subprocessId);
+
+            // Assert: Events were created
+            expect(result.events.length).toBe(3); // ACTION_DECLARED + 2 FIELD_VALUE_RECORDED
+            const eventTypes = result.events.map((e: Event) => e.type);
+            expect(eventTypes).toContain('ACTION_DECLARED');
+            expect(eventTypes.filter((t: string) => t === 'FIELD_VALUE_RECORDED').length).toBe(2);
+
+            // Verify events are in the database
+            const dbEvents = await db
+                .selectFrom('events')
+                .selectAll()
+                .where('action_id', '=', result.action.id)
+                .execute();
+            expect(dbEvents.length).toBe(3);
+
+            // Cleanup
+            await db.deleteFrom('events').where('action_id', '=', result.action.id).execute();
+            await db.deleteFrom('actions').where('id', '=', result.action.id).execute();
+            await cleanupTestData(db, testPrefix);
+        });
+
+        it('should create action references when provided', async () => {
+            // Arrange
+            const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
+            const { recordId } = await createTestRecord(db, testPrefix);
+
+            // Act: Compose with a reference
+            const result = await composerService.compose(
+                {
+                    action: {
+                        contextId: fixtures.subprocessId!,
+                        contextType: 'subprocess',
+                        type: 'BUG',
+                        fieldBindings: [{ fieldKey: 'title' }],
+                    },
+                    fieldValues: [
+                        { fieldName: 'title', value: 'Test Bug' },
+                    ],
+                    references: [
+                        { sourceRecordId: recordId, mode: 'dynamic' },
+                    ],
+                },
+                { actorId: null, skipView: true }
+            );
+
+            // Assert: Reference was created
+            expect(result.references).toBeDefined();
+            expect(result.references!.length).toBe(1);
+            expect(result.references![0].sourceRecordId).toBe(recordId);
+            expect(result.references![0].actionId).toBe(result.action.id);
+
+            // Verify in database
+            const dbRefs = await db
+                .selectFrom('action_references')
+                .selectAll()
+                .where('action_id', '=', result.action.id)
+                .execute();
+            expect(dbRefs.length).toBe(1);
+
+            // Cleanup
+            await db.deleteFrom('action_references').where('action_id', '=', result.action.id).execute();
+            await db.deleteFrom('events').where('action_id', '=', result.action.id).execute();
+            await db.deleteFrom('actions').where('id', '=', result.action.id).execute();
+            await cleanupTestData(db, testPrefix);
+        });
+
+        it('should reject legacy task types', async () => {
+            // Arrange
+            const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
+
+            // Act & Assert: Should throw for legacy_task
+            await expect(
+                composerService.compose(
+                    {
+                        action: {
+                            contextId: fixtures.subprocessId!,
+                            contextType: 'subprocess',
+                            type: 'legacy_task',
+                            fieldBindings: [],
+                        },
+                    },
+                    { actorId: null }
+                )
+            ).rejects.toThrow('Legacy task creation is not allowed');
+
+            // Act & Assert: Should throw for LEGACY_TASK
+            await expect(
+                composerService.compose(
+                    {
+                        action: {
+                            contextId: fixtures.subprocessId!,
+                            contextType: 'subprocess',
+                            type: 'LEGACY_TASK',
+                            fieldBindings: [],
+                        },
+                    },
+                    { actorId: null }
+                )
+            ).rejects.toThrow('Legacy task creation is not allowed');
+
+            // Cleanup
+            await cleanupTestData(db, testPrefix);
+        });
+
+        it('should emit extra events when provided', async () => {
+            // Arrange
+            const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
+
+            // Act: Compose with extra events
+            const result = await composerService.compose(
+                {
+                    action: {
+                        contextId: fixtures.subprocessId!,
+                        contextType: 'subprocess',
+                        type: 'TASK',
+                        fieldBindings: [{ fieldKey: 'title' }],
+                    },
+                    fieldValues: [
+                        { fieldName: 'title', value: 'Task with extra events' },
+                    ],
+                    emitExtraEvents: [
+                        { type: 'WORK_STARTED', payload: {} },
+                    ],
+                },
+                { actorId: null, skipView: true }
+            );
+
+            // Assert: All events were created
+            expect(result.events.length).toBe(3); // ACTION_DECLARED + FIELD_VALUE_RECORDED + WORK_STARTED
+            const eventTypes = result.events.map((e: Event) => e.type);
+            expect(eventTypes).toContain('ACTION_DECLARED');
+            expect(eventTypes).toContain('FIELD_VALUE_RECORDED');
+            expect(eventTypes).toContain('WORK_STARTED');
+
+            // Cleanup
+            await db.deleteFrom('events').where('action_id', '=', result.action.id).execute();
+            await db.deleteFrom('actions').where('id', '=', result.action.id).execute();
+            await cleanupTestData(db, testPrefix);
+        });
+    });
+
+    describe('QuickCompose', () => {
+        it('should create a task with QuickCompose.task', async () => {
+            // Arrange
+            const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
+
+            // Act
+            const result = await composerService.QuickCompose.task(
+                fixtures.subprocessId!,
+                'Quick Task Title',
+                {
+                    description: 'Quick task description',
+                    dueDate: '2026-02-01',
+                    actorId: null,
+                }
+            );
+
+            // Assert
+            expect(result.action.type).toBe('TASK');
+            expect(result.events.length).toBeGreaterThanOrEqual(3); // ACTION_DECLARED + title + description + possibly dueDate
+
+            // Check title is in events
+            const titleEvent = result.events.find(
+                (e: Event) => e.type === 'FIELD_VALUE_RECORDED' &&
+                    (e.payload as Record<string, unknown>)?.fieldKey === 'title'
+            );
+            expect(titleEvent).toBeDefined();
+            expect((titleEvent!.payload as any).value).toBe('Quick Task Title');
+
+            // Cleanup
+            await db.deleteFrom('events').where('action_id', '=', result.action.id).execute();
+            await db.deleteFrom('actions').where('id', '=', result.action.id).execute();
+            await cleanupTestData(db, testPrefix);
+        });
+
+        it('should create a bug with QuickCompose.bug', async () => {
+            // Arrange
+            const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
+
+            // Act
+            const result = await composerService.QuickCompose.bug(
+                fixtures.subprocessId!,
+                'Critical Bug',
+                'CRITICAL',
+                { description: 'Something broke', actorId: null }
+            );
+
+            // Assert
+            expect(result.action.type).toBe('BUG');
+
+            // Check severity is in events
+            const severityEvent = result.events.find(
+                (e: Event) => e.type === 'FIELD_VALUE_RECORDED' &&
+                    (e.payload as Record<string, unknown>)?.fieldKey === 'severity'
+            );
+            expect(severityEvent).toBeDefined();
+            expect((severityEvent!.payload as any).value).toBe('CRITICAL');
+
+            // Cleanup
+            await db.deleteFrom('events').where('action_id', '=', result.action.id).execute();
+            await db.deleteFrom('actions').where('id', '=', result.action.id).execute();
+            await cleanupTestData(db, testPrefix);
+        });
+    });
+});

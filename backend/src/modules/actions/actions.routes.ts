@@ -15,6 +15,7 @@
 
 import { FastifyInstance } from 'fastify';
 import * as actionsService from './actions.service.js';
+import * as interpreterService from '../interpreter/interpreter.service.js';
 import type { ContextType } from '../../db/schema.js';
 
 // Response schemas for Fastify
@@ -27,6 +28,33 @@ const actionSchema = {
     type: { type: 'string' },
     field_bindings: { type: 'array' },
     created_at: { type: 'string', format: 'date-time' },
+  },
+};
+
+const actionViewSchema = {
+  type: 'object',
+  properties: {
+    actionId: { type: 'string', format: 'uuid' },
+    viewType: { type: 'string', enum: ['task-like', 'kanban-card', 'timeline-row'] },
+    renderedAt: { type: 'string', format: 'date-time' },
+    data: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        description: { type: 'string', nullable: true },
+        status: { type: 'string', enum: ['pending', 'active', 'blocked', 'finished'] },
+        assignee: {
+          type: 'object',
+          nullable: true,
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+          },
+        },
+        dueDate: { type: 'string', nullable: true },
+        percentComplete: { type: 'number', nullable: true },
+      },
+    },
   },
 };
 
@@ -114,6 +142,44 @@ export async function actionsRoutes(fastify: FastifyInstance) {
       }
 
       return { action };
+    }
+  );
+
+  /**
+   * GET /actions/:id/view - Get an interpreted ActionView by ID
+   */
+  fastify.get<{
+    Params: { id: string };
+  }>(
+    '/:id/view',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          required: ['id'],
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              view: actionViewSchema,
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params;
+      const view = await interpreterService.getActionViewById(id);
+
+      if (!view) {
+        return reply.status(404).send({ error: 'Action not found' });
+      }
+
+      return { view };
     }
   );
 

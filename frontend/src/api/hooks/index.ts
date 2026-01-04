@@ -96,6 +96,31 @@ export {
   type IngestionResult,
 } from './ingestion';
 
+// Actions & Events
+export {
+  useActions,
+  useAction,
+  useCreateAction,
+  useActionEvents,
+  useContextEvents,
+  useEmitEvent,
+  useStartWork,
+  useStopWork,
+  useFinishWork,
+  useBlockWork,
+  useUnblockWork,
+  useAssignWork,
+  useUnassignWork,
+  useRecordFieldValue,
+} from './actions';
+
+// Action Views
+export {
+  useActionViews,
+  useActionView,
+  useActionViewsSummary,
+} from './actionViews';
+
 // Composer (Task Builder on Actions + Events)
 export {
   useCompose,
