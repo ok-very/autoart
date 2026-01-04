@@ -336,9 +336,14 @@ export function UniversalTableCore({
                                 style={{ width: widthStyle, flex: width === 'flex' ? 1 : undefined }}
                                 onClick={isSortable ? () => handleSort(column.id) : undefined}
                             >
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
-                                    {column.header}
-                                </span>
+                                {/* Custom header renderer or default text */}
+                                {column.renderHeader ? (
+                                    column.renderHeader()
+                                ) : (
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
+                                        {column.header}
+                                    </span>
+                                )}
                                 {isSortable && isSorted && (
                                     <span className="text-slate-400">
                                         {sortState.direction === 'asc' ? (

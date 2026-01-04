@@ -43,6 +43,11 @@ export type TableColumn = {
     id: string;
     /** Header display text */
     header: string;
+    /**
+     * Custom header renderer. If provided, overrides the default text header.
+     * Useful for checkbox columns, icons, etc.
+     */
+    renderHeader?: () => ReactNode;
     /** Width in pixels or 'flex' for flexible */
     width?: number | 'flex';
     /** Minimum width when resizing */
