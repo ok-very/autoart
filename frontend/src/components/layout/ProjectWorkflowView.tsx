@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { Plus, ChevronDown } from 'lucide-react';
+import { Plus, ChevronDown, Wand2 } from 'lucide-react';
 import { useProjectTree, useRecordDefinitions, useRecords, useUpdateNode } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
@@ -8,6 +8,8 @@ import { DataTableHierarchy, type HierarchyFieldDef } from '../../ui/composites/
 import { DataTableFlat } from '../../ui/composites/DataTableFlat';
 import { useUpdateRecord } from '../../api/hooks';
 import { deriveTaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
+import { ActionComposer } from '../composer';
+
 
 /**
  * Extract metadata from a node, parsing JSON string if needed
@@ -197,6 +199,8 @@ export function ProjectWorkflowView() {
     const [localSubprocessId, setLocalSubprocessId] = useState<string | null>(null);
     const [isSubprocessDropdownOpen, setIsSubprocessDropdownOpen] = useState(false);
     const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
+    const [isComposerOpen, setIsComposerOpen] = useState(false);
+
 
     // Track last focused table for contextual Add button
     // 'tasks' = Task table, or definition ID for record tables
@@ -450,83 +454,109 @@ export function ProjectWorkflowView() {
                             </div>
                         )}
                     </div>
-                    {/* Add dropdown menu */}
+                    {/* Add dropdown menu + Composer button */}
                     {activeSubprocessId && (
-                        <div className="relative">
-                            <button
-                                onClick={() => setIsAddDropdownOpen(!isAddDropdownOpen)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors"
-                            >
-                                <Plus size={14} />
-                                <span>Add</span>
-                                <ChevronDown size={12} className={`transition-transform ${isAddDropdownOpen ? 'rotate-180' : ''}`} />
-                            </button>
-                            {isAddDropdownOpen && (
-                                <>
-                                    <div className="fixed inset-0 z-10" onClick={() => setIsAddDropdownOpen(false)} />
-                                    <div className="absolute top-full right-0 mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1">
-                                        <button
-                                            onClick={() => {
-                                                openDrawer('create-node', { parentId: activeSubprocessId, nodeType: 'task' });
-                                                setIsAddDropdownOpen(false);
-                                            }}
-                                            className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                        >
-                                            <span className="w-5 h-5 rounded bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold">T</span>
-                                            Add Task
-                                        </button>
-                                        {/* Add Subtask - only enabled when a task is selected */}
-                                        <button
-                                            onClick={() => {
-                                                if (selectedNode?.type === 'task') {
-                                                    openDrawer('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
-                                                } else if (selectedNode?.type === 'subtask' && selectedNode.parent_id) {
-                                                    // If subtask selected, add sibling under same parent task
-                                                    openDrawer('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
-                                                }
-                                                setIsAddDropdownOpen(false);
-                                            }}
-                                            disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
-                                            className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
-                                                    ? 'text-slate-700 hover:bg-slate-50'
-                                                    : 'text-slate-400 cursor-not-allowed'
-                                                }`}
-                                        >
-                                            <span className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold ${selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
-                                                    ? 'bg-teal-100 text-teal-600'
-                                                    : 'bg-slate-100 text-slate-400'
-                                                }`}>ST</span>
-                                            Add Subtask
-                                        </button>
-                                        {/* Divider */}
-                                        {definitions && definitions.filter(d => !d.is_system && d.name !== 'Task').length > 0 && (
-                                            <div className="border-t border-slate-100 my-1" />
-                                        )}
-                                        {/* Record types from definitions */}
-                                        {definitions && definitions.filter(d => !d.is_system && d.name !== 'Task').map(def => (
+                        <div className="flex items-center gap-2">
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsAddDropdownOpen(!isAddDropdownOpen)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors"
+                                >
+                                    <Plus size={14} />
+                                    <span>Add</span>
+                                    <ChevronDown size={12} className={`transition-transform ${isAddDropdownOpen ? 'rotate-180' : ''}`} />
+                                </button>
+                                {isAddDropdownOpen && (
+                                    <>
+                                        <div className="fixed inset-0 z-10" onClick={() => setIsAddDropdownOpen(false)} />
+                                        <div className="absolute top-full right-0 mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1">
                                             <button
-                                                key={def.id}
                                                 onClick={() => {
-                                                    openDrawer('create-record', {
-                                                        definitionId: def.id,
-                                                        classificationNodeId: activeSubprocessId
-                                                    });
+                                                    openDrawer('create-node', { parentId: activeSubprocessId, nodeType: 'task' });
                                                     setIsAddDropdownOpen(false);
                                                 }}
                                                 className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                                             >
-                                                <span className="w-5 h-5 rounded bg-slate-100 text-slate-600 flex items-center justify-center text-xs">
-                                                    {def.styling?.icon || def.name.charAt(0)}
-                                                </span>
-                                                Add {def.name}
+                                                <span className="w-5 h-5 rounded bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold">T</span>
+                                                Add Task
                                             </button>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
+                                            {/* Add Subtask - only enabled when a task is selected */}
+                                            <button
+                                                onClick={() => {
+                                                    if (selectedNode?.type === 'task') {
+                                                        openDrawer('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
+                                                    } else if (selectedNode?.type === 'subtask' && selectedNode.parent_id) {
+                                                        // If subtask selected, add sibling under same parent task
+                                                        openDrawer('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
+                                                    }
+                                                    setIsAddDropdownOpen(false);
+                                                }}
+                                                disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
+                                                className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
+                                                    ? 'text-slate-700 hover:bg-slate-50'
+                                                    : 'text-slate-400 cursor-not-allowed'
+                                                    }`}
+                                            >
+                                                <span className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold ${selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
+                                                    ? 'bg-teal-100 text-teal-600'
+                                                    : 'bg-slate-100 text-slate-400'
+                                                    }`}>ST</span>
+                                                Add Subtask
+                                            </button>
+                                            {/* Divider */}
+                                            {definitions && definitions.filter(d => !d.is_system && d.name !== 'Task').length > 0 && (
+                                                <div className="border-t border-slate-100 my-1" />
+                                            )}
+                                            {/* Record types from definitions */}
+                                            {definitions && definitions.filter(d => !d.is_system && d.name !== 'Task').map(def => (
+                                                <button
+                                                    key={def.id}
+                                                    onClick={() => {
+                                                        openDrawer('create-record', {
+                                                            definitionId: def.id,
+                                                            classificationNodeId: activeSubprocessId
+                                                        });
+                                                        setIsAddDropdownOpen(false);
+                                                    }}
+                                                    className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                                >
+                                                    <span className="w-5 h-5 rounded bg-slate-100 text-slate-600 flex items-center justify-center text-xs">
+                                                        {def.styling?.icon || def.name.charAt(0)}
+                                                    </span>
+                                                    Add {def.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Composer Button */}
+                            <button
+                                onClick={() => setIsComposerOpen(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded shadow-sm transition-all"
+                            >
+                                <Wand2 size={14} />
+                                <span>Composer</span>
+                            </button>
                         </div>
                     )}
+
+                    {/* Composer Dialog */}
+                    {isComposerOpen && activeSubprocessId && (
+                        <>
+                            <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setIsComposerOpen(false)} />
+                            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
+                                <ActionComposer
+                                    contextId={activeSubprocessId}
+                                    onSuccess={() => setIsComposerOpen(false)}
+                                    onClose={() => setIsComposerOpen(false)}
+                                />
+                            </div>
+                        </>
+                    )}
                 </div>
+
 
                 <div className="flex-1 overflow-auto custom-scroll p-4">
                     <div className="min-w-[900px] space-y-4">
@@ -594,7 +624,7 @@ export function ProjectWorkflowView() {
                         ))}
                     </div>
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     );
 }

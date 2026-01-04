@@ -6,6 +6,8 @@ import { MainLayout } from './components/layout/MainLayout';
 import { LoginPage } from './pages/LoginPage';
 import { RecordsPage } from './pages/RecordsPage';
 import { FieldsPage } from './pages/FieldsPage';
+import { ComposerPage } from './pages/ComposerPage';
+
 
 function App() {
   const { isLoading, isError, isFetching } = useCurrentUser();
@@ -54,6 +56,7 @@ function App() {
   return (
     <Routes>
       <Route path="/fields" element={<FieldsPage />} />
+      <Route path="/composer" element={<ComposerPage />} />
       <Route path="/" element={<MainLayout />} />
       <Route path="/project/:projectId" element={<MainLayout />} />
       <Route path="/records" element={<RecordsPage />} />

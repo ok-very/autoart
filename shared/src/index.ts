@@ -107,21 +107,32 @@ export {
   type RecordStat,
 } from './schemas/records';
 
-// References
+// References (Action-based - Foundational Model)
 export {
+  // New Action References
+  ActionReferenceSchema,
+  CreateActionReferenceInputSchema,
+  ActionReferenceResponseSchema,
+  ActionReferencesResponseSchema,
+  type ActionReference,
+  type CreateActionReferenceInput,
+
+  // Deprecated Task References (read-only after migration 022)
   TaskReferenceSchema,
-  ResolvedReferenceSchema,
   CreateReferenceInputSchema,
+  ReferenceResponseSchema,
+  ReferencesResponseSchema,
+  type TaskReference,
+  type CreateReferenceInput,
+
+  // Shared types
+  ResolvedReferenceSchema,
   UpdateReferenceModeInputSchema,
   UpdateReferenceSnapshotInputSchema,
   BulkResolveInputSchema,
-  ReferenceResponseSchema,
-  ReferencesResponseSchema,
   ResolvedReferenceResponseSchema,
   DriftCheckResponseSchema,
-  type TaskReference,
   type ResolvedReference,
-  type CreateReferenceInput,
   type UpdateReferenceModeInput,
   type UpdateReferenceSnapshotInput,
   type BulkResolveInput,
@@ -224,3 +235,16 @@ export {
   type EventsResponse,
   type ActionViewsResponse,
 } from './schemas/actions';
+
+// Composer (Task Builder on Actions + Events)
+export {
+  ComposerFieldValueSchema,
+  ComposerInputSchema,
+  ComposerResponseSchema,
+  ActionTypeConfigSchema,
+  KNOWN_ACTION_TYPES,
+  type ComposerFieldValue,
+  type ComposerInput,
+  type ComposerResponse,
+  type ActionTypeConfig,
+} from './schemas/composer';

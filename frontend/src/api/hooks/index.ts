@@ -96,6 +96,15 @@ export {
   type IngestionResult,
 } from './ingestion';
 
+// Composer (Task Builder on Actions + Events)
+export {
+  useCompose,
+  useQuickTask,
+  useQuickBug,
+  buildTaskInput,
+  buildBugInput,
+} from './composer';
+
 // Search
 export { useSearch } from './search';
 

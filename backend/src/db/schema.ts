@@ -128,6 +128,8 @@ export type NewDataRecord = Insertable<RecordsTable>;
 export type DataRecordUpdate = Updateable<RecordsTable>;
 
 // Task References Table
+// DEPRECATED: Read-only after migration 022. Use ActionReferencesTable instead.
+// Kept for migration period traceability. Do not write new rows.
 export interface TaskReferencesTable {
   id: Generated<string>;
   task_id: string;
@@ -138,9 +140,29 @@ export interface TaskReferencesTable {
   created_at: Generated<Date>;
 }
 
+/** @deprecated Use ActionReference instead */
 export type TaskReference = Selectable<TaskReferencesTable>;
+/** @deprecated Do not create new TaskReferences - use action_references */
 export type NewTaskReference = Insertable<TaskReferencesTable>;
+/** @deprecated TaskReferences are read-only */
 export type TaskReferenceUpdate = Updateable<TaskReferencesTable>;
+
+// Action References Table (Foundational Model)
+// Links Actions to Records - replaces TaskReferences
+export interface ActionReferencesTable {
+  id: Generated<string>;
+  action_id: string;
+  source_record_id: string | null;
+  target_field_key: string | null;
+  mode: Generated<'static' | 'dynamic'>;
+  snapshot_value: unknown | null; // JSONB
+  created_at: Generated<Date>;
+  legacy_task_reference_id: string | null; // Traceability back to deprecated task_references
+}
+
+export type ActionReference = Selectable<ActionReferencesTable>;
+export type NewActionReference = Insertable<ActionReferencesTable>;
+export type ActionReferenceUpdate = Updateable<ActionReferencesTable>;
 
 // Record Links Table (Many-to-Many)
 export interface RecordLinksTable {
@@ -206,8 +228,11 @@ export interface Database {
   hierarchy_nodes: HierarchyNodesTable;
   record_definitions: RecordDefinitionsTable;
   records: RecordsTable;
+  /** @deprecated Read-only after migration 022 */
   task_references: TaskReferencesTable;
+  action_references: ActionReferencesTable;
   record_links: RecordLinksTable;
   actions: ActionsTable;
   events: EventsTable;
 }
+

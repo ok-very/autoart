@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, Plus, Copy, FolderOpen, Check, Library, Upload, Database, TableProperties } from 'lucide-react';
+import { ChevronDown, Plus, Copy, FolderOpen, Check, Library, Upload, Database, TableProperties, Wand2, Layers } from 'lucide-react';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import {
   useUIStore,
@@ -26,18 +26,25 @@ export function Header() {
   } = useUIStore();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isRegistryDropdownOpen, setIsRegistryDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const registryDropdownRef = useRef<HTMLDivElement>(null);
 
   const isRecordsPage = location.pathname.startsWith('/records');
   const isFieldsPage = location.pathname.startsWith('/fields');
+  const isComposerPage = location.pathname.startsWith('/composer');
+  const isRegistryPage = isRecordsPage || isFieldsPage;
 
   const selectedProject = activeProjectId ? getNode(activeProjectId) : null;
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
+      }
+      if (registryDropdownRef.current && !registryDropdownRef.current.contains(event.target as Node)) {
+        setIsRegistryDropdownOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -90,35 +97,73 @@ export function Header() {
         <nav className="flex items-center gap-1 ml-2">
           <Link
             to="/"
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${!isRecordsPage
+            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${!isRegistryPage && !isComposerPage
               ? 'bg-slate-100 text-slate-800'
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
               }`}
           >
             Projects
           </Link>
+
+          {/* Registry Dropdown (Records & Fields) */}
+          <div className="relative" ref={registryDropdownRef}>
+            <button
+              onClick={() => setIsRegistryDropdownOpen(!isRegistryDropdownOpen)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${isRegistryPage
+                ? 'bg-slate-100 text-slate-800'
+                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                }`}
+            >
+              <Layers size={14} />
+              Registry
+              <ChevronDown
+                size={14}
+                className={`text-slate-400 transition-transform ${isRegistryDropdownOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            {isRegistryDropdownOpen && (
+              <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden py-1">
+                <Link
+                  to="/records"
+                  onClick={() => setIsRegistryDropdownOpen(false)}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${isRecordsPage
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-slate-700'
+                    }`}
+                >
+                  <Database size={16} />
+                  Records
+                </Link>
+                <Link
+                  to="/fields"
+                  onClick={() => setIsRegistryDropdownOpen(false)}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${isFieldsPage
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-slate-700'
+                    }`}
+                >
+                  <TableProperties size={16} />
+                  Fields
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Composer Link */}
           <Link
-            to="/records"
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${isRecordsPage
-              ? 'bg-slate-100 text-slate-800'
+            to="/composer"
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${isComposerPage
+              ? 'bg-violet-50 text-violet-700'
               : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
               }`}
           >
-            <Database size={14} />
-            Records
-          </Link>
-          <Link
-            to="/fields"
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-              isFieldsPage ? 'bg-blue-50 text-blue-700' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-            }`}
-          >
-            <TableProperties size={14} />
-            Fields
+            <Wand2 size={14} />
+            Composer
           </Link>
         </nav>
 
-        {!isRecordsPage && !isFieldsPage && (
+        {!isRegistryPage && !isComposerPage && (
           <>
             <div className="h-6 w-px bg-slate-200 mx-1"></div>
 
