@@ -13,7 +13,11 @@ interface RecordTypeSidebarProps {
 /**
  * Left sidebar showing available record definition types.
  * Displays each type with emoji icon, name, and record count.
- * Allows filtering to show only non-hierarchy types (assets).
+ * 
+ * Filtering logic:
+ * - Shows only definitions with kind='record' (data definitions)
+ * - Excludes kind='action_recipe' (Task, Subtask, etc.) which belong in Composer
+ * - Also excludes legacy hierarchy node types by name as fallback
  */
 export function RecordTypeSidebar({
   width,
@@ -25,13 +29,19 @@ export function RecordTypeSidebar({
   const { openDrawer } = useUIStore();
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Filter out hierarchy node types (Project, Process, Stage, Subprocess, Task)
-  // These are internal types, not "records"
-  const hierarchyTypes = ['project', 'process', 'stage', 'subprocess', 'task'];
+  // Filter to show only data definitions (kind='record')
+  // Exclude action recipes and legacy hierarchy node types
+  const legacyHierarchyTypes = ['project', 'process', 'stage', 'subprocess'];
 
-  const recordDefinitions = (definitions || []).filter(
-    (def) => !hierarchyTypes.includes(def.name.toLowerCase())
-  );
+  const recordDefinitions = (definitions || []).filter((def) => {
+    // If kind is available, use it as the primary discriminator
+    const kind = (def as { kind?: string }).kind;
+    if (kind) {
+      return kind === 'record';
+    }
+    // Fallback: exclude legacy hierarchy types by name
+    return !legacyHierarchyTypes.includes(def.name.toLowerCase());
+  });
 
   const filteredDefinitions = searchQuery.trim()
     ? recordDefinitions.filter((def) =>

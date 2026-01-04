@@ -19,7 +19,7 @@ import { DataTableHierarchy, type HierarchyFieldDef } from '../../ui/composites/
 import { DataTableFlat } from '../../ui/composites/DataTableFlat';
 import { WorkflowSurfaceTable } from '../../ui/composites/WorkflowSurfaceTable';
 import { deriveTaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
-import { ActionComposer } from '../composer';
+import { ComposerSurface } from '../composer';
 
 
 /**
@@ -618,8 +618,9 @@ export function ProjectWorkflowView() {
                     {isComposerOpen && activeSubprocessId && (
                         <>
                             <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setIsComposerOpen(false)} />
-                            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
-                                <ActionComposer
+                            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[80vh] bg-white rounded-xl shadow-2xl overflow-hidden">
+                                <ComposerSurface
+                                    mode="drawer"
                                     contextId={activeSubprocessId}
                                     onSuccess={() => setIsComposerOpen(false)}
                                     onClose={() => setIsComposerOpen(false)}

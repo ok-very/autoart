@@ -29,6 +29,11 @@ export function deriveUIPanels(state: CompositionState): UIPanels {
     // 2. Workspace Logic
     let workspace: UIPanels['workspace'] = 'grid'; // Fallback
     switch (viewMode) {
+        case 'log':
+            // Project Log: chronological event view (default)
+            workspace = 'projectLog';
+            sidebar = null;
+            break;
         case 'columns':
             workspace = 'millerColumns';
             sidebar = null; // Miller Columns has its own navigation

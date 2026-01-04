@@ -14,83 +14,48 @@
  */
 
 import { FastifyInstance } from 'fastify';
+import { z } from 'zod';
+import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import * as actionsService from './actions.service.js';
 import * as interpreterService from '../interpreter/interpreter.service.js';
-import type { ContextType } from '../../db/schema.js';
 
-// Response schemas for Fastify
-const actionSchema = {
-  type: 'object',
-  properties: {
-    id: { type: 'string', format: 'uuid' },
-    context_id: { type: 'string', format: 'uuid' },
-    context_type: { type: 'string', enum: ['subprocess', 'stage', 'process', 'project', 'record'] },
-    type: { type: 'string' },
-    field_bindings: { type: 'array' },
-    created_at: { type: 'string', format: 'date-time' },
-  },
-};
+// Zod schemas for validation
+const ContextTypeSchema = z.enum(['subprocess', 'stage', 'process', 'project', 'record']);
 
-const actionViewSchema = {
-  type: 'object',
-  properties: {
-    actionId: { type: 'string', format: 'uuid' },
-    viewType: { type: 'string', enum: ['task-like', 'kanban-card', 'timeline-row'] },
-    renderedAt: { type: 'string', format: 'date-time' },
-    data: {
-      type: 'object',
-      properties: {
-        title: { type: 'string' },
-        description: { type: 'string', nullable: true },
-        status: { type: 'string', enum: ['pending', 'active', 'blocked', 'finished'] },
-        assignee: {
-          type: 'object',
-          nullable: true,
-          properties: {
-            id: { type: 'string' },
-            name: { type: 'string' },
-          },
-        },
-        dueDate: { type: 'string', nullable: true },
-        percentComplete: { type: 'number', nullable: true },
-      },
-    },
-  },
-};
+const CreateActionBodySchema = z.object({
+  contextId: z.string().uuid(),
+  contextType: ContextTypeSchema,
+  type: z.string().max(100),
+  fieldBindings: z.array(z.unknown()).optional(),
+});
+
+const IdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
+const ContextParamsSchema = z.object({
+  contextType: ContextTypeSchema,
+  contextId: z.string().uuid(),
+});
+
+const ListActionsQuerySchema = z.object({
+  contextId: z.string().uuid().optional(),
+  contextType: ContextTypeSchema.optional(),
+  type: z.string().optional(),
+  limit: z.coerce.number().optional().default(100),
+});
 
 export async function actionsRoutes(fastify: FastifyInstance) {
+  const app = fastify.withTypeProvider<ZodTypeProvider>();
+
   /**
    * POST /actions - Create a new action (intent declaration)
    */
-  fastify.post<{
-    Body: {
-      contextId: string;
-      contextType: ContextType;
-      type: string;
-      fieldBindings?: unknown[];
-    };
-  }>(
+  app.post(
     '/',
     {
       schema: {
-        body: {
-          type: 'object',
-          required: ['contextId', 'contextType', 'type'],
-          properties: {
-            contextId: { type: 'string', format: 'uuid' },
-            contextType: { type: 'string', enum: ['subprocess', 'stage', 'process', 'project', 'record'] },
-            type: { type: 'string', maxLength: 100 },
-            fieldBindings: { type: 'array' },
-          },
-        },
-        response: {
-          201: {
-            type: 'object',
-            properties: {
-              action: actionSchema,
-            },
-          },
-        },
+        body: CreateActionBodySchema,
       },
     },
     async (request, reply) => {
@@ -110,27 +75,11 @@ export async function actionsRoutes(fastify: FastifyInstance) {
   /**
    * GET /actions/:id - Get an action by ID
    */
-  fastify.get<{
-    Params: { id: string };
-  }>(
+  app.get(
     '/:id',
     {
       schema: {
-        params: {
-          type: 'object',
-          required: ['id'],
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-          },
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              action: actionSchema,
-            },
-          },
-        },
+        params: IdParamSchema,
       },
     },
     async (request, reply) => {
@@ -148,27 +97,11 @@ export async function actionsRoutes(fastify: FastifyInstance) {
   /**
    * GET /actions/:id/view - Get an interpreted ActionView by ID
    */
-  fastify.get<{
-    Params: { id: string };
-  }>(
+  app.get(
     '/:id/view',
     {
       schema: {
-        params: {
-          type: 'object',
-          required: ['id'],
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-          },
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              view: actionViewSchema,
-            },
-          },
-        },
+        params: IdParamSchema,
       },
     },
     async (request, reply) => {
@@ -187,34 +120,11 @@ export async function actionsRoutes(fastify: FastifyInstance) {
    * GET /actions - List all actions (with optional context filter)
    * Query params: contextId, contextType, type
    */
-  fastify.get<{
-    Querystring: {
-      contextId?: string;
-      contextType?: ContextType;
-      type?: string;
-      limit?: number;
-    };
-  }>(
+  app.get(
     '/',
     {
       schema: {
-        querystring: {
-          type: 'object',
-          properties: {
-            contextId: { type: 'string', format: 'uuid' },
-            contextType: { type: 'string', enum: ['subprocess', 'stage', 'process', 'project', 'record'] },
-            type: { type: 'string' },
-            limit: { type: 'number', default: 100 },
-          },
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              actions: { type: 'array', items: actionSchema },
-            },
-          },
-        },
+        querystring: ListActionsQuerySchema,
       },
     },
     async (request) => {
@@ -240,29 +150,11 @@ export async function actionsRoutes(fastify: FastifyInstance) {
    * GET /actions/context/:contextType/:contextId - Get actions for a specific context
    * Example: GET /actions/context/subprocess/uuid-here
    */
-  fastify.get<{
-    Params: { contextType: ContextType; contextId: string };
-  }>(
+  app.get(
     '/context/:contextType/:contextId',
     {
       schema: {
-        params: {
-          type: 'object',
-          required: ['contextType', 'contextId'],
-          properties: {
-            contextType: { type: 'string', enum: ['subprocess', 'stage', 'process', 'project', 'record'] },
-            contextId: { type: 'string', format: 'uuid' },
-          },
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              actions: { type: 'array', items: actionSchema },
-              count: { type: 'number' },
-            },
-          },
-        },
+        params: ContextParamsSchema,
       },
     },
     async (request) => {

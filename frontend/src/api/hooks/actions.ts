@@ -331,3 +331,61 @@ function invalidateWorkflowQueries(
   queryClient.invalidateQueries({ queryKey: ['actionView', actionId] });
   queryClient.invalidateQueries({ queryKey: ['actionViews'] });
 }
+
+// ============================================================================
+// CONTAINER ACTIONS (Process, Stage, Subprocess)
+// ============================================================================
+
+interface ContainerAction {
+  id: string;
+  contextId: string;
+  contextType: ContextType;
+  parentActionId: string | null;
+  type: string;
+  fieldBindings: unknown[];
+  createdAt: Date;
+}
+
+/**
+ * Get all container actions (Process, Stage, Subprocess) for a project
+ */
+export function useContainerActions(projectId: string | null) {
+  return useQuery({
+    queryKey: ['containerActions', projectId],
+    queryFn: () =>
+      api
+        .get<{ containers: ContainerAction[] }>(`/containers/${projectId}`)
+        .then((r) => r.containers),
+    enabled: !!projectId,
+  });
+}
+
+/**
+ * Get subprocess container actions for a project
+ * This is the hook used by ComposerSurface for context selection
+ */
+export function useSubprocesses(projectId: string | null) {
+  return useQuery({
+    queryKey: ['subprocesses', projectId],
+    queryFn: () =>
+      api
+        .get<{ subprocesses: ContainerAction[] }>(`/containers/${projectId}/subprocesses`)
+        .then((r) => r.subprocesses),
+    enabled: !!projectId,
+  });
+}
+
+/**
+ * Get child actions of a parent container action
+ */
+export function useChildActions(parentActionId: string | null) {
+  return useQuery({
+    queryKey: ['childActions', parentActionId],
+    queryFn: () =>
+      api
+        .get<{ children: ContainerAction[] }>(`/containers/children/${parentActionId}`)
+        .then((r) => r.children),
+    enabled: !!parentActionId,
+  });
+}
+

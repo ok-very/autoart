@@ -113,6 +113,9 @@ export {
   useAssignWork,
   useUnassignWork,
   useRecordFieldValue,
+  useContainerActions,
+  useSubprocesses,
+  useChildActions,
 } from './actions';
 
 // Action Views
@@ -152,6 +155,14 @@ export {
   buildTaskInput,
   buildBugInput,
 } from './composer';
+
+// Project Log (Event Stream)
+export {
+  useProjectLogEvents,
+  useProjectLogEventCount,
+  type EventsPageResponse,
+  type UseProjectLogEventsOptions,
+} from './projectLog';
 
 // Search
 export { useSearch } from './search';

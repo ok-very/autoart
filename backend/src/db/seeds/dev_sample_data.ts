@@ -386,4 +386,137 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
     .execute();
 
   console.log('  ✓ Created sample records');
+
+  // =========================================================================
+  // CONTAINER ACTIONS (New Architecture)
+  // Create Process → Stage → Subprocess as action-based containers
+  // These populate the ComposerSurface subprocess dropdown
+  // =========================================================================
+
+  // Create Process action (context = project)
+  const [processAction] = await db
+    .insertInto('actions')
+    .values({
+      context_id: project.id,
+      context_type: 'project',
+      parent_action_id: null,
+      type: 'Process',
+      field_bindings: JSON.stringify([
+        { fieldKey: 'title', value: 'Standard Commission' },
+        { fieldKey: 'methodology', value: 'Public Call' },
+      ]),
+    })
+    .returning('id')
+    .execute();
+
+  // Emit ACTION_DECLARED event for process
+  await db
+    .insertInto('events')
+    .values({
+      context_id: project.id,
+      context_type: 'project',
+      action_id: processAction.id,
+      type: 'ACTION_DECLARED',
+      payload: JSON.stringify({
+        actionType: 'Process',
+        fieldBindings: [
+          { fieldKey: 'title', value: 'Standard Commission' },
+          { fieldKey: 'methodology', value: 'Public Call' },
+        ],
+      }),
+      actor_id: user.id,
+    })
+    .execute();
+
+  // Create Stage actions (child of Process)
+  const stageNames = [
+    { title: '1. Feasibility', color: 'yellow' },
+    { title: '2. Design', color: 'blue' },
+    { title: '3. Fabrication', color: 'orange' },
+    { title: '4. Installation', color: 'green' },
+  ];
+
+  const stageActions: Array<{ id: string; title: string }> = [];
+
+  for (const stage of stageNames) {
+    const [stageAction] = await db
+      .insertInto('actions')
+      .values({
+        context_id: project.id,
+        context_type: 'project',
+        parent_action_id: processAction.id,
+        type: 'Stage',
+        field_bindings: JSON.stringify([
+          { fieldKey: 'title', value: stage.title },
+          { fieldKey: 'color', value: stage.color },
+        ]),
+      })
+      .returning('id')
+      .execute();
+
+    stageActions.push({ id: stageAction.id, title: stage.title });
+
+    await db
+      .insertInto('events')
+      .values({
+        context_id: project.id,
+        context_type: 'project',
+        action_id: stageAction.id,
+        type: 'ACTION_DECLARED',
+        payload: JSON.stringify({
+          actionType: 'Stage',
+          fieldBindings: [
+            { fieldKey: 'title', value: stage.title },
+            { fieldKey: 'color', value: stage.color },
+          ],
+        }),
+        actor_id: user.id,
+      })
+      .execute();
+  }
+
+  // Create Subprocess actions (children of first Stage - Feasibility)
+  const feasibilityStageAction = stageActions[0];
+  const subprocessNames = [
+    { title: 'Site Survey & Analysis', lead: 'Sarah Jenkins' },
+    { title: 'Initial Budgeting', lead: 'Mark Robinson' },
+  ];
+
+  for (const sub of subprocessNames) {
+    const [subprocessAction] = await db
+      .insertInto('actions')
+      .values({
+        context_id: project.id,
+        context_type: 'project',
+        parent_action_id: feasibilityStageAction.id,
+        type: 'Subprocess',
+        field_bindings: JSON.stringify([
+          { fieldKey: 'title', value: sub.title },
+          { fieldKey: 'lead', value: sub.lead },
+        ]),
+      })
+      .returning('id')
+      .execute();
+
+    await db
+      .insertInto('events')
+      .values({
+        context_id: project.id,
+        context_type: 'project',
+        action_id: subprocessAction.id,
+        type: 'ACTION_DECLARED',
+        payload: JSON.stringify({
+          actionType: 'Subprocess',
+          fieldBindings: [
+            { fieldKey: 'title', value: sub.title },
+            { fieldKey: 'lead', value: sub.lead },
+          ],
+        }),
+        actor_id: user.id,
+      })
+      .execute();
+  }
+
+  console.log('  ✓ Created container actions (Process → Stage → Subprocess)');
 }
+

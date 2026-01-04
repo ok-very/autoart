@@ -13,6 +13,7 @@
  * GUARDRAIL: Never writes to the legacy task tables.
  */
 
+import { sql } from 'kysely';
 import { db } from '../../db/client.js';
 import { ValidationError } from '../../utils/errors.js';
 import { EventFactory } from './event-factory.js';
@@ -63,8 +64,9 @@ export async function compose(
             .values({
                 context_id: contextId,
                 context_type: contextType,
+                parent_action_id: input.action.parentActionId || null,
                 type: input.action.type,
-                field_bindings: input.action.fieldBindings || [],
+                field_bindings: sql`${JSON.stringify(input.action.fieldBindings || [])}::jsonb`,
             })
             .returningAll()
             .executeTakeFirstOrThrow();
@@ -142,12 +144,21 @@ export async function compose(
             }
         }
 
-        // Bulk insert all events
+        // Bulk insert all events - serialize payload to JSONB
         if (eventsToCreate.length > 0) {
-            await trx
-                .insertInto('events')
-                .values(eventsToCreate)
-                .execute();
+            for (const evt of eventsToCreate) {
+                await trx
+                    .insertInto('events')
+                    .values({
+                        context_id: evt.context_id,
+                        context_type: evt.context_type,
+                        action_id: evt.action_id,
+                        type: evt.type,
+                        payload: sql`${JSON.stringify(evt.payload)}::jsonb`,
+                        actor_id: evt.actor_id,
+                    })
+                    .execute();
+            }
         }
 
         // Fetch the created events for the response
@@ -216,6 +227,7 @@ export async function compose(
                 id: action.id,
                 contextId: action.context_id,
                 contextType: action.context_type,
+                parentActionId: action.parent_action_id || null,
                 type: action.type,
                 fieldBindings: action.field_bindings as any || [],
                 createdAt: action.created_at,

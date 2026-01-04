@@ -54,6 +54,10 @@ interface UIState {
   // Theme
   theme: Theme;
 
+  // Project Log preferences
+  includeSystemEventsInLog: boolean;
+  setIncludeSystemEventsInLog: (value: boolean) => void;
+
   // Actions
   setSelection: (selection: Selection) => void;
   setActiveProject: (id: string | null) => void;
@@ -87,8 +91,9 @@ export const useUIStore = create<UIState>()(
     (set, get) => ({
       selection: null,
       activeProjectId: null,
-      viewMode: 'workflow',
+      viewMode: 'log',
       inspectorTabMode: 'record',
+      includeSystemEventsInLog: false,
 
       sidebarWidth: 280,
       inspectorWidth: 380,
@@ -98,6 +103,8 @@ export const useUIStore = create<UIState>()(
 
       activeDrawer: null,
       theme: 'light',
+
+      setIncludeSystemEventsInLog: (value) => set({ includeSystemEventsInLog: value }),
 
       setSelection: (selection) => set({ selection }),
       setActiveProject: (id) => set({ activeProjectId: id }),
@@ -154,6 +161,7 @@ export const useUIStore = create<UIState>()(
         drawerHeight: state.drawerHeight,
         inspectorTabMode: state.inspectorTabMode,
         activeProjectId: state.activeProjectId,
+        includeSystemEventsInLog: state.includeSystemEventsInLog,
       }),
     }
   )

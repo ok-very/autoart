@@ -50,12 +50,13 @@ export type FieldType = z.infer<typeof FieldTypeSchema>;
 
 /**
  * Project view mode enum - views available when viewing a project
+ * - log: Event log / execution ledger view (default)
  * - workflow: Kanban-style workflow view
  * - columns: Miller columns hierarchical navigation
  * - grid: Spreadsheet-style data grid
  * - calendar: Calendar view for dated items
  */
-export const ProjectViewModeSchema = z.enum(['workflow', 'columns', 'grid', 'calendar']);
+export const ProjectViewModeSchema = z.enum(['log', 'workflow', 'columns', 'grid', 'calendar']);
 export type ProjectViewMode = z.infer<typeof ProjectViewModeSchema>;
 
 /**
@@ -84,6 +85,7 @@ export type ViewMode = z.infer<typeof ViewModeSchema>;
  * View mode labels for UI display
  */
 export const PROJECT_VIEW_MODE_LABELS: Record<ProjectViewMode, string> = {
+  log: 'Log',
   workflow: 'Workflow',
   columns: 'Columns',
   grid: 'Data Grid',

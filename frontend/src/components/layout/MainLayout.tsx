@@ -6,6 +6,7 @@ import { Workspace } from './Workspace';
 import { MillerColumnsView } from './MillerColumnsView';
 import { ProjectWorkflowView } from './ProjectWorkflowView';
 import { CalendarView } from './CalendarView';
+import { ProjectLogSurface } from '../projectLog';
 import { RecordInspector } from '../../ui/composites';
 import { BottomDrawer } from '../drawer/BottomDrawer';
 import { ResizeHandle } from '../common/ResizeHandle';
@@ -87,6 +88,7 @@ export function MainLayout() {
         <div className="flex-1 flex flex-col overflow-hidden relative">
           {panels.workspace === 'millerColumns' && <MillerColumnsView />}
           {panels.workspace === 'projectWorkflow' && <ProjectWorkflowView />}
+          {panels.workspace === 'projectLog' && <ProjectLogSurface />}
           {panels.workspace === 'calendar' && <CalendarView />}
           {(panels.workspace === 'grid' || panels.workspace === 'details') && <Workspace />}
 

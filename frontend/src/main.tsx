@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import './index.css';
+import './styles/composer.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

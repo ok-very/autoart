@@ -90,6 +90,7 @@ export const ActionSchema = z.object({
   id: z.string().uuid(),
   contextId: z.string().uuid(),
   contextType: ContextTypeSchema,
+  parentActionId: z.string().uuid().nullable().optional(),
   type: z.string().max(100),
   fieldBindings: z.array(FieldBindingSchema).default([]),
   createdAt: z.coerce.date(),
@@ -102,6 +103,7 @@ export type Action = z.infer<typeof ActionSchema>;
 export const CreateActionInputSchema = z.object({
   contextId: z.string().uuid(),
   contextType: ContextTypeSchema,
+  parentActionId: z.string().uuid().nullish(),
   type: z.string().max(100),
   fieldBindings: z.array(FieldBindingSchema).optional().default([]),
 });

@@ -10,8 +10,10 @@
  * - Event types use fact-based naming (WORK_FINISHED, not ACTION_COMPLETED)
  */
 
+import { sql } from 'kysely';
 import { db } from '../../db/client.js';
 import type { NewEvent, Event, ContextType } from '../../db/schema.js';
+import { getSystemEventTypes } from './event-visibility.js';
 
 export interface CreateEventInput {
   contextId: string;
@@ -30,18 +32,16 @@ export interface CreateEventInput {
  * to ensure read-after-write consistency for UI consumers.
  */
 export async function emitEvent(input: CreateEventInput): Promise<Event> {
-  const newEvent: NewEvent = {
-    context_id: input.contextId,
-    context_type: input.contextType,
-    action_id: input.actionId || null,
-    type: input.type,
-    payload: input.payload || {},
-    actor_id: input.actorId || null,
-  };
-
   const event = await db
     .insertInto('events')
-    .values(newEvent)
+    .values({
+      context_id: input.contextId,
+      context_type: input.contextType,
+      action_id: input.actionId || null,
+      type: input.type,
+      payload: sql`${JSON.stringify(input.payload || {})}::jsonb`,
+      actor_id: input.actorId || null,
+    })
     .returningAll()
     .executeTakeFirstOrThrow();
 
@@ -243,4 +243,100 @@ export async function getEventsByActions(
   }
 
   return eventMap;
+}
+
+// ============================================================================
+// PROJECT LOG QUERIES (Paginated)
+// ============================================================================
+
+/**
+ * Options for paginated event queries
+ */
+export interface GetEventsPaginatedOptions {
+  contextId: string;
+  contextType: ContextType;
+  limit?: number;
+  offset?: number;
+  includeSystem?: boolean;
+  types?: string[];
+  actorId?: string;
+  actionId?: string;
+}
+
+/**
+ * Paginated response for events
+ */
+export interface EventsPage {
+  events: Event[];
+  total: number;
+  hasMore: boolean;
+}
+
+/**
+ * Get events for a context with pagination and filtering.
+ * Used by the Project Log view.
+ *
+ * - Events are returned in reverse chronological order (newest first)
+ * - System events are excluded by default
+ * - Supports filtering by type, actor, and action
+ */
+export async function getEventsByContextPaginated(
+  options: GetEventsPaginatedOptions
+): Promise<EventsPage> {
+  const {
+    contextId,
+    contextType,
+    limit = 50,
+    offset = 0,
+    includeSystem = false,
+    types,
+    actorId,
+    actionId,
+  } = options;
+
+  // Build base query
+  let query = db
+    .selectFrom('events')
+    .where('context_id', '=', contextId)
+    .where('context_type', '=', contextType);
+
+  // Filter out system events unless explicitly included
+  if (!includeSystem) {
+    const systemTypes = getSystemEventTypes();
+    if (systemTypes.length > 0) {
+      query = query.where('type', 'not in', systemTypes);
+    }
+  }
+
+  // Optional filters
+  if (types && types.length > 0) {
+    query = query.where('type', 'in', types);
+  }
+  if (actorId) {
+    query = query.where('actor_id', '=', actorId);
+  }
+  if (actionId) {
+    query = query.where('action_id', '=', actionId);
+  }
+
+  // Get total count (before pagination)
+  const countResult = await query
+    .select((eb) => eb.fn.countAll<string>().as('count'))
+    .executeTakeFirst();
+  const total = parseInt(countResult?.count || '0', 10);
+
+  // Get paginated events (newest first for log display)
+  const events = await query
+    .selectAll()
+    .orderBy('occurred_at', 'desc')
+    .orderBy('id', 'desc')
+    .limit(limit)
+    .offset(offset)
+    .execute();
+
+  return {
+    events,
+    total,
+    hasMore: offset + events.length < total,
+  };
 }

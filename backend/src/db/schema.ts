@@ -98,6 +98,7 @@ export interface RecordDefinitionsTable {
   project_id: string | null; // If set, belongs to project's template library
   is_template: Generated<boolean>; // Marks as reusable template
   is_system: Generated<boolean>; // System definitions (Task, Subtask, etc.) - cannot be deleted
+  kind: Generated<string>; // 'record' | 'action_recipe' - discriminator for action types vs data
   parent_definition_id: string | null; // For hierarchical types (e.g., Subtask under Task)
   clone_excluded: Generated<boolean>; // If true, definition is NOT cloned when cloning projects
   pinned: Generated<boolean>; // If true, appears in quick create menu
@@ -194,6 +195,7 @@ export interface ActionsTable {
   id: Generated<string>;
   context_id: string;
   context_type: ContextType;
+  parent_action_id: string | null; // Self-referential for container hierarchy
   type: string;
   field_bindings: Generated<unknown>; // JSONB - bindings to Field definitions
   created_at: Generated<Date>;

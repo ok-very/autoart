@@ -15,60 +15,63 @@
  */
 
 import { FastifyInstance } from 'fastify';
+import { z } from 'zod';
+import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import * as eventsService from './events.service.js';
-import type { ContextType, Event } from '../../db/schema.js';
+import type { Event } from '../../db/schema.js';
 
-// Response schemas for Fastify
-const eventSchema = {
-  type: 'object',
-  properties: {
-    id: { type: 'string', format: 'uuid' },
-    context_id: { type: 'string', format: 'uuid' },
-    context_type: { type: 'string', enum: ['subprocess', 'stage', 'process', 'project', 'record'] },
-    action_id: { type: 'string', format: 'uuid', nullable: true },
-    type: { type: 'string' },
-    payload: { type: 'object' },
-    actor_id: { type: 'string', format: 'uuid', nullable: true },
-    occurred_at: { type: 'string', format: 'date-time' },
-  },
-};
+// Zod schemas for validation
+const ContextTypeSchema = z.enum(['subprocess', 'stage', 'process', 'project', 'record']);
+
+const CreateEventBodySchema = z.object({
+  contextId: z.string().uuid(),
+  contextType: ContextTypeSchema,
+  actionId: z.string().uuid().optional(),
+  type: z.string().max(100),
+  payload: z.record(z.unknown()).optional(),
+});
+
+const IdParamSchema = z.object({
+  id: z.string().uuid(),
+});
+
+const ContextParamsSchema = z.object({
+  contextType: ContextTypeSchema,
+  contextId: z.string().uuid(),
+});
+
+const ListEventsQuerySchema = z.object({
+  contextId: z.string().uuid().optional(),
+  contextType: ContextTypeSchema.optional(),
+  actionId: z.string().uuid().optional(),
+  type: z.string().optional(),
+});
+
+const ContextEventsQuerySchema = z.object({
+  limit: z.string().optional(),
+  offset: z.string().optional(),
+  includeSystem: z.string().optional(),
+  types: z.union([z.string(), z.array(z.string())]).optional(),
+  actorId: z.string().uuid().optional(),
+  actionId: z.string().uuid().optional(),
+});
+
+const ActionIdParamSchema = z.object({
+  actionId: z.string().uuid(),
+});
 
 export async function eventsRoutes(fastify: FastifyInstance) {
+  const app = fastify.withTypeProvider<ZodTypeProvider>();
+
   /**
    * POST /events - Emit a new event (append to fact log)
    * This is the ONLY write operation for the entire event-sourced system.
    */
-  fastify.post<{
-    Body: {
-      contextId: string;
-      contextType: ContextType;
-      actionId?: string;
-      type: string;
-      payload?: Record<string, unknown>;
-    };
-  }>(
+  app.post(
     '/',
     {
       schema: {
-        body: {
-          type: 'object',
-          required: ['contextId', 'contextType', 'type'],
-          properties: {
-            contextId: { type: 'string', format: 'uuid' },
-            contextType: { type: 'string', enum: ['subprocess', 'stage', 'process', 'project', 'record'] },
-            actionId: { type: 'string', format: 'uuid' },
-            type: { type: 'string', maxLength: 100 },
-            payload: { type: 'object' },
-          },
-        },
-        response: {
-          201: {
-            type: 'object',
-            properties: {
-              event: eventSchema,
-            },
-          },
-        },
+        body: CreateEventBodySchema,
       },
     },
     async (request, reply) => {
@@ -90,27 +93,11 @@ export async function eventsRoutes(fastify: FastifyInstance) {
   /**
    * GET /events/:id - Get an event by ID
    */
-  fastify.get<{
-    Params: { id: string };
-  }>(
+  app.get(
     '/:id',
     {
       schema: {
-        params: {
-          type: 'object',
-          required: ['id'],
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-          },
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              event: eventSchema,
-            },
-          },
-        },
+        params: IdParamSchema,
       },
     },
     async (request, reply) => {
@@ -129,34 +116,11 @@ export async function eventsRoutes(fastify: FastifyInstance) {
    * GET /events - List events with optional filters
    * Query params: contextId, contextType, actionId, type
    */
-  fastify.get<{
-    Querystring: {
-      contextId?: string;
-      contextType?: ContextType;
-      actionId?: string;
-      type?: string;
-    };
-  }>(
+  app.get(
     '/',
     {
       schema: {
-        querystring: {
-          type: 'object',
-          properties: {
-            contextId: { type: 'string', format: 'uuid' },
-            contextType: { type: 'string', enum: ['subprocess', 'stage', 'process', 'project', 'record'] },
-            actionId: { type: 'string', format: 'uuid' },
-            type: { type: 'string' },
-          },
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              events: { type: 'array', items: eventSchema },
-            },
-          },
-        },
+        querystring: ListEventsQuerySchema,
       },
     },
     async (request) => {
@@ -184,28 +148,11 @@ export async function eventsRoutes(fastify: FastifyInstance) {
    * GET /events/action/:actionId - Get all events for an action
    * This is the core query for interpreting action state.
    */
-  fastify.get<{
-    Params: { actionId: string };
-  }>(
+  app.get(
     '/action/:actionId',
     {
       schema: {
-        params: {
-          type: 'object',
-          required: ['actionId'],
-          properties: {
-            actionId: { type: 'string', format: 'uuid' },
-          },
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              events: { type: 'array', items: eventSchema },
-              count: { type: 'number' },
-            },
-          },
-        },
+        params: ActionIdParamSchema,
       },
     },
     async (request) => {
@@ -218,41 +165,48 @@ export async function eventsRoutes(fastify: FastifyInstance) {
 
   /**
    * GET /events/context/:contextType/:contextId - Get events for a context
+   *
+   * Supports pagination and filtering for the Project Log:
+   * - limit: Number of events per page (default 50)
+   * - offset: Pagination offset (default 0)
+   * - includeSystem: Include system events (default false)
+   * - types: Filter by event types (array)
+   * - actorId: Filter by actor
    */
-  fastify.get<{
-    Params: { contextType: ContextType; contextId: string };
-  }>(
+  app.get(
     '/context/:contextType/:contextId',
     {
       schema: {
-        params: {
-          type: 'object',
-          required: ['contextType', 'contextId'],
-          properties: {
-            contextType: { type: 'string', enum: ['subprocess', 'stage', 'process', 'project', 'record'] },
-            contextId: { type: 'string', format: 'uuid' },
-          },
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              events: { type: 'array', items: eventSchema },
-              count: { type: 'number' },
-            },
-          },
-        },
+        params: ContextParamsSchema,
+        querystring: ContextEventsQuerySchema,
       },
     },
     async (request) => {
       const { contextType, contextId } = request.params;
+      const { limit, offset, includeSystem, types, actorId, actionId } = request.query;
 
-      const [events, count] = await Promise.all([
-        eventsService.getEventsByContext(contextId, contextType),
-        eventsService.countEventsByContext(contextId, contextType),
-      ]);
+      // Parse query parameters
+      const parsedLimit = limit ? parseInt(limit, 10) : 50;
+      const parsedOffset = offset ? parseInt(offset, 10) : 0;
+      const parsedIncludeSystem = includeSystem === 'true';
+      const parsedTypes = types
+        ? Array.isArray(types)
+          ? types
+          : [types]
+        : undefined;
 
-      return { events, count };
+      const result = await eventsService.getEventsByContextPaginated({
+        contextId,
+        contextType,
+        limit: parsedLimit,
+        offset: parsedOffset,
+        includeSystem: parsedIncludeSystem,
+        types: parsedTypes,
+        actorId,
+        actionId,
+      });
+
+      return result;
     }
   );
 }

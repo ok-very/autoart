@@ -18,6 +18,7 @@ import { eventsRoutes } from './modules/events/events.routes.js';
 import { workflowRoutes } from './modules/events/workflow.routes.js';
 import { workflowSurfaceRoutes } from './modules/projections/workflow-surface.routes.js';
 import { composerRoutes } from './modules/composer/composer.routes.js';
+import { containersRoutes } from './modules/actions/containers.routes.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -69,6 +70,9 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Composer - Task Builder on Actions + Events (replaces legacy task creation)
   await fastify.register(composerRoutes, { prefix: '/api/composer' });
+
+  // Container actions - hierarchical structure (Process, Stage, Subprocess)
+  await fastify.register(containersRoutes, { prefix: '/api/containers' });
 
   // Global error handler
   fastify.setErrorHandler((error: Error & { validation?: unknown; statusCode?: number; code?: string }, _request, reply) => {

@@ -40,6 +40,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     )
     .addColumn('context_id', 'uuid', (col) => col.notNull())
     .addColumn('context_type', sql`context_type`, (col) => col.notNull())
+    .addColumn('parent_action_id', 'uuid', (col) =>
+      col.references('actions.id').onDelete('cascade')
+    )
     .addColumn('type', 'varchar(100)', (col) => col.notNull())
     .addColumn('field_bindings', 'jsonb', (col) =>
       col.notNull().defaultTo(sql`'[]'::jsonb`)
@@ -61,6 +64,13 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createIndex('idx_actions_type')
     .on('actions')
     .column('type')
+    .execute();
+
+  // Index for parent action queries (tree traversal)
+  await db.schema
+    .createIndex('idx_actions_parent')
+    .on('actions')
+    .column('parent_action_id')
     .execute();
 
   // Index for chronological ordering

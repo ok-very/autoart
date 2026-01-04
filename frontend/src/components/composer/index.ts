@@ -1,7 +1,10 @@
 /**
  * Composer Components
  *
- * Exports for the ActionComposer UI components.
+ * Exports the unified ComposerSurface as the primary composer UI.
  */
 
-export { ActionComposer, InlineActionComposer } from './ActionComposer';
+// Primary exports - canonical composer UI
+export { ComposerSurface, InlineComposer } from './ComposerSurface';
+export type { ComposerSurfaceProps, InlineComposerProps } from './ComposerSurface';
+

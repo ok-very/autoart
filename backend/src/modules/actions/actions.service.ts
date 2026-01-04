@@ -133,3 +133,56 @@ export async function countActionsByContext(
 
   return parseInt(result?.count || '0', 10);
 }
+
+// Container types for hierarchical action structure
+const CONTAINER_TYPES = ['Process', 'Stage', 'Subprocess'];
+
+/**
+ * Get container actions for a project.
+ * Container actions are Process, Stage, and Subprocess type actions
+ * that form the hierarchy for task-like actions.
+ */
+export async function getContainerActions(
+  projectId: string
+): Promise<Action[]> {
+  return db
+    .selectFrom('actions')
+    .selectAll()
+    .where('context_id', '=', projectId)
+    .where('context_type', '=', 'project')
+    .where('type', 'in', CONTAINER_TYPES)
+    .orderBy('created_at', 'asc')
+    .execute();
+}
+
+/**
+ * Get container actions of a specific type.
+ */
+export async function getContainerActionsByType(
+  projectId: string,
+  containerType: string
+): Promise<Action[]> {
+  return db
+    .selectFrom('actions')
+    .selectAll()
+    .where('context_id', '=', projectId)
+    .where('context_type', '=', 'project')
+    .where('type', '=', containerType)
+    .orderBy('created_at', 'asc')
+    .execute();
+}
+
+/**
+ * Get child actions of a parent action (for tree traversal).
+ */
+export async function getChildActions(
+  parentActionId: string
+): Promise<Action[]> {
+  return db
+    .selectFrom('actions')
+    .selectAll()
+    .where('parent_action_id', '=', parentActionId)
+    .orderBy('created_at', 'asc')
+    .execute();
+}
+

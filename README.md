@@ -110,21 +110,57 @@ After seeding the database (`npm run seed`):
 
 ## Available Scripts
 
+### Root (Monorepo) Scripts
+
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start development servers (Linux/macOS) |
-| `npm run dev:win` | Start development servers (Windows) |
-| `npm run dev:kill` | Kill dev servers (free ports) |
-| `npm run build` | Build for production |
-| `npm run deploy` | Deploy to production |
-| `npm run restart` | Restart production services |
-| `npm run backup` | Backup database |
-| `npm run restore <file>` | Restore database from backup |
-| `npm run update` | Update all npm packages |
-| `npm run health` | Check service health |
-| `npm run logs` | View service logs |
+| `npm run dev` | Start development servers (backend + frontend) |
+| `npm run dev:kill` | Kill dev servers and free ports |
+| `npm run install:all` | Install dependencies for all workspaces |
+| `npm run build:shared` | Build shared type library |
+| `npm run build:backend` | Build backend for production |
+| `npm run build:frontend` | Build frontend for production |
+| `npm run start:backend` | Start backend dev server only |
+| `npm run start:frontend` | Start frontend dev server only |
+
+### Database Scripts
+
+| Command | Description |
+|---------|-------------|
 | `npm run migrate` | Run database migrations |
-| `npm run seed` | Seed sample data |
+| `npm run migrate:down` | Rollback last migration |
+| `npm run seed` | Seed reference data |
+| `npm run seed:dev` | Seed development sample data |
+| `npm run seed:reset` | Reset and re-seed development data |
+| `npm run db:rebuild` | Migrate down → up → seed:dev |
+| `npm run db:reset` | Nuke database → migrate → seed:dev |
+| `npm run db:nuke` | Drop all tables (requires "nuke" confirmation) |
+| `npm run db:status` | Show migration status |
+| `npm run db:verify` | Verify database connection and schema |
+| `npm run backup` | Backup database to timestamped file |
+
+### Backend Scripts (from `backend/`)
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server with hot reload |
+| `npm run build` | TypeScript compile |
+| `npm run start` | Start production server |
+| `npm run typecheck` | Type-check without emitting |
+| `npm run test` | Run tests with Vitest |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:coverage` | Run tests with coverage |
+| `npm run db:repair` | Repair migration history |
+
+### Frontend Scripts (from `frontend/`)
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start Vite dev server |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Run ESLint |
+| `npm run typecheck` | Type-check without emitting |
 
 ## Project Structure
 

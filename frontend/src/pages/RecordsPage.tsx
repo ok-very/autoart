@@ -1,27 +1,33 @@
 import { useCallback, useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header';
-import { RecordTypeSidebar } from '../components/records/RecordTypeSidebar';
+import { RegistrySidebar } from '../components/records/RegistrySidebar';
 import { UniversalTableView } from '../components/tables/UniversalTableView';
 import { BottomDrawer } from '../components/drawer/BottomDrawer';
 import { ResizeHandle } from '../components/common/ResizeHandle';
 import { useUIStore, isRecordsViewMode } from '../stores/uiStore';
 import { IngestionView, RecordInspector } from '../ui/composites';
 
+type RegistrySection = 'records' | 'actions';
+
 /**
- * Records workspace page for managing records (contacts, artworks, locations, etc.)
- * outside of the project hierarchy context.
+ * Registry page for managing both Record Types and Action Types.
+ * 
+ * This is the unified view for the definition registry:
+ * - Record Types: Data definitions (Contact, Location, Artwork, etc.)
+ * - Action Types: Action recipes (Task, Subtask, Meeting, etc.)
  *
- * Uses the UniversalTableView component for unified visualization of any record type.
- * Layout: Left sidebar (definition types) | Main table (records) | Right inspector
+ * Uses the UniversalTableView component for visualization.
+ * Layout: Left sidebar (type registry) | Main table (instances) | Right inspector
  *
  * View Modes:
- * - list: Standard table view of records
+ * - list: Standard table view
  * - ingest: Data ingestion/import interface
  */
-export function RecordsPage() {
+export function RegistryPage() {
   const { inspectorWidth, setInspectorWidth, viewMode, setViewMode } = useUIStore();
-  const [sidebarWidth, setSidebarWidth] = useState(240);
+  const [sidebarWidth, setSidebarWidth] = useState(260);
   const [selectedDefinitionId, setSelectedDefinitionId] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<RegistrySection>('records');
 
   // Ensure we're using a valid RecordsViewMode when on this page
   useEffect(() => {
@@ -32,7 +38,7 @@ export function RecordsPage() {
 
   const handleSidebarResize = useCallback(
     (delta: number) => {
-      setSidebarWidth((w) => Math.max(180, Math.min(400, w + delta)));
+      setSidebarWidth((w) => Math.max(200, Math.min(400, w + delta)));
     },
     []
   );
@@ -43,6 +49,11 @@ export function RecordsPage() {
     },
     [inspectorWidth, setInspectorWidth]
   );
+
+  const handleSelectDefinition = (id: string | null, section: RegistrySection) => {
+    setSelectedDefinitionId(id);
+    setActiveSection(section);
+  };
 
   // Determine which view to show based on view mode
   const isIngestMode = viewMode === 'ingest';
@@ -57,20 +68,21 @@ export function RecordsPage() {
             <IngestionView />
           ) : (
             <>
-              {/* Record Type Sidebar */}
-              <RecordTypeSidebar
+              {/* Registry Sidebar - shows both Record Types and Action Types */}
+              <RegistrySidebar
                 width={sidebarWidth}
                 selectedDefinitionId={selectedDefinitionId}
-                onSelectDefinition={setSelectedDefinitionId}
+                onSelectDefinition={handleSelectDefinition}
+                activeSection={activeSection}
               />
               <ResizeHandle direction="right" onResize={handleSidebarResize} />
 
-              {/* Main Table Area - Using UniversalTableView for unified visualization */}
+              {/* Main Table Area */}
               <div className="flex-1 overflow-hidden">
                 <UniversalTableView
                   definitionId={selectedDefinitionId}
-                  onDefinitionChange={setSelectedDefinitionId}
-                  showDefinitionSelector={false} // Using sidebar instead
+                  onDefinitionChange={(id) => setSelectedDefinitionId(id)}
+                  showDefinitionSelector={false}
                   allowCreate
                   allowBulkDelete
                   allowEdit
@@ -90,3 +102,6 @@ export function RecordsPage() {
     </div>
   );
 }
+
+// Re-export as RecordsPage for backwards compatibility
+export { RegistryPage as RecordsPage };
