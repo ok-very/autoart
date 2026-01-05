@@ -5,6 +5,16 @@
  * This is NOT reference data - it can be deleted and recreated freely.
  *
  * Run with: npm run seed:dev
+ *
+ * ARCHITECTURE NOTE:
+ * This seed follows the event-sourced Action architecture:
+ * - Only 'project' type is created as a hierarchy_node (root anchor)
+ * - All other entities (Process, Stage, Subprocess, Task, Subtask)
+ *   are created as Actions with ACTION_DECLARED events
+ * - parent_action_id maintains the hierarchy within the Action tree
+ *
+ * DO NOT create hierarchy_nodes with type: 'process', 'stage', 'subprocess',
+ * 'task', or 'subtask'. These types are DEPRECATED and should use Actions.
  */
 
 import { Kysely } from 'kysely';
@@ -73,273 +83,7 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
     .where('id', '=', project.id)
     .execute();
 
-  // Create process
-  const [process] = await db
-    .insertInto('hierarchy_nodes')
-    .values({
-      parent_id: project.id,
-      root_project_id: project.id,
-      type: 'process',
-      title: 'Standard Commission',
-      metadata: JSON.stringify({ methodology: 'Public Call', timeline: '12 Weeks' }),
-      created_by: user.id,
-      position: 0,
-    })
-    .returning('id')
-    .execute();
-
-  // Create stages
-  const [feasibilityStage] = await db
-    .insertInto('hierarchy_nodes')
-    .values({
-      parent_id: process.id,
-      root_project_id: project.id,
-      type: 'stage',
-      title: '1. Feasibility',
-      metadata: JSON.stringify({ color: 'yellow' }),
-      created_by: user.id,
-      position: 0,
-    })
-    .returning('id')
-    .execute();
-
-  await db
-    .insertInto('hierarchy_nodes')
-    .values({
-      parent_id: process.id,
-      root_project_id: project.id,
-      type: 'stage',
-      title: '2. Design',
-      metadata: JSON.stringify({ color: 'blue' }),
-      created_by: user.id,
-      position: 1,
-    })
-    .execute();
-
-  await db
-    .insertInto('hierarchy_nodes')
-    .values({
-      parent_id: process.id,
-      root_project_id: project.id,
-      type: 'stage',
-      title: '3. Fabrication',
-      metadata: JSON.stringify({ color: 'orange' }),
-      created_by: user.id,
-      position: 2,
-    })
-    .execute();
-
-  await db
-    .insertInto('hierarchy_nodes')
-    .values({
-      parent_id: process.id,
-      root_project_id: project.id,
-      type: 'stage',
-      title: '4. Installation',
-      metadata: JSON.stringify({ color: 'green' }),
-      created_by: user.id,
-      position: 3,
-    })
-    .execute();
-
-  // Create subprocess
-  const [siteSurvey] = await db
-    .insertInto('hierarchy_nodes')
-    .values({
-      parent_id: feasibilityStage.id,
-      root_project_id: project.id,
-      type: 'subprocess',
-      title: 'Site Survey & Analysis',
-      metadata: JSON.stringify({ lead: 'Sarah Jenkins', dueDate: '2025-02-15' }),
-      created_by: user.id,
-      position: 0,
-    })
-    .returning('id')
-    .execute();
-
-  await db
-    .insertInto('hierarchy_nodes')
-    .values({
-      parent_id: feasibilityStage.id,
-      root_project_id: project.id,
-      type: 'subprocess',
-      title: 'Initial Budgeting',
-      metadata: JSON.stringify({}),
-      created_by: user.id,
-      position: 1,
-    })
-    .execute();
-
-  // Create tasks
-  const [confirmBoundaryTask] = await db
-    .insertInto('hierarchy_nodes')
-    .values({
-      parent_id: siteSurvey.id,
-      root_project_id: project.id,
-      type: 'task',
-      title: 'Confirm Location Boundary',
-      description: JSON.stringify({
-        type: 'doc',
-        content: [
-          {
-            type: 'paragraph',
-            content: [{ type: 'text', text: 'Verify the GPS coordinates match the city filing.' }],
-          },
-        ],
-      }),
-      metadata: JSON.stringify({
-        tags: ['Engineering'],
-        status: 'in-progress',
-        owner: 'SJ',
-        dueDate: '2025-02-05',
-        percentComplete: 35,
-        completed: false,
-      }),
-      created_by: user.id,
-      position: 0,
-    })
-    .returning('id')
-    .execute();
-
-  const [submitReportTask] = await db
-    .insertInto('hierarchy_nodes')
-    .values({
-      parent_id: siteSurvey.id,
-      root_project_id: project.id,
-      type: 'task',
-      title: 'Submit Survey Report',
-      description: JSON.stringify({
-        type: 'doc',
-        content: [
-          {
-            type: 'paragraph',
-            content: [{ type: 'text', text: 'Upload the final PDF before the deadline.' }],
-          },
-        ],
-      }),
-      metadata: JSON.stringify({
-        status: 'blocked',
-        owner: 'MR',
-        dueDate: '2025-02-10',
-        percentComplete: 10,
-        completed: false,
-      }),
-      created_by: user.id,
-      position: 1,
-    })
-    .returning('id')
-    .execute();
-
-  await db
-    .insertInto('hierarchy_nodes')
-    .values({
-      parent_id: siteSurvey.id,
-      root_project_id: project.id,
-      type: 'task',
-      title: 'Document Site Conditions',
-      description: JSON.stringify({
-        type: 'doc',
-        content: [
-          {
-            type: 'paragraph',
-            content: [{ type: 'text', text: 'Take photos of current wall condition and surroundings.' }],
-          },
-        ],
-      }),
-      metadata: JSON.stringify({
-        tags: ['Documentation'],
-        status: 'done',
-        owner: 'SJ',
-        dueDate: '2025-02-03',
-        percentComplete: 100,
-        completed: true,
-      }),
-      created_by: user.id,
-      position: 2,
-    })
-    .execute();
-
-  console.log('  ✓ Created sample project hierarchy');
-
-  // Create subtasks under the "Confirm Location Boundary" task
-  await db
-    .insertInto('hierarchy_nodes')
-    .values([
-      {
-        parent_id: confirmBoundaryTask.id,
-        root_project_id: project.id,
-        type: 'subtask',
-        title: 'Pull property records from city archives',
-        metadata: JSON.stringify({
-          status: 'done',
-          owner: 'SJ',
-          completed: true,
-        }),
-        created_by: user.id,
-        position: 0,
-      },
-      {
-        parent_id: confirmBoundaryTask.id,
-        root_project_id: project.id,
-        type: 'subtask',
-        title: 'Cross-reference GPS with survey maps',
-        metadata: JSON.stringify({
-          status: 'in-progress',
-          owner: 'SJ',
-          completed: false,
-        }),
-        created_by: user.id,
-        position: 1,
-      },
-      {
-        parent_id: confirmBoundaryTask.id,
-        root_project_id: project.id,
-        type: 'subtask',
-        title: 'Get sign-off from property owner',
-        metadata: JSON.stringify({
-          status: 'not-started',
-          completed: false,
-        }),
-        created_by: user.id,
-        position: 2,
-      },
-    ])
-    .execute();
-
-  // Create subtasks under the "Submit Survey Report" task
-  await db
-    .insertInto('hierarchy_nodes')
-    .values([
-      {
-        parent_id: submitReportTask.id,
-        root_project_id: project.id,
-        type: 'subtask',
-        title: 'Compile field notes into draft',
-        metadata: JSON.stringify({
-          status: 'done',
-          owner: 'MR',
-          completed: true,
-        }),
-        created_by: user.id,
-        position: 0,
-      },
-      {
-        parent_id: submitReportTask.id,
-        root_project_id: project.id,
-        type: 'subtask',
-        title: 'Review with engineering lead',
-        metadata: JSON.stringify({
-          status: 'blocked',
-          owner: 'MR',
-          completed: false,
-        }),
-        created_by: user.id,
-        position: 1,
-      },
-    ])
-    .execute();
-
-  console.log('  ✓ Created sample subtasks');
+  console.log('  ✓ Created project node (hierarchy anchor)');
 
   // Create sample records
   await db
@@ -482,6 +226,8 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
     { title: 'Initial Budgeting', lead: 'Mark Robinson' },
   ];
 
+  const subprocessActions: Array<{ id: string; title: string }> = [];
+
   for (const sub of subprocessNames) {
     const [subprocessAction] = await db
       .insertInto('actions')
@@ -497,6 +243,8 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
       })
       .returning('id')
       .execute();
+
+    subprocessActions.push({ id: subprocessAction.id, title: sub.title });
 
     await db
       .insertInto('events')
@@ -518,5 +266,209 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
   }
 
   console.log('  ✓ Created container actions (Process → Stage → Subprocess)');
+
+  // =========================================================================
+  // TASK ACTIONS (New Architecture)
+  // Tasks are Actions with parent_action_id pointing to a Subprocess
+  // =========================================================================
+
+  const siteSurveySubprocess = subprocessActions[0]; // Site Survey & Analysis
+  const taskDefinitions = [
+    {
+      title: 'Confirm Location Boundary',
+      description: 'Verify the GPS coordinates match the city filing.',
+      status: 'in-progress',
+      owner: 'SJ',
+      dueDate: '2025-02-05',
+      percentComplete: 35,
+      tags: ['Engineering'],
+    },
+    {
+      title: 'Submit Survey Report',
+      description: 'Upload the final PDF before the deadline.',
+      status: 'blocked',
+      owner: 'MR',
+      dueDate: '2025-02-10',
+      percentComplete: 10,
+      tags: [],
+    },
+    {
+      title: 'Document Site Conditions',
+      description: 'Take photos of current wall condition and surroundings.',
+      status: 'done',
+      owner: 'SJ',
+      dueDate: '2025-02-03',
+      percentComplete: 100,
+      tags: ['Documentation'],
+    },
+  ];
+
+  const taskActions: Array<{ id: string; title: string }> = [];
+
+  for (const task of taskDefinitions) {
+    const fieldBindings = [
+      { fieldKey: 'title', value: task.title },
+      { fieldKey: 'description', value: task.description },
+      { fieldKey: 'status', value: task.status },
+      { fieldKey: 'owner', value: task.owner },
+      { fieldKey: 'dueDate', value: task.dueDate },
+      { fieldKey: 'percentComplete', value: task.percentComplete },
+      ...(task.tags.length > 0 ? [{ fieldKey: 'tags', value: task.tags }] : []),
+    ];
+
+    const [taskAction] = await db
+      .insertInto('actions')
+      .values({
+        context_id: project.id,
+        context_type: 'project',
+        parent_action_id: siteSurveySubprocess.id,
+        type: 'Task',
+        field_bindings: JSON.stringify(fieldBindings),
+      })
+      .returning('id')
+      .execute();
+
+    taskActions.push({ id: taskAction.id, title: task.title });
+
+    await db
+      .insertInto('events')
+      .values({
+        context_id: project.id,
+        context_type: 'project',
+        action_id: taskAction.id,
+        type: 'ACTION_DECLARED',
+        payload: JSON.stringify({
+          actionType: 'Task',
+          fieldBindings,
+        }),
+        actor_id: user.id,
+      })
+      .execute();
+  }
+
+  console.log('  ✓ Created task actions');
+
+  // =========================================================================
+  // SUBTASK ACTIONS (New Architecture)
+  // Subtasks are Actions with parent_action_id pointing to a Task
+  // =========================================================================
+
+  // Subtasks for "Confirm Location Boundary" task
+  const confirmBoundaryTask = taskActions[0];
+  const confirmBoundarySubtasks = [
+    { title: 'Pull property records from city archives', status: 'done', owner: 'SJ' },
+    { title: 'Cross-reference GPS with survey maps', status: 'in-progress', owner: 'SJ' },
+    { title: 'Get sign-off from property owner', status: 'not-started', owner: null },
+  ];
+
+  for (const subtask of confirmBoundarySubtasks) {
+    const fieldBindings = [
+      { fieldKey: 'title', value: subtask.title },
+      { fieldKey: 'status', value: subtask.status },
+      ...(subtask.owner ? [{ fieldKey: 'owner', value: subtask.owner }] : []),
+    ];
+
+    const [subtaskAction] = await db
+      .insertInto('actions')
+      .values({
+        context_id: project.id,
+        context_type: 'project',
+        parent_action_id: confirmBoundaryTask.id,
+        type: 'Subtask',
+        field_bindings: JSON.stringify(fieldBindings),
+      })
+      .returning('id')
+      .execute();
+
+    await db
+      .insertInto('events')
+      .values({
+        context_id: project.id,
+        context_type: 'project',
+        action_id: subtaskAction.id,
+        type: 'ACTION_DECLARED',
+        payload: JSON.stringify({
+          actionType: 'Subtask',
+          fieldBindings,
+        }),
+        actor_id: user.id,
+      })
+      .execute();
+  }
+
+  // Subtasks for "Submit Survey Report" task
+  const submitReportTask = taskActions[1];
+  const submitReportSubtasks = [
+    { title: 'Compile field notes into draft', status: 'done', owner: 'MR' },
+    { title: 'Review with engineering lead', status: 'blocked', owner: 'MR' },
+  ];
+
+  for (const subtask of submitReportSubtasks) {
+    const fieldBindings = [
+      { fieldKey: 'title', value: subtask.title },
+      { fieldKey: 'status', value: subtask.status },
+      { fieldKey: 'owner', value: subtask.owner },
+    ];
+
+    const [subtaskAction] = await db
+      .insertInto('actions')
+      .values({
+        context_id: project.id,
+        context_type: 'project',
+        parent_action_id: submitReportTask.id,
+        type: 'Subtask',
+        field_bindings: JSON.stringify(fieldBindings),
+      })
+      .returning('id')
+      .execute();
+
+    await db
+      .insertInto('events')
+      .values({
+        context_id: project.id,
+        context_type: 'project',
+        action_id: subtaskAction.id,
+        type: 'ACTION_DECLARED',
+        payload: JSON.stringify({
+          actionType: 'Subtask',
+          fieldBindings,
+        }),
+        actor_id: user.id,
+      })
+      .execute();
+  }
+
+  console.log('  ✓ Created subtask actions');
+  console.log('  ✓ Complete Action hierarchy: Process → Stage → Subprocess → Task → Subtask');
+
+  // =========================================================================
+  // GUARDRAIL: Verify no legacy nodes were created
+  // This prevents regression to the old architecture
+  // =========================================================================
+
+  const legacyNodeTypes = ['process', 'stage', 'subprocess', 'task', 'subtask'] as const;
+  const legacyNodes = await db
+    .selectFrom('hierarchy_nodes')
+    .select(['type'])
+    .where('type', 'in', [...legacyNodeTypes])
+    .execute();
+
+  if (legacyNodes.length > 0) {
+    const typeCounts = legacyNodes.reduce(
+      (acc, node) => {
+        acc[node.type] = (acc[node.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+    throw new Error(
+      `SEED GUARDRAIL FAILED: Legacy hierarchy_nodes detected!\n` +
+        `Found: ${JSON.stringify(typeCounts)}\n` +
+        `These types should be created as Actions, not hierarchy_nodes.\n` +
+        `See dev_sample_data.ts header comment for architecture guidance.`
+    );
+  }
+
+  console.log('  ✓ Guardrail passed: No legacy node types detected');
 }
 
