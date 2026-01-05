@@ -1,3 +1,16 @@
+/**
+ * DrawerRegistry
+ *
+ * Central routing component for the Drawer system.
+ * Maps drawer type strings to their corresponding view components.
+ * Used by BottomDrawer to render the appropriate content.
+ *
+ * To add a new drawer:
+ * 1. Create a view component in ./views/
+ * 2. Import it here
+ * 3. Add a case to the switch statement
+ */
+
 import { CreateNodeView } from './views/CreateNodeView';
 import { ConfirmDeleteView } from './views/ConfirmDeleteView';
 import { AddFieldView } from './views/AddFieldView';
@@ -11,6 +24,7 @@ import { ProjectLibraryDrawer } from './views/ProjectLibraryDrawer';
 import { CreateRecordView } from './views/CreateRecordView';
 import { CreateDefinitionView } from './views/CreateDefinitionView';
 import { ClassifyRecordsView } from './views/ClassifyRecordsView';
+import { ActionInspectorDrawer } from './views/ActionInspectorDrawer';
 
 interface DrawerRegistryProps {
   type: string;
@@ -45,6 +59,8 @@ export function DrawerRegistry({ type, props }: DrawerRegistryProps) {
       return <CreateDefinitionView />;
     case 'classify-records':
       return <ClassifyRecordsView {...(props as { recordIds: string[]; onSuccess?: () => void })} />;
+    case 'view-action':
+      return <ActionInspectorDrawer {...(props as { actionId: string })} />;
     default:
       return (
         <div className="p-4 text-slate-500">

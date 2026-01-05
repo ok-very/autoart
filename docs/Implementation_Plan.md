@@ -1,233 +1,248 @@
-# AutoArt System Implementation Plan
+# Action Inspector Implementation Plan
 
-## 1. Executive Summary
-This plan outlines the greenfield implementation of the AutoArt Process Management System. It pivots from the original proposal to support a specific 5-level hierarchy (**Project $\rightarrow$ Process $\rightarrow$ Stage $\rightarrow$ Subprocess $\rightarrow$ Task**) and treats Projects and Subprocesses as "Classifications" for polymorphic records.
+## Overview
 
-The system is architected as a **Hypertext-Database Hybrid**, where text content is not static strings but a mesh of live database references.
-
-## 2. Technology Stack Selection
-We replace standard choices with high-performance, type-safe alternatives suitable for graph-like data.
-
-### Backend (The "Graph" Engine)
-- **Runtime**: **Node.js** (TypeScript)
-- **Framework**: **Fastify** (Lower overhead than Express, better schema validation with Zod).
-- **Database**: **PostgreSQL 16+** (Required for JSONB and Recursive CTEs).
-- **SQL Builder**: **Kysely** (Type-safe SQL builder). *Why?* ORMs like Prisma struggle with complex Recursive CTEs and dynamic JSONB filtering. Kysely gives us raw SQL power with TypeScript safety.
-- **Search**: **Postgres Full Text Search (tsvector)** (Sufficient for the scale; avoids managing ElasticSearch).
-
-### Frontend (The "Canvas")
-- **Framework**: **React** + **Vite**.
-- **State Management**: **Zustand** (Global store) + **TanStack Query** (Server state/Caching).
-- **Rich Text Engine**: **TipTap** (Headless wrapper around ProseMirror). *Essential for the `#record:field` syntax.*
-- **UI Library**: **Shadcn/UI** (Tailwind-based, highly customizable for the "different styles" requirement).
+Implement the Action Inspector drawer and refactor registry views to use the table-core wrapper pattern.
 
 ---
 
-## 3. Database Schema Design
+## Pre-requisites: Table-Core Wrapper Refactoring
 
-### 3.1 The Hierarchy Backbone (`hierarchy_nodes`)
-Supports the 5-level structure. `node_type` enforces the nesting rules.
+Before implementing the Action Inspector, refactor registry views to use `ui/table-core/` pattern:
 
-```sql
-CREATE TYPE node_type AS ENUM ('project', 'process', 'stage', 'subprocess', 'task');
+> [!IMPORTANT]
+> **Actions are first-class entities.** Ensure clear separation of views between action types. Each action type should have its own distinct presentation in the registry.
 
-CREATE TABLE hierarchy_nodes (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    parent_id UUID REFERENCES hierarchy_nodes(id) ON DELETE CASCADE,
-    root_project_id UUID REFERENCES hierarchy_nodes(id), -- Optimization for "Get all nodes in Project"
-    type node_type NOT NULL,
-    title TEXT NOT NULL,
-    description JSONB, -- TipTap JSON document
-    position INTEGER NOT NULL, -- For drag-and-drop ordering
-    
-    -- Classification Logic
-    -- If this node is a Project or Subprocess, it can define a "Default Record Class"
-    default_record_def_id UUID REFERENCES record_definitions(id),
-    
-    metadata JSONB DEFAULT '{}', -- Folder colors, view settings
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+### Files to Refactor
 
-CREATE INDEX idx_hierarchy_parent ON hierarchy_nodes(parent_id);
-CREATE INDEX idx_hierarchy_root ON hierarchy_nodes(root_project_id);
+| Current Component | Refactored To |
+|-------------------|---------------|
+| `components/tables/ActionInstancesView.tsx` | Use `ui/table-core/UniversalTableCore.tsx` |
+| `components/tables/UniversalTableView.tsx` | Use `ui/table-core/UniversalTableCore.tsx` |
+
+### Pattern Reference
+See `ui/composites/DataTableFlat.tsx` for wrapper implementation pattern.
+
+---
+
+## Architecture
+
+**Location:** Registry → Actions section  
+**Trigger:** Click action row → opens `ActionInspector` drawer (right panel)  
+**Scope:** Context-scoped (shows actions for selected action type)
+
+---
+
+## Component Structure
+
+### 1. Main List: `ActionsList.tsx`
+**Path:** `frontend/src/ui/composites/ActionsList.tsx`
+
+Scrollable area showing action cards with:
+- Collapsed overview with quick mutation buttons
+- Top half: Mutable intent (field bindings + affordances)
+- Bottom half: Immutable events
+
+> [!TIP]
+> **Human-readable styling:** Field bindings and actions must be displayed with clear labels, proper formatting (dates, users, references), and contextual icons. Avoid raw IDs or technical jargon.
+
+### 2. Action Card: `ActionCard.tsx`
+**Path:** `frontend/src/ui/composites/ActionCard.tsx`
+
+Split card layout:
+- **Top (Mutable):** ACTION badge, field bindings, Retract/Amend buttons
+- **Divider**
+- **Bottom (Immutable):** Events emitted list
+
+### 3. Event Row: `EventRow.tsx`
+**Path:** `frontend/src/ui/primitives/EventRow.tsx`
+
+Displays single event with system event distinction.
+
+### 4. Inspector Drawer: `ActionInspectorDrawer.tsx`
+**Path:** `frontend/src/components/drawer/views/ActionInspectorDrawer.tsx`
+
+Detailed view sections:
+- Declared Intent (editable field bindings)
+- Interpreted As (events - read-only)
+- Current Projections (read-only)
+- Mutation Actions (Retract/Amend buttons)
+
+---
+
+## API Additions
+
+### Hooks
+```typescript
+useRetractAction()  // POST /actions/:id/retract
+useAmendAction()    // POST /actions/:id/amend
 ```
 
-### 3.2 The Polymorphic Record Engine
-Allows creating "Classes" of records and cloning them.
+### Backend Endpoints
+- `POST /api/actions/:id/retract` → emits `ACTION_RETRACTED`
+- `POST /api/actions/:id/amend` → emits `ACTION_MODIFIED`
 
-```sql
-CREATE TABLE record_definitions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL, -- e.g., "Plumbing Asset", "Client Contact"
-    derived_from_id UUID REFERENCES record_definitions(id), -- Inheritance/Cloning tracking
-    schema_config JSONB NOT NULL, -- The fields definition (UI styles, validation)
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+---
 
-CREATE TABLE records (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    definition_id UUID REFERENCES record_definitions(id) NOT NULL,
-    
-    -- The "Tag" capability
-    -- Records can be loosely classified by linking them to a Project or Subprocess node
-    classification_node_id UUID REFERENCES hierarchy_nodes(id),
-    
-    unique_name TEXT NOT NULL, -- The addressable handle (e.g., "ProjectA_Budget")
-    data JSONB NOT NULL, -- The actual values
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+## UIStore Additions
 
-CREATE INDEX idx_records_data ON records USING GIN (data);
-```
-
-### 3.3 The Reference Layer (The "Hyperlinks")
-
-```sql
-CREATE TABLE task_references (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    task_id UUID REFERENCES hierarchy_nodes(id) ON DELETE CASCADE,
-    
-    -- The Target
-    source_record_id UUID REFERENCES records(id),
-    target_field_key TEXT,
-    
-    -- The State
-    mode TEXT CHECK (mode IN ('STATIC', 'DYNAMIC')),
-    snapshot_value JSONB, -- If Static, this holds the frozen data
-    
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+```typescript
+includeSystemEventsInActionInspector: boolean  // persisted preference
 ```
 
 ---
 
-## 4. Backend Architecture & Logic
+## CSS Styles
 
-### 4.1 Deep Cloning Service (The "Template" Engine)
-When a user duplicates a Project or Process, we use a Recursive CTE.
-
-**Logic:**
-1.  **Fetch Tree**: `WITH RECURSIVE` query to get the node and all descendants.
-2.  **Map IDs**: Generate new UUIDs for every node in memory.
-3.  **Rewrite References**:
-    *   Update `parent_id` to the new parent UUID.
-    *   **Crucial**: Scan the `description` JSONB. If it contains internal links (e.g., Task A links to Task B within the same tree), remap those UUIDs too so the clone is self-contained.
-4.  **Bulk Insert**: Perform a transaction insert.
-
-### 4.2 The Resolution Service (UX Hookup)
-Handles the `#` syntax.
-
-*   **Input**: User types `#Proj`.
-*   **Query**: Search `hierarchy_nodes` (Projects/Subprocesses) AND `records` (Unique Names).
-*   **Return**: A polymorphic list:
-    *   `{ type: 'node', id: '...', label: 'Project Alpha' }`
-    *   `{ type: 'record', id: '...', label: 'Project Alpha Budget' }`
-
-### 4.3 Record Classification Logic
-Since "Project and Subprocesses are classifications":
-*   **Create Record**: When creating a record inside a Subprocess (e.g., "Plumbing"), the backend automatically tags `records.classification_node_id = subprocess_id`.
-*   **Inheritance**: If the Subprocess has a `default_record_def_id`, the new record automatically uses that schema.
+Add to `frontend/src/index.css`:
+- `.inspector-card` - Card container with hover states
+- `.card-intent` / `.card-events` - Top/bottom sections
+- `.event-row` / `.system-event` - Event display
+- `.badge-action` / `.badge-event` - Type badges
 
 ---
 
-## 5. Frontend Architecture & UX Bindings
+## Implementation Checklist
 
-### 5.1 The Layout
-*   **Left Sidebar**: **Hierarchy Tree**.
-    *   *UX Hook*: Drag-and-drop uses Optimistic UI. We update the local Zustand store immediately, then fire the API call. If it fails, we revert.
-*   **Center Stage**: **The Workspace**.
-    *   Renders the "Folder" view (Stage) or the "Document" view (Task).
-*   **Right Panel**: **Context/Inspector**.
-    *   Shows details of the currently selected Record or Reference.
+### Phase 1: Table-Core Refactor ✅
+- [x] Refactor `ActionInstancesView.tsx` to use `UniversalTableCore`
+- [x] Create `ActionsTableFlat.tsx` wrapper composite
 
-### 5.2 The "Hyperlink Engine" (TipTap Integration)
-This is the core UX component. We build a custom TipTap Node Extension called `ReferenceNode`.
+### Phase 2: UI Components ✅
+- [x] Create `ActionsList.tsx` (scrollable card list)
+- [x] Create `ActionCard.tsx` (split top/bottom card)
+- [x] Create `EventRow.tsx` (immutable event display)
 
-**The Flow:**
-1.  **Trigger**: User types `#`.
-2.  **Popup**: A floating menu appears (using `tippy.js`).
-3.  **Selection**: User selects "Project Alpha Budget" (Record).
-4.  **Field Picker**: UI asks "Which field? (Cost / Status)". User picks "Cost".
-5.  **Insertion**:
-    *   Frontend calls `POST /api/references` to create a `task_reference`.
-    *   Backend returns a UUID.
-    *   Editor inserts a "Chip" component: `<span data-type="reference" data-id="UUID">#ProjectAlpha:Cost</span>`.
+### Phase 3: Inspector Drawer ✅
+- [x] Create `ActionInspectorDrawer.tsx`
+- [x] Register in `DrawerRegistry.tsx`
+- [x] Add drawer collapse toggle (`drawerCollapsed` in UIStore)
 
-### 5.3 Static vs. Dynamic UX (The "Drift" System)
-How we handle the "Static/Dynamic" requirement visually.
+### Phase 4: Backend + API ✅
+- [x] `POST /actions/:id/retract` endpoint
+- [x] `POST /actions/:id/amend` endpoint
+- [x] Add `useRetractAction` hook
+- [x] Add `useAmendAction` hook
 
-*   **Component**: `<ReferenceChip id={refId} />`
-*   **Hook**: `useReference(refId)`
-    *   Fetches the `task_reference` data.
-    *   If `mode === 'DYNAMIC'`: Subscribes to the Record's value.
-    *   If `mode === 'STATIC'`:
-        *   Displays `snapshot_value`.
-        *   **Background Check**: Fetches the *current* Record value.
-        *   **Drift Alert**: If `current !== snapshot`, render a small orange dot.
-        *   **Interaction**: Hovering the dot shows "Value changed to X. Update?".
-
-### 5.4 The Schema Designer (Record Builder)
-To satisfy "create new types... by cloning original types":
-
-*   **UI**: A drag-and-drop form builder.
-*   **Action**: "Clone Definition".
-    *   User selects "Basic Contact".
-    *   System copies the JSON schema.
-    *   User adds "LinkedIn Profile" field.
-    *   Saves as "Tech Contact".
-*   **Binding**: This new Definition ID is now available to be assigned to Projects/Subprocesses as their "Default Class".
+### Phase 5: Integration
+- [ ] Wire up retract/amend hooks to ActionCard/Drawer
+- [ ] Add `includeSystemEventsInActionInspector` to UIStore
+- [ ] Test full flow: list → select → inspect → mutate
 
 ---
 
-## 6. Implementation Roadmap
+## Phase 6: UI Projection Presets
 
-### Phase 1: The Foundation
-1.  Setup Fastify + Kysely + Postgres.
-2.  Implement `hierarchy_nodes` CRUD.
-3.  Build the Recursive CTE for fetching the tree.
+> [!IMPORTANT]
+> **Projections are UI-level, not domain-level.** No persistence authority, no mutation power, no implied ontology. A projection can suggest meaning but never enforce it.
 
-### Phase 2: The Record System
-1.  Implement `record_definitions` and `records` tables.
-2.  Build the JSON Schema validator middleware.
-3.  Create the "Schema Designer" UI.
+### Philosophy
 
-### Phase 3: The Hyperlink Engine
-1.  Implement `task_references` table.
-2.  Build the TipTap extension for `#` mentions.
-3.  Implement the Resolver API (Search).
+The Action Inspector is effectively a **local projection debugger**:
+- **Actions** = intent
+- **Events** = interpretation  
+- **Projections** = current meaning
 
-### Phase 4: Advanced Logic
-1.  **Deep Cloning**: Implement the transaction logic to copy Projects/Processes.
-2.  **Drift Detection**: Implement the frontend logic to compare Static snapshots vs Live data.
+Decision rule: *"Would this belong in the Action Inspector?"*
+- If yes → projection
+- If no → persistence
+- If unclear → event
 
-### Phase 5: Polish
-1.  Styling based on Record Class (e.g., "Plumbing" records look Blue, "Electrical" look Yellow).
-2.  Drag-and-drop reordering of the hierarchy.
+### ProjectionPreset Interface
 
-## 7. Sample API Payloads
+**Path:** `frontend/src/ui/projections/types.ts`
 
-**POST /api/hierarchy/clone**
-```json
-{
-  "sourceNodeId": "uuid-of-project-template",
-  "targetParentId": "uuid-of-workspace",
-  "overrides": {
-    "title": "New Client Project"
+```typescript
+export interface ProjectionPreset<TRecord = any> {
+  id: string
+  label: string
+  description?: string
+
+  /** Determines applicability to current dataset/context */
+  appliesTo: (context: ProjectionContext) => boolean
+
+  /** Maps records into grouped, ordered, or flattened structures */
+  project: (records: TRecord[], context: ProjectionContext) => ProjectionResult<TRecord>
+
+  /** Optional affordances (must not mutate records) */
+  affordances?: ProjectionAffordance[]
+
+  /** UI hints only, not logic */
+  ui?: {
+    icon?: string
+    defaultCollapsed?: boolean
   }
 }
+
+export interface ProjectionContext {
+  workspaceId: string
+  userId: string
+  preferences: Record<string, unknown>
+}
+
+export interface ProjectionResult<T> {
+  groups?: ProjectionGroup<T>[]
+  flat?: T[]
+}
+
+export interface ProjectionGroup<T> {
+  id: string
+  label: string
+  items: T[]
+  meta?: Record<string, unknown>
+}
+
+export interface ProjectionAffordance {
+  id: string
+  label: string
+  icon?: string
+  intent: 'navigate' | 'filter' | 'annotate'
+}
 ```
 
-**POST /api/references/resolve**
-*(Used when rendering the document to get current values)*
-```json
-{
-  "referenceIds": ["uuid-1", "uuid-2"]
+### Example: StageProjection (Non-Primitive)
+
+**Path:** `frontend/src/ui/projections/presets/StageProjection.ts`
+
+Stages survive only as **labels derived from imported metadata**:
+
+```typescript
+export const StageProjection: ProjectionPreset = {
+  id: 'stage-projection',
+  label: 'Group by Imported Stage',
+  description: 'Groups work by stage metadata imported from external sources.',
+
+  appliesTo: ({ preferences }) =>
+    preferences.enableStageLikeViews === true,
+
+  project: (records) => {
+    const groups = new Map<string, any[]>()
+    records.forEach(record => {
+      const stageName = record.metadata?.import?.stage_name ?? 'Unlabeled'
+      if (!groups.has(stageName)) groups.set(stageName, [])
+      groups.get(stageName)!.push(record)
+    })
+    return {
+      groups: Array.from(groups.entries()).map(([label, items]) => ({
+        id: label, label, items, meta: { derived: true }
+      }))
+    }
+  },
+
+  ui: { icon: 'layers', defaultCollapsed: false }
 }
 ```
-**Response:**
-```json
-{
-  "uuid-1": { "value": 150, "drift": false },
-  "uuid-2": { "value": 100, "drift": true, "liveValue": 120 }
-}
-```
+
+**What this explicitly does NOT do:**
+- ❌ No `stage_id`
+- ❌ No container mutation
+- ❌ No ordering guarantees
+- ❌ No lifecycle semantics
+
+### Phase 6 Checklist
+
+- [ ] Create `frontend/src/ui/projections/types.ts` with interfaces
+- [ ] Create `frontend/src/ui/projections/presets/` directory
+- [ ] Implement `StageProjection` preset
+- [ ] Add projection selector to workflow views
+- [ ] Integrate with Action Inspector (show current projections)

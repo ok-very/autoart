@@ -3,6 +3,7 @@ export type Selection =
   | { type: 'record'; id: string }
   | { type: 'definition'; id: string }
   | { type: 'project'; id: string }
+  | { type: 'action'; id: string }
   | null;
 
 export type InspectorMode =

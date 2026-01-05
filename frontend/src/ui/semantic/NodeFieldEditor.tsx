@@ -218,7 +218,8 @@ export function NodeFieldEditor({
             <div className="border border-slate-200 rounded-md bg-white p-1 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
                 <RichTextEditor
                     content={vm.value}
-                    taskId={nodeId}
+                    contextId={nodeId}
+                    contextType="subprocess"
                     onChange={onChange}
                 />
             </div>

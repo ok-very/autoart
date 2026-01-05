@@ -168,4 +168,88 @@ export async function actionsRoutes(fastify: FastifyInstance) {
       return { actions, count };
     }
   );
+
+  // ==================== ACTION MUTATION ENDPOINTS ====================
+
+  const RetractBodySchema = z.object({
+    reason: z.string().optional(),
+  });
+
+  const AmendBodySchema = z.object({
+    fieldBindings: z.array(z.unknown()),
+    reason: z.string().optional(),
+  });
+
+  /**
+   * POST /actions/:id/retract - Retract an action
+   * Emits ACTION_RETRACTED event - action remains in database but is marked as retracted.
+   */
+  app.post(
+    '/:id/retract',
+    {
+      schema: {
+        params: IdParamSchema,
+        body: RetractBodySchema,
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params;
+      const { reason } = request.body;
+
+      try {
+        const result = await actionsService.retractAction({
+          actionId: id,
+          reason,
+        });
+
+        return reply.status(200).send({
+          success: true,
+          action: result.action,
+          eventId: result.eventId,
+        });
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('not found')) {
+          return reply.status(404).send({ error: 'Action not found' });
+        }
+        throw error;
+      }
+    }
+  );
+
+  /**
+   * POST /actions/:id/amend - Amend an action's field bindings
+   * Emits ACTION_AMENDED event with new bindings.
+   */
+  app.post(
+    '/:id/amend',
+    {
+      schema: {
+        params: IdParamSchema,
+        body: AmendBodySchema,
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params;
+      const { fieldBindings, reason } = request.body;
+
+      try {
+        const result = await actionsService.amendAction({
+          actionId: id,
+          fieldBindings,
+          reason,
+        });
+
+        return reply.status(200).send({
+          success: true,
+          action: result.action,
+          eventId: result.eventId,
+        });
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('not found')) {
+          return reply.status(404).send({ error: 'Action not found' });
+        }
+        throw error;
+      }
+    }
+  );
 }

@@ -24,6 +24,16 @@ AutoArt is built on a robust, type-safe architecture that ensures data integrity
 - **Unified Resolution**: The search and reference system (`#record:field`) uses a unified recursive path resolution strategy rooted in the database hierarchy.
 - **ID-Based references**: All internal references rely on stable UUIDs, making the system resilient to name changes and structural moves.
 
+### 4. UI Patterns: Drawer System
+- **Bottom Drawer**: Contextual forms and workflows (`frontend/src/components/drawer`)
+- **DrawerRegistry**: Routes drawer types to their view components
+- Replaces legacy modal pattern for all insertions, deletions, and contextual views
+
+### 5. Event-Sourced Actions
+- **Actions & Events**: All work is tracked through immutable Events emitted against Actions
+- **Project Log**: Default view showing chronological event stream for a context
+- **Workflow Surface**: Materialized projection of action state derived from events
+
 ## Refactor Plan: Unified Record Architecture
 
 The long-term vision is to treat all hierarchy nodes (Tasks, Projects, etc.) as "System Level Records" to enable unified visualization and querying.

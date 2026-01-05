@@ -129,7 +129,8 @@ function TaskCard({ task }: TaskCardProps) {
             <div className={`text-sm mt-1 leading-relaxed ${isCompleted ? 'text-slate-400' : 'text-slate-600'}`}>
               <RichTextEditor
                 content={task.description}
-                taskId={task.id}
+                contextId={task.id}
+                contextType="subprocess"
                 editable={false}
               />
             </div>

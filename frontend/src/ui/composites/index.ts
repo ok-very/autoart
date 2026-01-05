@@ -51,6 +51,11 @@ export { RecordInspector } from './RecordInspector';
 // Reusable Table Composites (UI Patterns)
 export { DataTableFlat, type DataTableFlatProps, type TableColumn } from './DataTableFlat';
 export { DataTableHierarchy, type DataTableHierarchyProps, type HierarchyFieldDef } from './DataTableHierarchy';
+export { ActionsTableFlat, type ActionsTableFlatProps } from './ActionsTableFlat';
+
+// Action Inspector Components
+export { ActionCard, type ActionCardProps } from './ActionCard';
+export { ActionsList, type ActionsListProps } from './ActionsList';
 
 // Reusable Record/Hierarchy View Composites
 export { RecordList } from './RecordList';

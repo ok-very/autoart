@@ -250,6 +250,55 @@ export type WorkflowSurfaceNode = Selectable<WorkflowSurfaceNodesTable>;
 export type NewWorkflowSurfaceNode = Insertable<WorkflowSurfaceNodesTable>;
 export type WorkflowSurfaceNodeUpdate = Updateable<WorkflowSurfaceNodesTable>;
 
+// ============================================
+// IMPORT TABLES (Migration 025)
+// ============================================
+
+// Import Sessions Table
+export interface ImportSessionsTable {
+  id: Generated<string>;
+  parser_name: string;
+  status: string;
+  raw_data: string;
+  parser_config: Generated<unknown>;
+  target_project_id: string | null;
+  created_by: string | null;
+  created_at: Generated<Date>;
+  updated_at: Generated<Date>;
+}
+
+export type ImportSession = Selectable<ImportSessionsTable>;
+export type NewImportSession = Insertable<ImportSessionsTable>;
+export type ImportSessionUpdate = Updateable<ImportSessionsTable>;
+
+// Import Plans Table
+export interface ImportPlansTable {
+  id: Generated<string>;
+  session_id: string;
+  plan_data: unknown;
+  validation_issues: Generated<unknown>;
+  created_at: Generated<Date>;
+}
+
+export type ImportPlan = Selectable<ImportPlansTable>;
+export type NewImportPlan = Insertable<ImportPlansTable>;
+export type ImportPlanUpdate = Updateable<ImportPlansTable>;
+
+// Import Executions Table
+export interface ImportExecutionsTable {
+  id: Generated<string>;
+  session_id: string;
+  plan_id: string;
+  status: string;
+  results: unknown | null;
+  started_at: Generated<Date>;
+  completed_at: Date | null;
+}
+
+export type ImportExecution = Selectable<ImportExecutionsTable>;
+export type NewImportExecution = Insertable<ImportExecutionsTable>;
+export type ImportExecutionUpdate = Updateable<ImportExecutionsTable>;
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -264,5 +313,9 @@ export interface Database {
   actions: ActionsTable;
   events: EventsTable;
   workflow_surface_nodes: WorkflowSurfaceNodesTable;
+  import_sessions: ImportSessionsTable;
+  import_plans: ImportPlansTable;
+  import_executions: ImportExecutionsTable;
 }
+
 

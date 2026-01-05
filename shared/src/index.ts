@@ -274,3 +274,16 @@ export {
   type ComposerResponse,
   type ActionTypeConfig,
 } from './schemas/composer';
+
+// Projections (Interpretive Views over Actions/Events)
+export {
+  type ProjectionPreset,
+  type ActionProjectionInput,
+  type ContainerInput,
+  type StageProjectionOutput,
+  type HierarchyProjectionOutput,
+  type TimelineProjectionOutput,
+  type ProjectionRef,
+  type ProjectionSelection,
+} from './projections';
+

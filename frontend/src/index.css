@@ -100,6 +100,7 @@ body {
     opacity: 0;
     transform: translateY(5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -199,4 +200,40 @@ body {
   color: #94a3b8;
   pointer-events: none;
   height: 0;
+}
+
+/* ============================================================================
+   ACTION INSPECTOR STYLES
+   ============================================================================ */
+
+/* Fade-in animation for cards */
+.fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Action card badge */
+.badge-action {
+  @apply bg-indigo-100 text-indigo-700 border border-indigo-200 text-[10px] font-bold px-1.5 py-0.5 rounded;
+}
+
+/* Event badge */
+.badge-event {
+  @apply bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-semibold px-1.5 py-0.5 rounded font-mono;
+}
+
+/* System event badge */
+.system-badge {
+  @apply text-[10px] font-semibold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded;
 }

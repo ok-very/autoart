@@ -119,7 +119,8 @@ export function FieldEditor({
             <div className="border border-slate-200 rounded-md bg-white p-1 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
                 <RichTextEditor
                     content={vm.value}
-                    taskId={recordId} // RichTextEditor uses taskId for context, passing recordId as fallback
+                    contextId={recordId}
+                    contextType="record"
                     onChange={onChange}
                 />
             </div>

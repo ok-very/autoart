@@ -90,6 +90,7 @@ export function ComposerSurface({
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [showRecordPicker, setShowRecordPicker] = useState(false);
     const [currentSlot, setCurrentSlot] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     // Context selection
     const { activeProjectId, setActiveProject } = useUIStore();
@@ -245,10 +246,16 @@ export function ComposerSurface({
             setFieldValues([]);
             setLinkedRecords([]);
 
+            // Show success message
+            const actionType = selectedRecipe?.name || 'Action';
+            setSuccessMessage(`${actionType} created successfully!`);
+            setTimeout(() => setSuccessMessage(null), 4000);
+
             if (onSuccess && result.action?.id) {
                 onSuccess(result.action.id);
             }
         } catch (err) {
+            setSuccessMessage(null);
             console.error('Failed to compose action:', err);
         }
     };
@@ -639,6 +646,14 @@ export function ComposerSurface({
                             </div>
                         )}
                     </div>
+
+                    {/* Success */}
+                    {successMessage && (
+                        <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
+                            <CheckCircle2 size={16} className="text-green-500" />
+                            {successMessage}
+                        </div>
+                    )}
 
                     {/* Error */}
                     {error && (

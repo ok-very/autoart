@@ -212,7 +212,9 @@ export async function compose(
         if (!skipView) {
             try {
                 // Note: This reads from the committed transaction, so the events must be visible
-                view = await interpreterService.getActionViewById(action.id);
+                const maybeView = await interpreterService.getActionViewById(action.id);
+                // Convert null to undefined to satisfy Zod's optional() validation
+                view = maybeView ?? undefined;
             } catch (error) {
                 // Not fatal - the caller still gets the raw data
                 console.warn('Composer: interpreter failed to compute view', error);

@@ -1,14 +1,51 @@
+/**
+ * RichTextEditor Component
+ *
+ * Configuration-driven rich text editor with TipTap.
+ * Supports record references (#record:field) and extensible styling.
+ *
+ * Architecture:
+ * - Config-driven: Extensions built from EditorConfig
+ * - Context-aware: Uses contextId + contextType for references (not taskId)
+ * - Extensible: Add custom extensions via config.extensions
+ */
+
 import { useRef, useMemo, useState, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
-import { createMentionExtension, MentionAttributes } from './MentionExtension';
+import { createConfiguredExtensions, MentionAttributes } from './MentionExtension';
 import { RecordSearchCombobox } from '../common/RecordSearchCombobox';
 import { useCreateReference } from '../../api/hooks';
 import type { SearchResult } from '../../types';
+import type { ContextType } from '@autoart/shared';
+import {
+  type RichTextEditorConfig,
+  mergeEditorConfig,
+  DEFAULT_EDITOR_CONFIG
+} from './EditorConfig';
 
-interface RichTextEditorProps {
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export interface RichTextEditorProps {
+  /** Document content (TipTap JSON format) */
   content: unknown;
+  /** Context entity ID for reference creation */
+  contextId: string;
+  /** Context type for reference creation */
+  contextType: ContextType;
+  /** Whether the editor is editable */
+  editable?: boolean;
+  /** Callback when content changes */
+  onChange?: (content: unknown) => void;
+  /** Editor configuration override */
+  config?: Partial<RichTextEditorConfig>;
+}
+
+/** @deprecated Use RichTextEditorProps with contextId/contextType instead */
+export interface LegacyRichTextEditorProps {
+  content: unknown;
+  /** @deprecated Use contextId instead */
   taskId: string;
   editable?: boolean;
   onChange?: (content: unknown) => void;
@@ -16,13 +53,30 @@ interface RichTextEditorProps {
 
 interface ComboboxState {
   isOpen: boolean;
-  triggerChar: '#';  // Only # trigger - @ is reserved for user tagging
+  triggerChar: '#' | '@';
   query: string;
   position: { top: number; left: number };
   command: ((attrs: MentionAttributes) => void) | null;
 }
 
-export function RichTextEditor({ content, taskId, editable = true, onChange }: RichTextEditorProps) {
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
+export function RichTextEditor({
+  content,
+  contextId,
+  contextType: _contextType, // Reserved for scoped reference creation
+  editable = true,
+  onChange,
+  config: configOverride,
+}: RichTextEditorProps) {
+  // Merge config with defaults
+  const config = useMemo(
+    () => mergeEditorConfig(configOverride),
+    [configOverride]
+  );
+
   const createReference = useCreateReference();
   const [combobox, setCombobox] = useState<ComboboxState>({
     isOpen: false,
@@ -33,9 +87,9 @@ export function RichTextEditor({ content, taskId, editable = true, onChange }: R
   });
 
   // Use refs to store the latest values without causing extension recreation
-  const taskIdRef = useRef(taskId);
+  const contextIdRef = useRef(contextId);
   const createReferenceRef = useRef(createReference);
-  taskIdRef.current = taskId;
+  contextIdRef.current = contextId;
   createReferenceRef.current = createReference;
 
   // Ref to track combobox state for keyboard handling
@@ -52,8 +106,9 @@ export function RichTextEditor({ content, taskId, editable = true, onChange }: R
 
       if (item.type === 'record' && fieldKey) {
         try {
+          // Create reference using contextId (backward compat: still uses taskId param name)
           const result = await createReferenceRef.current.mutateAsync({
-            taskId: taskIdRef.current,
+            taskId: contextIdRef.current,
             sourceRecordId: item.id,
             targetFieldKey: fieldKey,
             mode: 'dynamic',
@@ -93,8 +148,8 @@ export function RichTextEditor({ content, taskId, editable = true, onChange }: R
     setCombobox((prev) => ({ ...prev, isOpen: false, command: null }));
   }, []);
 
-  // Create suggestion render function for the # trigger character
-  const createSuggestionRender = useCallback((triggerChar: '#') => {
+  // Create suggestion render function for trigger characters
+  const createSuggestionRender = useCallback((triggerChar: '#' | '@') => {
     return () => {
       return {
         onStart: (props: {
@@ -155,25 +210,19 @@ export function RichTextEditor({ content, taskId, editable = true, onChange }: R
     };
   }, []);
 
-  // Memoize extensions to prevent TipTap plugin key conflicts
-  // Note: Only # trigger is used for record references
-  // @ is reserved for user tagging (future feature)
+  // Build extensions from config
   const extensions = useMemo(() => {
-    const hashMention = createMentionExtension('#', {
-      render: createSuggestionRender('#'),
-    });
+    const suggestionHandlers: { '#'?: () => ReturnType<ReturnType<typeof createSuggestionRender>>; '@'?: () => ReturnType<ReturnType<typeof createSuggestionRender>> } = {};
 
-    return [
-      StarterKit.configure({
-        heading: false,
-        codeBlock: false,
-      }),
-      Placeholder.configure({
-        placeholder: 'Start typing... Use # to reference records',
-      }),
-      hashMention,
-    ];
-  }, [createSuggestionRender]);
+    if (config.styles.recordReferences) {
+      suggestionHandlers['#'] = createSuggestionRender('#');
+    }
+    if (config.styles.userMentions) {
+      suggestionHandlers['@'] = createSuggestionRender('@');
+    }
+
+    return createConfiguredExtensions(config, suggestionHandlers);
+  }, [config, createSuggestionRender]);
 
   const editor = useEditor({
     extensions,
@@ -207,5 +256,30 @@ export function RichTextEditor({ content, taskId, editable = true, onChange }: R
         />
       )}
     </div>
+  );
+}
+
+// ============================================================================
+// LEGACY COMPATIBILITY
+// ============================================================================
+
+/**
+ * @deprecated Use RichTextEditor with contextId/contextType props
+ */
+export function LegacyRichTextEditor({
+  content,
+  taskId,
+  editable,
+  onChange
+}: LegacyRichTextEditorProps) {
+  return (
+    <RichTextEditor
+      content={content}
+      contextId={taskId}
+      contextType="subprocess"
+      editable={editable}
+      onChange={onChange}
+      config={DEFAULT_EDITOR_CONFIG}
+    />
   );
 }

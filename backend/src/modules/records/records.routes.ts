@@ -332,7 +332,13 @@ export async function recordsRoutes(app: FastifyInstance) {
     }
   );
 
-  // Create record
+  /**
+   * Create record
+   *
+   * @deprecated Use POST /composer for new record creation.
+   * This endpoint bypasses the Action+Event architecture.
+   * Retained for backward compatibility only.
+   */
   fastify.post(
     '/',
     {

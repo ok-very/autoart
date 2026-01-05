@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Action Inspector</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Card Styles matching the ASCII Layout */
+        .inspector-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+        }
+
+        .inspector-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Top Half (Mutable Intent) */
+        .card-intent {
+            padding: 16px;
+            background-color: #fff;
+        }
+
+        /* Divider */
+        .card-divider {
+            height: 1px;
+            background-color: #e2e8f0;
+            margin: 0;
+        }
+
+        /* Bottom Half (Immutable Events) */
+        .card-events {
+            background-color: #f8fafc;
+            padding: 12px 16px;
+            font-size: 13px;
+        }
+
+        /* Event Row */
+        .event-row {
+            display: flex;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .event-row:last-child {
+            border-bottom: none;
+        }
+
+        /* System Event Styling */
+        .system-event {
+            background-color: #fffbeb;
+            /* Amber 50 */
+            border-left: 2px solid #fcd34d;
+            /* Amber 300 */
+            padding-left: 10px;
+            margin-left: 4px;
+        }
+
+        /* Badges */
+        .badge-action {
+            background: #e0e7ff;
+            color: #4338ca;
+            border: 1px solid #c7d2fe;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 4px;
+        }
+
+        .badge-event {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="flex flex-col h-full bg-[#f8fafc]">
+
+    <!-- 1. HEADER (Inspector Context) -->
+    <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-50">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 text-slate-700">
+                <i class="ph ph-magnifying-glass text-lg"></i>
+                <h1 class="text-sm font-bold uppercase tracking-wide">Action Inspector</h1>
+            </div>
+            <div class="h-4 w-px bg-slate-200"></div>
+            <div class="text-xs text-slate-500 font-mono">
+                Context: <span class="font-bold text-slate-700">Subprocess X</span>
+            </div>
+        </div>
+
+        <!-- Persisted Toggle -->
+        <div class="flex items-center gap-4">
+            <label
+                class="flex items-center gap-2 text-xs font-medium text-slate-600 cursor-pointer select-none hover:text-slate-900 transition-colors">
+                <input type="checkbox" id="toggleSystem"
+                    class="rounded border-slate-300 text-indigo-600 focus:ring-0 focus:ring-offset-0">
+                <span>Include system events</span>
+            </label>
+            <button class="text-slate-400 hover:text-slate-600">
+                <i class="ph ph-gear text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- 2. MAIN SCROLLABLE AREA -->
+    <main class="flex-1 overflow-y-auto custom-scroll p-6 md:p-8">
+        <div class="max-w-4xl mx-auto space-y-6" id="inspector-stream">
+
+            <!-- CARD 1: CREATE_TASK -->
+            <div class="inspector-card fade-in group">
+
+                <!-- TOP: MUTABLE INTENT -->
+                <div class="card-intent">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2 cursor-pointer hover:opacity-80"
+                            onclick="toggleCard('card-1')">
+                            <i class="ph ph-caret-down text-slate-400 text-sm transition-transform"
+                                id="icon-card-1"></i>
+                            <span class="badge-action">ACTION: CREATE_TASK</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400 font-mono">
+                            act-2026-01-04-abc123 • Manual (Ellen) • 14:23:11
+                        </div>
+                    </div>
+
+                    <div id="content-card-1">
+                        <div class="pl-6 mb-4">
+                            <div class="text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Field
+                                Bindings</div>
+                            <div class="space-y-1 text-xs font-mono text-slate-600">
+                                <div class="flex gap-2">
+                                    <span class="text-slate-400 w-20 text-right">title →</span>
+                                    <span class="font-semibold text-slate-800">"Review City Policy"</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <span class="text-slate-400 w-20 text-right">assignee →</span>
+                                    <span class="text-indigo-600">@john</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <span class="text-slate-400 w-20 text-right">dueDate →</span>
+                                    <span>2026-01-15</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mutation Affordances -->
+                        <div class="pl-6 flex gap-3">
+                            <button
+                                class="text-[10px] font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 px-3 py-1.5 rounded transition-colors flex items-center gap-1">
+                                <i class="ph ph-x-circle"></i> Retract Action
+                            </button>
+                            <button
+                                class="text-[10px] font-bold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded transition-colors flex items-center gap-1">
+                                <i class="ph ph-pencil-simple"></i> Amend Bindings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-divider"></div>
+
+                <!-- BOTTOM: IMMUTABLE EVENTS -->
+                <div class="card-events">
+                    <div class="flex items-center gap-2 mb-3 cursor-pointer text-slate-500 hover:text-slate-700"
+                        onclick="toggleEvents('evts-1')">
+                        <i class="ph ph-caret-down text-xs"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Events emitted by this
+                            action</span>
+                    </div>
+
+                    <div id="evts-1" class="space-y-1">
+
+                        <!-- Immutable Event -->
+                        <div class="event-row">
+                            <div class="text-slate-400 pt-0.5"><i class="ph ph-arrow-elbow-down-right"></i></div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="badge-event">TASK_CREATED</span>
+                                    <span class="text-[10px] text-slate-400 font-mono">evt-2026-01-04-def456 •
+                                        14:23:11.234</span>
+                                </div>
+                                <div class="text-slate-600 pl-1">Created task: <span
+                                        class="font-mono text-slate-800">tsk-789</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Immutable Event -->
+                        <div class="event-row">
+                            <div class="text-slate-400 pt-0.5"><i class="ph ph-arrow-elbow-down-right"></i></div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="badge-event">FIELD_VALUE_RECORDED</span>
+                                    <span class="text-[10px] text-slate-400 font-mono">evt-2026-01-04-def457 •
+                                        14:23:11.456</span>
+                                </div>
+                                <div class="text-slate-600 pl-1">field: <span
+                                        class="font-mono text-slate-500">title</span> → <span class="font-bold">"Review
+                                        City Policy"</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Immutable Event -->
+                        <div class="event-row">
+                            <div class="text-slate-400 pt-0.5"><i class="ph ph-arrow-elbow-down-right"></i></div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="badge-event">FIELD_VALUE_RECORDED</span>
+                                    <span class="text-[10px] text-slate-400 font-mono">evt-2026-01-04-def458 •
+                                        14:23:11.678</span>
+                                </div>
+                                <div class="text-slate-600 pl-1">field: <span
+                                        class="font-mono text-slate-500">assignee</span> → <span
+                                        class="text-indigo-600 font-medium">@john</span></div>
+                            </div>
+                        </div>
+
+                        <!-- System Event (Toggleable) -->
+                        <div class="event-row system-event-row">
+                            <div class="text-amber-400 pt-0.5"><i class="ph ph-info"></i></div>
+                            <div class="flex-1 system-event rounded-sm py-1">
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span
+                                        class="text-[9px] font-bold text-amber-600 border border-amber-200 bg-amber-50 px-1 rounded uppercase">System:
+                                        PROJECTION_UPDATED</span>
+                                    <span class="text-[10px] text-amber-400 font-mono">evt-2026-01-04-def459 •
+                                        14:23:12.001</span>
+                                </div>
+                                <div class="text-amber-700 pl-1 text-[11px]">Workflow surface refreshed task card</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- CARD 2: ASSIGN_OWNER -->
+            <div class="inspector-card fade-in group">
+
+                <div class="card-intent">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex items-center gap-2 cursor-pointer hover:opacity-80"
+                            onclick="toggleCard('card-2')">
+                            <i class="ph ph-caret-down text-slate-400 text-sm transition-transform"
+                                id="icon-card-2"></i>
+                            <span class="badge-action">ACTION: ASSIGN_OWNER</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400 font-mono">
+                            act-2026-01-04-xyz789 • CSV Import • 14:25:33
+                        </div>
+                    </div>
+
+                    <div id="content-card-2">
+                        <div class="pl-6 mb-4">
+                            <div class="text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Field
+                                Bindings</div>
+                            <div class="space-y-1 text-xs font-mono text-slate-600">
+                                <div class="flex gap-2">
+                                    <span class="text-slate-400 w-20 text-right">taskId →</span>
+                                    <span class="font-mono text-slate-800">tsk-456</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <span class="text-slate-400 w-20 text-right">assignee →</span>
+                                    <span class="text-indigo-600">@sarah</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pl-6 flex gap-3">
+                            <button
+                                class="text-[10px] font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 px-3 py-1.5 rounded transition-colors flex items-center gap-1">
+                                <i class="ph ph-x-circle"></i> Retract Action
+                            </button>
+                            <button
+                                class="text-[10px] font-bold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded transition-colors flex items-center gap-1">
+                                <i class="ph ph-pencil-simple"></i> Amend Bindings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-divider"></div>
+
+                <div class="card-events">
+                    <div class="flex items-center gap-2 mb-3 cursor-pointer text-slate-500 hover:text-slate-700">
+                        <i class="ph ph-caret-down text-xs"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Events emitted</span>
+                    </div>
+
+                    <div class="space-y-1">
+                        <div class="event-row">
+                            <div class="text-slate-400 pt-0.5"><i class="ph ph-arrow-elbow-down-right"></i></div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="badge-event">FIELD_VALUE_RECORDED</span>
+                                    <span class="text-[10px] text-slate-400 font-mono">evt-2026-01-04-ghi123 •
+                                        14:25:33.567</span>
+                                </div>
+                                <div class="text-slate-600 pl-1">field: <span
+                                        class="font-mono text-slate-500">assignee</span> → <span
+                                        class="text-indigo-600 font-medium">@sarah</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // --- INTERACTION LOGIC ---
+
+        const toggle = document.getElementById("toggleSystem");
+        toggle.addEventListener("change", function () {
+            const systemRows = document.querySelectorAll('.system-event-row');
+            systemRows.forEach(row => {
+                row.style.display = this.checked ? 'flex' : 'none';
+            });
+        });
+
+        // Initialize Toggle State (Default Off)
+        toggle.checked = false;
+        document.querySelectorAll('.system-event-row').forEach(row => row.style.display = 'none');
+
+        // Collapsing Logic
+        function toggleCard(id) {
+            const content = document.getElementById('content-' + id);
+            const icon = document.getElementById('icon-' + id);
+
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                content.style.display = 'none';
+                icon.style.transform = 'rotate(-90deg)';
+            }
+        }
+
+        function toggleEvents(id) {
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+    </script>
+</body>
+
+</html>

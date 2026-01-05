@@ -151,14 +151,14 @@ export const MentionExtension = Node.create<MentionOptions>({
     return {
       insertMention:
         (attrs) =>
-        ({ chain }) => {
-          return chain()
-            .insertContent({
-              type: this.name,
-              attrs,
-            })
-            .run();
-        },
+          ({ chain }) => {
+            return chain()
+              .insertContent({
+                type: this.name,
+                attrs,
+              })
+              .run();
+          },
     };
   },
 
@@ -207,3 +207,77 @@ export function createMentionExtension(
     },
   });
 }
+
+// ============================================================================
+// CONFIGURED EXTENSIONS FACTORY
+// ============================================================================
+
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
+import type { RichTextEditorConfig } from './EditorConfig';
+
+type SuggestionRenderFn = () => ReturnType<NonNullable<SuggestionOptions['render']>>;
+
+/**
+ * Create TipTap extensions based on editor configuration.
+ * Enables conditional feature inclusion based on config flags.
+ */
+export function createConfiguredExtensions(
+  config: RichTextEditorConfig,
+  suggestionHandlers: {
+    '#'?: SuggestionRenderFn;
+    '@'?: SuggestionRenderFn;
+  }
+) {
+  const extensions = [];
+
+  // StarterKit with conditional features based on config
+  // Note: StarterKit expects `false` to disable, or options object to configure
+  extensions.push(
+    StarterKit.configure({
+      bold: config.styles.bold === false ? false : {},
+      italic: config.styles.italic === false ? false : {},
+      strike: config.styles.strikethrough === false ? false : {},
+      code: config.styles.code === false ? false : {},
+      heading: config.styles.heading === false
+        ? false
+        : typeof config.styles.heading === 'object'
+          ? { levels: config.styles.heading.levels as [1, 2, 3, 4, 5, 6] }
+          : false, // Disable heading by default
+      bulletList: config.styles.bulletList === false ? false : {},
+      orderedList: config.styles.orderedList === false ? false : {},
+      codeBlock: config.styles.codeBlock === false ? false : {},
+      blockquote: config.styles.blockquote === false ? false : {},
+    })
+  );
+
+  // Placeholder extension
+  if (config.placeholder) {
+    extensions.push(
+      Placeholder.configure({
+        placeholder: config.placeholder,
+      })
+    );
+  }
+
+  // Record reference mentions (# trigger)
+  if (config.styles.recordReferences && suggestionHandlers['#']) {
+    extensions.push(
+      createMentionExtension('#', {
+        render: suggestionHandlers['#'],
+      })
+    );
+  }
+
+  // User mentions (@ trigger) - future feature
+  if (config.styles.userMentions && suggestionHandlers['@']) {
+    extensions.push(
+      createMentionExtension('@', {
+        render: suggestionHandlers['@'],
+      })
+    );
+  }
+
+  return extensions;
+}
+

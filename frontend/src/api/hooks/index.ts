@@ -100,7 +100,10 @@ export {
 export {
   useActions,
   useAction,
+  useAllActionsByType,
   useCreateAction,
+  useRetractAction,
+  useAmendAction,
   useActionEvents,
   useContextEvents,
   useEmitEvent,

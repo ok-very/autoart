@@ -51,6 +51,21 @@ export function useAction(actionId: string | null) {
 }
 
 /**
+ * Get all actions of a specific type (across all contexts).
+ * Used by registry view to show instances of an action type.
+ */
+export function useAllActionsByType(actionType: string | null, limit = 100) {
+  return useQuery({
+    queryKey: ['actions', 'byType', actionType],
+    queryFn: () =>
+      api
+        .get<{ actions: Action[] }>(`/actions?type=${encodeURIComponent(actionType!)}&limit=${limit}`)
+        .then((r) => r.actions),
+    enabled: !!actionType,
+  });
+}
+
+/**
  * Create a new action (automatically emits ACTION_DECLARED event)
  */
 export function useCreateAction() {
@@ -65,6 +80,73 @@ export function useCreateAction() {
       queryClient.invalidateQueries({
         queryKey: ['actionViews', variables.contextId],
       });
+    },
+  });
+}
+
+// ============================================================================
+// ACTION MUTATIONS (Retract / Amend)
+// ============================================================================
+
+interface RetractActionInput {
+  actionId: string;
+  reason?: string;
+}
+
+interface RetractActionResult {
+  success: boolean;
+  action: Action;
+  eventId: string;
+}
+
+/**
+ * Retract an action (emits ACTION_RETRACTED event)
+ * The action remains in the database but is marked as retracted.
+ */
+export function useRetractAction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ actionId, reason }: RetractActionInput) =>
+      api.post<RetractActionResult>(`/actions/${actionId}/retract`, { reason }),
+    onSuccess: (result) => {
+      const actionId = result.action.id;
+      queryClient.invalidateQueries({ queryKey: ['action', actionId] });
+      queryClient.invalidateQueries({ queryKey: ['events', 'action', actionId] });
+      queryClient.invalidateQueries({ queryKey: ['actionView', actionId] });
+      queryClient.invalidateQueries({ queryKey: ['actionViews'] });
+      queryClient.invalidateQueries({ queryKey: ['actions'] });
+    },
+  });
+}
+
+interface AmendActionInput {
+  actionId: string;
+  fieldBindings: unknown[];
+  reason?: string;
+}
+
+interface AmendActionResult {
+  success: boolean;
+  action: Action;
+  eventId: string;
+}
+
+/**
+ * Amend an action's field bindings (emits ACTION_AMENDED event)
+ * The original action remains, but interpreters use the latest amendment.
+ */
+export function useAmendAction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ actionId, fieldBindings, reason }: AmendActionInput) =>
+      api.post<AmendActionResult>(`/actions/${actionId}/amend`, { fieldBindings, reason }),
+    onSuccess: (result) => {
+      const actionId = result.action.id;
+      queryClient.invalidateQueries({ queryKey: ['action', actionId] });
+      queryClient.invalidateQueries({ queryKey: ['events', 'action', actionId] });
+      queryClient.invalidateQueries({ queryKey: ['actionView', actionId] });
+      queryClient.invalidateQueries({ queryKey: ['actionViews'] });
+      queryClient.invalidateQueries({ queryKey: ['actions'] });
     },
   });
 }

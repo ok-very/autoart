@@ -46,6 +46,7 @@ interface UIState {
   inspectorWidth: number;
   sidebarCollapsed: boolean;
   inspectorCollapsed: boolean;
+  drawerCollapsed: boolean;
   drawerHeight: number;
 
   // Drawer State
@@ -65,6 +66,7 @@ interface UIState {
 
   toggleSidebar: () => void;
   toggleInspector: () => void;
+  toggleDrawer: () => void;
   setSidebarWidth: (width: number) => void;
   setInspectorWidth: (width: number) => void;
 
@@ -83,6 +85,8 @@ interface UIState {
   setInspectorMode: (mode: string) => void;
   inspectRecord: (recordId: string) => void;
   inspectNode: (nodeId: string) => void;
+  inspectAction: (actionId: string) => void;
+  clearSelection: () => void;
   clearInspection: () => void;
 }
 
@@ -99,6 +103,7 @@ export const useUIStore = create<UIState>()(
       inspectorWidth: 380,
       sidebarCollapsed: false,
       inspectorCollapsed: false,
+      drawerCollapsed: false,
       drawerHeight: 300,
 
       activeDrawer: null,
@@ -112,6 +117,7 @@ export const useUIStore = create<UIState>()(
 
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       toggleInspector: () => set((state) => ({ inspectorCollapsed: !state.inspectorCollapsed })),
+      toggleDrawer: () => set((state) => ({ drawerCollapsed: !state.drawerCollapsed })),
       setSidebarWidth: (width) => set({ sidebarWidth: Math.max(200, Math.min(400, width)) }),
       setInspectorWidth: (width) => set({ inspectorWidth: Math.max(300, Math.min(500, width)) }),
 
@@ -147,6 +153,8 @@ export const useUIStore = create<UIState>()(
       setInspectorMode: (mode) => set({ inspectorTabMode: mode }),
       inspectRecord: (recordId) => set({ selection: { type: 'record', id: recordId }, inspectorCollapsed: false }),
       inspectNode: (nodeId) => set({ selection: { type: 'node', id: nodeId }, inspectorCollapsed: false }),
+      inspectAction: (actionId) => set({ selection: { type: 'action', id: actionId }, inspectorCollapsed: false }),
+      clearSelection: () => set({ selection: null }),
       clearInspection: () => set({ selection: null }),
     }),
     {
@@ -156,6 +164,7 @@ export const useUIStore = create<UIState>()(
         inspectorWidth: state.inspectorWidth,
         sidebarCollapsed: state.sidebarCollapsed,
         inspectorCollapsed: state.inspectorCollapsed,
+        drawerCollapsed: state.drawerCollapsed,
         viewMode: state.viewMode,
         theme: state.theme,
         drawerHeight: state.drawerHeight,

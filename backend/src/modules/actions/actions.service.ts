@@ -186,3 +186,75 @@ export async function getChildActions(
     .execute();
 }
 
+// ==================== ACTION MUTATIONS ====================
+// Actions are immutable, but we can emit events to mark them as retracted or amended.
+// The interpreter will process these events to determine the action's effective status.
+
+export interface RetractActionInput {
+  actionId: string;
+  reason?: string;
+  actorId?: string;
+}
+
+/**
+ * Retract an action.
+ * This emits an ACTION_RETRACTED event - the action itself remains in the database.
+ * The interpreter uses this to filter out retracted actions from views.
+ */
+export async function retractAction(input: RetractActionInput): Promise<{ action: Action; eventId: string }> {
+  const action = await getActionById(input.actionId);
+  if (!action) {
+    throw new Error(`Action not found: ${input.actionId}`);
+  }
+
+  // Emit ACTION_RETRACTED event
+  const event = await eventsService.emitEvent({
+    contextId: action.context_id,
+    contextType: action.context_type,
+    actionId: action.id,
+    type: 'ACTION_RETRACTED',
+    payload: {
+      reason: input.reason || 'Retracted by user',
+      retractedAt: new Date().toISOString(),
+    },
+    actorId: input.actorId,
+  });
+
+  return { action, eventId: event.id };
+}
+
+export interface AmendActionInput {
+  actionId: string;
+  fieldBindings: unknown[];
+  reason?: string;
+  actorId?: string;
+}
+
+/**
+ * Amend an action's field bindings.
+ * This emits an ACTION_AMENDED event with the new bindings.
+ * The interpreter uses the latest amendment to determine effective field values.
+ */
+export async function amendAction(input: AmendActionInput): Promise<{ action: Action; eventId: string }> {
+  const action = await getActionById(input.actionId);
+  if (!action) {
+    throw new Error(`Action not found: ${input.actionId}`);
+  }
+
+  // Emit ACTION_AMENDED event
+  const event = await eventsService.emitEvent({
+    contextId: action.context_id,
+    contextType: action.context_type,
+    actionId: action.id,
+    type: 'ACTION_AMENDED',
+    payload: {
+      previousBindings: action.field_bindings,
+      newBindings: input.fieldBindings,
+      reason: input.reason || 'Amended by user',
+      amendedAt: new Date().toISOString(),
+    },
+    actorId: input.actorId,
+  });
+
+  return { action, eventId: event.id };
+}

@@ -180,7 +180,8 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
                         <RichTextEditor
                             key={item.id}
                             content={description}
-                            taskId={item.id}
+                            contextId={item.id}
+                            contextType="subprocess"
                             onChange={handleDescriptionChange}
                         />
                     </div>

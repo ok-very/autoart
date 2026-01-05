@@ -68,6 +68,15 @@ export function useCompose() {
             queryClient.invalidateQueries({
                 queryKey: ['actions', result.action.contextId, result.action.contextType],
             });
+            // Invalidate actions by type (for registry view)
+            queryClient.invalidateQueries({
+                queryKey: ['actions', 'byType', result.action.type],
+            });
+            // Invalidate all actions queries (broad invalidation)
+            queryClient.invalidateQueries({
+                queryKey: ['actions'],
+                exact: false,
+            });
             // Invalidate events for the context
             queryClient.invalidateQueries({
                 queryKey: ['events', 'context', result.action.contextId],

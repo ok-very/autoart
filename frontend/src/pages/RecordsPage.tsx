@@ -2,22 +2,27 @@ import { useCallback, useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header';
 import { RegistrySidebar } from '../components/records/RegistrySidebar';
 import { UniversalTableView } from '../components/tables/UniversalTableView';
+import { ActionInstancesView } from '../components/tables/ActionInstancesView';
 import { BottomDrawer } from '../components/drawer/BottomDrawer';
 import { ResizeHandle } from '../components/common/ResizeHandle';
 import { useUIStore, isRecordsViewMode } from '../stores/uiStore';
 import { IngestionView, RecordInspector } from '../ui/composites';
+import { ActionInspector } from '../components/inspector/ActionInspector';
 
 type RegistrySection = 'records' | 'actions';
 
 /**
  * Registry page for managing both Record Types and Action Types.
- * 
+ *
  * This is the unified view for the definition registry:
  * - Record Types: Data definitions (Contact, Location, Artwork, etc.)
  * - Action Types: Action recipes (Task, Subtask, Meeting, etc.)
  *
- * Uses the UniversalTableView component for visualization.
- * Layout: Left sidebar (type registry) | Main table (instances) | Right inspector
+ * Conditional rendering based on activeSection:
+ * - records: UniversalTableView + RecordInspector
+ * - actions: ActionInstancesView + ActionInspector
+ *
+ * Layout: Left sidebar (type registry) | Main content | Right inspector
  *
  * View Modes:
  * - list: Standard table view
@@ -57,6 +62,7 @@ export function RegistryPage() {
 
   // Determine which view to show based on view mode
   const isIngestMode = viewMode === 'ingest';
+  const isActionSection = activeSection === 'actions';
 
   return (
     <div className="flex flex-col h-full">
@@ -77,23 +83,34 @@ export function RegistryPage() {
               />
               <ResizeHandle direction="right" onResize={handleSidebarResize} />
 
-              {/* Main Table Area */}
+              {/* Main Content Area - conditional based on activeSection */}
               <div className="flex-1 overflow-hidden">
-                <UniversalTableView
-                  definitionId={selectedDefinitionId}
-                  onDefinitionChange={(id) => setSelectedDefinitionId(id)}
-                  showDefinitionSelector={false}
-                  allowCreate
-                  allowBulkDelete
-                  allowEdit
-                  className="h-full"
-                />
+                {isActionSection ? (
+                  <ActionInstancesView
+                    definitionId={selectedDefinitionId}
+                    className="h-full"
+                  />
+                ) : (
+                  <UniversalTableView
+                    definitionId={selectedDefinitionId}
+                    onDefinitionChange={(id) => setSelectedDefinitionId(id)}
+                    showDefinitionSelector={false}
+                    allowCreate
+                    allowBulkDelete
+                    allowEdit
+                    className="h-full"
+                  />
+                )}
               </div>
 
               <ResizeHandle direction="left" onResize={handleInspectorResize} />
 
-              {/* Right Inspector */}
-              <RecordInspector />
+              {/* Right Inspector - conditional based on activeSection */}
+              {isActionSection ? (
+                <ActionInspector width={inspectorWidth} />
+              ) : (
+                <RecordInspector />
+              )}
             </>
           )}
         </div>
