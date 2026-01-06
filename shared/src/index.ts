@@ -35,7 +35,7 @@ export {
   type RecordsViewMode,
   type FieldsViewMode,
   type ViewMode,
-} from './schemas/enums';
+} from './schemas/enums.js';
 
 // Fields
 export {
@@ -45,7 +45,7 @@ export {
   type FieldDescriptor,
   type FieldCategory,
   type FieldIndex,
-} from './schemas/fields';
+} from './schemas/fields.js';
 
 // Hierarchy
 export {
@@ -62,7 +62,7 @@ export {
   type UpdateNodeInput,
   type MoveNodeInput,
   type CloneNodeInput,
-} from './schemas/hierarchy';
+} from './schemas/hierarchy.js';
 
 // Records & Definitions
 export {
@@ -105,7 +105,7 @@ export {
   type SaveToLibraryInput,
   type ToggleCloneExcludedInput,
   type RecordStat,
-} from './schemas/records';
+} from './schemas/records.js';
 
 // References (Action-based - Foundational Model)
 export {
@@ -136,7 +136,7 @@ export {
   type UpdateReferenceModeInput,
   type UpdateReferenceSnapshotInput,
   type BulkResolveInput,
-} from './schemas/references';
+} from './schemas/references.js';
 
 // Auth
 export {
@@ -150,7 +150,7 @@ export {
   type RegisterInput,
   type AuthResponse,
   type RefreshResponse,
-} from './schemas/auth';
+} from './schemas/auth.js';
 
 // Search
 export {
@@ -159,7 +159,7 @@ export {
   SearchResponseSchema,
   type SearchResult,
   type SearchQueryInput,
-} from './schemas/search';
+} from './schemas/search.js';
 
 // Links
 export {
@@ -169,7 +169,7 @@ export {
   LinksResponseSchema,
   type RecordLink,
   type CreateLinkInput,
-} from './schemas/links';
+} from './schemas/links.js';
 
 // Tasks
 export {
@@ -187,7 +187,7 @@ export {
   type TaskStatus,
   type TaskMetadata,
   type TaskFieldDef,
-} from './schemas/tasks';
+} from './schemas/tasks.js';
 
 // Actions & Events (Foundational Model)
 export {
@@ -260,7 +260,7 @@ export {
   type EventResponse,
   type EventsResponse,
   type ActionViewsResponse,
-} from './schemas/actions';
+} from './schemas/actions.js';
 
 // Composer (Task Builder on Actions + Events)
 export {
@@ -273,7 +273,7 @@ export {
   type ComposerInput,
   type ComposerResponse,
   type ActionTypeConfig,
-} from './schemas/composer';
+} from './schemas/composer.js';
 
 // Projections (Interpretive Views over Actions/Events)
 export {
@@ -285,7 +285,7 @@ export {
   type TimelineProjectionOutput,
   type ProjectionRef,
   type ProjectionSelection,
-} from './projections';
+} from './projections/index.js';
 
 // Domain Events (7 Canonical Families)
 export {
@@ -323,7 +323,7 @@ export {
   type MeetingHeldPayload,
   type DecisionRecordedPayload,
   type ContractExecutedPayload,
-} from './schemas/domain-events';
+} from './schemas/domain-events.js';
 
 // Classification Framework
 export {
@@ -335,4 +335,4 @@ export {
   isInternalWork,
   type ClassificationOutcome,
   type ClassificationResult,
-} from './schemas/classification';
+} from './schemas/classification.js';
