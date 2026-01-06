@@ -8,7 +8,10 @@ import {
     useUpdateRecord,
     useWorkflowSurfaceNodes,
     useStartWork,
+    useStopWork,
     useFinishWork,
+    useBlockWork,
+    useUnblockWork,
     useRecordFieldValue,
 } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
@@ -20,7 +23,6 @@ import { DataTableFlat } from '../../ui/composites/DataTableFlat';
 import { WorkflowSurfaceTable } from '../../ui/composites/WorkflowSurfaceTable';
 import { deriveTaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
 import { ComposerSurface } from '../composer';
-
 
 /**
  * Extract metadata from a node, parsing JSON string if needed
@@ -38,23 +40,41 @@ function getNodeMetadata(node: HierarchyNode): Record<string, unknown> {
 }
 
 /**
- * Collect subprocesses from a project hierarchy
+ * Collect subprocesses under a process.
+ *
+ * Stages are projections now, so the default mapping is:
+ *   process -> subprocess
+ *
+ * However, seed/test data may still include stage nodes, so fall back to:
+ *   process -> stage -> subprocess
+ */
+function collectSubprocessesForProcess(
+    process: HierarchyNode,
+    getChildren: (id: string | null) => HierarchyNode[]
+): HierarchyNode[] {
+    const directSubprocesses = getChildren(process.id).filter((n) => n.type === 'subprocess');
+    if (directSubprocesses.length > 0) return directSubprocesses;
+
+    const stages = getChildren(process.id).filter((n) => n.type === 'stage');
+    const subprocesses: HierarchyNode[] = [];
+    for (const stage of stages) {
+        subprocesses.push(...getChildren(stage.id).filter((n) => n.type === 'subprocess'));
+    }
+    return subprocesses;
+}
+
+/**
+ * Collect subprocesses from a project hierarchy (across all processes).
  */
 function collectSubprocesses(
     project: HierarchyNode,
     getChildren: (id: string | null) => HierarchyNode[]
 ): HierarchyNode[] {
-    // Sort subprocesses via the full hierarchy: process -> stage -> subprocess.
-    // Previously this only considered the first process, which breaks ordering
-    // once a project has multiple processes.
     const processes = getChildren(project.id).filter((n) => n.type === 'process');
     const subprocesses: HierarchyNode[] = [];
 
     for (const process of processes) {
-        const stages = getChildren(process.id).filter((n) => n.type === 'stage');
-        for (const stage of stages) {
-            subprocesses.push(...getChildren(stage.id).filter((n) => n.type === 'subprocess'));
-        }
+        subprocesses.push(...collectSubprocessesForProcess(process, getChildren));
     }
 
     return subprocesses;
@@ -88,13 +108,18 @@ export function ProjectWorkflowView() {
             }
 
             // All other fields go into metadata
-            const currentMeta = typeof node.metadata === 'string'
-                ? JSON.parse(node.metadata || '{}')
-                : (node.metadata || {});
+            const currentMeta = getNodeMetadata(node);
+
+            // Nomenclature: owner -> assignee (keep both keys so old field defs still display)
+            const nextMeta: Record<string, unknown> = { ...currentMeta, [fieldKey]: value };
+            if (fieldKey === 'owner' || fieldKey === 'assignee') {
+                nextMeta.assignee = value;
+                nextMeta.owner = value;
+            }
 
             updateNode.mutate({
                 id: nodeId,
-                metadata: { ...currentMeta, [fieldKey]: value },
+                metadata: nextMeta,
             });
         },
         [getNode, updateNode]
@@ -110,11 +135,17 @@ export function ProjectWorkflowView() {
         // Convert definition fields to HierarchyFieldDef format
         return taskDef.schema_config.fields.map((field): HierarchyFieldDef => {
             // Determine display properties based on field type
-            const isCollapsedField = ['title', 'status', 'owner', 'dueDate'].includes(field.key);
-            const width = field.key === 'title' ? 280 :
-                field.type === 'status' ? 128 :
-                    field.type === 'user' ? 96 :
-                        field.type === 'date' ? 160 : 130;
+            const isCollapsedField = ['title', 'status', 'assignee', 'owner', 'dueDate'].includes(field.key);
+            const width =
+                field.key === 'title'
+                    ? 280
+                    : field.type === 'status'
+                        ? 128
+                        : field.type === 'user'
+                            ? 96
+                            : field.type === 'date'
+                                ? 160
+                                : 130;
 
             return {
                 key: field.key,
@@ -122,11 +153,18 @@ export function ProjectWorkflowView() {
                 type: field.type,
                 options: field.options,
                 statusConfig: field.statusConfig, // Preserve status config from definition
-                renderAs: (field.type === 'status' ? 'status' :
-                    field.type === 'user' ? 'user' :
-                        field.type === 'date' ? 'date' :
-                            field.type === 'tags' ? 'tags' :
-                                field.type === 'textarea' ? 'description' : 'text'),
+                renderAs:
+                    field.type === 'status'
+                        ? 'status'
+                        : field.type === 'user'
+                            ? 'user'
+                            : field.type === 'date'
+                                ? 'date'
+                                : field.type === 'tags'
+                                    ? 'tags'
+                                    : field.type === 'textarea'
+                                        ? 'description'
+                                        : 'text',
                 showInCollapsed: isCollapsedField,
                 showInExpanded: field.key !== 'title', // All except title show in expanded
                 width,
@@ -177,7 +215,7 @@ export function ProjectWorkflowView() {
 
     // Auto-select first process when processes change
     useEffect(() => {
-        if (processes.length > 0 && (!selectedProcessId || !processes.find(p => p.id === selectedProcessId))) {
+        if (processes.length > 0 && (!selectedProcessId || !processes.find((p) => p.id === selectedProcessId))) {
             setSelectedProcessId(processes[0].id);
         }
     }, [processes, selectedProcessId]);
@@ -194,14 +232,11 @@ export function ProjectWorkflowView() {
         }
 
         // Filter to only subprocesses under the selected process
-        const subprocessList: HierarchyNode[] = [];
-        const stages = getChildren(selectedProcessId).filter((n) => n.type === 'stage');
-        for (const stage of stages) {
-            subprocessList.push(...getChildren(stage.id).filter((n) => n.type === 'subprocess'));
-        }
-        return subprocessList;
+        const processNode = getNode(selectedProcessId);
+        if (!processNode) return [];
+        return collectSubprocessesForProcess(processNode, getChildren);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [project, getChildren, storeNodes, processes.length, selectedProcessId]);
+    }, [project, getChildren, storeNodes, processes.length, selectedProcessId, getNode]);
 
     const selectedNodeId = selection?.type === 'node' ? selection.id : null;
     const selectedNode = selectedNodeId ? getNode(selectedNodeId) : null;
@@ -212,7 +247,6 @@ export function ProjectWorkflowView() {
     const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
     const [isComposerOpen, setIsComposerOpen] = useState(false);
 
-
     // Track last focused table for contextual Add button
     // 'tasks' = Task table, or definition ID for record tables
     // Currently used for tracking only - could add visual focus ring later
@@ -222,7 +256,7 @@ export function ProjectWorkflowView() {
     // Determine active subprocess: use local selection, or derive from selected node
     const activeSubprocessId = useMemo(() => {
         // If we have a local selection, use it
-        if (localSubprocessId && subprocesses.find(sp => sp.id === localSubprocessId)) {
+        if (localSubprocessId && subprocesses.find((sp) => sp.id === localSubprocessId)) {
             return localSubprocessId;
         }
         // Otherwise derive from selected node
@@ -238,11 +272,14 @@ export function ProjectWorkflowView() {
     }, [localSubprocessId, selectedNode, subprocesses, getNode]);
 
     // Sync local selection when user clicks a subprocess in the sidebar
-    const handleSubprocessClick = useCallback((subprocessId: string) => {
-        setLocalSubprocessId(subprocessId);
-        setInspectorMode('record');
-        inspectNode(subprocessId);
-    }, [setInspectorMode, inspectNode]);
+    const handleSubprocessClick = useCallback(
+        (subprocessId: string) => {
+            setLocalSubprocessId(subprocessId);
+            setInspectorMode('record');
+            inspectNode(subprocessId);
+        },
+        [setInspectorMode, inspectNode]
+    );
 
     const activeSubprocess = activeSubprocessId ? getNode(activeSubprocessId) : null;
 
@@ -262,19 +299,18 @@ export function ProjectWorkflowView() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSubprocessId, getChildren, storeNodes]);
 
-    // ========== WORKFLOW SURFACE (New Projection-Based System) ==========
-    // Feature flag to toggle between legacy hierarchy-based and new surface-based tables
+    // ========== WORKFLOW SURFACE (Projection-Based System) ==========
     const [useWorkflowSurface, setUseWorkflowSurface] = useState(true);
 
     // Fetch workflow surface nodes for the active subprocess
-    const { data: surfaceNodes = [] } = useWorkflowSurfaceNodes(
-        useWorkflowSurface ? activeSubprocessId : null,
-        'subprocess'
-    );
+    const { data: surfaceNodes = [] } = useWorkflowSurfaceNodes(useWorkflowSurface ? activeSubprocessId : null, 'subprocess');
 
     // Mutations for workflow surface interactions
     const startWork = useStartWork();
+    const stopWork = useStopWork();
     const finishWork = useFinishWork();
+    const blockWork = useBlockWork();
+    const unblockWork = useUnblockWork();
     const recordFieldValue = useRecordFieldValue();
 
     // Handle field changes on surface nodes (emits FIELD_VALUE_RECORDED event)
@@ -287,17 +323,36 @@ export function ProjectWorkflowView() {
 
     // Handle status changes on surface nodes (emits work events)
     const handleSurfaceStatusChange = useCallback(
-        (actionId: string, status: DerivedStatus) => {
-            // Map status to appropriate work event
-            if (status === 'active') {
-                startWork.mutate({ actionId });
-            } else if (status === 'finished') {
-                finishWork.mutate({ actionId });
+        async (actionId: string, status: DerivedStatus) => {
+            const current = surfaceNodes.find((n) => n.actionId === actionId);
+            const prevStatus = (current?.payload.status as DerivedStatus | undefined) ?? 'pending';
+
+            // Leaving blocked should emit an explicit unblock event (keeps event stream semantic)
+            if (prevStatus === 'blocked' && status !== 'blocked') {
+                await unblockWork.mutateAsync({ actionId });
             }
-            // Note: 'blocked' and 'pending' require different events
-            // For now, only active and finished are implemented
+
+            if (status === 'active') {
+                await startWork.mutateAsync({ actionId });
+                return;
+            }
+
+            if (status === 'finished') {
+                await finishWork.mutateAsync({ actionId });
+                return;
+            }
+
+            if (status === 'pending') {
+                await stopWork.mutateAsync({ actionId });
+                return;
+            }
+
+            if (status === 'blocked') {
+                const reason = window.prompt('Why is this blocked?') || undefined;
+                await blockWork.mutateAsync({ actionId, reason });
+            }
         },
-        [startWork, finishWork]
+        [surfaceNodes, unblockWork, startWork, finishWork, stopWork, blockWork]
     );
 
     // Handle row selection on surface nodes
@@ -305,17 +360,20 @@ export function ProjectWorkflowView() {
         (actionId: string) => {
             setFocusedTableId('tasks');
             setInspectorMode('record');
-            // For now, we need to find the corresponding hierarchy node if one exists
-            // This bridges the gap between surface nodes and the inspector
-            // In future, inspector should support viewing Actions directly
+
+            // Bridge surface selection to inspector by locating a matching task node.
+            // Matching strategies are metadata-driven so CSV imports can seed the linkage.
             const matchingTask = tasks.find((task) => {
-                // Try to match by looking up action references or metadata
-                // Match task if its ID equals the action's context or if it has a matching actionId in metadata
-                const taskMeta = typeof task.metadata === 'string'
-                    ? JSON.parse(task.metadata || '{}')
-                    : (task.metadata || {});
-                return taskMeta.actionId === actionId || task.id === actionId;
+                const taskMeta = getNodeMetadata(task);
+                const metaActionId =
+                    (typeof taskMeta.actionId === 'string' && taskMeta.actionId) ||
+                    (typeof taskMeta.action_id === 'string' && taskMeta.action_id) ||
+                    (typeof taskMeta.actionID === 'string' && taskMeta.actionID) ||
+                    '';
+
+                return metaActionId === actionId || task.id === actionId;
             });
+
             if (matchingTask) {
                 inspectNode(matchingTask.id);
             }
@@ -324,9 +382,7 @@ export function ProjectWorkflowView() {
     );
 
     // Fetch records classified under this subprocess (excluding tasks which are nodes)
-    const { data: subprocessRecords = [] } = useRecords(
-        activeSubprocessId ? { classificationNodeId: activeSubprocessId } : undefined
-    );
+    const { data: subprocessRecords = [] } = useRecords(activeSubprocessId ? { classificationNodeId: activeSubprocessId } : undefined);
 
     // Handle inline cell edits for DataRecords
     const handleRecordCellChange = useCallback(
@@ -408,15 +464,16 @@ export function ProjectWorkflowView() {
                                     <span className="truncate" title={selectedProcess?.title || project.title}>
                                         {selectedProcess?.title || project.title}
                                     </span>
-                                    <ChevronDown size={14} className={`shrink-0 transition-transform ${isProcessDropdownOpen ? 'rotate-180' : ''}`} />
+                                    <ChevronDown
+                                        size={14}
+                                        className={`shrink-0 transition-transform ${isProcessDropdownOpen ? 'rotate-180' : ''}`}
+                                    />
                                 </button>
                                 {isProcessDropdownOpen && (
                                     <>
                                         <div className="fixed inset-0 z-10" onClick={() => setIsProcessDropdownOpen(false)} />
                                         <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
-                                            <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase">
-                                                Processes
-                                            </div>
+                                            <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase">Processes</div>
                                             {processes.map((process) => (
                                                 <button
                                                     key={process.id}
@@ -425,8 +482,9 @@ export function ProjectWorkflowView() {
                                                         setLocalSubprocessId(null); // Reset to show first subprocess of new process
                                                         setIsProcessDropdownOpen(false);
                                                     }}
-                                                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-slate-50 ${process.id === selectedProcessId ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
-                                                        }`}
+                                                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-slate-50 ${
+                                                        process.id === selectedProcessId ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
+                                                    }`}
                                                 >
                                                     <span className="truncate block" title={process.title}>
                                                         {process.title}
@@ -495,7 +553,10 @@ export function ProjectWorkflowView() {
                                     <span className="truncate" title={activeSubprocess?.title}>
                                         {activeSubprocess?.title || 'Select a subprocess'}
                                     </span>
-                                    <ChevronDown size={14} className={`shrink-0 transition-transform ${isSubprocessDropdownOpen ? 'rotate-180' : ''}`} />
+                                    <ChevronDown
+                                        size={14}
+                                        className={`shrink-0 transition-transform ${isSubprocessDropdownOpen ? 'rotate-180' : ''}`}
+                                    />
                                 </button>
                                 {isSubprocessDropdownOpen && (
                                     <>
@@ -508,8 +569,9 @@ export function ProjectWorkflowView() {
                                                         handleSubprocessClick(sp.id);
                                                         setIsSubprocessDropdownOpen(false);
                                                     }}
-                                                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-slate-50 ${sp.id === activeSubprocessId ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
-                                                        }`}
+                                                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-slate-50 ${
+                                                        sp.id === activeSubprocessId ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
+                                                    }`}
                                                 >
                                                     <span className="truncate block" title={sp.title}>
                                                         {sp.title}
@@ -564,40 +626,49 @@ export function ProjectWorkflowView() {
                                                     setIsAddDropdownOpen(false);
                                                 }}
                                                 disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
-                                                className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
-                                                    ? 'text-slate-700 hover:bg-slate-50'
-                                                    : 'text-slate-400 cursor-not-allowed'
-                                                    }`}
+                                                className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${
+                                                    selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
+                                                        ? 'text-slate-700 hover:bg-slate-50'
+                                                        : 'text-slate-400 cursor-not-allowed'
+                                                }`}
                                             >
-                                                <span className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold ${selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
-                                                    ? 'bg-teal-100 text-teal-600'
-                                                    : 'bg-slate-100 text-slate-400'
-                                                    }`}>ST</span>
+                                                <span
+                                                    className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold ${
+                                                        selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
+                                                            ? 'bg-teal-100 text-teal-600'
+                                                            : 'bg-slate-100 text-slate-400'
+                                                    }`}
+                                                >
+                                                    ST
+                                                </span>
                                                 Add Subtask
                                             </button>
                                             {/* Divider */}
-                                            {definitions && definitions.filter(d => !d.is_system && d.name !== 'Task').length > 0 && (
+                                            {definitions && definitions.filter((d) => !d.is_system && d.name !== 'Task').length > 0 && (
                                                 <div className="border-t border-slate-100 my-1" />
                                             )}
                                             {/* Record types from definitions */}
-                                            {definitions && definitions.filter(d => !d.is_system && d.name !== 'Task').map(def => (
-                                                <button
-                                                    key={def.id}
-                                                    onClick={() => {
-                                                        openDrawer('create-record', {
-                                                            definitionId: def.id,
-                                                            classificationNodeId: activeSubprocessId
-                                                        });
-                                                        setIsAddDropdownOpen(false);
-                                                    }}
-                                                    className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                                >
-                                                    <span className="w-5 h-5 rounded bg-slate-100 text-slate-600 flex items-center justify-center text-xs">
-                                                        {def.styling?.icon || def.name.charAt(0)}
-                                                    </span>
-                                                    Add {def.name}
-                                                </button>
-                                            ))}
+                                            {definitions &&
+                                                definitions
+                                                    .filter((d) => !d.is_system && d.name !== 'Task')
+                                                    .map((def) => (
+                                                        <button
+                                                            key={def.id}
+                                                            onClick={() => {
+                                                                openDrawer('create-record', {
+                                                                    definitionId: def.id,
+                                                                    classificationNodeId: activeSubprocessId,
+                                                                });
+                                                                setIsAddDropdownOpen(false);
+                                                            }}
+                                                            className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                                        >
+                                                            <span className="w-5 h-5 rounded bg-slate-100 text-slate-600 flex items-center justify-center text-xs">
+                                                                {def.styling?.icon || def.name.charAt(0)}
+                                                            </span>
+                                                            Add {def.name}
+                                                        </button>
+                                                    ))}
                                         </div>
                                     </>
                                 )}
@@ -630,49 +701,47 @@ export function ProjectWorkflowView() {
                     )}
                 </div>
 
-
                 <div className="flex-1 overflow-auto custom-scroll p-4">
                     <div className="min-w-[900px] space-y-4">
-                        {/* Task Table - Toggle between legacy hierarchy-based and new surface-based */}
+                        {/* Task Table - Toggle between hierarchy-based and surface-based */}
                         <div onFocus={() => setFocusedTableId('tasks')} onClick={() => setFocusedTableId('tasks')}>
                             {/* Toggle switch for development/testing */}
                             <div className="flex items-center justify-end gap-2 mb-2 text-xs">
                                 <span className="text-slate-400">View Mode:</span>
                                 <button
                                     onClick={() => setUseWorkflowSurface(false)}
-                                    className={`px-2 py-1 rounded ${!useWorkflowSurface ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'}`}
+                                    className={`px-2 py-1 rounded ${
+                                        !useWorkflowSurface ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'
+                                    }`}
                                 >
                                     Hierarchy
                                 </button>
                                 <button
                                     onClick={() => setUseWorkflowSurface(true)}
-                                    className={`px-2 py-1 rounded ${useWorkflowSurface ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100'}`}
+                                    className={`px-2 py-1 rounded ${
+                                        useWorkflowSurface ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100'
+                                    }`}
                                 >
                                     Surface
                                 </button>
                             </div>
 
                             {useWorkflowSurface ? (
-                                /* New: Workflow Surface Table (projection-based) */
                                 <WorkflowSurfaceTable
                                     nodes={surfaceNodes}
                                     selectedActionId={null} // TODO: Track selected action
                                     onRowSelect={handleSurfaceRowSelect}
                                     onFieldChange={handleSurfaceFieldChange}
                                     onStatusChange={handleSurfaceStatusChange}
-                                    onAddAction={
-                                        activeSubprocessId
-                                            ? () => setIsComposerOpen(true)
-                                            : undefined
-                                    }
+                                    onAddAction={activeSubprocessId ? () => setIsComposerOpen(true) : undefined}
                                     emptyMessage="No actions yet. Use Composer to declare one."
                                 />
                             ) : (
-                                /* Legacy: DataTableHierarchy (hierarchy node-based) */
                                 <DataTableHierarchy
                                     nodes={tasks}
                                     fields={taskFields}
                                     fallbacks={{
+                                        assignee: activeSubprocessLead,
                                         owner: activeSubprocessLead,
                                         dueDate: activeSubprocessDueDate,
                                     }}
@@ -688,7 +757,6 @@ export function ProjectWorkflowView() {
                                             ? () => openDrawer('create-node', { parentId: activeSubprocessId, nodeType: 'task' })
                                             : undefined
                                     }
-                                    // Enable subtask nesting
                                     enableNesting
                                     getChildren={(nodeId) => getChildren(nodeId).filter((n) => n.type === 'subtask')}
                                     onAddSubtask={(parentId) => openDrawer('create-node', { parentId, nodeType: 'subtask' })}
@@ -702,11 +770,7 @@ export function ProjectWorkflowView() {
 
                         {/* Floating Record Tables - Independent tables for each record definition */}
                         {recordsByDefinition.map(({ definition, records }) => (
-                            <div
-                                key={definition.id}
-                                onFocus={() => setFocusedTableId(definition.id)}
-                                onClick={() => setFocusedTableId(definition.id)}
-                            >
+                            <div key={definition.id} onFocus={() => setFocusedTableId(definition.id)} onClick={() => setFocusedTableId(definition.id)}>
                                 <DataTableFlat
                                     definition={definition}
                                     records={records}
@@ -719,10 +783,11 @@ export function ProjectWorkflowView() {
                                     onCellChange={handleRecordCellChange}
                                     onAddRecord={
                                         activeSubprocessId
-                                            ? () => openDrawer('create-record', {
-                                                definitionId: definition.id,
-                                                classificationNodeId: activeSubprocessId
-                                            })
+                                            ? () =>
+                                                openDrawer('create-record', {
+                                                    definitionId: definition.id,
+                                                    classificationNodeId: activeSubprocessId,
+                                                })
                                             : undefined
                                     }
                                     compact
@@ -732,7 +797,7 @@ export function ProjectWorkflowView() {
                         ))}
                     </div>
                 </div>
-            </main >
-        </div >
+            </main>
+        </div>
     );
 }
