@@ -26,7 +26,8 @@ import type { ContextType } from '@autoart/shared';
 const PAGE_SIZE = 50;
 
 /**
- * Collect all subprocesses from a project
+ * Collect all subprocesses from a project.
+ * Handles both stage-based and stage-less hierarchy structures.
  */
 function collectSubprocesses(
   project: HierarchyNode,
@@ -36,10 +37,13 @@ function collectSubprocesses(
   const subprocesses: HierarchyNode[] = [];
 
   for (const process of processes) {
+    // Check for subprocesses under stages (legacy/stage-based structure)
     const stages = getChildren(process.id).filter((n) => n.type === 'stage');
     for (const stage of stages) {
       subprocesses.push(...getChildren(stage.id).filter((n) => n.type === 'subprocess'));
     }
+    // Also check direct subprocess children (stage-less structure)
+    subprocesses.push(...getChildren(process.id).filter((n) => n.type === 'subprocess'));
   }
 
   return subprocesses;
@@ -350,7 +354,7 @@ export function ProjectLogSurface() {
               {!hasMore && events.length > 0 && (
                 <div className="flex items-center justify-center gap-2 text-xs text-slate-300 pt-6">
                   <div className="h-px w-10 bg-slate-200" />
-                  <span>End of History</span>
+                  <span>End of log</span>
                   <div className="h-px w-10 bg-slate-200" />
                 </div>
               )}

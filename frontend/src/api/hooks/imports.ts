@@ -14,7 +14,7 @@ import { api } from '../client';
 export interface ImportSession {
     id: string;
     parser_name: string;
-    status: 'pending' | 'planned' | 'executing' | 'completed' | 'failed';
+    status: 'pending' | 'planned' | 'needs_review' | 'executing' | 'completed' | 'failed';
     created_at: string;
 }
 
@@ -40,6 +40,20 @@ export interface ImportPlanItem {
     }>;
 }
 
+export interface ItemClassification {
+    itemTempId: string;
+    outcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'AMBIGUOUS' | 'UNCLASSIFIED';
+    confidence: 'high' | 'medium' | 'low';
+    rationale: string;
+    emittedEvents?: Array<{ type: string; payload: unknown }>;
+    candidates?: string[];
+    resolution?: {
+        resolvedOutcome: string;
+        resolvedFactKind?: string;
+        resolvedPayload?: Record<string, unknown>;
+    };
+}
+
 export interface ImportPlan {
     sessionId: string;
     containers: ImportPlanContainer[];
@@ -49,6 +63,7 @@ export interface ImportPlan {
         message: string;
         recordTempId?: string;
     }>;
+    classifications: ItemClassification[];
 }
 
 export interface ImportExecutionResult {

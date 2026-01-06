@@ -113,6 +113,7 @@ export function SessionConfigPanel({
                         fieldRecordings: [],
                     })),
                 validationIssues: [],
+                classifications: [], // Empty for mock data
             };
 
             onSessionCreated(mockSession, mockPlan);

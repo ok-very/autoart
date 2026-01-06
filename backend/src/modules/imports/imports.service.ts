@@ -15,10 +15,12 @@
 import { db } from '../../db/client.js';
 import { MondayCSVParser } from './parsers/monday-csv-parser.js';
 import { GenericCSVParser } from './parsers/generic-csv-parser.js';
-import type { ImportPlan, ImportPlanContainer, ImportPlanItem } from './types.js';
+import type { ImportPlan, ImportPlanContainer, ImportPlanItem, ItemClassification } from './types.js';
+import { hasUnresolvedClassifications, countUnresolved } from './types.js';
 import { interpretCsvRow, mapStatusToWorkEvent } from '../interpreter/interpreter.service.js';
 import { ensureFactKindDefinition } from '../records/fact-kinds.service.js';
 import { emitEvent } from '../events/events.service.js';
+import { isInternalWork, type ClassificationOutcome } from '@autoart/shared';
 
 // ============================================================================
 // PARSER REGISTRY
@@ -73,7 +75,7 @@ export async function getSession(id: string) {
 }
 
 export async function listSessions(params: {
-    status?: 'pending' | 'planned' | 'executing' | 'completed' | 'failed';
+    status?: 'pending' | 'planned' | 'needs_review' | 'executing' | 'completed' | 'failed';
     limit?: number;
 }) {
     let query = db
@@ -108,11 +110,15 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
     // Parse raw data into plan
     const { containers, items, validationIssues } = parser.parse(session.raw_data, config);
 
+    // Generate classifications for each item
+    const classifications = generateClassifications(items);
+
     const planData: ImportPlan = {
         sessionId,
         containers,
         items,
         validationIssues,
+        classifications,
     };
 
     // Persist plan
@@ -125,14 +131,85 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
         })
         .execute();
 
-    // Update session status
+    // Determine session status based on classifications
+    const hasUnresolved = hasUnresolvedClassifications(planData);
+    const newStatus = hasUnresolved ? 'needs_review' : 'planned';
+
     await db
         .updateTable('import_sessions')
-        .set({ status: 'planned', updated_at: new Date() })
+        .set({ status: newStatus, updated_at: new Date() })
         .where('id', '=', sessionId)
         .execute();
 
     return planData;
+}
+
+// ============================================================================
+// CLASSIFICATION GENERATION
+// ============================================================================
+
+/**
+ * Generate classifications for all items in the plan.
+ * Uses mapping rules to determine factKind and outcome.
+ */
+function generateClassifications(items: ImportPlanItem[]): ItemClassification[] {
+    return items.map((item) => {
+        const text = item.title;
+        const statusValue = (item.metadata as { status?: string })?.status;
+        const targetDate = (item.metadata as { targetDate?: string })?.targetDate;
+        const stageName = (item.metadata as { 'import.stage_name'?: string })?.['import.stage_name'];
+
+        // Check for internal work patterns first
+        if (isInternalWork(text)) {
+            return {
+                itemTempId: item.tempId,
+                outcome: 'INTERNAL_WORK' as ClassificationOutcome,
+                confidence: 'high' as const,
+                rationale: 'Matches internal work pattern',
+            };
+        }
+
+        // Run mapping rules
+        const factEvents = interpretCsvRow({
+            text,
+            status: statusValue,
+            targetDate: targetDate,
+            stageName: stageName ?? undefined,
+        });
+
+        if (factEvents.length > 0) {
+            // Rules matched - FACT_EMITTED
+            return {
+                itemTempId: item.tempId,
+                outcome: 'FACT_EMITTED' as ClassificationOutcome,
+                confidence: (factEvents[0].payload.confidence as 'low' | 'medium' | 'high') || 'medium',
+                rationale: `Matched rule for ${factEvents[0].payload.factKind}`,
+                emittedEvents: factEvents.map(fe => ({
+                    type: 'FACT_RECORDED',
+                    payload: fe.payload,
+                })),
+            };
+        }
+
+        // Check if status alone implies derived state
+        const workEventType = mapStatusToWorkEvent(statusValue);
+        if (workEventType) {
+            return {
+                itemTempId: item.tempId,
+                outcome: 'DERIVED_STATE' as ClassificationOutcome,
+                confidence: 'medium' as const,
+                rationale: `Status "${statusValue}" maps to ${workEventType}`,
+            };
+        }
+
+        // No rules matched - UNCLASSIFIED
+        return {
+            itemTempId: item.tempId,
+            outcome: 'UNCLASSIFIED' as ClassificationOutcome,
+            confidence: 'low' as const,
+            rationale: 'No mapping rules matched',
+        };
+    });
 }
 
 export async function getLatestPlan(sessionId: string): Promise<ImportPlan | null> {
@@ -153,6 +230,63 @@ export async function getLatestPlan(sessionId: string): Promise<ImportPlan | nul
 }
 
 // ============================================================================
+// RESOLUTION API
+// ============================================================================
+
+export interface Resolution {
+    itemTempId: string;
+    resolvedOutcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'SKIP';
+    resolvedFactKind?: string;
+    resolvedPayload?: Record<string, unknown>;
+}
+
+/**
+ * Save user resolutions for classifications.
+ * Updates the plan and recalculates session status.
+ */
+export async function saveResolutions(
+    sessionId: string,
+    resolutions: Resolution[]
+): Promise<ImportPlan> {
+    const session = await getSession(sessionId);
+    if (!session) throw new Error('Session not found');
+
+    const plan = await getLatestPlan(sessionId);
+    if (!plan) throw new Error('No plan found');
+
+    // Apply resolutions to classifications
+    for (const res of resolutions) {
+        const classification = plan.classifications.find((c: ItemClassification) => c.itemTempId === res.itemTempId);
+        if (classification) {
+            classification.resolution = {
+                resolvedOutcome: res.resolvedOutcome as any,
+                resolvedFactKind: res.resolvedFactKind,
+                resolvedPayload: res.resolvedPayload,
+            };
+        }
+    }
+
+    // Update the plan in database
+    await db
+        .updateTable('import_plans' as any)
+        .set({ plan_data: JSON.stringify(plan) })
+        .where('session_id', '=', sessionId)
+        .execute();
+
+    // Recalculate session status
+    const hasUnresolved = hasUnresolvedClassifications(plan);
+    const newStatus = hasUnresolved ? 'needs_review' : 'planned';
+
+    await db
+        .updateTable('import_sessions')
+        .set({ status: newStatus, updated_at: new Date() })
+        .where('id', '=', sessionId)
+        .execute();
+
+    return plan;
+}
+
+// ============================================================================
 // IMPORT EXECUTION
 // ============================================================================
 
@@ -162,6 +296,23 @@ export async function executeImport(sessionId: string, userId?: string) {
 
     const plan = await getLatestPlan(sessionId);
     if (!plan) throw new Error('No plan found');
+
+    // Gate: block execution if unresolved classifications exist
+    if (hasUnresolvedClassifications(plan)) {
+        const { ambiguous, unclassified } = countUnresolved(plan);
+        await db
+            .updateTable('import_sessions')
+            .set({ status: 'needs_review', updated_at: new Date() })
+            .where('id', '=', sessionId)
+            .execute();
+        return {
+            blocked: true,
+            unresolvedCount: ambiguous + unclassified,
+            ambiguous,
+            unclassified,
+            message: 'Import blocked: resolve ambiguous/unclassified items first',
+        };
+    }
 
     // Get latest plan row for the plan_id
     const planRow = await db

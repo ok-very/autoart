@@ -49,7 +49,7 @@ export const cloneNodeSchema = z.object({
     metadata: z.record(z.unknown()).optional(),
   }).optional(),
   // Clone options for projects
-  depth: z.enum(['all', 'process', 'subprocess']).optional(), // Removed 'stage' depth option
+  depth: z.enum(['all', 'process', 'stage', 'subprocess']).optional(), // Controls how deep to clone
   includeTemplates: z.boolean().optional(), // Clone definition templates
   includeRecords: z.boolean().optional(), // Clone associated records
 });

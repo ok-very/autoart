@@ -2,14 +2,14 @@
  * ProjectLogEventRow
  *
  * Renders a single event in the project log timeline.
- * Based on the visual design from docs/demo-execution-log.html.
+ * Implements narrative-first rendering for FACT_RECORDED events.
  *
  * Features:
  * - Timeline dot (major events have icon, minor events have colored dot)
- * - Event label + summary text
+ * - FACT_RECORDED: narrative as primary text (not truncated)
+ * - Other events: label + summary text
  * - Relative timestamp
  * - Optional expandable payload details
- * - Connecting timeline line
  */
 
 import { useState } from 'react';
@@ -69,6 +69,9 @@ export function ProjectLogEventRow({
   const summary = formatter.summarize(event.payload);
   const hasPayload = Object.keys(event.payload).length > 0;
 
+  // Special rendering for FACT_RECORDED: narrative as primary text
+  const isFactRecorded = event.type === 'FACT_RECORDED';
+
   return (
     <div className="relative pl-8 pb-4">
       {/* Timeline connector line */}
@@ -104,18 +107,31 @@ export function ProjectLogEventRow({
 
       {/* Event content */}
       <div className="min-w-0">
-        {/* Header row: label + timestamp */}
+        {/* Header row: label/narrative + timestamp */}
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className={clsx('text-xs', formatter.labelClass)}>
-              {formatter.label}
-            </span>
-            {summary && (
-              <span className="text-xs text-slate-500 truncate">
+          {isFactRecorded && summary ? (
+            // FACT_RECORDED: narrative as primary text (not truncated, allow wrapping)
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="text-sm text-slate-700">
                 {summary}
               </span>
-            )}
-          </div>
+              <span className="text-[10px] text-slate-400 uppercase tracking-wide">
+                Fact
+              </span>
+            </div>
+          ) : (
+            // Other events: label + summary
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={clsx('text-xs', formatter.labelClass)}>
+                {formatter.label}
+              </span>
+              {summary && (
+                <span className="text-xs text-slate-500 truncate">
+                  {summary}
+                </span>
+              )}
+            </div>
+          )}
           <span className="text-xs font-mono text-slate-400 whitespace-nowrap">
             {formatRelativeTime(event.occurredAt instanceof Date ? event.occurredAt.toISOString() : String(event.occurredAt))}
           </span>

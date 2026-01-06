@@ -2,7 +2,52 @@
  * Import Types
  *
  * Shared types for the imports module.
+ * Includes classification support for two-phase import gate.
  */
+
+import type { ClassificationOutcome } from '@autoart/shared';
+
+// ============================================================================
+// CLASSIFICATION TYPES
+// ============================================================================
+
+/**
+ * Classification result for a single import item.
+ * Stored in ImportPlan for gating execution.
+ */
+export interface ItemClassification {
+    /** Reference to the item being classified */
+    itemTempId: string;
+
+    /** Classification outcome from mapping rules */
+    outcome: ClassificationOutcome;
+
+    /** Confidence level of the classification */
+    confidence: 'high' | 'medium' | 'low';
+
+    /** Human-readable explanation for the classification */
+    rationale: string;
+
+    /** Events to emit for FACT_EMITTED outcomes */
+    emittedEvents?: Array<{
+        type: string;
+        payload: Record<string, unknown>;
+    }>;
+
+    /** Candidate fact kinds for AMBIGUOUS outcomes */
+    candidates?: string[];
+
+    /** User resolution (set via resolution API) */
+    resolution?: {
+        resolvedOutcome: ClassificationOutcome;
+        resolvedFactKind?: string;
+        resolvedPayload?: Record<string, unknown>;
+    };
+}
+
+// ============================================================================
+// IMPORT PLAN TYPES
+// ============================================================================
 
 export interface ImportPlanContainer {
     tempId: string;
@@ -35,6 +80,8 @@ export interface ImportPlan {
         message: string;
         recordTempId?: string;
     }>;
+    /** Classification results for each item (gating execution) */
+    classifications: ItemClassification[];
 }
 
 export interface ParseResult {
@@ -49,3 +96,40 @@ export interface ParseResult {
 
 export type FieldRecording = { fieldName: string; value: unknown };
 
+// ============================================================================
+// IMPORT SESSION STATUS
+// ============================================================================
+
+export type ImportSessionStatus =
+    | 'pending'      // Session created, no plan yet
+    | 'planned'      // Plan generated, ready to execute
+    | 'needs_review' // Has AMBIGUOUS/UNCLASSIFIED items
+    | 'executing'    // Execution in progress
+    | 'completed'    // Successfully completed
+    | 'failed';      // Execution failed
+
+/**
+ * Check if a plan has unresolved classifications.
+ */
+export function hasUnresolvedClassifications(plan: ImportPlan): boolean {
+    return plan.classifications.some(c =>
+        (c.outcome === 'AMBIGUOUS' || c.outcome === 'UNCLASSIFIED') &&
+        !c.resolution
+    );
+}
+
+/**
+ * Count unresolved classifications by outcome.
+ */
+export function countUnresolved(plan: ImportPlan): { ambiguous: number; unclassified: number } {
+    let ambiguous = 0;
+    let unclassified = 0;
+
+    for (const c of plan.classifications) {
+        if (c.resolution) continue;
+        if (c.outcome === 'AMBIGUOUS') ambiguous++;
+        if (c.outcome === 'UNCLASSIFIED') unclassified++;
+    }
+
+    return { ambiguous, unclassified };
+}

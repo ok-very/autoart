@@ -29,6 +29,11 @@ export interface CreateActionInput {
  * Automatically emits an ACTION_DECLARED event.
  */
 export async function createAction(input: CreateActionInput): Promise<Action> {
+  // Guard: Stage context is deprecated
+  if (input.contextType === 'stage') {
+    throw new Error('Stage context is deprecated; use subprocess context with stage metadata');
+  }
+
   const newAction: NewAction = {
     context_id: input.contextId,
     context_type: input.contextType,

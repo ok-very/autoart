@@ -32,6 +32,11 @@ export interface CreateEventInput {
  * to ensure read-after-write consistency for UI consumers.
  */
 export async function emitEvent(input: CreateEventInput): Promise<Event> {
+  // Guard: Stage context is deprecated
+  if (input.contextType === 'stage') {
+    throw new Error('Stage context is deprecated; use subprocess context with stage metadata');
+  }
+
   const event = await db
     .insertInto('events')
     .values({

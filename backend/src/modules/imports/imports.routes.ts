@@ -125,12 +125,44 @@ export async function importsRoutes(app: FastifyInstance) {
      */
     app.get('/sessions', async (request, reply) => {
         const query = request.query as { status?: string; limit?: string };
-        const status = query.status as 'pending' | 'planned' | 'executing' | 'completed' | 'failed' | undefined;
+        const status = query.status as 'pending' | 'planned' | 'needs_review' | 'executing' | 'completed' | 'failed' | undefined;
         const limit = query.limit ? parseInt(query.limit, 10) : 20;
 
         const sessions = await importsService.listSessions({ status, limit });
         return reply.send({ sessions });
     });
+
+    /**
+     * Save resolutions for classifications
+     * Allows user to resolve AMBIGUOUS/UNCLASSIFIED items before execution
+     */
+    app.patch('/sessions/:id/resolutions', async (request, reply) => {
+        const { id } = SessionIdParamSchema.parse(request.params);
+        const body = ResolutionBodySchema.parse(request.body);
+
+        try {
+            const plan = await importsService.saveResolutions(id, body.resolutions);
+            return reply.send(plan);
+        } catch (err) {
+            if ((err as Error).message === 'Session not found') {
+                return reply.status(404).send({ error: 'Session not found' });
+            }
+            if ((err as Error).message === 'No plan found') {
+                return reply.status(400).send({ error: 'Generate a plan first' });
+            }
+            throw err;
+        }
+    });
 }
+
+// Resolution schema
+const ResolutionBodySchema = z.object({
+    resolutions: z.array(z.object({
+        itemTempId: z.string(),
+        resolvedOutcome: z.enum(['FACT_EMITTED', 'DERIVED_STATE', 'INTERNAL_WORK', 'SKIP']),
+        resolvedFactKind: z.string().optional(),
+        resolvedPayload: z.record(z.unknown()).optional(),
+    })),
+});
 
 export default importsRoutes;
