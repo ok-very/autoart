@@ -294,6 +294,7 @@ export {
   FactRecordedPayloadSchema,
   FactPayloadSchemas,
   validateFactPayload,
+  renderFact,
   // Communication
   InformationSentPayloadSchema,
   // Artifacts

@@ -26,12 +26,15 @@ import {
   RefreshCw,
   Bug,
   HelpCircle,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
+import { renderFact, type BaseFactPayload } from '@autoart/shared';
 
 export type EventCategory =
   | 'workflow'
   | 'field'
+  | 'fact'
   | 'assignment'
   | 'reference'
   | 'dependency'
@@ -97,7 +100,7 @@ export const eventFormatters: Record<string, EventFormatter> = {
   },
 
   WORK_FINISHED: {
-    label: 'Completed',
+    label: 'Work Finished',
     category: 'workflow',
     icon: CheckCircle,
     dotBgClass: 'bg-emerald-100',
@@ -137,7 +140,7 @@ export const eventFormatters: Record<string, EventFormatter> = {
   // ─────────────────────────────────────────────────────────────
 
   FIELD_VALUE_RECORDED: {
-    label: 'Field Updated',
+    label: 'Field Value Recorded',
     category: 'field',
     icon: PenLine,
     dotBgClass: 'bg-blue-400',
@@ -153,6 +156,29 @@ export const eventFormatters: Record<string, EventFormatter> = {
         return `${field} = "${truncated}"`;
       }
       return field ? `${field} updated` : null;
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Fact Events (Domain facts via FACT_RECORDED)
+  // ─────────────────────────────────────────────────────────────
+
+  FACT_RECORDED: {
+    label: 'Fact Recorded',
+    category: 'fact',
+    icon: Sparkles,
+    dotBgClass: 'bg-amber-100',
+    dotTextClass: 'text-amber-600',
+    labelClass: 'text-amber-700',
+    isMajor: true,
+    summarize: (payload) => {
+      // Use shared renderFact for deterministic narrative
+      try {
+        return renderFact(payload as BaseFactPayload);
+      } catch {
+        const factKind = payload.factKind as string | undefined;
+        return factKind ? `${factKind.replace(/_/g, ' ').toLowerCase()}` : null;
+      }
     },
   },
 
@@ -344,6 +370,7 @@ export function getEventFormatter(eventType: string): EventFormatter {
  */
 export const EVENT_CATEGORIES: { value: EventCategory; label: string }[] = [
   { value: 'workflow', label: 'Workflow' },
+  { value: 'fact', label: 'Facts' },
   { value: 'field', label: 'Fields' },
   { value: 'assignment', label: 'Assignments' },
   { value: 'dependency', label: 'Dependencies' },

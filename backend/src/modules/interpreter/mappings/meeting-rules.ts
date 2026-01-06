@@ -1,25 +1,21 @@
 /**
  * Meeting Mapping Rules
  *
- * Rules for interpreting CSV rows related to meetings and coordination.
- * Based on patterns observed in the Avisina CSV test data.
+ * Rules for interpreting CSV rows related to meetings.
+ * Emits only canonical fact families: MEETING_SCHEDULED, MEETING_HELD
  */
 
 import type { MappingRule, MappingContext, MappingOutput } from './types.js';
 import { extractDateFromContext } from './types.js';
 
-// Inline fact kind constants to avoid shared module dependency during build
-const MEETING_HELD = 'MEETING_HELD';
+// Canonical fact kinds
 const MEETING_SCHEDULED = 'MEETING_SCHEDULED';
-const AGENDA_PREPARED = 'AGENDA_PREPARED';
-const MATERIALS_SENT = 'MATERIALS_SENT';
-const REMINDER_SENT = 'REMINDER_SENT';
-const FOLLOWED_UP = 'FOLLOWED_UP';
+const MEETING_HELD = 'MEETING_HELD';
 
 export const meetingMappingRules: MappingRule[] = [
     {
         id: 'meeting-held',
-        description: 'Matches meeting dates and meeting held events',
+        description: 'Matches meeting held/occurred events',
         pattern: /meeting\s*(date|held|occurred|completed)/i,
         emits: (ctx: MappingContext): MappingOutput[] => [{
             factKind: MEETING_HELD,
@@ -32,8 +28,8 @@ export const meetingMappingRules: MappingRule[] = [
     },
     {
         id: 'meeting-scheduled',
-        description: 'Matches meeting scheduling and invites',
-        pattern: /(schedule|confirm|coordinate)\s*(meeting|selection\s*panel|sp\d)/i,
+        description: 'Matches meeting scheduling/coordination',
+        pattern: /(schedule|confirm|coordinate)\s*(meeting|selection\s*panel|sp\d|kick-?off)/i,
         emits: (ctx: MappingContext): MappingOutput[] => [{
             factKind: MEETING_SCHEDULED,
             payload: {
@@ -41,94 +37,30 @@ export const meetingMappingRules: MappingRule[] = [
             },
             confidence: 'medium',
         }],
-        priority: 5,
+        priority: 8,
     },
     {
-        id: 'agenda-prepared',
-        description: 'Matches agenda creation',
-        pattern: /(create|prepare|draft)\s*(meeting\s*)?agenda/i,
+        id: 'kickoff-meeting',
+        description: 'Matches project kickoff meetings',
+        pattern: /(project\s*)?(kickoff|kick-off)\s*(meeting)?/i,
         emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: AGENDA_PREPARED,
+            factKind: MEETING_HELD,
             payload: {},
-            confidence: 'high',
+            confidence: 'medium',
         }],
-        priority: 5,
+        priority: 7,
     },
     {
-        id: 'materials-sent',
-        description: 'Matches sending materials or presentations',
-        pattern: /(submit|send)\s*(artist\s*)?(presentations?|materials?|longlist|shortlist)/i,
+        id: 'city-meeting',
+        description: 'Matches city/PAC presentations as meetings',
+        pattern: /(city\s*presentation|PAC\s*meeting|public\s*art\s*committee)/i,
         emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: MATERIALS_SENT,
+            factKind: MEETING_HELD,
             payload: {
-                materials: ctx.text.includes('presentation') ? ['presentations'] : undefined,
+                participants: ['city'],
             },
             confidence: 'medium',
         }],
-        priority: 5,
-    },
-    {
-        id: 'reminder-sent',
-        description: 'Matches reminder communications',
-        pattern: /(send|group)\s*reminder/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: REMINDER_SENT,
-            payload: {},
-            confidence: 'high',
-        }],
-        priority: 5,
-    },
-    {
-        id: 'follow-up',
-        description: 'Matches follow-up communications',
-        pattern: /follow[\s-]?up\s*(email|meeting|call)?/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: FOLLOWED_UP,
-            payload: {
-                channel: ctx.text.toLowerCase().includes('email') ? 'email' : undefined,
-            },
-            confidence: 'medium',
-        }],
-        priority: 5,
-    },
-    {
-        id: 'meeting-availability',
-        description: 'Matches availability requests (part of scheduling)',
-        pattern: /request\s*(meeting\s*)?availability/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: MEETING_SCHEDULED,
-            payload: {
-                notes: 'Availability requested',
-            },
-            confidence: 'low',
-        }],
-        priority: 3,
-    },
-    {
-        id: 'meeting-invite',
-        description: 'Matches meeting invitations',
-        pattern: /(send|send\s*out)\s*(meeting\s*)?invite/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: MEETING_SCHEDULED,
-            payload: {
-                notes: 'Invite sent',
-            },
-            confidence: 'medium',
-        }],
-        priority: 4,
-    },
-    {
-        id: 'meeting-notes',
-        description: 'Matches meeting notes distribution',
-        pattern: /send\s*(out\s*)?(meeting\s*)?notes/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: FOLLOWED_UP,
-            payload: {
-                channel: 'email',
-                notes: 'Meeting notes sent',
-            },
-            confidence: 'medium',
-        }],
-        priority: 4,
+        priority: 6,
     },
 ];

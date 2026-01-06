@@ -251,3 +251,114 @@ export function validateFactPayload(payload: unknown): boolean {
     }
     return true;
 }
+
+// ============================================================================
+// NARRATIVE RENDERING
+// ============================================================================
+
+/**
+ * Render a fact payload as a human-readable narrative line.
+ * Used by the Execution Log to display FACT_RECORDED events.
+ *
+ * Examples:
+ *   INFORMATION_SENT → "Information sent to Developer, Selection Panel"
+ *   DOCUMENT_PREPARED → "Agenda prepared"
+ *   MEETING_HELD → "Meeting held"
+ *   DECISION_RECORDED → "Decision recorded: Artist selected"
+ */
+export function renderFact(payload: BaseFactPayload): string {
+    const { factKind, ...rest } = payload;
+
+    switch (factKind) {
+        // Communication
+        case KnownFactKind.INFORMATION_SENT: {
+            const p = rest as { subject?: string; audiences?: string[]; artifacts?: string[] };
+            const subject = p.subject || 'Information';
+            const audiences = p.audiences?.join(', ') || '';
+            return audiences ? `${subject} sent to ${audiences}` : `${subject} sent`;
+        }
+
+        // Artifacts
+        case KnownFactKind.DOCUMENT_PREPARED: {
+            const p = rest as { documentType?: string };
+            const docType = formatDocumentType(p.documentType);
+            return `${docType} prepared`;
+        }
+        case KnownFactKind.DOCUMENT_SUBMITTED: {
+            const p = rest as { documentType?: string; submittedTo?: string };
+            const docType = formatDocumentType(p.documentType);
+            return p.submittedTo
+                ? `${docType} submitted to ${p.submittedTo}`
+                : `${docType} submitted`;
+        }
+
+        // Meetings
+        case KnownFactKind.MEETING_SCHEDULED: {
+            const p = rest as { participants?: string[] };
+            const who = p.participants?.length ? ` with ${p.participants.join(', ')}` : '';
+            return `Meeting scheduled${who}`;
+        }
+        case KnownFactKind.MEETING_HELD: {
+            const p = rest as { participants?: string[] };
+            const who = p.participants?.length ? ` with ${p.participants.join(', ')}` : '';
+            return `Meeting held${who}`;
+        }
+        case KnownFactKind.MEETING_CANCELLED:
+            return 'Meeting cancelled';
+
+        // Decisions
+        case KnownFactKind.DECISION_RECORDED: {
+            const p = rest as { decisionType?: string; subject?: string };
+            const type = formatDecisionType(p.decisionType);
+            return p.subject ? `${type}: ${p.subject}` : type;
+        }
+
+        // Financial
+        case KnownFactKind.INVOICE_PREPARED: {
+            const p = rest as { counterparty?: string };
+            return p.counterparty ? `Invoice prepared for ${p.counterparty}` : 'Invoice prepared';
+        }
+        case KnownFactKind.PAYMENT_RECORDED: {
+            const p = rest as { counterparty?: string };
+            return p.counterparty ? `Payment recorded from ${p.counterparty}` : 'Payment recorded';
+        }
+
+        // Contracts
+        case KnownFactKind.CONTRACT_EXECUTED: {
+            const p = rest as { parties?: string[]; contractType?: string };
+            const type = p.contractType ? ` (${p.contractType})` : '';
+            return `Contract executed${type}`;
+        }
+
+        // Process
+        case KnownFactKind.PROCESS_INITIATED: {
+            const p = rest as { processName?: string };
+            return p.processName ? `${p.processName} initiated` : 'Process initiated';
+        }
+        case KnownFactKind.PROCESS_COMPLETED: {
+            const p = rest as { processName?: string };
+            return p.processName ? `${p.processName} completed` : 'Process completed';
+        }
+
+        // Unknown fact kind
+        default:
+            return `Fact recorded: ${factKind}`;
+    }
+}
+
+/**
+ * Format document type for display (e.g., "agenda" → "Agenda")
+ */
+function formatDocumentType(type?: string): string {
+    if (!type) return 'Document';
+    return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase().replace(/_/g, ' ');
+}
+
+/**
+ * Format decision type for display
+ */
+function formatDecisionType(type?: string): string {
+    if (!type) return 'Decision recorded';
+    const formatted = type.replace(/_/g, ' ').toLowerCase();
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
