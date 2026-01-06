@@ -9,7 +9,7 @@
  * Milestones are now captured as DECISION_RECORDED.
  */
 
-import type { MappingRule, MappingContext, MappingOutput } from './types.js';
+import type { MappingRule, MappingContext, InterpretationOutput } from './types.js';
 
 // Canonical fact kinds
 const PROCESS_INITIATED = 'PROCESS_INITIATED';
@@ -20,7 +20,8 @@ export const processMappingRules: MappingRule[] = [
         id: 'process-initiated',
         description: 'Project initiation/kickoff',
         pattern: /^(project\s*)?(initiation|kickoff|kick-off)$/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
             factKind: PROCESS_INITIATED,
             payload: {
                 processName: ctx.stageName || 'Project',
@@ -33,7 +34,8 @@ export const processMappingRules: MappingRule[] = [
         id: 'stage-header-initiated',
         description: 'Stage header row (Stage 1: Project Initiation)',
         pattern: /^stage\s*\d+:\s*project\s*initiation/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
             factKind: PROCESS_INITIATED,
             payload: {
                 processName: ctx.stageName || 'Project Initiation',
@@ -46,7 +48,8 @@ export const processMappingRules: MappingRule[] = [
         id: 'final-documentation',
         description: 'Final documentation/report submission',
         pattern: /submit\s*final\s*(report|documentation)/i,
-        emits: (): MappingOutput[] => [{
+        emits: (): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
             factKind: PROCESS_COMPLETED,
             payload: {
                 processName: 'Public Art Process',
@@ -59,7 +62,8 @@ export const processMappingRules: MappingRule[] = [
         id: 'unveiling-event',
         description: 'Unveiling event (process completion marker)',
         pattern: /unveiling\s*event/i,
-        emits: (): MappingOutput[] => [{
+        emits: (): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
             factKind: PROCESS_COMPLETED,
             payload: {
                 processName: 'Installation',

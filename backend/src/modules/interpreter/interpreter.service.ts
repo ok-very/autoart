@@ -565,13 +565,13 @@ export async function getStatusSummary(
 
 import {
   MappingContext,
-  MappingOutput,
   MappingRule,
   applyMappingRules,
+  type InterpretationOutput,
 } from './mappings/types.js';
 import { defaultMappingRules } from './mappings/index.js';
 
-export type { MappingContext, MappingOutput, MappingRule };
+export type { MappingContext, MappingRule, InterpretationOutput };
 
 /**
  * CSV row input for interpretation.
@@ -592,32 +592,39 @@ export interface CsvRowInput {
 }
 
 /**
- * Event input ready for emission.
+ * Interpretation plan - separates semantic parsing from event commitment.
+ * 
+ * Enables classification of CSV rows into:
+ * - fact_candidate: Observable outcomes to be reviewed before commit
+ * - work_event: Status-derived lifecycle events (auto-commit)
+ * - field_value: Extracted dates, assignees, etc. (auto-commit)
+ * - action_hint: Preparatory/intended work (no commit, classification only)
  */
-export interface FactEventInput {
-  type: 'FACT_RECORDED';
-  payload: {
-    factKind: string;
-    source: 'csv-import';
-    confidence: 'low' | 'medium' | 'high';
-    [key: string]: unknown;
-  };
+export interface InterpretationPlan {
+  /** All interpretation outputs from rule matching */
+  outputs: InterpretationOutput[];
+  /** Status-derived work event (if status maps to lifecycle) */
+  statusEvent?: InterpretationOutput;
+  /** Original CSV row input for reference */
+  raw: CsvRowInput;
 }
 
 /**
- * Interpret a CSV row into domain fact events.
- *
- * This is a pure function - no database access, fully testable.
- * Applies mapping rules to determine which facts to emit.
+ * Interpret a CSV row into an InterpretationPlan.
+ * 
+ * Returns structured outputs that enable:
+ * - Classification based on output kind (fact_candidate vs action_hint)
+ * - Deferred commitment (fact_candidate can be reviewed before commit)
+ * - Auto-commitment of status-derived work events
  *
  * @param row - The CSV row data
  * @param rules - Mapping rules to apply (defaults to all known rules)
- * @returns Array of event inputs ready for emission
+ * @returns InterpretationPlan with outputs and status event
  */
-export function interpretCsvRow(
+export function interpretCsvRowPlan(
   row: CsvRowInput,
   rules: MappingRule[] = defaultMappingRules
-): FactEventInput[] {
+): InterpretationPlan {
   const ctx: MappingContext = {
     text: row.text,
     status: row.status,
@@ -627,17 +634,24 @@ export function interpretCsvRow(
     metadata: row.metadata,
   };
 
+  // Apply mapping rules to get InterpretationOutput[]
   const outputs = applyMappingRules(ctx, rules);
 
-  return outputs.map((output) => ({
-    type: 'FACT_RECORDED' as const,
-    payload: {
-      factKind: output.factKind,
-      source: 'csv-import' as const,
-      confidence: output.confidence,
-      ...output.payload,
-    },
-  }));
+  // Derive work lifecycle event from status column
+  const workEventType = mapStatusToWorkEvent(row.status);
+  const statusEvent: InterpretationOutput | undefined = workEventType
+    ? {
+      kind: 'work_event',
+      eventType: workEventType,
+      source: 'csv-status',
+    }
+    : undefined;
+
+  return {
+    outputs,
+    statusEvent,
+    raw: row,
+  };
 }
 
 /**
@@ -647,18 +661,16 @@ export function interpretCsvRow(
  * @param parentTitle - Title of the parent item
  * @param stageName - Current stage name for context
  * @param rules - Mapping rules to apply
- * @returns Array of event inputs for all subitems
+ * @returns Array of interpretation plans for all subitems
  */
 export function interpretSubitems(
   subitems: Array<{ text: string; status?: string; targetDate?: string }>,
   parentTitle: string,
   stageName?: string,
   rules: MappingRule[] = defaultMappingRules
-): FactEventInput[] {
-  const allEvents: FactEventInput[] = [];
-
-  for (const subitem of subitems) {
-    const events = interpretCsvRow(
+): InterpretationPlan[] {
+  return subitems.map((subitem) =>
+    interpretCsvRowPlan(
       {
         text: subitem.text,
         status: subitem.status,
@@ -667,12 +679,10 @@ export function interpretSubitems(
         stageName,
       },
       rules
-    );
-    allEvents.push(...events);
-  }
-
-  return allEvents;
+    )
+  );
 }
+
 
 /**
  * Map a CSV status value to a work lifecycle event type.

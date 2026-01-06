@@ -52,6 +52,26 @@ export interface ItemClassification {
         resolvedFactKind?: string;
         resolvedPayload?: Record<string, unknown>;
     };
+    /** V2 interpretation plan with structured outputs */
+    interpretationPlan?: InterpretationPlan;
+}
+
+/** Interpretation output variants */
+export type InterpretationOutput =
+    | { kind: 'fact_candidate'; factKind: string; payload?: Record<string, unknown>; confidence: 'low' | 'medium' | 'high' }
+    | { kind: 'work_event'; eventType: 'WORK_STARTED' | 'WORK_FINISHED' | 'WORK_BLOCKED'; source?: string }
+    | { kind: 'field_value'; field: string; value: unknown; confidence: 'low' | 'medium' | 'high' }
+    | { kind: 'action_hint'; hintType: 'request' | 'prepare' | 'coordinate' | 'setup' | 'communicate'; text: string };
+
+/** Interpretation plan from backend */
+export interface InterpretationPlan {
+    outputs: InterpretationOutput[];
+    statusEvent?: InterpretationOutput;
+    raw: {
+        text: string;
+        status?: string;
+        targetDate?: string;
+    };
 }
 
 export interface ImportPlan {

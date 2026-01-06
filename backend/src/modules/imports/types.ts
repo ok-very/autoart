@@ -37,6 +37,30 @@ export interface ItemClassification {
     /** Candidate fact kinds for AMBIGUOUS outcomes */
     candidates?: string[];
 
+    /**
+     * V2 interpretation plan for commit phase.
+     * Contains structured outputs (fact_candidate, work_event, field_value, action_hint).
+     */
+    interpretationPlan?: {
+        outputs: Array<{
+            kind: 'fact_candidate' | 'work_event' | 'field_value' | 'action_hint';
+            [key: string]: unknown;
+        }>;
+        /** The statusEvent can be any InterpretationOutput but is typically work_event */
+        statusEvent?: {
+            kind: 'fact_candidate' | 'work_event' | 'field_value' | 'action_hint';
+            [key: string]: unknown;
+        };
+        raw: {
+            text: string;
+            status?: string;
+            targetDate?: string;
+            parentTitle?: string;
+            stageName?: string;
+            metadata?: Record<string, unknown>;
+        };
+    };
+
     /** User resolution (set via resolution API) */
     resolution?: {
         resolvedOutcome: ClassificationOutcome;

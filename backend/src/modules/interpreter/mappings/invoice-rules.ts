@@ -1,16 +1,17 @@
 /**
  * Invoice & Contract Mapping Rules
  *
- * Rules for interpreting CSV rows as:
- * - INVOICE_PREPARED
- * - PAYMENT_RECORDED
- * - CONTRACT_EXECUTED
+ * Rules for interpreting CSV rows related to invoices and contracts.
+ * 
+ * IMPORTANT: Separates INTENT from OUTCOME.
+ * - Drafting is action_hint (internal work)
+ * - Requests are action_hint (intent)
+ * - Payment received/contract executed is fact_candidate (observable)
  */
 
-import type { MappingRule, MappingContext, MappingOutput } from './types.js';
+import type { MappingRule, MappingContext, InterpretationOutput } from './types.js';
 
 // Canonical fact kinds
-const INVOICE_PREPARED = 'INVOICE_PREPARED';
 const PAYMENT_RECORDED = 'PAYMENT_RECORDED';
 const CONTRACT_EXECUTED = 'CONTRACT_EXECUTED';
 
@@ -23,71 +24,71 @@ function extractCounterparty(text: string): string | undefined {
     if (lower.includes('artist')) return 'artist';
     if (lower.includes('city')) return 'city';
     if (lower.includes('client')) return 'client';
-    // Check for named individuals in honorarium requests
-    const nameMatch = text.match(/request\s+([A-Z][a-z]+\s+[A-Z][a-z]+)/);
-    if (nameMatch) return nameMatch[1];
     return undefined;
 }
 
 export const invoiceMappingRules: MappingRule[] = [
-    // Invoice rules
+    // ========================================================================
+    // ACTION HINTS - Drafting/requesting is internal work or intent
+    // ========================================================================
     {
         id: 'invoice-drafted',
-        description: 'Matches invoice/invocie drafting',
+        description: 'Draft invoice (internal work)',
         pattern: /draft\s*(invoice|ivnoice)/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: INVOICE_PREPARED,
-            payload: {
-                counterparty: extractCounterparty(ctx.text),
-            },
-            confidence: 'high',
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'action_hint',
+            hintType: 'prepare',
+            text: ctx.text,
         }],
-        priority: 6,
+        priority: 10,
+        terminal: true,
     },
     {
-        id: 'bfa-invoice',
-        description: 'BFA Invoice line item',
+        id: 'bfa-invoice-prep',
+        description: 'BFA Invoice line item (preparation)',
         pattern: /^bfa\s*invoice/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: INVOICE_PREPARED,
-            payload: {
-                counterparty: 'developer',
-            },
-            confidence: 'high',
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'action_hint',
+            hintType: 'prepare',
+            text: ctx.text,
         }],
-        priority: 5,
+        priority: 10,
+        terminal: true,
     },
     {
-        id: 'honorarium-prepared',
-        description: 'Artist/panel honorarium',
+        id: 'honorarium-prep',
+        description: 'Honorarium preparation',
         pattern: /(artist|selection\s*panel)\s*honorarium/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: INVOICE_PREPARED,
-            payload: {
-                counterparty: ctx.text.toLowerCase().includes('artist') ? 'artist' : 'selection_panel',
-            },
-            confidence: 'medium',
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'action_hint',
+            hintType: 'prepare',
+            text: ctx.text,
         }],
-        priority: 5,
+        priority: 10,
+        terminal: true,
     },
     {
         id: 'honorarium-request',
-        description: 'Individual honorarium request (e.g., Request Tyler Los Jones)',
+        description: 'Individual honorarium request (intent)',
         pattern: /^request\s+[A-Z][a-z]+\s+[A-Z]/,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: INVOICE_PREPARED,
-            payload: {
-                counterparty: extractCounterparty(ctx.text),
-            },
-            confidence: 'medium',
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'action_hint',
+            hintType: 'request',
+            text: ctx.text,
         }],
-        priority: 4,
+        priority: 10,
+        terminal: true,
     },
+
+    // ========================================================================
+    // FACT CANDIDATES - Observable financial/legal outcomes
+    // ========================================================================
     {
         id: 'payment-recorded',
-        description: 'Payment received/recorded',
+        description: 'Payment received/recorded (observable)',
         pattern: /(payment|honorarium)\s*(received|paid|recorded)/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
             factKind: PAYMENT_RECORDED,
             payload: {
                 counterparty: extractCounterparty(ctx.text),
@@ -96,25 +97,25 @@ export const invoiceMappingRules: MappingRule[] = [
         }],
         priority: 5,
     },
-
-    // Contract execution
     {
         id: 'contract-executed-status',
         description: 'Status=Executed on contract/proposal items',
         pattern: /^executed$/i,
-        emits: (): MappingOutput[] => [{
+        emits: (): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
             factKind: CONTRACT_EXECUTED,
             payload: {},
-            confidence: 'high',
+            confidence: 'high', // Status-based - strong signal
         }],
         priority: 10,
         terminal: true,
     },
     {
-        id: 'docusign-executed',
-        description: 'Document sent through DocuSign (implies execution process)',
-        pattern: /(send|request)\s*(through\s*)?docusign/i,
-        emits: (): MappingOutput[] => [{
+        id: 'docusign-sent',
+        description: 'Document sent through DocuSign (observable)',
+        pattern: /send\s*(through\s*)?docusign/i,
+        emits: (): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
             factKind: CONTRACT_EXECUTED,
             payload: {
                 contractType: 'legal_document',
@@ -122,5 +123,18 @@ export const invoiceMappingRules: MappingRule[] = [
             confidence: 'medium',
         }],
         priority: 6,
+    },
+    // Note: "request docusign" is different from "send docusign"
+    {
+        id: 'docusign-request',
+        description: 'Request DocuSign (intent)',
+        pattern: /request\s*(through\s*)?docusign/i,
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'action_hint',
+            hintType: 'request',
+            text: ctx.text,
+        }],
+        priority: 10,
+        terminal: true,
     },
 ];

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../client';
+import { useAuthStore } from '../../stores/authStore';
 import type { AuthResponse, User } from '../../types';
 
 // ==================== AUTH ====================
@@ -33,11 +34,17 @@ export function useRegister() {
 
 export function useLogout() {
   const queryClient = useQueryClient();
+  const logout = useAuthStore((s) => s.logout);
+
   return useMutation({
     mutationFn: () => api.post('/auth/logout', { refreshToken: api.getRefreshToken() }),
     onSuccess: () => {
+      // Clear API tokens
       api.setToken(null);
       api.setRefreshToken(null);
+      // Clear auth store state (triggers redirect via isAuthenticated)
+      logout();
+      // Clear all cached queries
       queryClient.clear();
     },
   });

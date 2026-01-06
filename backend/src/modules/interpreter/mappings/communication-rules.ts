@@ -1,11 +1,14 @@
 /**
  * Communication Mapping Rules
  *
- * Rules for interpreting CSV rows as INFORMATION_SENT.
- * Funnels: requests, submissions, reminders, follow-ups, invitations
+ * Rules for interpreting CSV rows related to communication.
+ * 
+ * IMPORTANT: Separates INTENT from OUTCOME.
+ * - Requests are action_hints (intent to obtain)
+ * - Sends/submits are fact_candidates (observable outcomes)
  */
 
-import type { MappingRule, MappingContext, MappingOutput } from './types.js';
+import type { MappingRule, MappingContext, InterpretationOutput } from './types.js';
 
 const INFORMATION_SENT = 'INFORMATION_SENT';
 
@@ -27,63 +30,64 @@ function extractAudience(text: string): string[] {
 }
 
 export const communicationMappingRules: MappingRule[] = [
-    // Requests
+    // ========================================================================
+    // ACTION HINTS - Requests are intent, not outcomes
+    // ========================================================================
     {
         id: 'request-availability',
-        description: 'Request for meeting availability',
+        description: 'Request for meeting availability (intent)',
         pattern: /request\s*(meeting\s*)?availability/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: INFORMATION_SENT,
-            payload: {
-                subject: 'availability',
-                audiences: extractAudience(ctx.text),
-            },
-            confidence: 'high',
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'action_hint',
+            hintType: 'request',
+            text: ctx.text,
         }],
-        priority: 5,
+        priority: 10,
+        terminal: true,
     },
     {
         id: 'request-files',
-        description: 'Request for project files/documents',
+        description: 'Request for project files/documents (intent)',
         pattern: /request\s*(project\s*)?(files?|documents?|proof|information)/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: INFORMATION_SENT,
-            payload: {
-                subject: 'files',
-                audiences: extractAudience(ctx.text),
-            },
-            confidence: 'high',
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'action_hint',
+            hintType: 'request',
+            text: ctx.text,
         }],
-        priority: 5,
+        priority: 10,
+        terminal: true,
     },
     {
         id: 'request-invoice',
-        description: 'Request for artist invoice',
+        description: 'Request for invoice (intent)',
         pattern: /request\s*(artist\s*)?invoice/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: INFORMATION_SENT,
-            payload: {
-                subject: 'invoice',
-                audiences: ['artist'],
-            },
-            confidence: 'high',
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'action_hint',
+            hintType: 'request',
+            text: ctx.text,
         }],
-        priority: 5,
+        priority: 10,
+        terminal: true,
     },
 
-    // Submissions
+    // ========================================================================
+    // FACT CANDIDATES - Observable communication outcomes
+    // ========================================================================
+
+    // Submissions - explicit send/submit actions
     {
         id: 'submit-materials',
         description: 'Submit materials/presentations to recipients',
         pattern: /(submit|send)\s*(artist\s*)?(presentations?|materials?|longlist|shortlist)/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
             factKind: INFORMATION_SENT,
             payload: {
                 subject: 'materials',
                 audiences: extractAudience(ctx.text),
                 artifacts: ['materials'],
             },
-            confidence: 'high',
+            confidence: 'medium', // Lowered - send/submit is intent until confirmed
         }],
         priority: 6,
     },
@@ -91,7 +95,8 @@ export const communicationMappingRules: MappingRule[] = [
         id: 'submit-to-party',
         description: 'Submit document to city/developer/client',
         pattern: /submit\s+\w+\s+(to\s+)?(city|developer|client)/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
             factKind: INFORMATION_SENT,
             payload: {
                 subject: 'document',
@@ -102,18 +107,19 @@ export const communicationMappingRules: MappingRule[] = [
         priority: 4,
     },
 
-    // Invitations
+    // Invitations - observable if sent
     {
         id: 'invite-members',
         description: 'Invite panel/advisory/artist members',
         pattern: /invite\s*(selection\s*panel|community\s*advisory|shortlisted\s*artists?)/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
             factKind: INFORMATION_SENT,
             payload: {
                 subject: 'invitation',
                 audiences: extractAudience(ctx.text),
             },
-            confidence: 'high',
+            confidence: 'medium',
         }],
         priority: 5,
     },
@@ -121,78 +127,80 @@ export const communicationMappingRules: MappingRule[] = [
         id: 'send-invite',
         description: 'Send meeting invite',
         pattern: /(send|send\s*out)\s*(meeting\s*)?invite/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
             factKind: INFORMATION_SENT,
             payload: {
                 subject: 'meeting invite',
                 audiences: ['attendees'],
             },
-            confidence: 'high',
+            confidence: 'medium',
         }],
         priority: 5,
     },
 
-    // Reminders
+    // Reminders - observable if sent
     {
         id: 'send-reminder',
         description: 'Send reminder communications',
         pattern: /(send|group)\s*reminder/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
             factKind: INFORMATION_SENT,
             payload: {
                 subject: 'reminder',
                 audiences: extractAudience(ctx.text),
             },
-            confidence: 'high',
-        }],
-        priority: 5,
-    },
-
-    // Follow-ups
-    {
-        id: 'follow-up-email',
-        description: 'Follow-up email/communication',
-        pattern: /follow[\s-]?up\s*(email|meeting|call)?/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
-            factKind: INFORMATION_SENT,
-            payload: {
-                subject: 'follow-up',
-                audiences: extractAudience(ctx.text),
-                channel: ctx.text.toLowerCase().includes('email') ? 'email' : undefined,
-            },
             confidence: 'medium',
         }],
         priority: 5,
     },
+
+    // Follow-ups - treated as intent (action_hint) since completion isn't guaranteed
+    {
+        id: 'follow-up-email',
+        description: 'Follow-up communication (intent)',
+        pattern: /follow[\s-]?up\s*(email|meeting|call)?/i,
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'action_hint',
+            hintType: 'communicate',
+            text: ctx.text,
+        }],
+        priority: 5,
+    },
+
+    // Send notes - observable outcome
     {
         id: 'send-notes',
         description: 'Send meeting notes',
         pattern: /send\s*(out\s*)?(meeting\s*)?notes/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
+        emits: (): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
             factKind: INFORMATION_SENT,
             payload: {
                 subject: 'meeting notes',
                 audiences: ['attendees'],
                 channel: 'email',
             },
-            confidence: 'high',
+            confidence: 'medium',
         }],
         priority: 5,
     },
 
-    // Email patterns
+    // Email patterns - observable outcome
     {
         id: 'email-details',
         description: 'Email details to recipient',
         pattern: /email\s+\w+\s+(details|information)\s+(to\s+)?/i,
-        emits: (ctx: MappingContext): MappingOutput[] => [{
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
             factKind: INFORMATION_SENT,
             payload: {
                 subject: 'details',
                 audiences: extractAudience(ctx.text),
                 channel: 'email',
             },
-            confidence: 'medium',
+            confidence: 'low', // Lexical pattern doesn't guarantee send
         }],
         priority: 4,
     },

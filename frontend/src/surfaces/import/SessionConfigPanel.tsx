@@ -17,6 +17,7 @@ import {
     CheckCircle2,
     RefreshCw,
 } from 'lucide-react';
+import { useCreateImportSession, useGenerateImportPlan } from '../../api/hooks/imports';
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
 
 // ============================================================================
@@ -41,10 +42,13 @@ export function SessionConfigPanel({
     onReset,
 }: SessionConfigPanelProps) {
     const [rawData, setRawData] = useState('');
-    const [parserName, setParserName] = useState('monday-csv');
+    const [parserName, setParserName] = useState('monday');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const createSession = useCreateImportSession();
+    const generatePlan = useGenerateImportPlan();
 
     // Handle file upload
     const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,7 +62,7 @@ export function SessionConfigPanel({
         reader.readAsText(file);
     }, []);
 
-    // Handle parse
+    // Handle parse - calls the actual backend API
     const handleParse = useCallback(async () => {
         if (!rawData.trim()) {
             setError('Please provide data to import');
@@ -69,60 +73,22 @@ export function SessionConfigPanel({
         setError(null);
 
         try {
-            // TODO: Replace with actual API call when backend is ready
-            // For now, create a mock session/plan for UI testing
-            const mockSession: ImportSession = {
-                id: `session-${Date.now()}`,
-                parser_name: parserName,
-                status: 'planned',
-                created_at: new Date().toISOString(),
-            };
+            // Step 1: Create session on backend
+            const newSession = await createSession.mutateAsync({
+                parserName,
+                rawData,
+            });
 
-            const mockPlan: ImportPlan = {
-                sessionId: mockSession.id,
-                containers: [
-                    {
-                        tempId: 'temp-process-1',
-                        type: 'process',
-                        title: 'Imported Process',
-                        parentTempId: null,
-                    },
-                    {
-                        tempId: 'temp-subprocess-1',
-                        type: 'subprocess',
-                        title: 'Imported Subprocess',
-                        parentTempId: 'temp-process-1',
-                    },
-                ],
-                items: rawData
-                    .split('\n')
-                    .filter((line) => line.trim())
-                    .slice(0, 10)
-                    .map((line, idx) => ({
-                        tempId: `temp-task-${idx}`,
-                        title: line.slice(0, 50),
-                        parentTempId: 'temp-subprocess-1',
-                        metadata: {
-                            'import.stage_name': idx < 3 ? 'To Do' : idx < 7 ? 'In Progress' : 'Done',
-                            'import.stage_order': idx < 3 ? 1 : idx < 7 ? 2 : 3,
-                        },
-                        plannedAction: {
-                            type: 'CREATE_TASK',
-                            payload: { title: line.slice(0, 50) },
-                        },
-                        fieldRecordings: [],
-                    })),
-                validationIssues: [],
-                classifications: [], // Empty for mock data
-            };
+            // Step 2: Generate plan (which calls the parser)
+            const newPlan = await generatePlan.mutateAsync(newSession.id);
 
-            onSessionCreated(mockSession, mockPlan);
+            onSessionCreated(newSession, newPlan);
         } catch (err) {
-            setError((err as Error).message);
+            setError((err as Error).message || 'Failed to parse data');
         } finally {
             setIsLoading(false);
         }
-    }, [rawData, parserName, onSessionCreated]);
+    }, [rawData, parserName, createSession, generatePlan, onSessionCreated]);
 
     // If session exists, show validation summary
     if (session && plan) {
@@ -209,9 +175,8 @@ export function SessionConfigPanel({
                     onChange={(e) => setParserName(e.target.value)}
                     className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                    <option value="monday-csv">Monday.com CSV</option>
-                    <option value="generic-csv">Generic CSV</option>
-                    <option value="json">JSON</option>
+                    <option value="monday">Monday.com CSV</option>
+                    <option value="airtable">Airtable CSV</option>
                 </select>
             </div>
 

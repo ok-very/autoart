@@ -12,7 +12,7 @@ import { factKindsRoutes } from './modules/records/fact-kinds.routes.js';
 import { referencesRoutes } from './modules/references/references.routes.js';
 import { searchRoutes } from './modules/search/search.routes.js';
 import { linksRoutes } from './modules/links/links.routes.js';
-import { ingestionRoutes } from './modules/ingestion/ingestion.routes.js';
+// ingestion module deprecated - use imports module instead
 import { actionsRoutes } from './modules/actions/actions.routes.js';
 import { actionReferencesRoutes } from './modules/actions/action-references.routes.js';
 import { eventsRoutes } from './modules/events/events.routes.js';
@@ -61,7 +61,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(referencesRoutes, { prefix: '/api/references' });
   await fastify.register(searchRoutes, { prefix: '/api/search' });
   await fastify.register(linksRoutes, { prefix: '/api/links' });
-  await fastify.register(ingestionRoutes, { prefix: '/api/ingestion' });
+  // ingestion routes deprecated - use /api/imports instead
 
   // Foundational model routes (Actions & Events)
   await fastify.register(actionsRoutes, { prefix: '/api/actions' });

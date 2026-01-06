@@ -17,7 +17,7 @@ import { MondayCSVParser } from './parsers/monday-csv-parser.js';
 import { GenericCSVParser } from './parsers/generic-csv-parser.js';
 import type { ImportPlan, ImportPlanContainer, ImportPlanItem, ItemClassification } from './types.js';
 import { hasUnresolvedClassifications, countUnresolved } from './types.js';
-import { interpretCsvRow, mapStatusToWorkEvent } from '../interpreter/interpreter.service.js';
+import { interpretCsvRowPlan, mapStatusToWorkEvent, type InterpretationOutput, type InterpretationPlan } from '../interpreter/interpreter.service.js';
 import { ensureFactKindDefinition } from '../records/fact-kinds.service.js';
 import { emitEvent } from '../events/events.service.js';
 import { isInternalWork, type ClassificationOutcome } from '@autoart/shared';
@@ -35,7 +35,7 @@ interface Parser {
 }
 
 const PARSERS: Record<string, Parser> = {
-    'monday-csv': new MondayCSVParser(),
+    'monday': new MondayCSVParser(),
     'generic-csv': new GenericCSVParser(),
 };
 
@@ -150,7 +150,13 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
 
 /**
  * Generate classifications for all items in the plan.
- * Uses mapping rules to determine factKind and outcome.
+ * Uses the V2 interpretation API to determine outcome based on output kinds.
+ * 
+ * Classification logic:
+ * - fact_candidate → FACT_EMITTED (needs review before commit)
+ * - action_hint → INTERNAL_WORK (preparatory work, no commit)
+ * - work_event/field_value → DERIVED_STATE (auto-commit)
+ * - No outputs → UNCLASSIFIED
  */
 function generateClassifications(items: ImportPlanItem[]): ItemClassification[] {
     return items.map((item) => {
@@ -169,36 +175,65 @@ function generateClassifications(items: ImportPlanItem[]): ItemClassification[] 
             };
         }
 
-        // Run mapping rules
-        const factEvents = interpretCsvRow({
+        // Use V2 interpretation API
+        const plan = interpretCsvRowPlan({
             text,
             status: statusValue,
             targetDate: targetDate,
             stageName: stageName ?? undefined,
         });
 
-        if (factEvents.length > 0) {
-            // Rules matched - FACT_EMITTED
+        // Classify based on output kinds
+        const factCandidates = plan.outputs.filter((o): o is InterpretationOutput & { kind: 'fact_candidate' } => o.kind === 'fact_candidate');
+        const actionHints = plan.outputs.filter((o): o is InterpretationOutput & { kind: 'action_hint' } => o.kind === 'action_hint');
+        const fieldValues = plan.outputs.filter((o): o is InterpretationOutput & { kind: 'field_value' } => o.kind === 'field_value');
+
+        // Fact candidates → FACT_EMITTED
+        if (factCandidates.length > 0) {
+            // Build emitted events from fact candidates
+            const emittedEvents = factCandidates.map(fc => ({
+                type: 'FACT_RECORDED' as const,
+                payload: {
+                    factKind: fc.factKind,
+                    source: 'csv-import' as const,
+                    confidence: fc.confidence,
+                    ...fc.payload,
+                },
+            }));
+
             return {
                 itemTempId: item.tempId,
                 outcome: 'FACT_EMITTED' as ClassificationOutcome,
-                confidence: (factEvents[0].payload.confidence as 'low' | 'medium' | 'high') || 'medium',
-                rationale: `Matched rule for ${factEvents[0].payload.factKind}`,
-                emittedEvents: factEvents.map(fe => ({
-                    type: 'FACT_RECORDED',
-                    payload: fe.payload,
-                })),
+                confidence: factCandidates[0].confidence || 'medium',
+                rationale: `Matched rule for ${factCandidates[0].factKind}`,
+                emittedEvents,
+                interpretationPlan: plan, // Store for commit phase
             };
         }
 
-        // Check if status alone implies derived state
-        const workEventType = mapStatusToWorkEvent(statusValue);
-        if (workEventType) {
+        // Action hints → INTERNAL_WORK (preparatory/intended work)
+        if (actionHints.length > 0) {
+            return {
+                itemTempId: item.tempId,
+                outcome: 'INTERNAL_WORK' as ClassificationOutcome,
+                confidence: 'medium' as const,
+                rationale: `Action hint: ${actionHints[0].hintType} - ${actionHints[0].text}`,
+                interpretationPlan: plan,
+            };
+        }
+
+        // Status-derived work event or field values → DERIVED_STATE
+        if (plan.statusEvent || fieldValues.length > 0) {
+            const rationale = plan.statusEvent
+                ? `Status "${statusValue}" maps to ${plan.statusEvent.kind === 'work_event' ? plan.statusEvent.eventType : 'work event'}`
+                : `Extracted ${fieldValues.length} field value(s)`;
+
             return {
                 itemTempId: item.tempId,
                 outcome: 'DERIVED_STATE' as ClassificationOutcome,
                 confidence: 'medium' as const,
-                rationale: `Status "${statusValue}" maps to ${workEventType}`,
+                rationale,
+                interpretationPlan: plan,
             };
         }
 
@@ -398,6 +433,12 @@ async function executePlanViaComposer(
     const createdIds: Record<string, string> = {};
     let factEventsEmitted = 0;
     let workEventsEmitted = 0;
+    let fieldValuesApplied = 0;
+
+    // Build lookup map: itemTempId -> classification
+    const classificationMap = new Map<string, ItemClassification>(
+        plan.classifications.map((c: ItemClassification) => [c.itemTempId, c])
+    );
 
     // Step 1: Create containers (process, subprocess) as hierarchy nodes
     for (const container of plan.containers) {
@@ -461,57 +502,150 @@ async function executePlanViaComposer(
             actorId: userId,
         });
 
-        // Step 3: Interpret item title for domain events using mapping rules
-        const statusValue = (item.metadata as { status?: string })?.status;
-        const targetDate = (item.metadata as { targetDate?: string })?.targetDate;
-        const stageName = (item.metadata as { 'import.stage_name'?: string })?.['import.stage_name'];
+        // Step 3: Use classification's interpretationPlan if available (V2 API)
+        const classification = classificationMap.get(item.tempId);
+        const interpretationPlan = classification?.interpretationPlan;
 
-        // Pass parent context for richer rule matching
-        const factEvents = interpretCsvRow({
-            text: item.title,
-            status: statusValue,
-            targetDate: targetDate,
-            stageName: stageName ?? undefined,
-        });
+        if (interpretationPlan) {
+            // V2 Path: Process InterpretationPlan outputs
 
-        // Emit FACT_RECORDED events via emitEvent (ensures projection refresh)
-        for (const factEvent of factEvents) {
-            // Ensure fact kind definition exists (auto-create if needed)
-            // Store clean payload (without wrapper envelope)
-            const { factKind, source, confidence, ...cleanPayload } = factEvent.payload;
-            await ensureFactKindDefinition({
-                factKind: factEvent.payload.factKind,
-                source: 'csv-import',
-                confidence: factEvent.payload.confidence as 'low' | 'medium' | 'high',
-                examplePayload: cleanPayload,
+            // Determine if fact_candidates should be committed
+            // fact_candidate: Only commit if user approved (resolved to FACT_EMITTED)
+            // work_event: Always auto-commit
+            // field_value: Always auto-commit
+            // action_hint: Never commit (stored as classification only)
+            const shouldCommitFacts =
+                classification?.outcome === 'FACT_EMITTED' ||
+                (classification?.resolution?.resolvedOutcome === 'FACT_EMITTED');
+
+            // Process fact_candidate outputs → FACT_RECORDED events (only if approved)
+            if (shouldCommitFacts) {
+                for (const output of interpretationPlan.outputs) {
+                    if (output.kind === 'fact_candidate') {
+                        const factKind = output.factKind as string;
+                        const confidence = (output.confidence as 'low' | 'medium' | 'high') || 'medium';
+                        const { kind, factKind: _, confidence: __, ...cleanPayload } = output;
+
+                        // Ensure fact kind definition exists (auto-create if needed)
+                        await ensureFactKindDefinition({
+                            factKind,
+                            source: 'csv-import',
+                            confidence,
+                            examplePayload: cleanPayload,
+                        });
+
+                        await emitEvent({
+                            contextId: contextId,
+                            contextType: 'subprocess',
+                            actionId: action.id,
+                            type: 'FACT_RECORDED',
+                            payload: {
+                                factKind,
+                                source: 'csv-import',
+                                confidence,
+                                ...cleanPayload,
+                            },
+                            actorId: userId,
+                        });
+                        factEventsEmitted++;
+                    }
+                }
+            }
+
+            // Auto-commit field_value outputs (always)
+            for (const output of interpretationPlan.outputs) {
+                if (output.kind === 'field_value') {
+                    // Field values update the action's field_bindings
+                    // For now, we track them but don't persist separately
+                    // The field binding was already set in action creation
+                    fieldValuesApplied++;
+                }
+            }
+
+            // Auto-commit work_event from status (if present)
+            if (interpretationPlan.statusEvent && interpretationPlan.statusEvent.kind === 'work_event') {
+                const statusEvent = interpretationPlan.statusEvent as {
+                    kind: 'work_event';
+                    eventType: 'WORK_STARTED' | 'WORK_FINISHED' | 'WORK_BLOCKED';
+                    source?: string;
+                };
+                await emitEvent({
+                    contextId: contextId,
+                    contextType: 'subprocess',
+                    actionId: action.id,
+                    type: statusEvent.eventType,
+                    payload: {
+                        source: statusEvent.source || 'csv-import',
+                        originalStatus: interpretationPlan.raw.status,
+                    },
+                    actorId: userId,
+                });
+                workEventsEmitted++;
+            }
+        } else {
+            // No stored plan - generate one on-the-fly
+            const statusValue = (item.metadata as { status?: string })?.status;
+            const targetDate = (item.metadata as { targetDate?: string })?.targetDate;
+            const stageName = (item.metadata as { 'import.stage_name'?: string })?.['import.stage_name'];
+
+            const plan = interpretCsvRowPlan({
+                text: item.title,
+                status: statusValue,
+                targetDate: targetDate,
+                stageName: stageName ?? undefined,
             });
 
-            await emitEvent({
-                contextId: contextId,
-                contextType: 'subprocess',
-                actionId: action.id,
-                type: 'FACT_RECORDED',
-                payload: factEvent.payload,
-                actorId: userId,
-            });
-            factEventsEmitted++;
-        }
+            // Process fact_candidate outputs
+            for (const output of plan.outputs) {
+                if (output.kind === 'fact_candidate') {
+                    const factKind = output.factKind as string;
+                    const confidence = (output.confidence as 'low' | 'medium' | 'high') || 'medium';
+                    const { kind, factKind: _, confidence: __, ...cleanPayload } = output;
 
-        // Step 4: Map status column to work lifecycle event via emitEvent
-        const workEventType = mapStatusToWorkEvent(statusValue);
-        if (workEventType) {
-            await emitEvent({
-                contextId: contextId,
-                contextType: 'subprocess',
-                actionId: action.id,
-                type: workEventType,
-                payload: {
-                    source: 'csv-import',
-                    originalStatus: statusValue,
-                },
-                actorId: userId,
-            });
-            workEventsEmitted++;
+                    await ensureFactKindDefinition({
+                        factKind,
+                        source: 'csv-import',
+                        confidence,
+                        examplePayload: cleanPayload,
+                    });
+
+                    await emitEvent({
+                        contextId: contextId,
+                        contextType: 'subprocess',
+                        actionId: action.id,
+                        type: 'FACT_RECORDED',
+                        payload: {
+                            factKind,
+                            source: 'csv-import',
+                            confidence,
+                            ...cleanPayload,
+                        },
+                        actorId: userId,
+                    });
+                    factEventsEmitted++;
+                }
+            }
+
+            // Auto-commit work_event from status
+            if (plan.statusEvent && plan.statusEvent.kind === 'work_event') {
+                const statusEvent = plan.statusEvent as {
+                    kind: 'work_event';
+                    eventType: 'WORK_STARTED' | 'WORK_FINISHED' | 'WORK_BLOCKED';
+                    source?: string;
+                };
+                await emitEvent({
+                    contextId: contextId,
+                    contextType: 'subprocess',
+                    actionId: action.id,
+                    type: statusEvent.eventType,
+                    payload: {
+                        source: statusEvent.source || 'csv-import',
+                        originalStatus: statusValue,
+                    },
+                    actorId: userId,
+                });
+                workEventsEmitted++;
+            }
         }
     }
 
@@ -521,6 +655,7 @@ async function executePlanViaComposer(
         containerCount: plan.containers.length,
         factEventsEmitted,
         workEventsEmitted,
+        fieldValuesApplied,
     };
 }
 

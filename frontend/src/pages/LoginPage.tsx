@@ -1,16 +1,21 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useLogin, useRegister } from '../api/hooks';
 import { useAuthStore } from '../stores/authStore';
 import { Button } from '../components/common/Button';
 
-export function LoginPage() {
+interface LoginPageProps {
+  /** Initial mode for the form */
+  initialMode?: 'login' | 'register';
+}
+
+export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
   const navigate = useNavigate();
   const login = useLogin();
   const register = useRegister();
   const setUser = useAuthStore((s) => s.setUser);
 
-  const [isLogin, setIsLogin] = useState(true);
+  const isLogin = initialMode === 'login';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -107,20 +112,22 @@ export function LoginPage() {
               {login.isPending || register.isPending
                 ? 'Please wait...'
                 : isLogin
-                ? 'Sign in'
-                : 'Create account'}
+                  ? 'Sign in'
+                  : 'Create account'}
             </Button>
           </form>
 
-          {/* Toggle */}
+          {/* Toggle - Link to other route */}
           <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-            </button>
+            {isLogin ? (
+              <Link to="/register" className="text-sm text-blue-600 hover:underline">
+                Don't have an account? Sign up
+              </Link>
+            ) : (
+              <Link to="/login" className="text-sm text-blue-600 hover:underline">
+                Already have an account? Sign in
+              </Link>
+            )}
           </div>
 
           {/* Demo Credentials */}
@@ -137,3 +144,4 @@ export function LoginPage() {
     </div>
   );
 }
+

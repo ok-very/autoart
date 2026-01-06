@@ -1,11 +1,17 @@
 /**
  * Execution Controls
  *
- * Footer with cancel/execute import buttons.
- * Gates execution when unresolved classifications exist.
+ * Footer with explicit commit phase button.
+ * 
+ * Commit behavior by output kind:
+ * - fact_candidate: Commit only if approved by user
+ * - work_event: Auto-commit (always)
+ * - field_value: Auto-commit (always)
+ * - action_hint: Never commit (stored as classification only)
+ * - unclassified: Never commit
  */
 
-import { Play, Ban, CheckCircle2, Loader2, AlertTriangle } from 'lucide-react';
+import { Ban, CheckCircle2, Loader2, AlertTriangle, Upload } from 'lucide-react';
 import { useState, useCallback, useMemo } from 'react';
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
 
@@ -22,26 +28,93 @@ interface ExecutionControlsProps {
     onReset: () => void;
 }
 
+interface CommitStats {
+    factCandidatesApproved: number;
+    factCandidatesPending: number;
+    workEvents: number;
+    fieldValues: number;
+    actionHints: number;
+    unclassified: number;
+}
+
 // ============================================================================
 // HELPERS
 // ============================================================================
 
 /**
- * Count unresolved classifications that block execution.
+ * Count items by their commit status based on output kinds.
  */
-function countUnresolved(plan: ImportPlan | null): { ambiguous: number; unclassified: number } {
-    if (!plan?.classifications) return { ambiguous: 0, unclassified: 0 };
+function getCommitStats(plan: ImportPlan | null): CommitStats {
+    const stats: CommitStats = {
+        factCandidatesApproved: 0,
+        factCandidatesPending: 0,
+        workEvents: 0,
+        fieldValues: 0,
+        actionHints: 0,
+        unclassified: 0,
+    };
 
-    let ambiguous = 0;
-    let unclassified = 0;
+    if (!plan?.classifications) return stats;
 
     for (const c of plan.classifications) {
-        if (c.resolution) continue;
-        if (c.outcome === 'AMBIGUOUS') ambiguous++;
-        if (c.outcome === 'UNCLASSIFIED') unclassified++;
+        const outputs = c.interpretationPlan?.outputs ?? [];
+        const statusEvent = c.interpretationPlan?.statusEvent;
+
+        // Count by primary classification
+        if (c.outcome === 'UNCLASSIFIED' || c.outcome === 'AMBIGUOUS') {
+            if (c.resolution) {
+                // Resolved - count as approved if resolved to FACT_EMITTED
+                if (c.resolution.resolvedOutcome === 'FACT_EMITTED') {
+                    stats.factCandidatesApproved++;
+                }
+            } else {
+                stats.unclassified++;
+            }
+            continue;
+        }
+
+        if (c.outcome === 'INTERNAL_WORK') {
+            stats.actionHints++;
+            continue;
+        }
+
+        if (c.outcome === 'DERIVED_STATE') {
+            stats.workEvents++;
+            continue;
+        }
+
+        if (c.outcome === 'FACT_EMITTED') {
+            // Check if it has fact_candidate outputs
+            const hasFactCandidate = outputs.some(o => o.kind === 'fact_candidate');
+            if (hasFactCandidate) {
+                if (c.resolution?.resolvedOutcome === 'FACT_EMITTED') {
+                    stats.factCandidatesApproved++;
+                } else {
+                    stats.factCandidatesPending++;
+                }
+            }
+        }
+
+        // Count work_events from status
+        if (statusEvent?.kind === 'work_event') {
+            stats.workEvents++;
+        }
+
+        // Count field_values
+        const fieldValues = outputs.filter(o => o.kind === 'field_value');
+        stats.fieldValues += fieldValues.length;
     }
 
-    return { ambiguous, unclassified };
+    return stats;
+}
+
+/**
+ * Check if commit is allowed (no pending fact_candidates that need approval).
+ */
+function canCommit(stats: CommitStats): boolean {
+    // Commit is allowed if there are no pending fact_candidates
+    // (all must be resolved to proceed)
+    return stats.factCandidatesPending === 0 && stats.unclassified === 0;
 }
 
 // ============================================================================
@@ -60,17 +133,32 @@ export function ExecutionControls({
 
     const hasErrors = plan?.validationIssues.some((i) => i.severity === 'error') ?? false;
 
-    // Classification gate
-    const { ambiguous, unclassified } = useMemo(() => countUnresolved(plan), [plan]);
-    const hasUnresolved = ambiguous + unclassified > 0;
+    // Commit stats
+    const stats = useMemo(() => getCommitStats(plan), [plan]);
+    const commitAllowed = canCommit(stats);
 
-    const canExecute = session && plan && !hasErrors && !hasUnresolved && !isExecuting;
+    const canExecute = session && plan && !hasErrors && commitAllowed && !isExecuting;
+
+    // Summary of what will be committed
+    const commitSummary = useMemo(() => {
+        const parts: string[] = [];
+        if (stats.factCandidatesApproved > 0) {
+            parts.push(`${stats.factCandidatesApproved} fact${stats.factCandidatesApproved !== 1 ? 's' : ''}`);
+        }
+        if (stats.workEvents > 0) {
+            parts.push(`${stats.workEvents} work event${stats.workEvents !== 1 ? 's' : ''}`);
+        }
+        if (stats.fieldValues > 0) {
+            parts.push(`${stats.fieldValues} field value${stats.fieldValues !== 1 ? 's' : ''}`);
+        }
+        return parts.length > 0 ? parts.join(', ') : 'no events';
+    }, [stats]);
 
     // Handle execute
     const handleExecute = useCallback(async () => {
         if (!session || !plan) return;
 
-        if (hasUnresolved) {
+        if (!commitAllowed) {
             setExecutionStatus('blocked');
             return;
         }
@@ -97,7 +185,7 @@ export function ExecutionControls({
             setExecutionStatus('error');
             onExecuteComplete(false);
         }
-    }, [session, plan, hasUnresolved, onExecuteStart, onExecuteComplete]);
+    }, [session, plan, commitAllowed, onExecuteStart, onExecuteComplete]);
 
     // No session yet
     if (!session || !plan) {
@@ -122,15 +210,25 @@ export function ExecutionControls({
                     )}
                 </div>
 
-                {/* Unresolved classification warning */}
-                {hasUnresolved && (
+                {/* Commit will produce */}
+                <div className="text-sm text-slate-500 border-l border-slate-200 pl-4">
+                    Will commit: <span className="font-medium text-slate-700">{commitSummary}</span>
+                </div>
+
+                {/* Pending items warning */}
+                {(stats.factCandidatesPending > 0 || stats.unclassified > 0) && (
                     <div className="flex items-center gap-2 text-amber-600 text-sm bg-amber-50 px-3 py-1 rounded-lg">
                         <AlertTriangle className="w-4 h-4" />
                         <span>
-                            {ambiguous + unclassified} unresolved
-                            {ambiguous > 0 && ` (${ambiguous} ambiguous)`}
-                            {unclassified > 0 && ` (${unclassified} unclassified)`}
+                            {stats.factCandidatesPending + stats.unclassified} need review
                         </span>
+                    </div>
+                )}
+
+                {/* Non-committed items info */}
+                {stats.actionHints > 0 && (
+                    <div className="text-xs text-slate-400">
+                        ({stats.actionHints} action hint{stats.actionHints !== 1 ? 's' : ''} stored as classification only)
                     </div>
                 )}
             </div>
@@ -149,7 +247,7 @@ export function ExecutionControls({
                 {executionStatus === 'blocked' && (
                     <div className="flex items-center gap-2 text-amber-600 text-sm">
                         <AlertTriangle className="w-4 h-4" />
-                        Resolve classifications first
+                        Approve or skip pending items first
                     </div>
                 )}
 
@@ -163,22 +261,22 @@ export function ExecutionControls({
                     Cancel
                 </button>
 
-                {/* Execute button */}
+                {/* Commit button - explicit action */}
                 <button
                     onClick={handleExecute}
                     disabled={!canExecute}
-                    title={hasUnresolved ? 'Resolve unclassified items first' : undefined}
-                    className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 rounded-lg transition-colors"
+                    title={!commitAllowed ? 'Approve or skip pending fact candidates first' : undefined}
+                    className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-slate-300 rounded-lg transition-colors"
                 >
                     {isExecuting ? (
                         <>
                             <Loader2 className="w-4 h-4 animate-spin" />
-                            Importing...
+                            Committing...
                         </>
                     ) : (
                         <>
-                            <Play className="w-4 h-4" />
-                            Execute Import
+                            <Upload className="w-4 h-4" />
+                            Commit Approved Events
                         </>
                     )}
                 </button>

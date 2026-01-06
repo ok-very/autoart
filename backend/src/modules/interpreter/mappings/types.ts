@@ -2,6 +2,7 @@
  * Mapping Types
  *
  * Type definitions for CSV-to-event mapping rules.
+ * Uses InterpretationOutput union for all rule outputs.
  */
 
 /**
@@ -23,19 +24,22 @@ export interface MappingContext {
 }
 
 /**
- * Output from a mapping rule - describes an event to emit.
+ * Interpretation output union type.
+ * Separates semantic parsing from event commitment.
+ * 
+ * - fact_candidate: Observable outcomes (send meeting notes, submit invoice)
+ * - work_event: Status-derived lifecycle events
+ * - field_value: Extracted dates, assignees, etc.
+ * - action_hint: Intended/preparatory work (request docs, prepare proposal)
  */
-export interface MappingOutput {
-    /** The fact kind to emit (e.g., 'MEETING_HELD') */
-    factKind: string;
-    /** Additional payload fields extracted from the row */
-    payload?: Record<string, unknown>;
-    /** Confidence level of this interpretation */
-    confidence: 'low' | 'medium' | 'high';
-}
+export type InterpretationOutput =
+    | { kind: 'fact_candidate'; factKind: string; payload?: Record<string, unknown>; confidence: 'low' | 'medium' | 'high' }
+    | { kind: 'work_event'; eventType: 'WORK_STARTED' | 'WORK_FINISHED' | 'WORK_BLOCKED'; source?: string }
+    | { kind: 'field_value'; field: string; value: unknown; confidence: 'low' | 'medium' | 'high' }
+    | { kind: 'action_hint'; hintType: 'request' | 'prepare' | 'coordinate' | 'setup' | 'communicate'; text: string };
 
 /**
- * A mapping rule that matches CSV text and produces event outputs.
+ * A mapping rule that matches CSV text and produces interpretation outputs.
  */
 export interface MappingRule {
     /** Unique identifier for this rule */
@@ -44,8 +48,8 @@ export interface MappingRule {
     description: string;
     /** Pattern to match against the text (case-insensitive) */
     pattern: RegExp;
-    /** The fact kind(s) this rule emits */
-    emits: (ctx: MappingContext) => MappingOutput[];
+    /** Emits InterpretationOutput variants */
+    emits: (ctx: MappingContext) => InterpretationOutput[];
     /** Priority - higher runs first (default: 0) */
     priority?: number;
     /** If true, stop processing further rules after this match */
@@ -60,9 +64,9 @@ export interface MappingRule {
 export function applyMappingRules(
     ctx: MappingContext,
     rules: MappingRule[]
-): MappingOutput[] {
+): InterpretationOutput[] {
     const sortedRules = [...rules].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
-    const outputs: MappingOutput[] = [];
+    const outputs: InterpretationOutput[] = [];
 
     for (const rule of sortedRules) {
         if (rule.pattern.test(ctx.text)) {

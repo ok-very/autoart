@@ -1,11 +1,12 @@
 /**
- * Monday CSV Parser
+ * Monday CSV Parser (v3.0)
  *
  * Parses Monday.com CSV exports into import plan format.
- * Extracts:
- * - Stage headers (optional grouping info)
- * - Subprocesses (main rows)
- * - Tasks (subitems - comma-delimited in Subitems column)
+ * Improved for varied export formats:
+ * - Header KV block pre-pass for metadata
+ * - Flexible stage detection (colon optional)
+ * - Stable container hierarchy (no per-task subprocesses)
+ * - Proper subtask handling
  */
 
 import type { ParseResult, ImportPlanContainer, ImportPlanItem } from '../types.js';
@@ -15,20 +16,48 @@ import type { ParseResult, ImportPlanContainer, ImportPlanItem } from '../types.
 // ============================================================================
 
 interface MondayRow {
-    Name?: string;
-    Subitems?: string;
-    PM?: string;
-    'Task Status'?: string;
-    'Target Date'?: string;
-    Priority?: string;
-    Notes?: string;
-    Files?: string;
-    'Timeline - Start'?: string;
-    'Timeline - End'?: string;
-    'Key Personnel'?: string;
-    Developer?: string;
     [key: string]: string | undefined;
 }
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Check if a row is a table header (Name, Subitems, ...)
+ */
+function isTableHeader(row: MondayRow): boolean {
+    const name = (row['Name'] ?? row[0] ?? '').toLowerCase();
+    const subitems = (row['Subitems'] ?? row[1] ?? '').toLowerCase();
+    return (name === 'name' && subitems === 'subitems') ||
+        (name === 'subitems' && subitems === 'name');
+}
+
+/**
+ * Check if a value looks like a metadata label (ends with colon only)
+ */
+function isMetadataLabel(value: string): boolean {
+    const trimmed = value.trim();
+    return /^[A-Za-z\s]+:$/.test(trimmed);
+}
+
+/**
+ * Patterns to detect stage headers
+ */
+const STAGE_PATTERNS = [
+    /^Stage\s+\d+/i,
+    /^Phase\s+\d+/i,
+];
+
+/**
+ * Section headers to treat as stages
+ */
+const SECTION_HEADERS = [
+    'project files',
+    'plaque',
+    'legal letters',
+    'photography',
+];
 
 // ============================================================================
 // PARSER CLASS
@@ -41,110 +70,154 @@ export class MondayCSVParser {
         const items: ImportPlanItem[] = [];
         const validationIssues: ParseResult['validationIssues'] = [];
 
-        let currentStageLabel: string | null = null;
-        let currentStageOrder = 0;
-        let processId: string | null = null;
-        let lastSubprocessId: string | null = null;
+        if (rows.length === 0) {
+            validationIssues.push({
+                severity: 'error',
+                message: 'No data found in CSV',
+            });
+            return { containers, items, validationIssues };
+        }
 
         const processName = (config.processName as string) ?? 'Imported Process';
 
+        // Create the main process container
+        const processId = 'temp-process-main';
+        containers.push({
+            tempId: processId,
+            type: 'process',
+            title: processName,
+            parentTempId: null,
+        });
+
+        let currentStageId: string | null = null;
+        let currentStageName: string | null = null;
+        let currentStageOrder = 0;
+        let currentTaskId: string | null = null;
+        let stageCounter = 0;
+        let taskCounter = 0;
+        let subtaskCounter = 0;
+
         for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
             const row = rows[rowIdx];
-            const name = row.Name?.trim() ?? '';
+            const col0 = (row['Name'] ?? row[0] ?? '').trim();
+            const col1 = (row['Subitems'] ?? row[1] ?? '').trim();
 
             // Skip empty rows
-            if (!name && !row.Subitems?.trim()) {
+            if (!col0 && !col1) continue;
+
+            // Skip table headers
+            if (isTableHeader(row)) continue;
+
+            // Skip "Subitems" header row (appears after main task rows)
+            if (col0.toLowerCase() === 'subitems' && (row['Name'] ?? row[1] ?? '').trim().toLowerCase() === 'name') {
                 continue;
             }
 
-            // Create process container on first meaningful row
-            if (!processId) {
-                processId = `temp-process-1`;
-                containers.push({
-                    tempId: processId,
-                    type: 'process',
-                    title: processName,
-                    parentTempId: null,
-                });
-            }
+            // Detect stage headers
+            const isStage = STAGE_PATTERNS.some((p) => p.test(col0));
+            const isSection = SECTION_HEADERS.includes(col0.toLowerCase());
 
-            // Detect stage headers (e.g., "Stage 1 - Project Initiation")
-            if (this.isStageHeader(name)) {
-                currentStageLabel = this.extractStageName(name);
-                currentStageOrder++;
-                continue;
-            }
-
-            // Detect subprocess (row with Name but may or may not have Subitems)
-            if (name && !row.Subitems?.trim()) {
-                // This is a subprocess header row
-                const subprocessId = `temp-subprocess-${containers.length}`;
+            if (isStage || isSection) {
+                const stageId = `temp-stage-${stageCounter++}`;
                 containers.push({
-                    tempId: subprocessId,
-                    type: 'subprocess',
-                    title: name,
+                    tempId: stageId,
+                    type: 'subprocess', // Map stages to subprocess for now
+                    title: col0,
                     parentTempId: processId,
                 });
-                lastSubprocessId = subprocessId;
+                currentStageId = stageId;
+                currentStageName = this.extractStageName(col0);
+                currentStageOrder++;
+                currentTaskId = null;
                 continue;
             }
 
-            // Parse subitems (comma-delimited task names)
-            if (row.Subitems?.trim()) {
-                const parentId = lastSubprocessId;
-                if (!parentId) {
-                    validationIssues.push({
-                        severity: 'warning',
-                        message: `Subitems found without parent subprocess on row ${rowIdx + 1}`,
-                    });
-                    // Create a default subprocess
-                    const subprocessId = `temp-subprocess-${containers.length}`;
-                    containers.push({
-                        tempId: subprocessId,
-                        type: 'subprocess',
-                        title: name || 'Untitled Subprocess',
-                        parentTempId: processId,
-                    });
-                    lastSubprocessId = subprocessId;
-                }
+            // Skip rows before first stage
+            if (!currentStageId) continue;
 
-                const taskNames = row.Subitems.split(',')
-                    .map((s) => s.trim())
-                    .filter(Boolean);
+            // Skip metadata-like rows that leaked through
+            if (isMetadataLabel(col0)) continue;
 
-                for (const taskName of taskNames) {
-                    const taskId = `temp-task-${items.length}`;
+            // Subtask row: empty col0, non-empty col1
+            if (col0 === '' && col1 !== '') {
+                if (currentTaskId) {
+                    // Create subtask as an item under the current task's parent stage
+                    const subtaskId = `temp-subtask-${subtaskCounter++}`;
                     items.push({
-                        tempId: taskId,
-                        title: taskName,
-                        parentTempId: lastSubprocessId!,
+                        tempId: subtaskId,
+                        title: col1,
+                        parentTempId: currentStageId!,
                         metadata: {
-                            'import.stage_name': currentStageLabel,
+                            isSubtask: true,
+                            parentTaskTempId: currentTaskId,
+                            status: row['Status'] ?? row[3] ?? 'Not Started',
+                            targetDate: row['Target Date'] ?? row[4] ?? null,
+                            'import.stage_name': currentStageName,
                             'import.stage_order': currentStageOrder,
                             'import.source_row': rowIdx + 1,
                         },
                         plannedAction: {
-                            type: 'CREATE_TASK',
-                            payload: { title: taskName },
+                            type: 'CREATE_SUBTASK',
+                            payload: { title: col1 },
                         },
                         fieldRecordings: this.extractFieldRecordings(row),
                     });
                 }
+                continue;
+            }
+
+            // Task row: non-empty col0 under a stage
+            if (col0 !== '') {
+                const taskId = `temp-task-${taskCounter++}`;
+
+                // Parse subitems preview from col1 (comma-separated list)
+                const subitemsList = col1 ? col1.split(',').map((s) => s.trim()).filter(Boolean) : [];
+
+                items.push({
+                    tempId: taskId,
+                    title: col0,
+                    parentTempId: currentStageId!,
+                    metadata: {
+                        status: row['Task Status'] ?? row[3] ?? 'Not Started',
+                        targetDate: row['Target Date'] ?? row[4] ?? null,
+                        priority: row['Priority'] ?? row[5] ?? null,
+                        notes: row['Notes'] ?? row[6] ?? null,
+                        subitemsPreview: subitemsList.length > 0 ? subitemsList : null,
+                        'import.stage_name': currentStageName,
+                        'import.stage_order': currentStageOrder,
+                        'import.source_row': rowIdx + 1,
+                    },
+                    plannedAction: {
+                        type: 'CREATE_TASK',
+                        payload: { title: col0 },
+                    },
+                    fieldRecordings: this.extractFieldRecordings(row),
+                });
+                currentTaskId = taskId;
             }
         }
 
-        // Validate results
-        if (containers.length === 0) {
+        // Validation
+        if (containers.length <= 1) {
             validationIssues.push({
-                severity: 'error',
-                message: 'No containers (process/subprocess) detected in the data',
+                severity: 'warning',
+                message: 'No stages detected. Check if "Stage X" headers exist in the data.',
             });
         }
 
-        if (items.length === 0 && containers.length > 1) {
+        if (items.length === 0) {
             validationIssues.push({
                 severity: 'warning',
-                message: 'No task items detected. Check if the Subitems column contains data.',
+                message: 'No tasks found. Check CSV structure.',
+            });
+        }
+
+        // Check for tasks that look like metadata (end with ":")
+        const suspiciousTasks = items.filter((i) => i.title.endsWith(':'));
+        if (suspiciousTasks.length > 0) {
+            validationIssues.push({
+                severity: 'warning',
+                message: `Found ${suspiciousTasks.length} task(s) ending with ":" which may be metadata`,
             });
         }
 
@@ -156,77 +229,84 @@ export class MondayCSVParser {
     // ============================================================================
 
     private parseCSV(rawData: string): MondayRow[] {
-        const lines = rawData.split(/\r?\n/).filter((line) => line.trim());
-        if (lines.length < 2) return [];
-
-        const headers = this.parseCSVLine(lines[0]);
         const rows: MondayRow[] = [];
-
-        for (let i = 1; i < lines.length; i++) {
-            const values = this.parseCSVLine(lines[i]);
-            const row: MondayRow = {};
-            for (let j = 0; j < headers.length; j++) {
-                row[headers[j]] = values[j] ?? '';
-            }
-            rows.push(row);
-        }
-
-        return rows;
-    }
-
-    private parseCSVLine(line: string): string[] {
-        const result: string[] = [];
-        let current = '';
+        let currentRow: string[] = [];
+        let currentCell = '';
         let inQuotes = false;
 
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
+        for (let i = 0; i < rawData.length; i++) {
+            const char = rawData[i];
+            const nextChar = rawData[i + 1];
+
             if (char === '"') {
-                if (inQuotes && line[i + 1] === '"') {
-                    current += '"';
+                if (inQuotes && nextChar === '"') {
+                    currentCell += '"';
                     i++;
                 } else {
                     inQuotes = !inQuotes;
                 }
             } else if (char === ',' && !inQuotes) {
-                result.push(current.trim());
-                current = '';
+                currentRow.push(currentCell);
+                currentCell = '';
+            } else if ((char === '\r' || char === '\n') && !inQuotes) {
+                if (char === '\r' && nextChar === '\n') i++;
+                currentRow.push(currentCell);
+                if (currentRow.some((c) => c.trim())) {
+                    // Convert array to object with indices as keys
+                    const rowObj: MondayRow = {};
+                    currentRow.forEach((val, idx) => {
+                        rowObj[idx] = val;
+                    });
+                    rows.push(rowObj);
+                }
+                currentRow = [];
+                currentCell = '';
             } else {
-                current += char;
+                currentCell += char;
             }
         }
-        result.push(current.trim());
 
-        return result;
-    }
+        if (currentCell) currentRow.push(currentCell);
+        if (currentRow.length > 0 && currentRow.some((c) => c.trim())) {
+            const rowObj: MondayRow = {};
+            currentRow.forEach((val, idx) => {
+                rowObj[idx] = val;
+            });
+            rows.push(rowObj);
+        }
 
-    private isStageHeader(name: string): boolean {
-        return /^Stage\s*\d/i.test(name);
+        return rows;
     }
 
     private extractStageName(name: string): string {
-        // Extract name after "Stage X -" or similar pattern
-        const match = name.match(/^Stage\s*\d+\s*[-–—]\s*(.+)/i);
+        // Extract name after "Stage X:" or "Stage X -" pattern
+        const match = name.match(/^Stage\s*\d+\s*[:–—-]\s*(.+)/i);
         return match ? match[1].trim() : name;
     }
 
     private extractFieldRecordings(row: MondayRow): Array<{ fieldName: string; value: unknown }> {
         const recordings: Array<{ fieldName: string; value: unknown }> = [];
 
-        if (row['Task Status']?.trim()) {
-            recordings.push({ fieldName: 'Status', value: row['Task Status'].trim() });
+        const status = row['Task Status'] ?? row['Status'] ?? row[3];
+        const targetDate = row['Target Date'] ?? row[4];
+        const priority = row['Priority'] ?? row[5];
+        const notes = row['Notes'] ?? row[6];
+        const pm = row['PM'] ?? row[2];
+
+        if (status?.trim()) {
+            recordings.push({ fieldName: 'Status', value: status.trim() });
         }
-        if (row['Target Date']?.trim()) {
-            recordings.push({ fieldName: 'Target Date', value: row['Target Date'].trim() });
+        if (targetDate?.trim()) {
+            recordings.push({ fieldName: 'Target Date', value: targetDate.trim() });
         }
-        if (row.Priority?.trim()) {
-            recordings.push({ fieldName: 'Priority', value: row.Priority.trim() });
+        if (priority?.trim()) {
+            recordings.push({ fieldName: 'Priority', value: priority.trim() });
         }
-        if (row.Notes?.trim()) {
-            recordings.push({ fieldName: 'Notes', value: row.Notes.trim() });
+        if (notes?.trim()) {
+            recordings.push({ fieldName: 'Notes', value: notes.trim() });
         }
-        if (row.PM?.trim()) {
-            recordings.push({ fieldName: 'Project Manager', value: row.PM.trim() });
+        if (pm?.trim()) {
+            recordings.push({ fieldName: 'Project Manager', value: pm.trim() });
         }
 
         return recordings;
