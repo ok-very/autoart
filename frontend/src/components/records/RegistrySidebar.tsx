@@ -14,11 +14,11 @@ interface RegistrySidebarProps {
 }
 
 /**
- * Registry Sidebar - shows both Record Types and Action Types
+ * Registry Sidebar - shows both Record Definitions and Action Definitions
  * 
  * Architecture:
- * - Record Types (kind='record') - Data definitions like Contact, Location, Artwork
- * - Action Types (kind='action_recipe') - Action recipes like Task, Subtask, Meeting
+ * - Record Definitions (definition_kind='record') - Data definitions like Contact, Location, Artwork
+ * - Action Definitions (definition_kind='action_recipe') - Action recipes like Task, Subtask, Meeting
  * 
  * This replaces RecordTypeSidebar with a unified registry view.
  */
@@ -38,19 +38,19 @@ export function RegistrySidebar({
     // Legacy hierarchy types to always exclude
     const legacyHierarchyTypes = ['project', 'process', 'stage', 'subprocess'];
 
-    // Split definitions by kind
+    // Split definitions by definition_kind
     const recordDefinitions = (definitions || []).filter((def) => {
-        const kind = (def as { kind?: string }).kind;
-        if (kind) return kind === 'record';
-        // Fallback: exclude hierarchy types and known action types
+        const defKind = (def as { definition_kind?: string }).definition_kind;
+        if (defKind) return defKind === 'record';
+        // Fallback: exclude hierarchy types and known action definitions
         const name = def.name.toLowerCase();
         return !legacyHierarchyTypes.includes(name) && name !== 'task' && name !== 'subtask';
     });
 
     const actionDefinitions = (definitions || []).filter((def) => {
-        const kind = (def as { kind?: string }).kind;
-        if (kind) return kind === 'action_recipe';
-        // Fallback: check known action types
+        const defKind = (def as { definition_kind?: string }).definition_kind;
+        if (defKind) return defKind === 'action_recipe';
+        // Fallback: check known action definitions
         const name = def.name.toLowerCase();
         return name === 'task' || name === 'subtask';
     });
@@ -72,8 +72,8 @@ export function RegistrySidebar({
         return stat?.count ?? 0;
     };
 
-    const handleCreateDefinition = (kind: 'record' | 'action_recipe') => {
-        openDrawer('create-definition', { kind });
+    const handleCreateDefinition = (definitionKind: 'record' | 'action_recipe') => {
+        openDrawer('create-definition', { definitionKind });
     };
 
     const handleEditDefinition = (e: React.MouseEvent, definitionId: string) => {
@@ -180,7 +180,7 @@ export function RegistrySidebar({
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search types..."
+                        placeholder="Search definitions..."
                         className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                 </div>
@@ -203,7 +203,7 @@ export function RegistrySidebar({
                                 <div className="flex items-center gap-2">
                                     <FolderOpen size={14} className="text-blue-500" />
                                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                        Record Types
+                                        Record Definitions
                                     </span>
                                     <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
                                         {recordDefinitions.length}
@@ -216,7 +216,7 @@ export function RegistrySidebar({
                                             handleCreateDefinition('record');
                                         }}
                                         className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                        title="Create record type"
+                                        title="Create record definition"
                                     >
                                         <Plus size={14} />
                                     </button>
@@ -250,7 +250,7 @@ export function RegistrySidebar({
                                             </div>
                                         </button>
                                     </div>
-                                    {renderDefinitionList(filteredRecords, 'records', 'No record types defined')}
+                                    {renderDefinitionList(filteredRecords, 'records', 'No record definitions')}
                                 </div>
                             )}
                         </div>
@@ -264,7 +264,7 @@ export function RegistrySidebar({
                                 <div className="flex items-center gap-2">
                                     <Zap size={14} className="text-purple-500" />
                                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                        Action Types
+                                        Action Definitions
                                     </span>
                                     <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
                                         {actionDefinitions.length}
@@ -277,7 +277,7 @@ export function RegistrySidebar({
                                             handleCreateDefinition('action_recipe');
                                         }}
                                         className="p-1 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
-                                        title="Create action type"
+                                        title="Create action definition"
                                     >
                                         <Plus size={14} />
                                     </button>

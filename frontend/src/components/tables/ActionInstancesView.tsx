@@ -1,20 +1,22 @@
 /**
  * ActionInstancesView
  *
- * Page-level view for action instances of a specific action type (recipe).
- * Used in the Registry page when an action type is selected.
+ * Page-level view for action instances.
+ * - When definitionId is provided: shows actions for that specific definition
+ * - When definitionId is null: shows all actions
  *
  * Architecture:
- * - Fetches data via useAllActionsByType hook
+ * - Uses useAllActionsByDefinition for specific definition lookup
+ * - Uses useAllActions for "all actions" view
  * - Delegates rendering to ActionsTableFlat composite
- * - This is a thin orchestration layer, not a reusable composite
  */
 
 import { useCallback } from 'react';
 import { clsx } from 'clsx';
 import { Plus } from 'lucide-react';
 import {
-    useAllActionsByType,
+    useAllActionsByDefinition,
+    useAllActions,
     useRecordDefinition,
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
@@ -23,7 +25,7 @@ import { ActionsTableFlat } from '../../ui/composites';
 // ==================== TYPES ====================
 
 export interface ActionInstancesViewProps {
-    /** Selected action type definition ID */
+    /** Selected action definition ID (null = show all actions) */
     definitionId: string | null;
     /** Custom className */
     className?: string;
@@ -39,13 +41,14 @@ export function ActionInstancesView({
     const { inspectAction, openDrawer, selection } = useUIStore();
     const { data: definition, isLoading: definitionLoading } = useRecordDefinition(definitionId);
 
-    // Get action type name from definition
-    const actionTypeName = definition?.name ?? null;
+    // Fetch actions - use specific definition lookup if ID provided, otherwise all actions
+    const { data: filteredActions = [], isLoading: filteredLoading } = useAllActionsByDefinition(definitionId);
+    const { data: allActions = [], isLoading: allLoading } = useAllActions();
 
-    // Fetch actions of this type
-    const { data: actions = [], isLoading: actionsLoading } = useAllActionsByType(actionTypeName);
-
-    const isLoading = definitionLoading || actionsLoading;
+    // Use appropriate data source
+    const actions = definitionId ? filteredActions : allActions;
+    const actionsLoading = definitionId ? filteredLoading : allLoading;
+    const isLoading = (definitionId ? definitionLoading : false) || actionsLoading;
 
     // Get currently selected action ID
     const selectedActionId = selection?.type === 'action' ? selection.id : null;
@@ -58,20 +61,24 @@ export function ActionInstancesView({
     const handleCreateAction = useCallback(() => {
         if (definitionId) {
             openDrawer('composer', { recipeId: definitionId });
+        } else {
+            // Navigate to composer without recipe
+            window.location.href = '/composer';
         }
     }, [definitionId, openDrawer]);
 
     // Toolbar header
     const renderHeader = useCallback(() => {
-        if (!definition) return null;
+        const title = definition ? definition.name : 'All Actions';
+        const icon = definition?.styling?.icon;
 
         return (
             <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200">
                 <div className="flex items-center gap-3">
-                    {/* Type badge */}
+                    {/* Definition badge */}
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg">
-                        {definition.styling?.icon && <span>{definition.styling.icon}</span>}
-                        <span className="text-sm font-medium text-purple-700">{definition.name}</span>
+                        {icon && <span>{icon}</span>}
+                        <span className="text-sm font-medium text-purple-700">{title}</span>
                     </div>
                     <span className="text-xs text-slate-400">
                         {actions.length} instance{actions.length !== 1 ? 's' : ''}
@@ -79,19 +86,17 @@ export function ActionInstancesView({
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {definitionId && (
-                        <button
-                            onClick={handleCreateAction}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700"
-                        >
-                            <Plus size={14} />
-                            Create {definition?.name || 'Action'}
-                        </button>
-                    )}
+                    <button
+                        onClick={handleCreateAction}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700"
+                    >
+                        <Plus size={14} />
+                        Create {definition?.name || 'Action'}
+                    </button>
                 </div>
             </div>
         );
-    }, [definition, definitionId, actions.length, handleCreateAction]);
+    }, [definition, actions.length, handleCreateAction]);
 
     return (
         <div className={clsx('flex flex-col h-full bg-slate-50', className)}>

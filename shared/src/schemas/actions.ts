@@ -50,6 +50,9 @@ export const EventTypeSchema = z.enum([
   // Field events
   'FIELD_VALUE_RECORDED', // A field value was captured
 
+  // Domain fact events (payload-discriminated)
+  'FACT_RECORDED',        // A domain fact occurred: payload { factKind, ...factPayload }
+
   // Assignment events
   'ASSIGNMENT_OCCURRED',  // Someone was assigned
   'ASSIGNMENT_REMOVED',   // Assignment was removed

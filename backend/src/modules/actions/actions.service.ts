@@ -118,6 +118,23 @@ export async function getAllActions(limit = 100): Promise<Action[]> {
 }
 
 /**
+ * Get all actions for a specific definition.
+ * This is the stable lookup pattern for Registry views.
+ */
+export async function getActionsByDefinition(
+  definitionId: string,
+  limit = 100
+): Promise<Action[]> {
+  return db
+    .selectFrom('actions')
+    .selectAll()
+    .where('definition_id', '=', definitionId)
+    .orderBy('created_at', 'desc')
+    .limit(limit)
+    .execute();
+}
+
+/**
  * Count actions for a context.
  */
 export async function countActionsByContext(

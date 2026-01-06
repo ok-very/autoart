@@ -5,12 +5,16 @@
  * - Create/manage sessions
  * - Parse data and generate plans
  * - Execute plans via Composer for proper Action/Event generation
+ * - Emit domain events from CSV subitems using interpreter mappings
+ * - Auto-create fact kind definitions for discovered event types
  */
 
 import { db } from '../../db/client.js';
 import { MondayCSVParser } from './parsers/monday-csv-parser.js';
 import { GenericCSVParser } from './parsers/generic-csv-parser.js';
 import type { ImportPlan, ImportPlanContainer, ImportPlanItem } from './types.js';
+import { interpretCsvRow, mapStatusToWorkEvent } from '../interpreter/interpreter.service.js';
+import { ensureFactKindDefinition } from '../records/fact-kinds.service.js';
 
 // ============================================================================
 // PARSER REGISTRY
@@ -237,6 +241,8 @@ async function executePlanViaComposer(
     userId?: string
 ) {
     const createdIds: Record<string, string> = {};
+    let factEventsEmitted = 0;
+    let workEventsEmitted = 0;
 
     // Step 1: Create containers (process, subprocess) as hierarchy nodes
     for (const container of plan.containers) {
@@ -302,7 +308,68 @@ async function executePlanViaComposer(
                 actor_id: userId ?? null,
             })
             .execute();
+
+        // Step 3: Interpret item title for domain events using mapping rules
+        const statusValue = (item.metadata as { status?: string })?.status;
+        const targetDate = (item.metadata as { targetDate?: string })?.targetDate;
+
+        const factEvents = interpretCsvRow({
+            text: item.title,
+            status: statusValue,
+            targetDate: targetDate,
+        });
+
+        // Emit FACT_RECORDED events for matched patterns
+        for (const factEvent of factEvents) {
+            // Ensure fact kind definition exists (auto-create if needed)
+            await ensureFactKindDefinition({
+                factKind: factEvent.payload.factKind,
+                source: 'csv-import',
+                confidence: factEvent.payload.confidence as 'low' | 'medium' | 'high',
+                examplePayload: factEvent.payload,
+            });
+
+            await db
+                .insertInto('events')
+                .values({
+                    context_id: contextId,
+                    context_type: 'subprocess',
+                    action_id: action.id,
+                    type: 'FACT_RECORDED',
+                    payload: JSON.stringify(factEvent.payload),
+                    actor_id: userId ?? null,
+                })
+                .execute();
+            factEventsEmitted++;
+        }
+
+        // Step 4: Map status column to work lifecycle event
+        const workEventType = mapStatusToWorkEvent(statusValue);
+        if (workEventType) {
+            await db
+                .insertInto('events')
+                .values({
+                    context_id: contextId,
+                    context_type: 'subprocess',
+                    action_id: action.id,
+                    type: workEventType,
+                    payload: JSON.stringify({
+                        source: 'csv-import',
+                        originalStatus: statusValue,
+                    }),
+                    actor_id: userId ?? null,
+                })
+                .execute();
+            workEventsEmitted++;
+        }
     }
 
-    return { createdIds, itemCount: plan.items.length, containerCount: plan.containers.length };
+    return {
+        createdIds,
+        itemCount: plan.items.length,
+        containerCount: plan.containers.length,
+        factEventsEmitted,
+        workEventsEmitted,
+    };
 }
+

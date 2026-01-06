@@ -39,6 +39,7 @@ export {
 // Record Definitions
 export {
   useRecordDefinitions,
+  useRecordDefinitionsFiltered,
   useRecordDefinition,
   useCreateDefinition,
   useUpdateDefinition,
@@ -100,7 +101,9 @@ export {
 export {
   useActions,
   useAction,
+  useAllActions,
   useAllActionsByType,
+  useAllActionsByDefinition,
   useCreateAction,
   useRetractAction,
   useAmendAction,
@@ -169,6 +172,19 @@ export {
 
 // Search
 export { useSearch } from './search';
+
+// Fact Kinds (Definition Review UI)
+export {
+  useFactKindDefinitions,
+  useFactKindsNeedingReview,
+  useFactKindStats,
+  useFactKindDefinition,
+  useApproveFactKind,
+  useDeprecateFactKind,
+  useMergeFactKinds,
+  type FactKindDefinition,
+  type FactKindStats,
+} from './factKinds';
 
 // Factory (for custom CRUD hooks)
 export { createCrudHooks, createFilteredListHook } from './factory';

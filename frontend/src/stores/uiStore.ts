@@ -59,6 +59,14 @@ interface UIState {
   includeSystemEventsInLog: boolean;
   setIncludeSystemEventsInLog: (value: boolean) => void;
 
+  // Registry preferences
+  registryTab: 'definitions' | 'instances';
+  registryDefinitionKind: 'record' | 'action_recipe' | null;
+  registryScope: 'global' | 'project' | 'all';
+  setRegistryTab: (tab: 'definitions' | 'instances') => void;
+  setRegistryDefinitionKind: (kind: 'record' | 'action_recipe' | null) => void;
+  setRegistryScope: (scope: 'global' | 'project' | 'all') => void;
+
   // Actions
   setSelection: (selection: Selection) => void;
   setActiveProject: (id: string | null) => void;
@@ -110,6 +118,14 @@ export const useUIStore = create<UIState>()(
       theme: 'light',
 
       setIncludeSystemEventsInLog: (value) => set({ includeSystemEventsInLog: value }),
+
+      // Registry preferences
+      registryTab: 'instances',
+      registryDefinitionKind: null,
+      registryScope: 'all',
+      setRegistryTab: (tab) => set({ registryTab: tab }),
+      setRegistryDefinitionKind: (kind) => set({ registryDefinitionKind: kind }),
+      setRegistryScope: (scope) => set({ registryScope: scope }),
 
       setSelection: (selection) => set({ selection }),
       setActiveProject: (id) => set({ activeProjectId: id }),
@@ -171,6 +187,9 @@ export const useUIStore = create<UIState>()(
         inspectorTabMode: state.inspectorTabMode,
         activeProjectId: state.activeProjectId,
         includeSystemEventsInLog: state.includeSystemEventsInLog,
+        registryTab: state.registryTab,
+        registryDefinitionKind: state.registryDefinitionKind,
+        registryScope: state.registryScope,
       }),
     }
   )

@@ -14,12 +14,36 @@ import type { RecordDefinition, DataRecord, NewRecordDefinition } from '../../db
 
 // ==================== DEFINITIONS ====================
 
-export async function listDefinitions(): Promise<RecordDefinition[]> {
-  return db
+export interface ListDefinitionsQuery {
+  definitionKind?: 'record' | 'action_recipe' | 'container';
+  projectId?: string;
+  isTemplate?: boolean;
+  isSystem?: boolean;
+}
+
+export async function listDefinitions(query?: ListDefinitionsQuery): Promise<RecordDefinition[]> {
+  let q = db
     .selectFrom('record_definitions')
     .selectAll()
-    .orderBy('name')
-    .execute();
+    .orderBy('name');
+
+  if (query?.definitionKind) {
+    q = q.where('definition_kind', '=', query.definitionKind);
+  }
+
+  if (query?.projectId !== undefined) {
+    q = q.where('project_id', '=', query.projectId);
+  }
+
+  if (query?.isTemplate !== undefined) {
+    q = q.where('is_template', '=', query.isTemplate);
+  }
+
+  if (query?.isSystem !== undefined) {
+    q = q.where('is_system', '=', query.isSystem);
+  }
+
+  return q.execute();
 }
 
 export async function getDefinitionById(id: string): Promise<RecordDefinition | null> {

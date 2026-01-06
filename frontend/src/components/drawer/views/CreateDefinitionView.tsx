@@ -20,6 +20,7 @@ const PRESET_EMOJIS = ['📋', '📁', '👤', '🏢', '🎨', '📦', '🔧', '
 // Legacy props interface (deprecated - use DrawerProps)
 interface LegacyCreateDefinitionViewProps {
   copyFromId?: string;
+  definitionKind?: 'record' | 'action_recipe';
 }
 
 // New contract props
@@ -35,6 +36,10 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
   const isNewContract = isDrawerProps(props);
   const onClose = isNewContract ? props.onClose : undefined;
   const onSubmit = isNewContract ? props.onSubmit : undefined;
+
+  // Get definitionKind from props (defaults to 'record')
+  const definitionKind = (props as { definitionKind?: string }).definitionKind ?? 'record';
+  const isActionRecipe = definitionKind === 'action_recipe';
 
   const { closeDrawer } = useUIStore();
   const createDefinition = useCreateDefinition();
@@ -108,7 +113,9 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
           <div className="text-[10px] font-bold text-slate-400 uppercase">
             Create New
           </div>
-          <h2 className="text-xl font-bold text-slate-800">Record Type</h2>
+          <h2 className="text-xl font-bold text-slate-800">
+            {isActionRecipe ? 'Action Definition' : 'Record Definition'}
+          </h2>
         </div>
       </div>
 
@@ -127,7 +134,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
             autoFocus
           />
           <p className="mt-1 text-xs text-slate-400">
-            This will be the display name for this record type
+            This will be the display name for this {isActionRecipe ? 'action' : 'record'} definition
           </p>
         </div>
 
@@ -226,7 +233,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
             </div>
             <div>
               <div className="text-sm font-medium text-slate-700">
-                {name.trim() || 'Record Type Name'}
+                {name.trim() || (isActionRecipe ? 'Action Definition Name' : 'Record Definition Name')}
               </div>
               <div className="text-xs text-slate-400">0 records</div>
             </div>
@@ -255,7 +262,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
             ) : (
               <>
                 <Plus size={16} />
-                Create Type
+                Create Definition
               </>
             )}
           </button>

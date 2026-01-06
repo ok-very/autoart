@@ -5,8 +5,11 @@ import { useAuthStore } from './stores/authStore';
 import { MainLayout } from './components/layout/MainLayout';
 import { LoginPage } from './pages/LoginPage';
 import { RecordsPage } from './pages/RecordsPage';
+import { ActionsPage } from './pages/ActionsPage';
+import { EventsPage } from './pages/EventsPage';
 import { FieldsPage } from './pages/FieldsPage';
 import { ComposerPage } from './pages/ComposerPage';
+import { WorkbenchPage } from './pages/WorkbenchPage';
 
 
 function App() {
@@ -56,10 +59,13 @@ function App() {
   return (
     <Routes>
       <Route path="/fields" element={<FieldsPage />} />
+      <Route path="/records" element={<RecordsPage />} />
+      <Route path="/actions" element={<ActionsPage />} />
+      <Route path="/events" element={<EventsPage />} />
       <Route path="/composer" element={<ComposerPage />} />
+      <Route path="/workbench" element={<WorkbenchPage />} />
       <Route path="/" element={<MainLayout />} />
       <Route path="/project/:projectId" element={<MainLayout />} />
-      <Route path="/records" element={<RecordsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

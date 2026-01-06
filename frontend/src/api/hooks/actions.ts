@@ -25,6 +25,19 @@ import type {
 // ============================================================================
 
 /**
+ * Get all actions (no filters) - for registry "All Actions" view
+ */
+export function useAllActions(limit = 100) {
+  return useQuery({
+    queryKey: ['actions', 'all', limit],
+    queryFn: () =>
+      api
+        .get<{ actions: Action[] }>(`/actions?limit=${limit}`)
+        .then((r) => r.actions),
+  });
+}
+
+/**
  * Get all actions for a context (subprocess, stage, etc.)
  */
 export function useActions(contextId: string | null, contextType: ContextType) {
@@ -53,6 +66,7 @@ export function useAction(actionId: string | null) {
 /**
  * Get all actions of a specific type (across all contexts).
  * Used by registry view to show instances of an action type.
+ * @deprecated Use useAllActionsByDefinition for stable lookups by definition_id
  */
 export function useAllActionsByType(actionType: string | null, limit = 100) {
   return useQuery({
@@ -62,6 +76,21 @@ export function useAllActionsByType(actionType: string | null, limit = 100) {
         .get<{ actions: Action[] }>(`/actions?type=${encodeURIComponent(actionType!)}&limit=${limit}`)
         .then((r) => r.actions),
     enabled: !!actionType,
+  });
+}
+
+/**
+ * Get all actions for a specific definition (across all contexts).
+ * This is the stable lookup pattern for Registry views - uses definition_id instead of type name.
+ */
+export function useAllActionsByDefinition(definitionId: string | null, limit = 100) {
+  return useQuery({
+    queryKey: ['actions', 'byDefinition', definitionId],
+    queryFn: () =>
+      api
+        .get<{ actions: Action[] }>(`/actions?definitionId=${definitionId}&limit=${limit}`)
+        .then((r) => r.actions),
+    enabled: !!definitionId,
   });
 }
 

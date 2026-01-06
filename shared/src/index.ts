@@ -287,3 +287,35 @@ export {
   type ProjectionSelection,
 } from './projections';
 
+// Domain Events (Payload-discriminated facts)
+export {
+  KnownFactKind,
+  BaseFactPayloadSchema,
+  FactRecordedPayloadSchema,
+  FactPayloadSchemas,
+  validateFactPayload,
+  // Meeting payloads
+  MeetingScheduledPayloadSchema,
+  AgendaPreparedPayloadSchema,
+  MaterialsSentPayloadSchema,
+  MeetingHeldPayloadSchema,
+  FollowedUpPayloadSchema,
+  // Contract payloads
+  ContractSentPayloadSchema,
+  SignatureReceivedPayloadSchema,
+  ContractExecutedPayloadSchema,
+  // Invoice payloads
+  InvoiceDraftedPayloadSchema,
+  InvoiceSubmittedPayloadSchema,
+  PaymentRecordedPayloadSchema,
+  // Process payloads
+  StageInitiatedPayloadSchema,
+  StageCompletedPayloadSchema,
+  type KnownFactKind as FactKind,
+  type BaseFactPayload,
+  type FactRecordedPayload,
+  type MeetingHeldPayload,
+  type ContractExecutedPayload,
+  type InvoiceSubmittedPayload,
+  type StageCompletedPayload,
+} from './schemas/domain-events';

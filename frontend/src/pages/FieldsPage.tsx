@@ -1,16 +1,30 @@
+/**
+ * FieldsPage
+ *
+ * Registry view for Field Definitions and Field Instances (records using fields).
+ *
+ * Structure:
+ * - Definitions tab: Field browser (Miller columns view)
+ * - Instances tab: Records that use the selected field (conservative view)
+ *
+ * Note: Fields are emergent - instances are derived from records using the field.
+ */
+
 import { useState, useEffect } from 'react';
 import { TableProperties, ClipboardList } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { ResizeHandle } from '../ui/atoms/ResizeHandle';
 import { FieldsMillerColumnsView } from '../ui/composites/FieldsMillerColumnsView';
 import { FieldDefinitionEditor } from '../ui/semantic/FieldDefinitionEditor';
+import { RegistryPageHeader, type RegistryTab } from '../components/registry';
 import { useUIStore, isFieldsViewMode } from '../stores/uiStore';
 import type { FieldDescriptor } from '@autoart/shared';
 
 export function FieldsPage() {
-    const { viewMode, setViewMode } = useUIStore();
+    const { viewMode, setViewMode, openDrawer } = useUIStore();
     const [sidebarWidth, setSidebarWidth] = useState(600);
     const [selectedField, setSelectedField] = useState<FieldDescriptor | null>(null);
+    const [activeTab, setActiveTab] = useState<RegistryTab>('definitions');
 
     // Ensure valid view mode on mount
     useEffect(() => {
@@ -19,29 +33,43 @@ export function FieldsPage() {
         }
     }, [viewMode, setViewMode]);
 
+    const handleCreateField = () => {
+        openDrawer('add-field', {});
+    };
+
     return (
         <div className="flex flex-col h-full bg-slate-50">
             <Header />
-            {/* Page Title Header */}
-            <div className="h-12 bg-white border-b border-slate-200 flex items-center px-6 shrink-0">
-                <h1 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                    <TableProperties size={20} className="text-slate-500" />
-                    Fields Explorer
-                </h1>
-                <div className="ml-auto text-xs text-slate-400">
-                    Mode: {viewMode}
-                </div>
-            </div>
+
+            {/* Page Header with tabs */}
+            <RegistryPageHeader
+                title="Fields"
+                icon={TableProperties}
+                showCreateButton={activeTab === 'definitions'}
+                onCreateClick={handleCreateField}
+                createLabel="Create Field"
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                showTabSwitch={true}
+            />
 
             <div className="flex flex-1 overflow-hidden">
-                {viewMode === 'aggregate' ? (
+                {activeTab === 'instances' ? (
+                    /* Instances View - Records using the selected field */
                     <div className="flex-1 flex items-center justify-center text-slate-400">
                         <div className="text-center">
-                            <p className="text-lg font-medium text-slate-600">Aggregate View</p>
-                            <p>Field usage statistics and global analysis coming soon.</p>
+                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <ClipboardList size={32} className="text-slate-300" />
+                            </div>
+                            <p className="text-lg font-medium text-slate-600">Field Instances</p>
+                            <p className="text-sm mt-1">Records using the selected field.</p>
+                            <p className="text-xs mt-4 text-slate-400">
+                                Select a field from the Definitions tab to see records that use it.
+                            </p>
                         </div>
                     </div>
                 ) : (
+                    /* Definitions View - Miller columns browser */
                     <>
                         {/* Left Drawer / Sidebar - Miller Columns */}
                         <div

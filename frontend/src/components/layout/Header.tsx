@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, Plus, Copy, FolderOpen, Check, Library, Upload, Database, TableProperties, Wand2, Layers } from 'lucide-react';
+import { ChevronDown, Plus, Copy, FolderOpen, Check, Library, Database, TableProperties, Wand2, Layers, Zap, Activity, Hammer } from 'lucide-react';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import {
   useUIStore,
@@ -32,8 +32,11 @@ export function Header() {
 
   const isRecordsPage = location.pathname.startsWith('/records');
   const isFieldsPage = location.pathname.startsWith('/fields');
+  const isActionsPage = location.pathname.startsWith('/actions');
+  const isEventsPage = location.pathname.startsWith('/events');
+  const isWorkbenchPage = location.pathname.startsWith('/workbench');
   const isComposerPage = location.pathname.startsWith('/composer');
-  const isRegistryPage = isRecordsPage || isFieldsPage;
+  const isRegistryPage = isRecordsPage || isFieldsPage || isActionsPage || isEventsPage;
 
   const selectedProject = activeProjectId ? getNode(activeProjectId) : null;
 
@@ -79,12 +82,6 @@ export function Header() {
     });
   };
 
-  const handleOpenIngestion = () => {
-    if (!selectedProject) return;
-    setIsDropdownOpen(false);
-    openDrawer('ingestion', {});
-  };
-
   return (
     <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 relative z-[60] shadow-sm">
       <div className="flex items-center gap-3">
@@ -125,6 +122,17 @@ export function Header() {
             {isRegistryDropdownOpen && (
               <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden py-1">
                 <Link
+                  to="/fields"
+                  onClick={() => setIsRegistryDropdownOpen(false)}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${isFieldsPage
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-slate-700'
+                    }`}
+                >
+                  <TableProperties size={16} />
+                  Fields
+                </Link>
+                <Link
                   to="/records"
                   onClick={() => setIsRegistryDropdownOpen(false)}
                   className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${isRecordsPage
@@ -136,15 +144,26 @@ export function Header() {
                   Records
                 </Link>
                 <Link
-                  to="/fields"
+                  to="/actions"
                   onClick={() => setIsRegistryDropdownOpen(false)}
-                  className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${isFieldsPage
-                    ? 'bg-blue-50 text-blue-700'
+                  className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${isActionsPage
+                    ? 'bg-purple-50 text-purple-700'
                     : 'text-slate-700'
                     }`}
                 >
-                  <TableProperties size={16} />
-                  Fields
+                  <Zap size={16} />
+                  Actions
+                </Link>
+                <Link
+                  to="/events"
+                  onClick={() => setIsRegistryDropdownOpen(false)}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${isEventsPage
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'text-slate-700'
+                    }`}
+                >
+                  <Activity size={16} />
+                  Events
                 </Link>
               </div>
             )}
@@ -160,6 +179,18 @@ export function Header() {
           >
             <Wand2 size={14} />
             Composer
+          </Link>
+
+          {/* Workbench Link */}
+          <Link
+            to="/workbench"
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${isWorkbenchPage
+              ? 'bg-amber-50 text-amber-700'
+              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+              }`}
+          >
+            <Hammer size={14} />
+            Workbench
           </Link>
         </nav>
 
@@ -216,13 +247,14 @@ export function Header() {
                           <Library size={16} />
                           <span>Template Library</span>
                         </button>
-                        <button
-                          onClick={handleOpenIngestion}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 rounded-md transition-colors"
+                        <Link
+                          to="/workbench"
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-amber-50 hover:text-amber-700 rounded-md transition-colors"
                         >
-                          <Upload size={16} />
-                          <span>Import CSV</span>
-                        </button>
+                          <Hammer size={16} />
+                          <span>Import Workbench</span>
+                        </Link>
                       </>
                     )}
                   </div>

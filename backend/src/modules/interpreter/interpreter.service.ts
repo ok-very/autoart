@@ -558,3 +558,155 @@ export async function getStatusSummary(
 
   return summary;
 }
+
+// ============================================================================
+// CSV INTERPRETATION LAYER
+// ============================================================================
+
+import {
+  MappingContext,
+  MappingOutput,
+  MappingRule,
+  applyMappingRules,
+} from './mappings/types.js';
+import { defaultMappingRules } from './mappings/index.js';
+
+export type { MappingContext, MappingOutput, MappingRule };
+
+/**
+ * CSV row input for interpretation.
+ */
+export interface CsvRowInput {
+  /** The main text content (task name / subitem description) */
+  text: string;
+  /** Status value from CSV */
+  status?: string;
+  /** Target date if present */
+  targetDate?: string;
+  /** Parent item title for context */
+  parentTitle?: string;
+  /** Stage name for context */
+  stageName?: string;
+  /** Additional metadata */
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Event input ready for emission.
+ */
+export interface FactEventInput {
+  type: 'FACT_RECORDED';
+  payload: {
+    factKind: string;
+    source: 'csv-import';
+    confidence: 'low' | 'medium' | 'high';
+    [key: string]: unknown;
+  };
+}
+
+/**
+ * Interpret a CSV row into domain fact events.
+ *
+ * This is a pure function - no database access, fully testable.
+ * Applies mapping rules to determine which facts to emit.
+ *
+ * @param row - The CSV row data
+ * @param rules - Mapping rules to apply (defaults to all known rules)
+ * @returns Array of event inputs ready for emission
+ */
+export function interpretCsvRow(
+  row: CsvRowInput,
+  rules: MappingRule[] = defaultMappingRules
+): FactEventInput[] {
+  const ctx: MappingContext = {
+    text: row.text,
+    status: row.status,
+    targetDate: row.targetDate,
+    parentTitle: row.parentTitle,
+    stageName: row.stageName,
+    metadata: row.metadata,
+  };
+
+  const outputs = applyMappingRules(ctx, rules);
+
+  return outputs.map((output) => ({
+    type: 'FACT_RECORDED' as const,
+    payload: {
+      factKind: output.factKind,
+      source: 'csv-import' as const,
+      confidence: output.confidence,
+      ...output.payload,
+    },
+  }));
+}
+
+/**
+ * Interpret multiple subitems for a parent item.
+ *
+ * @param subitems - Array of subitem texts
+ * @param parentTitle - Title of the parent item
+ * @param stageName - Current stage name for context
+ * @param rules - Mapping rules to apply
+ * @returns Array of event inputs for all subitems
+ */
+export function interpretSubitems(
+  subitems: Array<{ text: string; status?: string; targetDate?: string }>,
+  parentTitle: string,
+  stageName?: string,
+  rules: MappingRule[] = defaultMappingRules
+): FactEventInput[] {
+  const allEvents: FactEventInput[] = [];
+
+  for (const subitem of subitems) {
+    const events = interpretCsvRow(
+      {
+        text: subitem.text,
+        status: subitem.status,
+        targetDate: subitem.targetDate,
+        parentTitle,
+        stageName,
+      },
+      rules
+    );
+    allEvents.push(...events);
+  }
+
+  return allEvents;
+}
+
+/**
+ * Map a CSV status value to a work lifecycle event type.
+ *
+ * @param status - The status value from CSV
+ * @returns The event type to emit, or null if no event should be emitted
+ */
+export function mapStatusToWorkEvent(
+  status?: string
+): 'WORK_STARTED' | 'WORK_FINISHED' | 'WORK_BLOCKED' | null {
+  if (!status) return null;
+
+  const normalized = status.toLowerCase().trim();
+
+  // Finished states
+  if (['executed', 'done', 'completed', 'finished'].includes(normalized)) {
+    return 'WORK_FINISHED';
+  }
+
+  // Active states
+  if (['working on it', 'in progress', 'active', 'started'].includes(normalized)) {
+    return 'WORK_STARTED';
+  }
+
+  // Blocked states
+  if (['blocked', 'stuck', 'waiting'].includes(normalized)) {
+    return 'WORK_BLOCKED';
+  }
+
+  // Milestone is treated as finished
+  if (normalized === 'milestone') {
+    return 'WORK_FINISHED';
+  }
+
+  // Not started / Not applicable - no event needed
+  return null;
+}

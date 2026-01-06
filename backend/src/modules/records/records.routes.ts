@@ -18,11 +18,33 @@ export async function recordsRoutes(app: FastifyInstance) {
 
   // ==================== DEFINITIONS ====================
 
-  // List all definitions
-  fastify.get('/definitions', { preHandler: [fastify.authenticate] }, async (_request, reply) => {
-    const definitions = await recordsService.listDefinitions();
-    return reply.send({ definitions });
+  // Schema for list definitions query params
+  const listDefinitionsQuerySchema = z.object({
+    definitionKind: z.enum(['record', 'action_recipe', 'container']).optional(),
+    projectId: z.string().uuid().optional(),
+    isTemplate: z.enum(['true', 'false']).optional().transform(v => v === 'true' ? true : v === 'false' ? false : undefined),
+    isSystem: z.enum(['true', 'false']).optional().transform(v => v === 'true' ? true : v === 'false' ? false : undefined),
   });
+
+  // List all definitions (with optional filters)
+  fastify.get(
+    '/definitions',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        querystring: listDefinitionsQuerySchema,
+      },
+    },
+    async (request, reply) => {
+      const definitions = await recordsService.listDefinitions({
+        definitionKind: request.query.definitionKind,
+        projectId: request.query.projectId,
+        isTemplate: request.query.isTemplate,
+        isSystem: request.query.isSystem,
+      });
+      return reply.send({ definitions });
+    }
+  );
 
   // Get single definition
   fastify.get(

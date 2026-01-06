@@ -248,34 +248,39 @@ export function UniversalTableView({
         };
 
         // Dynamic columns from schema
+        // Dedupe: exclude fields that duplicate the primary Name column (unique_name)
+        // This includes 'name', 'unique_name', 'title' if they would duplicate primary identifier
         const fields = definition?.schema_config?.fields || [];
-        const fieldColumns = fields.map((field: FieldDef): TableColumn<DataRecord> => {
-            const renderAs = ((field as FieldDef & { renderAs?: string }).renderAs || field.type || 'text') as DataFieldKind;
+        const dedupeKeys = new Set(['name', 'unique_name']);
+        const fieldColumns = fields
+            .filter((field: FieldDef) => !dedupeKeys.has(field.key))
+            .map((field: FieldDef): TableColumn<DataRecord> => {
+                const renderAs = ((field as FieldDef & { renderAs?: string }).renderAs || field.type || 'text') as DataFieldKind;
 
-            // Determine sensible default width based on field type
-            let defaultWidth = 150;
-            if (field.type === 'text') defaultWidth = 180;
-            if (field.type === 'number' || field.type === 'percent') defaultWidth = 100;
-            if (field.type === 'date') defaultWidth = 120;
-            if (field.type === 'status' || field.type === 'select') defaultWidth = 130;
-            if (field.type === 'user') defaultWidth = 140;
-            if (field.type === 'tags') defaultWidth = 160;
+                // Determine sensible default width based on field type
+                let defaultWidth = 150;
+                if (field.type === 'text') defaultWidth = 180;
+                if (field.type === 'number' || field.type === 'percent') defaultWidth = 100;
+                if (field.type === 'date') defaultWidth = 120;
+                if (field.type === 'status' || field.type === 'select') defaultWidth = 130;
+                if (field.type === 'user') defaultWidth = 140;
+                if (field.type === 'tags') defaultWidth = 160;
 
-            return {
-                key: field.key,
-                label: field.label,
-                width: defaultWidth,
-                minWidth: 80,
-                field: field as FieldDef & { renderAs?: string },
-                sortable: ['text', 'number', 'date', 'status', 'select'].includes(field.type),
-                editable: allowEdit,
-                resizable: true,
-                renderCell: (record) => {
-                    const value = record.data?.[field.key];
-                    return <DataFieldWidget kind={renderAs} value={value} />;
-                },
-            };
-        });
+                return {
+                    key: field.key,
+                    label: field.label,
+                    width: defaultWidth,
+                    minWidth: 80,
+                    field: field as FieldDef & { renderAs?: string },
+                    sortable: ['text', 'number', 'date', 'status', 'select'].includes(field.type),
+                    editable: allowEdit,
+                    resizable: true,
+                    renderCell: (record) => {
+                        const value = record.data?.[field.key];
+                        return <DataFieldWidget kind={renderAs} value={value} />;
+                    },
+                };
+            });
 
         // Updated at column
         const updatedColumn: TableColumn<DataRecord> = {
@@ -487,8 +492,6 @@ export function UniversalTableView({
                         selectedRowId={useUIStore.getState().selection?.type === 'record' ? useUIStore.getState().selection?.id : null}
                         onRowSelect={handleSelectRecord}
                         onCellChange={handleCellChange}
-                        title={definition?.name}
-                        icon={definition?.styling?.icon}
                         emptyMessage="No records found"
                         compact={compact}
                         stickyHeader

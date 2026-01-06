@@ -42,6 +42,7 @@ const ListActionsQuerySchema = z.object({
   contextId: z.string().uuid().optional(),
   contextType: ContextTypeSchema.optional(),
   type: z.string().optional(),
+  definitionId: z.string().uuid().optional(),
   limit: z.coerce.number().optional().default(100),
 });
 
@@ -118,7 +119,7 @@ export async function actionsRoutes(fastify: FastifyInstance) {
 
   /**
    * GET /actions - List all actions (with optional context filter)
-   * Query params: contextId, contextType, type
+   * Query params: contextId, contextType, type, definitionId
    */
   app.get(
     '/',
@@ -128,16 +129,23 @@ export async function actionsRoutes(fastify: FastifyInstance) {
       },
     },
     async (request) => {
-      const { contextId, contextType, type, limit } = request.query;
+      const { contextId, contextType, type, definitionId, limit } = request.query;
 
       let actions;
 
-      if (contextId && contextType) {
+      if (definitionId) {
+        // Use stable definition_id lookup
+        actions = await actionsService.getActionsByDefinition(definitionId, limit || 100);
+      } else if (contextId && contextType) {
         if (type) {
           actions = await actionsService.getActionsByType(contextId, contextType, type);
         } else {
           actions = await actionsService.getActionsByContext(contextId, contextType);
         }
+      } else if (type) {
+        // Fallback: type-only query (legacy behavior)
+        actions = await actionsService.getAllActions(limit || 100);
+        actions = actions.filter(a => a.type === type);
       } else {
         actions = await actionsService.getAllActions(limit || 100);
       }

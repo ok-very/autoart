@@ -98,7 +98,7 @@ export interface RecordDefinitionsTable {
   project_id: string | null; // If set, belongs to project's template library
   is_template: Generated<boolean>; // Marks as reusable template
   is_system: Generated<boolean>; // System definitions (Task, Subtask, etc.) - cannot be deleted
-  kind: Generated<string>; // 'record' | 'action_recipe' - discriminator for action types vs data
+  definition_kind: Generated<string>; // 'record' | 'action_recipe' | 'container' - discriminator for definition types
   parent_definition_id: string | null; // For hierarchical types (e.g., Subtask under Task)
   clone_excluded: Generated<boolean>; // If true, definition is NOT cloned when cloning projects
   pinned: Generated<boolean>; // If true, appears in quick create menu
@@ -196,6 +196,7 @@ export interface ActionsTable {
   context_id: string;
   context_type: ContextType;
   parent_action_id: string | null; // Self-referential for container hierarchy
+  definition_id: string | null; // Links to action recipe definition
   type: string;
   field_bindings: Generated<unknown>; // JSONB - bindings to Field definitions
   created_at: Generated<Date>;
@@ -299,6 +300,31 @@ export type ImportExecution = Selectable<ImportExecutionsTable>;
 export type NewImportExecution = Insertable<ImportExecutionsTable>;
 export type ImportExecutionUpdate = Updateable<ImportExecutionsTable>;
 
+// ============================================
+// FACT KIND DEFINITIONS TABLE (Migration 028)
+// Tracks discovered fact kinds from imports
+// ============================================
+
+export interface FactKindDefinitionsTable {
+  id: Generated<string>;
+  fact_kind: string;
+  display_name: string;
+  description: string | null;
+  payload_schema: Generated<unknown>; // JSONB
+  example_payload: unknown | null; // First-seen payload for reference
+  source: string; // 'csv-import' | 'manual' | 'system'
+  confidence: string; // 'low' | 'medium' | 'high'
+  needs_review: Generated<boolean>;
+  is_known: Generated<boolean>;
+  first_seen_at: Generated<Date>;
+  reviewed_at: Date | null;
+  reviewed_by: string | null;
+}
+
+export type FactKindDefinition = Selectable<FactKindDefinitionsTable>;
+export type NewFactKindDefinition = Insertable<FactKindDefinitionsTable>;
+export type FactKindDefinitionUpdate = Updateable<FactKindDefinitionsTable>;
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -316,6 +342,5 @@ export interface Database {
   import_sessions: ImportSessionsTable;
   import_plans: ImportPlansTable;
   import_executions: ImportExecutionsTable;
+  fact_kind_definitions: FactKindDefinitionsTable;
 }
-
-

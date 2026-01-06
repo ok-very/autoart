@@ -8,6 +8,7 @@ import authPlugin from './plugins/auth.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { hierarchyRoutes } from './modules/hierarchy/hierarchy.routes.js';
 import { recordsRoutes } from './modules/records/records.routes.js';
+import { factKindsRoutes } from './modules/records/fact-kinds.routes.js';
 import { referencesRoutes } from './modules/references/references.routes.js';
 import { searchRoutes } from './modules/search/search.routes.js';
 import { linksRoutes } from './modules/links/links.routes.js';
@@ -77,6 +78,9 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Import sessions - new projection-driven import workflow
   await fastify.register(importsRoutes, { prefix: '/api/imports' });
+
+  // Fact kind definitions - Definition Review UI
+  await fastify.register(factKindsRoutes, { prefix: '/api' });
 
   // Global error handler
   fastify.setErrorHandler((error: Error & { validation?: unknown; statusCode?: number; code?: string }, _request, reply) => {
