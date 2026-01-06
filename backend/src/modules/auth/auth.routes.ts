@@ -16,17 +16,10 @@ export async function authRoutes(fastify: FastifyInstance) {
       const refreshToken = await authService.createSession(user.id);
       const accessToken = fastify.jwt.sign({ userId: user.id, email: user.email });
 
-      reply.setCookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        path: '/api/auth/refresh',
-        maxAge: 7 * 24 * 60 * 60, // 7 days
-      });
-
       return reply.code(201).send({
         user: { id: user.id, email: user.email, name: user.name },
         accessToken,
+        refreshToken,
       });
     } catch (err) {
       if (err instanceof AppError) {
@@ -48,17 +41,10 @@ export async function authRoutes(fastify: FastifyInstance) {
       const refreshToken = await authService.createSession(user.id);
       const accessToken = fastify.jwt.sign({ userId: user.id, email: user.email });
 
-      reply.setCookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        path: '/api/auth/refresh',
-        maxAge: 7 * 24 * 60 * 60,
-      });
-
       return reply.send({
         user: { id: user.id, email: user.email, name: user.name },
         accessToken,
+        refreshToken,
       });
     } catch (err) {
       if (err instanceof AppError) {
@@ -70,7 +56,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
   // Refresh Token
   fastify.post('/refresh', async (request: FastifyRequest<{ Body: RefreshInput }>, reply: FastifyReply) => {
-    const refreshToken = request.cookies.refreshToken || request.body?.refreshToken;
+    const refreshToken = request.body?.refreshToken;
 
     if (!refreshToken) {
       return reply.code(401).send({ error: 'UNAUTHORIZED', message: 'No refresh token provided' });
@@ -86,26 +72,17 @@ export async function authRoutes(fastify: FastifyInstance) {
     const newRefreshToken = await authService.createSession(payload.userId);
     const accessToken = fastify.jwt.sign(payload);
 
-    reply.setCookie('refreshToken', newRefreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/api/auth/refresh',
-      maxAge: 7 * 24 * 60 * 60,
-    });
-
-    return reply.send({ accessToken });
+    return reply.send({ accessToken, refreshToken: newRefreshToken });
   });
 
   // Logout
-  fastify.post('/logout', async (request: FastifyRequest, reply: FastifyReply) => {
-    const refreshToken = request.cookies.refreshToken;
+  fastify.post('/logout', async (request: FastifyRequest<{ Body: { refreshToken?: string } }>, reply: FastifyReply) => {
+    const refreshToken = request.body?.refreshToken;
 
     if (refreshToken) {
       await authService.deleteSession(refreshToken);
     }
 
-    reply.clearCookie('refreshToken', { path: '/api/auth/refresh' });
     return reply.send({ message: 'Logged out successfully' });
   });
 
@@ -132,5 +109,38 @@ export async function authRoutes(fastify: FastifyInstance) {
 
     const users = await authService.searchUsers(query, limit);
     return reply.send({ users });
+  });
+
+  // ============================================================================
+  // ADMIN ENDPOINTS
+  // ============================================================================
+
+  // List all users (admin)
+  fastify.get('/admin/users', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest, reply: FastifyReply) => {
+    // TODO: Add admin role check when roles are implemented
+    const users = await authService.listAllUsers();
+    return reply.send({ users });
+  });
+
+  // Soft delete user (admin)
+  interface DeleteUserParams {
+    Params: { id: string };
+  }
+  fastify.delete<DeleteUserParams>('/admin/users/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { id } = request.params;
+    const deletedBy = request.user.userId;
+
+    // Prevent self-deletion
+    if (id === deletedBy) {
+      return reply.code(400).send({ error: 'BAD_REQUEST', message: 'Cannot delete your own account' });
+    }
+
+    const result = await authService.softDeleteUser(id, deletedBy);
+
+    if (!result) {
+      return reply.code(404).send({ error: 'NOT_FOUND', message: 'User not found or already deleted' });
+    }
+
+    return reply.send({ message: 'User deleted successfully', user: result });
   });
 }

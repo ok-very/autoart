@@ -150,3 +150,38 @@ export function useExecuteImport() {
         },
     });
 }
+
+// ============================================================================
+// RESOLUTION TYPES & HOOKS
+// ============================================================================
+
+export interface Resolution {
+    itemTempId: string;
+    resolvedOutcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'SKIP';
+    resolvedFactKind?: string;
+    resolvedPayload?: Record<string, unknown>;
+}
+
+/**
+ * Save resolutions for classifications.
+ * Updates the plan and recalculates session status.
+ */
+export function useSaveResolutions() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ sessionId, resolutions }: {
+            sessionId: string;
+            resolutions: Resolution[];
+        }) => {
+            return api.patch<ImportPlan>(
+                `/imports/sessions/${sessionId}/resolutions`,
+                { resolutions }
+            );
+        },
+        onSuccess: (_, { sessionId }) => {
+            queryClient.invalidateQueries({ queryKey: ['import-plan', sessionId] });
+            queryClient.invalidateQueries({ queryKey: ['import-session', sessionId] });
+        },
+    });
+}

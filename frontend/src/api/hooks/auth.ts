@@ -12,6 +12,7 @@ export function useLogin() {
       api.post<AuthResponse>('/auth/login', data, { skipAuth: true }),
     onSuccess: (data) => {
       api.setToken(data.accessToken);
+      api.setRefreshToken(data.refreshToken);
       queryClient.invalidateQueries({ queryKey: ['user'] });
     },
   });
@@ -24,6 +25,7 @@ export function useRegister() {
       api.post<AuthResponse>('/auth/register', data, { skipAuth: true }),
     onSuccess: (data) => {
       api.setToken(data.accessToken);
+      api.setRefreshToken(data.refreshToken);
       queryClient.invalidateQueries({ queryKey: ['user'] });
     },
   });
@@ -32,9 +34,10 @@ export function useRegister() {
 export function useLogout() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => api.post('/auth/logout'),
+    mutationFn: () => api.post('/auth/logout', { refreshToken: api.getRefreshToken() }),
     onSuccess: () => {
       api.setToken(null);
+      api.setRefreshToken(null);
       queryClient.clear();
     },
   });
@@ -57,3 +60,4 @@ export function useSearchUsers(query: string, enabled: boolean = true) {
     staleTime: 30 * 1000, // 30 seconds
   });
 }
+

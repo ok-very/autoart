@@ -52,6 +52,8 @@ export interface UsersTable {
   password_hash: string;
   name: string;
   created_at: Generated<Date>;
+  deleted_at: Date | null;
+  deleted_by: string | null;
 }
 
 export type User = Selectable<UsersTable>;

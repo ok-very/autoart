@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, Plus, Copy, FolderOpen, Check, Library, Database, TableProperties, Wand2, Layers, Zap, Activity, Hammer } from 'lucide-react';
+import { ChevronDown, Plus, Copy, FolderOpen, Check, Library, Database, TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings } from 'lucide-react';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import {
   useUIStore,
@@ -306,57 +306,69 @@ export function Header() {
         )}
       </div>
 
-      {/* View Toggle - Context-Aware */}
-      <div className="flex bg-slate-100 p-0.5 rounded-lg">
-        {isRecordsPage ? (
-          // Records page view modes
-          <>
-            {(Object.entries(RECORDS_VIEW_MODE_LABELS) as [RecordsViewMode, string][]).map(([mode, label]) => (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                className={`px-3 py-1 text-xs font-medium rounded ${viewMode === mode
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-                  }`}
-              >
-                {label}
-              </button>
-            ))}
-          </>
-        ) : isFieldsPage ? (
-          // Fields page view modes
-          <>
-            {(Object.entries(FIELDS_VIEW_MODE_LABELS) as [FieldsViewMode, string][]).map(([mode, label]) => (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                className={`px-3 py-1 text-xs font-medium rounded ${viewMode === mode
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-                  }`}
-              >
-                {label}
-              </button>
-            ))}
-          </>
-        ) : (
-          // Project page view modes
-          <>
-            {(Object.entries(PROJECT_VIEW_MODE_LABELS) as [ProjectViewMode, string][]).map(([mode, label]) => (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                className={`px-3 py-1 text-xs font-medium rounded ${viewMode === mode
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-                  }`}
-              >
-                {label}
-              </button>
-            ))}
-          </>
-        )}
+      {/* Right side controls */}
+      <div className="flex items-center gap-2">
+        {/* View Toggle - Context-Aware */}
+        <div className="flex bg-slate-100 p-0.5 rounded-lg">
+          {isRecordsPage ? (
+            // Records page view modes
+            <>
+              {(Object.entries(RECORDS_VIEW_MODE_LABELS) as [RecordsViewMode, string][]).map(([mode, label]) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className={`px-3 py-1 text-xs font-medium rounded ${viewMode === mode
+                    ? 'bg-white text-slate-800 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </>
+          ) : isFieldsPage ? (
+            // Fields page view modes
+            <>
+              {(Object.entries(FIELDS_VIEW_MODE_LABELS) as [FieldsViewMode, string][]).map(([mode, label]) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className={`px-3 py-1 text-xs font-medium rounded ${viewMode === mode
+                    ? 'bg-white text-slate-800 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </>
+          ) : (
+            // Project page view modes
+            <>
+              {(Object.entries(PROJECT_VIEW_MODE_LABELS) as [ProjectViewMode, string][]).map(([mode, label]) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className={`px-3 py-1 text-xs font-medium rounded ${viewMode === mode
+                    ? 'bg-white text-slate-800 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </>
+          )}
+        </div>
+
+        {/* Settings Link */}
+        <Link
+          to="/settings"
+          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+          title="Settings"
+        >
+          <Settings size={18} />
+        </Link>
       </div>
     </header>
   );

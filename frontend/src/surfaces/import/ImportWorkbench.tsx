@@ -11,7 +11,7 @@
  * Replaces legacy IngestionView.tsx
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { X, FileSpreadsheet } from 'lucide-react';
 import { useActiveProjection, AVAILABLE_PROJECTIONS } from '../../stores/projectionStore';
 import { ProjectionSelector } from './ProjectionSelector';
@@ -19,6 +19,7 @@ import { ImportPreview } from './ImportPreview';
 import { RecordInspector } from './RecordInspector';
 import { SessionConfigPanel } from './SessionConfigPanel';
 import { ExecutionControls } from './ExecutionControls';
+import { ClassificationPanel } from './ClassificationPanel';
 import type { ImportPlan, ImportSession } from '../../api/hooks/imports';
 
 // ============================================================================
@@ -80,6 +81,19 @@ export function ImportWorkbench({ onImportComplete, onClose }: ImportWorkbenchPr
         setPlan(null);
         setSelectedRecordId(null);
     }, []);
+
+    // Handle resolutions saved
+    const handleResolutionsSaved = useCallback((updatedPlan: ImportPlan) => {
+        setPlan(updatedPlan);
+    }, []);
+
+    // Check if there are unresolved classifications
+    const hasUnresolvedClassifications = useMemo(() => {
+        if (!plan?.classifications) return false;
+        return plan.classifications.some(
+            (c) => !c.resolution && (c.outcome === 'AMBIGUOUS' || c.outcome === 'UNCLASSIFIED')
+        );
+    }, [plan]);
 
     return (
         <div className="flex flex-col h-full bg-slate-50">
@@ -148,6 +162,15 @@ export function ImportWorkbench({ onImportComplete, onClose }: ImportWorkbenchPr
                     </div>
                 )}
             </div>
+
+            {/* Classification Panel: shows when there are unresolved items */}
+            {hasUnresolvedClassifications && session && (
+                <ClassificationPanel
+                    sessionId={session.id}
+                    plan={plan}
+                    onResolutionsSaved={handleResolutionsSaved}
+                />
+            )}
 
             {/* Footer: Execution Controls */}
             <ExecutionControls

@@ -10,6 +10,7 @@ export { StagePreview } from './StagePreview';
 export { RecordInspector } from './RecordInspector';
 export { SessionConfigPanel } from './SessionConfigPanel';
 export { ExecutionControls } from './ExecutionControls';
+export { ClassificationPanel } from './ClassificationPanel';
 
 // Re-export types
 export type {

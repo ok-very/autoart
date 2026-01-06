@@ -10,6 +10,7 @@ import { EventsPage } from './pages/EventsPage';
 import { FieldsPage } from './pages/FieldsPage';
 import { ComposerPage } from './pages/ComposerPage';
 import { WorkbenchPage } from './pages/WorkbenchPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 
 function App() {
@@ -64,6 +65,7 @@ function App() {
       <Route path="/events" element={<EventsPage />} />
       <Route path="/composer" element={<ComposerPage />} />
       <Route path="/workbench" element={<WorkbenchPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
       <Route path="/" element={<MainLayout />} />
       <Route path="/project/:projectId" element={<MainLayout />} />
       <Route path="*" element={<Navigate to="/" replace />} />

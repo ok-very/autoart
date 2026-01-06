@@ -47,12 +47,17 @@ export async function registerUser(input: RegisterInput) {
 export async function loginUser(input: LoginInput) {
   const user = await db
     .selectFrom('users')
-    .select(['id', 'email', 'name', 'password_hash'])
+    .select(['id', 'email', 'name', 'password_hash', 'deleted_at'])
     .where('email', '=', input.email.toLowerCase())
     .executeTakeFirst();
 
   if (!user) {
     throw new UnauthorizedError('Invalid email or password');
+  }
+
+  // Reject deleted users
+  if (user.deleted_at) {
+    throw new UnauthorizedError('Account has been deactivated');
   }
 
   const passwordValid = await bcrypt.compare(input.password, user.password_hash);
@@ -88,11 +93,16 @@ export async function validateRefreshToken(refreshToken: string): Promise<UserPa
   const session = await db
     .selectFrom('sessions')
     .innerJoin('users', 'users.id', 'sessions.user_id')
-    .select(['users.id as userId', 'users.email', 'sessions.expires_at'])
+    .select(['users.id as userId', 'users.email', 'users.deleted_at', 'sessions.expires_at'])
     .where('sessions.refresh_token', '=', refreshToken)
     .executeTakeFirst();
 
   if (!session || new Date(session.expires_at) < new Date()) {
+    return null;
+  }
+
+  // Reject deleted users
+  if (session.deleted_at) {
     return null;
   }
 
@@ -130,6 +140,7 @@ export async function searchUsers(query: string, limit: number = 10) {
   return db
     .selectFrom('users')
     .select(['id', 'email', 'name'])
+    .where('deleted_at', 'is', null) // Only active users for search
     .where((eb) =>
       eb.or([
         eb('email', 'ilike', searchPattern),
@@ -138,4 +149,46 @@ export async function searchUsers(query: string, limit: number = 10) {
     )
     .limit(limit)
     .execute();
+}
+
+// ============================================================================
+// ADMIN FUNCTIONS
+// ============================================================================
+
+/**
+ * List all users (including deleted) for admin view.
+ */
+export async function listAllUsers() {
+  return db
+    .selectFrom('users')
+    .select(['id', 'email', 'name', 'created_at', 'deleted_at', 'deleted_by'])
+    .orderBy('created_at', 'desc')
+    .execute();
+}
+
+/**
+ * Soft delete a user.
+ * Sets deleted_at and deleted_by, revokes all sessions.
+ */
+export async function softDeleteUser(userId: string, deletedBy: string) {
+  // Set deleted_at and deleted_by
+  const result = await db
+    .updateTable('users')
+    .set({
+      deleted_at: new Date(),
+      deleted_by: deletedBy,
+    })
+    .where('id', '=', userId)
+    .where('deleted_at', 'is', null) // Only if not already deleted
+    .returning(['id', 'email', 'name', 'deleted_at'])
+    .executeTakeFirst();
+
+  if (!result) {
+    return null;
+  }
+
+  // Revoke all sessions for this user
+  await deleteAllUserSessions(userId);
+
+  return result;
 }

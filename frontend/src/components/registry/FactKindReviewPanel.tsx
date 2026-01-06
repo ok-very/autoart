@@ -179,7 +179,7 @@ function FactKindRow({
                     {factKind.description && (
                         <p className="description">{factKind.description}</p>
                     )}
-                    {factKind.example_payload && (
+                    {factKind.example_payload != null && (
                         <pre className="example-payload">
                             {typeof factKind.example_payload === 'string'
                                 ? factKind.example_payload

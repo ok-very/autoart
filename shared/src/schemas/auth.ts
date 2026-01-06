@@ -39,6 +39,7 @@ export type RegisterInput = z.infer<typeof RegisterInputSchema>;
 export const AuthResponseSchema = z.object({
   user: UserSchema,
   accessToken: z.string(),
+  refreshToken: z.string(),
 });
 
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
@@ -48,6 +49,8 @@ export type AuthResponse = z.infer<typeof AuthResponseSchema>;
  */
 export const RefreshResponseSchema = z.object({
   accessToken: z.string(),
+  refreshToken: z.string(),
 });
 
 export type RefreshResponse = z.infer<typeof RefreshResponseSchema>;
+

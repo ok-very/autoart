@@ -189,3 +189,10 @@ export {
 // Factory (for custom CRUD hooks)
 export { createCrudHooks, createFilteredListHook } from './factory';
 export type { CrudHookConfig, CrudHooks } from './factory';
+
+// Admin
+export {
+  useAdminUsers,
+  useSoftDeleteUser,
+  type AdminUser,
+} from './admin';
