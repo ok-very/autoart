@@ -1,68 +1,53 @@
 /**
- * Domain Event Payloads
+ * Domain Event Payloads — 7 Canonical Families
  *
- * This module defines payload schemas for domain-specific events.
- * These are used with the FACT_RECORDED event type via payload discrimination.
+ * These payloads are used with the FACT_RECORDED event type via payload discrimination.
  *
- * Design decision: Domain facts live in payload space, not event type enum space.
- * This allows:
- * - Schema-driven extensibility without enum churn
- * - Agents to introduce new facts safely
- * - UI and projections to evolve independently
+ * Guiding Principle:
+ *   Events record externally observable facts, not internal deliberation or intent.
  *
- * Usage:
- *   emitEvent({
- *     type: 'FACT_RECORDED',
- *     payload: { factKind: 'MEETING_HELD', ...meetingPayload }
- *   })
+ * 7 Families:
+ *   1. Communication (INFORMATION_SENT)
+ *   2. Artifacts (DOCUMENT_PREPARED, DOCUMENT_SUBMITTED)
+ *   3. Meetings (MEETING_SCHEDULED, MEETING_HELD)
+ *   4. Decisions (DECISION_RECORDED)
+ *   5. Financial (INVOICE_PREPARED, PAYMENT_RECORDED)
+ *   6. Contracts (CONTRACT_EXECUTED)
+ *   7. Process (PROCESS_INITIATED, PROCESS_COMPLETED)
  */
 
 import { z } from 'zod';
 
 // ============================================================================
-// FACT KIND REGISTRY
+// FACT KIND REGISTRY (12 canonical kinds)
 // ============================================================================
 
-/**
- * Known fact kinds. This is extensible - unknown kinds are allowed but may
- * be flagged for review when auto-created during CSV import.
- */
 export const KnownFactKind = {
-    // Meeting events
+    // 1. Communication
+    INFORMATION_SENT: 'INFORMATION_SENT',
+
+    // 2. Artifacts
+    DOCUMENT_PREPARED: 'DOCUMENT_PREPARED',
+    DOCUMENT_SUBMITTED: 'DOCUMENT_SUBMITTED',
+
+    // 3. Meetings
     MEETING_SCHEDULED: 'MEETING_SCHEDULED',
-    AGENDA_PREPARED: 'AGENDA_PREPARED',
-    MATERIALS_SENT: 'MATERIALS_SENT',
-    REMINDER_SENT: 'REMINDER_SENT',
     MEETING_HELD: 'MEETING_HELD',
     MEETING_CANCELLED: 'MEETING_CANCELLED',
-    MEETING_RESCHEDULED: 'MEETING_RESCHEDULED',
-    FOLLOWED_UP: 'FOLLOWED_UP',
 
-    // Contract events
-    CONTRACT_DRAFTED: 'CONTRACT_DRAFTED',
-    CONTRACT_SENT: 'CONTRACT_SENT',
-    SIGNATURE_REQUESTED: 'SIGNATURE_REQUESTED',
-    SIGNATURE_RECEIVED: 'SIGNATURE_RECEIVED',
-    CONTRACT_EXECUTED: 'CONTRACT_EXECUTED',
-    CONTRACT_AMENDED: 'CONTRACT_AMENDED',
+    // 4. Decisions
+    DECISION_RECORDED: 'DECISION_RECORDED',
 
-    // Document events
-    DOCUMENT_FILED: 'DOCUMENT_FILED',
-    DOCUMENT_SUBMITTED: 'DOCUMENT_SUBMITTED',
-    DOCUMENT_APPROVED: 'DOCUMENT_APPROVED',
-
-    // Invoice events
-    INVOICE_DRAFTED: 'INVOICE_DRAFTED',
-    INVOICE_REVISED: 'INVOICE_REVISED',
-    INVOICE_SUBMITTED: 'INVOICE_SUBMITTED',
-    INVOICE_REJECTED: 'INVOICE_REJECTED',
+    // 5. Financial
+    INVOICE_PREPARED: 'INVOICE_PREPARED',
     PAYMENT_RECORDED: 'PAYMENT_RECORDED',
 
-    // Process events
+    // 6. Contracts
+    CONTRACT_EXECUTED: 'CONTRACT_EXECUTED',
+
+    // 7. Process
     PROCESS_INITIATED: 'PROCESS_INITIATED',
     PROCESS_COMPLETED: 'PROCESS_COMPLETED',
-    STAGE_INITIATED: 'STAGE_INITIATED',
-    STAGE_COMPLETED: 'STAGE_COMPLETED',
 } as const;
 
 export type KnownFactKind = (typeof KnownFactKind)[keyof typeof KnownFactKind];
@@ -71,13 +56,9 @@ export type KnownFactKind = (typeof KnownFactKind)[keyof typeof KnownFactKind];
 // BASE FACT PAYLOAD
 // ============================================================================
 
-/**
- * Base payload for all FACT_RECORDED events.
- * All domain facts extend this with their specific fields.
- */
 export const BaseFactPayloadSchema = z.object({
-    factKind: z.string(), // Discriminator - can be any string, known kinds are validated
-    occurredAt: z.string().datetime().optional(), // When the fact occurred (may differ from event timestamp)
+    factKind: z.string(),
+    occurredAt: z.string().datetime().optional(),
     source: z.enum(['manual', 'csv-import', 'system']).optional(),
     confidence: z.enum(['low', 'medium', 'high']).optional(),
     notes: z.string().optional(),
@@ -85,160 +66,183 @@ export const BaseFactPayloadSchema = z.object({
 export type BaseFactPayload = z.infer<typeof BaseFactPayloadSchema>;
 
 // ============================================================================
-// MEETING EVENT PAYLOADS
+// 1. COMMUNICATION FAMILY
 // ============================================================================
 
+/**
+ * INFORMATION_SENT — Captures requests, submissions, reminders, follow-ups.
+ * Whether it's a "request" or "delivery" is semantics; the fact is information was sent.
+ */
+export const InformationSentPayloadSchema = BaseFactPayloadSchema.extend({
+    factKind: z.literal(KnownFactKind.INFORMATION_SENT),
+    subject: z.string().optional(),
+    audiences: z.array(z.string()),
+    artifacts: z.array(z.string()).optional(),
+    channel: z.string().optional(),
+});
+export type InformationSentPayload = z.infer<typeof InformationSentPayloadSchema>;
+
+// ============================================================================
+// 2. ARTIFACT FAMILY
+// ============================================================================
+
+/**
+ * DOCUMENT_PREPARED — A persistent artifact was created/drafted.
+ */
+export const DocumentPreparedPayloadSchema = BaseFactPayloadSchema.extend({
+    factKind: z.literal(KnownFactKind.DOCUMENT_PREPARED),
+    documentType: z.string(),
+    documentId: z.string().optional(),
+});
+export type DocumentPreparedPayload = z.infer<typeof DocumentPreparedPayloadSchema>;
+
+/**
+ * DOCUMENT_SUBMITTED — An artifact was submitted to an external party.
+ */
+export const DocumentSubmittedPayloadSchema = BaseFactPayloadSchema.extend({
+    factKind: z.literal(KnownFactKind.DOCUMENT_SUBMITTED),
+    documentType: z.string(),
+    submittedTo: z.string().optional(),
+});
+export type DocumentSubmittedPayload = z.infer<typeof DocumentSubmittedPayloadSchema>;
+
+// ============================================================================
+// 3. MEETING FAMILY
+// ============================================================================
+
+/**
+ * MEETING_SCHEDULED — A meeting has been coordinated and scheduled.
+ */
 export const MeetingScheduledPayloadSchema = BaseFactPayloadSchema.extend({
     factKind: z.literal(KnownFactKind.MEETING_SCHEDULED),
-    plannedAt: z.string().datetime(),
-    meetingLink: z.string().url().optional(),
+    plannedAt: z.string().datetime().optional(),
+    participants: z.array(z.string()).optional(),
     location: z.string().optional(),
-    attendees: z.array(z.string()).optional(),
+    meetingLink: z.string().url().optional(),
 });
 export type MeetingScheduledPayload = z.infer<typeof MeetingScheduledPayloadSchema>;
 
-export const AgendaPreparedPayloadSchema = BaseFactPayloadSchema.extend({
-    factKind: z.literal(KnownFactKind.AGENDA_PREPARED),
-    agendaDocId: z.string().optional(),
-    agendaItems: z.array(z.string()).optional(),
-});
-export type AgendaPreparedPayload = z.infer<typeof AgendaPreparedPayloadSchema>;
-
-export const MaterialsSentPayloadSchema = BaseFactPayloadSchema.extend({
-    factKind: z.literal(KnownFactKind.MATERIALS_SENT),
-    audiences: z.array(z.string()).optional(),
-    materials: z.array(z.string()).optional(),
-    channel: z.string().optional(), // "email", "upload", "sharepoint"
-});
-export type MaterialsSentPayload = z.infer<typeof MaterialsSentPayloadSchema>;
-
-export const ReminderSentPayloadSchema = BaseFactPayloadSchema.extend({
-    factKind: z.literal(KnownFactKind.REMINDER_SENT),
-    audience: z.array(z.string()).optional(),
-    messageType: z.string().optional(), // "meeting reminder", "follow-up"
-});
-export type ReminderSentPayload = z.infer<typeof ReminderSentPayloadSchema>;
-
+/**
+ * MEETING_HELD — A meeting occurred (externally observable fact).
+ */
 export const MeetingHeldPayloadSchema = BaseFactPayloadSchema.extend({
     factKind: z.literal(KnownFactKind.MEETING_HELD),
-    attendance: z.array(z.string()).optional(),
-    minutesDocId: z.string().optional(),
+    occurredAt: z.string().datetime().optional(),
+    participants: z.array(z.string()).optional(),
     outcomeSummary: z.string().optional(),
 });
 export type MeetingHeldPayload = z.infer<typeof MeetingHeldPayloadSchema>;
 
-export const FollowedUpPayloadSchema = BaseFactPayloadSchema.extend({
-    factKind: z.literal(KnownFactKind.FOLLOWED_UP),
-    channel: z.string().optional(),
-    recipients: z.array(z.string()).optional(),
+/**
+ * MEETING_CANCELLED — A scheduled meeting was cancelled.
+ */
+export const MeetingCancelledPayloadSchema = BaseFactPayloadSchema.extend({
+    factKind: z.literal(KnownFactKind.MEETING_CANCELLED),
+    reason: z.string().optional(),
 });
-export type FollowedUpPayload = z.infer<typeof FollowedUpPayloadSchema>;
+export type MeetingCancelledPayload = z.infer<typeof MeetingCancelledPayloadSchema>;
 
 // ============================================================================
-// CONTRACT EVENT PAYLOADS
+// 4. DECISION FAMILY
 // ============================================================================
 
-export const ContractSentPayloadSchema = BaseFactPayloadSchema.extend({
-    factKind: z.literal(KnownFactKind.CONTRACT_SENT),
-    contractDocId: z.string().optional(),
-    recipients: z.array(z.string()).optional(),
-    sentVia: z.string().optional(), // "docusign", "email"
+/**
+ * DECISION_RECORDED — A decision that ends ambiguity.
+ * Milestones, selections, approvals are all decisions.
+ */
+export const DecisionRecordedPayloadSchema = BaseFactPayloadSchema.extend({
+    factKind: z.literal(KnownFactKind.DECISION_RECORDED),
+    decisionType: z.string(),
+    subject: z.string().optional(),
 });
-export type ContractSentPayload = z.infer<typeof ContractSentPayloadSchema>;
-
-export const SignatureReceivedPayloadSchema = BaseFactPayloadSchema.extend({
-    factKind: z.literal(KnownFactKind.SIGNATURE_RECEIVED),
-    signatory: z.string().optional(),
-    signedDocId: z.string().optional(),
-});
-export type SignatureReceivedPayload = z.infer<typeof SignatureReceivedPayloadSchema>;
-
-export const ContractExecutedPayloadSchema = BaseFactPayloadSchema.extend({
-    factKind: z.literal(KnownFactKind.CONTRACT_EXECUTED),
-    executedDocId: z.string().optional(),
-    allParties: z.array(z.string()).optional(),
-});
-export type ContractExecutedPayload = z.infer<typeof ContractExecutedPayloadSchema>;
+export type DecisionRecordedPayload = z.infer<typeof DecisionRecordedPayloadSchema>;
 
 // ============================================================================
-// INVOICE EVENT PAYLOADS
+// 5. FINANCIAL FAMILY
 // ============================================================================
 
-export const InvoiceDraftedPayloadSchema = BaseFactPayloadSchema.extend({
-    factKind: z.literal(KnownFactKind.INVOICE_DRAFTED),
+/**
+ * INVOICE_PREPARED — An invoice or honorarium was drafted.
+ */
+export const InvoicePreparedPayloadSchema = BaseFactPayloadSchema.extend({
+    factKind: z.literal(KnownFactKind.INVOICE_PREPARED),
+    counterparty: z.string().optional(),
     amount: z.number().optional(),
-    invoiceNumber: z.string().optional(),
+    currency: z.string().optional(),
 });
-export type InvoiceDraftedPayload = z.infer<typeof InvoiceDraftedPayloadSchema>;
+export type InvoicePreparedPayload = z.infer<typeof InvoicePreparedPayloadSchema>;
 
-export const InvoiceSubmittedPayloadSchema = BaseFactPayloadSchema.extend({
-    factKind: z.literal(KnownFactKind.INVOICE_SUBMITTED),
-    submittedTo: z.string().optional(),
-    amount: z.number().optional(),
-});
-export type InvoiceSubmittedPayload = z.infer<typeof InvoiceSubmittedPayloadSchema>;
-
+/**
+ * PAYMENT_RECORDED — A payment was received or made.
+ */
 export const PaymentRecordedPayloadSchema = BaseFactPayloadSchema.extend({
     factKind: z.literal(KnownFactKind.PAYMENT_RECORDED),
+    counterparty: z.string().optional(),
     amount: z.number().optional(),
-    paymentMethod: z.string().optional(),
+    currency: z.string().optional(),
 });
 export type PaymentRecordedPayload = z.infer<typeof PaymentRecordedPayloadSchema>;
 
 // ============================================================================
-// PROCESS EVENT PAYLOADS
+// 6. CONTRACT FAMILY
 // ============================================================================
 
-export const StageInitiatedPayloadSchema = BaseFactPayloadSchema.extend({
-    factKind: z.literal(KnownFactKind.STAGE_INITIATED),
-    stageName: z.string().optional(),
-    stageNumber: z.number().optional(),
+/**
+ * CONTRACT_EXECUTED — A contract was fully executed (legally binding).
+ * Execution is the legally meaningful boundary; partial signatures are not facts.
+ */
+export const ContractExecutedPayloadSchema = BaseFactPayloadSchema.extend({
+    factKind: z.literal(KnownFactKind.CONTRACT_EXECUTED),
+    parties: z.array(z.string()),
+    executedAt: z.string().datetime().optional(),
+    contractType: z.string().optional(),
 });
-export type StageInitiatedPayload = z.infer<typeof StageInitiatedPayloadSchema>;
+export type ContractExecutedPayload = z.infer<typeof ContractExecutedPayloadSchema>;
 
-export const StageCompletedPayloadSchema = BaseFactPayloadSchema.extend({
-    factKind: z.literal(KnownFactKind.STAGE_COMPLETED),
-    stageName: z.string().optional(),
-    stageNumber: z.number().optional(),
+// ============================================================================
+// 7. PROCESS FAMILY
+// ============================================================================
+
+/**
+ * PROCESS_INITIATED — A process/project has started.
+ */
+export const ProcessInitiatedPayloadSchema = BaseFactPayloadSchema.extend({
+    factKind: z.literal(KnownFactKind.PROCESS_INITIATED),
+    processName: z.string().optional(),
 });
-export type StageCompletedPayload = z.infer<typeof StageCompletedPayloadSchema>;
+export type ProcessInitiatedPayload = z.infer<typeof ProcessInitiatedPayloadSchema>;
+
+/**
+ * PROCESS_COMPLETED — A process/project has finished.
+ */
+export const ProcessCompletedPayloadSchema = BaseFactPayloadSchema.extend({
+    factKind: z.literal(KnownFactKind.PROCESS_COMPLETED),
+    processName: z.string().optional(),
+});
+export type ProcessCompletedPayload = z.infer<typeof ProcessCompletedPayloadSchema>;
 
 // ============================================================================
 // FACT PAYLOAD REGISTRY
 // ============================================================================
 
-/**
- * Registry of known fact payload schemas, keyed by factKind.
- * Used for validation when emitting FACT_RECORDED events.
- */
 export const FactPayloadSchemas: Record<string, z.ZodType> = {
+    [KnownFactKind.INFORMATION_SENT]: InformationSentPayloadSchema,
+    [KnownFactKind.DOCUMENT_PREPARED]: DocumentPreparedPayloadSchema,
+    [KnownFactKind.DOCUMENT_SUBMITTED]: DocumentSubmittedPayloadSchema,
     [KnownFactKind.MEETING_SCHEDULED]: MeetingScheduledPayloadSchema,
-    [KnownFactKind.AGENDA_PREPARED]: AgendaPreparedPayloadSchema,
-    [KnownFactKind.MATERIALS_SENT]: MaterialsSentPayloadSchema,
-    [KnownFactKind.REMINDER_SENT]: ReminderSentPayloadSchema,
     [KnownFactKind.MEETING_HELD]: MeetingHeldPayloadSchema,
-    [KnownFactKind.FOLLOWED_UP]: FollowedUpPayloadSchema,
-    [KnownFactKind.CONTRACT_SENT]: ContractSentPayloadSchema,
-    [KnownFactKind.SIGNATURE_RECEIVED]: SignatureReceivedPayloadSchema,
-    [KnownFactKind.CONTRACT_EXECUTED]: ContractExecutedPayloadSchema,
-    [KnownFactKind.INVOICE_DRAFTED]: InvoiceDraftedPayloadSchema,
-    [KnownFactKind.INVOICE_SUBMITTED]: InvoiceSubmittedPayloadSchema,
+    [KnownFactKind.MEETING_CANCELLED]: MeetingCancelledPayloadSchema,
+    [KnownFactKind.DECISION_RECORDED]: DecisionRecordedPayloadSchema,
+    [KnownFactKind.INVOICE_PREPARED]: InvoicePreparedPayloadSchema,
     [KnownFactKind.PAYMENT_RECORDED]: PaymentRecordedPayloadSchema,
-    [KnownFactKind.STAGE_INITIATED]: StageInitiatedPayloadSchema,
-    [KnownFactKind.STAGE_COMPLETED]: StageCompletedPayloadSchema,
+    [KnownFactKind.CONTRACT_EXECUTED]: ContractExecutedPayloadSchema,
+    [KnownFactKind.PROCESS_INITIATED]: ProcessInitiatedPayloadSchema,
+    [KnownFactKind.PROCESS_COMPLETED]: ProcessCompletedPayloadSchema,
 };
 
-/**
- * Generic FACT_RECORDED payload schema.
- * Validates base structure; specific factKind payloads validated separately.
- */
 export const FactRecordedPayloadSchema = BaseFactPayloadSchema;
 export type FactRecordedPayload = z.infer<typeof FactRecordedPayloadSchema>;
 
-/**
- * Validate a fact payload against its specific schema if known.
- * Returns true if valid, throws ZodError if invalid.
- */
 export function validateFactPayload(payload: unknown): boolean {
     const base = BaseFactPayloadSchema.parse(payload);
     const specificSchema = FactPayloadSchemas[base.factKind];

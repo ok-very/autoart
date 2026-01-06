@@ -4,9 +4,12 @@
  * Business logic for import sessions:
  * - Create/manage sessions
  * - Parse data and generate plans
- * - Execute plans via Composer for proper Action/Event generation
+ * - Execute plans via Action/Event creation
  * - Emit domain events from CSV subitems using interpreter mappings
  * - Auto-create fact kind definitions for discovered event types
+ *
+ * IMPORTANT: All event writes MUST go through emitEvent() to ensure
+ * projection refresh and central validation guarantees.
  */
 
 import { db } from '../../db/client.js';
@@ -15,6 +18,7 @@ import { GenericCSVParser } from './parsers/generic-csv-parser.js';
 import type { ImportPlan, ImportPlanContainer, ImportPlanItem } from './types.js';
 import { interpretCsvRow, mapStatusToWorkEvent } from '../interpreter/interpreter.service.js';
 import { ensureFactKindDefinition } from '../records/fact-kinds.service.js';
+import { emitEvent } from '../events/events.service.js';
 
 // ============================================================================
 // PARSER REGISTRY
@@ -292,74 +296,70 @@ async function executePlanViaComposer(
 
         createdIds[item.tempId] = action.id;
 
-        // Record ACTION_DECLARED event
-        await db
-            .insertInto('events')
-            .values({
-                context_id: contextId,
-                context_type: 'subprocess',
-                action_id: action.id,
-                type: 'ACTION_DECLARED',
-                payload: JSON.stringify({
-                    actionType: 'Task',
-                    title: item.title,
-                    metadata: item.metadata,
-                }),
-                actor_id: userId ?? null,
-            })
-            .execute();
+        // Record ACTION_DECLARED event via emitEvent (ensures projection refresh)
+        await emitEvent({
+            contextId: contextId,
+            contextType: 'subprocess',
+            actionId: action.id,
+            type: 'ACTION_DECLARED',
+            payload: {
+                actionType: 'Task',
+                title: item.title,
+                metadata: item.metadata,
+            },
+            actorId: userId,
+        });
 
         // Step 3: Interpret item title for domain events using mapping rules
         const statusValue = (item.metadata as { status?: string })?.status;
         const targetDate = (item.metadata as { targetDate?: string })?.targetDate;
+        const stageName = (item.metadata as { 'import.stage_name'?: string })?.['import.stage_name'];
 
+        // Pass parent context for richer rule matching
         const factEvents = interpretCsvRow({
             text: item.title,
             status: statusValue,
             targetDate: targetDate,
+            stageName: stageName ?? undefined,
         });
 
-        // Emit FACT_RECORDED events for matched patterns
+        // Emit FACT_RECORDED events via emitEvent (ensures projection refresh)
         for (const factEvent of factEvents) {
             // Ensure fact kind definition exists (auto-create if needed)
+            // Store clean payload (without wrapper envelope)
+            const { factKind, source, confidence, ...cleanPayload } = factEvent.payload;
             await ensureFactKindDefinition({
                 factKind: factEvent.payload.factKind,
                 source: 'csv-import',
                 confidence: factEvent.payload.confidence as 'low' | 'medium' | 'high',
-                examplePayload: factEvent.payload,
+                examplePayload: cleanPayload,
             });
 
-            await db
-                .insertInto('events')
-                .values({
-                    context_id: contextId,
-                    context_type: 'subprocess',
-                    action_id: action.id,
-                    type: 'FACT_RECORDED',
-                    payload: JSON.stringify(factEvent.payload),
-                    actor_id: userId ?? null,
-                })
-                .execute();
+            await emitEvent({
+                contextId: contextId,
+                contextType: 'subprocess',
+                actionId: action.id,
+                type: 'FACT_RECORDED',
+                payload: factEvent.payload,
+                actorId: userId,
+            });
             factEventsEmitted++;
         }
 
-        // Step 4: Map status column to work lifecycle event
+        // Step 4: Map status column to work lifecycle event via emitEvent
         const workEventType = mapStatusToWorkEvent(statusValue);
         if (workEventType) {
-            await db
-                .insertInto('events')
-                .values({
-                    context_id: contextId,
-                    context_type: 'subprocess',
-                    action_id: action.id,
-                    type: workEventType,
-                    payload: JSON.stringify({
-                        source: 'csv-import',
-                        originalStatus: statusValue,
-                    }),
-                    actor_id: userId ?? null,
-                })
-                .execute();
+            await emitEvent({
+                contextId: contextId,
+                contextType: 'subprocess',
+                actionId: action.id,
+                type: workEventType,
+                payload: {
+                    source: 'csv-import',
+                    originalStatus: statusValue,
+                },
+                actorId: userId,
+            });
             workEventsEmitted++;
         }
     }

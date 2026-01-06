@@ -287,35 +287,51 @@ export {
   type ProjectionSelection,
 } from './projections';
 
-// Domain Events (Payload-discriminated facts)
+// Domain Events (7 Canonical Families)
 export {
   KnownFactKind,
   BaseFactPayloadSchema,
   FactRecordedPayloadSchema,
   FactPayloadSchemas,
   validateFactPayload,
-  // Meeting payloads
+  // Communication
+  InformationSentPayloadSchema,
+  // Artifacts
+  DocumentPreparedPayloadSchema,
+  DocumentSubmittedPayloadSchema,
+  // Meetings
   MeetingScheduledPayloadSchema,
-  AgendaPreparedPayloadSchema,
-  MaterialsSentPayloadSchema,
   MeetingHeldPayloadSchema,
-  FollowedUpPayloadSchema,
-  // Contract payloads
-  ContractSentPayloadSchema,
-  SignatureReceivedPayloadSchema,
-  ContractExecutedPayloadSchema,
-  // Invoice payloads
-  InvoiceDraftedPayloadSchema,
-  InvoiceSubmittedPayloadSchema,
+  MeetingCancelledPayloadSchema,
+  // Decisions
+  DecisionRecordedPayloadSchema,
+  // Financial
+  InvoicePreparedPayloadSchema,
   PaymentRecordedPayloadSchema,
-  // Process payloads
-  StageInitiatedPayloadSchema,
-  StageCompletedPayloadSchema,
+  // Contracts
+  ContractExecutedPayloadSchema,
+  // Process
+  ProcessInitiatedPayloadSchema,
+  ProcessCompletedPayloadSchema,
+  // Types
   type KnownFactKind as FactKind,
   type BaseFactPayload,
   type FactRecordedPayload,
+  type InformationSentPayload,
+  type DocumentPreparedPayload,
   type MeetingHeldPayload,
+  type DecisionRecordedPayload,
   type ContractExecutedPayload,
-  type InvoiceSubmittedPayload,
-  type StageCompletedPayload,
 } from './schemas/domain-events';
+
+// Classification Framework
+export {
+  ClassificationOutcomeSchema,
+  ClassificationResultSchema,
+  EXECUTION_LOG_OUTCOMES,
+  IMPORT_WORKBENCH_ONLY,
+  INTERNAL_WORK_PATTERNS,
+  isInternalWork,
+  type ClassificationOutcome,
+  type ClassificationResult,
+} from './schemas/classification';
