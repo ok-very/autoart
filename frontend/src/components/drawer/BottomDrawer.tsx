@@ -54,7 +54,7 @@ export function BottomDrawer() {
 
       {!drawerCollapsed && (
         <div className="flex-1 overflow-auto p-4 custom-scroll">
-          <DrawerRegistry type={activeDrawer.type} props={activeDrawer.props} />
+          <DrawerRegistry type={activeDrawer.type} context={activeDrawer.props} onClose={closeDrawer} />
         </div>
       )}
     </div>

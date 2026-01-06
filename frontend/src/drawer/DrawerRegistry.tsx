@@ -68,9 +68,18 @@ export const DRAWER_DEFINITIONS: Record<keyof DrawerContextMap, DrawerDefinition
         dismissible: true,
         showClose: true,
     },
+    'assign-records': {
+        id: 'assign-records',
+        title: 'Assign Records',
+        size: 'md',
+        sideEffects: [{ type: 'classify', entityType: 'record' }],
+        dismissible: true,
+        showClose: true,
+    },
+    /** @deprecated Use 'assign-records' instead */
     'classify-records': {
         id: 'classify-records',
-        title: 'Classify Records',
+        title: 'Assign Records',
         size: 'md',
         sideEffects: [{ type: 'classify', entityType: 'record' }],
         dismissible: true,
@@ -155,8 +164,8 @@ const CreateLinkView = lazy(() =>
 const AddFieldView = lazy(() =>
     import('../components/drawer/views/AddFieldView').then((m) => ({ default: m.AddFieldView }))
 );
-const ClassifyRecordsView = lazy(() =>
-    import('../components/drawer/views/ClassifyRecordsView').then((m) => ({ default: m.ClassifyRecordsView }))
+const AssignRecordsView = lazy(() =>
+    import('../components/drawer/views/AssignRecordsView').then((m) => ({ default: m.AssignRecordsView }))
 );
 const CloneDefinitionView = lazy(() =>
     import('../components/drawer/views/CloneDefinitionView').then((m) => ({ default: m.CloneDefinitionView }))
@@ -259,8 +268,9 @@ export function DrawerRegistry({ type, context, onClose, onResult }: DrawerRegis
                 return <CreateLinkView {...(context as any)} />;
             case 'add-field':
                 return <AddFieldView {...(context as any)} />;
+            case 'assign-records':
             case 'classify-records':
-                return <ClassifyRecordsView {...(context as any)} />;
+                return <AssignRecordsView {...(context as any)} />;
             case 'clone-definition':
                 return <CloneDefinitionView {...(context as any)} />;
             case 'clone-project':

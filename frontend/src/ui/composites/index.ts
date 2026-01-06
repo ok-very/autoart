@@ -46,7 +46,7 @@ export { UserMentionInput, type UserMentionInputProps } from './UserMentionInput
 
 // View Composites (orchestrate molecules with domain data)
 export { RecordPropertiesView } from './RecordPropertiesView';
-export { RecordInspector } from './RecordInspector';
+export { SelectionInspector, RecordInspector, type InspectorTabId } from './SelectionInspector';
 
 // Reusable Table Composites (UI Patterns)
 export { DataTableFlat, type DataTableFlatProps, type TableColumn } from './DataTableFlat';

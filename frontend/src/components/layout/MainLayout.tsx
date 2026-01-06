@@ -7,7 +7,7 @@ import { MillerColumnsView } from './MillerColumnsView';
 import { ProjectWorkflowView } from './ProjectWorkflowView';
 import { CalendarView } from './CalendarView';
 import { ProjectLogSurface } from '../projectLog';
-import { RecordInspector } from '../../ui/composites';
+import { SelectionInspector } from '../../ui/composites';
 import { BottomDrawer } from '../drawer/BottomDrawer';
 import { ResizeHandle } from '../common/ResizeHandle';
 import { useUIStore, useUIPanels } from '../../stores/uiStore';
@@ -101,7 +101,7 @@ export function MainLayout() {
           <>
             <ResizeHandle direction="left" onResize={handleInspectorResize} />
             <InspectorErrorBoundary width={inspectorWidth}>
-              <RecordInspector />
+              <SelectionInspector />
             </InspectorErrorBoundary>
           </>
         )}

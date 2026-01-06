@@ -145,7 +145,9 @@ export interface DrawerContextMap {
     'create-definition': CreateDefinitionContext;
     'create-link': CreateLinkContext;
     'add-field': AddFieldContext;
-    'classify-records': ClassifyRecordsContext;
+    'assign-records': AssignRecordsContext;
+    /** @deprecated Use 'assign-records' instead */
+    'classify-records': AssignRecordsContext;
     'clone-definition': CloneDefinitionContext;
     'clone-project': CloneProjectContext;
     'confirm-delete': ConfirmDeleteContext;
@@ -211,7 +213,11 @@ export interface AddFieldContext {
     };
 }
 
-export interface ClassifyRecordsContext {
+/**
+ * Context for hierarchy assignment (formerly "classification").
+ * This is for placing records into the hierarchy, not semantic interpretation.
+ */
+export interface AssignRecordsContext {
     recordIds: string[];
     /** Pre-resolved records info */
     records?: Array<{
@@ -221,6 +227,9 @@ export interface ClassifyRecordsContext {
     /** Success callback */
     onSuccess?: () => void;
 }
+
+/** @deprecated Use AssignRecordsContext instead */
+export type ClassifyRecordsContext = AssignRecordsContext;
 
 export interface CloneDefinitionContext {
     definitionId: string;
