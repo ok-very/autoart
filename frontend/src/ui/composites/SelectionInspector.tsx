@@ -16,14 +16,14 @@
 
 import { FileText, Link2, ExternalLink, Wrench, Lightbulb } from 'lucide-react';
 import { clsx } from 'clsx';
-import { useUIStore } from '../../stores/uiStore';
-import { useNode, useRecord } from '../../api/hooks';
+import { useUIStore, type InspectorTabId } from '../../stores/uiStore';
+import { useNode, useRecord, useInterpretationAvailable } from '../../api/hooks';
 import { RecordPropertiesView } from './RecordPropertiesView';
 import { SchemaEditor, ReferencesManager, LinksManager } from '../semantic';
 import { InterpretationInspectorView } from './interpretation/InterpretationInspectorView';
 
-/** Explicit inspector tab IDs */
-export type InspectorTabId = 'record' | 'interpretation' | 'references' | 'links' | 'schema';
+// Re-export from canonical location for backward compatibility
+export type { InspectorTabId } from '../../types/ui';
 
 interface Tab {
     id: InspectorTabId;
@@ -38,10 +38,15 @@ export function SelectionInspector() {
     const inspectedNodeId = selection?.type === 'node' ? selection.id : null;
     const inspectedRecordId = selection?.type === 'record' ? selection.id : null;
     const inspectedActionId = selection?.type === 'action' ? selection.id : null;
-    const inspectorMode = inspectorTabMode as InspectorTabId;
+    // inspectorTabMode is now properly typed as InspectorTabId in uiStore
+    const inspectorMode = inspectorTabMode;
 
     const { data: node } = useNode(inspectedNodeId);
     const { data: record } = useRecord(inspectedRecordId);
+
+    // Check if interpretation data is available for this action
+    const { data: interpretationStatus } = useInterpretationAvailable(inspectedActionId);
+    const hasInterpretation = interpretationStatus?.available ?? false;
 
     const inspectedItem = node || record;
     const isNode = !!node;
@@ -65,13 +70,13 @@ export function SelectionInspector() {
 
     // Build available tabs based on context
     // - record: Always shown
-    // - interpretation: Show for actions with interpretation data
+    // - interpretation: Show for items with interpretation data available
     // - references: Only for tasks (nodes with type='task')
     // - links: Only for records (not hierarchy nodes)
     // - schema: Always shown
     const tabs: Tab[] = [
         { id: 'record', label: 'Record', icon: FileText },
-        ...(isAction ? [{ id: 'interpretation' as const, label: 'Interpretation', icon: Lightbulb }] : []),
+        ...(hasInterpretation ? [{ id: 'interpretation' as const, label: 'Interpretation', icon: Lightbulb }] : []),
         ...(isTask ? [{ id: 'references' as const, label: 'References', icon: Link2 }] : []),
         ...(isRecord ? [{ id: 'links' as const, label: 'Links', icon: ExternalLink }] : []),
         { id: 'schema', label: 'Schema', icon: Wrench },

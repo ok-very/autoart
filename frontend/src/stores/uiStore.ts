@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Selection, UIPanels, InspectorMode, DrawerConfig } from '../types/ui';
+import { Selection, UIPanels, InspectorMode, DrawerConfig, InspectorTabId, normalizeInspectorTabId } from '../types/ui';
 import { deriveUIPanels } from '../utils/uiComposition';
 import type { ProjectViewMode, RecordsViewMode, FieldsViewMode, ViewMode } from '@autoart/shared';
 import {
@@ -13,7 +13,7 @@ import {
 } from '@autoart/shared';
 
 // Re-export for compatibility if needed, or prefer importing from types/ui
-export type { Selection, UIPanels, InspectorMode };
+export type { Selection, UIPanels, InspectorMode, InspectorTabId };
 
 // Re-export view mode types and utilities from shared schemas
 export type { ProjectViewMode, RecordsViewMode, FieldsViewMode, ViewMode };
@@ -39,7 +39,7 @@ interface UIState {
   selection: Selection;
   activeProjectId: string | null;
   viewMode: ViewMode;
-  inspectorTabMode: string; // 'record', 'schema', 'references', etc.
+  inspectorTabMode: InspectorTabId;
 
   // Layout Geometry
   sidebarWidth: number;
@@ -70,7 +70,7 @@ interface UIState {
   // Actions
   setSelection: (selection: Selection) => void;
   setActiveProject: (id: string | null) => void;
-  setInspectorTab: (tab: string) => void;
+  setInspectorTab: (tab: InspectorTabId) => void;
 
   toggleSidebar: () => void;
   toggleInspector: () => void;
@@ -89,8 +89,8 @@ interface UIState {
   // Legacy compatibility - derived from selection
   readonly inspectedNodeId: string | null;
   readonly inspectedRecordId: string | null;
-  readonly inspectorMode: string;
-  setInspectorMode: (mode: string) => void;
+  readonly inspectorMode: InspectorTabId;
+  setInspectorMode: (mode: InspectorTabId) => void;
   inspectRecord: (recordId: string) => void;
   inspectNode: (nodeId: string) => void;
   inspectAction: (actionId: string) => void;
@@ -175,6 +175,7 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: 'ui-storage',
+      version: 1, // Increment when schema changes
       partialize: (state) => ({
         sidebarWidth: state.sidebarWidth,
         inspectorWidth: state.inspectorWidth,
@@ -191,6 +192,16 @@ export const useUIStore = create<UIState>()(
         registryDefinitionKind: state.registryDefinitionKind,
         registryScope: state.registryScope,
       }),
+      // Migrate stale persisted values to valid InspectorTabId
+      migrate: (persistedState, version) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const state = persistedState as any;
+        if (version < 1) {
+          // Normalize any stale inspectorTabMode values
+          state.inspectorTabMode = normalizeInspectorTabId(state.inspectorTabMode);
+        }
+        return state;
+      },
     }
   )
 );

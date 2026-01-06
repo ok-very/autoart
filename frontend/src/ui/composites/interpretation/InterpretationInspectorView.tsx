@@ -27,37 +27,15 @@ import {
     HelpCircle,
     ChevronDown,
     ChevronRight,
-    AlertTriangle
+    AlertTriangle,
+    Loader2
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useInterpretationPlan } from '../../../api/hooks';
 
 interface InterpretationInspectorViewProps {
     actionId: string;
 }
-
-// Interpretation output types (mirrored from backend)
-interface InterpretationOutput {
-    kind: 'fact_candidate' | 'action_hint' | 'work_event' | 'field_value';
-    [key: string]: unknown;
-}
-
-interface InterpretationPlan {
-    outputs: InterpretationOutput[];
-    statusEvent?: InterpretationOutput;
-    raw?: unknown;
-}
-
-// Mock data for now - will be replaced with API hook
-const MOCK_PLAN: InterpretationPlan = {
-    outputs: [
-        { kind: 'action_hint', hintType: 'request', text: 'Request meeting availability' },
-        { kind: 'action_hint', hintType: 'prepare', text: 'Prepare proposal document' },
-        { kind: 'fact_candidate', factKind: 'MEETING_HELD', confidence: 'low', payload: { subject: 'kickoff meeting' } },
-        { kind: 'fact_candidate', factKind: 'DOCUMENT_SUBMITTED', confidence: 'medium', payload: { documentType: 'ppap' } },
-        { kind: 'field_value', field: 'targetDate', value: '2026-01-15' },
-    ],
-    statusEvent: { kind: 'work_event', eventType: 'WORK_FINISHED', source: 'status' },
-};
 
 // Confidence badge component
 function ConfidenceBadge({ confidence }: { confidence: string }) {
@@ -110,14 +88,21 @@ function Section({
 }
 
 export function InterpretationInspectorView({ actionId }: InterpretationInspectorViewProps) {
-    // TODO: Replace with actual API hook
-    // const { data: plan } = useActionInterpretationPlan(actionId);
-    const plan = MOCK_PLAN;
+    const { data: plan, isLoading, error } = useInterpretationPlan(actionId);
 
-    // Track approved facts
+    // Track approved facts (local state for now - will be persisted via API in follow-up)
     const [approvedFacts, setApprovedFacts] = useState<Set<number>>(new Set());
 
-    if (!plan) {
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-8 text-slate-400">
+                <Loader2 size={20} className="animate-spin mr-2" />
+                <span className="text-sm">Loading interpretation...</span>
+            </div>
+        );
+    }
+
+    if (error || !plan) {
         return (
             <div className="text-sm text-slate-500 text-center py-8">
                 No interpretation data available

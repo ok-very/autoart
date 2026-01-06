@@ -196,3 +196,14 @@ export {
   useSoftDeleteUser,
   type AdminUser,
 } from './admin';
+
+// Interpretation
+export {
+  useInterpretationAvailable,
+  useInterpretationPlan,
+  useApproveFactCandidate,
+  useRejectFactCandidate,
+  type InterpretationOutput,
+  type InterpretationPlan,
+  type InterpretationAvailability,
+} from './interpretation';
