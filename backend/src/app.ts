@@ -35,9 +35,12 @@ export async function buildApp(): Promise<FastifyInstance> {
   fastify.setValidatorCompiler(validatorCompiler);
   fastify.setSerializerCompiler(serializerCompiler);
 
-  // Register plugins
+  // Parse and log CORS origins for debugging
+  const corsOrigins = env.CORS_ORIGIN.split(',').map(o => o.trim());
+  console.log('CORS origins configured:', JSON.stringify(corsOrigins));
+
   await fastify.register(cors, {
-    origin: env.CORS_ORIGIN.split(','),
+    origin: corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

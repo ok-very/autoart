@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "build:shared": "cd shared && npm run build",
+    "build": "npm run build:shared && npm run build:backend",
     "dev": "powershell -ExecutionPolicy Bypass -File scripts/dev.ps1",
     "dev:kill": "powershell -ExecutionPolicy Bypass -File scripts/kill-dev.ps1",
     "backup": "powershell -ExecutionPolicy Bypass -File scripts/backup.ps1",
