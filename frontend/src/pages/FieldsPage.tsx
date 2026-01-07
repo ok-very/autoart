@@ -16,6 +16,7 @@ import { Header } from '../components/layout/Header';
 import { ResizeHandle } from '../ui/atoms/ResizeHandle';
 import { FieldsMillerColumnsView } from '../ui/composites/FieldsMillerColumnsView';
 import { FieldDefinitionEditor } from '../ui/semantic/FieldDefinitionEditor';
+import { FieldInstancesReview } from '../ui/semantic/FieldInstancesReview';
 import { RegistryPageHeader, type RegistryTab } from '../components/registry';
 import { useUIStore, isFieldsViewMode } from '../stores/uiStore';
 import type { FieldDescriptor } from '@autoart/shared';
@@ -56,18 +57,22 @@ export function FieldsPage() {
             <div className="flex flex-1 overflow-hidden">
                 {activeTab === 'instances' ? (
                     /* Instances View - Records using the selected field */
-                    <div className="flex-1 flex items-center justify-center text-slate-400">
-                        <div className="text-center">
-                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <ClipboardList size={32} className="text-slate-300" />
+                    selectedField ? (
+                        <FieldInstancesReview
+                            key={selectedField.id}
+                            field={selectedField}
+                        />
+                    ) : (
+                        <div className="flex-1 flex items-center justify-center text-slate-400">
+                            <div className="text-center">
+                                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <ClipboardList size={32} className="text-slate-300" />
+                                </div>
+                                <p className="text-lg font-medium text-slate-600">No Field Selected</p>
+                                <p className="text-sm mt-1">Select a field from the Definitions tab first.</p>
                             </div>
-                            <p className="text-lg font-medium text-slate-600">Field Instances</p>
-                            <p className="text-sm mt-1">Records using the selected field.</p>
-                            <p className="text-xs mt-4 text-slate-400">
-                                Select a field from the Definitions tab to see records that use it.
-                            </p>
                         </div>
-                    </div>
+                    )
                 ) : (
                     /* Definitions View - Miller columns browser */
                     <>

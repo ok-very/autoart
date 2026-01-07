@@ -19,8 +19,10 @@ import type { ImportPlan, ImportPlanContainer, ImportPlanItem, ItemClassificatio
 import { hasUnresolvedClassifications, countUnresolved } from './types.js';
 import { interpretCsvRowPlan, mapStatusToWorkEvent, type InterpretationOutput, type InterpretationPlan } from '../interpreter/interpreter.service.js';
 import { ensureFactKindDefinition } from '../records/fact-kinds.service.js';
+import { listDefinitions } from '../records/records.service.js';
+import { matchSchema } from './schema-matcher.js';
 import { emitEvent } from '../events/events.service.js';
-import { isInternalWork, type ClassificationOutcome } from '@autoart/shared';
+import { isInternalWork, type ClassificationOutcome, type RecordDefinition } from '@autoart/shared';
 
 // ============================================================================
 // PARSER REGISTRY
@@ -110,8 +112,11 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
     // Parse raw data into plan
     const { containers, items, validationIssues } = parser.parse(session.raw_data, config);
 
-    // Generate classifications for each item
-    const classifications = generateClassifications(items);
+    // Fetch definitions for schema matching
+    const definitions = await listDefinitions({ definitionKind: 'record' });
+
+    // Generate classifications for each item (with schema matching)
+    const classifications = generateClassifications(items, definitions);
 
     const planData: ImportPlan = {
         sessionId,
@@ -158,93 +163,122 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
  * - work_event/field_value → DERIVED_STATE (auto-commit)
  * - No outputs → UNCLASSIFIED
  */
-function generateClassifications(items: ImportPlanItem[]): ItemClassification[] {
+function generateClassifications(items: ImportPlanItem[], definitions: RecordDefinition[]): ItemClassification[] {
     return items.map((item) => {
         const text = item.title;
         const statusValue = (item.metadata as { status?: string })?.status;
         const targetDate = (item.metadata as { targetDate?: string })?.targetDate;
         const stageName = (item.metadata as { 'import.stage_name'?: string })?.['import.stage_name'];
 
+        let baseClassification: ItemClassification;
+
         // Check for internal work patterns first
         if (isInternalWork(text)) {
-            return {
+            baseClassification = {
                 itemTempId: item.tempId,
                 outcome: 'INTERNAL_WORK' as ClassificationOutcome,
                 confidence: 'high' as const,
                 rationale: 'Matches internal work pattern',
             };
+        } else {
+            // Use V2 interpretation API
+            const plan = interpretCsvRowPlan({
+                text,
+                status: statusValue,
+                targetDate: targetDate,
+                stageName: stageName ?? undefined,
+            });
+
+            // Classify based on output kinds
+            const factCandidates = plan.outputs.filter((o): o is InterpretationOutput & { kind: 'fact_candidate' } => o.kind === 'fact_candidate');
+            const actionHints = plan.outputs.filter((o): o is InterpretationOutput & { kind: 'action_hint' } => o.kind === 'action_hint');
+            const fieldValues = plan.outputs.filter((o): o is InterpretationOutput & { kind: 'field_value' } => o.kind === 'field_value');
+
+            // Fact candidates → FACT_EMITTED
+            if (factCandidates.length > 0) {
+                const emittedEvents = factCandidates.map(fc => ({
+                    type: 'FACT_RECORDED' as const,
+                    payload: {
+                        factKind: fc.factKind,
+                        source: 'csv-import' as const,
+                        confidence: fc.confidence,
+                        ...fc.payload,
+                    },
+                }));
+
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'FACT_EMITTED' as ClassificationOutcome,
+                    confidence: factCandidates[0].confidence || 'medium',
+                    rationale: `Matched rule for ${factCandidates[0].factKind}`,
+                    emittedEvents,
+                    interpretationPlan: plan,
+                };
+            }
+            // Action hints → INTERNAL_WORK
+            else if (actionHints.length > 0) {
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'INTERNAL_WORK' as ClassificationOutcome,
+                    confidence: 'medium' as const,
+                    rationale: `Action hint: ${actionHints[0].hintType} - ${actionHints[0].text}`,
+                    interpretationPlan: plan,
+                };
+            }
+            // Status-derived work event or field values → DERIVED_STATE
+            else if (plan.statusEvent || fieldValues.length > 0) {
+                const rationale = plan.statusEvent
+                    ? `Status "${statusValue}" maps to ${plan.statusEvent.kind === 'work_event' ? plan.statusEvent.eventType : 'work event'}`
+                    : `Extracted ${fieldValues.length} field value(s)`;
+
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'DERIVED_STATE' as ClassificationOutcome,
+                    confidence: 'medium' as const,
+                    rationale,
+                    interpretationPlan: plan,
+                };
+            }
+            // No rules matched - UNCLASSIFIED
+            else {
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'UNCLASSIFIED' as ClassificationOutcome,
+                    confidence: 'low' as const,
+                    rationale: 'No mapping rules matched',
+                };
+            }
         }
 
-        // Use V2 interpretation API
-        const plan = interpretCsvRowPlan({
-            text,
-            status: statusValue,
-            targetDate: targetDate,
-            stageName: stageName ?? undefined,
-        });
-
-        // Classify based on output kinds
-        const factCandidates = plan.outputs.filter((o): o is InterpretationOutput & { kind: 'fact_candidate' } => o.kind === 'fact_candidate');
-        const actionHints = plan.outputs.filter((o): o is InterpretationOutput & { kind: 'action_hint' } => o.kind === 'action_hint');
-        const fieldValues = plan.outputs.filter((o): o is InterpretationOutput & { kind: 'field_value' } => o.kind === 'field_value');
-
-        // Fact candidates → FACT_EMITTED
-        if (factCandidates.length > 0) {
-            // Build emitted events from fact candidates
-            const emittedEvents = factCandidates.map(fc => ({
-                type: 'FACT_RECORDED' as const,
-                payload: {
-                    factKind: fc.factKind,
-                    source: 'csv-import' as const,
-                    confidence: fc.confidence,
-                    ...fc.payload,
-                },
-            }));
-
-            return {
-                itemTempId: item.tempId,
-                outcome: 'FACT_EMITTED' as ClassificationOutcome,
-                confidence: factCandidates[0].confidence || 'medium',
-                rationale: `Matched rule for ${factCandidates[0].factKind}`,
-                emittedEvents,
-                interpretationPlan: plan, // Store for commit phase
-            };
-        }
-
-        // Action hints → INTERNAL_WORK (preparatory/intended work)
-        if (actionHints.length > 0) {
-            return {
-                itemTempId: item.tempId,
-                outcome: 'INTERNAL_WORK' as ClassificationOutcome,
-                confidence: 'medium' as const,
-                rationale: `Action hint: ${actionHints[0].hintType} - ${actionHints[0].text}`,
-                interpretationPlan: plan,
-            };
-        }
-
-        // Status-derived work event or field values → DERIVED_STATE
-        if (plan.statusEvent || fieldValues.length > 0) {
-            const rationale = plan.statusEvent
-                ? `Status "${statusValue}" maps to ${plan.statusEvent.kind === 'work_event' ? plan.statusEvent.eventType : 'work event'}`
-                : `Extracted ${fieldValues.length} field value(s)`;
-
-            return {
-                itemTempId: item.tempId,
-                outcome: 'DERIVED_STATE' as ClassificationOutcome,
-                confidence: 'medium' as const,
-                rationale,
-                interpretationPlan: plan,
-            };
-        }
-
-        // No rules matched - UNCLASSIFIED
-        return {
-            itemTempId: item.tempId,
-            outcome: 'UNCLASSIFIED' as ClassificationOutcome,
-            confidence: 'low' as const,
-            rationale: 'No mapping rules matched',
-        };
+        // Add schema matching to ALL classifications
+        return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
     });
+}
+
+/**
+ * Add schema matching result to a classification
+ */
+function addSchemaMatch(
+    classification: ItemClassification,
+    fieldRecordings: ImportPlanItem['fieldRecordings'],
+    definitions: RecordDefinition[]
+): ItemClassification {
+    // Skip schema matching if no field recordings
+    if (!fieldRecordings || fieldRecordings.length === 0) {
+        return classification;
+    }
+
+    const schemaResult = matchSchema(fieldRecordings, definitions);
+
+    return {
+        ...classification,
+        schemaMatch: {
+            definitionId: schemaResult.matchedDefinition?.id ?? null,
+            definitionName: schemaResult.matchedDefinition?.name ?? null,
+            matchScore: schemaResult.matchScore,
+            proposedDefinition: schemaResult.proposedDefinition,
+        },
+    };
 }
 
 export async function getLatestPlan(sessionId: string): Promise<ImportPlan | null> {
@@ -270,7 +304,7 @@ export async function getLatestPlan(sessionId: string): Promise<ImportPlan | nul
 
 export interface Resolution {
     itemTempId: string;
-    resolvedOutcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'SKIP';
+    resolvedOutcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'SKIP' | 'DEFERRED';
     resolvedFactKind?: string;
     resolvedPayload?: Record<string, unknown>;
 }

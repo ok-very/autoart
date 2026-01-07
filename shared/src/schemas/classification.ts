@@ -17,8 +17,10 @@ export const ClassificationOutcomeSchema = z.enum([
     'FACT_EMITTED',    // Domain event produced
     'DERIVED_STATE',   // Work lifecycle event only (from status column)
     'INTERNAL_WORK',   // No events; internal deliberation
+    'EXTERNAL_WORK',   // No events; outward-facing work (requests, communications)
     'AMBIGUOUS',       // Needs human review
     'UNCLASSIFIED',    // Unknown pattern (data quality issue)
+    'DEFERRED',        // Moved to editor-only, excluded from execution
 ]);
 export type ClassificationOutcome = z.infer<typeof ClassificationOutcomeSchema>;
 
@@ -69,6 +71,7 @@ export const IMPORT_WORKBENCH_ONLY: ClassificationOutcome[] = [
     'INTERNAL_WORK',
     'AMBIGUOUS',
     'UNCLASSIFIED',
+    'DEFERRED',
 ];
 
 // ============================================================================

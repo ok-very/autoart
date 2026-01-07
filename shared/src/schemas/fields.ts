@@ -2,6 +2,24 @@ import { z } from 'zod';
 import { FieldTypeSchema, NodeTypeSchema } from './enums.js';
 
 /**
+ * RenderHint - Semantic rendering hints for field display
+ * Determines which UI component to use when editing/displaying field values
+ */
+export const RenderHintSchema = z.enum([
+    'text',      // Single-line text input (default)
+    'longtext',  // Multi-line textarea
+    'status',    // Status dropdown with project-specific options
+    'date',      // Date picker with calendar
+    'person',    // Person/owner selector from workspace members
+    'select',    // Generic select from options list
+    'number',    // Number input
+    'currency',  // Currency input with formatting
+    'url',       // URL input with link preview
+    'email',     // Email input with validation
+]);
+export type RenderHint = z.infer<typeof RenderHintSchema>;
+
+/**
  * FieldDescriptor - Describes a unique field path in the system
  * Used by the Fields view to present all available fields across hierarchy and records
  */
@@ -17,6 +35,9 @@ export const FieldDescriptorSchema = z.object({
 
     /** Field data type */
     type: FieldTypeSchema,
+
+    /** Rendering hint for UI component selection */
+    renderHint: RenderHintSchema.optional(),
 
     /** Source node type where this field appears (null for record fields) */
     sourceNodeType: NodeTypeSchema.nullable(),

@@ -39,12 +39,14 @@ export interface ImportPlanItem {
     fieldRecordings: Array<{
         fieldName: string;
         value: unknown;
+        /** Rendering hint for UI component (status, date, person, etc.) */
+        renderHint?: string;
     }>;
 }
 
 export interface ItemClassification {
     itemTempId: string;
-    outcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'AMBIGUOUS' | 'UNCLASSIFIED';
+    outcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'EXTERNAL_WORK' | 'AMBIGUOUS' | 'UNCLASSIFIED';
     confidence: 'high' | 'medium' | 'low';
     rationale: string;
     emittedEvents?: Array<{ type: string; payload: unknown }>;
@@ -56,6 +58,16 @@ export interface ItemClassification {
     };
     /** V2 interpretation plan with structured outputs */
     interpretationPlan?: InterpretationPlan;
+    /** Schema matching result for definition selection */
+    schemaMatch?: {
+        definitionId: string | null;
+        definitionName: string | null;
+        matchScore: number;
+        proposedDefinition?: {
+            name: string;
+            schemaConfig: { fields: Array<{ key: string; type: string; label: string }> };
+        };
+    };
 }
 
 /** Interpretation output variants */
@@ -96,8 +108,48 @@ export interface ImportExecutionResult {
 }
 
 // ============================================================================
+// CLASSIFICATION SUGGESTIONS
+// ============================================================================
+
+export interface ClassificationSuggestion {
+    /** Rule ID that would match */
+    ruleId: string;
+    /** Source rule file (e.g., 'decision-rules', 'intent-mapping-rules') */
+    ruleSource: string;
+    /** Suggested fact kind (for fact_candidate rules) */
+    factKind?: string;
+    /** Suggested hint type (for action_hint rules) */
+    hintType?: string;
+    /** Confidence level */
+    confidence: 'low' | 'medium' | 'high';
+    /** Human-readable reason for suggestion */
+    reason: string;
+    /** Match score 0-100 (higher = better match) */
+    matchScore: number;
+    /** Output kind from the rule */
+    outputKind: 'fact_candidate' | 'action_hint' | 'work_event' | 'field_value';
+}
+
+// ============================================================================
 // HOOKS
 // ============================================================================
+
+/**
+ * Fetch classification suggestions for UNCLASSIFIED items.
+ */
+export function useClassificationSuggestions(sessionId: string | null) {
+    return useQuery({
+        queryKey: ['classification-suggestions', sessionId],
+        queryFn: async () => {
+            const response = await api.get<{ suggestions: Record<string, ClassificationSuggestion[]> }>(
+                `/imports/sessions/${sessionId}/suggestions`
+            );
+            return response.suggestions;
+        },
+        enabled: !!sessionId,
+        staleTime: 30000, // 30 seconds - suggestions don't change often
+    });
+}
 
 /**
  * Create a new import session.
@@ -179,7 +231,7 @@ export function useExecuteImport() {
 
 export interface Resolution {
     itemTempId: string;
-    resolvedOutcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'SKIP';
+    resolvedOutcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'EXTERNAL_WORK' | 'SKIP';
     resolvedFactKind?: string;
     resolvedPayload?: Record<string, unknown>;
 }

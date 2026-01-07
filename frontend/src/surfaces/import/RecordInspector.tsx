@@ -4,8 +4,9 @@
  * Shows planned actions/events for a single import record.
  */
 
-import { X, FileText, Zap, Database } from 'lucide-react';
+import { X, FileText, Zap, Database, TableProperties } from 'lucide-react';
 import type { ImportPlan } from '../../api/hooks/imports';
+import { FieldSchemaPreview } from './FieldSchemaPreview';
 
 // ============================================================================
 // TYPES
@@ -32,6 +33,9 @@ export function RecordInspector({ recordId, plan, onClose }: RecordInspectorProp
             </div>
         );
     }
+
+    // Get classification for schema match info
+    const classification = plan.classifications?.find((c) => c.itemTempId === recordId);
 
     return (
         <div className="flex flex-col h-full">
@@ -86,6 +90,17 @@ export function RecordInspector({ recordId, plan, onClose }: RecordInspectorProp
                                 </div>
                             ))}
                         </div>
+                    </Section>
+                )}
+
+                {/* Field Schema Preview */}
+                {record.fieldRecordings.length > 0 && (
+                    <Section title="Field Schema" icon={<TableProperties className="w-3 h-3" />}>
+                        <FieldSchemaPreview
+                            item={record}
+                            schemaMatch={classification?.schemaMatch}
+                            compact
+                        />
                     </Section>
                 )}
 

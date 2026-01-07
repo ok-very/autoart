@@ -289,8 +289,8 @@ export class MondayCSVParser {
         return match ? match[1].trim() : name;
     }
 
-    private extractFieldRecordings(row: MondayRow): Array<{ fieldName: string; value: unknown }> {
-        const recordings: Array<{ fieldName: string; value: unknown }> = [];
+    private extractFieldRecordings(row: MondayRow): Array<{ fieldName: string; value: unknown; renderHint?: string }> {
+        const recordings: Array<{ fieldName: string; value: unknown; renderHint?: string }> = [];
 
         const status = row['Task Status'] ?? row['Status'] ?? row[3];
         const targetDate = row['Target Date'] ?? row[4];
@@ -299,19 +299,20 @@ export class MondayCSVParser {
         const pm = row['PM'] ?? row[2];
 
         if (status?.trim()) {
-            recordings.push({ fieldName: 'Status', value: status.trim() });
+            recordings.push({ fieldName: 'Status', value: status.trim(), renderHint: 'status' });
         }
         if (targetDate?.trim()) {
-            recordings.push({ fieldName: 'Target Date', value: targetDate.trim() });
+            recordings.push({ fieldName: 'Target Date', value: targetDate.trim(), renderHint: 'date' });
         }
         if (priority?.trim()) {
-            recordings.push({ fieldName: 'Priority', value: priority.trim() });
+            recordings.push({ fieldName: 'Priority', value: priority.trim(), renderHint: 'select' });
         }
         if (notes?.trim()) {
-            recordings.push({ fieldName: 'Notes', value: notes.trim() });
+            recordings.push({ fieldName: 'Notes', value: notes.trim(), renderHint: 'longtext' });
         }
         if (pm?.trim()) {
-            recordings.push({ fieldName: 'Project Manager', value: pm.trim() });
+            // PM = Owner (person selector)
+            recordings.push({ fieldName: 'Owner', value: pm.trim(), renderHint: 'person' });
         }
 
         return recordings;

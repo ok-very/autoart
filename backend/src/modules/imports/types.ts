@@ -67,6 +67,21 @@ export interface ItemClassification {
         resolvedFactKind?: string;
         resolvedPayload?: Record<string, unknown>;
     };
+
+    /** Schema matching result for definition selection */
+    schemaMatch?: {
+        /** Matched definition ID (null if no match) */
+        definitionId: string | null;
+        /** Matched definition name (null if no match) */
+        definitionName: string | null;
+        /** Match quality score (0-1) */
+        matchScore: number;
+        /** Proposed new definition if no good match */
+        proposedDefinition?: {
+            name: string;
+            schemaConfig: { fields: Array<{ key: string; type: string; label: string }> };
+        };
+    };
 }
 
 // ============================================================================
@@ -94,6 +109,8 @@ export interface ImportPlanItem {
     fieldRecordings: Array<{
         fieldName: string;
         value: unknown;
+        /** Rendering hint for UI component selection (status, date, person, etc.) */
+        renderHint?: string;
     }>;
 }
 

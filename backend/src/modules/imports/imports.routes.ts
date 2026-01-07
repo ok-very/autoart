@@ -12,6 +12,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import * as importsService from './imports.service.js';
+import { suggestClassificationsForPlan, type ClassificationSuggestion } from './classification-suggester.js';
 
 // ============================================================================
 // SCHEMAS
@@ -153,13 +154,36 @@ export async function importsRoutes(app: FastifyInstance) {
             throw err;
         }
     });
+
+    /**
+     * Get classification suggestions for UNCLASSIFIED items
+     * Returns ranked suggestions based on partial pattern matches
+     */
+    app.get('/sessions/:id/suggestions', async (request, reply) => {
+        const { id } = SessionIdParamSchema.parse(request.params);
+
+        const plan = await importsService.getLatestPlan(id);
+        if (!plan) {
+            return reply.status(404).send({ error: 'No plan found for this session' });
+        }
+
+        const suggestionsMap = suggestClassificationsForPlan(plan.items, plan.classifications);
+
+        // Convert Map to serializable object
+        const suggestions: Record<string, ClassificationSuggestion[]> = {};
+        for (const [key, value] of suggestionsMap) {
+            suggestions[key] = value;
+        }
+
+        return reply.send({ suggestions });
+    });
 }
 
 // Resolution schema
 const ResolutionBodySchema = z.object({
     resolutions: z.array(z.object({
         itemTempId: z.string(),
-        resolvedOutcome: z.enum(['FACT_EMITTED', 'DERIVED_STATE', 'INTERNAL_WORK', 'SKIP']),
+        resolvedOutcome: z.enum(['FACT_EMITTED', 'DERIVED_STATE', 'INTERNAL_WORK', 'SKIP', 'DEFERRED']),
         resolvedFactKind: z.string().optional(),
         resolvedPayload: z.record(z.unknown()).optional(),
     })),

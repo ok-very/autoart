@@ -7,9 +7,9 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { AlertTriangle, HelpCircle, Check, X, ChevronDown, ChevronUp, Save, Loader2, Lightbulb, Play, FileText, Inbox } from 'lucide-react';
-import { useSaveResolutions } from '../../api/hooks/imports';
-import type { ImportPlan, Resolution, ItemClassification, InterpretationOutput } from '../../api/hooks/imports';
+import { AlertTriangle, HelpCircle, Check, X, ChevronDown, ChevronUp, Save, Loader2, Lightbulb, Play, FileText, Inbox, Sparkles, Clock, ArrowUpRight } from 'lucide-react';
+import { useSaveResolutions, useClassificationSuggestions } from '../../api/hooks/imports';
+import type { ImportPlan, Resolution, ItemClassification, InterpretationOutput, ClassificationSuggestion } from '../../api/hooks/imports';
 
 // ============================================================================
 // TYPES
@@ -23,8 +23,9 @@ interface ClassificationPanelProps {
 
 interface PendingResolution {
     itemTempId: string;
-    outcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'SKIP' | null;
+    outcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'EXTERNAL_WORK' | 'SKIP' | null;
     factKind?: string;
+    hintType?: string; // Track selected hint type for action_hints
 }
 
 // ============================================================================
@@ -35,6 +36,7 @@ const OUTCOME_OPTIONS = [
     { value: 'FACT_EMITTED', label: 'Emit as Fact', icon: Check, color: 'text-green-600' },
     { value: 'DERIVED_STATE', label: 'Derived State', icon: Play, color: 'text-blue-600' },
     { value: 'INTERNAL_WORK', label: 'Internal Work', icon: Lightbulb, color: 'text-amber-500' },
+    { value: 'EXTERNAL_WORK', label: 'External Work', icon: ArrowUpRight, color: 'text-purple-500' },
     { value: 'SKIP', label: 'Skip', icon: X, color: 'text-red-500' },
 ] as const;
 
@@ -77,6 +79,29 @@ function getOutputKindBadge(output: InterpretationOutput) {
     }
 }
 
+/** Format suggestion label - capitalize hint types, return fact kinds as-is */
+function formatSuggestionLabel(suggestion: ClassificationSuggestion): string {
+    if (suggestion.factKind) {
+        return suggestion.factKind; // Already SCREAMING_SNAKE_CASE
+    }
+    if (suggestion.hintType) {
+        // Capitalize first letter: 'request' -> 'Request'
+        return suggestion.hintType.charAt(0).toUpperCase() + suggestion.hintType.slice(1);
+    }
+    return 'Unknown';
+}
+
+/** Check if a suggestion is currently selected */
+function isSuggestionSelected(suggestion: ClassificationSuggestion, pending?: PendingResolution): boolean {
+    if (suggestion.factKind) {
+        return pending?.factKind === suggestion.factKind;
+    }
+    if (suggestion.hintType) {
+        return pending?.hintType === suggestion.hintType;
+    }
+    return false;
+}
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -91,8 +116,12 @@ export function ClassificationPanel({
     );
     const [expandedItem, setExpandedItem] = useState<string | null>(null);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [saveSuccess, setSaveSuccess] = useState(false);
 
     const saveResolutionsMutation = useSaveResolutions();
+
+    // Fetch suggestions for unclassified items
+    const { data: suggestions } = useClassificationSuggestions(sessionId);
 
     // Get unresolved classifications
     const unresolvedItems = useMemo(() => {
@@ -129,10 +158,73 @@ export function ClassificationPanel({
         setPendingResolutions((prev) => {
             const next = new Map(prev);
             const existing = next.get(itemTempId) ?? { itemTempId, outcome: 'FACT_EMITTED' };
-            next.set(itemTempId, { ...existing, factKind });
+            next.set(itemTempId, { ...existing, factKind, hintType: undefined });
             return next;
         });
     }, []);
+
+    // Handle hint type selection (for action_hints)
+    const handleHintTypeSelect = useCallback((itemTempId: string, hintType: string) => {
+        setPendingResolutions((prev) => {
+            const next = new Map(prev);
+            const existing = next.get(itemTempId) ?? { itemTempId, outcome: 'INTERNAL_WORK' };
+            next.set(itemTempId, { ...existing, hintType, factKind: undefined, outcome: 'INTERNAL_WORK' });
+            return next;
+        });
+    }, []);
+
+    // Count items with suggestions
+    const itemsWithSuggestions = useMemo(() => {
+        if (!suggestions) return [];
+        return unresolvedItems.filter((item) => {
+            const itemSuggestions = suggestions[item.itemTempId];
+            return itemSuggestions && itemSuggestions.length > 0;
+        });
+    }, [suggestions, unresolvedItems]);
+
+    // Handle Accept All Suggestions
+    const handleAcceptAllSuggestions = useCallback(() => {
+        if (!suggestions) return;
+        setPendingResolutions((prev) => {
+            const next = new Map(prev);
+            for (const item of itemsWithSuggestions) {
+                const topSuggestion = suggestions[item.itemTempId]?.[0];
+                if (topSuggestion) {
+                    if (topSuggestion.factKind) {
+                        next.set(item.itemTempId, {
+                            itemTempId: item.itemTempId,
+                            outcome: 'FACT_EMITTED',
+                            factKind: topSuggestion.factKind,
+                        });
+                    } else if (topSuggestion.hintType) {
+                        next.set(item.itemTempId, {
+                            itemTempId: item.itemTempId,
+                            outcome: 'INTERNAL_WORK',
+                            hintType: topSuggestion.hintType,
+                        });
+                    }
+                }
+            }
+            return next;
+        });
+    }, [suggestions, itemsWithSuggestions]);
+
+    // Handle Defer Unclassified
+    const handleDeferUnclassified = useCallback(() => {
+        setPendingResolutions((prev) => {
+            const next = new Map(prev);
+            for (const item of unresolvedItems) {
+                // Only defer items that haven't been resolved yet
+                if (!next.has(item.itemTempId) || next.get(item.itemTempId)?.outcome === null) {
+                    next.set(item.itemTempId, {
+                        itemTempId: item.itemTempId,
+                        outcome: 'SKIP', // Maps to DEFERRED on backend
+                    });
+                }
+            }
+            return next;
+        });
+    }, [unresolvedItems]);
 
     // Count resolved items
     const resolvedCount = useMemo(() => {
@@ -161,6 +253,9 @@ export function ClassificationPanel({
             });
             onResolutionsSaved(updatedPlan);
             setPendingResolutions(new Map());
+            // Show success message
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 3000);
         } catch (err) {
             console.error('Failed to save resolutions:', err);
         }
@@ -198,12 +293,44 @@ export function ClassificationPanel({
                             </span>
                         )}
                     </span>
+                    {/* Success toast */}
+                    {saveSuccess && (
+                        <span className="ml-2 px-2 py-0.5 text-xs font-medium text-green-700 bg-green-100 rounded-full animate-pulse">
+                            ✓ Saved!
+                        </span>
+                    )}
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     {needsReview && (
                         <>
-                            <span className="text-sm text-amber-700">
-                                {resolvedCount} of {unresolvedItems.length} resolved
+                            {/* Batch: Accept All Suggestions */}
+                            {itemsWithSuggestions.length > 0 && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleAcceptAllSuggestions();
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
+                                    title={`Accept top suggestion for ${itemsWithSuggestions.length} items`}
+                                >
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    Accept Suggestions ({itemsWithSuggestions.length})
+                                </button>
+                            )}
+                            {/* Batch: Defer Unclassified */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeferUnclassified();
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors"
+                                title="Defer all unclassified items"
+                            >
+                                <Clock className="w-3.5 h-3.5" />
+                                Defer All
+                            </button>
+                            <span className="text-sm text-amber-700 mx-1">
+                                {resolvedCount}/{unresolvedItems.length}
                             </span>
                             <button
                                 onClick={(e) => {
@@ -250,6 +377,8 @@ export function ClassificationPanel({
                             pending={pendingResolutions.get(classification.itemTempId)}
                             onOutcomeSelect={(outcome) => handleOutcomeSelect(classification.itemTempId, outcome)}
                             onFactKindSelect={(factKind) => handleFactKindSelect(classification.itemTempId, factKind)}
+                            onHintTypeSelect={(hintType) => handleHintTypeSelect(classification.itemTempId, hintType)}
+                            suggestions={suggestions?.[classification.itemTempId]}
                         />
                     ))}
                 </div>
@@ -270,6 +399,8 @@ interface ClassificationRowProps {
     pending?: PendingResolution;
     onOutcomeSelect: (outcome: PendingResolution['outcome']) => void;
     onFactKindSelect: (factKind: string) => void;
+    onHintTypeSelect: (hintType: string) => void;
+    suggestions?: ClassificationSuggestion[];
 }
 
 function ClassificationRow({
@@ -280,6 +411,8 @@ function ClassificationRow({
     pending,
     onOutcomeSelect,
     onFactKindSelect,
+    onHintTypeSelect,
+    suggestions,
 }: ClassificationRowProps) {
     const OutcomeIcon = getOutcomeIcon(classification.outcome);
     const needsResolution = !classification.resolution &&
@@ -288,12 +421,26 @@ function ClassificationRow({
     // Get outputs from interpretation plan
     const outputs = classification.interpretationPlan?.outputs ?? [];
 
+    // Check if row has expandable content
+    const hasExpandableContent = needsResolution ||
+        outputs.length > 0 ||
+        classification.candidates?.length ||
+        (suggestions && suggestions.length > 0) ||
+        classification.resolution;
+
+    // Only allow toggle if there's content to show
+    const handleRowClick = () => {
+        if (hasExpandableContent) {
+            onToggle();
+        }
+    };
+
     return (
         <div className={`border-b border-slate-100 last:border-b-0 ${needsResolution ? 'bg-amber-50/50' : ''}`}>
             {/* Item row */}
             <div
-                className="flex items-center gap-3 px-6 py-3 hover:bg-slate-50 cursor-pointer"
-                onClick={onToggle}
+                className={`flex items-center gap-3 px-6 py-3 ${hasExpandableContent ? 'hover:bg-slate-50 cursor-pointer' : ''}`}
+                onClick={handleRowClick}
             >
                 <OutcomeIcon className={`w-4 h-4 flex-shrink-0 ${needsResolution ? 'text-amber-600' : 'text-slate-400'
                     }`} />
@@ -335,12 +482,18 @@ function ClassificationRow({
                 {pending?.outcome && (
                     <span className="px-2 py-0.5 text-xs font-medium rounded bg-green-100 text-green-700">
                         → {pending.outcome}
+                        {pending.hintType && ` (${formatSuggestionLabel({ hintType: pending.hintType } as ClassificationSuggestion)})`}
                     </span>
                 )}
 
-                <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                />
+                {/* Only show chevron if expandable */}
+                {hasExpandableContent ? (
+                    <ChevronDown
+                        className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                    />
+                ) : (
+                    <div className="w-4 h-4" /> /* Spacer */
+                )}
             </div>
 
             {/* Expanded panel */}
@@ -398,6 +551,65 @@ function ClassificationRow({
                         </div>
                     )}
 
+                    {/* Suggestions (for UNCLASSIFIED items) */}
+                    {classification.outcome === 'UNCLASSIFIED' && suggestions && suggestions.length > 0 && (
+                        <div className="mb-4">
+                            <p className="text-xs font-medium text-emerald-600 mb-2 flex items-center gap-1">
+                                <Sparkles className="w-3 h-3" />
+                                Suggested classifications:
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                {suggestions.map((suggestion, idx) => {
+                                    const isSelected = isSuggestionSelected(suggestion, pending);
+                                    const label = formatSuggestionLabel(suggestion);
+                                    const isFactCandidate = !!suggestion.factKind;
+
+                                    return (
+                                        <button
+                                            key={suggestion.ruleId + idx}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (suggestion.factKind) {
+                                                    onFactKindSelect(suggestion.factKind);
+                                                    onOutcomeSelect('FACT_EMITTED');
+                                                } else if (suggestion.hintType) {
+                                                    onHintTypeSelect(suggestion.hintType);
+                                                }
+                                            }}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${isSelected
+                                                ? 'bg-emerald-500 text-white border-emerald-500'
+                                                : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:border-emerald-400'
+                                                }`}
+                                            title={suggestion.reason}
+                                        >
+                                            {isFactCandidate ? (
+                                                <FileText className="w-3 h-3" />
+                                            ) : (
+                                                <Lightbulb className="w-3 h-3" />
+                                            )}
+                                            <span className="font-medium">{label}</span>
+                                            <span className={`text-[10px] px-1 py-0.5 rounded ${isSelected
+                                                ? 'bg-white/20 text-white'
+                                                : suggestion.confidence === 'high'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : suggestion.confidence === 'medium'
+                                                        ? 'bg-amber-100 text-amber-700'
+                                                        : 'bg-red-100 text-red-700'
+                                                }`}>
+                                                {suggestion.matchScore}%
+                                            </span>
+                                            {/* Rule source tag */}
+                                            <span className={`text-[9px] px-1 py-0.5 rounded ${isSelected ? 'bg-white/10 text-white/70' : 'bg-slate-100 text-slate-500'
+                                                }`}>
+                                                [{suggestion.ruleSource?.replace('-rules', '') ?? 'unknown'}]
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Outcome selection (only for items needing resolution) */}
                     {needsResolution && (
                         <div>
@@ -440,8 +652,9 @@ function ClassificationRow({
                         </div>
                     )}
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }
 
