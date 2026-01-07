@@ -18,11 +18,11 @@ import {
     EventSchema,
     CreateEventInputSchema,
     ActionViewSchema,
-} from './actions';
+} from './actions.js';
 import {
     ActionReferenceSchema,
     CreateActionReferenceInputSchema,
-} from './references';
+} from './references.js';
 
 // ============================================================================
 // COMPOSER FIELD VALUE

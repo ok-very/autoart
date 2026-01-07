@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { NodeTypeSchema } from './enums';
+import { NodeTypeSchema } from './enums.js';
 
 /**
  * Hierarchy Node Schema

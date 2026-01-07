@@ -15,7 +15,7 @@ import type {
     ResolvedReference,
     ReferenceStatus,
     ProjectState,
-} from './types';
+} from './types.js';
 
 // ==================== REFERENCE RESOLUTION ====================
 

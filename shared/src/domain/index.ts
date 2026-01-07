@@ -28,7 +28,7 @@ export type {
     ResolvedReference,
     FieldViewModel,
     EntityContext,
-} from './types';
+} from './types.js';
 
 // ==================== FIELD VISIBILITY ====================
 
@@ -38,7 +38,7 @@ export {
     getVisibleFields,
     isFieldEditable,
     getRequiredFields,
-} from './fieldVisibility';
+} from './fieldVisibility.js';
 
 // ==================== COMPLETENESS ====================
 
@@ -48,7 +48,7 @@ export {
     getMissingFields,
     getCompletenessPercentage,
     countMissingBySeverity,
-} from './completeness';
+} from './completeness.js';
 
 // ==================== REFERENCE RESOLUTION ====================
 
@@ -60,7 +60,7 @@ export {
     getReferenceStatusLabel,
     getReferenceStatusSeverity,
     validateReference,
-} from './referenceResolution';
+} from './referenceResolution.js';
 
 // ==================== PHASE PROGRESSION ====================
 
@@ -70,11 +70,11 @@ export {
     getPhaseReadinessSummary,
     getPhaseBlockers,
     validatePhaseTransition,
-} from './phaseProgression';
+} from './phaseProgression.js';
 
 // ==================== FIELD VIEW MODEL ====================
 
-export type { BuildFieldViewModelOptions } from './fieldViewModel';
+export type { BuildFieldViewModelOptions } from './fieldViewModel.js';
 
 export {
     buildFieldViewModel,
@@ -82,4 +82,4 @@ export {
     filterVisibleViewModels,
     groupViewModelsByCategory,
     createEmptyFieldViewModel,
-} from './fieldViewModel';
+} from './fieldViewModel.js';

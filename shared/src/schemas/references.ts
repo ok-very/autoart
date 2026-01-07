@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { RefModeSchema, ReferenceStatusSchema } from './enums';
+import { RefModeSchema, ReferenceStatusSchema } from './enums.js';
 
 // ============================================================================
 // ACTION REFERENCES (Foundational Model)

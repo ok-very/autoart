@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FieldTypeSchema, NodeTypeSchema } from './enums';
+import { FieldTypeSchema, NodeTypeSchema } from './enums.js';
 
 /**
  * FieldDescriptor - Describes a unique field path in the system

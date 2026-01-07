@@ -9,8 +9,8 @@
  * RULE: Backend services MUST import from here, not reimplement.
  */
 
-import type { FieldDef, RecordDefinition, DataRecord } from '../schemas/records';
-import type { HierarchyNode } from '../schemas/hierarchy';
+import type { FieldDef, RecordDefinition, DataRecord } from '../schemas/records.js';
+import type { HierarchyNode } from '../schemas/hierarchy.js';
 
 // ==================== PROJECT STATE ====================
 
