@@ -61,7 +61,17 @@ export async function emitEvent(input: CreateEventInput): Promise<Event> {
   // Handle reference events - project to action_references table
   if (event.type === 'ACTION_REFERENCE_ADDED' || event.type === 'ACTION_REFERENCE_REMOVED') {
     const { projectActionReference } = await import('../projections/action-references.projector.js');
-    await projectActionReference(event);
+    // Transform database event to shared Event format
+    await projectActionReference({
+      id: event.id,
+      type: event.type,
+      actionId: event.action_id,
+      contextId: event.context_id,
+      contextType: event.context_type,
+      payload: event.payload as Record<string, unknown>,
+      actorId: event.actor_id,
+      occurredAt: event.occurred_at,
+    });
   }
 
   return event;

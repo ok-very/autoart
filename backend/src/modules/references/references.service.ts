@@ -281,7 +281,7 @@ export async function batchResolveReferences(referenceIds: string[]): Promise<Re
 export async function checkDrift(id: string): Promise<{ drift: boolean; snapshotValue: unknown; liveValue: unknown }> {
   const resolved = await resolveReference(id);
   return {
-    drift: resolved.drift,
+    drift: resolved.drift ?? false,
     snapshotValue: resolved.value,
     liveValue: resolved.liveValue ?? resolved.value,
   };

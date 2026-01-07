@@ -314,6 +314,7 @@ export const QuickCompose = {
                 fieldValues,
                 references: options.references?.map((r) => ({
                     sourceRecordId: r.sourceRecordId,
+                    mode: 'dynamic' as const,
                 })),
             },
             { actorId: options.actorId || null }
@@ -357,6 +358,7 @@ export const QuickCompose = {
                 fieldValues,
                 references: options.references?.map((r) => ({
                     sourceRecordId: r.sourceRecordId,
+                    mode: 'dynamic' as const,
                 })),
             },
             { actorId: options.actorId || null }
