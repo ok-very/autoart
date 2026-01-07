@@ -78,6 +78,8 @@ export interface ImportPlanContainer {
     type: 'project' | 'process' | 'subprocess';
     title: string;
     parentTempId: string | null;
+    /** Optional hint for classification (e.g., 'process', 'stage', 'subprocess') */
+    definitionName?: string;
 }
 
 export interface ImportPlanItem {

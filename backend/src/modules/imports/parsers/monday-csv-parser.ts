@@ -78,7 +78,9 @@ export class MondayCSVParser {
             return { containers, items, validationIssues };
         }
 
-        const processName = (config.processName as string) ?? 'Imported Process';
+        // Extract process name from row 1 (Monday export format has project title in first cell)
+        const csvTitle = rows.length > 0 ? (rows[0][0] ?? rows[0]['Name'] ?? '').trim() : '';
+        const processName = csvTitle || (config.processName as string) || 'Imported Process';
 
         // Create the main process container
         const processId = 'temp-process-main';
@@ -87,6 +89,7 @@ export class MondayCSVParser {
             type: 'process',
             title: processName,
             parentTempId: null,
+            definitionName: 'process', // Classification hint
         });
 
         let currentStageId: string | null = null;
@@ -119,14 +122,16 @@ export class MondayCSVParser {
 
             if (isStage || isSection) {
                 const stageId = `temp-stage-${stageCounter++}`;
+                const stageName = this.extractStageName(col0);
                 containers.push({
                     tempId: stageId,
-                    type: 'subprocess', // Map stages to subprocess for now
-                    title: col0,
+                    type: 'subprocess',
+                    title: stageName || col0, // Use extracted name if available
                     parentTempId: processId,
+                    definitionName: 'stage', // Classification hint
                 });
                 currentStageId = stageId;
-                currentStageName = this.extractStageName(col0);
+                currentStageName = stageName;
                 currentStageOrder++;
                 currentTaskId = null;
                 continue;
