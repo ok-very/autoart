@@ -55,6 +55,10 @@ interface UIState {
   // Theme
   theme: Theme;
 
+  // Inspector Composer footer state
+  inspectorComposerExpanded: boolean;
+  setInspectorComposerExpanded: (expanded: boolean) => void;
+
   // Project Log preferences
   includeSystemEventsInLog: boolean;
   setIncludeSystemEventsInLog: (value: boolean) => void;
@@ -116,6 +120,9 @@ export const useUIStore = create<UIState>()(
 
       activeDrawer: null,
       theme: 'light',
+
+      inspectorComposerExpanded: false,
+      setInspectorComposerExpanded: (expanded) => set({ inspectorComposerExpanded: expanded }),
 
       setIncludeSystemEventsInLog: (value) => set({ includeSystemEventsInLog: value }),
 
@@ -191,6 +198,7 @@ export const useUIStore = create<UIState>()(
         registryTab: state.registryTab,
         registryDefinitionKind: state.registryDefinitionKind,
         registryScope: state.registryScope,
+        inspectorComposerExpanded: state.inspectorComposerExpanded,
       }),
       // Migrate stale persisted values to valid InspectorTabId
       migrate: (persistedState, version) => {

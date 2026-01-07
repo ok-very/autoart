@@ -1,26 +1,29 @@
 /**
- * SelectionInspector - Composite inspector panel router
+ * SelectionInspector - Unified Workbench Inspector
  *
- * This is a thin shell that:
- * 1. Determines what's being inspected (node, record, or action)
- * 2. Builds the available tabs based on context
- * 3. Routes to the appropriate view component
+ * Routes by selection.type (node | record | action) to show context-appropriate tabs.
+ * Includes always-visible composer footer for quick action declaration.
  *
- * Tabs:
- * - record: Record/node field editing
- * - interpretation: Semantic interpretation review (for import items)
- * - schema: Definition schema editing
- * - references: Task reference management
- * - links: Record-to-record links
+ * Tab Structure:
+ * - Node/Record: Record | Interpretation | References | Links | Schema
+ * - Action: Details | Execution Log
+ *
+ * Layout:
+ * - Tab header (dynamic based on selection type)
+ * - Scrollable content area
+ * - Pinned footer composer
  */
 
-import { FileText, Link2, ExternalLink, Wrench, Lightbulb } from 'lucide-react';
+import { FileText, Link2, ExternalLink, Wrench, Lightbulb, Info, History } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useUIStore, type InspectorTabId } from '../../stores/uiStore';
 import { useNode, useRecord, useInterpretationAvailable } from '../../api/hooks';
 import { RecordPropertiesView } from './RecordPropertiesView';
 import { SchemaEditor, ReferencesManager, LinksManager } from '../semantic';
 import { InterpretationInspectorView } from './interpretation/InterpretationInspectorView';
+import { ActionDetailsPanel } from '../../components/inspector/ActionDetailsPanel';
+import { ActionEventsPanel } from '../../components/inspector/ActionEventsPanel';
+import { InspectorFooterComposer } from '../../components/inspector/InspectorFooterComposer';
 
 // Re-export from canonical location for backward compatibility
 export type { InspectorTabId } from '../../types/ui';
@@ -31,6 +34,12 @@ interface Tab {
     icon: React.ElementType;
 }
 
+// Action-specific tabs
+const ACTION_TABS: Tab[] = [
+    { id: 'details', label: 'Details', icon: Info },
+    { id: 'execution_log', label: 'Events', icon: History },
+];
+
 export function SelectionInspector() {
     const { selection, inspectorTabMode, setInspectorMode, inspectorWidth } = useUIStore();
 
@@ -38,7 +47,6 @@ export function SelectionInspector() {
     const inspectedNodeId = selection?.type === 'node' ? selection.id : null;
     const inspectedRecordId = selection?.type === 'record' ? selection.id : null;
     const inspectedActionId = selection?.type === 'action' ? selection.id : null;
-    // inspectorTabMode is now properly typed as InspectorTabId in uiStore
     const inspectorMode = inspectorTabMode;
 
     const { data: node } = useNode(inspectedNodeId);
@@ -54,6 +62,9 @@ export function SelectionInspector() {
     const isRecord = !!record;
     const isAction = !!inspectedActionId;
 
+    // Determine selection type for routing
+    const selectionType = isAction ? 'action' : (inspectedItem ? 'node_record' : null);
+
     // Empty state
     if (!inspectedItem && !isAction) {
         return (
@@ -64,27 +75,46 @@ export function SelectionInspector() {
                 <div className="h-14 border-b border-slate-100 flex items-center justify-center px-5 bg-slate-50/50">
                     <span className="text-xs text-slate-400">Select an item to inspect</span>
                 </div>
+                {/* Footer composer still available even without selection */}
+                <div className="flex-1" />
+                <InspectorFooterComposer />
             </aside>
         );
     }
 
-    // Build available tabs based on context
-    // - record: Always shown
-    // - interpretation: Show for items with interpretation data available
-    // - references: Only for tasks (nodes with type='task')
-    // - links: Only for records (not hierarchy nodes)
-    // - schema: Always shown
-    const tabs: Tab[] = [
-        { id: 'record', label: 'Record', icon: FileText },
-        ...(hasInterpretation ? [{ id: 'interpretation' as const, label: 'Interpretation', icon: Lightbulb }] : []),
-        ...(isTask ? [{ id: 'references' as const, label: 'References', icon: Link2 }] : []),
-        ...(isRecord ? [{ id: 'links' as const, label: 'Links', icon: ExternalLink }] : []),
-        { id: 'schema', label: 'Schema', icon: Wrench },
-    ];
+    // Build available tabs based on selection type
+    const tabs: Tab[] = selectionType === 'action'
+        ? ACTION_TABS
+        : [
+            { id: 'record', label: 'Record', icon: FileText },
+            ...(hasInterpretation ? [{ id: 'interpretation' as const, label: 'Interpretation', icon: Lightbulb }] : []),
+            ...(isTask ? [{ id: 'references' as const, label: 'References', icon: Link2 }] : []),
+            ...(isRecord ? [{ id: 'links' as const, label: 'Links', icon: ExternalLink }] : []),
+            { id: 'schema', label: 'Schema', icon: Wrench },
+        ];
+
+    // Auto-correct tab mode if current mode is invalid for selection type
+    const validTabIds = tabs.map(t => t.id);
+    const effectiveTab = validTabIds.includes(inspectorMode)
+        ? inspectorMode
+        : tabs[0]?.id || 'record';
 
     // Determine which view to render
     const renderView = () => {
-        switch (inspectorMode) {
+        // Action selection routing
+        if (selectionType === 'action' && inspectedActionId) {
+            switch (effectiveTab) {
+                case 'details':
+                    return <ActionDetailsPanel actionId={inspectedActionId} />;
+                case 'execution_log':
+                    return <ActionEventsPanel actionId={inspectedActionId} />;
+                default:
+                    return <ActionDetailsPanel actionId={inspectedActionId} />;
+            }
+        }
+
+        // Node/Record selection routing
+        switch (effectiveTab) {
             case 'record':
                 if (inspectedItem) {
                     return <RecordPropertiesView itemId={inspectedItem.id} isNode={isNode} />;
@@ -135,13 +165,14 @@ export function SelectionInspector() {
             className="bg-white border-l border-slate-200 flex flex-col shrink-0 shadow-xl z-30"
             style={{ width: inspectorWidth }}
             data-aa-component="SelectionInspector"
-            data-aa-view={inspectorMode}
+            data-aa-view={effectiveTab}
+            data-aa-selection-type={selectionType}
         >
             {/* Tab Selector Header */}
-            <div className="h-12 border-b border-slate-100 flex items-center bg-slate-50/50 px-1">
+            <div className="h-12 border-b border-slate-100 flex items-center bg-slate-50/50 px-1 shrink-0">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
-                    const isActive = inspectorMode === tab.id;
+                    const isActive = effectiveTab === tab.id;
                     return (
                         <button
                             key={tab.id}
@@ -164,8 +195,11 @@ export function SelectionInspector() {
                 })}
             </div>
 
-            {/* View Content */}
+            {/* View Content (scrollable) */}
             <div className="flex-1 overflow-y-auto custom-scroll p-5">{renderView()}</div>
+
+            {/* Footer Composer (pinned) */}
+            <InspectorFooterComposer />
         </aside>
     );
 }

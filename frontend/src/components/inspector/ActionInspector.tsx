@@ -2,7 +2,9 @@
  * ActionInspector
  *
  * Right-side inspector panel for viewing action details.
- * Placeholder component - will be implemented with full inspector surface.
+ * 
+ * @deprecated Use SelectionInspector which now routes to ActionDetailsPanel internally.
+ * This file is retained for backward compatibility during migration.
  */
 
 import { X } from 'lucide-react';

@@ -4,6 +4,9 @@
  * The unified, canonical composer UI for declaring Actions.
  * Used by both ComposerPage (page mode) and drawer contexts (drawer mode).
  *
+ * @deprecated For new usage, prefer InspectorFooterComposer in the unified inspector.
+ * This component is retained for ComposerPage and legacy drawer contexts.
+ *
  * Core principles:
  * - Schema-first: Action types come from definitions with kind='action_recipe'
  * - References are first-class inputs with named slots

@@ -7,14 +7,18 @@ export type Selection =
   | null;
 
 /** Valid inspector tab IDs */
-export type InspectorTabId = 'record' | 'interpretation' | 'references' | 'links' | 'schema';
+export type InspectorTabId =
+  // Node/Record tabs
+  | 'record' | 'interpretation' | 'references' | 'links' | 'schema'
+  // Action tabs
+  | 'details' | 'execution_log' | 'declare';
 
 /** Default inspector tab */
 export const DEFAULT_INSPECTOR_TAB: InspectorTabId = 'record';
 
 /** Validate and normalize inspector tab ID (handles stale persisted values) */
 export function normalizeInspectorTabId(value: string | undefined): InspectorTabId {
-  const validTabs: InspectorTabId[] = ['record', 'interpretation', 'references', 'links', 'schema'];
+  const validTabs: InspectorTabId[] = ['record', 'interpretation', 'references', 'links', 'schema', 'details', 'execution_log', 'declare'];
   return validTabs.includes(value as InspectorTabId) ? (value as InspectorTabId) : DEFAULT_INSPECTOR_TAB;
 }
 
