@@ -19,7 +19,7 @@ import { BottomDrawer } from '../components/drawer/BottomDrawer';
 import { ResizeHandle } from '../components/common/ResizeHandle';
 import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../components/registry';
 import { useUIStore } from '../stores/uiStore';
-import { ActionInspector } from '../components/inspector/ActionInspector';
+import { SelectionInspector } from '../ui/composites/SelectionInspector';
 
 export function ActionsPage() {
     const navigate = useNavigate();
@@ -101,7 +101,7 @@ export function ActionsPage() {
                     <ResizeHandle direction="left" onResize={handleInspectorResize} />
 
                     {/* Right Inspector */}
-                    <ActionInspector width={inspectorWidth} />
+                    <SelectionInspector />
                 </div>
                 <BottomDrawer />
             </div>
