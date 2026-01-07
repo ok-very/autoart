@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FieldTypeSchema } from './enums';
+import { FieldTypeSchema } from './enums.js';
 
 /**
  * Status Option Config Schema

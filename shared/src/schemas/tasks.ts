@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FieldDefSchema, type StatusConfig, type FieldDef } from './records';
+import { FieldDefSchema, type StatusConfig, type FieldDef } from './records.js';
 
 /**
  * Task Status Enum

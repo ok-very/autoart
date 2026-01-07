@@ -12,8 +12,8 @@ import type {
     FieldDefinition,
     ProjectState,
     EntityContext,
-} from './types';
-import { getFieldState } from './fieldVisibility';
+} from './types.js';
+import { getFieldState } from './fieldVisibility.js';
 
 // ==================== MISSING FIELD DETECTION ====================
 

@@ -11,8 +11,8 @@ import type {
     PhaseProgressionResult,
     MissingField,
     ProjectState,
-} from './types';
-import { getMissingFields } from './completeness';
+} from './types.js';
+import { getMissingFields } from './completeness.js';
 
 // ==================== PHASE PROGRESSION ====================
 

@@ -13,9 +13,9 @@ import type {
     FieldDefinition,
     ProjectState,
     EntityContext,
-} from './types';
-import { getFieldState } from './fieldVisibility';
-import { isValueMissing } from './completeness';
+} from './types.js';
+import { getFieldState } from './fieldVisibility.js';
+import { isValueMissing } from './completeness.js';
 
 // ==================== FIELD VIEW MODEL FACTORY ====================
 
