@@ -16,7 +16,7 @@ import { X, FileSpreadsheet } from 'lucide-react';
 import { useActiveProjection, AVAILABLE_PROJECTIONS } from '../../stores/projectionStore';
 import { ProjectionSelector } from './ProjectionSelector';
 import { ImportPreview } from './ImportPreview';
-import { RecordInspector } from './RecordInspector';
+import { ImportRecordInspector } from './ImportRecordInspector';
 import { SessionConfigPanel } from './SessionConfigPanel';
 import { ExecutionControls } from './ExecutionControls';
 import { ClassificationPanel } from './ClassificationPanel';
@@ -154,7 +154,7 @@ export function ImportWorkbench({ onImportComplete, onClose }: ImportWorkbenchPr
                 {/* Right Panel: Record Inspector */}
                 {selectedRecordId && plan && (
                     <div className="w-80 bg-white border-l border-slate-200 overflow-auto">
-                        <RecordInspector
+                        <ImportRecordInspector
                             recordId={selectedRecordId}
                             plan={plan}
                             onClose={() => setSelectedRecordId(null)}

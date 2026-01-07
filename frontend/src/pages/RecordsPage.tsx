@@ -18,7 +18,7 @@ import { BottomDrawer } from '../components/drawer/BottomDrawer';
 import { ResizeHandle } from '../components/common/ResizeHandle';
 import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../components/registry';
 import { useUIStore, isRecordsViewMode } from '../stores/uiStore';
-import { RecordInspector } from '../ui/composites';
+import { SelectionInspector } from '../ui/composites';
 
 export function RecordsPage() {
   const { inspectorWidth, setInspectorWidth, viewMode, setViewMode, openDrawer } = useUIStore();
@@ -109,7 +109,7 @@ export function RecordsPage() {
           <ResizeHandle direction="left" onResize={handleInspectorResize} />
 
           {/* Right Inspector */}
-          <RecordInspector />
+          <SelectionInspector />
         </div>
         <BottomDrawer />
       </div>

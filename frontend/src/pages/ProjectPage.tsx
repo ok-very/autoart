@@ -9,7 +9,7 @@
 
 import { useCallback } from 'react';
 import { Header } from '../components/layout/Header';
-import { RecordInspector } from '../ui/composites/RecordInspector';
+import { SelectionInspector } from '../ui/composites/SelectionInspector';
 import { ProjectView } from '../ui/composites/ProjectView';
 import { BottomDrawer } from '../components/drawer/BottomDrawer';
 import { ResizeHandle } from '../components/common/ResizeHandle';
@@ -40,7 +40,7 @@ export function ProjectPage() {
                 {panels.inspector && (
                     <>
                         <ResizeHandle direction="left" onResize={handleInspectorResize} />
-                        <RecordInspector />
+                        <SelectionInspector />
                     </>
                 )}
             </div>

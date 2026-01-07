@@ -1,7 +1,8 @@
 /**
- * Record Inspector
+ * ImportRecordInspector
  *
  * Shows planned actions/events for a single import record.
+ * This is import-specific, not to be confused with SelectionInspector.
  */
 
 import { X, FileText, Zap, Database, TableProperties } from 'lucide-react';
@@ -12,7 +13,7 @@ import { FieldSchemaPreview } from './FieldSchemaPreview';
 // TYPES
 // ============================================================================
 
-interface RecordInspectorProps {
+interface ImportRecordInspectorProps {
     recordId: string;
     plan: ImportPlan;
     onClose: () => void;
@@ -22,7 +23,7 @@ interface RecordInspectorProps {
 // COMPONENT
 // ============================================================================
 
-export function RecordInspector({ recordId, plan, onClose }: RecordInspectorProps) {
+export function ImportRecordInspector({ recordId, plan, onClose }: ImportRecordInspectorProps) {
     // Find the record in the plan
     const record = plan.items.find((item) => item.tempId === recordId);
 
@@ -144,4 +145,4 @@ function Section({ title, icon, children }: SectionProps) {
     );
 }
 
-export default RecordInspector;
+export default ImportRecordInspector;

@@ -10,7 +10,7 @@
 import { useCallback, useState } from 'react';
 import { Header } from '../components/layout/Header';
 import { RecordTypeSidebar } from '../components/records/RecordTypeSidebar';
-import { RecordInspector } from '../ui/composites/RecordInspector';
+import { SelectionInspector } from '../ui/composites/SelectionInspector';
 import { RecordList } from '../ui/composites/RecordList';
 import { BottomDrawer } from '../components/drawer/BottomDrawer';
 import { ResizeHandle } from '../components/common/ResizeHandle';
@@ -59,7 +59,7 @@ export function RecordPage() {
                     <ResizeHandle direction="left" onResize={handleInspectorResize} />
 
                     {/* Right Inspector */}
-                    <RecordInspector />
+                    <SelectionInspector />
                 </div>
                 <BottomDrawer />
             </div>
