@@ -7,7 +7,7 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { AlertTriangle, HelpCircle, Check, X, ChevronDown, ChevronUp, Save, Loader2, Lightbulb, Play, FileText, Inbox, Sparkles, Clock, ArrowUpRight } from 'lucide-react';
+import { AlertTriangle, HelpCircle, Check, X, ChevronDown, ChevronUp, Save, Loader2, Lightbulb, Play, FileText, Inbox, Sparkles, Clock, ArrowUpRight, ArrowUpDown, MoreVertical, Trash2 } from 'lucide-react';
 import { useSaveResolutions, useClassificationSuggestions } from '../../api/hooks/imports';
 import type { ImportPlan, Resolution, ItemClassification, InterpretationOutput, ClassificationSuggestion } from '../../api/hooks/imports';
 
@@ -117,6 +117,8 @@ export function ClassificationPanel({
     const [expandedItem, setExpandedItem] = useState<string | null>(null);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
+    const [sortUnresolvedFirst, setSortUnresolvedFirst] = useState(true);
+    const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
 
     const saveResolutionsMutation = useSaveResolutions();
 
@@ -131,11 +133,20 @@ export function ClassificationPanel({
         );
     }, [plan]);
 
-    // Get all classifications for display
+    // Get all classifications for display (with optional sorting)
     const allClassifications = useMemo(() => {
         if (!plan?.classifications) return [];
-        return plan.classifications;
-    }, [plan]);
+        if (!sortUnresolvedFirst) return plan.classifications;
+
+        // Sort: unresolved items first, then by title
+        return [...plan.classifications].sort((a, b) => {
+            const aNeeds = !a.resolution && (a.outcome === 'AMBIGUOUS' || a.outcome === 'UNCLASSIFIED');
+            const bNeeds = !b.resolution && (b.outcome === 'AMBIGUOUS' || b.outcome === 'UNCLASSIFIED');
+            if (aNeeds && !bNeeds) return -1;
+            if (!aNeeds && bNeeds) return 1;
+            return 0;
+        });
+    }, [plan, sortUnresolvedFirst]);
 
     // Get item title by tempId
     const getItemTitle = useCallback((itemTempId: string) => {
@@ -209,8 +220,8 @@ export function ClassificationPanel({
         });
     }, [suggestions, itemsWithSuggestions]);
 
-    // Handle Defer Unclassified
-    const handleDeferUnclassified = useCallback(() => {
+    // Handle Defer Remaining (only items without pending resolutions)
+    const handleDeferRemaining = useCallback(() => {
         setPendingResolutions((prev) => {
             const next = new Map(prev);
             for (const item of unresolvedItems) {
@@ -224,7 +235,29 @@ export function ClassificationPanel({
             }
             return next;
         });
+        setBulkMenuOpen(false);
     }, [unresolvedItems]);
+
+    // Handle Skip All Unresolved
+    const handleSkipAll = useCallback(() => {
+        setPendingResolutions((prev) => {
+            const next = new Map(prev);
+            for (const item of unresolvedItems) {
+                next.set(item.itemTempId, {
+                    itemTempId: item.itemTempId,
+                    outcome: 'SKIP',
+                });
+            }
+            return next;
+        });
+        setBulkMenuOpen(false);
+    }, [unresolvedItems]);
+
+    // Handle Clear All Pending
+    const handleClearPending = useCallback(() => {
+        setPendingResolutions(new Map());
+        setBulkMenuOpen(false);
+    }, []);
 
     // Count resolved items
     const resolvedCount = useMemo(() => {
@@ -317,18 +350,68 @@ export function ClassificationPanel({
                                     Accept Suggestions ({itemsWithSuggestions.length})
                                 </button>
                             )}
-                            {/* Batch: Defer Unclassified */}
+                            {/* Sort Toggle */}
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleDeferUnclassified();
+                                    setSortUnresolvedFirst(!sortUnresolvedFirst);
                                 }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors"
-                                title="Defer all unclassified items"
+                                className={`flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-lg border transition-colors ${sortUnresolvedFirst
+                                        ? 'text-blue-700 bg-blue-50 border-blue-200'
+                                        : 'text-slate-500 bg-white border-slate-200 hover:border-slate-300'
+                                    }`}
+                                title={sortUnresolvedFirst ? 'Showing unresolved first' : 'Show in original order'}
                             >
-                                <Clock className="w-3.5 h-3.5" />
-                                Defer All
+                                <ArrowUpDown className="w-3.5 h-3.5" />
                             </button>
+
+                            {/* Bulk Actions Dropdown */}
+                            <div className="relative">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setBulkMenuOpen(!bulkMenuOpen);
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors"
+                                    title="Bulk actions"
+                                >
+                                    <MoreVertical className="w-3.5 h-3.5" />
+                                    Actions
+                                </button>
+                                {bulkMenuOpen && (
+                                    <div
+                                        className="absolute right-0 top-full mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-50"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {/* Primary action: Defer Remaining */}
+                                        <button
+                                            onClick={handleDeferRemaining}
+                                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-amber-50 hover:text-amber-700 font-medium"
+                                        >
+                                            <Clock className="w-4 h-4" />
+                                            Defer Remaining
+                                            <span className="ml-auto text-xs text-slate-400">
+                                                {unresolvedItems.length - resolvedCount}
+                                            </span>
+                                        </button>
+                                        <div className="border-t border-slate-100 my-1" />
+                                        <button
+                                            onClick={handleSkipAll}
+                                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                                        >
+                                            <X className="w-4 h-4" />
+                                            Skip All Unresolved
+                                        </button>
+                                        <button
+                                            onClick={handleClearPending}
+                                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                            Clear Pending
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                             <span className="text-sm text-amber-700 mx-1">
                                 {resolvedCount}/{unresolvedItems.length}
                             </span>
@@ -436,7 +519,10 @@ function ClassificationRow({
     };
 
     return (
-        <div className={`border-b border-slate-100 last:border-b-0 ${needsResolution ? 'bg-amber-50/50' : ''}`}>
+        <div className={`border-b border-slate-100 last:border-b-0 ${needsResolution
+                ? 'bg-red-50/60 border-l-4 border-l-red-400'
+                : ''
+            }`}>
             {/* Item row */}
             <div
                 className={`flex items-center gap-3 px-6 py-3 ${hasExpandableContent ? 'hover:bg-slate-50 cursor-pointer' : ''}`}
