@@ -22,7 +22,8 @@ import { ensureFactKindDefinition } from '../records/fact-kinds.service.js';
 import { listDefinitions } from '../records/records.service.js';
 import { matchSchema } from './schema-matcher.js';
 import { emitEvent } from '../events/events.service.js';
-import { isInternalWork, type ClassificationOutcome, type RecordDefinition } from '@autoart/shared';
+import { isInternalWork, type ClassificationOutcome } from '@autoart/shared';
+import type { RecordDefinition } from '../../db/schema.js';
 
 // ============================================================================
 // PARSER REGISTRY

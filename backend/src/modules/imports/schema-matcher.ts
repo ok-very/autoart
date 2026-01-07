@@ -7,7 +7,8 @@
  * 3. Propose new definitions when no suitable match exists
  */
 
-import type { RecordDefinition, FieldDef, FieldType } from '@autoart/shared';
+import type { FieldDef, FieldType } from '@autoart/shared';
+import type { RecordDefinition } from '../../db/schema.js';
 
 // ============================================================================
 // TYPES
@@ -241,7 +242,8 @@ function scoreDefinitionMatch(
         return { score: 0, fieldMatches: [] };
     }
 
-    const fields = definition.schema_config?.fields || [];
+    const schemaConfig = definition.schema_config as { fields?: FieldDef[] } | null;
+    const fields = schemaConfig?.fields || [];
     if (fields.length === 0) {
         return { score: 0, fieldMatches: [] };
     }
