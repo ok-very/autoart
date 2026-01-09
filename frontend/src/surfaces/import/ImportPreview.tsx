@@ -2,12 +2,14 @@
  * Import Preview
  *
  * Renders the import plan using the selected projection.
- * Delegates to HierarchyPreview or StagePreview based on projection ID.
+ * Delegates to HierarchyPreview, StagePreview, TablePreview, or LogPreview.
  */
 
 import { FileQuestion } from 'lucide-react';
 import { HierarchyPreview } from './HierarchyPreview';
 import { StagePreview } from './StagePreview';
+import { TablePreview } from './TablePreview';
+import { LogPreview } from './LogPreview';
 import type { ImportPlan } from '../../api/hooks/imports';
 
 // ============================================================================
@@ -75,6 +77,24 @@ export function ImportPreview({
         case 'stage-projection':
             return (
                 <StagePreview
+                    plan={plan}
+                    selectedRecordId={selectedRecordId}
+                    onSelect={onRecordSelect}
+                />
+            );
+
+        case 'table-projection':
+            return (
+                <TablePreview
+                    plan={plan}
+                    selectedRecordId={selectedRecordId}
+                    onSelect={onRecordSelect}
+                />
+            );
+
+        case 'log-projection':
+            return (
+                <LogPreview
                     plan={plan}
                     selectedRecordId={selectedRecordId}
                     onSelect={onRecordSelect}

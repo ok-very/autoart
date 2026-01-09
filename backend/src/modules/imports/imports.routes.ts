@@ -183,7 +183,7 @@ export async function importsRoutes(app: FastifyInstance) {
 const ResolutionBodySchema = z.object({
     resolutions: z.array(z.object({
         itemTempId: z.string(),
-        resolvedOutcome: z.enum(['FACT_EMITTED', 'DERIVED_STATE', 'INTERNAL_WORK', 'SKIP', 'DEFERRED']),
+        resolvedOutcome: z.enum(['FACT_EMITTED', 'DERIVED_STATE', 'INTERNAL_WORK', 'EXTERNAL_WORK', 'AMBIGUOUS', 'UNCLASSIFIED', 'DEFERRED']),
         resolvedFactKind: z.string().optional(),
         resolvedPayload: z.record(z.unknown()).optional(),
     })),

@@ -87,13 +87,23 @@ export function useActiveProjection(
 export const AVAILABLE_PROJECTIONS = [
     {
         id: 'hierarchy-projection',
-        label: 'Hierarchy Tree',
+        label: 'Hierarchy',
         description: 'Tree view of project/process/subprocess/task',
     },
     {
         id: 'stage-projection',
-        label: 'Stage Groups',
+        label: 'Stages',
         description: 'Grouped by stage labels (Kanban-like)',
+    },
+    {
+        id: 'table-projection',
+        label: 'Table',
+        description: 'Spreadsheet view showing records as they will appear',
+    },
+    {
+        id: 'log-projection',
+        label: 'Log',
+        description: 'Chronological event log of import actions',
     },
 ] as const;
 

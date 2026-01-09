@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
-import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { ErrorBoundary } from './ui/common/ErrorBoundary';
 import './index.css';
 import './styles/composer.css';
 

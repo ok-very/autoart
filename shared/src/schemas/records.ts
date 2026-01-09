@@ -32,6 +32,12 @@ export const FieldDefSchema = z.object({
   options: z.array(z.string()).optional(), // For select/status fields - list of values
   defaultValue: z.unknown().optional(),
   /**
+   * Semantic hint for rendering.
+   * Specifies how to interpret/display the value while keeping base type simple.
+   * Examples: 'phone', 'email', 'url', 'person', 'date', 'timeline', 'file'
+   */
+  renderHint: z.string().optional(),
+  /**
    * Whether this field allows # reference triggers.
    * Default: true for text/textarea, false for other types.
    */

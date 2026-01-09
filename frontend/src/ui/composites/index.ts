@@ -58,7 +58,7 @@ export { ActionCard, type ActionCardProps } from './ActionCard';
 export { ActionsList, type ActionsListProps } from './ActionsList';
 
 // Reusable Record/Hierarchy View Composites
-export { RecordList } from './RecordList';
+export { RecordView } from './RecordView';
 export { ProjectView, type ProjectViewProps } from './ProjectView';
 export { MillerColumnsView, type MillerColumnsViewProps } from './MillerColumnsView';
 

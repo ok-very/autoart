@@ -11,6 +11,7 @@ export { ImportRecordInspector } from './ImportRecordInspector';
 export { SessionConfigPanel } from './SessionConfigPanel';
 export { ExecutionControls } from './ExecutionControls';
 export { ClassificationPanel } from './ClassificationPanel';
+export { MondayBoardSelector } from './MondayBoardSelector';
 
 // Re-export types
 export type {

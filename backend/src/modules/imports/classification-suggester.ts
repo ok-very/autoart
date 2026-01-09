@@ -11,6 +11,7 @@
 
 import { defaultMappingRules } from '../interpreter/mappings/index.js';
 import type { MappingRule, MappingContext, InterpretationOutput } from '../interpreter/mappings/types.js';
+import { inferFactKind } from '../interpreter/fact-kind-inferrer.js';
 
 // ============================================================================
 // TYPES
@@ -23,6 +24,8 @@ export interface ClassificationSuggestion {
     ruleSource: string;
     /** Suggested fact kind (for fact_candidate rules) */
     factKind?: string;
+    /** Human-readable label for the fact kind (inferred from text) */
+    inferredLabel?: string;
     /** Suggested hint type (for action_hint rules) */
     hintType?: string;
     /** Confidence level */
@@ -98,10 +101,28 @@ export function suggestClassificationsForText(
     // Deduplicate by fact kind / hint type (keep highest score)
     const deduped = deduplicateSuggestions(suggestions);
 
-    // Sort by match score descending, return top 3
-    return deduped
-        .sort((a, b) => b.matchScore - a.matchScore)
-        .slice(0, 3);
+    // Sort by match score descending
+    const sorted = deduped.sort((a, b) => b.matchScore - a.matchScore);
+
+    // If no rule-based suggestions, add inferred suggestion from text
+    if (sorted.length === 0 || sorted[0].matchScore < 40) {
+        const inferred = inferFactKind(text);
+        if (inferred.confidence >= 0.3) {
+            sorted.push({
+                ruleId: 'inferred',
+                ruleSource: 'inferred',
+                factKind: inferred.key,
+                inferredLabel: inferred.label,
+                confidence: inferred.confidence >= 0.6 ? 'medium' : 'low',
+                reason: `Inferred from text: "${text.slice(0, 40)}..."`,
+                matchScore: Math.round(inferred.confidence * 50), // Scale to 0-50 range
+                outputKind: 'fact_candidate',
+            });
+        }
+    }
+
+    // Return top 3
+    return sorted.slice(0, 3);
 }
 
 /**

@@ -19,7 +19,7 @@ import { useNode, useRecordDefinitions, useUpdateNode } from '../../api/hooks';
 import { FieldRenderer, type FieldRendererCallbacks } from '../molecules/FieldRenderer';
 import { ReferenceEditor } from './ReferenceEditor';
 import { UserMentionInput } from '../composites/UserMentionInput';
-import { RichTextEditor } from '../../components/editor/RichTextEditor';
+import { RichTextEditor } from '../editor/RichTextEditor';
 import type { FieldViewModel, FieldDefinition, ProjectState, EntityContext } from '@autoart/shared/domain';
 import { buildFieldViewModel } from '@autoart/shared/domain';
 import { TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';

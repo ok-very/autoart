@@ -1,25 +1,73 @@
 /**
  * SettingsPage
  *
- * User settings and account management.
- * Features:
- * - Display current user info
- * - Logout functionality
+ * User settings with sidebar navigation.
+ * Sections:
+ * - Account: User info and logout
+ * - Integrations: External service connections (Monday, Google)
  */
 
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, LogOut, User, Mail, Calendar, Loader2 } from 'lucide-react';
-import { useCurrentUser, useLogout } from '../api/hooks';
+import { Settings, User, Plug, Loader2 } from 'lucide-react';
+import { useCurrentUser } from '../api/hooks';
+import { useConnections, useConnectMonday, useDisconnectMonday } from '../api/connections';
+import { AccountSection, IntegrationsSection } from './settings';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+type SettingsTab = 'account' | 'integrations';
+
+interface NavItem {
+    id: SettingsTab;
+    label: string;
+    icon: React.ReactNode;
+}
+
+const NAV_ITEMS: NavItem[] = [
+    { id: 'account', label: 'Account', icon: <User className="w-4 h-4" /> },
+    { id: 'integrations', label: 'Integrations', icon: <Plug className="w-4 h-4" /> },
+];
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
 
 export function SettingsPage() {
     const navigate = useNavigate();
-    const { data: user, isLoading } = useCurrentUser();
-    const logoutMutation = useLogout();
+    const { isLoading } = useCurrentUser();
+    const [activeTab, setActiveTab] = useState<SettingsTab>('account');
 
-    const handleLogout = async () => {
-        await logoutMutation.mutateAsync();
-        navigate('/login');
-    };
+    // Fetch connection status from backend
+    const { data: connections } = useConnections();
+    const connectMondayMutation = useConnectMonday();
+    const disconnectMondayMutation = useDisconnectMonday();
+
+    // Monday connection handlers
+    const handleMondayConnect = useCallback(async (apiKey: string) => {
+        await connectMondayMutation.mutateAsync(apiKey);
+    }, [connectMondayMutation]);
+
+    const handleMondayDisconnect = useCallback(async () => {
+        await disconnectMondayMutation.mutateAsync();
+    }, [disconnectMondayMutation]);
+
+    // Google connection handlers (placeholder - will connect to OAuth)
+    const [googleConnected, setGoogleConnected] = useState(false);
+    const handleGoogleConnect = useCallback(() => {
+        // TODO: Redirect to Google OAuth flow
+        console.log('Starting Google OAuth flow...');
+        // For now, simulate connection
+        setGoogleConnected(true);
+    }, []);
+
+    const handleGoogleDisconnect = useCallback(async () => {
+        // TODO: Call backend to revoke and remove tokens
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setGoogleConnected(false);
+    }, []);
 
     if (isLoading) {
         return (
@@ -33,7 +81,7 @@ export function SettingsPage() {
         <div className="min-h-screen bg-slate-50">
             {/* Header */}
             <header className="bg-white border-b border-slate-200">
-                <div className="max-w-3xl mx-auto px-6 py-4">
+                <div className="max-w-5xl mx-auto px-6 py-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
                             <Settings className="w-5 h-5 text-white" />
@@ -47,75 +95,56 @@ export function SettingsPage() {
             </header>
 
             {/* Content */}
-            <main className="max-w-3xl mx-auto px-6 py-8">
-                {/* Account Section */}
-                <section className="mb-8">
-                    <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
-                        Account
-                    </h2>
-                    <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
-                        {/* User Info */}
-                        <div className="p-4">
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xl font-semibold">
-                                    {user?.name?.charAt(0).toUpperCase() || 'U'}
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <User className="w-4 h-4 text-slate-400" />
-                                        <span className="font-medium text-slate-900">{user?.name || 'Unknown'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                                        <Mail className="w-4 h-4 text-slate-400" />
-                                        <span>{user?.email || 'No email'}</span>
-                                    </div>
-                                    {user?.created_at && (
-                                        <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
-                                            <Calendar className="w-3.5 h-3.5" />
-                                            <span>Member since {new Date(user.created_at).toLocaleDateString()}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+            <main className="max-w-5xl mx-auto px-6 py-8">
+                <div className="flex gap-8">
+                    {/* Sidebar Navigation */}
+                    <nav className="w-48 flex-shrink-0">
+                        <ul className="space-y-1">
+                            {NAV_ITEMS.map((item) => (
+                                <li key={item.id}>
+                                    <button
+                                        onClick={() => setActiveTab(item.id)}
+                                        className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === item.id
+                                            ? 'bg-slate-900 text-white'
+                                            : 'text-slate-600 hover:bg-slate-100'
+                                            }`}
+                                    >
+                                        {item.icon}
+                                        {item.label}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+
+                        {/* Back link */}
+                        <div className="mt-8 pt-4 border-t border-slate-200">
+                            <button
+                                onClick={() => navigate('/')}
+                                className="text-sm text-slate-500 hover:text-slate-700"
+                            >
+                                ← Back to Home
+                            </button>
                         </div>
-                    </div>
-                </section>
+                    </nav>
 
-                {/* Actions Section */}
-                <section>
-                    <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
-                        Actions
-                    </h2>
-                    <div className="bg-white rounded-xl border border-slate-200">
-                        <button
-                            onClick={handleLogout}
-                            disabled={logoutMutation.isPending}
-                            className="w-full flex items-center gap-3 p-4 text-left hover:bg-red-50 transition-colors rounded-xl disabled:opacity-50"
-                        >
-                            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                                <LogOut className="w-5 h-5 text-red-600" />
-                            </div>
-                            <div>
-                                <span className="font-medium text-red-700">Log out</span>
-                                <p className="text-sm text-red-600/70">Sign out of your account</p>
-                            </div>
-                            {logoutMutation.isPending && (
-                                <Loader2 className="w-5 h-5 text-red-500 animate-spin ml-auto" />
-                            )}
-                        </button>
+                    {/* Content Area */}
+                    <div className="flex-1 min-w-0">
+                        {activeTab === 'account' && <AccountSection />}
+                        {activeTab === 'integrations' && (
+                            <IntegrationsSection
+                                mondayStatus={{ connected: connections?.monday?.connected ?? false }}
+                                googleStatus={{ connected: googleConnected }}
+                                onMondayConnect={handleMondayConnect}
+                                onMondayDisconnect={handleMondayDisconnect}
+                                onGoogleConnect={handleGoogleConnect}
+                                onGoogleDisconnect={handleGoogleDisconnect}
+                            />
+                        )}
                     </div>
-                </section>
-
-                {/* Back link */}
-                <div className="mt-8 text-center">
-                    <button
-                        onClick={() => navigate('/')}
-                        className="text-sm text-slate-500 hover:text-slate-700"
-                    >
-                        ← Back to Home
-                    </button>
                 </div>
             </main>
         </div>
     );
 }
+
+export default SettingsPage;

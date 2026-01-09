@@ -141,49 +141,57 @@ export const DRAWER_DEFINITIONS: Record<keyof DrawerContextMap, DrawerDefinition
         dismissible: true,
         showClose: true,
     },
+    'integrations': {
+        id: 'integrations',
+        title: 'Integrations',
+        size: 'md',
+        sideEffects: [{ type: 'update', entityType: 'connection' }],
+        dismissible: true,
+        showClose: true,
+    },
 };
 
 // ==================== LAZY LOADED VIEWS ====================
 
 // Lazy load drawer views for code splitting
 const CreateRecordView = lazy(() =>
-    import('../components/drawer/views/CreateRecordView').then((m) => ({ default: m.CreateRecordView }))
+    import('../ui/drawer/views/CreateRecordView').then((m) => ({ default: m.CreateRecordView }))
 );
 const CreateNodeView = lazy(() =>
-    import('../components/drawer/views/CreateNodeView').then((m) => ({ default: m.CreateNodeView }))
+    import('../ui/drawer/views/CreateNodeView').then((m) => ({ default: m.CreateNodeView }))
 );
 const CreateProjectView = lazy(() =>
-    import('../components/drawer/views/CreateProjectView').then((m) => ({ default: m.CreateProjectView }))
+    import('../ui/drawer/views/CreateProjectView').then((m) => ({ default: m.CreateProjectView }))
 );
 const CreateDefinitionView = lazy(() =>
-    import('../components/drawer/views/CreateDefinitionView').then((m) => ({ default: m.CreateDefinitionView }))
+    import('../ui/drawer/views/CreateDefinitionView').then((m) => ({ default: m.CreateDefinitionView }))
 );
 const CreateLinkView = lazy(() =>
-    import('../components/drawer/views/CreateLinkView').then((m) => ({ default: m.CreateLinkView }))
+    import('../ui/drawer/views/CreateLinkView').then((m) => ({ default: m.CreateLinkView }))
 );
 const AddFieldView = lazy(() =>
-    import('../components/drawer/views/AddFieldView').then((m) => ({ default: m.AddFieldView }))
+    import('../ui/drawer/views/AddFieldView').then((m) => ({ default: m.AddFieldView }))
 );
 const AssignRecordsView = lazy(() =>
-    import('../components/drawer/views/AssignRecordsView').then((m) => ({ default: m.AssignRecordsView }))
+    import('../ui/drawer/views/AssignRecordsView').then((m) => ({ default: m.AssignRecordsView }))
 );
 const CloneDefinitionView = lazy(() =>
-    import('../components/drawer/views/CloneDefinitionView').then((m) => ({ default: m.CloneDefinitionView }))
+    import('../ui/drawer/views/CloneDefinitionView').then((m) => ({ default: m.CloneDefinitionView }))
 );
 const CloneProjectView = lazy(() =>
-    import('../components/drawer/views/CloneProjectView').then((m) => ({ default: m.CloneProjectView }))
+    import('../ui/drawer/views/CloneProjectView').then((m) => ({ default: m.CloneProjectView }))
 );
 const ConfirmDeleteView = lazy(() =>
-    import('../components/drawer/views/ConfirmDeleteView').then((m) => ({ default: m.ConfirmDeleteView }))
+    import('../ui/drawer/views/ConfirmDeleteView').then((m) => ({ default: m.ConfirmDeleteView }))
 );
 const ViewRecordDrawer = lazy(() =>
-    import('../components/drawer/views/ViewRecordDrawer').then((m) => ({ default: m.ViewRecordDrawer }))
+    import('../ui/drawer/views/ViewRecordDrawer').then((m) => ({ default: m.ViewRecordDrawer }))
 );
 const ViewDefinitionDrawer = lazy(() =>
-    import('../components/drawer/views/ViewDefinitionDrawer').then((m) => ({ default: m.ViewDefinitionDrawer }))
+    import('../ui/drawer/views/ViewDefinitionDrawer').then((m) => ({ default: m.ViewDefinitionDrawer }))
 );
 const ProjectLibraryDrawer = lazy(() =>
-    import('../components/drawer/views/ProjectLibraryDrawer').then((m) => ({ default: m.ProjectLibraryDrawer }))
+    import('../ui/drawer/views/ProjectLibraryDrawer').then((m) => ({ default: m.ProjectLibraryDrawer }))
 );
 
 // ==================== LOADING FALLBACK ====================

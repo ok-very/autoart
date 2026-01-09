@@ -8,8 +8,8 @@
  */
 
 import { useState } from 'react';
-import { Header } from '../components/layout/Header';
-import { BottomDrawer } from '../components/drawer/BottomDrawer';
+import { Header } from '../ui/layout/Header';
+import { BottomDrawer } from '../ui/drawer/BottomDrawer';
 import { Activity, Filter } from 'lucide-react';
 
 /**

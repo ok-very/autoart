@@ -10,7 +10,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Link2, X, ExternalLink, RefreshCw } from 'lucide-react';
 import { clsx } from 'clsx';
-import { RecordSearchCombobox } from '../../components/common/RecordSearchCombobox';
+import { RecordSearchCombobox } from '../common/RecordSearchCombobox';
 import {
     useResolveReference,
     useCreateReference,

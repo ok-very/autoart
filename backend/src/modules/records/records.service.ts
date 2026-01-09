@@ -540,3 +540,87 @@ export async function bulkDeleteRecords(recordIds: string[]): Promise<number> {
     return result.reduce((sum, r) => sum + Number(r.numDeletedRows), 0);
   });
 }
+
+// ==================== BULK IMPORT ====================
+
+export interface BulkCreateRecordInput {
+  uniqueName: string;
+  data: Record<string, unknown>;
+  classificationNodeId?: string | null;
+}
+
+export interface BulkCreateResult {
+  created: number;
+  updated: number;
+  errors: Array<{ uniqueName: string; error: string }>;
+}
+
+/**
+ * Create or update multiple records at once.
+ * Uses unique_name for upsert logic - if a record with the same unique_name exists,
+ * it will be updated instead of creating a duplicate.
+ */
+export async function bulkCreateRecords(
+  definitionId: string,
+  records: BulkCreateRecordInput[],
+  userId?: string
+): Promise<BulkCreateResult> {
+  // Verify definition exists
+  const def = await getDefinitionById(definitionId);
+  if (!def) {
+    throw new NotFoundError('Record definition', definitionId);
+  }
+
+  const result: BulkCreateResult = { created: 0, updated: 0, errors: [] };
+
+  if (records.length === 0) return result;
+
+  // Process in transaction for atomicity
+  await db.transaction().execute(async (trx) => {
+    for (const record of records) {
+      try {
+        // Check if record with same unique_name exists
+        const existing = await trx
+          .selectFrom('records')
+          .select('id')
+          .where('definition_id', '=', definitionId)
+          .where('unique_name', '=', record.uniqueName)
+          .executeTakeFirst();
+
+        if (existing) {
+          // Update existing record
+          await trx
+            .updateTable('records')
+            .set({
+              data: JSON.stringify(record.data),
+              classification_node_id: record.classificationNodeId ?? null,
+              updated_at: new Date(),
+            })
+            .where('id', '=', existing.id)
+            .execute();
+          result.updated++;
+        } else {
+          // Create new record
+          await trx
+            .insertInto('records')
+            .values({
+              definition_id: definitionId,
+              unique_name: record.uniqueName,
+              data: JSON.stringify(record.data),
+              classification_node_id: record.classificationNodeId ?? null,
+              created_by: userId ?? null,
+            })
+            .execute();
+          result.created++;
+        }
+      } catch (error) {
+        result.errors.push({
+          uniqueName: record.uniqueName,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+  });
+
+  return result;
+}

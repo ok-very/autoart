@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLogin, useRegister } from '../api/hooks';
 import { useAuthStore } from '../stores/authStore';
-import { Button } from '../components/common/Button';
+import { Button } from '../ui/common/Button';
 
 interface LoginPageProps {
   /** Initial mode for the form */

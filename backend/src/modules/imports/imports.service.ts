@@ -7,6 +7,7 @@
  * - Execute plans via Action/Event creation
  * - Emit domain events from CSV subitems using interpreter mappings
  * - Auto-create fact kind definitions for discovered event types
+ * - Connect to external sources (Monday, Asana) via connectors
  *
  * IMPORTANT: All event writes MUST go through emitEvent() to ensure
  * projection refresh and central validation guarantees.
@@ -24,6 +25,12 @@ import { matchSchema } from './schema-matcher.js';
 import { emitEvent } from '../events/events.service.js';
 import { isInternalWork, type ClassificationOutcome } from '@autoart/shared';
 import type { RecordDefinition } from '../../db/schema.js';
+
+// Connector imports
+import { MondayConnector } from './connectors/monday-connector.js';
+import { getMondayToken } from './connections.service.js';
+import { createMapping } from './sync.service.js';
+import { interpretMondayBoard } from '../interpreter/monday-interpreter.js';
 
 // ============================================================================
 // PARSER REGISTRY
@@ -67,6 +74,116 @@ export async function createSession(params: {
         .executeTakeFirstOrThrow();
 
     return session;
+}
+
+/**
+ * Create an import session from an external connector (Monday, Asana, etc.)
+ */
+export async function createConnectorSession(params: {
+    connectorType: 'monday' | 'asana' | 'notion';
+    connectorConfig: {
+        boardId?: string;
+        boardIds?: string[];
+        includeSubitems?: boolean;
+    };
+    targetProjectId?: string;
+    userId?: string;
+}) {
+    // Store connector config as parser_config, use connectorType as parser_name
+    const session = await db
+        .insertInto('import_sessions')
+        .values({
+            parser_name: `connector:${params.connectorType}`,
+            raw_data: '', // No raw data for connector imports
+            parser_config: JSON.stringify(params.connectorConfig),
+            target_project_id: params.targetProjectId ?? null,
+            status: 'pending',
+            created_by: params.userId ?? null,
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow();
+
+    return session;
+}
+
+/**
+ * Generate a plan from a Monday.com connector session.
+ */
+export async function generatePlanFromConnector(
+    sessionId: string,
+    userId?: string
+): Promise<ImportPlan> {
+    const session = await getSession(sessionId);
+    if (!session) {
+        throw new Error(`Session ${sessionId} not found`);
+    }
+
+    // Parse connector config
+    const config = session.parser_config as {
+        boardId?: string;
+        boardIds?: string[];
+        includeSubitems?: boolean;
+    };
+
+    const boardIds = config.boardIds ?? (config.boardId ? [config.boardId] : []);
+    if (boardIds.length === 0) {
+        throw new Error('No board IDs specified in connector config');
+    }
+
+    // Get token for the user
+    const token = await getMondayToken(userId);
+    const connector = new MondayConnector(token);
+
+    // Collect all nodes from all boards
+    const allNodes: Parameters<typeof interpretMondayBoard>[0] = [];
+    for (const boardId of boardIds) {
+        for await (const node of connector.traverseHierarchy(boardId, {
+            includeSubitems: config.includeSubitems ?? true,
+        })) {
+            allNodes.push(node);
+        }
+    }
+
+    // Interpret nodes into ImportPlanItems
+    const items = await interpretMondayBoard(allNodes, {
+        projectId: session.target_project_id ?? undefined,
+    });
+
+    // Generate classifications
+    const definitions = await listDefinitions();
+    const classifications = generateClassifications(items, definitions);
+
+    // Create the plan
+    const plan: ImportPlan = {
+        sessionId,
+        items,
+        containers: [], // Monday groups become stages, not containers
+        classifications,
+        validationIssues: [],
+    };
+
+    // Save plan to database
+    await db
+        .insertInto('import_plans')
+        .values({
+            session_id: sessionId,
+            plan_data: JSON.stringify(plan),
+            validation_issues: JSON.stringify(plan.validationIssues),
+        })
+        .execute();
+
+    // Update session status
+    const newStatus = hasUnresolvedClassifications(plan)
+        ? 'needs_review'
+        : 'planned';
+
+    await db
+        .updateTable('import_sessions')
+        .set({ status: newStatus })
+        .where('id', '=', sessionId)
+        .execute();
+
+    return plan;
 }
 
 export async function getSession(id: string) {
@@ -305,7 +422,7 @@ export async function getLatestPlan(sessionId: string): Promise<ImportPlan | nul
 
 export interface Resolution {
     itemTempId: string;
-    resolvedOutcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'SKIP' | 'DEFERRED';
+    resolvedOutcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'EXTERNAL_WORK' | 'AMBIGUOUS' | 'UNCLASSIFIED' | 'DEFERRED';
     resolvedFactKind?: string;
     resolvedPayload?: Record<string, unknown>;
 }
@@ -497,7 +614,10 @@ async function executePlanViaComposer(
 
     // Step 2: Create work items via Actions + Events (proper Composer pattern)
     for (const item of plan.items) {
-        const contextId = createdIds[item.parentTempId];
+        // Use parent container if specified, otherwise fall back to target project
+        const contextId = item.parentTempId
+            ? createdIds[item.parentTempId]
+            : targetProjectId;
         if (!contextId) {
             console.warn(`Parent container not found for item: ${item.tempId}`);
             continue;
@@ -536,6 +656,18 @@ async function executePlanViaComposer(
             },
             actorId: userId,
         });
+
+        // Step 2b: Create sync mapping for Monday items (enables future bi-directional sync)
+        const mondayMeta = (item.metadata as { monday?: { id: string; type: string } })?.monday;
+        if (mondayMeta?.id) {
+            await createMapping({
+                provider: 'monday',
+                externalId: mondayMeta.id,
+                externalType: mondayMeta.type || 'item',
+                localEntityType: 'action',
+                localEntityId: action.id,
+            });
+        }
 
         // Step 3: Use classification's interpretationPlan if available (V2 API)
         const classification = classificationMap.get(item.tempId);

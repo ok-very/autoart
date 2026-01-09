@@ -77,20 +77,48 @@ export interface SchemaMatchResult {
 // ============================================================================
 
 /**
- * Map renderHint to compatible FieldTypes
- * First type in array is preferred/exact match
+ * Map renderHint to compatible FieldTypes.
+ * First type in array is preferred/exact match.
+ * Source: Combined from Monday/Airtable/Notion connectors.
  */
 const RENDER_HINT_TO_FIELD_TYPES: Record<string, FieldType[]> = {
+    // Core text types
     text: ['text', 'textarea'],
     longtext: ['textarea', 'text'],
+
+    // Selection types
     status: ['status', 'select'],
-    date: ['date'],
-    person: ['user'],
     select: ['select', 'status'],
+
+    // Date/time types
+    date: ['date'],
+    timeline: ['date'], // Date range - renders as timeline
+
+    // User types
+    person: ['user'],
+
+    // Number types
     number: ['number', 'percent'],
     currency: ['number'],
+    percent: ['percent', 'number'],
+
+    // Link types
     url: ['url', 'text'],
     email: ['email', 'text'],
+    phone: ['text'], // No dedicated phone type
+
+    // Rich content types
+    file: ['text'], // File attachments - fallback to text URLs
+    doc: ['textarea', 'text'], // Documents - render as longtext
+
+    // Relation types
+    relation: ['link'], // Board relations → links
+    mirror: ['text'], // Mirrored values → read-only text
+    subtasks: ['text'], // Subitems summary → text
+
+    // Misc
+    checkbox: ['checkbox'],
+    tags: ['tags', 'text'],
 };
 
 /**

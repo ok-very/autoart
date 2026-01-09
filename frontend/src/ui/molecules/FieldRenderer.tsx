@@ -2,6 +2,7 @@ import { clsx } from 'clsx';
 import type { FieldViewModel } from '@autoart/shared/domain';
 import { TagsInput } from './TagsInput';
 import { StatusFieldEditor } from '../semantic/StatusFieldEditor';
+import { DateFieldEditor } from '../semantic/DateFieldEditor';
 
 /**
  * Status configuration for rendering status fields
@@ -42,8 +43,7 @@ export interface FieldRendererProps {
  * FieldRenderer - Molecule for rendering editable fields
  * 
  * Accepts a FieldViewModel and renders the appropriate input.
- * Complex field types (link, user, richtext) are delegated to
- * callbacks provided by the composite.
+ * Dispatch priority: renderHint → type → fallback
  * 
  * This is a pure molecule - no API calls, no domain logic.
  */
@@ -54,8 +54,65 @@ export function FieldRenderer({
     callbacks,
     className,
 }: FieldRendererProps) {
-    const { type, value, editable, options } = viewModel;
+    const { type, value, editable, options, renderHint } = viewModel;
     const readOnly = !editable;
+
+    // ========== RENDER HINT DISPATCH ==========
+    // Semantic hints override base type for specialized rendering
+
+    // Email hint - native email input with validation
+    if (renderHint === 'email') {
+        return (
+            <input
+                type="email"
+                value={String(value || '')}
+                onChange={(e) => onChange(e.target.value)}
+                readOnly={readOnly}
+                placeholder={viewModel.placeholder}
+                className={clsx(
+                    'w-full text-sm border rounded-md shadow-sm px-3 py-2 transition-colors',
+                    readOnly
+                        ? 'border-slate-300 bg-white cursor-default'
+                        : 'border-slate-300 bg-white hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
+                    className
+                )}
+            />
+        );
+    }
+
+    // Phone hint - tel input for mobile keyboards
+    if (renderHint === 'phone') {
+        return (
+            <input
+                type="tel"
+                value={String(value || '')}
+                onChange={(e) => onChange(e.target.value)}
+                readOnly={readOnly}
+                placeholder={viewModel.placeholder}
+                className={clsx(
+                    'w-full text-sm border rounded-md shadow-sm px-3 py-2 transition-colors',
+                    readOnly
+                        ? 'border-slate-300 bg-white cursor-default'
+                        : 'border-slate-300 bg-white hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
+                    className
+                )}
+            />
+        );
+    }
+
+    // Date hint - use semantic DateFieldEditor
+    if (renderHint === 'date' || renderHint === 'timeline') {
+        return (
+            <DateFieldEditor
+                value={value as string | null}
+                onChange={(val) => onChange(val)}
+                readOnly={readOnly}
+                className={className}
+            />
+        );
+    }
+
+    // ========== TYPE-BASED DISPATCH ==========
 
     // Link field - delegate to composite
     if (type === 'link') {

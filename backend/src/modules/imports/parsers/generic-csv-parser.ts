@@ -154,24 +154,47 @@ export class GenericCSVParser {
     private extractFieldRecordings(
         row: Record<string, string>,
         titleKey: string
-    ): Array<{ fieldName: string; value: unknown }> {
-        const recordings: Array<{ fieldName: string; value: unknown }> = [];
-        const skipKeys = [titleKey];
-        const commonFields = ['status', 'priority', 'due', 'date', 'assignee', 'owner', 'notes', 'description'];
+    ): Array<{ fieldName: string; value: unknown; renderHint?: string }> {
+        const recordings: Array<{ fieldName: string; value: unknown; renderHint?: string }> = [];
+        let unnamedCounter = 1;
 
         for (const [key, value] of Object.entries(row)) {
-            if (skipKeys.includes(key)) continue;
+            // Skip title column
+            if (key === titleKey) continue;
+            // Skip empty values
             if (!value?.trim()) continue;
 
-            const keyLower = key.toLowerCase();
-            const isCommon = commonFields.some((f) => keyLower.includes(f));
+            // Handle empty/unnamed headers - preserve data with generated name
+            const fieldName = key.trim() || `Field ${unnamedCounter++}`;
+            const trimmedValue = value.trim();
 
-            if (isCommon) {
-                recordings.push({ fieldName: key, value: value.trim() });
-            }
+            recordings.push({
+                fieldName,
+                value: trimmedValue,
+                renderHint: this.inferRenderHint(fieldName.toLowerCase(), trimmedValue)
+            });
         }
 
         return recordings;
+    }
+
+    /**
+     * Infer a render hint from the field name and value content.
+     * Known patterns get semantic hints; unknown fields default to text.
+     */
+    private inferRenderHint(keyLower: string, value: string): string {
+        // Known field patterns → semantic hints
+        if (keyLower.includes('status')) return 'status';
+        if (keyLower.includes('priority')) return 'select';
+        if (keyLower.includes('date') || keyLower.includes('due')) return 'date';
+        if (keyLower.includes('owner') || keyLower.includes('assignee')) return 'person';
+        if (keyLower.includes('description') || keyLower.includes('notes')) return 'longtext';
+
+        // Long text detection (>200 chars or contains newlines)
+        if (value.length > 200 || value.includes('\n')) return 'longtext';
+
+        // Default to plain text
+        return 'text';
     }
 }
 

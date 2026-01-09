@@ -157,6 +157,7 @@ export interface DrawerContextMap {
     'view-definition': ViewDefinitionContext;
     'project-library': ProjectLibraryContext;
     'ingestion': IngestionContext;
+    'integrations': IntegrationsContext;
 }
 
 // ==================== CONTEXT TYPES ====================
@@ -286,6 +287,12 @@ export interface IngestionContext {
     targetDefinitionId?: string;
     /** Target classification node */
     targetNodeId?: string;
+}
+
+/** Context for integrations management drawer */
+export interface IntegrationsContext {
+    /** Optional: pre-select a specific integration tab */
+    activeTab?: 'monday' | 'google' | 'api';
 }
 
 // ==================== HELPER FUNCTIONS ====================

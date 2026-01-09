@@ -21,6 +21,7 @@ import { workflowSurfaceRoutes } from './modules/projections/workflow-surface.ro
 import { composerRoutes } from './modules/composer/composer.routes.js';
 import { containersRoutes } from './modules/actions/containers.routes.js';
 import { importsRoutes } from './modules/imports/imports.routes.js';
+import { connectionsRoutes } from './modules/imports/connections.routes.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -83,6 +84,9 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Import sessions - new projection-driven import workflow
   await fastify.register(importsRoutes, { prefix: '/api/imports' });
+
+  // External connections management (Monday, Google OAuth)
+  await fastify.register(connectionsRoutes, { prefix: '/api' });
 
   // Fact kind definitions - Definition Review UI
   await fastify.register(factKindsRoutes, { prefix: '/api' });

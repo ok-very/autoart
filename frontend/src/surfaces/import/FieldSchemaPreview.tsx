@@ -11,7 +11,7 @@
 
 import { useMemo } from 'react';
 import { TableProperties, AlertCircle, CheckCircle } from 'lucide-react';
-import { DataTable, type TableColumn } from '../../components/tables/DataTable';
+import { DataTable, type TableColumn } from '../../ui/tables/DataTable';
 import type { ImportPlanItem } from '../../api/hooks/imports';
 
 // ============================================================================
@@ -95,7 +95,7 @@ export function FieldSchemaPreview({ item, schemaMatch, compact = false }: Field
             key: 'fieldName',
             label: 'Field',
             width: 120,
-            renderCell: (row) => (
+            renderCell: (row: FieldRow) => (
                 <div className="flex items-center gap-1.5">
                     <span className="font-medium text-slate-700">{row.fieldName}</span>
                     {row.renderHint && (
@@ -110,7 +110,7 @@ export function FieldSchemaPreview({ item, schemaMatch, compact = false }: Field
             key: 'value',
             label: 'Value',
             width: 'flex',
-            renderCell: (row) => (
+            renderCell: (row: FieldRow) => (
                 <span className="text-slate-600 truncate block">
                     {row.value === null || row.value === undefined
                         ? <span className="text-slate-400 italic">empty</span>
@@ -122,7 +122,7 @@ export function FieldSchemaPreview({ item, schemaMatch, compact = false }: Field
             key: 'matchedType',
             label: 'Schema Type',
             width: 100,
-            renderCell: (row) => (
+            renderCell: (row: FieldRow) => (
                 <div className="flex items-center gap-1">
                     {row.status === 'matched' ? (
                         <CheckCircle size={12} className="text-green-500 flex-shrink-0" />

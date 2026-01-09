@@ -13,11 +13,11 @@
 import { useCallback, useState } from 'react';
 import { Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../components/layout/Header';
-import { ActionInstancesView } from '../components/tables/ActionInstancesView';
-import { BottomDrawer } from '../components/drawer/BottomDrawer';
-import { ResizeHandle } from '../components/common/ResizeHandle';
-import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../components/registry';
+import { Header } from '../ui/layout/Header';
+import { ActionInstancesView } from '../ui/tables/ActionInstancesView';
+import { BottomDrawer } from '../ui/drawer/BottomDrawer';
+import { ResizeHandle } from '../ui/common/ResizeHandle';
+import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../ui/registry';
 import { useUIStore } from '../stores/uiStore';
 import { SelectionInspector } from '../ui/composites/SelectionInspector';
 

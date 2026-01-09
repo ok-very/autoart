@@ -21,9 +21,9 @@ import { useNode, useRecord, useInterpretationAvailable } from '../../api/hooks'
 import { RecordPropertiesView } from './RecordPropertiesView';
 import { SchemaEditor, ReferencesManager, LinksManager } from '../semantic';
 import { InterpretationInspectorView } from './interpretation/InterpretationInspectorView';
-import { ActionDetailsPanel } from '../../components/inspector/ActionDetailsPanel';
-import { ActionEventsPanel } from '../../components/inspector/ActionEventsPanel';
-import { InspectorFooterComposer } from '../../components/inspector/InspectorFooterComposer';
+import { ActionDetailsPanel } from '../inspector/ActionDetailsPanel';
+import { ActionEventsPanel } from '../inspector/ActionEventsPanel';
+import { InspectorFooterComposer } from '../inspector/InspectorFooterComposer';
 
 // Re-export from canonical location for backward compatibility
 export type { InspectorTabId } from '../../types/ui';

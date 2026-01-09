@@ -220,6 +220,9 @@ export interface FieldViewModel {
     /** Field type for rendering */
     type: string;
 
+    /** Semantic hint for specialized rendering (e.g., 'email', 'phone', 'person') */
+    renderHint?: string;
+
     /** Whether field is visible */
     visible: boolean;
 

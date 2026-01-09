@@ -327,6 +327,77 @@ export type FactKindDefinition = Selectable<FactKindDefinitionsTable>;
 export type NewFactKindDefinition = Insertable<FactKindDefinitionsTable>;
 export type FactKindDefinitionUpdate = Updateable<FactKindDefinitionsTable>;
 
+// ============================================
+// EXTERNAL SYNC TABLES (Migration 032)
+// ============================================
+
+// Connection Credentials Table
+export interface ConnectionCredentialsTable {
+  id: Generated<string>;
+  user_id: string | null;
+  provider: string;
+  access_token: string;
+  refresh_token: string | null;
+  expires_at: Date | null;
+  scopes: Generated<unknown>;
+  metadata: Generated<unknown>;
+  created_at: Generated<Date>;
+  updated_at: Generated<Date>;
+}
+
+export type ConnectionCredential = Selectable<ConnectionCredentialsTable>;
+export type NewConnectionCredential = Insertable<ConnectionCredentialsTable>;
+export type ConnectionCredentialUpdate = Updateable<ConnectionCredentialsTable>;
+
+// External Source Mappings Table
+export interface ExternalSourceMappingsTable {
+  id: Generated<string>;
+  provider: string;
+  external_id: string;
+  external_type: string;
+  local_entity_type: string;
+  local_entity_id: string;
+  sync_enabled: Generated<boolean>;
+  column_mappings: Generated<unknown>;
+  last_synced_at: Date | null;
+  last_sync_hash: string | null;
+  created_at: Generated<Date>;
+}
+
+export type ExternalSourceMapping = Selectable<ExternalSourceMappingsTable>;
+export type NewExternalSourceMapping = Insertable<ExternalSourceMappingsTable>;
+export type ExternalSourceMappingUpdate = Updateable<ExternalSourceMappingsTable>;
+
+// User Settings Table
+export interface UserSettingsTable {
+  id: Generated<string>;
+  user_id: string;
+  setting_key: string;
+  setting_value: unknown;
+  updated_at: Generated<Date>;
+}
+
+export type UserSetting = Selectable<UserSettingsTable>;
+export type NewUserSetting = Insertable<UserSettingsTable>;
+export type UserSettingUpdate = Updateable<UserSettingsTable>;
+
+// Inference Learnings Table
+export interface InferenceLearningsTable {
+  id: Generated<string>;
+  source_type: string;
+  input_signature: unknown;
+  suggested_mapping: unknown | null;
+  user_mapping: unknown;
+  project_id: string | null;
+  definition_id: string | null;
+  applied_count: Generated<number>;
+  created_at: Generated<Date>;
+}
+
+export type InferenceLearning = Selectable<InferenceLearningsTable>;
+export type NewInferenceLearning = Insertable<InferenceLearningsTable>;
+export type InferenceLearningUpdate = Updateable<InferenceLearningsTable>;
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -345,4 +416,9 @@ export interface Database {
   import_plans: ImportPlansTable;
   import_executions: ImportExecutionsTable;
   fact_kind_definitions: FactKindDefinitionsTable;
+  connection_credentials: ConnectionCredentialsTable;
+  external_source_mappings: ExternalSourceMappingsTable;
+  user_settings: UserSettingsTable;
+  inference_learnings: InferenceLearningsTable;
 }
+

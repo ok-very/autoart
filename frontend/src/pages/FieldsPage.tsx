@@ -12,12 +12,12 @@
 
 import { useState, useEffect } from 'react';
 import { TableProperties, ClipboardList } from 'lucide-react';
-import { Header } from '../components/layout/Header';
+import { Header } from '../ui/layout/Header';
 import { ResizeHandle } from '../ui/atoms/ResizeHandle';
 import { FieldsMillerColumnsView } from '../ui/composites/FieldsMillerColumnsView';
 import { FieldDefinitionEditor } from '../ui/semantic/FieldDefinitionEditor';
 import { FieldInstancesReview } from '../ui/semantic/FieldInstancesReview';
-import { RegistryPageHeader, type RegistryTab } from '../components/registry';
+import { RegistryPageHeader, type RegistryTab } from '../ui/registry';
 import { useUIStore, isFieldsViewMode } from '../stores/uiStore';
 import type { FieldDescriptor } from '@autoart/shared';
 

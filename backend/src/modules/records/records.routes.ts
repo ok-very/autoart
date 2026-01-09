@@ -303,6 +303,39 @@ export async function recordsRoutes(app: FastifyInstance) {
     }
   );
 
+  // Bulk import (create/update) records
+  fastify.post(
+    '/bulk/import',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        body: z.object({
+          definitionId: z.string().uuid(),
+          records: z.array(z.object({
+            uniqueName: z.string().min(1),
+            data: z.record(z.unknown()),
+            classificationNodeId: z.string().uuid().nullable().optional(),
+          })),
+        }),
+      },
+    },
+    async (request, reply) => {
+      try {
+        const result = await recordsService.bulkCreateRecords(
+          request.body.definitionId,
+          request.body.records,
+          request.user.userId
+        );
+        return reply.send(result);
+      } catch (err) {
+        if (err instanceof AppError) {
+          return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+        }
+        throw err;
+      }
+    }
+  );
+
   // List records
   fastify.get(
     '/',

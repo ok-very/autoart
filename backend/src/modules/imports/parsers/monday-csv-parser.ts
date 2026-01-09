@@ -291,31 +291,71 @@ export class MondayCSVParser {
 
     private extractFieldRecordings(row: MondayRow): Array<{ fieldName: string; value: unknown; renderHint?: string }> {
         const recordings: Array<{ fieldName: string; value: unknown; renderHint?: string }> = [];
+        let unnamedCounter = 1;
 
-        const status = row['Task Status'] ?? row['Status'] ?? row[3];
-        const targetDate = row['Target Date'] ?? row[4];
-        const priority = row['Priority'] ?? row[5];
-        const notes = row['Notes'] ?? row[6];
-        const pm = row['PM'] ?? row[2];
+        // Known field mappings with specific render hints (preserve existing behavior)
+        const knownFields: Record<string, { keys: string[]; renderHint: string }> = {
+            'Status': { keys: ['Task Status', 'Status', '3'], renderHint: 'status' },
+            'Target Date': { keys: ['Target Date', '4'], renderHint: 'date' },
+            'Priority': { keys: ['Priority', '5'], renderHint: 'select' },
+            'Notes': { keys: ['Notes', '6'], renderHint: 'longtext' },
+            'Owner': { keys: ['PM', '2'], renderHint: 'person' },
+        };
 
-        if (status?.trim()) {
-            recordings.push({ fieldName: 'Status', value: status.trim(), renderHint: 'status' });
+        const processedKeys = new Set<string>();
+
+        // First pass: extract known fields with specific hints
+        for (const [fieldName, config] of Object.entries(knownFields)) {
+            for (const key of config.keys) {
+                const value = row[key];
+                if (value?.trim()) {
+                    recordings.push({
+                        fieldName,
+                        value: value.trim(),
+                        renderHint: config.renderHint
+                    });
+                    config.keys.forEach(k => processedKeys.add(k));
+                    break;
+                }
+            }
         }
-        if (targetDate?.trim()) {
-            recordings.push({ fieldName: 'Target Date', value: targetDate.trim(), renderHint: 'date' });
-        }
-        if (priority?.trim()) {
-            recordings.push({ fieldName: 'Priority', value: priority.trim(), renderHint: 'select' });
-        }
-        if (notes?.trim()) {
-            recordings.push({ fieldName: 'Notes', value: notes.trim(), renderHint: 'longtext' });
-        }
-        if (pm?.trim()) {
-            // PM = Owner (person selector)
-            recordings.push({ fieldName: 'Owner', value: pm.trim(), renderHint: 'person' });
+
+        // Second pass: capture all remaining columns
+        for (const [key, value] of Object.entries(row)) {
+            if (processedKeys.has(key)) continue;
+            if (!value?.trim()) continue;
+            // Skip Name and Subitems columns (handled separately)
+            if (key === 'Name' || key === 'Subitems' || key === '0' || key === '1') continue;
+
+            // Handle empty/unnamed headers
+            const fieldName = key.trim() || `Field ${unnamedCounter++}`;
+            const trimmedValue = value.trim();
+
+            recordings.push({
+                fieldName,
+                value: trimmedValue,
+                renderHint: this.inferRenderHint(fieldName.toLowerCase(), trimmedValue)
+            });
         }
 
         return recordings;
+    }
+
+    /**
+     * Infer a render hint from the field name and value content.
+     * Known patterns get semantic hints; unknown fields default to text.
+     */
+    private inferRenderHint(keyLower: string, value: string): string {
+        if (keyLower.includes('status')) return 'status';
+        if (keyLower.includes('priority')) return 'select';
+        if (keyLower.includes('date') || keyLower.includes('due')) return 'date';
+        if (keyLower.includes('owner') || keyLower.includes('assignee') || keyLower.includes('pm')) return 'person';
+        if (keyLower.includes('description') || keyLower.includes('notes')) return 'longtext';
+
+        // Long text detection (>200 chars or contains newlines)
+        if (value.length > 200 || value.includes('\n')) return 'longtext';
+
+        return 'text';
     }
 }
 

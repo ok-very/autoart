@@ -19,7 +19,7 @@ import {
     useUpdateNode,
     useDeleteRecord,
 } from '../../api/hooks';
-import { RichTextEditor } from '../../components/editor/RichTextEditor';
+import { RichTextEditor } from '../editor/RichTextEditor';
 import { FieldEditor } from '../semantic/FieldEditor';
 import { NodeFieldEditor } from '../semantic/NodeFieldEditor';
 import { useRecordFieldViewModels } from './hooks/useDomain';

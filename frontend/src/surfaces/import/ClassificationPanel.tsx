@@ -7,9 +7,10 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { AlertTriangle, HelpCircle, Check, X, ChevronDown, ChevronUp, Save, Loader2, Lightbulb, Play, FileText, Inbox, Sparkles, Clock, ArrowUpRight, ArrowUpDown, MoreVertical, Trash2 } from 'lucide-react';
+import { AlertTriangle, HelpCircle, Check, ChevronDown, ChevronUp, Save, Loader2, Lightbulb, Play, FileText, Inbox, Sparkles, Clock, ArrowUpRight, ArrowUpDown, MoreVertical, Trash2, Layers, Square, CheckSquare } from 'lucide-react';
 import { useSaveResolutions, useClassificationSuggestions } from '../../api/hooks/imports';
 import type { ImportPlan, Resolution, ItemClassification, InterpretationOutput, ClassificationSuggestion } from '../../api/hooks/imports';
+import { humanizeFactKind, formatRuleSource, toFactKindKey } from '../../utils/formatFactKind';
 
 // ============================================================================
 // TYPES
@@ -23,9 +24,10 @@ interface ClassificationPanelProps {
 
 interface PendingResolution {
     itemTempId: string;
-    outcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'EXTERNAL_WORK' | 'SKIP' | null;
+    outcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'EXTERNAL_WORK' | 'DEFERRED' | null;
     factKind?: string;
     hintType?: string; // Track selected hint type for action_hints
+    customFactLabel?: string; // User-entered custom fact kind label
 }
 
 // ============================================================================
@@ -37,7 +39,7 @@ const OUTCOME_OPTIONS = [
     { value: 'DERIVED_STATE', label: 'Derived State', icon: Play, color: 'text-blue-600' },
     { value: 'INTERNAL_WORK', label: 'Internal Work', icon: Lightbulb, color: 'text-amber-500' },
     { value: 'EXTERNAL_WORK', label: 'External Work', icon: ArrowUpRight, color: 'text-purple-500' },
-    { value: 'SKIP', label: 'Skip', icon: X, color: 'text-red-500' },
+    { value: 'DEFERRED', label: 'Defer', icon: Clock, color: 'text-slate-500' },
 ] as const;
 
 // ============================================================================
@@ -67,11 +69,11 @@ function getOutcomeIcon(outcome: string) {
 function getOutputKindBadge(output: InterpretationOutput) {
     switch (output.kind) {
         case 'fact_candidate':
-            return { label: output.factKind, color: 'bg-green-100 text-green-700', icon: FileText };
+            return { label: humanizeFactKind(output.factKind), color: 'bg-green-100 text-green-700', icon: FileText };
         case 'action_hint':
-            return { label: output.hintType, color: 'bg-amber-100 text-amber-700', icon: Lightbulb };
+            return { label: output.hintType?.charAt(0).toUpperCase() + (output.hintType?.slice(1) ?? ''), color: 'bg-amber-100 text-amber-700', icon: Lightbulb };
         case 'work_event':
-            return { label: output.eventType, color: 'bg-blue-100 text-blue-700', icon: Play };
+            return { label: humanizeFactKind(output.eventType), color: 'bg-blue-100 text-blue-700', icon: Play };
         case 'field_value':
             return { label: output.field, color: 'bg-purple-100 text-purple-700', icon: Inbox };
         default:
@@ -79,10 +81,14 @@ function getOutputKindBadge(output: InterpretationOutput) {
     }
 }
 
-/** Format suggestion label - capitalize hint types, return fact kinds as-is */
+/** Format suggestion label - prefer inferredLabel, then humanize fact kinds */
 function formatSuggestionLabel(suggestion: ClassificationSuggestion): string {
+    // Use inferred label if available (human-readable from inference)
+    if (suggestion.inferredLabel) {
+        return suggestion.inferredLabel;
+    }
     if (suggestion.factKind) {
-        return suggestion.factKind; // Already SCREAMING_SNAKE_CASE
+        return humanizeFactKind(suggestion.factKind);
     }
     if (suggestion.hintType) {
         // Capitalize first letter: 'request' -> 'Request'
@@ -119,6 +125,8 @@ export function ClassificationPanel({
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [sortUnresolvedFirst, setSortUnresolvedFirst] = useState(true);
     const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<'flat' | 'grouped'>('flat');
+    const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
 
     const saveResolutionsMutation = useSaveResolutions();
 
@@ -132,6 +140,19 @@ export function ClassificationPanel({
             (c) => !c.resolution && (c.outcome === 'AMBIGUOUS' || c.outcome === 'UNCLASSIFIED')
         );
     }, [plan]);
+
+    // Group unresolved items by their primary field name (for bulk selection)
+    const groupedByField = useMemo(() => {
+        const groups = new Map<string, ItemClassification[]>();
+        for (const c of unresolvedItems) {
+            // Get the first field_value output's field name, or use outcome as fallback
+            const fieldOutput = c.interpretationPlan?.outputs?.find(o => o.kind === 'field_value');
+            const key = (fieldOutput?.field as string) ?? c.outcome ?? 'Other';
+            const existing = groups.get(key) ?? [];
+            groups.set(key, [...existing, c]);
+        }
+        return groups;
+    }, [unresolvedItems]);
 
     // Get all classifications for display (with optional sorting)
     const allClassifications = useMemo(() => {
@@ -184,6 +205,18 @@ export function ClassificationPanel({
         });
     }, []);
 
+    // Handle custom fact kind label input
+    const handleCustomFactLabelChange = useCallback((itemTempId: string, customLabel: string) => {
+        setPendingResolutions((prev) => {
+            const next = new Map(prev);
+            const existing = next.get(itemTempId) ?? { itemTempId, outcome: 'FACT_EMITTED' };
+            // Convert label to snake case for factKind
+            const factKind = customLabel ? toFactKindKey(customLabel) : undefined;
+            next.set(itemTempId, { ...existing, customFactLabel: customLabel, factKind, outcome: 'FACT_EMITTED' });
+            return next;
+        });
+    }, []);
+
     // Count items with suggestions
     const itemsWithSuggestions = useMemo(() => {
         if (!suggestions) return [];
@@ -229,7 +262,7 @@ export function ClassificationPanel({
                 if (!next.has(item.itemTempId) || next.get(item.itemTempId)?.outcome === null) {
                     next.set(item.itemTempId, {
                         itemTempId: item.itemTempId,
-                        outcome: 'SKIP', // Maps to DEFERRED on backend
+                        outcome: 'DEFERRED',
                     });
                 }
             }
@@ -238,14 +271,14 @@ export function ClassificationPanel({
         setBulkMenuOpen(false);
     }, [unresolvedItems]);
 
-    // Handle Skip All Unresolved
-    const handleSkipAll = useCallback(() => {
+    // Handle Defer All Unresolved
+    const handleDeferAll = useCallback(() => {
         setPendingResolutions((prev) => {
             const next = new Map(prev);
             for (const item of unresolvedItems) {
                 next.set(item.itemTempId, {
                     itemTempId: item.itemTempId,
-                    outcome: 'SKIP',
+                    outcome: 'DEFERRED',
                 });
             }
             return next;
@@ -258,6 +291,37 @@ export function ClassificationPanel({
         setPendingResolutions(new Map());
         setBulkMenuOpen(false);
     }, []);
+
+    // Handle group selection toggle
+    const handleToggleGroup = useCallback((groupKey: string) => {
+        setSelectedGroups(prev => {
+            const next = new Set(prev);
+            if (next.has(groupKey)) {
+                next.delete(groupKey);
+            } else {
+                next.add(groupKey);
+            }
+            return next;
+        });
+    }, []);
+
+    // Handle bulk outcome for selected groups
+    const handleBulkGroupOutcome = useCallback((outcome: PendingResolution['outcome']) => {
+        const itemsInSelectedGroups: string[] = [];
+        for (const [key, items] of groupedByField.entries()) {
+            if (selectedGroups.has(key)) {
+                items.forEach(item => itemsInSelectedGroups.push(item.itemTempId));
+            }
+        }
+        setPendingResolutions(prev => {
+            const next = new Map(prev);
+            for (const itemTempId of itemsInSelectedGroups) {
+                next.set(itemTempId, { itemTempId, outcome });
+            }
+            return next;
+        });
+        setSelectedGroups(new Set());
+    }, [groupedByField, selectedGroups]);
 
     // Count resolved items
     const resolvedCount = useMemo(() => {
@@ -357,12 +421,27 @@ export function ClassificationPanel({
                                     setSortUnresolvedFirst(!sortUnresolvedFirst);
                                 }}
                                 className={`flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-lg border transition-colors ${sortUnresolvedFirst
-                                        ? 'text-blue-700 bg-blue-50 border-blue-200'
-                                        : 'text-slate-500 bg-white border-slate-200 hover:border-slate-300'
+                                    ? 'text-blue-700 bg-blue-50 border-blue-200'
+                                    : 'text-slate-500 bg-white border-slate-200 hover:border-slate-300'
                                     }`}
                                 title={sortUnresolvedFirst ? 'Showing unresolved first' : 'Show in original order'}
                             >
                                 <ArrowUpDown className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* View Mode Toggle */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setViewMode(viewMode === 'flat' ? 'grouped' : 'flat');
+                                }}
+                                className={`flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-lg border transition-colors ${viewMode === 'grouped'
+                                    ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
+                                    : 'text-slate-500 bg-white border-slate-200 hover:border-slate-300'
+                                    }`}
+                                title={viewMode === 'grouped' ? 'Switch to flat view' : 'Group by field'}
+                            >
+                                <Layers className="w-3.5 h-3.5" />
                             </button>
 
                             {/* Bulk Actions Dropdown */}
@@ -396,11 +475,11 @@ export function ClassificationPanel({
                                         </button>
                                         <div className="border-t border-slate-100 my-1" />
                                         <button
-                                            onClick={handleSkipAll}
+                                            onClick={handleDeferAll}
                                             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
                                         >
-                                            <X className="w-4 h-4" />
-                                            Skip All Unresolved
+                                            <Clock className="w-4 h-4" />
+                                            Defer All Unresolved
                                         </button>
                                         <button
                                             onClick={handleClearPending}
@@ -448,22 +527,94 @@ export function ClassificationPanel({
             {/* Collapsible Content */}
             {!isCollapsed && (
                 <div className="max-h-72 overflow-y-auto border-t border-slate-100">
-                    {allClassifications.map((classification) => (
-                        <ClassificationRow
-                            key={classification.itemTempId}
-                            classification={classification}
-                            itemTitle={getItemTitle(classification.itemTempId)}
-                            isExpanded={expandedItem === classification.itemTempId}
-                            onToggle={() => setExpandedItem(
-                                expandedItem === classification.itemTempId ? null : classification.itemTempId
+                    {/* View mode toggle + Group bulk actions */}
+                    {viewMode === 'grouped' && groupedByField.size > 0 && (
+                        <div className="px-6 py-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-slate-500">
+                                    {selectedGroups.size} of {groupedByField.size} groups selected
+                                </span>
+                            </div>
+                            {selectedGroups.size > 0 && (
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handleBulkGroupOutcome('DEFERRED')}
+                                        className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded hover:bg-amber-100"
+                                    >
+                                        <Clock className="w-3 h-3" />
+                                        Defer Selected
+                                    </button>
+                                    <button
+                                        onClick={() => handleBulkGroupOutcome('INTERNAL_WORK')}
+                                        className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded hover:bg-purple-100"
+                                    >
+                                        <Lightbulb className="w-3 h-3" />
+                                        Mark Internal
+                                    </button>
+                                </div>
                             )}
-                            pending={pendingResolutions.get(classification.itemTempId)}
-                            onOutcomeSelect={(outcome) => handleOutcomeSelect(classification.itemTempId, outcome)}
-                            onFactKindSelect={(factKind) => handleFactKindSelect(classification.itemTempId, factKind)}
-                            onHintTypeSelect={(hintType) => handleHintTypeSelect(classification.itemTempId, hintType)}
-                            suggestions={suggestions?.[classification.itemTempId]}
-                        />
-                    ))}
+                        </div>
+                    )}
+
+                    {viewMode === 'grouped' ? (
+                        /* Grouped View */
+                        Array.from(groupedByField.entries()).map(([groupKey, items]) => (
+                            <div key={groupKey} className="border-b border-slate-100 last:border-b-0">
+                                {/* Group Header */}
+                                <div
+                                    className="flex items-center gap-3 px-6 py-2 bg-slate-50 hover:bg-slate-100 cursor-pointer"
+                                    onClick={() => handleToggleGroup(groupKey)}
+                                >
+                                    {selectedGroups.has(groupKey) ? (
+                                        <CheckSquare className="w-4 h-4 text-blue-600" />
+                                    ) : (
+                                        <Square className="w-4 h-4 text-slate-400" />
+                                    )}
+                                    <span className="font-medium text-slate-700">{groupKey}</span>
+                                    <span className="text-xs text-slate-500">({items.length} items)</span>
+                                </div>
+                                {/* Group Items */}
+                                <div className="pl-4">
+                                    {items.map((classification) => (
+                                        <ClassificationRow
+                                            key={classification.itemTempId}
+                                            classification={classification}
+                                            itemTitle={getItemTitle(classification.itemTempId)}
+                                            isExpanded={expandedItem === classification.itemTempId}
+                                            onToggle={() => setExpandedItem(
+                                                expandedItem === classification.itemTempId ? null : classification.itemTempId
+                                            )}
+                                            pending={pendingResolutions.get(classification.itemTempId)}
+                                            onOutcomeSelect={(outcome) => handleOutcomeSelect(classification.itemTempId, outcome)}
+                                            onFactKindSelect={(factKind) => handleFactKindSelect(classification.itemTempId, factKind)}
+                                            onHintTypeSelect={(hintType) => handleHintTypeSelect(classification.itemTempId, hintType)}
+                                            onCustomFactLabelChange={(label) => handleCustomFactLabelChange(classification.itemTempId, label)}
+                                            suggestions={suggestions?.[classification.itemTempId]}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        /* Flat View */
+                        allClassifications.map((classification) => (
+                            <ClassificationRow
+                                key={classification.itemTempId}
+                                classification={classification}
+                                itemTitle={getItemTitle(classification.itemTempId)}
+                                isExpanded={expandedItem === classification.itemTempId}
+                                onToggle={() => setExpandedItem(
+                                    expandedItem === classification.itemTempId ? null : classification.itemTempId
+                                )}
+                                pending={pendingResolutions.get(classification.itemTempId)}
+                                onOutcomeSelect={(outcome) => handleOutcomeSelect(classification.itemTempId, outcome)}
+                                onFactKindSelect={(factKind) => handleFactKindSelect(classification.itemTempId, factKind)}
+                                onHintTypeSelect={(hintType) => handleHintTypeSelect(classification.itemTempId, hintType)}
+                                onCustomFactLabelChange={(label) => handleCustomFactLabelChange(classification.itemTempId, label)}
+                                suggestions={suggestions?.[classification.itemTempId]}
+                            />
+                        ))
+                    )}
                 </div>
             )}
         </div>
@@ -483,6 +634,7 @@ interface ClassificationRowProps {
     onOutcomeSelect: (outcome: PendingResolution['outcome']) => void;
     onFactKindSelect: (factKind: string) => void;
     onHintTypeSelect: (hintType: string) => void;
+    onCustomFactLabelChange: (label: string) => void;
     suggestions?: ClassificationSuggestion[];
 }
 
@@ -495,6 +647,7 @@ function ClassificationRow({
     onOutcomeSelect,
     onFactKindSelect,
     onHintTypeSelect,
+    onCustomFactLabelChange,
     suggestions,
 }: ClassificationRowProps) {
     const OutcomeIcon = getOutcomeIcon(classification.outcome);
@@ -520,8 +673,8 @@ function ClassificationRow({
 
     return (
         <div className={`border-b border-slate-100 last:border-b-0 ${needsResolution
-                ? 'bg-red-50/60 border-l-4 border-l-red-400'
-                : ''
+            ? 'bg-red-50/60 border-l-4 border-l-red-400'
+            : ''
             }`}>
             {/* Item row */}
             <div
@@ -687,7 +840,7 @@ function ClassificationRow({
                                             {/* Rule source tag */}
                                             <span className={`text-[9px] px-1 py-0.5 rounded ${isSelected ? 'bg-white/10 text-white/70' : 'bg-slate-100 text-slate-500'
                                                 }`}>
-                                                [{suggestion.ruleSource?.replace('-rules', '') ?? 'unknown'}]
+                                                [{formatRuleSource(suggestion.ruleSource ?? '')}]
                                             </span>
                                         </button>
                                     );
@@ -724,6 +877,28 @@ function ClassificationRow({
                                     );
                                 })}
                             </div>
+
+                            {/* Custom fact kind input - appears when FACT_EMITTED is selected */}
+                            {pending?.outcome === 'FACT_EMITTED' && !pending?.factKind && (
+                                <div className="mt-3 pt-3 border-t border-slate-100">
+                                    <label className="block text-xs font-medium text-slate-500 mb-1.5">
+                                        Or enter a custom fact type:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={pending?.customFactLabel ?? ''}
+                                        onChange={(e) => onCustomFactLabelChange(e.target.value)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        placeholder="e.g., Fee Proposal Submitted"
+                                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
+                                    />
+                                    {pending?.customFactLabel && (
+                                        <p className="mt-1.5 text-xs text-slate-500">
+                                            Will be stored as: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-600">{toFactKindKey(pending.customFactLabel)}</code>
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
 

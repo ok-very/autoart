@@ -17,8 +17,8 @@ import { useState, useMemo } from 'react';
 import { Copy, AlertCircle, Trash2, Pin, Edit2, Check, X } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useUIStore } from '../../stores/uiStore';
-import { EmojiPicker } from '../../components/common/EmojiPicker';
-import { CloneExcludedToggle } from '../../components/common/CloneExcludedToggle';
+import { EmojiPicker } from '../common/EmojiPicker';
+import { CloneExcludedToggle } from '../common/CloneExcludedToggle';
 import {
     useNode,
     useRecord,

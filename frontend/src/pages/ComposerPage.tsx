@@ -7,8 +7,8 @@
 
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { Header } from '../components/layout/Header';
-import { ComposerSurface } from '../components/composer';
+import { Header } from '../ui/layout/Header';
+import { ComposerSurface } from '../ui/composer';
 
 export function ComposerPage() {
     return (

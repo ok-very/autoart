@@ -12,11 +12,11 @@
 
 import { useCallback, useState, useEffect } from 'react';
 import { Database } from 'lucide-react';
-import { Header } from '../components/layout/Header';
-import { UniversalTableView } from '../components/tables/UniversalTableView';
-import { BottomDrawer } from '../components/drawer/BottomDrawer';
-import { ResizeHandle } from '../components/common/ResizeHandle';
-import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../components/registry';
+import { Header } from '../ui/layout/Header';
+import { RecordView } from '../ui/composites/RecordView';
+import { BottomDrawer } from '../ui/drawer/BottomDrawer';
+import { ResizeHandle } from '../ui/common/ResizeHandle';
+import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../ui/registry';
 import { useUIStore, isRecordsViewMode } from '../stores/uiStore';
 import { SelectionInspector } from '../ui/composites';
 
@@ -93,13 +93,9 @@ export function RecordsPage() {
                   </div>
                 </div>
               ) : (
-                <UniversalTableView
+                <RecordView
                   definitionId={selectedDefinitionId}
                   onDefinitionChange={(id) => setSelectedDefinitionId(id)}
-                  showDefinitionSelector={false}
-                  allowCreate
-                  allowBulkDelete
-                  allowEdit
                   className="h-full"
                 />
               )}

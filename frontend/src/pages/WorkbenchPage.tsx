@@ -8,7 +8,7 @@
  */
 
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../components/layout/Header';
+import { Header } from '../ui/layout/Header';
 import { ImportWorkbench } from '../surfaces/import/ImportWorkbench';
 
 export function WorkbenchPage() {

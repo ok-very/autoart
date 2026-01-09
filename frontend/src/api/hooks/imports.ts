@@ -118,6 +118,8 @@ export interface ClassificationSuggestion {
     ruleSource: string;
     /** Suggested fact kind (for fact_candidate rules) */
     factKind?: string;
+    /** Human-readable label for the fact kind (inferred from text) */
+    inferredLabel?: string;
     /** Suggested hint type (for action_hint rules) */
     hintType?: string;
     /** Confidence level */
@@ -231,7 +233,7 @@ export function useExecuteImport() {
 
 export interface Resolution {
     itemTempId: string;
-    resolvedOutcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'EXTERNAL_WORK' | 'SKIP';
+    resolvedOutcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'EXTERNAL_WORK' | 'AMBIGUOUS' | 'UNCLASSIFIED' | 'DEFERRED';
     resolvedFactKind?: string;
     resolvedPayload?: Record<string, unknown>;
 }

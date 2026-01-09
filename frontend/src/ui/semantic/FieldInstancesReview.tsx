@@ -13,7 +13,7 @@
 import { useState, useMemo } from 'react';
 import { Search, Trash2, Edit3, CheckSquare, Square, X } from 'lucide-react';
 import { useRecords, useUpdateRecord } from '../../api/hooks';
-import { DataFieldWidget, type DataFieldKind } from '../../components/common/DataFieldWidget';
+import { DataFieldWidget, type DataFieldKind } from '../common/DataFieldWidget';
 import type { FieldDescriptor, DataRecord } from '@autoart/shared';
 
 interface FieldInstancesReviewProps {

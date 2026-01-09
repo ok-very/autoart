@@ -19,7 +19,7 @@ import { FieldRenderer, type FieldRendererCallbacks } from '../molecules/FieldRe
 import { useUpdateRecord } from '../../api/hooks';
 import { ReferenceEditor } from './ReferenceEditor';
 import { UserMentionInput } from '../composites/UserMentionInput';
-import { RichTextEditor } from '../../components/editor/RichTextEditor';
+import { RichTextEditor } from '../editor/RichTextEditor';
 import type { FieldViewModel } from '@autoart/shared/domain';
 
 export interface FieldEditorProps {

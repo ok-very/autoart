@@ -2,18 +2,18 @@
  * RecordPage - Page wrapper for records workspace
  *
  * This is a PAGE that provides the layout shell (header, sidebar, inspector, drawer)
- * around the RecordList composite.
+ * around the RecordView composite.
  *
  * Layout: Left sidebar (definition types) | Main table (records) | Right inspector
  */
 
 import { useCallback, useState } from 'react';
-import { Header } from '../components/layout/Header';
-import { RecordTypeSidebar } from '../components/records/RecordTypeSidebar';
+import { Header } from '../ui/layout/Header';
+import { RecordTypeSidebar } from '../ui/records/RecordTypeSidebar';
 import { SelectionInspector } from '../ui/composites/SelectionInspector';
-import { RecordList } from '../ui/composites/RecordList';
-import { BottomDrawer } from '../components/drawer/BottomDrawer';
-import { ResizeHandle } from '../components/common/ResizeHandle';
+import { RecordView } from '../ui/composites/RecordView';
+import { BottomDrawer } from '../ui/drawer/BottomDrawer';
+import { ResizeHandle } from '../ui/common/ResizeHandle';
 import { useUIStore } from '../stores/uiStore';
 
 export function RecordPage() {
@@ -48,9 +48,9 @@ export function RecordPage() {
                     />
                     <ResizeHandle direction="right" onResize={handleSidebarResize} />
 
-                    {/* Main Table Area - RecordList composite */}
+                    {/* Main Table Area - RecordView composite */}
                     <div className="flex-1 overflow-hidden">
-                        <RecordList
+                        <RecordView
                             definitionId={selectedDefinitionId}
                             onDefinitionChange={setSelectedDefinitionId}
                         />
