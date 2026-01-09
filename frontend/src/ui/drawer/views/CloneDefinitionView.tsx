@@ -1,4 +1,12 @@
+/**
+ * CloneDefinitionView
+ *
+ * Drawer view for cloning a record definition using Mantine.
+ */
+
 import { useState } from 'react';
+import { Copy } from 'lucide-react';
+import { TextInput, Button, Stack, Group, Text, Box } from '@mantine/core';
 import { useUIStore } from '../../../stores/uiStore';
 import type { DrawerProps, CloneDefinitionContext } from '../../../drawer/types';
 
@@ -73,42 +81,34 @@ export function CloneDefinitionView(props: CloneDefinitionViewProps | LegacyClon
   };
 
   return (
-    <div className="max-w-lg mx-auto">
-      <div className="space-y-4">
-        <p className="text-sm text-slate-600">
+    <Box maw={480} mx="auto">
+      <Stack gap="md">
+        <Text size="sm" c="dimmed">
           Create a new record type based on "{definitionName}". The new type will inherit all fields and styling.
-        </p>
-        <div>
-          <label htmlFor="cloneName" className="block text-sm font-medium text-slate-700 mb-1">
-            New Type Name
-          </label>
-          <input
-            id="cloneName"
-            type="text"
-            value={cloneName}
-            onChange={(e) => setCloneName(e.target.value)}
-            placeholder="e.g., VIP Contact"
-            className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            autoFocus
-          />
-        </div>
-        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-          <button
-            onClick={handleClose}
-            disabled={isCloning}
-            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
-          >
+        </Text>
+
+        <TextInput
+          label="New Type Name"
+          placeholder="e.g., VIP Contact"
+          value={cloneName}
+          onChange={(e) => setCloneName(e.currentTarget.value)}
+          autoFocus
+        />
+
+        <Group justify="flex-end" gap="sm" pt="md" className="border-t border-slate-100">
+          <Button variant="default" onClick={handleClose} disabled={isCloning}>
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleClone}
-            disabled={!cloneName.trim() || isCloning}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={!cloneName.trim()}
+            loading={isCloning}
+            leftSection={<Copy size={16} />}
           >
-            {isCloning ? 'Cloning...' : 'Clone Type'}
-          </button>
-        </div>
-      </div>
-    </div>
+            Clone Type
+          </Button>
+        </Group>
+      </Stack>
+    </Box>
   );
 }

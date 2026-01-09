@@ -1,18 +1,19 @@
 /**
  * Import Workbench Surface
  *
- * Projection-driven import interface with:
+ * Projection-driven import interface using Mantine components.
  * - Session configuration panel
  * - Projection selector (hierarchy vs stage views)
  * - Import preview with selected projection
  * - Record inspector for inspecting planned actions
  * - Execution controls
- *
- * Replaces legacy IngestionView.tsx
  */
 
 import { useState, useCallback, useMemo } from 'react';
 import { X, FileSpreadsheet } from 'lucide-react';
+import {
+    Paper, Group, Text, ActionIcon, Badge, Box, Stack
+} from '@mantine/core';
 import { useActiveProjection, AVAILABLE_PROJECTIONS } from '../../stores/projectionStore';
 import { ProjectionSelector } from './ProjectionSelector';
 import { ImportPreview } from './ImportPreview';
@@ -96,42 +97,46 @@ export function ImportWorkbench({ onImportComplete, onClose }: ImportWorkbenchPr
     }, [plan]);
 
     return (
-        <div className="flex flex-col h-full bg-slate-50">
+        <Stack gap={0} className="h-full bg-slate-50">
             {/* Header */}
-            <div className="flex items-center justify-between h-14 px-6 bg-white border-b border-slate-200">
-                <div className="flex items-center gap-3">
-                    <FileSpreadsheet className="w-5 h-5 text-blue-600" />
-                    <h1 className="text-lg font-bold text-slate-800">Import Workbench</h1>
-                    {session && (
-                        <span className="text-xs font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
-                            {session.parser_name}
-                        </span>
+            <Paper shadow="none" radius={0} className="border-b border-slate-200">
+                <Group justify="space-between" h={56} px="md">
+                    <Group gap="sm">
+                        <FileSpreadsheet size={20} className="text-blue-600" />
+                        <Text size="lg" fw={700}>Import Workbench</Text>
+                        {session && (
+                            <Badge size="sm" variant="light" color="gray" tt="none" className="font-mono">
+                                {session.parser_name}
+                            </Badge>
+                        )}
+                    </Group>
+                    {onClose && (
+                        <ActionIcon
+                            variant="subtle"
+                            color="gray"
+                            onClick={onClose}
+                            size="lg"
+                        >
+                            <X size={20} />
+                        </ActionIcon>
                     )}
-                </div>
-                {onClose && (
-                    <button
-                        onClick={onClose}
-                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                )}
-            </div>
+                </Group>
+            </Paper>
 
             {/* Main Content */}
-            <div className="flex flex-1 overflow-hidden">
+            <Group gap={0} className="flex-1 overflow-hidden" align="stretch" wrap="nowrap">
                 {/* Left Panel: Session Config / Validation */}
-                <div className="w-72 bg-white border-r border-slate-200 flex flex-col">
+                <Box w={288} className="bg-white border-r border-slate-200 flex flex-col">
                     <SessionConfigPanel
                         session={session}
                         plan={plan}
                         onSessionCreated={handleSessionCreated}
                         onReset={handleReset}
                     />
-                </div>
+                </Box>
 
                 {/* Center Panel: Preview */}
-                <div className="flex-1 flex flex-col overflow-hidden">
+                <Stack gap={0} className="flex-1 overflow-hidden">
                     {/* Projection Selector */}
                     <ProjectionSelector
                         activeProjectionId={activeProjection}
@@ -141,27 +146,27 @@ export function ImportWorkbench({ onImportComplete, onClose }: ImportWorkbenchPr
                     />
 
                     {/* Preview */}
-                    <div className="flex-1 overflow-auto">
+                    <Box className="flex-1 overflow-auto">
                         <ImportPreview
                             plan={plan}
                             projectionId={activeProjection}
                             selectedRecordId={selectedRecordId}
                             onRecordSelect={handleRecordSelect}
                         />
-                    </div>
-                </div>
+                    </Box>
+                </Stack>
 
                 {/* Right Panel: Record Inspector */}
                 {selectedRecordId && plan && (
-                    <div className="w-80 bg-white border-l border-slate-200 overflow-auto">
+                    <Box w={320} className="bg-white border-l border-slate-200 overflow-auto">
                         <ImportRecordInspector
                             recordId={selectedRecordId}
                             plan={plan}
                             onClose={() => setSelectedRecordId(null)}
                         />
-                    </div>
+                    </Box>
                 )}
-            </div>
+            </Group>
 
             {/* Classification Panel: shows when there are unresolved items */}
             {hasUnresolvedClassifications && session && (
@@ -181,7 +186,7 @@ export function ImportWorkbench({ onImportComplete, onClose }: ImportWorkbenchPr
                 onExecuteComplete={handleExecuteComplete}
                 onReset={handleReset}
             />
-        </div>
+        </Stack>
     );
 }
 

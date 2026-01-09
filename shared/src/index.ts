@@ -282,6 +282,7 @@ export {
   type ContainerInput,
   type StageProjectionOutput,
   type HierarchyProjectionOutput,
+  type ProcessProjectionOutput,
   type TimelineProjectionOutput,
   type ProjectionRef,
   type ProjectionSelection,

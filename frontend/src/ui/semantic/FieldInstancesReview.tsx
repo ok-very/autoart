@@ -8,11 +8,14 @@
  * - Reuses existing UI elements (DataFieldWidget, Button, etc.)
  *
  * Placed in FieldsPage "Instances" tab.
+ * Now built on TableKit for consistent visual grammar.
  */
 
 import { useState, useMemo } from 'react';
-import { Search, Trash2, Edit3, CheckSquare, Square, X } from 'lucide-react';
+import { Search, Trash2, Edit3, X } from 'lucide-react';
+import { Checkbox } from '@mantine/core';
 import { useRecords, useUpdateRecord } from '../../api/hooks';
+import { TableFrame, TableHeaderRow, TableRow, TableHeaderCell, TableCell } from '../table';
 import { DataFieldWidget, type DataFieldKind } from '../common/DataFieldWidget';
 import type { FieldDescriptor, DataRecord } from '@autoart/shared';
 
@@ -170,7 +173,7 @@ export function FieldInstancesReview({ field }: FieldInstancesReviewProps) {
                         {field.label} Instances
                     </h2>
                     <div className="text-xs text-slate-400">
-                        {records.length} record(s) • {filteredRecords.length} shown
+                        {records.length} record(s) - {filteredRecords.length} shown
                     </div>
                 </div>
 
@@ -248,67 +251,64 @@ export function FieldInstancesReview({ field }: FieldInstancesReviewProps) {
                         <p>No records found</p>
                     </div>
                 ) : (
-                    <table className="w-full">
-                        <thead className="sticky top-0 bg-slate-50 border-b border-slate-200">
-                            <tr>
-                                <th className="w-10 px-4 py-3">
-                                    <button onClick={toggleSelectAll} className="text-slate-400 hover:text-slate-600">
-                                        {allSelected ? <CheckSquare size={18} /> : <Square size={18} />}
-                                    </button>
-                                </th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                    Record Name
-                                </th>
-                                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                    {field.label} Value
-                                </th>
-                                <th className="w-20 px-4 py-3"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {filteredRecords.map(record => {
-                                const value = record.data?.[field.fieldKey];
-                                const isSelected = selectedIds.has(record.id);
+                    <TableFrame shadow={false} className="h-full">
+                        {/* Header Row */}
+                        <TableHeaderRow size="sm" sticky>
+                            <TableCell width={48} className="justify-center">
+                                <Checkbox
+                                    checked={allSelected}
+                                    indeterminate={someSelected && !allSelected}
+                                    onChange={toggleSelectAll}
+                                    size="sm"
+                                />
+                            </TableCell>
+                            <TableHeaderCell width="flex">Record Name</TableHeaderCell>
+                            <TableHeaderCell width="flex">{field.label} Value</TableHeaderCell>
+                            <TableCell width={64} />
+                        </TableHeaderRow>
 
-                                return (
-                                    <tr
-                                        key={record.id}
-                                        className={`hover:bg-slate-50 ${isSelected ? 'bg-blue-50' : ''}`}
-                                    >
-                                        <td className="px-4 py-3">
-                                            <button
-                                                onClick={() => toggleSelection(record.id)}
-                                                className="text-slate-400 hover:text-slate-600"
-                                            >
-                                                {isSelected ? <CheckSquare size={18} className="text-blue-600" /> : <Square size={18} />}
-                                            </button>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <span className="text-sm font-medium text-slate-700">
-                                                {record.unique_name}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <DataFieldWidget
-                                                kind={fieldKind}
-                                                value={value}
-                                                className="max-w-xs"
-                                            />
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <button
-                                                onClick={() => handleInlineEdit(record)}
-                                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                                title="Edit value"
-                                            >
-                                                <Edit3 size={14} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                        {/* Data Rows */}
+                        {filteredRecords.map(record => {
+                            const value = record.data?.[field.fieldKey];
+                            const isSelected = selectedIds.has(record.id);
+
+                            return (
+                                <TableRow
+                                    key={record.id}
+                                    size="sm"
+                                    selected={isSelected}
+                                    onClick={() => toggleSelection(record.id)}
+                                >
+                                    <TableCell width={48} className="justify-center" onClick={(e) => e.stopPropagation()}>
+                                        <Checkbox
+                                            checked={isSelected}
+                                            onChange={() => toggleSelection(record.id)}
+                                            size="sm"
+                                        />
+                                    </TableCell>
+                                    <TableCell width="flex" className="font-medium">
+                                        {record.unique_name}
+                                    </TableCell>
+                                    <TableCell width="flex">
+                                        <DataFieldWidget
+                                            kind={fieldKind}
+                                            value={value}
+                                            className="max-w-xs"
+                                        />
+                                    </TableCell>
+                                    <TableCell width={64} className="justify-center" onClick={(e) => e.stopPropagation()}>
+                                        <button
+                                            onClick={() => handleInlineEdit(record)}
+                                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                            title="Edit value"
+                                        >
+                                            <Edit3 size={14} />
+                                        </button>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
+                    </TableFrame>
                 )}
             </div>
         </div>

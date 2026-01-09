@@ -1,18 +1,25 @@
 /**
  * AssignRecordsView (formerly ClassifyRecordsView)
  *
- * Bulk hierarchy assignment UI for records.
+ * Bulk hierarchy assignment UI for records using Mantine.
  * This assigns records to hierarchy nodes - NOT semantic classification.
+ *
+ * @deprecated Legacy props are deprecated. Use DrawerProps<ClassifyRecordsContext> instead.
  */
 
 import { useState } from 'react';
 import { FolderOpen, ChevronRight } from 'lucide-react';
+import {
+    Button, Stack, Group, Text, Paper, Box, ThemeIcon, Alert
+} from '@mantine/core';
 import { useUIStore } from '../../../stores/uiStore';
 import { useProjectTree, useBulkClassifyRecords } from '../../../api/hooks';
 import type { HierarchyNode } from '../../../types';
 import type { DrawerProps, ClassifyRecordsContext } from '../../../drawer/types';
 
-// Props types for backward compatibility
+/**
+ * @deprecated Use DrawerProps<ClassifyRecordsContext> instead.
+ */
 interface LegacyAssignRecordsViewProps {
     recordIds: string[];
     onSuccess?: () => void;
@@ -137,94 +144,107 @@ export function AssignRecordsView(props: AssignRecordsViewProps | LegacyAssignRe
     const renderNode = (node: HierarchyNode & { children: HierarchyNode[] }, depth = 0) => {
         const isSelected = selectedNodeId === node.id;
         return (
-            <div key={node.id}>
-                <button
-                    type="button"
-                    onClick={() => setSelectedNodeId(node.id)}
-                    className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center gap-2 ${isSelected
-                        ? 'bg-blue-100 text-blue-800 border border-blue-300'
-                        : 'hover:bg-slate-100 text-slate-700'
+            <Box key={node.id}>
+                <Paper
+                    withBorder={isSelected}
+                    p="xs"
+                    radius="sm"
+                    className={`cursor-pointer transition-colors ${isSelected
+                        ? 'bg-blue-50 border-blue-300'
+                        : 'hover:bg-slate-100'
                         }`}
-                    style={{ paddingLeft: `${12 + depth * 16}px` }}
+                    style={{ marginLeft: depth * 16 }}
+                    onClick={() => setSelectedNodeId(node.id)}
                 >
-                    {node.children.length > 0 && (
-                        <ChevronRight size={14} className="text-slate-400" />
-                    )}
-                    <span className="truncate">{node.title}</span>
-                    <span className="text-xs text-slate-400 capitalize ml-auto">{node.type}</span>
-                </button>
+                    <Group gap="xs" wrap="nowrap">
+                        {node.children.length > 0 && (
+                            <ChevronRight size={14} className="text-slate-400" />
+                        )}
+                        <Text size="sm" truncate className="flex-1">{node.title}</Text>
+                        <Text size="xs" c="dimmed" tt="capitalize">{node.type}</Text>
+                    </Group>
+                </Paper>
                 {node.children.map((child) => renderNode(child as typeof node, depth + 1))}
-            </div>
+            </Box>
         );
     };
 
     return (
-        <div className="max-w-lg mx-auto">
-            <div className="flex items-start gap-4 mb-6">
-                <div className="shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <FolderOpen size={24} className="text-blue-600" />
-                </div>
-                <div>
-                    <h4 className="text-lg font-medium text-slate-900 mb-2">Assign Records</h4>
-                    <p className="text-sm text-slate-600">
+        <Box maw={480} mx="auto">
+            <Group gap="md" mb="lg" align="flex-start">
+                <ThemeIcon size={48} variant="light" color="blue" radius="xl">
+                    <FolderOpen size={24} />
+                </ThemeIcon>
+                <Stack gap={2}>
+                    <Text size="lg" fw={500}>Assign Records</Text>
+                    <Text size="sm" c="dimmed">
                         Select a project, process, or stage to assign {recordIds.length} record
                         {recordIds.length > 1 ? 's' : ''}.
-                    </p>
-                </div>
-            </div>
+                    </Text>
+                </Stack>
+            </Group>
 
             {/* Node selection tree */}
-            <div className="mb-4 max-h-64 overflow-y-auto border border-slate-200 rounded-md p-2 bg-slate-50">
+            <Paper
+                withBorder
+                p="xs"
+                radius="md"
+                className="bg-slate-50 overflow-y-auto"
+                style={{ maxHeight: 256 }}
+                mb="md"
+            >
                 {tree.length === 0 ? (
-                    <p className="text-sm text-slate-500 p-2">No hierarchy nodes available</p>
+                    <Text size="sm" c="dimmed" p="sm">No hierarchy nodes available</Text>
                 ) : (
-                    tree.map((node) => renderNode(node))
+                    <Stack gap={4}>
+                        {tree.map((node) => renderNode(node))}
+                    </Stack>
                 )}
-            </div>
+            </Paper>
 
             {selectedNodeId && (
-                <p className="text-sm text-blue-600 mb-4">
+                <Text size="sm" c="blue" mb="md">
                     Selected: {hierarchy?.find((n: HierarchyNode) => n.id === selectedNodeId)?.title || 'Unknown'}
-                </p>
+                </Text>
             )}
 
             {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                    <p className="text-sm text-red-700">{error}</p>
-                </div>
+                <Alert color="red" variant="light" mb="md">
+                    {error}
+                </Alert>
             )}
 
-            <div className="flex justify-between pt-4 border-t border-slate-100">
-                <button
-                    type="button"
+            <Group justify="space-between" pt="md" className="border-t border-slate-100">
+                <Button
+                    variant="subtle"
+                    color="gray"
                     onClick={handleRemoveAssignment}
                     disabled={bulkAssign.isPending}
-                    className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 disabled:opacity-50 transition-colors"
                 >
                     Remove Assignment
-                </button>
-                <div className="flex gap-3">
-                    <button
-                        type="button"
+                </Button>
+                <Group gap="sm">
+                    <Button
+                        variant="default"
                         onClick={handleClose}
                         disabled={bulkAssign.isPending}
-                        className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 transition-colors"
                     >
                         Cancel
-                    </button>
-                    <button
-                        type="button"
+                    </Button>
+                    <Button
                         onClick={handleAssign}
-                        disabled={bulkAssign.isPending || !selectedNodeId}
-                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        disabled={!selectedNodeId}
+                        loading={bulkAssign.isPending}
                     >
-                        {bulkAssign.isPending ? 'Assigning...' : 'Assign'}
-                    </button>
-                </div>
-            </div>
-        </div>
+                        Assign
+                    </Button>
+                </Group>
+            </Group>
+        </Box>
     );
 }
 
-// Legacy alias for backward compatibility
+/**
+ * @deprecated Use AssignRecordsView instead.
+ */
 export const ClassifyRecordsView = AssignRecordsView;

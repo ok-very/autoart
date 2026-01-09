@@ -1,10 +1,22 @@
+/**
+ * CreateNodeView
+ *
+ * Drawer view for creating hierarchy nodes using Mantine.
+ *
+ * @deprecated Legacy props are deprecated. Use DrawerProps<CreateNodeContext> instead.
+ */
+
 import { useState } from 'react';
+import { Plus } from 'lucide-react';
+import { TextInput, Button, Stack, Group, Text, Box } from '@mantine/core';
 import { useUIStore } from '../../../stores/uiStore';
 import { useCreateNode } from '../../../api/hooks';
 import type { NodeType } from '../../../types';
 import type { DrawerProps, CreateNodeContext } from '../../../drawer/types';
 
-// Legacy props interface (deprecated - use DrawerProps)
+/**
+ * @deprecated Use DrawerProps<CreateNodeContext> instead.
+ */
 interface LegacyCreateNodeViewProps {
   parentId: string;
   nodeType: Exclude<NodeType, 'project' | 'process'>;
@@ -84,55 +96,42 @@ export function CreateNodeView(props: CreateNodeViewProps | LegacyCreateNodeView
   };
 
   return (
-    <div className="max-w-lg mx-auto">
-      <div className="mb-4">
-        <p className="text-sm text-slate-600">
-          Add a new {nodeLabel.toLowerCase()} to the hierarchy.
-        </p>
-      </div>
+    <Box maw={480} mx="auto">
+      <Text size="sm" c="dimmed" mb="md">
+        Add a new {nodeLabel.toLowerCase()} to the hierarchy.
+      </Text>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label
-            htmlFor="title"
-            className="block text-sm font-medium text-slate-700 mb-1"
-          >
-            Title
-          </label>
-          <input
-            id="title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+      <form onSubmit={handleSubmit}>
+        <Stack gap="md">
+          <TextInput
+            label="Title"
             placeholder={`Enter ${nodeLabel.toLowerCase()} title...`}
-            className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={title}
+            onChange={(e) => setTitle(e.currentTarget.value)}
             autoFocus
           />
-        </div>
 
-        <div className="flex justify-end gap-3 pt-4">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={!title.trim() || createNode.isPending}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {createNode.isPending ? 'Creating...' : `Create ${nodeLabel}`}
-          </button>
-        </div>
+          <Group justify="flex-end" gap="sm" pt="md">
+            <Button variant="default" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={!title.trim()}
+              loading={createNode.isPending}
+              leftSection={<Plus size={16} />}
+            >
+              Create {nodeLabel}
+            </Button>
+          </Group>
 
-        {createNode.isError && (
-          <p className="text-sm text-red-600">
-            Failed to create {nodeLabel.toLowerCase()}. Please try again.
-          </p>
-        )}
+          {createNode.isError && (
+            <Text size="sm" c="red">
+              Failed to create {nodeLabel.toLowerCase()}. Please try again.
+            </Text>
+          )}
+        </Stack>
       </form>
-    </div>
+    </Box>
   );
 }

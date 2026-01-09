@@ -1,6 +1,16 @@
-import { useState, useRef, useEffect } from 'react';
+/**
+ * Header
+ *
+ * Main application header with navigation, project selector, and view controls.
+ * Uses Mantine Menu for dropdowns and SegmentedControl for view toggles.
+ */
+
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, Plus, Copy, FolderOpen, Check, Library, Database, TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings } from 'lucide-react';
+import { Menu, Button, SegmentedControl, ActionIcon, Group, Text, Badge as MantineBadge, Divider } from '@mantine/core';
+import {
+  ChevronDown, Plus, Copy, FolderOpen, Check, Library, Database,
+  TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings
+} from 'lucide-react';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import {
   useUIStore,
@@ -10,7 +20,6 @@ import {
 } from '../../stores/uiStore';
 import type { ProjectViewMode, RecordsViewMode, FieldsViewMode } from '@autoart/shared';
 import { useProjects } from '../../api/hooks';
-import { Badge } from '../common/Badge';
 
 export function Header() {
   const location = useLocation();
@@ -25,11 +34,6 @@ export function Header() {
     openDrawer
   } = useUIStore();
 
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isRegistryDropdownOpen, setIsRegistryDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const registryDropdownRef = useRef<HTMLDivElement>(null);
-
   const isRecordsPage = location.pathname.startsWith('/records');
   const isFieldsPage = location.pathname.startsWith('/fields');
   const isActionsPage = location.pathname.startsWith('/actions');
@@ -40,33 +44,16 @@ export function Header() {
 
   const selectedProject = activeProjectId ? getNode(activeProjectId) : null;
 
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-      if (registryDropdownRef.current && !registryDropdownRef.current.contains(event.target as Node)) {
-        setIsRegistryDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const handleSelectProject = (projectId: string) => {
     setActiveProject(projectId);
-    setIsDropdownOpen(false);
   };
 
   const handleCreateProject = () => {
-    setIsDropdownOpen(false);
     openDrawer('create-project', {});
   };
 
   const handleCloneProject = () => {
     if (!selectedProject) return;
-    setIsDropdownOpen(false);
     openDrawer('clone-project', {
       sourceProjectId: selectedProject.id,
       sourceProjectTitle: selectedProject.title,
@@ -75,301 +62,224 @@ export function Header() {
 
   const handleOpenLibrary = () => {
     if (!selectedProject) return;
-    setIsDropdownOpen(false);
     openDrawer('project-library', {
       projectId: selectedProject.id,
       projectTitle: selectedProject.title,
     });
   };
 
+  // Build view mode data for SegmentedControl
+  const getViewModeData = () => {
+    if (isRecordsPage) {
+      return Object.entries(RECORDS_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }));
+    }
+    if (isFieldsPage) {
+      return Object.entries(FIELDS_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }));
+    }
+    return Object.entries(PROJECT_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }));
+  };
+
   return (
-    <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 relative z-[60] shadow-sm">
-      <div className="flex items-center gap-3">
+    <header className="h-14 bg-white flex items-center justify-between px-4 shrink-0">
+      <Group gap="sm">
         {/* Logo */}
         <Link to="/" className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold hover:bg-slate-800 transition-colors">
           A
         </Link>
 
         {/* Navigation Links */}
-        <nav className="flex items-center gap-1 ml-2">
-          <Link
+        <Group gap={4} ml="xs">
+          <Button
+            component={Link}
             to="/"
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${!isRegistryPage && !isComposerPage
-              ? 'bg-slate-100 text-slate-800'
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-              }`}
+            variant={!isRegistryPage && !isComposerPage ? 'light' : 'subtle'}
+            color="gray"
+            size="sm"
           >
             Projects
-          </Link>
+          </Button>
 
-          {/* Registry Dropdown (Records & Fields) */}
-          <div className="relative" ref={registryDropdownRef}>
-            <button
-              onClick={() => setIsRegistryDropdownOpen(!isRegistryDropdownOpen)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${isRegistryPage
-                ? 'bg-slate-100 text-slate-800'
-                : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                }`}
-            >
-              <Layers size={14} />
-              Registry
-              <ChevronDown
-                size={14}
-                className={`text-slate-400 transition-transform ${isRegistryDropdownOpen ? 'rotate-180' : ''}`}
-              />
-            </button>
+          {/* Registry Dropdown */}
+          <Menu shadow="md" width={180}>
+            <Menu.Target>
+              <Button
+                variant={isRegistryPage ? 'light' : 'subtle'}
+                color="gray"
+                size="sm"
+                rightSection={<ChevronDown size={14} />}
+                leftSection={<Layers size={14} />}
+              >
+                Registry
+              </Button>
+            </Menu.Target>
 
-            {isRegistryDropdownOpen && (
-              <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden py-1">
-                <Link
-                  to="/fields"
-                  onClick={() => setIsRegistryDropdownOpen(false)}
-                  className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${isFieldsPage
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-slate-700'
-                    }`}
-                >
-                  <TableProperties size={16} />
-                  Fields
-                </Link>
-                <Link
-                  to="/records"
-                  onClick={() => setIsRegistryDropdownOpen(false)}
-                  className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${isRecordsPage
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-slate-700'
-                    }`}
-                >
-                  <Database size={16} />
-                  Records
-                </Link>
-                <Link
-                  to="/actions"
-                  onClick={() => setIsRegistryDropdownOpen(false)}
-                  className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${isActionsPage
-                    ? 'bg-purple-50 text-purple-700'
-                    : 'text-slate-700'
-                    }`}
-                >
-                  <Zap size={16} />
-                  Actions
-                </Link>
-                <Link
-                  to="/events"
-                  onClick={() => setIsRegistryDropdownOpen(false)}
-                  className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${isEventsPage
-                    ? 'bg-emerald-50 text-emerald-700'
-                    : 'text-slate-700'
-                    }`}
-                >
-                  <Activity size={16} />
-                  Events
-                </Link>
-              </div>
-            )}
-          </div>
+            <Menu.Dropdown>
+              <Menu.Item
+                component={Link}
+                to="/fields"
+                leftSection={<TableProperties size={16} />}
+                className={isFieldsPage ? 'bg-blue-50' : ''}
+              >
+                Fields
+              </Menu.Item>
+              <Menu.Item
+                component={Link}
+                to="/records"
+                leftSection={<Database size={16} />}
+                className={isRecordsPage ? 'bg-blue-50' : ''}
+              >
+                Records
+              </Menu.Item>
+              <Menu.Item
+                component={Link}
+                to="/actions"
+                leftSection={<Zap size={16} />}
+                className={isActionsPage ? 'bg-purple-50' : ''}
+              >
+                Actions
+              </Menu.Item>
+              <Menu.Item
+                component={Link}
+                to="/events"
+                leftSection={<Activity size={16} />}
+                className={isEventsPage ? 'bg-emerald-50' : ''}
+              >
+                Events
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
 
           {/* Composer Link */}
-          <Link
+          <Button
+            component={Link}
             to="/composer"
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${isComposerPage
-              ? 'bg-violet-50 text-violet-700'
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-              }`}
+            variant={isComposerPage ? 'light' : 'subtle'}
+            color={isComposerPage ? 'violet' : 'gray'}
+            size="sm"
+            leftSection={<Wand2 size={14} />}
           >
-            <Wand2 size={14} />
             Composer
-          </Link>
+          </Button>
 
           {/* Workbench Link */}
-          <Link
+          <Button
+            component={Link}
             to="/workbench"
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${isWorkbenchPage
-              ? 'bg-amber-50 text-amber-700'
-              : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-              }`}
+            variant={isWorkbenchPage ? 'light' : 'subtle'}
+            color={isWorkbenchPage ? 'yellow' : 'gray'}
+            size="sm"
+            leftSection={<Hammer size={14} />}
           >
-            <Hammer size={14} />
             Workbench
-          </Link>
-        </nav>
+          </Button>
+        </Group>
 
         {!isRegistryPage && !isComposerPage && (
           <>
-            <div className="h-6 w-px bg-slate-200 mx-1"></div>
+            <Divider orientation="vertical" className="h-6 mx-1" />
 
-            {/* Project Selector Dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-slate-200"
-              >
-                {selectedProject ? (
+            {/* Project Selector */}
+            <Menu shadow="md" width={280}>
+              <Menu.Target>
+                <Button
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  rightSection={<ChevronDown size={14} />}
+                  className="max-w-[280px]"
+                >
+                  {selectedProject ? (
+                    <Group gap="xs">
+                      <MantineBadge size="xs" variant="light" color="blue">Project</MantineBadge>
+                      <Text size="sm" fw={600} truncate className="max-w-[160px]">
+                        {selectedProject.title}
+                      </Text>
+                    </Group>
+                  ) : (
+                    <Text size="sm" c="dimmed">Select a project...</Text>
+                  )}
+                </Button>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                {/* Actions Section */}
+                <Menu.Item leftSection={<Plus size={16} />} onClick={handleCreateProject}>
+                  New Project
+                </Menu.Item>
+                {selectedProject && (
                   <>
-                    <Badge variant="project">Project</Badge>
-                    <span className="font-semibold text-slate-700 max-w-[200px] truncate">
-                      {selectedProject.title}
-                    </span>
+                    <Menu.Item leftSection={<Copy size={16} />} onClick={handleCloneProject}>
+                      Clone Current Project
+                    </Menu.Item>
+                    <Menu.Item leftSection={<Library size={16} />} onClick={handleOpenLibrary}>
+                      Template Library
+                    </Menu.Item>
+                    <Menu.Item component={Link} to="/workbench" leftSection={<Hammer size={16} />}>
+                      Import Workbench
+                    </Menu.Item>
                   </>
-                ) : (
-                  <span className="text-slate-500">Select a project...</span>
                 )}
-                <ChevronDown
-                  size={16}
-                  className={`text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-                />
-              </button>
 
-              {isDropdownOpen && (
-                <div className="absolute top-full left-0 mt-1 w-72 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden">
-                  {/* Actions */}
-                  <div className="p-2 border-b border-slate-100">
-                    <button
-                      onClick={handleCreateProject}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                <Menu.Divider />
+
+                {/* Project List */}
+                <Menu.Label>Your Projects</Menu.Label>
+                {projects && projects.length > 0 ? (
+                  projects.map((project) => (
+                    <Menu.Item
+                      key={project.id}
+                      leftSection={<FolderOpen size={16} />}
+                      rightSection={project.id === activeProjectId ? <Check size={16} className="text-blue-600" /> : null}
+                      onClick={() => handleSelectProject(project.id)}
+                      className={project.id === activeProjectId ? 'bg-blue-50' : ''}
                     >
-                      <Plus size={16} />
-                      <span>New Project</span>
-                    </button>
-                    {selectedProject && (
-                      <>
-                        <button
-                          onClick={handleCloneProject}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
-                        >
-                          <Copy size={16} />
-                          <span>Clone Current Project</span>
-                        </button>
-                        <button
-                          onClick={handleOpenLibrary}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-purple-50 hover:text-purple-700 rounded-md transition-colors"
-                        >
-                          <Library size={16} />
-                          <span>Template Library</span>
-                        </button>
-                        <Link
-                          to="/workbench"
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-amber-50 hover:text-amber-700 rounded-md transition-colors"
-                        >
-                          <Hammer size={16} />
-                          <span>Import Workbench</span>
-                        </Link>
-                      </>
-                    )}
-                  </div>
+                      <Text size="sm" truncate>{project.title}</Text>
+                    </Menu.Item>
+                  ))
+                ) : (
+                  <Text size="sm" c="dimmed" ta="center" py="md">
+                    No projects yet
+                  </Text>
+                )}
+              </Menu.Dropdown>
+            </Menu>
 
-                  {/* Project List */}
-                  <div className="max-h-64 overflow-y-auto">
-                    {projects && projects.length > 0 ? (
-                      <div className="py-1">
-                        <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          Your Projects
-                        </div>
-                        {projects.map((project) => (
-                          <button
-                            key={project.id}
-                            onClick={() => handleSelectProject(project.id)}
-                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 transition-colors ${project.id === activeProjectId
-                              ? 'bg-blue-50 text-blue-700'
-                              : 'text-slate-700'
-                              }`}
-                          >
-                            <FolderOpen size={16} className="shrink-0" />
-                            <span className="truncate flex-1 text-left">{project.title}</span>
-                            {project.id === activeProjectId && (
-                              <Check size={16} className="text-blue-600 shrink-0" />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="px-3 py-4 text-center text-sm text-slate-400">
-                        No projects yet. Create your first project!
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Edit button when project selected */}
+            {/* Edit button */}
             {selectedProject && (
-              <button
+              <Button
+                variant="subtle"
+                color="gray"
+                size="xs"
                 onClick={() => setSelection({ type: 'node', id: selectedProject.id })}
-                className="text-xs text-slate-400 hover:text-blue-600 transition-colors"
               >
                 Edit
-              </button>
+              </Button>
             )}
           </>
         )}
-      </div>
+      </Group>
 
       {/* Right side controls */}
-      <div className="flex items-center gap-2">
-        {/* View Toggle - Context-Aware */}
-        <div className="flex bg-slate-100 p-0.5 rounded-lg">
-          {isRecordsPage ? (
-            // Records page view modes
-            <>
-              {(Object.entries(RECORDS_VIEW_MODE_LABELS) as [RecordsViewMode, string][]).map(([mode, label]) => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  className={`px-3 py-1 text-xs font-medium rounded ${viewMode === mode
-                    ? 'bg-white text-slate-800 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                    }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </>
-          ) : isFieldsPage ? (
-            // Fields page view modes
-            <>
-              {(Object.entries(FIELDS_VIEW_MODE_LABELS) as [FieldsViewMode, string][]).map(([mode, label]) => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  className={`px-3 py-1 text-xs font-medium rounded ${viewMode === mode
-                    ? 'bg-white text-slate-800 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                    }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </>
-          ) : (
-            // Project page view modes
-            <>
-              {(Object.entries(PROJECT_VIEW_MODE_LABELS) as [ProjectViewMode, string][]).map(([mode, label]) => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  className={`px-3 py-1 text-xs font-medium rounded ${viewMode === mode
-                    ? 'bg-white text-slate-800 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
-                    }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </>
-          )}
-        </div>
+      <Group gap="sm">
+        {/* View Toggle */}
+        <SegmentedControl
+          size="xs"
+          value={viewMode as string}
+          onChange={(value) => setViewMode(value as ProjectViewMode | RecordsViewMode | FieldsViewMode)}
+          data={getViewModeData()}
+        />
 
-        {/* Settings Link */}
-        <Link
+        {/* Settings */}
+        <ActionIcon
+          component={Link}
           to="/settings"
-          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-          title="Settings"
+          variant="subtle"
+          color="gray"
+          size="lg"
         >
           <Settings size={18} />
-        </Link>
-      </div>
+        </ActionIcon>
+      </Group>
     </header>
   );
 }

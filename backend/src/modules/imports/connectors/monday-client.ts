@@ -1,11 +1,11 @@
 /**
  * Monday.com GraphQL Client
  *
- * Low-level wrapper for Monday.com GraphQL API.
- * Handles authentication, request formatting, and error handling.
+ * Wrapper around @mondaydotcomorg/api SDK for Monday.com API access.
+ * Provides consistent error handling and configuration.
  */
 
-const MONDAY_API_URL = 'https://api.monday.com/v2';
+import { ApiClient } from '@mondaydotcomorg/api';
 
 export interface MondayClientConfig {
     token: string;
@@ -35,14 +35,18 @@ export class MondayClientError extends Error {
 
 /**
  * Monday.com GraphQL API Client
+ * Uses the official @mondaydotcomorg/api SDK
  */
 export class MondayClient {
-    private token: string;
-    private apiVersion: string;
+    private client: ApiClient;
 
     constructor(config: MondayClientConfig) {
-        this.token = config.token;
-        this.apiVersion = config.apiVersion ?? '2024-10';
+        this.client = new ApiClient({
+            token: config.token,
+            requestConfig: {
+                errorPolicy: 'all', // Return partial data even with errors
+            },
+        });
     }
 
     /**
@@ -52,39 +56,30 @@ export class MondayClient {
         query: string,
         variables?: Record<string, unknown>
     ): Promise<T> {
-        const response = await fetch(MONDAY_API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': this.token,
-                'API-Version': this.apiVersion,
-            },
-            body: JSON.stringify({ query, variables }),
-        });
-
-        if (!response.ok) {
+        try {
+            const result = await this.client.request<T>(query, variables as any);
+            return result;
+        } catch (err) {
+            // Handle SDK errors - extract message and wrap in our error type
+            const error = err as Error & { response?: { errors?: Array<{ message: string; locations?: any; extensions?: any }>; status?: number } };
+            if (error.response?.errors) {
+                const errors = error.response.errors.map((e) => ({
+                    message: e.message,
+                    locations: e.locations,
+                    extensions: e.extensions,
+                }));
+                throw new MondayClientError(
+                    errors.map((e) => e.message).join('; ') ?? 'Unknown Monday API error',
+                    errors,
+                    error.response.status
+                );
+            }
             throw new MondayClientError(
-                `Monday API request failed: ${response.status} ${response.statusText}`,
+                error.message || 'Unknown Monday API error',
                 undefined,
-                response.status
+                undefined
             );
         }
-
-        const json: unknown = await response.json();
-        const result = json as MondayGraphQLResponse<T>;
-
-        if (result.errors && result.errors.length > 0) {
-            throw new MondayClientError(
-                result.errors.map((e) => e.message).join('; '),
-                result.errors
-            );
-        }
-
-        if (!result.data) {
-            throw new MondayClientError('No data returned from Monday API');
-        }
-
-        return result.data;
     }
 
     /**
@@ -95,6 +90,13 @@ export class MondayClient {
         variables?: Record<string, unknown>
     ): Promise<T> {
         return this.query<T>(mutation, variables);
+    }
+
+    /**
+     * Get the underlying ApiClient for direct operations access
+     */
+    getOperations() {
+        return this.client.operations;
     }
 }
 

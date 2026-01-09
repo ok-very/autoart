@@ -122,6 +122,26 @@ export interface HierarchyProjectionOutput {
 }
 
 /**
+ * Process projection output: grouped by definition or stage.
+ * Implements auto-grouping for 2+ similar items.
+ */
+export interface ProcessProjectionOutput {
+    /** Derived process containers */
+    processes: Array<{
+        /** Synthetic process ID */
+        id: string;
+        /** Process title */
+        title: string;
+        /** Items in this process */
+        items: ActionProjectionInput[];
+        /** Source of grouping (explicit parent, definition match, or stage) */
+        source: 'definition' | 'stage' | 'explicit';
+    }>;
+    /** Orphan items without enough context to group */
+    floating: ActionProjectionInput[];
+}
+
+/**
  * Timeline projection output: chronological view.
  * Used for Gantt-like or calendar views.
  */

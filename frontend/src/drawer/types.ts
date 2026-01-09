@@ -31,9 +31,9 @@ export const DRAWER_SIZES: Record<DrawerSize, number> = {
  * This prevents hidden state mutations.
  */
 export type DrawerSideEffect =
-    | { type: 'create'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' }
-    | { type: 'update'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' }
-    | { type: 'delete'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' }
+    | { type: 'create'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
+    | { type: 'update'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
+    | { type: 'delete'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
     | { type: 'assign'; entityType: 'record' }
     /** @deprecated Use 'assign' instead */
     | { type: 'classify'; entityType: 'record' }

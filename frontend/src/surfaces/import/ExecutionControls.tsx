@@ -1,7 +1,7 @@
 /**
  * Execution Controls
  *
- * Footer with explicit commit phase button.
+ * Footer with explicit commit phase button using Mantine components.
  * 
  * Commit behavior by output kind:
  * - fact_candidate: Commit only if approved by user
@@ -11,8 +11,9 @@
  * - unclassified: Never commit
  */
 
-import { Ban, CheckCircle2, Loader2, AlertTriangle, Upload } from 'lucide-react';
+import { Ban, CheckCircle2, AlertTriangle, Upload } from 'lucide-react';
 import { useState, useCallback, useMemo } from 'react';
+import { Paper, Group, Text, Button, Badge, Loader } from '@mantine/core';
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
 
 // ============================================================================
@@ -190,98 +191,90 @@ export function ExecutionControls({
     // No session yet
     if (!session || !plan) {
         return (
-            <div className="h-16 bg-white border-t border-slate-200 flex items-center justify-end px-6">
-                <span className="text-sm text-slate-400">
-                    Configure and parse data to continue
-                </span>
-            </div>
+            <Paper h={64} shadow="none" className="border-t border-slate-200">
+                <Group justify="flex-end" h="100%" px="md">
+                    <Text size="sm" c="dimmed">
+                        Configure and parse data to continue
+                    </Text>
+                </Group>
+            </Paper>
         );
     }
 
     return (
-        <div className="h-16 bg-white border-t border-slate-200 flex items-center justify-between px-6">
-            {/* Stats summary */}
-            <div className="flex items-center gap-4">
-                <div className="text-sm text-slate-600">
-                    Ready to import{' '}
-                    <span className="font-medium text-slate-800">{plan.items.length}</span> items
-                    {plan.containers.length > 0 && (
-                        <> in <span className="font-medium text-slate-800">{plan.containers.length}</span> containers</>
-                    )}
-                </div>
+        <Paper h={64} shadow="none" className="border-t border-slate-200">
+            <Group justify="space-between" h="100%" px="md">
+                {/* Stats summary */}
+                <Group gap="md">
+                    <Text size="sm" c="dimmed">
+                        Ready to import{' '}
+                        <Text span fw={500} c="dark">{plan.items.length}</Text> items
+                        {plan.containers.length > 0 && (
+                            <> in <Text span fw={500} c="dark">{plan.containers.length}</Text> containers</>
+                        )}
+                    </Text>
 
-                {/* Commit will produce */}
-                <div className="text-sm text-slate-500 border-l border-slate-200 pl-4">
-                    Will commit: <span className="font-medium text-slate-700">{commitSummary}</span>
-                </div>
+                    {/* Commit will produce */}
+                    <Text size="sm" c="dimmed" className="border-l border-slate-200 pl-4">
+                        Will commit: <Text span fw={500} c="dark">{commitSummary}</Text>
+                    </Text>
 
-                {/* Pending items warning */}
-                {(stats.factCandidatesPending > 0 || stats.unclassified > 0) && (
-                    <div className="flex items-center gap-2 text-amber-600 text-sm bg-amber-50 px-3 py-1 rounded-lg">
-                        <AlertTriangle className="w-4 h-4" />
-                        <span>
+                    {/* Pending items warning */}
+                    {(stats.factCandidatesPending > 0 || stats.unclassified > 0) && (
+                        <Badge color="yellow" variant="light" leftSection={<AlertTriangle size={12} />}>
                             {stats.factCandidatesPending + stats.unclassified} need review
-                        </span>
-                    </div>
-                )}
-
-                {/* Non-committed items info */}
-                {stats.actionHints > 0 && (
-                    <div className="text-xs text-slate-400">
-                        ({stats.actionHints} action hint{stats.actionHints !== 1 ? 's' : ''} stored as classification only)
-                    </div>
-                )}
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex items-center gap-3">
-                {/* Success message */}
-                {executionStatus === 'success' && (
-                    <div className="flex items-center gap-2 text-green-600 text-sm">
-                        <CheckCircle2 className="w-4 h-4" />
-                        Import completed!
-                    </div>
-                )}
-
-                {/* Blocked message */}
-                {executionStatus === 'blocked' && (
-                    <div className="flex items-center gap-2 text-amber-600 text-sm">
-                        <AlertTriangle className="w-4 h-4" />
-                        Approve or skip pending items first
-                    </div>
-                )}
-
-                {/* Cancel button */}
-                <button
-                    onClick={onReset}
-                    disabled={isExecuting}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 rounded-lg transition-colors"
-                >
-                    <Ban className="w-4 h-4" />
-                    Cancel
-                </button>
-
-                {/* Commit button - explicit action */}
-                <button
-                    onClick={handleExecute}
-                    disabled={!canExecute}
-                    title={!commitAllowed ? 'Approve or skip pending fact candidates first' : undefined}
-                    className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-slate-300 rounded-lg transition-colors"
-                >
-                    {isExecuting ? (
-                        <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Committing...
-                        </>
-                    ) : (
-                        <>
-                            <Upload className="w-4 h-4" />
-                            Commit Approved Events
-                        </>
+                        </Badge>
                     )}
-                </button>
-            </div>
-        </div>
+
+                    {/* Non-committed items info */}
+                    {stats.actionHints > 0 && (
+                        <Text size="xs" c="dimmed">
+                            ({stats.actionHints} action hint{stats.actionHints !== 1 ? 's' : ''} stored as classification only)
+                        </Text>
+                    )}
+                </Group>
+
+                {/* Action buttons */}
+                <Group gap="sm">
+                    {/* Success message */}
+                    {executionStatus === 'success' && (
+                        <Group gap="xs" c="green">
+                            <CheckCircle2 size={16} />
+                            <Text size="sm">Import completed!</Text>
+                        </Group>
+                    )}
+
+                    {/* Blocked message */}
+                    {executionStatus === 'blocked' && (
+                        <Group gap="xs" c="yellow.7">
+                            <AlertTriangle size={16} />
+                            <Text size="sm">Approve or skip pending items first</Text>
+                        </Group>
+                    )}
+
+                    {/* Cancel button */}
+                    <Button
+                        variant="default"
+                        leftSection={<Ban size={16} />}
+                        disabled={isExecuting}
+                        onClick={onReset}
+                    >
+                        Cancel
+                    </Button>
+
+                    {/* Commit button - explicit action */}
+                    <Button
+                        color="green"
+                        leftSection={isExecuting ? <Loader size={16} color="white" /> : <Upload size={16} />}
+                        disabled={!canExecute}
+                        onClick={handleExecute}
+                        title={!commitAllowed ? 'Approve or skip pending fact candidates first' : undefined}
+                    >
+                        {isExecuting ? 'Committing...' : 'Commit Approved Events'}
+                    </Button>
+                </Group>
+            </Group>
+        </Paper>
     );
 }
 

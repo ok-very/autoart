@@ -59,6 +59,7 @@ export interface MondayDataNode {
     metadata: {
         groupId?: string;
         groupTitle?: string;
+        parentItemId?: string;
         creator?: { id: string; name: string };
         createdAt?: string;
         updatedAt?: string;
@@ -321,10 +322,11 @@ export class MondayConnector {
 
                 yield itemNode;
 
-                // Yield subitems
+                // Yield subitems with parent reference
                 if (config?.includeSubitems !== false && item.subitems) {
                     for (const subitem of item.subitems) {
                         const subitemNode = this.createItemNode(subitem, schema.columns, 'subitem');
+                        subitemNode.metadata.parentItemId = item.id;
                         yield subitemNode;
                     }
                 }

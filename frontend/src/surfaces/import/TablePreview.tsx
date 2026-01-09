@@ -3,10 +3,14 @@
  *
  * Spreadsheet view of import items showing records as they will appear.
  * Uses field recordings with renderHint for semantic display.
+ *
+ * Now built on TableKit for consistent visual grammar.
  */
 
 import { useMemo } from 'react';
-import { Table } from 'lucide-react';
+import { Table as TableIcon } from 'lucide-react';
+import { Badge } from '@mantine/core';
+import { TableFrame, TableHeaderRow, TableRow, TableHeaderCell, TableCell } from '../../ui/table';
 import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
 import type { ImportPlan } from '../../api/hooks/imports';
 
@@ -59,7 +63,7 @@ export function TablePreview({ plan, selectedRecordId, onSelect }: TablePreviewP
         return (
             <div className="flex-1 flex items-center justify-center p-8">
                 <div className="text-center">
-                    <Table className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                    <TableIcon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                     <p className="text-slate-500 font-medium">No items to display</p>
                 </div>
             </div>
@@ -67,59 +71,51 @@ export function TablePreview({ plan, selectedRecordId, onSelect }: TablePreviewP
     }
 
     return (
-        <div className="flex-1 overflow-auto">
-            <table className="w-full text-sm border-collapse">
-                <thead className="bg-slate-50 sticky top-0 z-10">
-                    <tr>
-                        <th className="px-3 py-2 text-left font-medium text-slate-600 border-b border-slate-200">
-                            Title
-                        </th>
-                        {columns.map((col) => (
-                            <th
-                                key={col.key}
-                                className="px-3 py-2 text-left font-medium text-slate-600 border-b border-slate-200"
-                            >
-                                <div className="flex items-center gap-1.5">
-                                    <span>{col.label}</span>
-                                    <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1 rounded">
-                                        {col.renderHint}
-                                    </span>
-                                </div>
-                            </th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {rows.map((row) => {
-                        const rowId = String(row._id);
-                        const isSelected = rowId === selectedRecordId;
+        <TableFrame className="flex-1" shadow={false}>
+            <div className="overflow-auto h-full">
+                {/* Header Row */}
+                <TableHeaderRow size="sm" sticky>
+                    <TableHeaderCell width={200}>Title</TableHeaderCell>
+                    {columns.map((col) => (
+                        <TableHeaderCell key={col.key} width="flex">
+                            <span className="flex items-center gap-1.5">
+                                {col.label}
+                                <Badge size="xs" variant="light" color="gray" className="font-mono">
+                                    {col.renderHint}
+                                </Badge>
+                            </span>
+                        </TableHeaderCell>
+                    ))}
+                </TableHeaderRow>
 
-                        return (
-                            <tr
-                                key={rowId}
-                                onClick={() => onSelect(rowId)}
-                                className={`cursor-pointer border-b border-slate-100 transition-colors ${isSelected
-                                        ? 'bg-blue-50 hover:bg-blue-100'
-                                        : 'hover:bg-slate-50'
-                                    }`}
-                            >
-                                <td className="px-3 py-2 font-medium text-slate-800">
-                                    {String(row._title)}
-                                </td>
-                                {columns.map((col) => (
-                                    <td key={col.key} className="px-3 py-2 text-slate-600">
-                                        <DataFieldWidget
-                                            kind={col.renderHint}
-                                            value={row[col.key]}
-                                        />
-                                    </td>
-                                ))}
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
-        </div>
+                {/* Data Rows */}
+                {rows.map((row) => {
+                    const rowId = String(row._id);
+                    const isSelected = rowId === selectedRecordId;
+
+                    return (
+                        <TableRow
+                            key={rowId}
+                            size="sm"
+                            selected={isSelected}
+                            onClick={() => onSelect(rowId)}
+                        >
+                            <TableCell width={200} className="font-medium text-slate-800">
+                                {String(row._title)}
+                            </TableCell>
+                            {columns.map((col) => (
+                                <TableCell key={col.key} width="flex">
+                                    <DataFieldWidget
+                                        kind={col.renderHint}
+                                        value={row[col.key]}
+                                    />
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    );
+                })}
+            </div>
+        </TableFrame>
     );
 }
 

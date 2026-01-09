@@ -1,5 +1,15 @@
+/**
+ * CloneProjectView
+ *
+ * Drawer view for cloning a project with configurable depth using Mantine.
+ */
+
 import { useState } from 'react';
 import { Copy, FileText, Database, Layers } from 'lucide-react';
+import {
+  TextInput, Button, Stack, Group, Text, Paper, Radio, Checkbox,
+  Box, Alert, ThemeIcon, Badge
+} from '@mantine/core';
 import { useUIStore } from '../../../stores/uiStore';
 import { useHierarchyStore } from '../../../stores/hierarchyStore';
 import { useCloneNode, useCloneStats } from '../../../api/hooks';
@@ -105,178 +115,154 @@ export function CloneProjectView(props: CloneProjectViewProps | LegacyCloneProje
   };
 
   return (
-    <div className="max-w-lg mx-auto">
+    <Box maw={480} mx="auto">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-          <Copy className="w-5 h-5 text-blue-600" />
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold text-slate-800">Clone Project</h2>
-          <p className="text-sm text-slate-500">
-            "{sourceProjectTitle}"
-          </p>
-        </div>
-      </div>
+      <Group gap="sm" mb="md">
+        <ThemeIcon size={40} variant="light" color="blue" radius="md">
+          <Copy size={20} />
+        </ThemeIcon>
+        <Stack gap={0}>
+          <Text size="lg" fw={600}>Clone Project</Text>
+          <Text size="sm" c="dimmed">"{sourceProjectTitle}"</Text>
+        </Stack>
+      </Group>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Project Name */}
-        <div>
-          <label
-            htmlFor="clone-title"
-            className="block text-sm font-medium text-slate-700 mb-1"
-          >
-            New Project Name
-          </label>
-          <input
-            id="clone-title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+      <form onSubmit={handleSubmit}>
+        <Stack gap="lg">
+          {/* Project Name */}
+          <TextInput
+            label="New Project Name"
             placeholder="Enter new project name..."
-            className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={title}
+            onChange={(e) => setTitle(e.currentTarget.value)}
             autoFocus
           />
-        </div>
 
-        {/* Clone Depth */}
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Layers size={16} className="text-slate-500" />
-            <span className="text-sm font-medium text-slate-700">Clone Depth</span>
-          </div>
-          <div className="space-y-2">
-            {DEPTH_OPTIONS.map((option) => (
-              <label
-                key={option.value}
-                className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${depth === option.value
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-slate-200 hover:border-slate-300 bg-white'
-                  }`}
-              >
-                <input
-                  type="radio"
-                  name="depth"
-                  value={option.value}
-                  checked={depth === option.value}
-                  onChange={(e) => setDepth(e.target.value as CloneDepth)}
-                  className="mt-0.5"
+          {/* Clone Depth */}
+          <Box>
+            <Group gap="xs" mb="xs">
+              <Layers size={16} />
+              <Text size="sm" fw={500}>Clone Depth</Text>
+            </Group>
+            <Radio.Group value={depth} onChange={(val) => setDepth(val as CloneDepth)}>
+              <Stack gap="xs">
+                {DEPTH_OPTIONS.map((option) => (
+                  <Paper
+                    key={option.value}
+                    withBorder
+                    p="sm"
+                    radius="md"
+                    className={`cursor-pointer transition-colors ${depth === option.value ? 'border-blue-500 bg-blue-50' : ''
+                      }`}
+                    onClick={() => setDepth(option.value)}
+                  >
+                    <Group wrap="nowrap">
+                      <Radio value={option.value} />
+                      <Stack gap={0}>
+                        <Text size="sm" fw={500}>{option.label}</Text>
+                        <Text size="xs" c="dimmed">{option.description}</Text>
+                      </Stack>
+                    </Group>
+                  </Paper>
+                ))}
+              </Stack>
+            </Radio.Group>
+          </Box>
+
+          {/* Include Options */}
+          <Stack gap="xs">
+            {/* Include Definitions */}
+            <Paper
+              withBorder
+              p="sm"
+              radius="md"
+              className={`cursor-pointer transition-colors ${includeDefinitions ? 'border-purple-500 bg-purple-50' : ''
+                }`}
+              onClick={() => setIncludeDefinitions(!includeDefinitions)}
+            >
+              <Group wrap="nowrap">
+                <Checkbox
+                  checked={includeDefinitions}
+                  onChange={(e) => setIncludeDefinitions(e.currentTarget.checked)}
                 />
-                <div>
-                  <div className="text-sm font-medium text-slate-800">{option.label}</div>
-                  <div className="text-xs text-slate-500">{option.description}</div>
-                </div>
-              </label>
-            ))}
-          </div>
-        </div>
+                <Stack gap={2} style={{ flex: 1 }}>
+                  <Group gap="xs">
+                    <FileText size={16} className="text-purple-600" />
+                    <Text size="sm" fw={500}>Include Record Definitions</Text>
+                    {includedCount > 0 && (
+                      <Badge size="xs" color="purple" variant="light">
+                        {includedCount} definition{includedCount !== 1 ? 's' : ''}
+                      </Badge>
+                    )}
+                    {excludedCount > 0 && (
+                      <Badge size="xs" color="yellow" variant="light">
+                        {excludedCount} excluded
+                      </Badge>
+                    )}
+                  </Group>
+                  <Text size="xs" c="dimmed">
+                    Clone all non-excluded record definitions to the new project
+                  </Text>
+                </Stack>
+              </Group>
+            </Paper>
 
-        {/* Include Options */}
-        <div className="space-y-3">
-          {/* Include Definitions */}
-          <label
-            className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${includeDefinitions
-                ? 'border-purple-500 bg-purple-50'
-                : 'border-slate-200 hover:border-slate-300 bg-white'
-              }`}
-          >
-            <input
-              type="checkbox"
-              checked={includeDefinitions}
-              onChange={(e) => setIncludeDefinitions(e.target.checked)}
-              className="mt-0.5"
-            />
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <FileText size={16} className="text-purple-600" />
-                <span className="text-sm font-medium text-slate-800">
-                  Include Record Definitions
-                </span>
-                {includedCount > 0 && (
-                  <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
-                    {includedCount} definition{includedCount !== 1 ? 's' : ''}
-                  </span>
-                )}
-                {excludedCount > 0 && (
-                  <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
-                    {excludedCount} excluded
-                  </span>
-                )}
-              </div>
-              <div className="text-xs text-slate-500 mt-1">
-                Clone all non-excluded record definitions to the new project
-              </div>
-            </div>
-          </label>
+            {/* Include Records */}
+            <Paper
+              withBorder
+              p="sm"
+              radius="md"
+              className={`cursor-pointer transition-colors ${includeRecords ? 'border-green-500 bg-green-50' : ''
+                }`}
+              onClick={() => setIncludeRecords(!includeRecords)}
+            >
+              <Group wrap="nowrap">
+                <Checkbox
+                  checked={includeRecords}
+                  onChange={(e) => setIncludeRecords(e.currentTarget.checked)}
+                />
+                <Stack gap={2} style={{ flex: 1 }}>
+                  <Group gap="xs">
+                    <Database size={16} className="text-green-600" />
+                    <Text size="sm" fw={500}>Include Records</Text>
+                  </Group>
+                  <Text size="xs" c="dimmed">
+                    Copy data records classified under this project's hierarchy
+                  </Text>
+                </Stack>
+              </Group>
+            </Paper>
+          </Stack>
 
-          {/* Include Records */}
-          <label
-            className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${includeRecords
-                ? 'border-green-500 bg-green-50'
-                : 'border-slate-200 hover:border-slate-300 bg-white'
-              }`}
-          >
-            <input
-              type="checkbox"
-              checked={includeRecords}
-              onChange={(e) => setIncludeRecords(e.target.checked)}
-              className="mt-0.5"
-            />
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <Database size={16} className="text-green-600" />
-                <span className="text-sm font-medium text-slate-800">
-                  Include Records
-                </span>
-              </div>
-              <div className="text-xs text-slate-500 mt-1">
-                Copy data records classified under this project's hierarchy
-              </div>
-            </div>
-          </label>
-        </div>
+          {/* Info Box */}
+          <Alert color="yellow" variant="light">
+            <Text size="xs">
+              <strong>Note:</strong> Task references will be cloned but will still point to the original records (unless you include records).
+            </Text>
+          </Alert>
 
-        {/* Info Box */}
-        <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
-          <p className="text-xs text-amber-800">
-            <strong>Note:</strong> Task references will be cloned but will still point to the original records (unless you include records).
-          </p>
-        </div>
+          {/* Actions */}
+          <Group justify="flex-end" gap="sm" pt="md" className="border-t border-slate-100">
+            <Button variant="default" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={!title.trim()}
+              loading={cloneNode.isPending}
+              leftSection={<Copy size={16} />}
+            >
+              Clone Project
+            </Button>
+          </Group>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={!title.trim() || cloneNode.isPending}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-          >
-            {cloneNode.isPending ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Cloning...
-              </>
-            ) : (
-              <>
-                <Copy size={16} />
-                Clone Project
-              </>
-            )}
-          </button>
-        </div>
-
-        {cloneNode.isError && (
-          <p className="text-sm text-red-600">
-            Failed to clone project. Please try again.
-          </p>
-        )}
+          {cloneNode.isError && (
+            <Text size="sm" c="red">
+              Failed to clone project. Please try again.
+            </Text>
+          )}
+        </Stack>
       </form>
-    </div>
+    </Box>
   );
 }

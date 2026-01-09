@@ -112,9 +112,9 @@ function inferEntityType(nodeType: MondayDataNode['type']): ImportPlanItem['enti
         case 'group':
             return 'stage';
         case 'item':
-            return 'action';
-        case 'subitem':
             return 'task';
+        case 'subitem':
+            return 'subtask';
         default:
             return 'record';
     }
@@ -176,7 +176,11 @@ export async function interpretMondayBoard(
     // Get existing definitions for potential matching
     const _definitions = await listDefinitions();
 
-    return nodes.map((node) => {
+    // First pass: Generate items and track node ID -> tempId mapping
+    const nodeIdToTempId = new Map<string, string>();
+    const items: ImportPlanItem[] = [];
+
+    for (const node of nodes) {
         // Generate auto-mappings for all columns
         const autoMappings = node.columnValues.map((cv) => ({
             columnName: cv.title,
@@ -193,8 +197,11 @@ export async function interpretMondayBoard(
             return columnToFieldRecording(cv, mapping);
         });
 
-        return {
-            tempId: generateTempId(),
+        const tempId = generateTempId();
+        nodeIdToTempId.set(node.id, tempId);
+
+        items.push({
+            tempId,
             title: node.name,
             entityType: inferEntityType(node.type),
             fieldRecordings,
@@ -204,10 +211,21 @@ export async function interpretMondayBoard(
                     type: node.type,
                     groupId: node.metadata.groupId,
                     groupTitle: node.metadata.groupTitle,
+                    parentItemId: node.metadata.parentItemId,
                 },
             },
-        };
-    });
+        });
+    }
+
+    // Second pass: Resolve parent references for subitems
+    for (const item of items) {
+        const parentItemId = (item.metadata as { monday?: { parentItemId?: string } })?.monday?.parentItemId;
+        if (parentItemId && nodeIdToTempId.has(parentItemId)) {
+            item.parentTempId = nodeIdToTempId.get(parentItemId);
+        }
+    }
+
+    return items;
 }
 
 /**

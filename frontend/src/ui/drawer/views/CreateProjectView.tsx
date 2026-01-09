@@ -1,4 +1,11 @@
+/**
+ * CreateProjectView
+ *
+ * Drawer view for creating new projects. Uses Mantine form components.
+ */
+
 import { useState } from 'react';
+import { TextInput, Button, Group, Stack, Text, Alert } from '@mantine/core';
 import { useUIStore } from '../../../stores/uiStore';
 import { useHierarchyStore } from '../../../stores/hierarchyStore';
 import { useCreateNode } from '../../../api/hooks';
@@ -90,73 +97,48 @@ export function CreateProjectView(props: CreateProjectViewProps | LegacyCreatePr
 
   return (
     <div className="max-w-lg mx-auto">
-      <div className="mb-4">
-        <p className="text-sm text-slate-600">
-          Create a new project to organize your work. Projects contain processes, stages, subprocesses, and tasks.
-        </p>
-      </div>
+      <Text size="sm" c="dimmed" mb="md">
+        Create a new project to organize your work. Projects contain processes, stages, subprocesses, and tasks.
+      </Text>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label
-            htmlFor="project-title"
-            className="block text-sm font-medium text-slate-700 mb-1"
-          >
-            Project Name
-          </label>
-          <input
-            id="project-title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+      <form onSubmit={handleSubmit}>
+        <Stack gap="md">
+          <TextInput
+            label="Project Name"
             placeholder="Enter project name..."
-            className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={title}
+            onChange={(e) => setTitle(e.currentTarget.value)}
+            required
             autoFocus
           />
-        </div>
 
-        <div>
-          <label
-            htmlFor="process-name"
-            className="block text-sm font-medium text-slate-700 mb-1"
-          >
-            Default Process Name
-          </label>
-          <input
-            id="process-name"
-            type="text"
-            value={processName}
-            onChange={(e) => setProcessName(e.target.value)}
+          <TextInput
+            label="Default Process Name"
             placeholder="Main Process"
-            className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={processName}
+            onChange={(e) => setProcessName(e.currentTarget.value)}
+            description="Every project needs at least one process. This will be created automatically."
           />
-          <p className="mt-1 text-xs text-slate-500">
-            Every project needs at least one process. This will be created automatically.
-          </p>
-        </div>
 
-        <div className="flex justify-end gap-3 pt-4">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={!title.trim() || createNode.isPending}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {createNode.isPending ? 'Creating...' : 'Create Project'}
-          </button>
-        </div>
+          <Group justify="flex-end" gap="sm" pt="md">
+            <Button variant="default" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={!title.trim()}
+              loading={createNode.isPending}
+            >
+              Create Project
+            </Button>
+          </Group>
 
-        {createNode.isError && (
-          <p className="text-sm text-red-600">
-            Failed to create project. Please try again.
-          </p>
-        )}
+          {createNode.isError && (
+            <Alert color="red" variant="light">
+              Failed to create project. Please try again.
+            </Alert>
+          )}
+        </Stack>
       </form>
     </div>
   );

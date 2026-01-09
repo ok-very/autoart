@@ -29,9 +29,12 @@ const MondayConnectBodySchema = z.object({
 export async function connectionsRoutes(app: FastifyInstance) {
     /**
      * List connection status for all providers
+     * Uses optional auth - works for both authenticated and anonymous users
      */
-    app.get('/connections', async (request, reply) => {
-        const userId = (request.user as { id?: string })?.id;
+    app.get('/connections', {
+        preHandler: app.authenticateOptional
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
 
         const [mondayConnected, googleConnected] = await Promise.all([
             connectionsService.isProviderConnected(userId ?? null, 'monday'),
@@ -46,9 +49,12 @@ export async function connectionsRoutes(app: FastifyInstance) {
 
     /**
      * Connect Monday.com with API key
+     * Requires authentication
      */
-    app.post('/connections/monday', async (request, reply) => {
-        const userId = (request.user as { id?: string })?.id;
+    app.post('/connections/monday', {
+        preHandler: app.authenticate
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
         if (!userId) {
             return reply.status(401).send({ error: 'Authentication required' });
         }
@@ -89,9 +95,12 @@ export async function connectionsRoutes(app: FastifyInstance) {
 
     /**
      * Disconnect Monday.com
+     * Requires authentication
      */
-    app.delete('/connections/monday', async (request, reply) => {
-        const userId = (request.user as { id?: string })?.id;
+    app.delete('/connections/monday', {
+        preHandler: app.authenticate
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
         if (!userId) {
             return reply.status(401).send({ error: 'Authentication required' });
         }
@@ -133,9 +142,12 @@ export async function connectionsRoutes(app: FastifyInstance) {
 
     /**
      * List accessible Monday.com boards for the current user
+     * Uses optional auth - can use env token as fallback
      */
-    app.get('/connectors/monday/boards', async (request, reply) => {
-        const userId = (request.user as { id?: string })?.id;
+    app.get('/connectors/monday/boards', {
+        preHandler: app.authenticateOptional
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
 
         try {
             const token = await connectionsService.getMondayToken(userId);

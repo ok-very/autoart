@@ -50,22 +50,28 @@ export async function getCredential(
 
 /**
  * Save or update a credential.
+ * Uses delete-then-insert pattern because partial unique indexes don't work with ON CONFLICT.
  */
 export async function saveCredential(
     params: NewConnectionCredential
 ): Promise<ConnectionCredential> {
+    // First delete any existing credential for this user/provider
+    let deleteQuery = db
+        .deleteFrom('connection_credentials')
+        .where('provider', '=', params.provider);
+
+    if (params.user_id) {
+        deleteQuery = deleteQuery.where('user_id', '=', params.user_id);
+    } else {
+        deleteQuery = deleteQuery.where('user_id', 'is', null);
+    }
+
+    await deleteQuery.execute();
+
+    // Then insert the new credential
     const result = await db
         .insertInto('connection_credentials')
         .values(params)
-        .onConflict((oc) =>
-            oc.columns(['user_id', 'provider']).doUpdateSet({
-                access_token: params.access_token,
-                refresh_token: params.refresh_token,
-                expires_at: params.expires_at,
-                scopes: params.scopes,
-                metadata: params.metadata,
-            })
-        )
         .returningAll()
         .executeTakeFirstOrThrow();
 

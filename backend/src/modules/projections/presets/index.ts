@@ -6,6 +6,7 @@
 
 export { StageProjection } from './stage-projection.js';
 export { HierarchyProjection } from './hierarchy-projection.js';
+export { ProcessProjection } from './process-projection.js';
 
 // Re-export types for convenience
 export type {
