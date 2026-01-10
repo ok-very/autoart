@@ -24,9 +24,18 @@ export interface MappingContext {
 }
 
 /**
+ * Action hint phase - when the hint is relevant in the workflow.
+ * Aligned with email app's pre_reply/post_reply concept.
+ *
+ * - 'before_completion': Hint for work to do BEFORE marking the parent action complete
+ * - 'after_completion': Hint for follow-up work AFTER completion
+ */
+export type ActionHintPhase = 'before_completion' | 'after_completion';
+
+/**
  * Interpretation output union type.
  * Separates semantic parsing from event commitment.
- * 
+ *
  * - fact_candidate: Observable outcomes (send meeting notes, submit invoice)
  * - work_event: Status-derived lifecycle events
  * - field_value: Extracted dates, assignees, etc.
@@ -36,7 +45,7 @@ export type InterpretationOutput =
     | { kind: 'fact_candidate'; factKind: string; payload?: Record<string, unknown>; confidence: 'low' | 'medium' | 'high' }
     | { kind: 'work_event'; eventType: 'WORK_STARTED' | 'WORK_FINISHED' | 'WORK_BLOCKED'; source?: string }
     | { kind: 'field_value'; field: string; value: unknown; confidence: 'low' | 'medium' | 'high' }
-    | { kind: 'action_hint'; hintType: 'request' | 'prepare' | 'coordinate' | 'setup' | 'communicate'; text: string };
+    | { kind: 'action_hint'; hintType: 'request' | 'prepare' | 'coordinate' | 'setup' | 'communicate'; text: string; phase?: ActionHintPhase };
 
 /**
  * A mapping rule that matches CSV text and produces interpretation outputs.

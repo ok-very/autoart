@@ -76,6 +76,25 @@ export type EventType = z.infer<typeof EventTypeSchema>;
 
 /**
  * Field binding - maps action parameters to Field definitions
+ *
+ * Common fieldKey vocabulary:
+ * - 'title': Display name for the action
+ * - 'description': Detailed description (may be TipTap JSON)
+ * - 'dueDate': Target completion date (ISO string)
+ * - 'assignee': Person assigned to the action
+ * - 'priority': Priority scoring (see Priority Pattern below)
+ *
+ * Priority Pattern (aligned with email app):
+ * Use for actions that need explicit priority beyond dependency-derived ordering.
+ * Example: { fieldKey: 'priority', value: { score: 4, factors: ['urgency_keyword', 'external_sender'] } }
+ * - score: 1-5 (1=lowest, 5=highest)
+ * - factors: Array of strings explaining why this priority was assigned
+ *
+ * Stakeholder Pattern (aligned with email app):
+ * Captures sender/actor classification for communication-related actions.
+ * Example: { fieldKey: 'stakeholder', value: { type: 'External', domain: 'client.com' } }
+ * - type: 'Internal' | 'External' | 'Government' | 'System'
+ * - domain: Optional email domain for context
  */
 export const FieldBindingSchema = z.object({
   fieldKey: z.string(),
