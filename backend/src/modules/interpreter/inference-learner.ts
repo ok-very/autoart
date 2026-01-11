@@ -27,7 +27,8 @@ export interface ColumnMapping {
     fieldName: string;
     fieldType: string;
     renderHint?: string;
-    specialMapping?: 'title' | 'owner' | 'dueDate' | 'status' | 'description';
+    // 'assignee' is an alias for 'owner' (both map to the 'owner' field key)
+    specialMapping?: 'title' | 'owner' | 'assignee' | 'dueDate' | 'status' | 'description';
 }
 
 // ============================================================================

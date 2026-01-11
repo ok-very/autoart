@@ -68,13 +68,15 @@ export async function composerRoutes(fastify: FastifyInstance) {
             title: string;
             description?: string;
             dueDate?: string;
+            /** Assignee - maps to 'owner' field key for backward compatibility */
+            assignee?: string;
             references?: Array<{ sourceRecordId: string }>;
         };
     }>(
         '/quick/task',
         { preHandler: [fastify.authenticate] },
         async (request, reply) => {
-            const { contextId, title, description, dueDate, references } = request.body;
+            const { contextId, title, description, dueDate, assignee, references } = request.body;
             const actorId = (request.user as any)?.id || null;
 
             if (!contextId || !title) {
@@ -87,7 +89,7 @@ export async function composerRoutes(fastify: FastifyInstance) {
             const result = await composerService.QuickCompose.task(
                 contextId,
                 title,
-                { description, dueDate, actorId, references }
+                { description, dueDate, assignee, actorId, references }
             );
 
             return reply.status(201).send(result);
