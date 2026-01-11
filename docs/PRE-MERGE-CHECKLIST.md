@@ -87,9 +87,9 @@ This checklist must be completed before merging the `testing-infrastructure-merg
    ```
 
 2. **Final commit message format**
-   ```
+   ```text
    feat: merge foundational refactor v1 (#18)
-   
+
    Includes:
    - Error handling standardization (#20)
    - Testing infrastructure (#19)

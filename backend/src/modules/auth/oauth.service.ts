@@ -92,11 +92,23 @@ export async function handleGoogleCallback(code: string, state: string) {
     }
 
     // Exchange code for tokens
-    const { tokens } = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(tokens);
+    let tokens;
+    try {
+        const response = await oauth2Client.getToken(code);
+        tokens = response.tokens;
+        oauth2Client.setCredentials(tokens);
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        throw new AppError(500, `Failed to exchange authorization code: ${message}`, 'OAUTH_TOKEN_EXCHANGE_FAILED', { error: message });
+    }
+
+    // Validate access token exists
+    if (!tokens || !tokens.access_token) {
+        throw new AppError(500, 'No access token received from Google', 'OAUTH_NO_ACCESS_TOKEN');
+    }
 
     // Get user profile
-    const profile = await getGoogleProfile(tokens.access_token!);
+    const profile = await getGoogleProfile(tokens.access_token);
 
     // Find or create user
     let user = await db
@@ -163,10 +175,23 @@ async function getGoogleProfile(accessToken: string): Promise<{ email: string; n
     });
 
     if (!response.ok) {
-        throw new AppError(500, 'Failed to fetch Google profile', 'OAUTH_PROFILE_FAILED');
+        const statusText = response.statusText;
+        const body = await response.text().catch(() => 'Unable to read response body');
+        throw new AppError(
+            500,
+            'Failed to fetch Google profile',
+            'OAUTH_PROFILE_FAILED',
+            { status: response.status, statusText, body }
+        );
     }
 
     const data = await response.json();
+
+    // Validate email exists and is non-empty
+    if (!data.email || typeof data.email !== 'string' || data.email.trim() === '') {
+        throw new AppError(400, 'Google profile missing email', 'OAUTH_PROFILE_MISSING_EMAIL', { profileData: data });
+    }
+
     return {
         email: data.email,
         name: data.name || data.email.split('@')[0],

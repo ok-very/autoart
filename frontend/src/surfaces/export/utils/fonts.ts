@@ -34,7 +34,6 @@ export function getFontsForFormat(format: string): FontOption[] {
  */
 export function getDefaultFont(format: string): string {
     switch (format) {
-        case 'bfa-todo':
         case 'rtf':
             return 'Calibri';
         case 'google-doc':
