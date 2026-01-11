@@ -2,21 +2,56 @@
  * API Hooks - Re-exports all domain-specific hooks
  *
  * This barrel file maintains backwards compatibility with imports from '@/api/hooks'
- * while the hooks are now organized by domain:
+ * while hooks are now organized by category:
  *
+ * **Entities** (CRUD operations on data entities):
  * - auth.ts: useLogin, useRegister, useLogout, useCurrentUser
  * - hierarchy.ts: useProjects, useProjectTree, useNode, CRUD, useMoveNode, useCloneNode
  * - records.ts: useRecords, useRecord, CRUD, useRecordStats, bulk operations
  * - definitions.ts: useRecordDefinitions, CRUD, template library operations
  * - references.ts: useTaskReferences, mode/snapshot updates, resolution
  * - links.ts: useRecordLinks, CRUD, useLinkTypes
- * - ingestion.ts: parsers, preview, import
- * - search.ts: useSearch
  *
- * Factory utilities are available via './factory' for creating custom CRUD hooks.
+ * **Actions** (Action/Event architecture):
+ * - actions.ts: Action CRUD, workflow operations (start/stop/finish/block/assign)
+ * - actionViews.ts: Materialized projections
+ * - actionReferences.ts: Action reference management
+ * - composer.ts: Task builder
+ * - projectLog.ts: Event stream
+ * - workflowSurface.ts: Materialized DAG
+ *
+ * **Operations** (Complex operations):
+ * - imports.ts: Data ingestion, classification
+ * - exports.ts: Data export, formatting
+ * - ingestion.ts: Parsers, preview, import
+ * - search.ts: Search functionality
+ * - interpretation.ts: AI/ML interpretation
+ *
+ * **Utilities**:
+ * - factory.ts: Factory utilities for creating custom CRUD hooks
+ * - queryKeys.ts: Centralized TanStack Query key definitions
+ *
+ * @see ./queryKeys.ts for centralized query key definitions
  */
 
-// Auth
+// ============================================================================
+// CATEGORY EXPORTS (New Structure)
+// ============================================================================
+
+// Entities - CRUD operations on data entities
+export * from './entities';
+
+// Actions - Action/Event architecture primitives
+export * from './actions';
+
+// Operations - Complex operations (imports, exports, search, etc.)
+export * from './operations';
+
+// ============================================================================
+// DIRECT EXPORTS (Maintained for backwards compatibility)
+// ============================================================================
+
+// Auth (Root level - not in a category)
 export {
   useLogin,
   useRegister,
@@ -24,7 +59,7 @@ export {
   useCurrentUser,
 } from './auth';
 
-// Hierarchy
+// Hierarchy (Also exported via ./entities)
 export {
   useProjects,
   useProjectTree,
@@ -36,7 +71,7 @@ export {
   useCloneNode,
 } from './hierarchy';
 
-// Record Definitions
+// Record Definitions (Also exported via ./entities)
 export {
   useRecordDefinitions,
   useRecordDefinitionsFiltered,
@@ -51,7 +86,7 @@ export {
   useCloneStats,
 } from './definitions';
 
-// Records
+// Records (Also exported via ./entities)
 export {
   useRecords,
   useRecord,
@@ -63,7 +98,7 @@ export {
   useBulkDeleteRecords,
 } from './records';
 
-// References
+// References (Also exported via ./entities)
 export {
   useTaskReferences,
   useCreateReference,
@@ -75,7 +110,7 @@ export {
   useResolveReferences,
 } from './references';
 
-// Links
+// Links (Also exported via ./entities)
 export {
   useRecordLinks,
   useCreateLink,
@@ -84,7 +119,7 @@ export {
   type RecordLink,
 } from './links';
 
-// Ingestion
+// Ingestion (Also exported via ./operations)
 export {
   useIngestionParsers,
   useIngestionPreview,
@@ -97,7 +132,7 @@ export {
   type IngestionResult,
 } from './ingestion';
 
-// Actions & Events
+// Actions & Events (Also exported via ./actions)
 export {
   useActions,
   useAction,
@@ -124,14 +159,14 @@ export {
   useChildActions,
 } from './actions';
 
-// Action Views
+// Action Views (Also exported via ./actions)
 export {
   useActionViews,
   useActionView,
   useActionViewsSummary,
 } from './actionViews';
 
-// Workflow Surface (Materialized Projection)
+// Workflow Surface (Also exported via ./actions)
 export {
   useWorkflowSurfaceNodes,
   useAddDependency,
@@ -143,7 +178,7 @@ export {
   getChildren,
 } from './workflowSurface';
 
-// Action References
+// Action References (Also exported via ./actions)
 export {
   useActionReferences,
   useAddActionReference,
@@ -153,7 +188,7 @@ export {
   type ReferenceInput,
 } from './actionReferences';
 
-// Composer (Task Builder on Actions + Events)
+// Composer (Also exported via ./actions)
 export {
   useCompose,
   useQuickTask,
@@ -162,7 +197,7 @@ export {
   buildBugInput,
 } from './composer';
 
-// Project Log (Event Stream)
+// Project Log (Also exported via ./actions)
 export {
   useProjectLogEvents,
   useProjectLogEventCount,
@@ -170,10 +205,10 @@ export {
   type UseProjectLogEventsOptions,
 } from './projectLog';
 
-// Search
+// Search (Also exported via ./operations)
 export { useSearch } from './search';
 
-// Fact Kinds (Definition Review UI)
+// Fact Kinds (Root level - Definition Review UI)
 export {
   useFactKindDefinitions,
   useFactKindsNeedingReview,
@@ -190,14 +225,14 @@ export {
 export { createCrudHooks, createFilteredListHook } from './factory';
 export type { CrudHookConfig, CrudHooks } from './factory';
 
-// Admin
+// Admin (Root level)
 export {
   useAdminUsers,
   useSoftDeleteUser,
   type AdminUser,
 } from './admin';
 
-// Interpretation
+// Interpretation (Also exported via ./operations)
 export {
   useInterpretationAvailable,
   useInterpretationPlan,
@@ -207,3 +242,11 @@ export {
   type InterpretationPlan,
   type InterpretationAvailability,
 } from './interpretation';
+
+// ============================================================================
+// UTILITIES
+// ============================================================================
+
+// Query Keys - Centralized TanStack Query key definitions
+export { queryKeys, invalidationHelpers } from './queryKeys';
+export type { QueryKey } from './queryKeys';
