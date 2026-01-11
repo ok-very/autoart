@@ -46,15 +46,21 @@ export { UserMentionInput, type UserMentionInputProps } from './UserMentionInput
 
 // View Composites (orchestrate molecules with domain data)
 export { RecordPropertiesView } from './RecordPropertiesView';
-export { RecordInspector } from './RecordInspector';
+export { SelectionInspector, RecordInspector, type InspectorTabId } from './SelectionInspector';
 
 // Reusable Table Composites (UI Patterns)
 export { DataTableFlat, type DataTableFlatProps, type TableColumn } from './DataTableFlat';
 export { DataTableHierarchy, type DataTableHierarchyProps, type HierarchyFieldDef } from './DataTableHierarchy';
+export { ActionsTableFlat, type ActionsTableFlatProps } from './ActionsTableFlat';
+
+// Action Inspector Components
+export { ActionCard, type ActionCardProps } from './ActionCard';
+export { ActionsList, type ActionsListProps } from './ActionsList';
 
 // Reusable Record/Hierarchy View Composites
-export { RecordList } from './RecordList';
+export { RecordView } from './RecordView';
 export { ProjectView, type ProjectViewProps } from './ProjectView';
+export { ProjectLogView } from './ProjectLogView';
 export { MillerColumnsView, type MillerColumnsViewProps } from './MillerColumnsView';
 
 // Ingestion/Import View

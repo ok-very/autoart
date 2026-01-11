@@ -1,10 +1,28 @@
 import { z } from 'zod';
 
-export const nodeTypeSchema = z.enum(['project', 'process', 'stage', 'subprocess', 'task', 'subtask']);
+// ============================================================================
+// NODE TYPE SCHEMAS
+// ============================================================================
+
+/**
+ * Primary node type schema (stage removed from new creations).
+ * Stage is demoted to projection-only - see projections module.
+ */
+export const nodeTypeSchema = z.enum(['project', 'process', 'subprocess', 'task', 'subtask']);
+
+/**
+ * Legacy node type schema (includes stage for read compatibility).
+ * @deprecated Only use for reading existing data or migrations.
+ */
+export const legacyNodeTypeSchema = z.enum(['project', 'process', 'stage', 'subprocess', 'task', 'subtask']);
+
+// ============================================================================
+// CREATE/UPDATE SCHEMAS
+// ============================================================================
 
 export const createNodeSchema = z.object({
   parentId: z.string().uuid().nullable().optional(),
-  type: nodeTypeSchema,
+  type: nodeTypeSchema, // No longer accepts 'stage' for new creations
   title: z.string().min(1, 'Title is required'),
   description: z.unknown().optional(),
   metadata: z.record(z.unknown()).optional(),
@@ -31,11 +49,17 @@ export const cloneNodeSchema = z.object({
     metadata: z.record(z.unknown()).optional(),
   }).optional(),
   // Clone options for projects
-  depth: z.enum(['all', 'process', 'stage', 'subprocess']).optional(), // How deep to clone
+  depth: z.enum(['all', 'process', 'stage', 'subprocess']).optional(), // Controls how deep to clone
   includeTemplates: z.boolean().optional(), // Clone definition templates
   includeRecords: z.boolean().optional(), // Clone associated records
 });
 
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export type NodeType = z.infer<typeof nodeTypeSchema>;
+export type LegacyNodeType = z.infer<typeof legacyNodeTypeSchema>;
 export type CreateNodeInput = z.infer<typeof createNodeSchema>;
 export type UpdateNodeInput = z.infer<typeof updateNodeSchema>;
 export type MoveNodeInput = z.infer<typeof moveNodeSchema>;

@@ -12,6 +12,29 @@ export function useRecordDefinitions() {
   });
 }
 
+export interface DefinitionFilterOptions {
+  definitionKind?: 'record' | 'action_recipe' | 'container';
+  projectId?: string;
+  isTemplate?: boolean;
+  isSystem?: boolean;
+}
+
+export function useRecordDefinitionsFiltered(options: DefinitionFilterOptions) {
+  const params = new URLSearchParams();
+  if (options.definitionKind) params.set('definitionKind', options.definitionKind);
+  if (options.projectId) params.set('projectId', options.projectId);
+  if (options.isTemplate !== undefined) params.set('isTemplate', String(options.isTemplate));
+  if (options.isSystem !== undefined) params.set('isSystem', String(options.isSystem));
+
+  const queryString = params.toString();
+  const url = queryString ? `/records/definitions?${queryString}` : '/records/definitions';
+
+  return useQuery({
+    queryKey: ['definitions', 'filtered', options],
+    queryFn: () => api.get<{ definitions: RecordDefinition[] }>(url).then(r => r.definitions),
+  });
+}
+
 export function useRecordDefinition(id: string | null) {
   return useQuery({
     queryKey: ['definition', id],

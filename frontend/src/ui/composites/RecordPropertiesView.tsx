@@ -19,7 +19,7 @@ import {
     useUpdateNode,
     useDeleteRecord,
 } from '../../api/hooks';
-import { RichTextEditor } from '../../components/editor/RichTextEditor';
+import { RichTextEditor } from '../editor/RichTextEditor';
 import { FieldEditor } from '../semantic/FieldEditor';
 import { NodeFieldEditor } from '../semantic/NodeFieldEditor';
 import { useRecordFieldViewModels } from './hooks/useDomain';
@@ -180,7 +180,8 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
                         <RichTextEditor
                             key={item.id}
                             content={description}
-                            taskId={item.id}
+                            contextId={item.id}
+                            contextType="subprocess"
                             onChange={handleDescriptionChange}
                         />
                     </div>

@@ -13,9 +13,9 @@ import type {
     FieldDefinition,
     ProjectState,
     EntityContext,
-} from './types';
-import { getFieldState } from './fieldVisibility';
-import { isValueMissing } from './completeness';
+} from './types.js';
+import { getFieldState } from './fieldVisibility.js';
+import { isValueMissing } from './completeness.js';
 
 // ==================== FIELD VIEW MODEL FACTORY ====================
 
@@ -73,6 +73,7 @@ export function buildFieldViewModel(options: BuildFieldViewModelOptions): FieldV
         label: field.label,
         value,
         type: field.type,
+        renderHint: field.renderHint,
         visible: state.visible,
         editable: state.editable,
         required: state.required,
@@ -161,6 +162,7 @@ export function createEmptyFieldViewModel(field: FieldDefinition): FieldViewMode
         label: field.label,
         value: field.defaultValue ?? getDefaultValue(field.type),
         type: field.type,
+        renderHint: field.renderHint,
         visible: true,
         editable: true,
         required: field.required ?? false,

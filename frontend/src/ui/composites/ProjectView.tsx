@@ -11,8 +11,9 @@
  * For page-level usage, see ProjectPage which wraps this with layout.
  */
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
+import { ProjectLogView } from './ProjectLogView';
 import { useProjectTree, useRecordDefinitions, useRecords } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
@@ -70,6 +71,9 @@ function collectSubprocesses(
 // ==================== PROJECT VIEW ====================
 
 export function ProjectView({ projectId, className }: ProjectViewProps) {
+    // Tab state for switching between Workflow and Log views
+    const [activeTab, setActiveTab] = useState<'workflow' | 'log'>('workflow');
+
     // Subscribe to nodes directly to ensure reactivity when nodes are updated
     const storeNodes = useHierarchyStore((state) => state.nodes);
     const setNodes = useHierarchyStore((state) => state.setNodes);
@@ -237,18 +241,41 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
     return (
         <div className={`flex-1 flex overflow-hidden bg-white ${className || ''}`}
             data-aa-component="ProjectView"
-            data-aa-view="workflow"
+            data-aa-view={activeTab}
         >
             {/* Left navigation (subprocess list) */}
             <aside className="w-[320px] shrink-0 border-r border-slate-200 bg-slate-50 flex flex-col">
                 <div className="p-3 border-b border-slate-200 bg-white">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Workflow</div>
                     <div className="text-sm font-semibold text-slate-800 truncate" title={project.title}>
                         {project.title}
                     </div>
+                    {/* Tab Switcher */}
+                    <div className="flex gap-1 mt-2">
+                        <button
+                            onClick={() => setActiveTab('workflow')}
+                            className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                                activeTab === 'workflow'
+                                    ? 'bg-slate-900 text-white'
+                                    : 'text-slate-600 hover:bg-slate-100'
+                            }`}
+                        >
+                            Workflow
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('log')}
+                            className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                                activeTab === 'log'
+                                    ? 'bg-slate-900 text-white'
+                                    : 'text-slate-600 hover:bg-slate-100'
+                            }`}
+                        >
+                            Log
+                        </button>
+                    </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-2 custom-scroll">
+                {activeTab === 'workflow' && (
+                    <div className="flex-1 overflow-y-auto p-2 custom-scroll">
                     {subprocesses.length === 0 ? (
                         <div className="p-3 text-xs text-slate-400">No subprocesses yet.</div>
                     ) : (
@@ -277,9 +304,18 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                         </div>
                     )}
                 </div>
+                )}
+                
+                {activeTab === 'log' && (
+                    <div className="flex-1 p-4">
+                        <p className="text-xs font-medium text-slate-600 mb-2">Execution Log</p>
+                        <p className="text-xs text-slate-400">Timeline of all actions and events for this project.</p>
+                    </div>
+                )}
             </aside>
 
             {/* Main content area */}
+            {activeTab === 'workflow' ? (
             <main className="flex-1 flex flex-col overflow-hidden">
                 <div className="h-12 border-b border-slate-200 bg-white px-4 flex items-center justify-between">
                     <div className="min-w-0">
@@ -351,6 +387,9 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                     </div>
                 </div>
             </main>
+            ) : (
+                <ProjectLogView projectId={projectId} />
+            )}
         </div>
     );
 }

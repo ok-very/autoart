@@ -8,10 +8,20 @@ import authPlugin from './plugins/auth.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { hierarchyRoutes } from './modules/hierarchy/hierarchy.routes.js';
 import { recordsRoutes } from './modules/records/records.routes.js';
+import { factKindsRoutes } from './modules/records/fact-kinds.routes.js';
 import { referencesRoutes } from './modules/references/references.routes.js';
 import { searchRoutes } from './modules/search/search.routes.js';
 import { linksRoutes } from './modules/links/links.routes.js';
-import { ingestionRoutes } from './modules/ingestion/ingestion.routes.js';
+// ingestion module deprecated - use imports module instead
+import { actionsRoutes } from './modules/actions/actions.routes.js';
+import { actionReferencesRoutes } from './modules/actions/action-references.routes.js';
+import { eventsRoutes } from './modules/events/events.routes.js';
+import { workflowRoutes } from './modules/events/workflow.routes.js';
+import { workflowSurfaceRoutes } from './modules/projections/workflow-surface.routes.js';
+import { composerRoutes } from './modules/composer/composer.routes.js';
+import { containersRoutes } from './modules/actions/containers.routes.js';
+import { importsRoutes } from './modules/imports/imports.routes.js';
+import { connectionsRoutes } from './modules/imports/connections.routes.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -26,10 +36,15 @@ export async function buildApp(): Promise<FastifyInstance> {
   fastify.setValidatorCompiler(validatorCompiler);
   fastify.setSerializerCompiler(serializerCompiler);
 
-  // Register plugins
+  // Parse and log CORS origins for debugging
+  const corsOrigins = env.CORS_ORIGIN.split(',').map(o => o.trim());
+  console.log('CORS origins configured:', JSON.stringify(corsOrigins));
+
   await fastify.register(cors, {
-    origin: env.CORS_ORIGIN.split(','),
+    origin: corsOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   await fastify.register(cookie, {
@@ -52,7 +67,29 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(referencesRoutes, { prefix: '/api/references' });
   await fastify.register(searchRoutes, { prefix: '/api/search' });
   await fastify.register(linksRoutes, { prefix: '/api/links' });
-  await fastify.register(ingestionRoutes, { prefix: '/api/ingestion' });
+  // ingestion routes deprecated - use /api/imports instead
+
+  // Foundational model routes (Actions & Events)
+  await fastify.register(actionsRoutes, { prefix: '/api/actions' });
+  await fastify.register(actionReferencesRoutes, { prefix: '/api/actions' });
+  await fastify.register(eventsRoutes, { prefix: '/api/events' });
+  await fastify.register(workflowRoutes, { prefix: '/api/workflow' });
+  await fastify.register(workflowSurfaceRoutes, { prefix: '/api/workflow' });
+
+  // Composer - Task Builder on Actions + Events (replaces legacy task creation)
+  await fastify.register(composerRoutes, { prefix: '/api/composer' });
+
+  // Container actions - hierarchical structure (Process, Stage, Subprocess)
+  await fastify.register(containersRoutes, { prefix: '/api/containers' });
+
+  // Import sessions - new projection-driven import workflow
+  await fastify.register(importsRoutes, { prefix: '/api/imports' });
+
+  // External connections management (Monday, Google OAuth)
+  await fastify.register(connectionsRoutes, { prefix: '/api' });
+
+  // Fact kind definitions - Definition Review UI
+  await fastify.register(factKindsRoutes, { prefix: '/api' });
 
   // Global error handler
   fastify.setErrorHandler((error: Error & { validation?: unknown; statusCode?: number; code?: string }, _request, reply) => {

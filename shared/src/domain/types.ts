@@ -9,8 +9,8 @@
  * RULE: Backend services MUST import from here, not reimplement.
  */
 
-import type { FieldDef, RecordDefinition, DataRecord } from '../schemas/records';
-import type { HierarchyNode } from '../schemas/hierarchy';
+import type { FieldDef, RecordDefinition, DataRecord } from '../schemas/records.js';
+import type { HierarchyNode } from '../schemas/hierarchy.js';
 
 // ==================== PROJECT STATE ====================
 
@@ -219,6 +219,9 @@ export interface FieldViewModel {
 
     /** Field type for rendering */
     type: string;
+
+    /** Semantic hint for specialized rendering (e.g., 'email', 'phone', 'person') */
+    renderHint?: string;
 
     /** Whether field is visible */
     visible: boolean;

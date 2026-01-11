@@ -1,89 +1,82 @@
-# Architectural Inventory
-Date: 2026-01-03
+# Architecture Inventory & Deprecation Plan
 
-This document lists the current state of the codebase components, services, and data structures. It is descriptive only and serves as a factual map.
+**Status:** Living Document
+**Last Updated:** 2026-01-03
 
-## 1. Frontend Components (`frontend/src/components/`)
+## 1. System Overview
 
-### Common (`/common`)
-Reusable, generic UI components.
-- `Badge.tsx`, `Button.tsx`, `CloneExcludedToggle.tsx`, `DataFieldWidget.tsx`, `EmojiPicker.tsx`
-- `ErrorBoundary.tsx`, `MentionableInput.tsx`, `PortalMenu.tsx`, `ProgressBar.tsx`
-- `RecordSearchCombobox.tsx`, `ResizeHandle.tsx`, `UserChip.tsx`
+The system is transitioning from a direct CRUD model to an **Action-Event** driven architecture, centered around the **Composer** module.
 
-### Drawer (`/drawer`)
-Sliding side panel management and views.
-- **Registry**: `DrawerRegistry.tsx`
-- **Container**: `BottomDrawer.tsx`
-- **Views** (`/views`):
-    - Creation: `AddFieldView.tsx`, `CreateDefinitionView.tsx`, `CreateLinkView.tsx`, `CreateNodeView.tsx`, `CreateProjectView.tsx`, `CreateRecordView.tsx`
-    - Management: `ClassifyRecordsView.tsx`, `CloneDefinitionView.tsx`, `CloneProjectView.tsx`
-    - Deletion: `ConfirmDeleteView.tsx`
-    - Viewing: `ProjectLibraryDrawer.tsx`, `ViewDefinitionDrawer.tsx`, `ViewRecordDrawer.tsx`
+### Core Modules (New System)
 
-### Editor (`/editor`)
-Rich text editing capabilities (TipTap based).
-- `RichTextEditor.tsx`, `RichTextInput.tsx`
-- Mentions: `MentionChip.tsx`, `MentionExtension.ts`, `MentionSuggestion.tsx`
+| Module | Location | Purpose | Key Endpoints |
+|---|---|---|---|
+| **Composer** | `backend/src/modules/composer` | Single entry point for creating work items (Tasks, Bugs) via the Action+Event model. | `POST /composer`<br>`POST /composer/quick/task`<br>`POST /composer/quick/bug` |
+| **Actions** | `backend/src/modules/actions` | Manages "Intents" or actions that trigger workflows. Actions are immutable. | `POST /actions`<br>`GET /actions/:id` |
+| **Events** | `backend/src/modules/events` | Event stream handling side-effects of Actions. | - |
+| **Drawers** | `frontend/src/components/drawer` | Unified UI for contextual views, replacing Modals. | N/A |
 
-### Hierarchy (`/hierarchy`)
-Tree structure visualization.
-- `Sidebar.tsx`, `TreeNode.tsx`
+### Active Modules (Standard)
 
-### Layout (`/layout`)
-Main application structure and specific layout views.
-- `Header.tsx`, `MainLayout.tsx`, `Workspace.tsx`
-- Views: `CalendarView.tsx`, `MillerColumn.tsx`, `MillerColumnsView.tsx`, `ProjectWorkflowView.tsx`
+| Module | Location | Purpose |
+|---|---|---|
+| **Auth** | `backend/src/modules/auth` | Authentication & Sessions. |
+| **Hierarchy** | `backend/src/modules/hierarchy` | Tree/Hierarchy visualization and management. |
+| **Ingestion** | `backend/src/modules/ingestion` | Data import parsers (e.g., Airtable). |
+| **Search** | `backend/src/modules/search` | Global search functionality. |
+| **Links** | `backend/src/modules/links` | Record-to-record relationships. |
 
-### Modals (`/modals`)
-Dialog components.
-- `Modal.tsx`
-- Specifics: `AddFieldModal.tsx`, `ConfirmDeleteModal.tsx`, `CreateNodeModal.tsx`
+## 2. Legacy Inventory
 
-### Records (`/records`)
-Record listing and categorization.
-- `RecordGrid.tsx`, `RecordTypeSidebar.tsx`
+Components identified as deprecated or superseded by the new system.
 
-### Tables (`/tables`)
-Data grid representations.
-- `DataTable.tsx`, `RecordDataTable.tsx`, `TaskDataTable.tsx`, `UniversalTableView.tsx` (Note: `RecordDataTable` and `TaskDataTable` were not found in scan, verifying `UniversalTableView` and `DataTable` presence)
-- Cells: `EditableCell.tsx`
+| Component | Location | Status | Replacement |
+|---|---|---|---|
+| **Modals** | `frontend/src/components/modals` | **Dead Code** | `frontend/src/components/drawer` |
+| **Legacy Task Tables** | `TaskDataTable.tsx` | **Removed** | `DataTableHierarchy` / `DataTableFlat` |
+| **Ingestion Drawer** | `IngestionDrawer.tsx` | **Removed** | Ingestion View Mode |
+| **Project Templates** | `cloneProjectTemplates` | **Removed** | `cloneProjectDefinitions` |
 
-*Note: The `inspector` directory exists but appears to be empty or deprecated.*
+---
 
-## 2. Backend Services (`backend/src/modules/`)
+## 3. Deprecation Proposals
 
-| Module | Purpose | Key Files |
-| :--- | :--- | :--- |
-| **Auth** | Authentication & Session Management | `auth.routes.ts`, `auth.schemas.ts`, `auth.service.ts` |
-| **Hierarchy** | Tree Structure Management (Projects/Tasks) | `hierarchy.routes.ts`, `hierarchy.schemas.ts`, `hierarchy.service.ts` |
-| **Ingestion** | Data Import/Parsing | `ingestion.routes.ts`, `ingestion.schemas.ts`, `ingestion.service.ts`, `parser.registry.ts` |
-| **Links** | Record-to-Record Relationships | `links.routes.ts`, `links.service.ts` |
-| **Records** | Data Record CRUD & Definitions | `records.routes.ts`, `records.schemas.ts`, `records.service.ts` |
-| **References** | Task-to-Record References | `references.routes.ts`, `references.schemas.ts`, `references.service.ts` |
-| **Search** | Global Search | `search.routes.ts`, `search.service.ts` |
+### Proposal 1: Remove `frontend/src/components/modals` Directory
 
-## 3. Data Entry Points
+**Reasoning:**
+The `modals` directory contains `AddFieldModal.tsx`, `ConfirmDeleteModal.tsx`, `CreateNodeModal.tsx`, and `Modal.tsx`.
+- **Investigation:** A grep search for `from .*modals` in `frontend/src` returned **0 results**.
+- **Conclusion:** These files are completely disconnected from the application.
+- **Risk:** None. The code is unreachable.
 
-### Shared Schemas (`shared/src/schemas/`)
-Single source of truth for validation types.
-- `auth.ts`: Login/Register inputs.
-- `enums.ts`: System-wide enumerations.
-- `fields.ts`: Field definitions and types.
-- `hierarchy.ts`: Node creation/movement.
-- `links.ts`: Link creation inputs.
-- `records.ts`: Definition & Record CRUD.
-- `references.ts`: Reference creation.
-- `search.ts`: Search query inputs.
-- `tasks.ts`: Task-specific validations.
+**Action:** Delete the directory.
 
-## 4. Legacy / Experimental Fields
+### Proposal 2: Enforce Composer for All Creations
 
-### Backend
-- **`backend/src/db/schema.ts`**:
-    - `project_id` on `record_definitions` drives the template library logic.
-    - `clone_excluded` flag handles exclusion of definitions during project cloning.
+**Reasoning:**
+The `composer` module (`POST /composer`) is designed as the single entry point for creating task-like entities to ensure proper Action/Event generation.
+- **Observation:** Direct creation endpoints might still exist in legacy modules (e.g. `records` or `tasks` old endpoints), though `Composer` is now the preferred path.
+- **Recommendation:** Audit `records.routes.ts` or `hierarchy.routes.ts` for direct CREATE operations and mark them as `@deprecated`.
 
-### Historical
-- **`hierarchy_nodes` table**:
-    - `metadata.status`: Logic relying on unstructured status strings is considered legacy (refer to migration history).
+### Proposal 3: Clean up `clone_excluded` Logic
+
+**Reasoning:**
+Documentation mentions `project_id` on `record_definitions` as driving template library logic, and it's potentially legacy.
+- **Action:** Verify if `clone_excluded` fully covers the requirement and remove the old `project_id` based logic if unused.
+## Flags
+
+- **Dead Code:** The `frontend/src/components/modals` directory contains files that are never imported or used in the application.
+- **Missing Component:** `IngestionDrawer.tsx` is referenced in the legacy inventory but does not exist in the codebase.
+- **Documentation Gap:** The README does not mention the new `Drawer` system that replaces modals, leading to potential confusion for new developers.
+- **Header Comments:** Several backend module entry files (e.g., `backend/src/modules/composer/index.ts`, `backend/src/modules/actions/index.ts`) lack top‑level comment headers describing their purpose.
+- **Legacy References:** Documentation still references `Legacy Task Tables` and `Project Templates` which have been removed; these references should be cleaned up.
+- **Composer Usage:** Some API routes in `backend/src/modules/records` still expose direct creation endpoints that bypass the Composer; these should be flagged for deprecation.
+- **Missing Header Comments – Backend Modules:** `backend/src/modules/composer/composer.routes.ts`, `composer.service.ts`, `actions.routes.ts`, `events.routes.ts` lack file‑level comment headers.
+- **Missing Header Comments – Frontend Components:** `frontend/src/components/drawer/DrawerRegistry.tsx`, `drawer/views/ActionInspectorDrawer.tsx`, `inspector/ActionInspector.tsx` lack introductory comments.
+- **Inconsistent Naming – Legacy Files:** `TaskDataTable.tsx` is listed but the file has been removed.
+- **Out‑of‑Date API Documentation:** README lists `npm run dev` for Windows, but the correct command is `npm run dev:win`.
+- **Undocumented Environment Variables:** `.env.example` contains `SMTP_HOST` and `SMTP_PORT` not referenced in docs.
+- **Missing Tests for New Modules:** No test files for `backend/src/modules/composer` and `frontend/src/components/drawer`.
+- **Unreferenced UI Assets:** SVG icons in `frontend/src/components/drawer` are not imported.
+- **Stale Documentation Links:** Demo URLs in README point to outdated paths.
+- **Missing Export Statements:** Module index files (e.g., `backend/src/modules/records/index.ts`) do not re‑export sub‑modules.

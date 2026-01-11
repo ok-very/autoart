@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FieldTypeSchema } from './enums';
+import { FieldTypeSchema } from './enums.js';
 
 /**
  * Status Option Config Schema
@@ -31,6 +31,12 @@ export const FieldDefSchema = z.object({
   required: z.boolean().optional(),
   options: z.array(z.string()).optional(), // For select/status fields - list of values
   defaultValue: z.unknown().optional(),
+  /**
+   * Semantic hint for rendering.
+   * Specifies how to interpret/display the value while keeping base type simple.
+   * Examples: 'phone', 'email', 'url', 'person', 'date', 'timeline', 'file'
+   */
+  renderHint: z.string().optional(),
   /**
    * Whether this field allows # reference triggers.
    * Default: true for text/textarea, false for other types.
@@ -77,6 +83,7 @@ export const RecordDefinitionSchema = z.object({
   project_id: z.string().uuid().nullable(), // If set, belongs to project's template library
   is_template: z.boolean(),
   is_system: z.boolean(), // System definitions (Task, Subtask, etc.) - cannot be deleted
+  kind: z.enum(['record', 'action_recipe', 'container']).default('record'), // Discriminator for definition types
   parent_definition_id: z.string().uuid().nullable(), // For hierarchical types (e.g., Subtask under Task)
   clone_excluded: z.boolean(),
   pinned: z.boolean(),

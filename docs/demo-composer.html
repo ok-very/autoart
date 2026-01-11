@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoArt Action Recorder</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Form Elements */
+        .input-group {
+            transition: all 0.2s;
+        }
+
+        .input-group:focus-within label {
+            color: #3b82f6;
+        }
+
+        .input-group:focus-within input,
+        .input-group:focus-within select,
+        .input-group:focus-within textarea {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
+
+        /* Record Card (Linked Item) */
+        .record-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .record-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="flex flex-col h-full bg-[#f1f5f9]">
+
+    <!-- APP HEADER -->
+    <header
+        class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-50 shadow-sm">
+        <div class="flex items-center gap-4">
+            <button
+                class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors rounded hover:bg-slate-100">
+                <i class="ph ph-x text-xl"></i>
+            </button>
+            <div>
+                <h1 class="text-base font-bold text-slate-800">New Action Record</h1>
+                <div class="text-xs text-slate-500">Create and link an action to the Registry</div>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button class="text-slate-500 hover:text-slate-800 px-3 py-2 text-sm font-medium">Cancel</button>
+            <button
+                class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-6 py-2 rounded-lg shadow transition-colors flex items-center gap-2">
+                <span>Save Action</span>
+                <i class="ph ph-check"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN FORM CONTAINER -->
+    <main class="flex-1 overflow-y-auto custom-scroll p-6 md:p-10">
+        <div class="max-w-3xl mx-auto space-y-8">
+
+            <!-- SECTION 1: CONTEXT (Project Association) -->
+            <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <div
+                        class="w-6 h-6 rounded bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">
+                        1</div>
+                    <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Project Context</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="input-group">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Parent Project</label>
+                        <select
+                            class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:outline-none transition-colors">
+                            <option>West Wall Mural (2025)</option>
+                            <option>Downtown Sculpture Walk</option>
+                            <option>Community Art Center</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Process / Stage</label>
+                        <select
+                            class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-800 focus:outline-none transition-colors">
+                            <option>Surface Preparation</option>
+                            <option>Design Phase</option>
+                            <option>Fabrication</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: IDENTITY (The Action) -->
+            <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <div
+                        class="w-6 h-6 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold">
+                        2</div>
+                    <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Action Definition</h2>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="input-group">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Action Title</label>
+                        <input type="text" placeholder="e.g. Conduct Initial Site Survey"
+                            class="w-full text-lg font-semibold text-slate-800 placeholder-slate-300 border border-slate-200 rounded-lg px-4 py-3 focus:outline-none transition-colors">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="input-group">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Action Type</label>
+                            <select
+                                class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none"
+                                onchange="toggleFields(this.value)">
+                                <option value="standard">Standard Task</option>
+                                <option value="meeting">Meeting / Event</option>
+                                <option value="document">Document Submission</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Owner</label>
+                            <div
+                                class="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg bg-white cursor-pointer hover:border-slate-300">
+                                <div
+                                    class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 text-[10px] font-bold flex items-center justify-center">
+                                    AL</div>
+                                <span class="text-sm text-slate-700">Alex (You)</span>
+                                <i class="ph ph-caret-down ml-auto text-slate-400"></i>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Initial
+                                Status</label>
+                            <select
+                                class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none">
+                                <option>Pending</option>
+                                <option>In Progress</option>
+                                <option>Blocked</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Description /
+                            Notes</label>
+                        <textarea
+                            class="w-full h-24 text-sm text-slate-700 placeholder-slate-400 border border-slate-200 rounded-lg p-3 focus:outline-none resize-none"
+                            placeholder="Add detailed instructions or context..."></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: REGISTRY LINKING (The Core Request) -->
+            <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <div
+                            class="w-6 h-6 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs font-bold">
+                            3</div>
+                        <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Referenced Records</h2>
+                        <p class="text-xs text-slate-500 mb-2">
+                            Actions operate *against* records. These references are semantic inputs.
+                        </p>
+                    </div>
+                    <button class="text-xs text-emerald-600 font-bold hover:underline">+ Link New Record</button>
+                </div>
+
+                <div class="bg-slate-50 rounded-lg p-4 mb-4">
+                    <div class="relative">
+                        <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" placeholder="Search Contacts, Artworks, or Locations to link..."
+                            class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 transition-colors"
+                            onkeydown="simulateSearch(event)">
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-2 ml-1">Type to search existing registry records.</p>
+                </div>
+
+                <!-- Linked Items Container -->
+                <div class="space-y-2" id="linked-records-area">
+                    <!-- Default Link: The Project itself (Implied) -->
+                    <div class="record-card opacity-75">
+                        <div class="w-8 h-8 rounded bg-blue-100 text-blue-600 flex items-center justify-center">
+                            <i class="ph ph-projector-screen"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold text-slate-700">West Wall Mural</div>
+                            <div class="text-[10px] text-slate-500">Project Record · Parent</div>
+                        </div>
+                        <i class="ph ph-lock text-slate-300"></i>
+                    </div>
+
+                    <!-- Example Linked Contact -->
+                    <div class="record-card group">
+                        <div class="w-8 h-8 rounded bg-purple-100 text-purple-600 flex items-center justify-center">
+                            <i class="ph ph-user"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold text-slate-700">Sarah Jenkins</div>
+                            <div class="text-[10px] text-slate-500">Contact Record · Lead Artist</div>
+                        </div>
+                        <button
+                            class="text-slate-300 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="ph ph-x"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: DECLARED FIELDS -->
+            <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 border-dashed">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div
+                            class="w-6 h-6 rounded bg-slate-100 text-slate-500 flex items-center justify-center text-xs font-bold">
+                            4</div>
+                        <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wide">
+                            Declared Action Fields
+                        </h2>
+                    </div>
+                    <button onclick="addFieldPrompt()" class="text-xs font-bold text-indigo-600 hover:underline">
+                        + Add Field
+                    </button>
+                </div>
+
+                <p class="text-xs text-slate-500 mb-4">
+                    Fields are declared for this action instance. They do not imply task semantics.
+                </p>
+
+                <div id="declared-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </section>
+
+
+        </div>
+    </main>
+
+    <script>
+        // --- INTERACTION LOGIC ---
+        const FIELD_TEMPLATES = {
+            due_date: {
+                label: "Due Date",
+                type: "date"
+            },
+            hours: {
+                label: "Estimated Hours",
+                type: "number",
+                placeholder: "0"
+            },
+            location: {
+                label: "Location",
+                type: "text",
+                placeholder: "Physical or virtual"
+            },
+            notes: {
+                label: "Notes",
+                type: "textarea"
+            }
+        };
+
+        function addFieldPrompt() {
+            const choice = prompt(
+                "Declare field:\n" +
+                Object.keys(FIELD_TEMPLATES).join(", ")
+            );
+
+            if (!FIELD_TEMPLATES[choice]) return;
+
+            addDeclaredField(choice);
+        }
+
+        function addDeclaredField(key) {
+            const field = FIELD_TEMPLATES[key];
+            const container = document.getElementById("declared-fields");
+
+            const wrapper = document.createElement("div");
+            wrapper.className =
+                "relative border border-slate-200 rounded-lg p-3 bg-slate-50 fade-in";
+
+            let inputHTML = "";
+
+            if (field.type === "textarea") {
+                inputHTML = `<textarea class="w-full text-sm border border-slate-200 rounded p-2 resize-none"></textarea>`;
+            } else {
+                inputHTML = `<input type="${field.type}" placeholder="${field.placeholder || ""}"
+            class="w-full text-sm border border-slate-200 rounded px-2 py-1.5">`;
+            }
+
+            wrapper.innerHTML = `
+        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">
+            ${field.label}
+        </label>
+        ${inputHTML}
+        <button
+            onclick="this.parentElement.remove()"
+            class="absolute top-2 right-2 text-slate-300 hover:text-red-500"
+        >
+            <i class="ph ph-x"></i>
+        </button>
+    `;
+
+            container.appendChild(wrapper);
+        }
+
+        function toggleFields(type) {
+            const container = document.getElementById('dynamic-fields');
+
+            if (type === 'meeting') {
+                container.innerHTML = `
+                     <div class="input-group fade-in">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Meeting Date & Time</label>
+                        <input type="datetime-local" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none">
+                    </div>
+                     <div class="input-group fade-in">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Location</label>
+                        <input type="text" placeholder="Zoom or Physical Address" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none">
+                    </div>
+                    <div class="input-group fade-in md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Attendees</label>
+                        <input type="text" placeholder="Add names..." class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none">
+                    </div>
+                `;
+            } else if (type === 'document') {
+                container.innerHTML = `
+                     <div class="input-group fade-in">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Submission Deadline</label>
+                        <input type="date" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none">
+                    </div>
+                     <div class="input-group fade-in">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Document Type</label>
+                         <select class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none">
+                            <option>PDF Report</option>
+                            <option>Contract</option>
+                            <option>Image Proof</option>
+                        </select>
+                    </div>
+                `;
+            } else {
+                // Standard
+                container.innerHTML = `
+                    <div class="input-group fade-in">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Due Date</label>
+                        <input type="date" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none">
+                    </div>
+                     <div class="input-group fade-in">
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Estimated Hours</label>
+                        <input type="number" placeholder="0" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none">
+                    </div>
+                `;
+            }
+        }
+
+        function simulateSearch(e) {
+            if (e.key === 'Enter') {
+                const text = e.target.value;
+                if (!text) return;
+
+                const area = document.getElementById('linked-records-area');
+                const newCard = document.createElement('div');
+                newCard.className = "record-card group fade-in";
+                newCard.innerHTML = `
+                     <div class="w-8 h-8 rounded bg-orange-100 text-orange-600 flex items-center justify-center">
+                        <i class="ph ph-map-pin"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-bold text-slate-700">${text}</div>
+                        <div class="text-[10px] text-slate-500">Location Record · Newly Linked</div>
+                    </div>
+                    <button onclick="this.parentElement.remove()" class="text-slate-300 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i class="ph ph-x"></i>
+                    </button>
+                `;
+
+                area.appendChild(newCard);
+                e.target.value = "";
+            }
+        }
+    </script>
+</body>
+
+</html>

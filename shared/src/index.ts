@@ -13,167 +13,62 @@
 // Re-export Zod for convenience
 export { z } from 'zod';
 
-// Enums
-export {
-  NodeTypeSchema,
-  RefModeSchema,
-  ReferenceStatusSchema,
-  FieldTypeSchema,
-  // UI View Mode Schemas
-  ProjectViewModeSchema,
-  RecordsViewModeSchema,
-  FieldsViewModeSchema,
-  ViewModeSchema,
-  PROJECT_VIEW_MODE_LABELS,
-  RECORDS_VIEW_MODE_LABELS,
-  FIELDS_VIEW_MODE_LABELS,
-  type NodeType,
-  type RefMode,
-  type ReferenceStatus,
-  type FieldType,
-  type ProjectViewMode,
-  type RecordsViewMode,
-  type FieldsViewMode,
-  type ViewMode,
-} from './schemas/enums';
+// ==================== SCHEMAS ====================
+// All Zod schemas and their inferred types (authoritative source)
+export * from './schemas/index.js';
 
-// Fields
-export {
-  FieldDescriptorSchema,
-  FieldCategorySchema,
-  FieldIndexSchema,
-  type FieldDescriptor,
-  type FieldCategory,
-  type FieldIndex,
-} from './schemas/fields';
+// ==================== TYPES ====================
+// Pure TypeScript types (projections)
+export * from './types/index.js';
 
-// Hierarchy
-export {
-  HierarchyNodeSchema,
-  CreateNodeInputSchema,
-  UpdateNodeInputSchema,
-  MoveNodeInputSchema,
-  CloneNodeInputSchema,
-  NodeResponseSchema,
-  NodesResponseSchema,
-  ProjectsResponseSchema,
-  type HierarchyNode,
-  type CreateNodeInput,
-  type UpdateNodeInput,
-  type MoveNodeInput,
-  type CloneNodeInput,
-} from './schemas/hierarchy';
+// ==================== DOMAIN ====================
+// Domain logic: field visibility, completeness, reference resolution, etc.
+// Note: ReferenceStatus and ResolvedReference are NOT re-exported here
+// because they conflict with schemas. Use schema versions or import domain directly.
+export type {
+  ProjectState,
+  FieldDefinition,
+  FieldState,
+  MissingField,
+  PhaseProgressionResult,
+  Reference,
+  FieldViewModel,
+  EntityContext,
+} from './domain/index.js';
 
-// Records & Definitions
 export {
-  StatusOptionConfigSchema,
-  StatusConfigSchema,
-  FieldDefSchema,
-  SchemaConfigSchema,
-  StylingSchema,
-  RecordDefinitionSchema,
-  DataRecordSchema,
-  CreateDefinitionInputSchema,
-  UpdateDefinitionInputSchema,
-  CreateRecordInputSchema,
-  UpdateRecordInputSchema,
-  BulkClassifyInputSchema,
-  BulkDeleteInputSchema,
-  SaveToLibraryInputSchema,
-  ToggleCloneExcludedInputSchema,
-  RecordStatSchema,
-  DefinitionResponseSchema,
-  DefinitionsResponseSchema,
-  RecordResponseSchema,
-  RecordsResponseSchema,
-  RecordStatsResponseSchema,
-  BulkOperationResponseSchema,
-  getFieldAllowReferences,
-  type StatusOptionConfig,
-  type StatusConfig,
-  type FieldDef,
-  type SchemaConfig,
-  type Styling,
-  type RecordDefinition,
-  type DataRecord,
-  type CreateDefinitionInput,
-  type UpdateDefinitionInput,
-  type CreateRecordInput,
-  type UpdateRecordInput,
-  type BulkClassifyInput,
-  type BulkDeleteInput,
-  type SaveToLibraryInput,
-  type ToggleCloneExcludedInput,
-  type RecordStat,
-} from './schemas/records';
+  // Field visibility
+  getFieldState,
+  getFieldStates,
+  getVisibleFields,
+  isFieldEditable,
+  getRequiredFields,
+  // Completeness
+  isValueMissing,
+  getMissingFieldsForEntity,
+  getMissingFields,
+  getCompletenessPercentage,
+  countMissingBySeverity,
+  // Reference resolution
+  resolveReference,
+  resolveReferences,
+  detectBrokenReferences,
+  referenceTargetExists,
+  getReferenceStatusLabel,
+  getReferenceStatusSeverity,
+  validateReference,
+  // Phase progression
+  canAdvancePhase,
+  getMaxReachablePhase,
+  getPhaseReadinessSummary,
+  getPhaseBlockers,
+  validatePhaseTransition,
+  // Field view model
+  buildFieldViewModel,
+  buildFieldViewModels,
+  filterVisibleViewModels,
+  groupViewModelsByCategory,
+  createEmptyFieldViewModel,
+} from './domain/index.js';
 
-// References
-export {
-  TaskReferenceSchema,
-  ResolvedReferenceSchema,
-  CreateReferenceInputSchema,
-  UpdateReferenceModeInputSchema,
-  UpdateReferenceSnapshotInputSchema,
-  BulkResolveInputSchema,
-  ReferenceResponseSchema,
-  ReferencesResponseSchema,
-  ResolvedReferenceResponseSchema,
-  DriftCheckResponseSchema,
-  type TaskReference,
-  type ResolvedReference,
-  type CreateReferenceInput,
-  type UpdateReferenceModeInput,
-  type UpdateReferenceSnapshotInput,
-  type BulkResolveInput,
-} from './schemas/references';
-
-// Auth
-export {
-  UserSchema,
-  LoginInputSchema,
-  RegisterInputSchema,
-  AuthResponseSchema,
-  RefreshResponseSchema,
-  type User,
-  type LoginInput,
-  type RegisterInput,
-  type AuthResponse,
-  type RefreshResponse,
-} from './schemas/auth';
-
-// Search
-export {
-  SearchResultSchema,
-  SearchQueryInputSchema,
-  SearchResponseSchema,
-  type SearchResult,
-  type SearchQueryInput,
-} from './schemas/search';
-
-// Links
-export {
-  RecordLinkSchema,
-  CreateLinkInputSchema,
-  LinkResponseSchema,
-  LinksResponseSchema,
-  type RecordLink,
-  type CreateLinkInput,
-} from './schemas/links';
-
-// Tasks
-export {
-  TaskStatusSchema,
-  TaskMetadataSchema,
-  TaskFieldDefSchema,
-  TASK_STATUS_CONFIG,
-  DEFAULT_TASK_FIELDS,
-  parseTaskMetadata,
-  deriveTaskStatus,
-  coercePercentComplete,
-  isActiveStatus,
-  getStatusConfig,
-  getStatusDisplay,
-  type TaskStatus,
-  type TaskMetadata,
-  type TaskFieldDef,
-} from './schemas/tasks';
+export type { BuildFieldViewModelOptions } from './domain/index.js';

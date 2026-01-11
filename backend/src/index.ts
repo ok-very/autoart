@@ -7,6 +7,7 @@ async function start() {
   try {
     await app.listen({ port: env.PORT, host: env.HOST });
     console.log(`Server running at http://${env.HOST}:${env.PORT}`);
+    console.log(`CORS origins allowed: ${env.CORS_ORIGIN}`);
   } catch (err) {
     app.log.error(err);
     process.exit(1);

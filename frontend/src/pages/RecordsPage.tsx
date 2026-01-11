@@ -1,27 +1,30 @@
-import { useCallback, useState, useEffect } from 'react';
-import { Header } from '../components/layout/Header';
-import { RecordTypeSidebar } from '../components/records/RecordTypeSidebar';
-import { UniversalTableView } from '../components/tables/UniversalTableView';
-import { BottomDrawer } from '../components/drawer/BottomDrawer';
-import { ResizeHandle } from '../components/common/ResizeHandle';
-import { useUIStore, isRecordsViewMode } from '../stores/uiStore';
-import { IngestionView, RecordInspector } from '../ui/composites';
-
 /**
- * Records workspace page for managing records (contacts, artworks, locations, etc.)
- * outside of the project hierarchy context.
+ * RecordsPage
  *
- * Uses the UniversalTableView component for unified visualization of any record type.
- * Layout: Left sidebar (definition types) | Main table (records) | Right inspector
+ * Registry view for Record Definitions and Record Instances.
  *
- * View Modes:
- * - list: Standard table view of records
- * - ingest: Data ingestion/import interface
+ * Structure:
+ * - Definitions tab: Record Definitions (definition_kind='record')
+ * - Instances tab: Record instances filtered by selected definition
+ *
+ * Layout: Left sidebar (definition list) | Main content | Right inspector
  */
+
+import { useCallback, useState, useEffect } from 'react';
+import { Database } from 'lucide-react';
+import { Header } from '../ui/layout/Header';
+import { RecordView } from '../ui/composites/RecordView';
+import { BottomDrawer } from '../ui/drawer/BottomDrawer';
+import { ResizeHandle } from '../ui/common/ResizeHandle';
+import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../ui/registry';
+import { useUIStore, isRecordsViewMode } from '../stores/uiStore';
+import { SelectionInspector } from '../ui/composites';
+
 export function RecordsPage() {
-  const { inspectorWidth, setInspectorWidth, viewMode, setViewMode } = useUIStore();
-  const [sidebarWidth, setSidebarWidth] = useState(240);
+  const { inspectorWidth, setInspectorWidth, viewMode, setViewMode, openDrawer } = useUIStore();
+  const [sidebarWidth, setSidebarWidth] = useState(260);
   const [selectedDefinitionId, setSelectedDefinitionId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<RegistryTab>('instances');
 
   // Ensure we're using a valid RecordsViewMode when on this page
   useEffect(() => {
@@ -32,7 +35,7 @@ export function RecordsPage() {
 
   const handleSidebarResize = useCallback(
     (delta: number) => {
-      setSidebarWidth((w) => Math.max(180, Math.min(400, w + delta)));
+      setSidebarWidth((w) => Math.max(200, Math.min(400, w + delta)));
     },
     []
   );
@@ -44,49 +47,71 @@ export function RecordsPage() {
     [inspectorWidth, setInspectorWidth]
   );
 
-  // Determine which view to show based on view mode
-  const isIngestMode = viewMode === 'ingest';
+  const handleSelectDefinition = (id: string | null) => {
+    setSelectedDefinitionId(id);
+  };
+
+  const handleCreateDefinition = () => {
+    openDrawer('create-definition', { definitionKind: 'record' });
+  };
 
   return (
     <div className="flex flex-col h-full">
       <Header />
       <div className="flex flex-1 flex-col overflow-hidden">
         <div className="flex flex-1 overflow-hidden">
-          {/* Ingest mode - full width ingestion view */}
-          {isIngestMode ? (
-            <IngestionView />
-          ) : (
-            <>
-              {/* Record Type Sidebar */}
-              <RecordTypeSidebar
-                width={sidebarWidth}
-                selectedDefinitionId={selectedDefinitionId}
-                onSelectDefinition={setSelectedDefinitionId}
-              />
-              <ResizeHandle direction="right" onResize={handleSidebarResize} />
+          {/* Definition Sidebar - Records only */}
+          <DefinitionListSidebar
+            width={sidebarWidth}
+            selectedDefinitionId={selectedDefinitionId}
+            onSelectDefinition={handleSelectDefinition}
+            definitionKind="record"
+          />
+          <ResizeHandle direction="right" onResize={handleSidebarResize} />
 
-              {/* Main Table Area - Using UniversalTableView for unified visualization */}
-              <div className="flex-1 overflow-hidden">
-                <UniversalTableView
+          {/* Main Content Area */}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            {/* Page Header with tabs */}
+            <RegistryPageHeader
+              title="Records"
+              icon={Database}
+              showCreateButton={activeTab === 'definitions'}
+              onCreateClick={handleCreateDefinition}
+              createLabel="Create Record Definition"
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              showTabSwitch={true}
+            />
+
+            {/* Content based on tab */}
+            <div className="flex-1 overflow-hidden">
+              {activeTab === 'definitions' ? (
+                <div className="h-full flex items-center justify-center text-slate-400">
+                  <div className="text-center">
+                    <p className="text-lg font-medium text-slate-600">Record Definitions</p>
+                    <p>Select a definition from the sidebar to view its schema.</p>
+                  </div>
+                </div>
+              ) : (
+                <RecordView
                   definitionId={selectedDefinitionId}
-                  onDefinitionChange={setSelectedDefinitionId}
-                  showDefinitionSelector={false} // Using sidebar instead
-                  allowCreate
-                  allowBulkDelete
-                  allowEdit
+                  onDefinitionChange={(id) => setSelectedDefinitionId(id)}
                   className="h-full"
                 />
-              </div>
+              )}
+            </div>
+          </div>
 
-              <ResizeHandle direction="left" onResize={handleInspectorResize} />
+          <ResizeHandle direction="left" onResize={handleInspectorResize} />
 
-              {/* Right Inspector */}
-              <RecordInspector />
-            </>
-          )}
+          {/* Right Inspector */}
+          <SelectionInspector />
         </div>
         <BottomDrawer />
       </div>
     </div>
   );
 }
+
+// Legacy export alias
+export { RecordsPage as RegistryPage };

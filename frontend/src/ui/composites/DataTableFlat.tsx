@@ -11,19 +11,25 @@
  * - Dynamic columns from definition schema
  * - Inline editing via EditableCell
  * - Column visibility picker
- * - Sorting (internal state)
+ * - Sorting (delegated to UniversalTableCore)
  * - Row selection with multi-select
  * - Pagination (internal state)
  * - Builds FieldViewModels for cells
+ *
+ * Architecture:
+ * - Uses UniversalTableCore for rendering
+ * - Wrapper handles pagination, selection, column visibility
+ * - Wrapper provides cell() functions with domain factory calls
  */
 
 import { useState, useMemo, useCallback } from 'react';
 import { clsx } from 'clsx';
-import { ArrowUpDown, Columns, ChevronUp, ChevronDown, Plus } from 'lucide-react';
+import { Columns, Plus } from 'lucide-react';
 import { EditableCell } from '../molecules/EditableCell';
 import { DataFieldWidget, type DataFieldKind } from '../molecules/DataFieldWidget';
 import { StatusColumnSummary } from '../molecules/StatusColumnSummary';
 import { buildFieldViewModel, type FieldViewModel, type FieldDefinition, type ProjectState, type EntityContext } from '@autoart/shared/domain';
+import { UniversalTableCore, makeFlatRowModel, type TableColumn as CoreTableColumn, type TableRow, type TableFeature } from '../table-core';
 import type { DataRecord, RecordDefinition, FieldDef } from '../../types';
 
 // ==================== TYPES ====================
@@ -88,9 +94,6 @@ export interface DataTableFlatProps {
     className?: string;
 }
 
-type SortDirection = 'asc' | 'desc';
-type SortConfig = { key: string; direction: SortDirection } | null;
-
 // ==================== COLUMN VISIBILITY PICKER ====================
 
 interface ColumnPickerProps {
@@ -140,7 +143,7 @@ function ColumnPicker({ allColumns, visibleKeys, onToggle }: ColumnPickerProps) 
     );
 }
 
-// ==================== UNIVERSAL TABLE VIEW ====================
+// ==================== HELPERS ====================
 
 /**
  * Create minimal project state for building view models
@@ -155,6 +158,8 @@ function createMinimalProjectState(): ProjectState {
         metadata: {},
     };
 }
+
+// ==================== DATA TABLE FLAT ====================
 
 /**
  * DataTableFlat - Table composite for flat DataRecord data
@@ -180,7 +185,6 @@ export function DataTableFlat({
     className,
 }: DataTableFlatProps) {
     // Internal state
-    const [sortConfig, setSortConfig] = useState<SortConfig>(null);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [internalVisibleKeys, setInternalVisibleKeys] = useState<Set<string>>(new Set());
     const [page, setPage] = useState(0);
@@ -200,7 +204,6 @@ export function DataTableFlat({
         };
 
         // Dynamic columns from schema
-        // Skip 'name' or 'unique_name' fields since they're already shown in the first column
         const fields = definition?.schema_config?.fields || [];
         const fieldColumns = fields
             .filter((field: FieldDef) => field.key !== 'name' && field.key !== 'unique_name')
@@ -256,51 +259,15 @@ export function DataTableFlat({
         return allColumns.filter((col) => visibleColumnKeys.has(col.key));
     }, [allColumns, visibleColumnKeys]);
 
-    // Sort records
-    const sortedRecords = useMemo(() => {
-        if (!sortConfig) return records;
-
-        return [...records].sort((a, b) => {
-            let aVal: unknown;
-            let bVal: unknown;
-
-            if (sortConfig.key === 'unique_name') {
-                aVal = a.unique_name;
-                bVal = b.unique_name;
-            } else if (sortConfig.key === 'updated_at') {
-                aVal = a.updated_at;
-                bVal = b.updated_at;
-            } else {
-                aVal = a.data?.[sortConfig.key];
-                bVal = b.data?.[sortConfig.key];
-            }
-
-            if (aVal === undefined || aVal === null) return 1;
-            if (bVal === undefined || bVal === null) return -1;
-
-            const comparison = String(aVal).localeCompare(String(bVal));
-            return sortConfig.direction === 'asc' ? comparison : -comparison;
-        });
-    }, [records, sortConfig]);
-
-    // Paginate
+    // Paginate records (sorting delegated to core)
     const paginatedRecords = useMemo(() => {
         const start = page * pageSize;
-        return sortedRecords.slice(start, start + pageSize);
-    }, [sortedRecords, page, pageSize]);
+        return records.slice(start, start + pageSize);
+    }, [records, page, pageSize]);
 
-    const totalPages = Math.ceil(sortedRecords.length / pageSize);
+    const totalPages = Math.ceil(records.length / pageSize);
 
     // Handlers
-    const handleSort = useCallback((key: string) => {
-        setSortConfig((prev) => {
-            if (prev?.key === key) {
-                return prev.direction === 'asc' ? { key, direction: 'desc' } : null;
-            }
-            return { key, direction: 'asc' };
-        });
-    }, []);
-
     const handleToggleColumn = useCallback((key: string) => {
         setInternalVisibleKeys((prev) => {
             const next = new Set(prev.size > 0 ? prev : visibleColumnKeys);
@@ -385,40 +352,256 @@ export function DataTableFlat({
         };
     }, [editable]);
 
-    // Render cell content
-    const renderCellContent = useCallback((record: DataRecord, column: TableColumn) => {
-        const viewModel = buildCellViewModel(record, column);
+    // Convert wrapper columns to core columns with cell() functions
+    const coreColumns = useMemo<CoreTableColumn[]>(() => {
+        const cols: CoreTableColumn[] = [];
 
-        // Custom renderer
-        if (column.renderCell) {
-            return column.renderCell(record, viewModel);
+        // Checkbox column for multi-select
+        if (multiSelect) {
+            const allOnPageSelected = paginatedRecords.length > 0 &&
+                paginatedRecords.every((r) => selectedIds.has(r.id));
+
+            cols.push({
+                id: '__checkbox__',
+                header: '',
+                width: 40,
+                resizable: false,
+                renderHeader: () => (
+                    <input
+                        type="checkbox"
+                        checked={allOnPageSelected}
+                        onChange={handleSelectAll}
+                        className="rounded border-slate-300"
+                    />
+                ),
+                cell: (row: TableRow) => {
+                    const record = row.data as DataRecord;
+                    const isSelected = selectedIds.has(record.id);
+                    return (
+                        <div onClick={(e) => e.stopPropagation()}>
+                            <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => handleSelectOne(record.id)}
+                                className="rounded border-slate-300"
+                            />
+                        </div>
+                    );
+                },
+            });
         }
 
-        // Updated at special handling
-        if (column.key === 'updated_at') {
-            const date = record.updated_at ? new Date(record.updated_at) : null;
-            return (
-                <div className="text-xs text-slate-500">
-                    {date ? date.toLocaleDateString() : '-'}
-                </div>
-            );
+        // Data columns
+        for (const col of displayColumns) {
+            cols.push({
+                id: col.key,
+                header: col.label,
+                width: col.width,
+                minWidth: col.minWidth,
+                resizable: col.resizable,
+                align: 'left',
+                // sortKey for sortable columns
+                sortKey: col.sortable ? (row: TableRow) => {
+                    const record = row.data as DataRecord;
+                    if (col.key === 'unique_name') return record.unique_name;
+                    if (col.key === 'updated_at') return record.updated_at || '';
+                    const val = record.data?.[col.key];
+                    return val == null ? null : String(val);
+                } : undefined,
+                // cell renderer with EditableCell
+                cell: (row: TableRow) => {
+                    const record = row.data as DataRecord;
+                    const viewModel = buildCellViewModel(record, col);
+
+                    // Custom renderer
+                    if (col.renderCell) {
+                        return col.renderCell(record, viewModel);
+                    }
+
+                    // Updated at special handling
+                    if (col.key === 'updated_at') {
+                        const date = record.updated_at ? new Date(record.updated_at) : null;
+                        return (
+                            <div className="text-xs text-slate-500">
+                                {date ? date.toLocaleDateString() : '-'}
+                            </div>
+                        );
+                    }
+
+                    // Editable cell
+                    if (col.editable && editable) {
+                        return (
+                            <EditableCell
+                                viewModel={viewModel}
+                                onSave={(fieldId, value) => handleCellSave(record.id, fieldId, value)}
+                                width={col.width}
+                            />
+                        );
+                    }
+
+                    // Read-only display
+                    const renderAs = (col.field?.type || 'text') as DataFieldKind;
+                    return <DataFieldWidget kind={renderAs} value={viewModel.value} />;
+                },
+            });
         }
 
-        // Editable cell
-        if (column.editable && editable) {
-            return (
-                <EditableCell
-                    viewModel={viewModel}
-                    onSave={(fieldId, value) => handleCellSave(record.id, fieldId, value)}
-                    width={column.width}
+        return cols;
+    }, [displayColumns, multiSelect, selectedIds, buildCellViewModel, editable, handleCellSave, handleSelectOne]);
+
+    // Row model from paginated records
+    const rowModel = useMemo(() => {
+        return makeFlatRowModel(paginatedRecords);
+    }, [paginatedRecords]);
+
+    // Features: column picker in toolbar
+    const features = useMemo<TableFeature[]>(() => {
+        if (renderHeader) return []; // Custom header replaces default
+
+        return [{
+            id: 'column-picker',
+            renderToolbarRight: () => (
+                <ColumnPicker
+                    allColumns={allColumns}
+                    visibleKeys={visibleColumnKeys}
+                    onToggle={handleToggleColumn}
                 />
-            );
-        }
+            ),
+        }];
+    }, [renderHeader, allColumns, visibleColumnKeys, handleToggleColumn]);
 
-        // Read-only display
-        const renderAs = (column.field?.type || 'text') as DataFieldKind;
-        return <DataFieldWidget kind={renderAs} value={viewModel.value} />;
-    }, [buildCellViewModel, editable, handleCellSave]);
+    // Select-all checkbox in header feature
+    const selectAllFeature = useMemo<TableFeature | null>(() => {
+        if (!multiSelect) return null;
+        return {
+            id: 'select-all',
+            decorateColumns: (cols) => {
+                // Find checkbox column and add header checkbox
+                return cols.map((col) => {
+                    if (col.id === '__checkbox__') {
+                        return {
+                            ...col,
+                            // Header will show select-all checkbox via custom render
+                        };
+                    }
+                    return col;
+                });
+            },
+        };
+    }, [multiSelect]);
+
+    const allFeatures = useMemo(() => {
+        return [...features, selectAllFeature].filter(Boolean) as TableFeature[];
+    }, [features, selectAllFeature]);
+
+    // Get row class for selection highlighting
+    const getRowClassName = useCallback((row: TableRow) => {
+        const record = row.data as DataRecord;
+        const isActive = selectedRecordId === record.id;
+        const isSelected = selectedIds.has(record.id);
+        if (isActive) return 'bg-blue-50';
+        if (isSelected) return 'bg-blue-25';
+        return '';
+    }, [selectedRecordId, selectedIds]);
+
+    // Status summary footer
+    const statusSummaryFooter = useCallback(() => {
+        const statusColumns = displayColumns.filter((col) => col.field?.type === 'status');
+        if (statusColumns.length === 0) return null;
+
+        return (
+            <div className="flex items-center h-10 border-t border-slate-200">
+                {/* Checkbox placeholder */}
+                {multiSelect && <div className="w-10 px-3" />}
+
+                {/* Columns with status summary */}
+                {displayColumns.map((col) => {
+                    if (col.field?.type === 'status') {
+                        const statusCounts: Record<string, number> = {};
+                        for (const record of records) {
+                            const statusValue = String(record.data?.[col.key] || '');
+                            if (statusValue) {
+                                statusCounts[statusValue] = (statusCounts[statusValue] || 0) + 1;
+                            }
+                        }
+
+                        const countsArray = Object.entries(statusCounts).map(([status, count]) => ({
+                            status,
+                            count,
+                        }));
+
+                        let colorConfig: Record<string, { bgClass: string }> | undefined;
+                        const fieldWithConfig = col.field as (typeof col.field) & { statusConfig?: Record<string, { colorClass: string }> };
+                        if (fieldWithConfig?.statusConfig) {
+                            colorConfig = Object.fromEntries(
+                                Object.entries(fieldWithConfig.statusConfig).map(([status, config]) => [
+                                    status,
+                                    { bgClass: config.colorClass || 'bg-slate-400' },
+                                ])
+                            );
+                        }
+
+                        return (
+                            <div key={col.key} className="px-3" style={{ width: col.width }}>
+                                <StatusColumnSummary counts={countsArray} colorConfig={colorConfig} />
+                            </div>
+                        );
+                    }
+
+                    return <div key={col.key} className="px-3" style={{ width: col.width }} />;
+                })}
+            </div>
+        );
+    }, [displayColumns, records, multiSelect]);
+
+    // Combined footer with status summary and pagination
+    const combinedFooter = useCallback(() => {
+        const statusFooter = statusSummaryFooter();
+        const hasStatusFooter = !!statusFooter;
+        const hasPagination = totalPages > 1;
+        const hasCustomFooter = !!renderFooter;
+
+        if (!hasStatusFooter && !hasPagination && !hasCustomFooter) return null;
+
+        return (
+            <>
+                {statusFooter}
+                {hasCustomFooter ? (
+                    renderFooter({
+                        totalRecords: records.length,
+                        page,
+                        totalPages,
+                        selectedIds,
+                    })
+                ) : hasPagination && (
+                    <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-t border-slate-200">
+                        <span className="text-xs text-slate-500">
+                            {records.length} record{records.length !== 1 ? 's' : ''}
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                                disabled={page === 0}
+                                className="px-2 py-1 text-xs rounded border border-slate-200 hover:bg-slate-100 disabled:opacity-50"
+                            >
+                                Prev
+                            </button>
+                            <span className="text-xs text-slate-500">
+                                Page {page + 1} of {totalPages}
+                            </span>
+                            <button
+                                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                                disabled={page >= totalPages - 1}
+                                className="px-2 py-1 text-xs rounded border border-slate-200 hover:bg-slate-100 disabled:opacity-50"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </>
+        );
+    }, [statusSummaryFooter, totalPages, renderFooter, records.length, page, selectedIds]);
 
     // Loading state
     if (isLoading) {
@@ -429,7 +612,7 @@ export function DataTableFlat({
         );
     }
 
-    // Empty state
+    // Empty state - no definition
     if (!definition) {
         return (
             <div className={clsx('flex flex-col items-center justify-center h-64 text-slate-400', className)}>
@@ -439,6 +622,7 @@ export function DataTableFlat({
         );
     }
 
+    // Empty state - no records
     if (records.length === 0) {
         return (
             <div className={clsx('flex flex-col items-center justify-center h-64 text-slate-400', className)}>
@@ -449,171 +633,21 @@ export function DataTableFlat({
 
     return (
         <div className={clsx('flex flex-col h-full', className)}>
-            {/* Optional header */}
-            {renderHeader ? (
-                renderHeader()
-            ) : (
-                <div className="flex items-center justify-end px-2 py-1 bg-slate-50 border-b border-slate-200">
-                    <ColumnPicker
-                        allColumns={allColumns}
-                        visibleKeys={visibleColumnKeys}
-                        onToggle={handleToggleColumn}
-                    />
-                </div>
-            )}
+            {/* Custom header */}
+            {renderHeader && renderHeader()}
 
-            {/* Table */}
-            <div className="flex-1 overflow-auto">
-                <table className="w-full border-collapse">
-                    <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 z-10">
-                        <tr>
-                            {/* Checkbox column */}
-                            {multiSelect && (
-                                <th className="w-10 px-3 py-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={paginatedRecords.length > 0 && paginatedRecords.every((r) => selectedIds.has(r.id))}
-                                        onChange={handleSelectAll}
-                                        className="rounded border-slate-300"
-                                    />
-                                </th>
-                            )}
-
-                            {/* Data columns */}
-                            {displayColumns.map((col) => (
-                                <th
-                                    key={col.key}
-                                    onClick={col.sortable ? () => handleSort(col.key) : undefined}
-                                    className={clsx(
-                                        'px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase',
-                                        col.sortable && 'cursor-pointer hover:bg-slate-100'
-                                    )}
-                                    style={{ width: col.width, minWidth: col.minWidth }}
-                                >
-                                    <div className="flex items-center gap-1">
-                                        {col.label}
-                                        {sortConfig?.key === col.key && (
-                                            sortConfig.direction === 'asc'
-                                                ? <ChevronUp size={12} />
-                                                : <ChevronDown size={12} />
-                                        )}
-                                        {col.sortable && sortConfig?.key !== col.key && (
-                                            <ArrowUpDown size={10} className="text-slate-300" />
-                                        )}
-                                    </div>
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginatedRecords.map((record) => {
-                            const isSelected = selectedIds.has(record.id);
-                            const isActive = selectedRecordId === record.id;
-
-                            return (
-                                <tr
-                                    key={record.id}
-                                    onClick={() => handleRowClick(record.id)}
-                                    className={clsx(
-                                        'border-b border-slate-100 cursor-pointer transition-colors',
-                                        isActive && 'bg-blue-50',
-                                        isSelected && !isActive && 'bg-blue-25',
-                                        !isActive && !isSelected && 'hover:bg-slate-50'
-                                    )}
-                                >
-                                    {/* Checkbox */}
-                                    {multiSelect && (
-                                        <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
-                                            <input
-                                                type="checkbox"
-                                                checked={isSelected}
-                                                onChange={() => handleSelectOne(record.id)}
-                                                className="rounded border-slate-300"
-                                            />
-                                        </td>
-                                    )}
-
-                                    {/* Data cells */}
-                                    {displayColumns.map((col) => (
-                                        <td
-                                            key={col.key}
-                                            className={clsx(
-                                                'px-3 text-sm',
-                                                compact ? 'py-1' : 'py-2'
-                                            )}
-                                            style={{ width: col.width, minWidth: col.minWidth }}
-                                        >
-                                            {renderCellContent(record, col)}
-                                        </td>
-                                    ))}
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                    {/* Status column summary footer */}
-                    {displayColumns.some((col) => col.field?.type === 'status') && (
-                        <tfoot className="sticky bottom-0 z-10 bg-slate-50 border-t border-slate-200">
-                            <tr>
-                                {/* Checkbox column placeholder */}
-                                {multiSelect && <td className="px-3 py-2" />}
-
-                                {/* Data columns - show status counts only under status columns */}
-                                {displayColumns.map((col) => {
-                                    if (col.field?.type === 'status') {
-                                        // Calculate status counts for this column
-                                        const statusCounts: Record<string, number> = {};
-                                        for (const record of sortedRecords) {
-                                            const statusValue = String(record.data?.[col.key] || '');
-                                            if (statusValue) {
-                                                statusCounts[statusValue] = (statusCounts[statusValue] || 0) + 1;
-                                            }
-                                        }
-
-                                        const countsArray = Object.entries(statusCounts).map(([status, count]) => ({
-                                            status,
-                                            count,
-                                        }));
-
-                                        // Build color config from field statusConfig or use defaults
-                                        let colorConfig: Record<string, { bgClass: string }> | undefined;
-                                        const fieldWithConfig = col.field as (typeof col.field) & { statusConfig?: Record<string, { colorClass: string }> };
-                                        if (fieldWithConfig?.statusConfig) {
-                                            colorConfig = Object.fromEntries(
-                                                Object.entries(fieldWithConfig.statusConfig).map(([status, config]) => [
-                                                    status,
-                                                    { bgClass: config.colorClass || 'bg-slate-400' },
-                                                ])
-                                            );
-                                        }
-
-                                        return (
-                                            <td
-                                                key={col.key}
-                                                className="px-3 py-2"
-                                                style={{ width: col.width, minWidth: col.minWidth }}
-                                            >
-                                                <StatusColumnSummary
-                                                    counts={countsArray}
-                                                    colorConfig={colorConfig}
-                                                />
-                                            </td>
-                                        );
-                                    }
-
-                                    // Empty placeholder for non-status columns
-                                    return (
-                                        <td
-                                            key={col.key}
-                                            className="px-3 py-2"
-                                            style={{ width: col.width, minWidth: col.minWidth }}
-                                        />
-                                    );
-                                })}
-                            </tr>
-                        </tfoot>
-                    )}
-                </table>
-            </div>
+            {/* Core table */}
+            <UniversalTableCore
+                rowModel={rowModel}
+                columns={coreColumns}
+                features={allFeatures}
+                onRowClick={handleRowClick}
+                getRowClassName={getRowClassName}
+                stickyHeader
+                stickyFooter
+                compact={compact}
+                renderFooter={combinedFooter}
+            />
 
             {/* Add Record button */}
             {onAddRecord && (
@@ -624,41 +658,6 @@ export function DataTableFlat({
                     <Plus size={14} />
                     <span>Add {definition?.name || 'Record'}</span>
                 </button>
-            )}
-
-            {/* Footer */}
-            {renderFooter ? (
-                renderFooter({
-                    totalRecords: sortedRecords.length,
-                    page,
-                    totalPages,
-                    selectedIds,
-                })
-            ) : totalPages > 1 && (
-                <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-t border-slate-200">
-                    <span className="text-xs text-slate-500">
-                        {sortedRecords.length} record{sortedRecords.length !== 1 ? 's' : ''}
-                    </span>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setPage((p) => Math.max(0, p - 1))}
-                            disabled={page === 0}
-                            className="px-2 py-1 text-xs rounded border border-slate-200 hover:bg-slate-100 disabled:opacity-50"
-                        >
-                            Prev
-                        </button>
-                        <span className="text-xs text-slate-500">
-                            Page {page + 1} of {totalPages}
-                        </span>
-                        <button
-                            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                            disabled={page >= totalPages - 1}
-                            className="px-2 py-1 text-xs rounded border border-slate-200 hover:bg-slate-100 disabled:opacity-50"
-                        >
-                            Next
-                        </button>
-                    </div>
-                </div>
             )}
         </div>
     );

@@ -1,0 +1,519 @@
+/**
+ * Composer Global Styles
+ * 
+ * Consolidated styles for the unified ComposerSurface component.
+ * Matches demo-composer.html aesthetic with premium polish.
+ */
+
+/* ============================================
+   CSS Variables for Composer
+   ============================================ */
+
+.composer-surface {
+    --composer-bg: #f8fafc;
+    --composer-card-bg: #ffffff;
+    --composer-border: #e2e8f0;
+    --composer-border-active: #3b82f6;
+    --composer-text: #0f172a;
+    --composer-text-muted: #64748b;
+    --composer-text-label: #475569;
+    --composer-accent-blue: #3b82f6;
+    --composer-accent-green: #22c55e;
+    --composer-accent-purple: #8b5cf6;
+    --composer-accent-amber: #f59e0b;
+    --composer-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --composer-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --composer-radius: 12px;
+    --composer-radius-sm: 8px;
+}
+
+/* ============================================
+   Composer Layout
+   ============================================ */
+
+.composer-surface {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--composer-bg);
+    color: var(--composer-text);
+}
+
+.composer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    padding: 0 24px;
+    background: var(--composer-card-bg);
+    border-bottom: 1px solid var(--composer-border);
+    box-shadow: var(--composer-shadow-sm);
+    flex-shrink: 0;
+    z-index: 50;
+}
+
+.composer-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.composer-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.composer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+/* ============================================
+   Section Cards
+   ============================================ */
+
+.composer-section {
+    background: var(--composer-card-bg);
+    border: 1px solid var(--composer-border);
+    border-radius: var(--composer-radius);
+    box-shadow: var(--composer-shadow-sm);
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: box-shadow 0.2s ease;
+}
+
+.composer-section:hover {
+    box-shadow: var(--composer-shadow-md);
+}
+
+.composer-section-dashed {
+    border-style: dashed;
+}
+
+.composer-section-accent-green {
+    border-left: 3px solid var(--composer-accent-green);
+}
+
+.composer-section-accent-blue {
+    border-left: 3px solid var(--composer-accent-blue);
+}
+
+.composer-section-accent-purple {
+    border-left: 3px solid var(--composer-accent-purple);
+}
+
+.composer-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.composer-section-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    color: var(--composer-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.composer-section-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--composer-text);
+}
+
+.composer-section-subtitle {
+    font-size: 12px;
+    color: var(--composer-text-muted);
+    margin-left: auto;
+}
+
+/* ============================================
+   Form Elements
+   ============================================ */
+
+.composer-input-group {
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+}
+
+.composer-input-group:last-child {
+    margin-bottom: 0;
+}
+
+.composer-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--composer-text-label);
+    margin-bottom: 6px;
+    transition: color 0.2s ease;
+}
+
+.composer-input-group:focus-within .composer-label {
+    color: var(--composer-accent-blue);
+}
+
+.composer-input,
+.composer-select,
+.composer-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    border: 1px solid var(--composer-border);
+    border-radius: var(--composer-radius-sm);
+    background: var(--composer-card-bg);
+    color: var(--composer-text);
+    transition: all 0.2s ease;
+}
+
+.composer-input:focus,
+.composer-select:focus,
+.composer-textarea:focus {
+    outline: none;
+    border-color: var(--composer-accent-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.composer-input::placeholder,
+.composer-textarea::placeholder {
+    color: #94a3b8;
+}
+
+.composer-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* ============================================
+   Record Cards (Linked Items)
+   ============================================ */
+
+.composer-record-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--composer-card-bg);
+    border: 1px solid var(--composer-border);
+    border-radius: var(--composer-radius-sm);
+    font-size: 13px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.composer-record-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.composer-record-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.composer-record-card-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.composer-record-card-name {
+    font-weight: 500;
+    color: var(--composer-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.composer-record-card-type {
+    font-size: 11px;
+    color: var(--composer-text-muted);
+}
+
+.composer-slot-selector {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    padding: 4px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+    border: 1px solid var(--composer-border);
+    background: #f8fafc;
+    color: var(--composer-text-muted);
+    cursor: pointer;
+}
+
+.composer-record-card:hover .composer-slot-selector {
+    opacity: 1;
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+
+.composer-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--composer-radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.composer-btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #ffffff;
+    box-shadow: 0 1px 3px 0 rgba(59, 130, 246, 0.4);
+}
+
+.composer-btn-primary:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 12px 0 rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+}
+
+.composer-btn-secondary {
+    background: var(--composer-card-bg);
+    color: var(--composer-text);
+    border: 1px solid var(--composer-border);
+}
+
+.composer-btn-secondary:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.composer-btn-ghost {
+    background: transparent;
+    color: var(--composer-text-muted);
+    padding: 8px;
+}
+
+.composer-btn-ghost:hover {
+    background: #f1f5f9;
+    color: var(--composer-text);
+}
+
+.composer-btn-success {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: #ffffff;
+    box-shadow: 0 1px 3px 0 rgba(34, 197, 94, 0.4);
+}
+
+.composer-btn-success:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    box-shadow: 0 4px 12px 0 rgba(34, 197, 94, 0.4);
+    transform: translateY(-1px);
+}
+
+/* ============================================
+   Recipe Picker (Action Type Selector)
+   ============================================ */
+
+.composer-recipe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.composer-recipe-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 12px;
+    border: 2px solid var(--composer-border);
+    border-radius: var(--composer-radius);
+    background: var(--composer-card-bg);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.composer-recipe-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: var(--composer-shadow-md);
+    transform: translateY(-2px);
+}
+
+.composer-recipe-card.selected {
+    border-color: var(--composer-accent-blue);
+    background: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.composer-recipe-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+.composer-recipe-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--composer-text);
+    text-align: center;
+}
+
+/* ============================================
+   Events Preview (Advanced Panel)
+   ============================================ */
+
+.composer-events-preview {
+    background: #0f172a;
+    border-radius: var(--composer-radius);
+    padding: 16px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-x: auto;
+}
+
+.composer-event-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.composer-event-item:last-child {
+    border-bottom: none;
+}
+
+.composer-event-type {
+    color: #22c55e;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.composer-event-payload {
+    color: #94a3b8;
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+
+.composer-fade-in {
+    animation: composerFadeIn 0.3s ease-out;
+}
+
+@keyframes composerFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.composer-slide-up {
+    animation: composerSlideUp 0.25s ease-out;
+}
+
+@keyframes composerSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+
+.composer-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--composer-text-muted);
+}
+
+.composer-empty-icon {
+    font-size: 40px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.composer-empty-text {
+    font-size: 14px;
+}
+
+/* ============================================
+   Add Button (Dashed Border)
+   ============================================ */
+
+.composer-add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 16px;
+    border: 2px dashed var(--composer-border);
+    border-radius: var(--composer-radius-sm);
+    background: transparent;
+    color: var(--composer-text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.composer-add-btn:hover {
+    border-color: var(--composer-accent-blue);
+    color: var(--composer-accent-blue);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+/* ============================================
+   Field Grid
+   ============================================ */
+
+.composer-field-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.composer-field-grid-full {
+    grid-column: 1 / -1;
+}

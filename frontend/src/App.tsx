@@ -2,10 +2,18 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useCurrentUser } from './api/hooks';
 import { useAuthStore } from './stores/authStore';
-import { MainLayout } from './components/layout/MainLayout';
+import { MainLayout } from './ui/layout/MainLayout';
 import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
 import { RecordsPage } from './pages/RecordsPage';
+import { ActionsPage } from './pages/ActionsPage';
+import { EventsPage } from './pages/EventsPage';
 import { FieldsPage } from './pages/FieldsPage';
+import { ComposerPage } from './pages/ComposerPage';
+import { ImportPage } from './pages/ImportPage';
+import { ExportPage } from './pages/ExportPage';
+import { SettingsPage } from './pages/SettingsPage';
+
 
 function App() {
   const { isLoading, isError, isFetching } = useCurrentUser();
@@ -41,25 +49,39 @@ function App() {
     );
   }
 
-  // If not authenticated, show login
+  // If not authenticated, show login/register routes
   if (isError || !isAuthenticated) {
     return (
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
   }
 
+  // Authenticated routes
   return (
     <Routes>
+      {/* Redirect auth routes to home when logged in */}
+      <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/register" element={<Navigate to="/" replace />} />
+
+      {/* App routes */}
       <Route path="/fields" element={<FieldsPage />} />
+      <Route path="/records" element={<RecordsPage />} />
+      <Route path="/actions" element={<ActionsPage />} />
+      <Route path="/events" element={<EventsPage />} />
+      <Route path="/composer" element={<ComposerPage />} />
+      <Route path="/import" element={<ImportPage />} />
+      <Route path="/export" element={<ExportPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
       <Route path="/" element={<MainLayout />} />
       <Route path="/project/:projectId" element={<MainLayout />} />
-      <Route path="/records" element={<RecordsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
 
 export default App;
+

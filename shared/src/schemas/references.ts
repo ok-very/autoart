@@ -1,9 +1,48 @@
 import { z } from 'zod';
-import { RefModeSchema, ReferenceStatusSchema } from './enums';
+import { RefModeSchema, ReferenceStatusSchema } from './enums.js';
+
+// ============================================================================
+// ACTION REFERENCES (Foundational Model)
+// Links Actions to Records - the new canonical model
+// ============================================================================
+
+/**
+ * Action Reference Schema
+ * Links an action to a record field with static/dynamic mode
+ */
+export const ActionReferenceSchema = z.object({
+  id: z.string().uuid(),
+  actionId: z.string().uuid(),
+  sourceRecordId: z.string().uuid().nullable(),
+  targetFieldKey: z.string().nullable(),
+  mode: RefModeSchema,
+  snapshotValue: z.unknown().nullable(),
+  createdAt: z.coerce.date(),
+  legacyTaskReferenceId: z.string().uuid().nullable().optional(),
+});
+
+export type ActionReference = z.infer<typeof ActionReferenceSchema>;
+
+/**
+ * Create Action Reference Input Schema
+ */
+export const CreateActionReferenceInputSchema = z.object({
+  actionId: z.string().uuid(),
+  sourceRecordId: z.string().uuid(),
+  targetFieldKey: z.string(),
+  mode: RefModeSchema.optional().default('dynamic'),
+});
+
+export type CreateActionReferenceInput = z.infer<typeof CreateActionReferenceInputSchema>;
+
+// ============================================================================
+// TASK REFERENCES (DEPRECATED)
+// Read-only after migration 022. Use ActionReference instead.
+// ============================================================================
 
 /**
  * Task Reference Schema
- * Links a task to a record field with static/dynamic mode
+ * @deprecated Use ActionReferenceSchema instead. TaskReferences are read-only after migration 022.
  */
 export const TaskReferenceSchema = z.object({
   id: z.string().uuid(),
@@ -15,7 +54,26 @@ export const TaskReferenceSchema = z.object({
   created_at: z.string().datetime(),
 });
 
+/** @deprecated Use ActionReference instead */
 export type TaskReference = z.infer<typeof TaskReferenceSchema>;
+
+/**
+ * Create Reference Input Schema
+ * @deprecated Use CreateActionReferenceInputSchema instead
+ */
+export const CreateReferenceInputSchema = z.object({
+  taskId: z.string().uuid(),
+  sourceRecordId: z.string().uuid(),
+  targetFieldKey: z.string(),
+  mode: RefModeSchema.optional().default('dynamic'),
+});
+
+/** @deprecated Use CreateActionReferenceInput instead */
+export type CreateReferenceInput = z.infer<typeof CreateReferenceInputSchema>;
+
+// ============================================================================
+// SHARED RESOLUTION TYPES
+// ============================================================================
 
 /**
  * Resolved Reference Schema
@@ -50,18 +108,6 @@ export const ResolvedReferenceSchema = z.object({
 export type ResolvedReference = z.infer<typeof ResolvedReferenceSchema>;
 
 /**
- * Create Reference Input Schema
- */
-export const CreateReferenceInputSchema = z.object({
-  taskId: z.string().uuid(),
-  sourceRecordId: z.string().uuid(),
-  targetFieldKey: z.string(),
-  mode: RefModeSchema.optional().default('dynamic'),
-});
-
-export type CreateReferenceInput = z.infer<typeof CreateReferenceInputSchema>;
-
-/**
  * Update Reference Mode Input Schema
  */
 export const UpdateReferenceModeInputSchema = z.object({
@@ -91,10 +137,20 @@ export type BulkResolveInput = z.infer<typeof BulkResolveInputSchema>;
 /**
  * API Response Schemas
  */
+export const ActionReferenceResponseSchema = z.object({
+  reference: ActionReferenceSchema,
+});
+
+export const ActionReferencesResponseSchema = z.object({
+  references: z.array(ActionReferenceSchema),
+});
+
+/** @deprecated Use ActionReferenceResponseSchema */
 export const ReferenceResponseSchema = z.object({
   reference: TaskReferenceSchema,
 });
 
+/** @deprecated Use ActionReferencesResponseSchema */
 export const ReferencesResponseSchema = z.object({
   references: z.array(TaskReferenceSchema),
 });

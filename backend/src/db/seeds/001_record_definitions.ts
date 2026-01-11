@@ -22,11 +22,20 @@ export async function seed(db: Kysely<Database>): Promise<void> {
       name: 'Contact',
       schema_config: JSON.stringify({
         fields: [
+          // Core identity - text types with semantic hints
           { key: 'name', type: 'text', label: 'Name', required: true },
-          { key: 'email', type: 'email', label: 'Email' },
-          { key: 'phone', type: 'text', label: 'Phone' },
-          { key: 'organization', type: 'text', label: 'Organization' },
-          { key: 'role', type: 'select', label: 'Role', options: ['Client', 'Vendor', 'Partner', 'Consultant'] },
+          { key: 'email', type: 'text', label: 'Email', renderHint: 'email' },
+          { key: 'phone', type: 'text', label: 'Phone', renderHint: 'phone' },
+          { key: 'company', type: 'text', label: 'Company/Org' },
+          { key: 'role', type: 'text', label: 'Role' },
+          // Classification - status with options
+          {
+            key: 'contactGroup', type: 'status', label: 'Contact Group', options: [
+              'Developer/Client', 'Artist/Arts Worker', 'City/Govt', 'Health Care',
+              'Architect/Engineer', 'Fabricator/Supplier', 'Selection Panel', 'Miscellaneous',
+            ]
+          },
+          // Free-form notes
           { key: 'notes', type: 'textarea', label: 'Notes' },
         ],
       }),

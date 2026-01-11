@@ -1,0 +1,248 @@
+/**
+ * FactKindReviewPanel Styles
+ *
+ * Lightweight styling for the Definition Review UI.
+ */
+
+.fact-kind-review-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary, #1a1a2e);
+    border-radius: 8px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.fkrp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color, #2d2d4a);
+}
+
+.fkrp-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary, #e0e0e0);
+}
+
+.fkrp-stats {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+}
+
+.fkrp-stats .stat {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    background: var(--bg-tertiary, #252542);
+}
+
+.fkrp-stats .stat.review {
+    color: #ffa726;
+}
+
+.fkrp-stats .stat.known {
+    color: #66bb6a;
+}
+
+.fkrp-filters {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.fkrp-filters button {
+    padding: 0.4rem 0.75rem;
+    background: var(--bg-tertiary, #252542);
+    border: 1px solid var(--border-color, #2d2d4a);
+    border-radius: 4px;
+    color: var(--text-secondary, #a0a0b0);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.fkrp-filters button:hover {
+    background: var(--bg-hover, #2d2d4a);
+}
+
+.fkrp-filters button.active {
+    background: var(--accent-primary, #6366f1);
+    border-color: var(--accent-primary, #6366f1);
+    color: white;
+}
+
+.fkrp-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.fkrp-row {
+    background: var(--bg-tertiary, #252542);
+    border: 1px solid var(--border-color, #2d2d4a);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: border-color 0.15s ease;
+}
+
+.fkrp-row:hover {
+    border-color: var(--border-hover, #3d3d5a);
+}
+
+.fkrp-row.selected {
+    border-color: var(--accent-primary, #6366f1);
+}
+
+.fkrp-row.needs-review {
+    border-left: 3px solid #ffa726;
+}
+
+.fkrp-row.known {
+    border-left: 3px solid #66bb6a;
+}
+
+.fkrp-row.deprecated {
+    border-left: 3px solid #9e9e9e;
+    opacity: 0.7;
+}
+
+.fkrp-row-main {
+    padding: 0.75rem;
+    cursor: pointer;
+}
+
+.fkrp-row-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.fkrp-row-header .display-name {
+    font-weight: 500;
+    color: var(--text-primary, #e0e0e0);
+}
+
+.fkrp-row-header .confidence {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.fkrp-row-header .confidence-high {
+    background: rgba(102, 187, 106, 0.2);
+    color: #66bb6a;
+}
+
+.fkrp-row-header .confidence-medium {
+    background: rgba(255, 167, 38, 0.2);
+    color: #ffa726;
+}
+
+.fkrp-row-header .confidence-low {
+    background: rgba(239, 83, 80, 0.2);
+    color: #ef5350;
+}
+
+.fkrp-row-header .source {
+    margin-left: auto;
+    font-size: 0.7rem;
+    color: var(--text-tertiary, #707080);
+}
+
+.fkrp-row-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary, #a0a0b0);
+}
+
+.fkrp-row-meta .fact-kind {
+    font-family: monospace;
+    background: var(--bg-secondary, #1a1a2e);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+}
+
+.fkrp-row-details {
+    padding: 0.75rem;
+    border-top: 1px solid var(--border-color, #2d2d4a);
+    background: var(--bg-secondary, #1a1a2e);
+}
+
+.fkrp-row-details .description {
+    margin: 0 0 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #a0a0b0);
+}
+
+.fkrp-row-details .example-payload {
+    margin: 0 0 0.75rem;
+    padding: 0.5rem;
+    background: var(--bg-tertiary, #252542);
+    border-radius: 4px;
+    font-size: 0.7rem;
+    max-height: 150px;
+    overflow: auto;
+}
+
+.fkrp-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.fkrp-actions button {
+    flex: 1;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.fkrp-actions button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.fkrp-actions button.approve {
+    background: #66bb6a;
+    color: white;
+}
+
+.fkrp-actions button.approve:hover:not(:disabled) {
+    background: #4caf50;
+}
+
+.fkrp-actions button.deprecate {
+    background: #9e9e9e;
+    color: white;
+}
+
+.fkrp-actions button.deprecate:hover:not(:disabled) {
+    background: #757575;
+}
+
+.fkrp-loading,
+.fkrp-error,
+.fkrp-empty {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-secondary, #a0a0b0);
+}
+
+.fkrp-error {
+    color: #ef5350;
+}

@@ -52,3 +52,8 @@ certs/
 !certs/.gitkeep
 
 postgres_data/
+
+
+.aye/
+.well-known/
+.coderabbit.yaml

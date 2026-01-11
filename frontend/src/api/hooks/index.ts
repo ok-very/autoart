@@ -39,6 +39,7 @@ export {
 // Record Definitions
 export {
   useRecordDefinitions,
+  useRecordDefinitionsFiltered,
   useRecordDefinition,
   useCreateDefinition,
   useUpdateDefinition,
@@ -96,9 +97,113 @@ export {
   type IngestionResult,
 } from './ingestion';
 
+// Actions & Events
+export {
+  useActions,
+  useAction,
+  useAllActions,
+  useAllActionsByType,
+  useAllActionsByDefinition,
+  useCreateAction,
+  useRetractAction,
+  useAmendAction,
+  useActionEvents,
+  useContextEvents,
+  useEmitEvent,
+  useEmitActionEvents,
+  useStartWork,
+  useStopWork,
+  useFinishWork,
+  useBlockWork,
+  useUnblockWork,
+  useAssignWork,
+  useUnassignWork,
+  useRecordFieldValue,
+  useContainerActions,
+  useSubprocesses,
+  useChildActions,
+} from './actions';
+
+// Action Views
+export {
+  useActionViews,
+  useActionView,
+  useActionViewsSummary,
+} from './actionViews';
+
+// Workflow Surface (Materialized Projection)
+export {
+  useWorkflowSurfaceNodes,
+  useAddDependency,
+  useRemoveDependency,
+  useMoveWorkflowRow,
+  useRefreshWorkflowSurface,
+  buildChildrenMap,
+  getRootNodes,
+  getChildren,
+} from './workflowSurface';
+
+// Action References
+export {
+  useActionReferences,
+  useAddActionReference,
+  useRemoveActionReference,
+  useSetActionReferences,
+  type ActionReference,
+  type ReferenceInput,
+} from './actionReferences';
+
+// Composer (Task Builder on Actions + Events)
+export {
+  useCompose,
+  useQuickTask,
+  useQuickBug,
+  buildTaskInput,
+  buildBugInput,
+} from './composer';
+
+// Project Log (Event Stream)
+export {
+  useProjectLogEvents,
+  useProjectLogEventCount,
+  type EventsPageResponse,
+  type UseProjectLogEventsOptions,
+} from './projectLog';
+
 // Search
 export { useSearch } from './search';
+
+// Fact Kinds (Definition Review UI)
+export {
+  useFactKindDefinitions,
+  useFactKindsNeedingReview,
+  useFactKindStats,
+  useFactKindDefinition,
+  useApproveFactKind,
+  useDeprecateFactKind,
+  useMergeFactKinds,
+  type FactKindDefinition,
+  type FactKindStats,
+} from './factKinds';
 
 // Factory (for custom CRUD hooks)
 export { createCrudHooks, createFilteredListHook } from './factory';
 export type { CrudHookConfig, CrudHooks } from './factory';
+
+// Admin
+export {
+  useAdminUsers,
+  useSoftDeleteUser,
+  type AdminUser,
+} from './admin';
+
+// Interpretation
+export {
+  useInterpretationAvailable,
+  useInterpretationPlan,
+  useApproveFactCandidate,
+  useRejectFactCandidate,
+  type InterpretationOutput,
+  type InterpretationPlan,
+  type InterpretationAvailability,
+} from './interpretation';

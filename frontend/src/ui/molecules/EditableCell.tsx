@@ -111,10 +111,64 @@ export function EditableCell({
         );
     }
 
-    // Editing mode - render appropriate input based on field type
+    // Editing mode - render appropriate input based on renderHint, then type
     const renderEditInput = () => {
         const baseInputClass =
             'w-full px-2 py-1 text-sm border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400';
+
+        const { renderHint } = viewModel;
+
+        // ========== RENDER HINT DISPATCH (priority) ==========
+
+        // Email hint - native email input
+        if (renderHint === 'email') {
+            return (
+                <input
+                    ref={inputRef as React.RefObject<HTMLInputElement>}
+                    type="email"
+                    value={(editValue as string) || ''}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onBlur={handleSave}
+                    onKeyDown={handleKeyDown}
+                    className={baseInputClass}
+                    placeholder="email@example.com"
+                />
+            );
+        }
+
+        // Phone hint - tel input for mobile keyboards
+        if (renderHint === 'phone') {
+            return (
+                <input
+                    ref={inputRef as React.RefObject<HTMLInputElement>}
+                    type="tel"
+                    value={(editValue as string) || ''}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onBlur={handleSave}
+                    onKeyDown={handleKeyDown}
+                    className={baseInputClass}
+                    placeholder="+1 (555) 123-4567"
+                />
+            );
+        }
+
+        // URL hint
+        if (renderHint === 'url') {
+            return (
+                <input
+                    ref={inputRef as React.RefObject<HTMLInputElement>}
+                    type="url"
+                    value={(editValue as string) || ''}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onBlur={handleSave}
+                    onKeyDown={handleKeyDown}
+                    className={baseInputClass}
+                    placeholder="https://..."
+                />
+            );
+        }
+
+        // ========== TYPE-BASED DISPATCH ==========
 
         switch (type) {
             case 'status':

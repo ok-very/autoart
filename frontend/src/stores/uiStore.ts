@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Selection, UIPanels, InspectorMode, DrawerConfig } from '../types/ui';
+import { Selection, UIPanels, InspectorMode, DrawerConfig, InspectorTabId, normalizeInspectorTabId } from '../types/ui';
 import { deriveUIPanels } from '../utils/uiComposition';
 import type { ProjectViewMode, RecordsViewMode, FieldsViewMode, ViewMode } from '@autoart/shared';
 import {
@@ -13,7 +13,7 @@ import {
 } from '@autoart/shared';
 
 // Re-export for compatibility if needed, or prefer importing from types/ui
-export type { Selection, UIPanels, InspectorMode };
+export type { Selection, UIPanels, InspectorMode, InspectorTabId };
 
 // Re-export view mode types and utilities from shared schemas
 export type { ProjectViewMode, RecordsViewMode, FieldsViewMode, ViewMode };
@@ -39,13 +39,14 @@ interface UIState {
   selection: Selection;
   activeProjectId: string | null;
   viewMode: ViewMode;
-  inspectorTabMode: string; // 'record', 'schema', 'references', etc.
+  inspectorTabMode: InspectorTabId;
 
   // Layout Geometry
   sidebarWidth: number;
   inspectorWidth: number;
   sidebarCollapsed: boolean;
   inspectorCollapsed: boolean;
+  drawerCollapsed: boolean;
   drawerHeight: number;
 
   // Drawer State
@@ -54,13 +55,30 @@ interface UIState {
   // Theme
   theme: Theme;
 
+  // Inspector Composer footer state
+  inspectorComposerExpanded: boolean;
+  setInspectorComposerExpanded: (expanded: boolean) => void;
+
+  // Project Log preferences
+  includeSystemEventsInLog: boolean;
+  setIncludeSystemEventsInLog: (value: boolean) => void;
+
+  // Registry preferences
+  registryTab: 'definitions' | 'instances';
+  registryDefinitionKind: 'record' | 'action_recipe' | null;
+  registryScope: 'global' | 'project' | 'all';
+  setRegistryTab: (tab: 'definitions' | 'instances') => void;
+  setRegistryDefinitionKind: (kind: 'record' | 'action_recipe' | null) => void;
+  setRegistryScope: (scope: 'global' | 'project' | 'all') => void;
+
   // Actions
   setSelection: (selection: Selection) => void;
   setActiveProject: (id: string | null) => void;
-  setInspectorTab: (tab: string) => void;
+  setInspectorTab: (tab: InspectorTabId) => void;
 
   toggleSidebar: () => void;
   toggleInspector: () => void;
+  toggleDrawer: () => void;
   setSidebarWidth: (width: number) => void;
   setInspectorWidth: (width: number) => void;
 
@@ -75,10 +93,12 @@ interface UIState {
   // Legacy compatibility - derived from selection
   readonly inspectedNodeId: string | null;
   readonly inspectedRecordId: string | null;
-  readonly inspectorMode: string;
-  setInspectorMode: (mode: string) => void;
+  readonly inspectorMode: InspectorTabId;
+  setInspectorMode: (mode: InspectorTabId) => void;
   inspectRecord: (recordId: string) => void;
   inspectNode: (nodeId: string) => void;
+  inspectAction: (actionId: string) => void;
+  clearSelection: () => void;
   clearInspection: () => void;
 }
 
@@ -87,17 +107,32 @@ export const useUIStore = create<UIState>()(
     (set, get) => ({
       selection: null,
       activeProjectId: null,
-      viewMode: 'workflow',
+      viewMode: 'log',
       inspectorTabMode: 'record',
+      includeSystemEventsInLog: false,
 
       sidebarWidth: 280,
       inspectorWidth: 380,
       sidebarCollapsed: false,
       inspectorCollapsed: false,
+      drawerCollapsed: false,
       drawerHeight: 300,
 
       activeDrawer: null,
       theme: 'light',
+
+      inspectorComposerExpanded: false,
+      setInspectorComposerExpanded: (expanded) => set({ inspectorComposerExpanded: expanded }),
+
+      setIncludeSystemEventsInLog: (value) => set({ includeSystemEventsInLog: value }),
+
+      // Registry preferences
+      registryTab: 'instances',
+      registryDefinitionKind: null,
+      registryScope: 'all',
+      setRegistryTab: (tab) => set({ registryTab: tab }),
+      setRegistryDefinitionKind: (kind) => set({ registryDefinitionKind: kind }),
+      setRegistryScope: (scope) => set({ registryScope: scope }),
 
       setSelection: (selection) => set({ selection }),
       setActiveProject: (id) => set({ activeProjectId: id }),
@@ -105,6 +140,7 @@ export const useUIStore = create<UIState>()(
 
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       toggleInspector: () => set((state) => ({ inspectorCollapsed: !state.inspectorCollapsed })),
+      toggleDrawer: () => set((state) => ({ drawerCollapsed: !state.drawerCollapsed })),
       setSidebarWidth: (width) => set({ sidebarWidth: Math.max(200, Math.min(400, width)) }),
       setInspectorWidth: (width) => set({ inspectorWidth: Math.max(300, Math.min(500, width)) }),
 
@@ -123,7 +159,7 @@ export const useUIStore = create<UIState>()(
 
       openDrawer: (type, props = {}) => set({ activeDrawer: { type, props } }),
       closeDrawer: () => set({ activeDrawer: null }),
-      setDrawerHeight: (height) => set({ drawerHeight: Math.max(100, Math.min(600, height)) }),
+      setDrawerHeight: (height) => set({ drawerHeight: Math.max(100, Math.min(1200, height)) }),
 
       // Legacy compatibility getters - derived from selection
       get inspectedNodeId() {
@@ -140,21 +176,40 @@ export const useUIStore = create<UIState>()(
       setInspectorMode: (mode) => set({ inspectorTabMode: mode }),
       inspectRecord: (recordId) => set({ selection: { type: 'record', id: recordId }, inspectorCollapsed: false }),
       inspectNode: (nodeId) => set({ selection: { type: 'node', id: nodeId }, inspectorCollapsed: false }),
+      inspectAction: (actionId) => set({ selection: { type: 'action', id: actionId }, inspectorCollapsed: false }),
+      clearSelection: () => set({ selection: null }),
       clearInspection: () => set({ selection: null }),
     }),
     {
       name: 'ui-storage',
+      version: 1, // Increment when schema changes
       partialize: (state) => ({
         sidebarWidth: state.sidebarWidth,
         inspectorWidth: state.inspectorWidth,
         sidebarCollapsed: state.sidebarCollapsed,
         inspectorCollapsed: state.inspectorCollapsed,
+        drawerCollapsed: state.drawerCollapsed,
         viewMode: state.viewMode,
         theme: state.theme,
         drawerHeight: state.drawerHeight,
         inspectorTabMode: state.inspectorTabMode,
         activeProjectId: state.activeProjectId,
+        includeSystemEventsInLog: state.includeSystemEventsInLog,
+        registryTab: state.registryTab,
+        registryDefinitionKind: state.registryDefinitionKind,
+        registryScope: state.registryScope,
+        inspectorComposerExpanded: state.inspectorComposerExpanded,
       }),
+      // Migrate stale persisted values to valid InspectorTabId
+      migrate: (persistedState, version) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const state = persistedState as any;
+        if (version < 1) {
+          // Normalize any stale inspectorTabMode values
+          state.inspectorTabMode = normalizeInspectorTabId(state.inspectorTabMode);
+        }
+        return state;
+      },
     }
   )
 );

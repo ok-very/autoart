@@ -12,7 +12,7 @@ import type {
     FieldDefinition,
     ProjectState,
     EntityContext,
-} from './types';
+} from './types.js';
 
 // ==================== FIELD STATE RESOLUTION ====================
 

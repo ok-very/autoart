@@ -8,11 +8,11 @@
  */
 
 import { useCallback } from 'react';
-import { Header } from '../components/layout/Header';
-import { RecordInspector } from '../ui/composites/RecordInspector';
+import { Header } from '../ui/layout/Header';
+import { SelectionInspector } from '../ui/composites/SelectionInspector';
 import { ProjectView } from '../ui/composites/ProjectView';
-import { BottomDrawer } from '../components/drawer/BottomDrawer';
-import { ResizeHandle } from '../components/common/ResizeHandle';
+import { BottomDrawer } from '../ui/drawer/BottomDrawer';
+import { ResizeHandle } from '../ui/common/ResizeHandle';
 import { useUIStore, useUIPanels } from '../stores/uiStore';
 
 export function ProjectPage() {
@@ -40,7 +40,7 @@ export function ProjectPage() {
                 {panels.inspector && (
                     <>
                         <ResizeHandle direction="left" onResize={handleInspectorResize} />
-                        <RecordInspector />
+                        <SelectionInspector />
                     </>
                 )}
             </div>

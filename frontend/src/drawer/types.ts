@@ -31,9 +31,11 @@ export const DRAWER_SIZES: Record<DrawerSize, number> = {
  * This prevents hidden state mutations.
  */
 export type DrawerSideEffect =
-    | { type: 'create'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' }
-    | { type: 'update'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' }
-    | { type: 'delete'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' }
+    | { type: 'create'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
+    | { type: 'update'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
+    | { type: 'delete'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
+    | { type: 'assign'; entityType: 'record' }
+    /** @deprecated Use 'assign' instead */
     | { type: 'classify'; entityType: 'record' }
     | { type: 'clone'; entityType: 'definition' | 'project' }
     | { type: 'navigate'; target: string }
@@ -145,7 +147,9 @@ export interface DrawerContextMap {
     'create-definition': CreateDefinitionContext;
     'create-link': CreateLinkContext;
     'add-field': AddFieldContext;
-    'classify-records': ClassifyRecordsContext;
+    'assign-records': AssignRecordsContext;
+    /** @deprecated Use 'assign-records' instead */
+    'classify-records': AssignRecordsContext;
     'clone-definition': CloneDefinitionContext;
     'clone-project': CloneProjectContext;
     'confirm-delete': ConfirmDeleteContext;
@@ -153,6 +157,9 @@ export interface DrawerContextMap {
     'view-definition': ViewDefinitionContext;
     'project-library': ProjectLibraryContext;
     'ingestion': IngestionContext;
+    'integrations': IntegrationsContext;
+    'monday-boards': MondayBoardsContext;
+    'classification': ClassificationContext;
 }
 
 // ==================== CONTEXT TYPES ====================
@@ -211,7 +218,11 @@ export interface AddFieldContext {
     };
 }
 
-export interface ClassifyRecordsContext {
+/**
+ * Context for hierarchy assignment (formerly "classification").
+ * This is for placing records into the hierarchy, not semantic interpretation.
+ */
+export interface AssignRecordsContext {
     recordIds: string[];
     /** Pre-resolved records info */
     records?: Array<{
@@ -221,6 +232,9 @@ export interface ClassifyRecordsContext {
     /** Success callback */
     onSuccess?: () => void;
 }
+
+/** @deprecated Use AssignRecordsContext instead */
+export type ClassifyRecordsContext = AssignRecordsContext;
 
 export interface CloneDefinitionContext {
     definitionId: string;
@@ -275,6 +289,40 @@ export interface IngestionContext {
     targetDefinitionId?: string;
     /** Target classification node */
     targetNodeId?: string;
+}
+
+/** Context for integrations management drawer */
+export interface IntegrationsContext {
+    /** Optional: pre-select a specific integration tab */
+    activeTab?: 'monday' | 'google' | 'api';
+}
+
+/** Context for Monday boards selection drawer */
+export interface MondayBoardsContext {
+    /** Callback when board(s) are selected for import */
+    onBoardImport: (boardIds: string[]) => Promise<void>;
+    /** Whether import is currently in progress */
+    isImporting?: boolean;
+}
+
+/** Context for classification resolution drawer */
+export interface ClassificationContext {
+    /** Import session ID */
+    sessionId: string;
+    /** Import plan with classifications */
+    plan: {
+        id: string;
+        items: Array<{ tempId: string; title: string }>;
+        classifications?: Array<{
+            itemTempId: string;
+            outcome: string;
+            confidence: string;
+            rationale: string;
+            resolution?: { resolvedOutcome: string };
+        }>;
+    };
+    /** Callback when resolutions are saved */
+    onResolutionsSaved: (plan: ClassificationContext['plan']) => void;
 }
 
 // ==================== HELPER FUNCTIONS ====================

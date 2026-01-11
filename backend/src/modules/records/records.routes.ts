@@ -18,11 +18,33 @@ export async function recordsRoutes(app: FastifyInstance) {
 
   // ==================== DEFINITIONS ====================
 
-  // List all definitions
-  fastify.get('/definitions', { preHandler: [fastify.authenticate] }, async (_request, reply) => {
-    const definitions = await recordsService.listDefinitions();
-    return reply.send({ definitions });
+  // Schema for list definitions query params
+  const listDefinitionsQuerySchema = z.object({
+    definitionKind: z.enum(['record', 'action_recipe', 'container']).optional(),
+    projectId: z.string().uuid().optional(),
+    isTemplate: z.enum(['true', 'false']).optional().transform(v => v === 'true' ? true : v === 'false' ? false : undefined),
+    isSystem: z.enum(['true', 'false']).optional().transform(v => v === 'true' ? true : v === 'false' ? false : undefined),
   });
+
+  // List all definitions (with optional filters)
+  fastify.get(
+    '/definitions',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        querystring: listDefinitionsQuerySchema,
+      },
+    },
+    async (request, reply) => {
+      const definitions = await recordsService.listDefinitions({
+        definitionKind: request.query.definitionKind,
+        projectId: request.query.projectId,
+        isTemplate: request.query.isTemplate,
+        isSystem: request.query.isSystem,
+      });
+      return reply.send({ definitions });
+    }
+  );
 
   // Get single definition
   fastify.get(
@@ -281,6 +303,39 @@ export async function recordsRoutes(app: FastifyInstance) {
     }
   );
 
+  // Bulk import (create/update) records
+  fastify.post(
+    '/bulk/import',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        body: z.object({
+          definitionId: z.string().uuid(),
+          records: z.array(z.object({
+            uniqueName: z.string().min(1),
+            data: z.record(z.unknown()),
+            classificationNodeId: z.string().uuid().nullable().optional(),
+          })),
+        }),
+      },
+    },
+    async (request, reply) => {
+      try {
+        const result = await recordsService.bulkCreateRecords(
+          request.body.definitionId,
+          request.body.records,
+          request.user.userId
+        );
+        return reply.send(result);
+      } catch (err) {
+        if (err instanceof AppError) {
+          return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+        }
+        throw err;
+      }
+    }
+  );
+
   // List records
   fastify.get(
     '/',
@@ -332,7 +387,13 @@ export async function recordsRoutes(app: FastifyInstance) {
     }
   );
 
-  // Create record
+  /**
+   * Create record
+   *
+   * @deprecated Use POST /composer for new record creation.
+   * This endpoint bypasses the Action+Event architecture.
+   * Retained for backward compatibility only.
+   */
   fastify.post(
     '/',
     {

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../client';
+import { useAuthStore } from '../../stores/authStore';
 import type { AuthResponse, User } from '../../types';
 
 // ==================== AUTH ====================
@@ -12,6 +13,7 @@ export function useLogin() {
       api.post<AuthResponse>('/auth/login', data, { skipAuth: true }),
     onSuccess: (data) => {
       api.setToken(data.accessToken);
+      api.setRefreshToken(data.refreshToken);
       queryClient.invalidateQueries({ queryKey: ['user'] });
     },
   });
@@ -24,6 +26,7 @@ export function useRegister() {
       api.post<AuthResponse>('/auth/register', data, { skipAuth: true }),
     onSuccess: (data) => {
       api.setToken(data.accessToken);
+      api.setRefreshToken(data.refreshToken);
       queryClient.invalidateQueries({ queryKey: ['user'] });
     },
   });
@@ -31,10 +34,17 @@ export function useRegister() {
 
 export function useLogout() {
   const queryClient = useQueryClient();
+  const logout = useAuthStore((s) => s.logout);
+
   return useMutation({
-    mutationFn: () => api.post('/auth/logout'),
+    mutationFn: () => api.post('/auth/logout', { refreshToken: api.getRefreshToken() }),
     onSuccess: () => {
+      // Clear API tokens
       api.setToken(null);
+      api.setRefreshToken(null);
+      // Clear auth store state (triggers redirect via isAuthenticated)
+      logout();
+      // Clear all cached queries
       queryClient.clear();
     },
   });
@@ -57,3 +67,4 @@ export function useSearchUsers(query: string, enabled: boolean = true) {
     staleTime: 30 * 1000, // 30 seconds
   });
 }
+
