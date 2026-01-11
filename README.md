@@ -73,14 +73,13 @@ The long-term vision is to treat all hierarchy nodes (Tasks, Projects, etc.) as 
 - **Shared**: Zod (Schema validation & Type inference)
 - **Backend**: Fastify + TypeScript + Kysely + PostgreSQL
 - **Frontend**: React + Vite + TailwindCSS + TipTap + Zustand + TanStack Query
-- **Infrastructure**: Docker + Nginx
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js 20+
-- Docker & Docker Compose
+- PostgreSQL 15+
 - Git
 
 ### Development Setup
@@ -192,7 +191,6 @@ autoart_v02/
 │   │   │   ├── references/ # Static/dynamic links
 │   │   │   └── search/     # Full-text search
 │   │   └── plugins/        # Fastify plugins
-│   └── Dockerfile
 │
 ├── frontend/                # React SPA
 │   ├── src/
@@ -201,7 +199,6 @@ autoart_v02/
 │   │   ├── stores/         # Zustand state stores
 │   │   ├── types/          # Re-exported shared types
 │   │   └── pages/          # Route components
-│   └── Dockerfile
 │
 ├── config/                  # Configuration files
 │   ├── nginx.conf          # Reverse proxy config
@@ -214,8 +211,7 @@ autoart_v02/
 │   ├── backup.sh           # Database backup
 │   └── ...
 │
-├── docker-compose.yml       # Development compose
-└── docker-compose.prod.yml  # Production compose
+└── scripts/                 # Utility scripts
 ```
 
 ## API Endpoints
