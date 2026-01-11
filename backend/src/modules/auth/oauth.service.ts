@@ -112,25 +112,26 @@ export async function handleGoogleCallback(code: string, state: string) {
     // Get user profile
     const profile = await getGoogleProfile(tokens.access_token);
 
-    // Find or create user
-    let user = await db
-        .selectFrom('users')
-        .selectAll()
-        .where('email', '=', profile.email)
-        .where('deleted_at', 'is', null)
-        .executeTakeFirst();
-
-    if (!user) {
-        // Create new user (OAuth users don't need password)
-        user = await db
-            .insertInto('users')
-            .values({
-                email: profile.email,
+    // Find or create user (using upsert to handle concurrent OAuth callbacks)
+    const user = await db
+        .insertInto('users')
+        .values({
+            email: profile.email,
+            name: profile.name,
+            password_hash: '', // OAuth users have no password
+        })
+        .onConflict((oc) =>
+            oc.column('email').doUpdateSet({
+                // Update name if it changed, but only for non-deleted users
                 name: profile.name,
-                password_hash: '', // OAuth users have no password
             })
-            .returningAll()
-            .executeTakeFirstOrThrow();
+        )
+        .returningAll()
+        .executeTakeFirstOrThrow();
+
+    // Verify user is not soft-deleted
+    if (user.deleted_at !== null) {
+        throw new AppError(403, 'This account has been deactivated', 'ACCOUNT_DEACTIVATED');
     }
 
     // Store Google tokens in connection_credentials table
