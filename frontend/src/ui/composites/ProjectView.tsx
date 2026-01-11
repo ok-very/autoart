@@ -94,8 +94,9 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
 
         // Convert definition fields to HierarchyFieldDef format
         return taskDef.schema_config.fields.map((field): HierarchyFieldDef => {
-            // Determine display properties based on field type
-            const isCollapsedField = ['title', 'status', 'assignee', 'dueDate'].includes(field.key);
+            // Check collapsed by field key - include both 'owner' and 'assignee' for compatibility
+            // (field key is 'owner' in schema, but label displays as 'Assignee')
+            const isCollapsedField = ['title', 'status', 'owner', 'assignee', 'dueDate'].includes(field.key);
             const width = field.key === 'title' ? 360 :
                 field.type === 'status' ? 128 :
                     field.type === 'user' ? 96 :
@@ -149,8 +150,11 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
         return getNodeMetadata(activeSubprocess);
     }, [activeSubprocess]);
 
+    // Fallbacks for subprocess-level defaults - include both owner and assignee keys
+    // (field key is 'owner' in schema, but we support 'assignee' for forward compatibility)
     const fallbacks = useMemo(() => ({
         owner: activeSubprocessMeta && typeof activeSubprocessMeta.lead === 'string' ? activeSubprocessMeta.lead : undefined,
+        assignee: activeSubprocessMeta && typeof activeSubprocessMeta.lead === 'string' ? activeSubprocessMeta.lead : undefined,
         dueDate: activeSubprocessMeta && typeof activeSubprocessMeta.dueDate === 'string' ? activeSubprocessMeta.dueDate : undefined,
     }), [activeSubprocessMeta]);
 
@@ -255,8 +259,8 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                         <button
                             onClick={() => setActiveTab('workflow')}
                             className={`px-3 py-1 text-xs font-medium rounded transition-colors ${activeTab === 'workflow'
-                                    ? 'bg-slate-900 text-white'
-                                    : 'text-slate-600 hover:bg-slate-100'
+                                ? 'bg-slate-900 text-white'
+                                : 'text-slate-600 hover:bg-slate-100'
                                 }`}
                         >
                             Workflow
@@ -264,8 +268,8 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                         <button
                             onClick={() => setActiveTab('log')}
                             className={`px-3 py-1 text-xs font-medium rounded transition-colors ${activeTab === 'log'
-                                    ? 'bg-slate-900 text-white'
-                                    : 'text-slate-600 hover:bg-slate-100'
+                                ? 'bg-slate-900 text-white'
+                                : 'text-slate-600 hover:bg-slate-100'
                                 }`}
                         >
                             Log
