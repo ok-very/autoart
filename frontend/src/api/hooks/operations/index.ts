@@ -9,9 +9,8 @@
  * - Interpretation (AI/ML)
  */
 
-// Re-export from parent directory (hooks will be moved here)
-export * from '../imports';
-export * from '../exports';
-export * from '../ingestion';
-export * from '../search';
-export * from '../interpretation';
+export * from './imports';
+export * from './exports';
+export * from './ingestion';
+export * from './search';
+export * from './interpretation';
