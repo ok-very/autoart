@@ -210,8 +210,6 @@ autoart_v02/
 │   ├── deploy.sh           # Production deployment
 │   ├── backup.sh           # Database backup
 │   └── ...
-│
-└── scripts/                 # Utility scripts
 ```
 
 ## API Endpoints
