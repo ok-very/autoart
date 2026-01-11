@@ -398,6 +398,31 @@ export type InferenceLearning = Selectable<InferenceLearningsTable>;
 export type NewInferenceLearning = Insertable<InferenceLearningsTable>;
 export type InferenceLearningUpdate = Updateable<InferenceLearningsTable>;
 
+// ============================================
+// EXPORT TABLES (Migration 033)
+// ============================================
+
+// Export Sessions Table
+export interface ExportSessionsTable {
+  id: Generated<string>;
+  format: string;
+  status: string;
+  project_ids: unknown; // JSONB
+  options: unknown; // JSONB
+  target_config: Generated<unknown>; // JSONB
+  projection_cache: unknown | null; // JSONB
+  output_url: string | null;
+  error: string | null;
+  created_by: string | null;
+  created_at: Generated<Date>;
+  updated_at: Generated<Date>;
+  executed_at: Date | null;
+}
+
+export type ExportSession = Selectable<ExportSessionsTable>;
+export type NewExportSession = Insertable<ExportSessionsTable>;
+export type ExportSessionUpdate = Updateable<ExportSessionsTable>;
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -420,5 +445,7 @@ export interface Database {
   external_source_mappings: ExternalSourceMappingsTable;
   user_settings: UserSettingsTable;
   inference_learnings: InferenceLearningsTable;
+  export_sessions: ExportSessionsTable;
 }
+
 

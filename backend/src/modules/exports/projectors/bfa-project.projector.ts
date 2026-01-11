@@ -6,7 +6,7 @@
  * export projection for each selected project.
  */
 
-import { db } from '../../../db/client.js';
+import { db } from '@db/client.js';
 import type {
     BfaProjectExportModel,
     BfaMilestone,

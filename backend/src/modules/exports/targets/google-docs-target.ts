@@ -9,7 +9,7 @@ import type { ExportTarget, ValidationResult } from './export-target.interface.j
 import type { ExportOptions, BfaProjectExportModel, ExportResult } from '../types.js';
 import { projectBfaExportModels } from '../projectors/bfa-project.projector.js';
 import { GoogleDocsConnector } from '../connectors/google-docs-connector.js';
-import { getGoogleToken } from '../../imports/connections.service.js';
+import { getGoogleToken } from '@utils/auth.js';
 
 // ============================================================================
 // GOOGLE DOCS TARGET

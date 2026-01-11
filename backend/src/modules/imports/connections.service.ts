@@ -11,7 +11,7 @@ import type {
     NewConnectionCredential,
 } from '../../db/schema.js';
 
-export type Provider = 'monday' | 'asana' | 'notion' | 'jira';
+export type Provider = 'monday' | 'asana' | 'notion' | 'jira' | 'google';
 
 // ============================================================================
 // CRUD OPERATIONS
@@ -133,6 +133,36 @@ export async function getMondayToken(userId?: string): Promise<string> {
 }
 
 /**
+ * Get Google OAuth access token with fallback chain:
+ * 1. User-specific credential from DB
+ * 2. System-wide credential from DB
+ * 3. Environment variable GOOGLE_ACCESS_TOKEN
+ */
+export async function getGoogleToken(userId?: string): Promise<string> {
+    const credential = await getCredential(userId ?? null, 'google');
+
+    if (credential) {
+        // Check if token is expired
+        if (credential.expires_at && credential.expires_at < new Date()) {
+            // TODO: Implement OAuth refresh token flow
+            console.warn('Google OAuth token expired');
+            throw new Error('Google OAuth token expired. Please re-authenticate.');
+        }
+        return credential.access_token;
+    }
+
+    // Fall back to environment variable (for testing/development)
+    const envToken = process.env.GOOGLE_ACCESS_TOKEN;
+    if (!envToken) {
+        throw new Error(
+            'No Google OAuth token found. Please connect your Google account in Settings.'
+        );
+    }
+
+    return envToken;
+}
+
+/**
  * Check if a provider is connected for a user.
  */
 export async function isProviderConnected(
@@ -149,3 +179,4 @@ export async function isProviderConnected(
 
     return true;
 }
+
