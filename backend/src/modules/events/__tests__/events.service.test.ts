@@ -50,8 +50,6 @@ describe('events.service', () => {
       expect(event.type).toBe('WORK_STARTED');
       expect(event.payload).toEqual({ reason: 'test' });
       expect(event.occurred_at).toBeDefined();
-
-      await db.deleteFrom('events').where('id', '=', event.id).execute();
     });
 
     it('should reject stage context type', async () => {
@@ -105,9 +103,6 @@ describe('events.service', () => {
       expect(events.length).toBe(2);
       expect(events[0].id).toBe(event1.id);
       expect(events[1].id).toBe(event2.id);
-
-      await db.deleteFrom('events').where('action_id', '=', action.id).execute();
-      await db.deleteFrom('actions').where('id', '=', action.id).execute();
     });
   });
 
@@ -148,9 +143,6 @@ describe('events.service', () => {
       expect(latestWork).toBeDefined();
       expect(latestWork!.id).toBe(finishedEvent.id);
       expect(latestWork!.type).toBe('WORK_FINISHED');
-
-      await db.deleteFrom('events').where('action_id', '=', action.id).execute();
-      await db.deleteFrom('actions').where('id', '=', action.id).execute();
     });
   });
 
@@ -180,9 +172,6 @@ describe('events.service', () => {
       });
 
       expect(await eventsService.hasFinishedEvent(action.id)).toBe(true);
-
-      await db.deleteFrom('events').where('action_id', '=', action.id).execute();
-      await db.deleteFrom('actions').where('id', '=', action.id).execute();
     });
   });
 
@@ -212,11 +201,6 @@ describe('events.service', () => {
       expect(page.total).toBe(5);
       expect(page.hasMore).toBe(true);
       expect((page.events[0].payload as { index: number }).index).toBe(4);
-
-      await db
-        .deleteFrom('events')
-        .where('context_id', '=', fixtures.subprocessId!)
-        .execute();
     });
   });
 
@@ -240,11 +224,6 @@ describe('events.service', () => {
       );
 
       expect(count).toBe(3);
-
-      await db
-        .deleteFrom('events')
-        .where('context_id', '=', fixtures.subprocessId!)
-        .execute();
     });
   });
 });

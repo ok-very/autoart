@@ -34,6 +34,12 @@ describe('composer.service', () => {
         testPrefix = generateTestPrefix();
     });
 
+    afterEach(async () => {
+        if (testPrefix) {
+            await cleanupTestData(db, testPrefix);
+        }
+    });
+
     afterAll(async () => {
         await cleanupTestData(db, '__test_');
     });
@@ -81,11 +87,6 @@ describe('composer.service', () => {
                 .where('action_id', '=', result.action.id)
                 .execute();
             expect(dbEvents.length).toBe(3);
-
-            // Cleanup
-            await db.deleteFrom('events').where('action_id', '=', result.action.id).execute();
-            await db.deleteFrom('actions').where('id', '=', result.action.id).execute();
-            await cleanupTestData(db, testPrefix);
         });
 
         it('should create action references when provided', async () => {
@@ -125,12 +126,6 @@ describe('composer.service', () => {
                 .where('action_id', '=', result.action.id)
                 .execute();
             expect(dbRefs.length).toBe(1);
-
-            // Cleanup
-            await db.deleteFrom('action_references').where('action_id', '=', result.action.id).execute();
-            await db.deleteFrom('events').where('action_id', '=', result.action.id).execute();
-            await db.deleteFrom('actions').where('id', '=', result.action.id).execute();
-            await cleanupTestData(db, testPrefix);
         });
 
         it('should reject legacy task types', async () => {
@@ -166,9 +161,6 @@ describe('composer.service', () => {
                     { actorId: null }
                 )
             ).rejects.toThrow('Legacy task creation is not allowed');
-
-            // Cleanup
-            await cleanupTestData(db, testPrefix);
         });
 
         it('should emit extra events when provided', async () => {
@@ -200,11 +192,6 @@ describe('composer.service', () => {
             expect(eventTypes).toContain('ACTION_DECLARED');
             expect(eventTypes).toContain('FIELD_VALUE_RECORDED');
             expect(eventTypes).toContain('WORK_STARTED');
-
-            // Cleanup
-            await db.deleteFrom('events').where('action_id', '=', result.action.id).execute();
-            await db.deleteFrom('actions').where('id', '=', result.action.id).execute();
-            await cleanupTestData(db, testPrefix);
         });
     });
 
@@ -235,11 +222,6 @@ describe('composer.service', () => {
             );
             expect(titleEvent).toBeDefined();
             expect((titleEvent!.payload as any).value).toBe('Quick Task Title');
-
-            // Cleanup
-            await db.deleteFrom('events').where('action_id', '=', result.action.id).execute();
-            await db.deleteFrom('actions').where('id', '=', result.action.id).execute();
-            await cleanupTestData(db, testPrefix);
         });
 
         it('should create a bug with QuickCompose.bug', async () => {
@@ -264,11 +246,6 @@ describe('composer.service', () => {
             );
             expect(severityEvent).toBeDefined();
             expect((severityEvent!.payload as any).value).toBe('CRITICAL');
-
-            // Cleanup
-            await db.deleteFrom('events').where('action_id', '=', result.action.id).execute();
-            await db.deleteFrom('actions').where('id', '=', result.action.id).execute();
-            await cleanupTestData(db, testPrefix);
         });
     });
 });
