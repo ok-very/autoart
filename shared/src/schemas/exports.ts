@@ -85,7 +85,7 @@ export type BfaMilestone = z.infer<typeof BfaMilestoneSchema>;
 export const BfaNextStepBulletSchema = z.object({
     text: z.string(),
     completed: z.boolean(),
-    ownerHint: z.string().optional(),
+    assigneeHint: z.string().optional(),
     dueHint: z.string().optional(),
     bulletSymbol: z.string().optional(),
     originalText: z.string().optional(),

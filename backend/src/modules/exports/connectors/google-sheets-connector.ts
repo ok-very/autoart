@@ -345,7 +345,7 @@ export class GoogleSheetsConnector {
                     project.header.clientName,
                     project.header.projectName,
                     bullet.text,
-                    bullet.ownerHint ?? '',
+                    bullet.assigneeHint ?? '',
                     bullet.dueHint ?? '',
                     bullet.completed ? 'Yes' : 'No',
                 ]);

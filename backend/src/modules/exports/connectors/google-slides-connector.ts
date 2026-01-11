@@ -500,7 +500,7 @@ export class GoogleSlidesConnector {
         if (nextSteps.length > 0) {
             const nextStepsBoxId = `project_nextsteps_${Date.now()}`;
             const nextStepsText = 'Next Steps:\n' + nextSteps.slice(0, 5).map(b =>
-                `• ${b.text}${b.ownerHint ? ` (${b.ownerHint})` : ''}`
+                `• ${b.text}${b.assigneeHint ? ` (${b.assigneeHint})` : ''}`
             ).join('\n');
 
             requests.push(
