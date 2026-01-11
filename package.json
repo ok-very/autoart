@@ -31,7 +31,11 @@
     "build:frontend": "cd frontend && npm run build",
     "lint": "eslint frontend/src backend/src shared/src",
     "lint:fix": "eslint frontend/src backend/src shared/src --fix",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:backend": "cd backend && npm run test",
+    "test:shared": "cd shared && npm run test",
+    "test:coverage": "cd backend && npm run test:coverage"
   },
   "keywords": [
     "process-management",

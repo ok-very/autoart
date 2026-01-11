@@ -1,17 +1,28 @@
 import { defineConfig } from 'vitest/config';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@config': path.resolve(__dirname, './src/config'),
+      '@db': path.resolve(__dirname, './src/db'),
+      '@modules': path.resolve(__dirname, './src/modules'),
+      '@plugins': path.resolve(__dirname, './src/plugins'),
+      '@utils': path.resolve(__dirname, './src/utils'),
+    },
+  },
   test: {
-    // Test environment
     environment: 'node',
-
-    // Include test files
     include: ['src/**/*.test.ts', 'src/**/*.spec.ts'],
-
-    // Global test setup
-    globals: true,
-
-    // Coverage configuration
+    testTimeout: 30000,
+    fileParallelism: false,
+    sequence: {
+      shuffle: false,
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -23,17 +34,6 @@ export default defineConfig({
         'src/db/seeds/**',
         'src/index.ts',
       ],
-    },
-
-    // Test timeout
-    testTimeout: 30000,
-
-    // Run tests sequentially for database tests
-    fileParallelism: false,
-
-    // Sequence tests (important for database tests)
-    sequence: {
-      shuffle: false,
     },
   },
 });
