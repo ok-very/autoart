@@ -22,7 +22,8 @@ const NODE_TYPE_DEFINITIONS: NodeTypeDefinition[] = [
     name: 'Project',
     schema_config: {
       fields: [
-        { key: 'status', type: 'select', label: 'Status', options: ['Planning', 'Active', 'On Hold', 'Completed', 'Archived'] },
+        { key: 'status', type: 'select', label: 'Status', options: ['Planning', 'Active', 'On Hold', 'Done', 'Archived'] },
+        { key: 'owner', type: 'text', label: 'Project Lead' },
         { key: 'client', type: 'text', label: 'Client' },
         { key: 'start_date', type: 'date', label: 'Start Date' },
         { key: 'due_date', type: 'date', label: 'Due Date' },
@@ -34,7 +35,7 @@ const NODE_TYPE_DEFINITIONS: NodeTypeDefinition[] = [
     name: 'Process',
     schema_config: {
       fields: [
-        { key: 'owner', type: 'text', label: 'Process Owner' },
+        { key: 'owner', type: 'text', label: 'Assignee' },
         { key: 'priority', type: 'select', label: 'Priority', options: ['Low', 'Medium', 'High', 'Critical'] },
       ],
     },
@@ -44,7 +45,7 @@ const NODE_TYPE_DEFINITIONS: NodeTypeDefinition[] = [
     name: 'Stage',
     schema_config: {
       fields: [
-        { key: 'status', type: 'select', label: 'Status', options: ['Not Started', 'In Progress', 'Completed'] },
+        { key: 'status', type: 'select', label: 'Status', options: ['Not Started', 'In Progress', 'Done'] },
         { key: 'gate_criteria', type: 'textarea', label: 'Gate Criteria' },
       ],
     },
@@ -68,7 +69,7 @@ const NODE_TYPE_DEFINITIONS: NodeTypeDefinition[] = [
         { key: 'assignee', type: 'text', label: 'Assignee' },
         { key: 'priority', type: 'select', label: 'Priority', options: ['Low', 'Medium', 'High'] },
         { key: 'due_date', type: 'date', label: 'Due Date' },
-        { key: 'completed', type: 'checkbox', label: 'Completed' },
+        { key: 'completed', type: 'checkbox', label: 'Done' },
         { key: 'tags', type: 'text', label: 'Tags' },
       ],
     },

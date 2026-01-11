@@ -109,7 +109,7 @@ export function ExportInspector({
                         </Text>
                         <Checkbox
                             label="Only open items"
-                            description="Exclude completed next steps from export"
+                            description="Exclude done next steps from export"
                             checked={options.includeOnlyOpenNextSteps}
                             onChange={(checked) => onOptionChange('includeOnlyOpenNextSteps', checked)}
                         />

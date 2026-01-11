@@ -156,8 +156,8 @@ function formatProjectRtf(
             parts.push(`{\\fs20\\b Next Steps:}\\par`);
             for (const step of stepsToShow) {
                 const bullet = step.completed ? '[x]' : '[ ]';
-                const ownerSuffix = step.ownerHint ? ` (${step.ownerHint})` : '';
-                parts.push(`{\\fs20   ${bullet} ${escapeRtf(step.text)}${escapeRtf(ownerSuffix)}}\\par`);
+                const assigneeSuffix = step.assigneeHint ? ` (${step.assigneeHint})` : '';
+                parts.push(`{\\fs20   ${bullet} ${escapeRtf(step.text)}${escapeRtf(assigneeSuffix)}}\\par`);
             }
         }
     }

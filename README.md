@@ -79,7 +79,7 @@ The long-term vision is to treat all hierarchy nodes (Tasks, Projects, etc.) as 
 ### Prerequisites
 
 - Node.js 20+
-- PostgreSQL 14+ (locally installed or remote)
+- PostgreSQL 15+
 - Git
 
 ### Development Setup

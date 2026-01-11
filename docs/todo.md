@@ -8,7 +8,7 @@ Workflow view"
 
 
 Record Inspector
-    @Owner chip should support multiple users
+    @Assignee chip should support multiple users
 
 User Accounts
     Create sign out option, account settings

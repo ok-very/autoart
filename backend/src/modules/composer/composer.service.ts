@@ -287,6 +287,8 @@ export const QuickCompose = {
         options: {
             description?: string;
             dueDate?: string;
+            /** Assignee field - maps to 'owner' field key for backward compatibility */
+            assignee?: string;
             actorId?: string | null;
             references?: Array<{ sourceRecordId: string }>;
         } = {}
@@ -301,6 +303,10 @@ export const QuickCompose = {
         if (options.dueDate) {
             fieldValues.push({ fieldName: 'dueDate', value: options.dueDate });
         }
+        // Map 'assignee' to the 'owner' field key for backward compatibility
+        if (options.assignee) {
+            fieldValues.push({ fieldName: 'assignee', value: options.assignee });
+        }
 
         return compose(
             {
@@ -312,6 +318,7 @@ export const QuickCompose = {
                         { fieldKey: 'title' },
                         { fieldKey: 'description' },
                         { fieldKey: 'dueDate' },
+                        { fieldKey: 'assignee' },
                     ],
                 },
                 fieldValues,

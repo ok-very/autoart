@@ -123,8 +123,8 @@ function formatProjectMarkdown(
             lines.push('**Next Steps:**');
             for (const step of stepsToShow) {
                 const bullet = step.completed ? '[x]' : '[ ]';
-                const ownerSuffix = step.ownerHint ? ` *(${step.ownerHint})*` : '';
-                lines.push(`- ${bullet} ${step.text}${ownerSuffix}`);
+                const assigneeSuffix = step.assigneeHint ? ` *(${step.assigneeHint})*` : '';
+                lines.push(`- ${bullet} ${step.text}${assigneeSuffix}`);
             }
             lines.push('');
         }

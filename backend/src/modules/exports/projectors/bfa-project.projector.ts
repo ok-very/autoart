@@ -472,7 +472,7 @@ function formatNextSteps(
         return {
             text: t.title,
             completed,
-            ownerHint: t.metadata?.assignee as string | undefined,
+            assigneeHint: t.metadata?.assignee as string | undefined,
             dueHint: t.metadata?.due_date as string | undefined,
         };
     });

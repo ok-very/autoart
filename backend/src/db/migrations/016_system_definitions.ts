@@ -34,7 +34,7 @@ const TASK_SCHEMA = {
             options: WORKFLOW_STATUS_OPTIONS,
             statusConfig: WORKFLOW_STATUS_CONFIG,
         },
-        { key: 'owner', type: 'user', label: 'Owner' },
+        { key: 'owner', type: 'user', label: 'Assignee' },
         { key: 'dueDate', type: 'date', label: 'Due' },
         { key: 'tags', type: 'tags', label: 'Tags' },
         { key: 'description', type: 'textarea', label: 'Description' },
@@ -52,7 +52,7 @@ const SUBTASK_SCHEMA = {
             options: WORKFLOW_STATUS_OPTIONS,
             statusConfig: WORKFLOW_STATUS_CONFIG,
         },
-        { key: 'owner', type: 'user', label: 'Owner' },
+        { key: 'owner', type: 'user', label: 'Assignee' },
         { key: 'dueDate', type: 'date', label: 'Due' },
     ],
 };
