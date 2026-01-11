@@ -65,7 +65,7 @@ export function getStatusDisplay(
 export const TaskMetadataSchema = z
     .object({
         status: TaskStatusSchema.optional(),
-        // Owner can be a string (name/id) or an object with user details
+        // Assignee - key is "owner" for backward compatibility (see .CLAUDE.md nomenclature)
         owner: z.union([
             z.string(),
             z.object({
@@ -128,7 +128,7 @@ export const DEFAULT_TASK_FIELDS: TaskFieldDef[] = [
     {
         key: 'owner',
         type: 'user',
-        label: 'Owner',
+        label: 'Assignee', // Nomenclature: UI displays "Assignee", key remains "owner" for compatibility
         width: 96,
         showInCollapsed: true,
         showInExpanded: true,
