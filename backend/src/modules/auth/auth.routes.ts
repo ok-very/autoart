@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
 import { registerSchema, loginSchema, refreshSchema, RegisterInput, LoginInput, RefreshInput } from './auth.schemas.js';
 import * as authService from './auth.service.js';
+import * as oauthService from './oauth.service.js';
 import { AppError } from '../../utils/errors.js';
 
 export async function authRoutes(fastify: FastifyInstance) {
@@ -110,6 +111,57 @@ export async function authRoutes(fastify: FastifyInstance) {
 
     const users = await authService.searchUsers(query, limit);
     return reply.send({ users });
+  });
+
+  // ============================================================================
+  // GOOGLE OAUTH ENDPOINTS
+  // ============================================================================
+
+  // Initiate Google OAuth flow
+  fastify.get('/google', async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { url, state } = oauthService.getGoogleAuthUrl();
+      return reply.send({ url, state });
+    } catch (err) {
+      if (err instanceof AppError) {
+        return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+      }
+      throw err;
+    }
+  });
+
+  // Handle Google OAuth callback
+  interface GoogleCallbackQuery {
+    Querystring: { code?: string; state?: string; error?: string };
+  }
+  fastify.get<GoogleCallbackQuery>('/google/callback', async (request, reply) => {
+    const { code, state, error } = request.query;
+
+    // User denied consent
+    if (error) {
+      return reply.code(400).send({ error: 'OAUTH_DENIED', message: 'User denied consent' });
+    }
+
+    if (!code || !state) {
+      return reply.code(400).send({ error: 'BAD_REQUEST', message: 'Missing code or state parameter' });
+    }
+
+    try {
+      const { user } = await oauthService.handleGoogleCallback(code, state);
+      const refreshToken = await authService.createSession(user.id);
+      const accessToken = fastify.jwt.sign({ userId: user.id, email: user.email });
+
+      return reply.send({
+        user: { id: user.id, email: user.email, name: user.name },
+        accessToken,
+        refreshToken,
+      });
+    } catch (err) {
+      if (err instanceof AppError) {
+        return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+      }
+      throw err;
+    }
   });
 
   // ============================================================================
