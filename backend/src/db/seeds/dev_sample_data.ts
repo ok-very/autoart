@@ -279,7 +279,7 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
       title: 'Confirm Location Boundary',
       description: 'Verify the GPS coordinates match the city filing.',
       status: 'in-progress',
-      owner: 'SJ',
+      assignee: 'SJ',
       dueDate: '2025-02-05',
       percentComplete: 35,
       tags: ['Engineering'],
@@ -288,7 +288,7 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
       title: 'Submit Survey Report',
       description: 'Upload the final PDF before the deadline.',
       status: 'blocked',
-      owner: 'MR',
+      assignee: 'MR',
       dueDate: '2025-02-10',
       percentComplete: 10,
       tags: [],
@@ -297,7 +297,7 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
       title: 'Document Site Conditions',
       description: 'Take photos of current wall condition and surroundings.',
       status: 'done',
-      owner: 'SJ',
+      assignee: 'SJ',
       dueDate: '2025-02-03',
       percentComplete: 100,
       tags: ['Documentation'],
@@ -311,7 +311,7 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
       { fieldKey: 'title', value: task.title },
       { fieldKey: 'description', value: task.description },
       { fieldKey: 'status', value: task.status },
-      { fieldKey: 'owner', value: task.owner },
+      { fieldKey: 'assignee', value: task.assignee },
       { fieldKey: 'dueDate', value: task.dueDate },
       { fieldKey: 'percentComplete', value: task.percentComplete },
       ...(task.tags.length > 0 ? [{ fieldKey: 'tags', value: task.tags }] : []),
@@ -357,16 +357,16 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
   // Subtasks for "Confirm Location Boundary" task
   const confirmBoundaryTask = taskActions[0];
   const confirmBoundarySubtasks = [
-    { title: 'Pull property records from city archives', status: 'done', owner: 'SJ' },
-    { title: 'Cross-reference GPS with survey maps', status: 'in-progress', owner: 'SJ' },
-    { title: 'Get sign-off from property owner', status: 'not-started', owner: null },
+    { title: 'Pull property records from city archives', status: 'done', assignee: 'SJ' },
+    { title: 'Cross-reference GPS with survey maps', status: 'in-progress', assignee: 'SJ' },
+    { title: 'Get sign-off from property owner', status: 'not-started', assignee: null },
   ];
 
   for (const subtask of confirmBoundarySubtasks) {
     const fieldBindings = [
       { fieldKey: 'title', value: subtask.title },
       { fieldKey: 'status', value: subtask.status },
-      ...(subtask.owner ? [{ fieldKey: 'owner', value: subtask.owner }] : []),
+      ...(subtask.assignee ? [{ fieldKey: 'assignee', value: subtask.assignee }] : []),
     ];
 
     const [subtaskAction] = await db
@@ -400,15 +400,15 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
   // Subtasks for "Submit Survey Report" task
   const submitReportTask = taskActions[1];
   const submitReportSubtasks = [
-    { title: 'Compile field notes into draft', status: 'done', owner: 'MR' },
-    { title: 'Review with engineering lead', status: 'blocked', owner: 'MR' },
+    { title: 'Compile field notes into draft', status: 'done', assignee: 'MR' },
+    { title: 'Review with engineering lead', status: 'blocked', assignee: 'MR' },
   ];
 
   for (const subtask of submitReportSubtasks) {
     const fieldBindings = [
       { fieldKey: 'title', value: subtask.title },
       { fieldKey: 'status', value: subtask.status },
-      { fieldKey: 'owner', value: subtask.owner },
+      { fieldKey: 'assignee', value: subtask.assignee },
     ];
 
     const [subtaskAction] = await db
@@ -464,9 +464,9 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
     );
     throw new Error(
       `SEED GUARDRAIL FAILED: Legacy hierarchy_nodes detected!\n` +
-        `Found: ${JSON.stringify(typeCounts)}\n` +
-        `These types should be created as Actions, not hierarchy_nodes.\n` +
-        `See dev_sample_data.ts header comment for architecture guidance.`
+      `Found: ${JSON.stringify(typeCounts)}\n` +
+      `These types should be created as Actions, not hierarchy_nodes.\n` +
+      `See dev_sample_data.ts header comment for architecture guidance.`
     );
   }
 

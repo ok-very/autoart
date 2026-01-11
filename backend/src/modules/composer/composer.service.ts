@@ -305,7 +305,7 @@ export const QuickCompose = {
         }
         // Map 'assignee' to the 'owner' field key for backward compatibility
         if (options.assignee) {
-            fieldValues.push({ fieldName: 'owner', value: options.assignee });
+            fieldValues.push({ fieldName: 'assignee', value: options.assignee });
         }
 
         return compose(
@@ -318,7 +318,7 @@ export const QuickCompose = {
                         { fieldKey: 'title' },
                         { fieldKey: 'description' },
                         { fieldKey: 'dueDate' },
-                        { fieldKey: 'owner' },
+                        { fieldKey: 'assignee' },
                     ],
                 },
                 fieldValues,

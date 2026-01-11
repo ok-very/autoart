@@ -65,8 +65,8 @@ export function getStatusDisplay(
 export const TaskMetadataSchema = z
     .object({
         status: TaskStatusSchema.optional(),
-        // Assignee - key is "owner" for backward compatibility (see .CLAUDE.md nomenclature)
-        owner: z.union([
+        // Assignee field - canonical key is "assignee"
+        assignee: z.union([
             z.string(),
             z.object({
                 id: z.string().optional(),
@@ -126,9 +126,9 @@ export const DEFAULT_TASK_FIELDS: TaskFieldDef[] = [
         renderAs: 'status',
     },
     {
-        key: 'owner',
+        key: 'assignee',
         type: 'user',
-        label: 'Assignee', // Nomenclature: UI displays "Assignee", key remains "owner" for compatibility
+        label: 'Assignee',
         width: 96,
         showInCollapsed: true,
         showInExpanded: true,
@@ -187,11 +187,11 @@ export function parseTaskMetadata(input: unknown): TaskMetadata {
     const salvaged: TaskMetadata = {};
     const statusResult = TaskStatusSchema.safeParse(candidate.status);
     if (statusResult.success) salvaged.status = statusResult.data;
-    // Owner can be string or object
-    if (typeof candidate.owner === 'string') {
-        salvaged.owner = candidate.owner;
-    } else if (candidate.owner && typeof candidate.owner === 'object') {
-        salvaged.owner = candidate.owner as { id?: string; name?: string; email?: string };
+    // Assignee can be string or object
+    if (typeof candidate.assignee === 'string') {
+        salvaged.assignee = candidate.assignee;
+    } else if (candidate.assignee && typeof candidate.assignee === 'object') {
+        salvaged.assignee = candidate.assignee as { id?: string; name?: string; email?: string };
     }
     if (typeof candidate.dueDate === 'string') salvaged.dueDate = candidate.dueDate;
     if (typeof candidate.percentComplete === 'number') {

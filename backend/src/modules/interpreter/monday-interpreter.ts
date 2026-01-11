@@ -84,7 +84,7 @@ const SPECIAL_COLUMN_PATTERNS: Array<{
     pattern: RegExp;
     specialMapping: ColumnMapping['specialMapping'];
 }> = [
-        { pattern: /^(owner|pm|manager|assigned|assignee)/i, specialMapping: 'owner' },
+        { pattern: /^(owner|pm|manager|assigned|assignee)/i, specialMapping: 'assignee' },
         { pattern: /^(due|deadline|target\s*date)/i, specialMapping: 'dueDate' },
         { pattern: /^(status|state|progress)/i, specialMapping: 'status' },
         { pattern: /^(title|name|item)/i, specialMapping: 'title' },
