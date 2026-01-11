@@ -2,11 +2,25 @@
  * Hierarchy Preview
  *
  * Renders import plan as a tree view (hierarchy projection).
+ * Shows inline classification badges on items that need attention.
  */
 
-import { ChevronRight, ChevronDown, Folder, FileText, Box } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, FileText, Box, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import type { ImportPlan, ImportPlanContainer, ImportPlanItem } from '../../api/hooks/imports';
+import type { ImportPlan, ImportPlanContainer, ImportPlanItem, ItemClassification } from '../../api/hooks/imports';
+
+// ============================================================================
+// CLASSIFICATION COLORS
+// ============================================================================
+
+const OUTCOME_STYLES: Record<string, { bg: string; text: string; icon: 'alert' | 'check' | 'none' }> = {
+    FACT_EMITTED: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: 'check' },
+    DERIVED_STATE: { bg: 'bg-blue-100', text: 'text-blue-700', icon: 'check' },
+    INTERNAL_WORK: { bg: 'bg-slate-100', text: 'text-slate-600', icon: 'none' },
+    EXTERNAL_WORK: { bg: 'bg-purple-100', text: 'text-purple-700', icon: 'check' },
+    AMBIGUOUS: { bg: 'bg-amber-100', text: 'text-amber-700', icon: 'alert' },
+    UNCLASSIFIED: { bg: 'bg-red-100', text: 'text-red-700', icon: 'alert' },
+};
 
 // ============================================================================
 // TYPES
@@ -26,6 +40,7 @@ interface TreeNode {
     parentId: string | null;
     children: TreeNode[];
     data: ImportPlanContainer | ImportPlanItem;
+    classification?: ItemClassification;
 }
 
 // ============================================================================
@@ -52,6 +67,34 @@ export function HierarchyPreview({
                 />
             ))}
         </div>
+    );
+}
+
+// ============================================================================
+// CLASSIFICATION BADGE COMPONENT
+// ============================================================================
+
+interface ClassificationBadgeProps {
+    classification: ItemClassification;
+}
+
+function ClassificationBadge({ classification }: ClassificationBadgeProps) {
+    // Show resolved outcome if available, otherwise current outcome
+    const outcome = classification.resolution?.resolvedOutcome || classification.outcome;
+    const isResolved = !!classification.resolution;
+    const needsAttention = !isResolved && (outcome === 'AMBIGUOUS' || outcome === 'UNCLASSIFIED');
+
+    const styles = OUTCOME_STYLES[outcome] || OUTCOME_STYLES.UNCLASSIFIED;
+
+    return (
+        <span
+            className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold uppercase rounded ${styles.bg} ${styles.text}`}
+            title={classification.rationale}
+        >
+            {needsAttention && <AlertCircle className="w-3 h-3" />}
+            {isResolved && <CheckCircle2 className="w-3 h-3" />}
+            {outcome.replace(/_/g, ' ')}
+        </span>
     );
 }
 
@@ -109,6 +152,11 @@ function TreeNodeView({ node, depth, selectedRecordId, onSelect }: TreeNodeViewP
                 {/* Title */}
                 <span className="text-sm font-medium truncate flex-1">{node.title}</span>
 
+                {/* Classification badge (for items) */}
+                {node.classification && (
+                    <ClassificationBadge classification={node.classification} />
+                )}
+
                 {/* Type badge */}
                 <span className="text-[10px] font-bold uppercase text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
                     {node.nodeType}
@@ -140,6 +188,14 @@ function TreeNodeView({ node, depth, selectedRecordId, onSelect }: TreeNodeViewP
 function buildTree(plan: ImportPlan): TreeNode[] {
     const nodeMap = new Map<string, TreeNode>();
 
+    // Build classification lookup by item tempId
+    const classificationMap = new Map<string, ItemClassification>();
+    if (plan.classifications) {
+        for (const c of plan.classifications) {
+            classificationMap.set(c.itemTempId, c);
+        }
+    }
+
     // Add containers
     for (const container of plan.containers) {
         nodeMap.set(container.tempId, {
@@ -153,7 +209,7 @@ function buildTree(plan: ImportPlan): TreeNode[] {
         });
     }
 
-    // Add items
+    // Add items with their classifications
     for (const item of plan.items) {
         nodeMap.set(item.tempId, {
             id: item.tempId,
@@ -163,6 +219,7 @@ function buildTree(plan: ImportPlan): TreeNode[] {
             parentId: item.parentTempId,
             children: [],
             data: item,
+            classification: classificationMap.get(item.tempId),
         });
     }
 

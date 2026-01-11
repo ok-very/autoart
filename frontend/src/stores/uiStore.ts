@@ -159,7 +159,7 @@ export const useUIStore = create<UIState>()(
 
       openDrawer: (type, props = {}) => set({ activeDrawer: { type, props } }),
       closeDrawer: () => set({ activeDrawer: null }),
-      setDrawerHeight: (height) => set({ drawerHeight: Math.max(100, Math.min(600, height)) }),
+      setDrawerHeight: (height) => set({ drawerHeight: Math.max(100, Math.min(1200, height)) }),
 
       // Legacy compatibility getters - derived from selection
       get inspectedNodeId() {

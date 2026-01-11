@@ -8,11 +8,10 @@
  */
 
 import { useState, useMemo } from 'react';
-import { FileSpreadsheet, Columns, Layers, Tag, AlertCircle } from 'lucide-react';
-import { Card, Text, Stack, Inline, Badge } from '../../ui/atoms';
+import { FileSpreadsheet, Columns, Layers, AlertCircle } from 'lucide-react';
+import { Text, Stack, Badge } from '../../ui/atoms';
 import { HierarchyPreview } from './HierarchyPreview';
 import { StagePreview } from './StagePreview';
-import { ClassificationPanel } from './ClassificationPanel';
 import { ExecutionControls } from './ExecutionControls';
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
 
@@ -20,14 +19,13 @@ import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
 // TYPES
 // ============================================================================
 
-type PreviewMode = 'hierarchy' | 'stage' | 'classification';
+type PreviewMode = 'hierarchy' | 'stage';
 
 interface ImportWorkbenchViewProps {
     session: ImportSession | null;
     plan: ImportPlan | null;
     selectedItemId: string | null;
     onSelectItem: (itemId: string | null) => void;
-    onPlanUpdated: (plan: ImportPlan) => void;
     onReset: () => void;
 }
 
@@ -53,7 +51,6 @@ export function ImportWorkbenchView({
     plan,
     selectedItemId,
     onSelectItem,
-    onPlanUpdated,
     onReset,
 }: ImportWorkbenchViewProps) {
     const [previewMode, setPreviewMode] = useState<PreviewMode>('hierarchy');
@@ -121,22 +118,15 @@ export function ImportWorkbenchView({
                         <Layers className="w-4 h-4" />
                         Stages
                     </button>
-                    <button
-                        onClick={() => setPreviewMode('classification')}
-                        className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                            previewMode === 'classification'
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'text-slate-600 hover:bg-slate-100'
-                        }`}
-                    >
-                        <Tag className="w-4 h-4" />
-                        Classifications
-                        {hasUnresolvedClassifications && (
-                            <span className="w-2 h-2 bg-amber-500 rounded-full" />
-                        )}
-                    </button>
+                    {/* Classification Summary - unresolved indicator */}
+                    {hasUnresolvedClassifications && (
+                        <Badge size="sm" className="bg-amber-100 text-amber-700 ml-2">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            Needs Review
+                        </Badge>
+                    )}
 
-                    {/* Classification Summary */}
+                    {/* Classification Counts */}
                     <div className="ml-auto flex items-center gap-2">
                         {Object.entries(outcomeCounts).map(([outcome, count]) => {
                             const colors = OUTCOME_COLORS[outcome] || { bg: 'bg-slate-100', text: 'text-slate-600' };
@@ -164,13 +154,6 @@ export function ImportWorkbenchView({
                         plan={plan}
                         selectedRecordId={selectedItemId}
                         onSelect={onSelectItem}
-                    />
-                )}
-                {previewMode === 'classification' && (
-                    <ClassificationPanel
-                        sessionId={session.id}
-                        plan={plan}
-                        onResolutionsSaved={onPlanUpdated}
                     />
                 )}
             </div>

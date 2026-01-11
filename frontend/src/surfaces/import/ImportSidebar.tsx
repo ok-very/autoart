@@ -6,7 +6,7 @@
  * Receives state from ImportPage via props.
  */
 
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, useMemo } from 'react';
 import {
     File,
     Calendar,
@@ -18,9 +18,11 @@ import {
     Loader2,
     Check,
     RefreshCw,
+    Search,
+    ChevronDown,
 } from 'lucide-react';
 import { clsx } from 'clsx';
-import { useConnections } from '../../api/connections';
+import { useConnections, useMondayBoards } from '../../api/connections';
 import { useUIStore } from '../../stores/uiStore';
 import {
     useCreateImportSession,
@@ -38,6 +40,10 @@ type SourceType = 'file' | 'monday' | 'api';
 
 interface ImportSidebarProps {
     width: number;
+    /** Current source type (controlled by parent for view switching) */
+    sourceType: SourceType;
+    /** Callback when source type changes */
+    onSourceChange: (sourceType: SourceType) => void;
     session: ImportSession | null;
     plan: ImportPlan | null;
     onSessionCreated: (session: ImportSession, plan: ImportPlan) => void;
@@ -86,9 +92,8 @@ function SourceIcon({ id, icon, label, isActive, isConnected, isDisabled, onClic
 // COMPONENT
 // ============================================================================
 
-export function ImportSidebar({ width, session, plan, onSessionCreated, onReset }: ImportSidebarProps) {
-    // State
-    const [sourceType, setSourceType] = useState<SourceType>('file');
+export function ImportSidebar({ width, sourceType, onSourceChange, session, onSessionCreated, onReset }: ImportSidebarProps) {
+    // State (sourceType is now controlled by parent)
     const [rawData, setRawData] = useState('');
     const [parserName, setParserName] = useState('monday');
     const [isLoading, setIsLoading] = useState(false);
@@ -96,7 +101,7 @@ export function ImportSidebar({ width, session, plan, onSessionCreated, onReset 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Hooks
-    const { openDrawer, closeDrawer } = useUIStore();
+    const { openDrawer } = useUIStore();
 
     // Connections
     const { data: connections } = useConnections();
@@ -143,30 +148,23 @@ export function ImportSidebar({ width, session, plan, onSessionCreated, onReset 
         }
     }, [rawData, parserName, createSession, generatePlan, onSessionCreated]);
 
-    // Handle Monday board selection via drawer
-    const handleMondaySelect = useCallback(() => {
-        openDrawer('monday-boards', {
-            onBoardImport: async (boardIds: string[]) => {
-                if (boardIds.length === 0) return;
+    // Handle Monday board selection - direct import (no drawer)
+    const handleBoardSelect = useCallback(async (boardId: string) => {
+        setIsLoading(true);
+        setError(null);
 
-                try {
-                    setIsLoading(true);
-                    setError(null);
-                    const result = await createConnectorSession.mutateAsync({
-                        connectorType: 'monday',
-                        boardId: boardIds[0],
-                    });
-                    closeDrawer();
-                    onSessionCreated(result.session, result.plan);
-                } catch (err) {
-                    setError((err as Error).message || 'Failed to import from Monday');
-                } finally {
-                    setIsLoading(false);
-                }
-            },
-            isImporting: isLoading,
-        });
-    }, [openDrawer, closeDrawer, createConnectorSession, isLoading, onSessionCreated]);
+        try {
+            const result = await createConnectorSession.mutateAsync({
+                connectorType: 'monday',
+                boardId,
+            });
+            onSessionCreated(result.session, result.plan);
+        } catch (err) {
+            setError((err as Error).message || 'Failed to import from Monday');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [createConnectorSession, onSessionCreated]);
 
     // Handle reset
     const handleReset = useCallback(() => {
@@ -221,7 +219,7 @@ export function ImportSidebar({ width, session, plan, onSessionCreated, onReset 
                     isActive={sourceType === 'file'}
                     isConnected={false}
                     isDisabled={false}
-                    onClick={() => setSourceType('file')}
+                    onClick={() => onSourceChange('file')}
                 />
                 <SourceIcon
                     id="monday"
@@ -230,7 +228,7 @@ export function ImportSidebar({ width, session, plan, onSessionCreated, onReset 
                     isActive={sourceType === 'monday'}
                     isConnected={isMondayConnected}
                     isDisabled={!isMondayConnected}
-                    onClick={() => isMondayConnected && setSourceType('monday')}
+                    onClick={() => isMondayConnected && onSourceChange('monday')}
                 />
                 <SourceIcon
                     id="api"
@@ -337,39 +335,13 @@ export function ImportSidebar({ width, session, plan, onSessionCreated, onReset 
                     </>
                 )}
 
-                {/* Monday Source */}
+                {/* Monday Source - Board list directly in sidebar */}
                 {sourceType === 'monday' && (
-                    <div className="flex-1 flex flex-col p-4">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">
-                            Monday.com
-                        </div>
-
-                        {error && (
-                            <div className="mb-3 px-3 py-2 bg-red-50 text-red-700 text-xs rounded-lg flex items-center gap-2">
-                                <AlertCircle className="w-4 h-4" />
-                                {error}
-                            </div>
-                        )}
-
-                        <p className="text-sm text-slate-600 mb-4">
-                            Select boards from your Monday.com workspace to import.
-                        </p>
-
-                        <button
-                            onClick={handleMondaySelect}
-                            disabled={isLoading}
-                            className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-white bg-amber-500 hover:bg-amber-600 disabled:bg-slate-300 rounded-lg transition-colors"
-                        >
-                            {isLoading ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                                <>
-                                    <Calendar className="w-4 h-4" />
-                                    Select Board
-                                </>
-                            )}
-                        </button>
-                    </div>
+                    <MondayBoardList
+                        onBoardSelect={handleBoardSelect}
+                        isLoading={isLoading}
+                        error={error}
+                    />
                 )}
 
                 {/* API Source (placeholder) */}
@@ -386,6 +358,123 @@ export function ImportSidebar({ width, session, plan, onSessionCreated, onReset 
                 )}
             </div>
         </aside>
+    );
+}
+
+// ============================================================================
+// MONDAY BOARD LIST (inline in sidebar)
+// ============================================================================
+
+interface MondayBoardListProps {
+    onBoardSelect: (boardId: string) => void;
+    isLoading: boolean;
+    error: string | null;
+}
+
+function MondayBoardList({ onBoardSelect, isLoading, error }: MondayBoardListProps) {
+    const { data: boards, isLoading: boardsLoading } = useMondayBoards();
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Filter boards by search
+    const filteredBoards = useMemo(() => {
+        if (!boards) return [];
+        if (!searchQuery.trim()) return boards;
+        const q = searchQuery.toLowerCase();
+        return boards.filter(
+            (b) => b.name.toLowerCase().includes(q) || b.workspace.toLowerCase().includes(q)
+        );
+    }, [boards, searchQuery]);
+
+    // Group by workspace
+    const boardsByWorkspace = useMemo(() => {
+        const grouped = new Map<string, typeof boards>();
+        for (const board of filteredBoards) {
+            const existing = grouped.get(board.workspace) ?? [];
+            grouped.set(board.workspace, [...existing, board]);
+        }
+        return grouped;
+    }, [filteredBoards]);
+
+    if (boardsLoading) {
+        return (
+            <div className="flex-1 flex items-center justify-center">
+                <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Search */}
+            <div className="p-3 border-b border-slate-100">
+                <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search boards..."
+                        className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    />
+                </div>
+            </div>
+
+            {/* Error */}
+            {error && (
+                <div className="mx-3 mt-2 px-2 py-1.5 bg-red-50 text-red-700 text-xs rounded flex items-center gap-1.5">
+                    <AlertCircle className="w-3 h-3" />
+                    {error}
+                </div>
+            )}
+
+            {/* Loading overlay when importing */}
+            {isLoading && (
+                <div className="mx-3 mt-2 px-2 py-1.5 bg-amber-50 text-amber-700 text-xs rounded flex items-center gap-1.5">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Importing...
+                </div>
+            )}
+
+            {/* Board list */}
+            <div className="flex-1 overflow-auto p-2">
+                {filteredBoards.length === 0 ? (
+                    <div className="text-center py-4 text-slate-400 text-sm">
+                        No boards found
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {Array.from(boardsByWorkspace.entries()).map(([workspace, workspaceBoards]) => (
+                            <div key={workspace}>
+                                <div className="flex items-center gap-1 px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                                    <ChevronDown className="w-3 h-3" />
+                                    {workspace}
+                                </div>
+                                <div className="space-y-0.5">
+                                    {workspaceBoards?.map((board) => (
+                                        <button
+                                            key={board.id}
+                                            onClick={() => onBoardSelect(board.id)}
+                                            disabled={isLoading}
+                                            className="w-full flex items-center gap-2 px-2 py-1.5 text-left rounded hover:bg-amber-50 transition-colors disabled:opacity-50"
+                                        >
+                                            <Calendar className="w-4 h-4 text-amber-500 shrink-0" />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-sm font-medium text-slate-700 truncate">
+                                                    {board.name}
+                                                </div>
+                                                <div className="text-[10px] text-slate-400">
+                                                    {board.itemCount} items
+                                                </div>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
     );
 }
 

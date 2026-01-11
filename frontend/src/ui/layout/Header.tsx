@@ -44,7 +44,9 @@ export function Header() {
   const isFieldsPage = location.pathname.startsWith('/fields');
   const isActionsPage = location.pathname.startsWith('/actions');
   const isEventsPage = location.pathname.startsWith('/events');
-  const isWorkbenchPage = location.pathname.startsWith('/workbench');
+  const isImportPage = location.pathname.startsWith('/import');
+  const isExportPage = location.pathname.startsWith('/export');
+  const isWorkbenchPage = isImportPage || isExportPage;
   const isComposerPage = location.pathname.startsWith('/composer');
   const isRegistryPage = isRecordsPage || isFieldsPage || isActionsPage || isEventsPage;
 
@@ -166,17 +168,39 @@ export function Header() {
             </Button>
           </Link>
 
-          {/* Workbench Link */}
-          <Link to="/workbench">
-            <Button
-              variant={isWorkbenchPage ? 'light' : 'subtle'}
-              color={isWorkbenchPage ? 'yellow' : 'gray'}
-              size="sm"
-              leftSection={<Hammer size={14} />}
-            >
-              Workbench
-            </Button>
-          </Link>
+          {/* Workbench Dropdown */}
+          <Menu>
+            <Menu.Target>
+              <Button
+                variant={isWorkbenchPage ? 'light' : 'subtle'}
+                color={isWorkbenchPage ? 'yellow' : 'gray'}
+                size="sm"
+                rightSection={<ChevronDown size={14} />}
+                leftSection={<Hammer size={14} />}
+              >
+                Workbench
+              </Button>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Item
+                component={Link}
+                to="/import"
+                leftSection={<FolderOpen size={16} />}
+                className={location.pathname.startsWith('/import') ? 'bg-amber-50' : ''}
+              >
+                Import
+              </Menu.Item>
+              <Menu.Item
+                component={Link}
+                to="/export"
+                leftSection={<Database size={16} />}
+                className={location.pathname.startsWith('/export') ? 'bg-amber-50' : ''}
+              >
+                Export
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </Inline>
 
         {!isRegistryPage && !isComposerPage && (
@@ -218,8 +242,8 @@ export function Header() {
                     <Menu.Item leftSection={<Library size={16} />} onClick={handleOpenLibrary}>
                       Template Library
                     </Menu.Item>
-                    <Menu.Item component={Link} to="/workbench" leftSection={<Hammer size={16} />}>
-                      Import Workbench
+                    <Menu.Item component={Link} to="/import" leftSection={<Hammer size={16} />}>
+                      Import Data
                     </Menu.Item>
                   </>
                 )}

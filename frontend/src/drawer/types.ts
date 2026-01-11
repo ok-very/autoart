@@ -159,6 +159,7 @@ export interface DrawerContextMap {
     'ingestion': IngestionContext;
     'integrations': IntegrationsContext;
     'monday-boards': MondayBoardsContext;
+    'classification': ClassificationContext;
 }
 
 // ==================== CONTEXT TYPES ====================
@@ -302,6 +303,26 @@ export interface MondayBoardsContext {
     onBoardImport: (boardIds: string[]) => Promise<void>;
     /** Whether import is currently in progress */
     isImporting?: boolean;
+}
+
+/** Context for classification resolution drawer */
+export interface ClassificationContext {
+    /** Import session ID */
+    sessionId: string;
+    /** Import plan with classifications */
+    plan: {
+        id: string;
+        items: Array<{ tempId: string; title: string }>;
+        classifications?: Array<{
+            itemTempId: string;
+            outcome: string;
+            confidence: string;
+            rationale: string;
+            resolution?: { resolvedOutcome: string };
+        }>;
+    };
+    /** Callback when resolutions are saved */
+    onResolutionsSaved: (plan: ClassificationContext['plan']) => void;
 }
 
 // ==================== HELPER FUNCTIONS ====================

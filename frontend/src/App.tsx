@@ -10,7 +10,8 @@ import { ActionsPage } from './pages/ActionsPage';
 import { EventsPage } from './pages/EventsPage';
 import { FieldsPage } from './pages/FieldsPage';
 import { ComposerPage } from './pages/ComposerPage';
-import { WorkbenchPage } from './pages/WorkbenchPage';
+import { ImportPage } from './pages/ImportPage';
+import { ExportPage } from './pages/ExportPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 
@@ -72,7 +73,8 @@ function App() {
       <Route path="/actions" element={<ActionsPage />} />
       <Route path="/events" element={<EventsPage />} />
       <Route path="/composer" element={<ComposerPage />} />
-      <Route path="/workbench" element={<WorkbenchPage />} />
+      <Route path="/import" element={<ImportPage />} />
+      <Route path="/export" element={<ExportPage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/" element={<MainLayout />} />
       <Route path="/project/:projectId" element={<MainLayout />} />

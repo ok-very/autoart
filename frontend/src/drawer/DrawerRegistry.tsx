@@ -157,6 +157,14 @@ export const DRAWER_DEFINITIONS: Record<keyof DrawerContextMap, DrawerDefinition
         dismissible: true,
         showClose: true,
     },
+    'classification': {
+        id: 'classification',
+        title: 'Resolve Classifications',
+        size: 'full',
+        sideEffects: [{ type: 'update', entityType: 'record' }],
+        dismissible: true,
+        showClose: true,
+    },
 };
 
 // ==================== LAZY LOADED VIEWS ====================
@@ -203,6 +211,9 @@ const ProjectLibraryDrawer = lazy(() =>
 );
 const MondayBoardsDrawer = lazy(() =>
     import('../ui/drawer/views/MondayBoardsDrawer').then((m) => ({ default: m.MondayBoardsDrawer }))
+);
+const ClassificationDrawerView = lazy(() =>
+    import('../surfaces/import/ClassificationPanel').then((m) => ({ default: m.ClassificationPanel }))
 );
 
 // ==================== LOADING FALLBACK ====================
@@ -304,6 +315,8 @@ export function DrawerRegistry({ type, context, onClose, onResult }: DrawerRegis
                 return <ProjectLibraryDrawer {...(context as any)} />;
             case 'monday-boards':
                 return <MondayBoardsDrawer {...(context as any)} />;
+            case 'classification':
+                return <ClassificationDrawerView {...(context as any)} />;
             default:
                 return (
                     <div className="p-4 text-slate-500">

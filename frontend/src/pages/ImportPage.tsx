@@ -1,29 +1,47 @@
 /**
  * ImportPage - Page wrapper for Import Workbench
  *
- * Layout: ImportSidebar | ImportWorkbenchView | ImportInspector + BottomDrawer
+ * Layout: ImportSidebar | Center View (swappable) | ImportInspector + BottomDrawer
  *
- * Follows the same pattern as ProjectPage and RecordsPage.
+ * Center view swaps based on source type:
+ * - file: ImportWorkbenchView
+ * - monday: MondayPreviewView
+ * - api: ApiPreviewView (placeholder)
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo, useEffect } from 'react';
 import { Header } from '../ui/layout/Header';
 import { ImportSidebar } from '../surfaces/import/ImportSidebar';
 import { ImportWorkbenchView } from '../surfaces/import/ImportWorkbenchView';
+import { MondayPreviewView } from '../surfaces/import/MondayPreviewView';
 import { ImportInspector } from '../surfaces/import/ImportInspector';
 import { BottomDrawer } from '../ui/drawer/BottomDrawer';
 import { ResizeHandle } from '../ui/common/ResizeHandle';
 import { useUIStore } from '../stores/uiStore';
 import type { ImportSession, ImportPlan } from '../api/hooks/imports';
 
+// Source type lifted to page level for view swapping
+export type ImportSourceType = 'file' | 'monday' | 'api';
+
 export function ImportPage() {
-    const { inspectorWidth, setInspectorWidth } = useUIStore();
+    const { inspectorWidth, setInspectorWidth, openDrawer, activeDrawer } = useUIStore();
     const [sidebarWidth, setSidebarWidth] = useState(280);
+
+    // Source type controls which center view is shown
+    const [sourceType, setSourceType] = useState<ImportSourceType>('file');
 
     // Import session state (lifted to page level for cross-component access)
     const [session, setSession] = useState<ImportSession | null>(null);
     const [plan, setPlan] = useState<ImportPlan | null>(null);
     const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+    // Check if there are unresolved classifications
+    const hasUnresolvedClassifications = useMemo(() => {
+        if (!plan?.classifications) return false;
+        return plan.classifications.some(
+            (c) => !c.resolution && (c.outcome === 'AMBIGUOUS' || c.outcome === 'UNCLASSIFIED')
+        );
+    }, [plan]);
 
     const handleSidebarResize = useCallback(
         (delta: number) => {
@@ -55,6 +73,44 @@ export function ImportPage() {
         setSelectedItemId(null);
     }, []);
 
+    // Open classification drawer when unresolved items exist
+    useEffect(() => {
+        if (hasUnresolvedClassifications && session && plan && activeDrawer?.type !== 'classification') {
+            openDrawer('classification', {
+                sessionId: session.id,
+                plan,
+                onResolutionsSaved: handlePlanUpdated,
+            });
+        }
+    }, [hasUnresolvedClassifications, session, plan, openDrawer, activeDrawer, handlePlanUpdated]);
+
+    // Render center view based on source type
+    const renderCenterView = () => {
+        switch (sourceType) {
+            case 'monday':
+                return (
+                    <MondayPreviewView
+                        session={session}
+                        plan={plan}
+                        selectedItemId={selectedItemId}
+                        onSelectItem={setSelectedItemId}
+                        onReset={handleReset}
+                    />
+                );
+            case 'file':
+            default:
+                return (
+                    <ImportWorkbenchView
+                        session={session}
+                        plan={plan}
+                        selectedItemId={selectedItemId}
+                        onSelectItem={setSelectedItemId}
+                        onReset={handleReset}
+                    />
+                );
+        }
+    };
+
     return (
         <div className="flex flex-col h-full">
             <Header />
@@ -62,6 +118,8 @@ export function ImportPage() {
                 {/* Left Sidebar: Source selection & configuration */}
                 <ImportSidebar
                     width={sidebarWidth}
+                    sourceType={sourceType}
+                    onSourceChange={setSourceType}
                     session={session}
                     plan={plan}
                     onSessionCreated={handleSessionCreated}
@@ -69,16 +127,9 @@ export function ImportPage() {
                 />
                 <ResizeHandle direction="right" onResize={handleSidebarResize} />
 
-                {/* Center: Preview workspace */}
+                {/* Center: Preview workspace (swappable based on source) */}
                 <div className="flex-1 flex flex-col overflow-hidden relative">
-                    <ImportWorkbenchView
-                        session={session}
-                        plan={plan}
-                        selectedItemId={selectedItemId}
-                        onSelectItem={setSelectedItemId}
-                        onPlanUpdated={handlePlanUpdated}
-                        onReset={handleReset}
-                    />
+                    {renderCenterView()}
                     <BottomDrawer />
                 </div>
 
