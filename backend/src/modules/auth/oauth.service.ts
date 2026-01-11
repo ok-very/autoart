@@ -6,6 +6,7 @@
 
 import { OAuth2Client } from 'google-auth-library';
 import crypto from 'crypto';
+import { sql } from 'kysely';
 
 import { db } from '../../db/client.js';
 import { AppError } from '../../utils/errors.js';
@@ -92,31 +93,45 @@ export async function handleGoogleCallback(code: string, state: string) {
     }
 
     // Exchange code for tokens
-    const { tokens } = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(tokens);
+    let tokens;
+    try {
+        const response = await oauth2Client.getToken(code);
+        tokens = response.tokens;
+        // Don't call setCredentials - it mutates the shared oauth2Client and creates race conditions
+        // Tokens are stored in the database and used per-request when needed
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        throw new AppError(500, `Failed to exchange authorization code: ${message}`, 'OAUTH_TOKEN_EXCHANGE_FAILED', { error: message });
+    }
+
+    // Validate access token exists
+    if (!tokens || !tokens.access_token) {
+        throw new AppError(500, 'No access token received from Google', 'OAUTH_NO_ACCESS_TOKEN');
+    }
 
     // Get user profile
-    const profile = await getGoogleProfile(tokens.access_token!);
+    const profile = await getGoogleProfile(tokens.access_token);
 
-    // Find or create user
-    let user = await db
-        .selectFrom('users')
-        .selectAll()
-        .where('email', '=', profile.email)
-        .where('deleted_at', 'is', null)
-        .executeTakeFirst();
-
-    if (!user) {
-        // Create new user (OAuth users don't need password)
-        user = await db
-            .insertInto('users')
-            .values({
-                email: profile.email,
+    // Find or create user (using upsert to handle concurrent OAuth callbacks)
+    const user = await db
+        .insertInto('users')
+        .values({
+            email: profile.email,
+            name: profile.name,
+            password_hash: '', // OAuth users have no password
+        })
+        .onConflict((oc) =>
+            oc.column('email').doUpdateSet({
+                // Update name if it changed, but only for non-deleted users
                 name: profile.name,
-                password_hash: '', // OAuth users have no password
             })
-            .returningAll()
-            .executeTakeFirstOrThrow();
+        )
+        .returningAll()
+        .executeTakeFirstOrThrow();
+
+    // Verify user is not soft-deleted
+    if (user.deleted_at !== null) {
+        throw new AppError(403, 'This account has been deactivated', 'ACCOUNT_DEACTIVATED');
     }
 
     // Store Google tokens in connection_credentials table
@@ -137,7 +152,8 @@ export async function handleGoogleCallback(code: string, state: string) {
         .onConflict((oc) =>
             oc.columns(['user_id', 'provider']).doUpdateSet({
                 access_token: tokens.access_token!,
-                refresh_token: tokens.refresh_token || null,
+                // Preserve existing refresh_token if Google doesn't return a new one
+                refresh_token: tokens.refresh_token ? tokens.refresh_token : sql`refresh_token`,
                 expires_at: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
                 scopes: JSON.stringify(tokens.scope?.split(' ') || []),
                 metadata: JSON.stringify({
@@ -163,10 +179,29 @@ async function getGoogleProfile(accessToken: string): Promise<{ email: string; n
     });
 
     if (!response.ok) {
-        throw new AppError(500, 'Failed to fetch Google profile', 'OAUTH_PROFILE_FAILED');
+        const statusText = response.statusText;
+        const body = await response.text().catch(() => 'Unable to read response body');
+        throw new AppError(
+            500,
+            'Failed to fetch Google profile',
+            'OAUTH_PROFILE_FAILED',
+            { status: response.status, statusText, body }
+        );
     }
 
     const data = await response.json();
+
+    // Validate email exists and is non-empty
+    if (!data.email || typeof data.email !== 'string' || data.email.trim() === '') {
+        // Log only non-PII fields to avoid exposing sensitive profile data
+        throw new AppError(400, 'Google profile missing email', 'OAUTH_PROFILE_MISSING_EMAIL', {
+            provider: data.provider || 'google',
+            id: data.id || data.sub,
+            emailPresent: Boolean(data.email),
+            domain: data.hd || null,
+        });
+    }
+
     return {
         email: data.email,
         name: data.name || data.email.split('@')[0],

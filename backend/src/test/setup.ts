@@ -49,6 +49,49 @@ export async function cleanupTestData(db: Kysely<Database>, testPrefix: string):
   // Delete in reverse dependency order
   // Wrap each in try-catch in case tables don't exist
 
+  // First delete events (references actions via action_id)
+  try {
+    await db.deleteFrom('events')
+      .where('context_id', 'in',
+        db.selectFrom('hierarchy_nodes')
+          .select('id')
+          .where('title', 'like', `${testPrefix}%`)
+      )
+      .execute();
+  } catch {
+    // Table may not exist
+  }
+
+  // Then delete action_references (references actions via action_id)
+  try {
+    await db.deleteFrom('action_references')
+      .where('action_id', 'in',
+        db.selectFrom('actions')
+          .select('id')
+          .where('context_id', 'in',
+            db.selectFrom('hierarchy_nodes')
+              .select('id')
+              .where('title', 'like', `${testPrefix}%`)
+          )
+      )
+      .execute();
+  } catch {
+    // Table may not exist
+  }
+
+  // Then delete actions (references hierarchy_nodes via context_id)
+  try {
+    await db.deleteFrom('actions')
+      .where('context_id', 'in',
+        db.selectFrom('hierarchy_nodes')
+          .select('id')
+          .where('title', 'like', `${testPrefix}%`)
+      )
+      .execute();
+  } catch {
+    // Table may not exist
+  }
+
   try {
     await db.deleteFrom('task_references')
       .where('task_id', 'in',

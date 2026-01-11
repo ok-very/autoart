@@ -416,6 +416,7 @@ export class GoogleDocsConnector {
 
     /**
      * Apply BFA-style formatting to the document.
+     * - Font family (default: Calibri for BFA)
      * - Bold headers
      * - Bullet formatting
      * - Yellow highlighting for current month items
@@ -423,15 +424,32 @@ export class GoogleDocsConnector {
     private async applyBfaFormatting(
         documentId: string,
         _projects: BfaProjectExportModel[],
-        _options: ExportOptions
+        _options: ExportOptions,
+        font: string = 'Calibri'
     ): Promise<void> {
         // Get current document to find text positions
         const doc = await this.client.getDocument(documentId);
         const requests: GoogleDocumentRequest[] = [];
+        const text = this.extractPlainText(doc);
+
+        // Apply font to entire document first
+        if (text.length > 0) {
+            requests.push({
+                updateTextStyle: {
+                    range: { startIndex: 1, endIndex: text.length + 1 },
+                    textStyle: {
+                        weightedFontFamily: {
+                            fontFamily: font,
+                        },
+                        fontSize: { magnitude: 11, unit: 'PT' },
+                    },
+                    fields: 'weightedFontFamily,fontSize',
+                },
+            });
+        }
 
         // Find and format section headers (PUBLIC ART PROJECTS, etc.)
         const sectionHeaders = ['PUBLIC ART PROJECTS', 'CORPORATE PROJECTS', 'PRIVATE CORPORATE PROJECTS'];
-        const text = this.extractPlainText(doc);
 
         for (const header of sectionHeaders) {
             const index = text.indexOf(header);
