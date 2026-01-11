@@ -134,14 +134,6 @@ export const queryKeys = {
   },
 
   // ============================================================================
-  // COMPOSER (Task Builder)
-  // ============================================================================
-  composer: {
-    // Composer doesn't use query keys (mutations only)
-    // But including for completeness
-  },
-
-  // ============================================================================
   // PROJECT LOG (Event Stream)
   // ============================================================================
   projectLog: {
@@ -208,38 +200,25 @@ export const queryKeys = {
 
 /**
  * Helper type to extract query key types
- * Usage: type MyKey = QueryKey<typeof queryKeys.actions.detail>;
  */
 export type QueryKey<T extends (...args: any[]) => readonly any[]> = ReturnType<T>;
 
 /**
  * Type-safe invalidation helpers
- * These ensure you're using the correct key structure when invalidating queries
  */
 export const invalidationHelpers = {
-  /**
-   * Invalidate all action-related queries for a specific action
-   */
   invalidateAction: (queryClient: any, actionId: string) => {
     queryClient.invalidateQueries({ queryKey: queryKeys.actions.detail(actionId) });
     queryClient.invalidateQueries({ queryKey: queryKeys.actionViews.detail(actionId) });
     queryClient.invalidateQueries({ queryKey: queryKeys.events.byAction(actionId) });
     queryClient.invalidateQueries({ queryKey: queryKeys.actionReferences.byAction(actionId) });
   },
-
-  /**
-   * Invalidate all queries for a specific context
-   */
   invalidateContext: (queryClient: any, contextId: string, contextType: ContextType) => {
     queryClient.invalidateQueries({ queryKey: queryKeys.actions.byContext(contextId, contextType) });
     queryClient.invalidateQueries({ queryKey: queryKeys.actionViews.byContext(contextId) });
     queryClient.invalidateQueries({ queryKey: queryKeys.events.byContext(contextId, contextType) });
     queryClient.invalidateQueries({ queryKey: queryKeys.workflowSurface.nodes(contextId) });
   },
-
-  /**
-   * Invalidate all hierarchy queries (after moving/creating nodes)
-   */
   invalidateHierarchy: (queryClient: any) => {
     queryClient.invalidateQueries({ queryKey: queryKeys.hierarchy.all() });
   },
