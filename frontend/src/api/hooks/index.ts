@@ -248,5 +248,5 @@ export {
 // ============================================================================
 
 // Query Keys - Centralized TanStack Query key definitions
-export { queryKeys, invalidationHelpers } from './queryKeys';
-export type { QueryKey } from './queryKeys';
+export { queryKeys, invalidationHelpers } from '../queryKeys';
+export type { QueryKey } from '../queryKeys';

@@ -9,7 +9,7 @@ import type {
     BfaProjectExportModel,
 } from '../../../surfaces/export/types';
 import { api } from '../../client';
-import { queryKeys } from '../queryKeys';
+import { queryKeys } from '../../queryKeys';
 
 export type ExportFormat = 'rtf' | 'plaintext' | 'markdown' | 'csv' | 'google-doc';
 

@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { Event, ContextType } from '@autoart/shared';
 
 import { api } from '../../client';
-import { queryKeys } from '../queryKeys';
+import { queryKeys } from '../../queryKeys';
 
 // ============================================================================
 // TYPES

@@ -5,7 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../../client';
-import { queryKeys } from '../queryKeys';
+import { queryKeys } from '../../queryKeys';
 
 export interface ImportSession {
     id: string;

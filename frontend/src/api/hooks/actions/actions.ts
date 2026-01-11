@@ -18,7 +18,7 @@ import type {
 } from '@autoart/shared';
 
 import { api } from '../../client';
-import { queryKeys, invalidationHelpers } from '../queryKeys';
+import { queryKeys, invalidationHelpers } from '../../queryKeys';
 
 // ============================================================================
 // ACTIONS
