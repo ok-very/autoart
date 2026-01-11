@@ -11,10 +11,9 @@
  * - Workflow operations (event emission helpers)
  */
 
-// Re-export from parent directory (hooks will be moved here)
-export * from '../actions';
-export * from '../actionViews';
-export * from '../actionReferences';
-export * from '../composer';
-export * from '../projectLog';
-export * from '../workflowSurface';
+export * from './actions';
+export * from './actionViews';
+export * from './actionReferences';
+export * from './composer';
+export * from './projectLog';
+export * from './workflowSurface';
