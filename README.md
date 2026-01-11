@@ -210,6 +210,8 @@ autoart_v02/
 │   ├── deploy.sh           # Production deployment
 │   ├── backup.sh           # Database backup
 │   └── ...
+│
+└── .env.example             # Environment template
 ```
 
 ## API Endpoints
