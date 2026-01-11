@@ -5,7 +5,7 @@
  */
 
 import { ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { COMMON_FONTS, type FontOption } from '../utils/fonts';
 
 interface FontSelectorProps {
@@ -22,16 +22,79 @@ export function FontSelector({
     disabled = false,
 }: FontSelectorProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const [focusedIndex, setFocusedIndex] = useState(0);
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const listboxRef = useRef<HTMLDivElement>(null);
+    const optionsRef = useRef<(HTMLButtonElement | null)[]>([]);
 
     const selectedFontOption = availableFonts.find((f) => f.family === selectedFont);
 
+    // Initialize/Reset focused index when opening
+    useEffect(() => {
+        if (isOpen) {
+            const index = availableFonts.findIndex((f) => f.family === selectedFont);
+            setFocusedIndex(index >= 0 ? index : 0);
+            // Focus active option after render
+            requestAnimationFrame(() => {
+                optionsRef.current[index >= 0 ? index : 0]?.focus();
+            });
+        }
+    }, [isOpen]);
+
+    // Update focus when index changes
+    useEffect(() => {
+        if (isOpen && optionsRef.current[focusedIndex]) {
+            optionsRef.current[focusedIndex]?.focus();
+        }
+    }, [focusedIndex, isOpen]);
+
+    const handleTriggerKeyDown = (e: KeyboardEvent) => {
+        if (disabled) return;
+
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsOpen((prev) => !prev);
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setIsOpen(true);
+        }
+    };
+
+    const handleListKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            setIsOpen(false);
+            buttonRef.current?.focus();
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setFocusedIndex((prev) => (prev + 1) % availableFonts.length);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setFocusedIndex((prev) => (prev - 1 + availableFonts.length) % availableFonts.length);
+        } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onChange(availableFonts[focusedIndex].family);
+            setIsOpen(false);
+            buttonRef.current?.focus();
+        } else if (e.key === 'Tab') {
+            setIsOpen(false);
+        }
+    };
+
     return (
         <div className="relative">
-            <label className="block text-sm font-medium text-slate-700 mb-1">Font Family</label>
+            <label id="font-selector-label" className="block text-sm font-medium text-slate-700 mb-1">
+                Font Family
+            </label>
             <button
+                ref={buttonRef}
                 type="button"
                 onClick={() => !disabled && setIsOpen(!isOpen)}
+                onKeyDown={handleTriggerKeyDown}
                 disabled={disabled}
+                aria-haspopup="listbox"
+                aria-expanded={isOpen}
+                aria-labelledby="font-selector-label"
                 className="w-full flex items-center justify-between px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 <span className="flex items-center gap-2">
@@ -46,16 +109,28 @@ export function FontSelector({
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-                    <div className="absolute z-20 mt-1 w-full bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-auto">
-                        {availableFonts.map((font) => (
+                    <div
+                        ref={listboxRef}
+                        role="listbox"
+                        aria-labelledby="font-selector-label"
+                        onKeyDown={handleListKeyDown}
+                        className="absolute z-20 mt-1 w-full bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-auto focus:outline-none"
+                    >
+                        {availableFonts.map((font, index) => (
                             <button
                                 key={font.family}
+                                ref={(el) => (optionsRef.current[index] = el)}
                                 type="button"
+                                role="option"
+                                aria-selected={font.family === selectedFont}
+                                tabIndex={focusedIndex === index ? 0 : -1}
                                 onClick={() => {
                                     onChange(font.family);
                                     setIsOpen(false);
+                                    buttonRef.current?.focus();
                                 }}
-                                className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-slate-100 ${font.family === selectedFont ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
+                                onMouseEnter={() => setFocusedIndex(index)}
+                                className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-slate-100 focus:bg-slate-100 focus:outline-none ${font.family === selectedFont ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
                                     }`}
                             >
                                 <span style={{ fontFamily: font.family }}>{font.family}</span>
