@@ -1,8 +1,10 @@
 import { clsx } from 'clsx';
+
 import type { FieldViewModel } from '@autoart/shared/domain';
+
 import { TagsInput } from './TagsInput';
-import { StatusFieldEditor } from '../semantic/StatusFieldEditor';
 import { DateFieldEditor } from '../semantic/DateFieldEditor';
+import { StatusFieldEditor } from '../semantic/StatusFieldEditor';
 
 /**
  * Status configuration for rendering status fields

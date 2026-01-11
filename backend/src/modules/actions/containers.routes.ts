@@ -6,8 +6,9 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { z } from 'zod';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { z } from 'zod';
+
 import * as actionsService from './actions.service.js';
 
 const ProjectIdParamSchema = z.object({

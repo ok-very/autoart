@@ -2,8 +2,8 @@
  * TableRow / TableHeaderRow - Row primitives with consistent height and states
  */
 
-import { forwardRef, type HTMLAttributes } from 'react';
 import { clsx } from 'clsx';
+import { forwardRef, type HTMLAttributes } from 'react';
 
 /** Row height variants */
 export type RowSize = 'xs' | 'sm' | 'md';

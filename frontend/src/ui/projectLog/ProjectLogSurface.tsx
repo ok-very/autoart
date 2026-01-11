@@ -11,17 +11,20 @@
  * - Optional grouping by action
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, Loader2, RefreshCw } from 'lucide-react';
-import { useUIStore } from '../../stores/uiStore';
-import { useHierarchyStore } from '../../stores/hierarchyStore';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+
+import type { ContextType } from '@autoart/shared';
+
+import { type EventCategory, getEventTypesByCategory } from './eventFormatters';
+import { ProjectLogEventRow } from './ProjectLogEventRow';
+import { ProjectLogFilterBar } from './ProjectLogFilterBar';
 import { useProjectTree } from '../../api/hooks';
 import { useProjectLogEvents } from '../../api/hooks/projectLog';
-import { ProjectLogFilterBar } from './ProjectLogFilterBar';
-import { ProjectLogEventRow } from './ProjectLogEventRow';
-import { type EventCategory, getEventTypesByCategory } from './eventFormatters';
+import { useHierarchyStore } from '../../stores/hierarchyStore';
+import { useUIStore } from '../../stores/uiStore';
 import type { HierarchyNode } from '../../types';
-import type { ContextType } from '@autoart/shared';
+
 
 const PAGE_SIZE = 50;
 

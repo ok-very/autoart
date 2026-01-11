@@ -1,8 +1,9 @@
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
+
+import type { RegisterInput, LoginInput } from './auth.schemas.js';
 import { db } from '../../db/client.js';
 import { ConflictError, UnauthorizedError } from '../../utils/errors.js';
-import type { RegisterInput, LoginInput } from './auth.schemas.js';
 
 const SALT_ROUNDS = 10;
 const REFRESH_TOKEN_DAYS = 7;

@@ -1,8 +1,9 @@
 import { sql } from 'kysely';
-import { db } from '../../db/client.js';
-import { NotFoundError, ValidationError } from '../../utils/errors.js';
+
 import type { CreateNodeInput, UpdateNodeInput, MoveNodeInput, CloneNodeInput } from './hierarchy.schemas.js';
+import { db } from '../../db/client.js';
 import type { HierarchyNode, NodeType } from '../../db/schema.js';
+import { NotFoundError, ValidationError } from '../../utils/errors.js';
 import * as recordsService from '../records/records.service.js';
 
 // Validate hierarchy rules

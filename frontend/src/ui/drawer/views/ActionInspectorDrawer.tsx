@@ -8,11 +8,12 @@
  * - Mutation Actions (Retract/Amend buttons)
  */
 
-import { useState } from 'react';
 import { ExternalLink, XCircle, PencilLine, Eye, EyeOff, Zap, ArrowDownRight } from 'lucide-react';
-import { useUIStore } from '../../../stores/uiStore';
-import { useAction, useActionEvents, useRetractAction, useAmendAction } from '../../../api/hooks';
-import { EventRow } from '../../../ui/primitives/EventRow';
+import { useState } from 'react';
+
+import { useAction, useActionEvents, useRetractAction, useAmendAction } from '@/api/hooks';
+import { useUIStore } from '@/stores';
+import { EventRow } from '@/ui/primitives/EventRow';
 
 interface ActionInspectorDrawerProps {
     actionId: string;

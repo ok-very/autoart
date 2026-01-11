@@ -32,13 +32,13 @@ export { intentMappingRules } from './intent-mapping-rules.js';
 export { intentMappingRules as taskMappingRules } from './intent-mapping-rules.js';
 
 // Combined default rules
-import { meetingMappingRules } from './meeting-rules.js';
 import { communicationMappingRules } from './communication-rules.js';
-import { documentMappingRules } from './document-rules.js';
 import { decisionMappingRules } from './decision-rules.js';
-import { invoiceMappingRules } from './invoice-rules.js';
-import { processMappingRules } from './process-rules.js';
+import { documentMappingRules } from './document-rules.js';
 import { intentMappingRules } from './intent-mapping-rules.js';
+import { invoiceMappingRules } from './invoice-rules.js';
+import { meetingMappingRules } from './meeting-rules.js';
+import { processMappingRules } from './process-rules.js';
 import type { MappingRule } from './types.js';
 
 /**

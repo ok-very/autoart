@@ -6,7 +6,7 @@
  * Receives state from ImportPage via props.
  */
 
-import { useRef, useCallback, useState, useMemo } from 'react';
+import { clsx } from 'clsx';
 import {
     File,
     Calendar,
@@ -21,9 +21,9 @@ import {
     Search,
     ChevronDown,
 } from 'lucide-react';
-import { clsx } from 'clsx';
+import { useRef, useCallback, useState, useMemo } from 'react';
+
 import { useConnections, useMondayBoards } from '../../api/connections';
-import { useUIStore } from '../../stores/uiStore';
 import {
     useCreateImportSession,
     useGenerateImportPlan,
@@ -31,6 +31,7 @@ import {
     type ImportSession,
     type ImportPlan,
 } from '../../api/hooks/imports';
+import { useUIStore } from '../../stores/uiStore';
 
 // ============================================================================
 // TYPES

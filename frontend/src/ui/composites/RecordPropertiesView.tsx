@@ -10,20 +10,21 @@
  * handles layout and orchestration.
  */
 
-import { useRef, useMemo } from 'react';
 import { Trash2 } from 'lucide-react';
-import { useUIStore } from '../../stores/uiStore';
+import { useRef, useMemo } from 'react';
+
 import {
     useNode,
     useRecordDefinitions,
     useUpdateNode,
     useDeleteRecord,
 } from '../../api/hooks';
+import { useUIStore } from '../../stores/uiStore';
+import type { NodeType, HierarchyNode } from '../../types';
 import { RichTextEditor } from '../editor/RichTextEditor';
 import { FieldEditor } from '../semantic/FieldEditor';
 import { NodeFieldEditor } from '../semantic/NodeFieldEditor';
 import { useRecordFieldViewModels } from './hooks/useDomain';
-import type { NodeType, HierarchyNode } from '../../types';
 
 interface RecordPropertiesViewProps {
     itemId: string;
@@ -52,19 +53,8 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
 
     const descriptionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Determine which item we're working with
-    const item = isNode ? node : record;
-    if (!item && !recordLoading) return null;
-    if (!item) return <div className="p-4 text-slate-400">Loading...</div>;
-
-    const nodeType = isNode ? (item as { type: NodeType }).type : 'record';
-    const title = isNode
-        ? (item as { title: string }).title
-        : (item as { unique_name: string }).unique_name;
-
-    const description = isNode ? (item as { description?: unknown }).description : null;
-
     // For nodes: compute the list of field keys to render
+    // Must be before early returns to comply with hooks rules
     const nodeFieldKeys = useMemo(() => {
         if (!isNode || !node) return [];
 
@@ -72,6 +62,8 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
         const rawMetadata = node.metadata || {};
         const metadata: Record<string, unknown> =
             typeof rawMetadata === 'string' ? JSON.parse(rawMetadata) : rawMetadata;
+
+        const nodeType = node.type;
 
         // Find the definition for this node type
         const nodeTypeName = node.type.charAt(0).toUpperCase() + node.type.slice(1);
@@ -104,7 +96,18 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
 
         // Fallback: show all metadata keys
         return Object.keys(metadata);
-    }, [isNode, node, nodeType, definitions]);
+    }, [isNode, node, definitions]);
+
+    // Determine which item we're working with
+    const item = isNode ? node : record;
+    if (!item && !recordLoading) return null;
+    if (!item) return <div className="p-4 text-slate-400">Loading...</div>;
+
+    const nodeType = isNode ? (item as { type: NodeType }).type : 'record';
+    const title = isNode
+        ? (item as { title: string }).title
+        : (item as { unique_name: string }).unique_name;
+    const description = isNode ? (item as { description?: unknown }).description : null;
 
     const bgColor = {
         project: 'bg-blue-50 border-blue-100 text-blue-900',

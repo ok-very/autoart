@@ -2,8 +2,8 @@
  * TableCell / TableHeaderCell - Cell primitives with alignment and sizing
  */
 
-import { forwardRef, type HTMLAttributes } from 'react';
 import { clsx } from 'clsx';
+import { forwardRef, type HTMLAttributes } from 'react';
 
 export type CellAlign = 'left' | 'center' | 'right';
 

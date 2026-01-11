@@ -1,12 +1,13 @@
 import type {
-    RecordDefinition,
-    FieldDef,
-} from '../types';
-import type {
     FieldIndex,
     FieldCategory,
     FieldDescriptor
 } from '@autoart/shared';
+
+import type {
+    RecordDefinition,
+    FieldDef,
+} from '../types';
 
 /**
  * Generates a FieldIndex structure from RecordDefinitions.

@@ -7,8 +7,9 @@
  * Used when displaying tasks derived from the Actions/Events system.
  */
 
-import type { RowModel, TableRow } from '../types';
 import type { ActionView, DerivedStatus } from '@autoart/shared';
+
+import type { RowModel, TableRow } from '../types';
 
 /**
  * Create a RowModel from an array of ActionViews.

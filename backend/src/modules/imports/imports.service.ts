@@ -13,24 +13,26 @@
  * projection refresh and central validation guarantees.
  */
 
-import { db } from '../../db/client.js';
-import { MondayCSVParser } from './parsers/monday-csv-parser.js';
+import { isInternalWork, type ClassificationOutcome } from '@autoart/shared';
+
+import { getMondayToken } from './connections.service.js';
+import { MondayConnector } from './connectors/monday-connector.js';
 import { GenericCSVParser } from './parsers/generic-csv-parser.js';
+import { MondayCSVParser } from './parsers/monday-csv-parser.js';
+import { matchSchema } from './schema-matcher.js';
+import { createMapping } from './sync.service.js';
 import type { ImportPlan, ImportPlanContainer, ImportPlanItem, ItemClassification } from './types.js';
 import { hasUnresolvedClassifications, countUnresolved } from './types.js';
+import { db } from '../../db/client.js';
+import type { RecordDefinition } from '../../db/schema.js';
+import { emitEvent } from '../events/events.service.js';
 import { interpretCsvRowPlan, mapStatusToWorkEvent, type InterpretationOutput, type InterpretationPlan } from '../interpreter/interpreter.service.js';
+import { interpretMondayBoard } from '../interpreter/monday-interpreter.js';
 import { ensureFactKindDefinition } from '../records/fact-kinds.service.js';
 import { listDefinitions } from '../records/records.service.js';
-import { matchSchema } from './schema-matcher.js';
-import { emitEvent } from '../events/events.service.js';
-import { isInternalWork, type ClassificationOutcome } from '@autoart/shared';
-import type { RecordDefinition } from '../../db/schema.js';
+
 
 // Connector imports
-import { MondayConnector } from './connectors/monday-connector.js';
-import { getMondayToken } from './connections.service.js';
-import { createMapping } from './sync.service.js';
-import { interpretMondayBoard } from '../interpreter/monday-interpreter.js';
 
 // ============================================================================
 // PARSER REGISTRY

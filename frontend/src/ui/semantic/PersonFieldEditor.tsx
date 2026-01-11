@@ -11,9 +11,10 @@
  * - Used in table cells and inspector fields
  */
 
-import { useState, useRef, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { User, ChevronDown, X } from 'lucide-react';
+import { useState, useRef, useCallback } from 'react';
+
 import { PortalMenu } from '../atoms/PortalMenu';
 
 export interface Person {

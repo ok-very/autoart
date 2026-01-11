@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../client';
+
 import type { RecordDefinition, CreateDefinitionInput, UpdateDefinitionInput } from '../../types';
+import { api } from '../client';
 
 // ==================== RECORD DEFINITIONS ====================
 // Base CRUD operations

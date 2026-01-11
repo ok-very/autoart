@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
 import { registerSchema, loginSchema, refreshSchema, RegisterInput, LoginInput, RefreshInput } from './auth.schemas.js';
 import * as authService from './auth.service.js';
 import { AppError } from '../../utils/errors.js';

@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+
 import { useCurrentUser } from './api/hooks';
+import { ActionsPage } from './pages/ActionsPage';
+import { ComposerPage } from './pages/ComposerPage';
+import { EventsPage } from './pages/EventsPage';
+import { ExportPage } from './pages/ExportPage';
+import { FieldsPage } from './pages/FieldsPage';
+import { ImportPage } from './pages/ImportPage';
+import { LoginPage } from './pages/LoginPage';
+import { RecordsPage } from './pages/RecordsPage';
+import { RegisterPage } from './pages/RegisterPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { useAuthStore } from './stores/authStore';
 import { MainLayout } from './ui/layout/MainLayout';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
-import { RecordsPage } from './pages/RecordsPage';
-import { ActionsPage } from './pages/ActionsPage';
-import { EventsPage } from './pages/EventsPage';
-import { FieldsPage } from './pages/FieldsPage';
-import { ComposerPage } from './pages/ComposerPage';
-import { ImportPage } from './pages/ImportPage';
-import { ExportPage } from './pages/ExportPage';
-import { SettingsPage } from './pages/SettingsPage';
 
 
 function App() {

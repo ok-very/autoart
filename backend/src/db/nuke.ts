@@ -9,12 +9,12 @@
  * WARNING: This destroys ALL data!
  */
 
-import { Kysely, PostgresDialect, sql } from 'kysely';
-import { Pool } from 'pg';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { Kysely, PostgresDialect, sql } from 'kysely';
+import path from 'path';
+import { Pool } from 'pg';
 import readline from 'readline';
+import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.join(__dirname, '..', '..', '..', '.env');

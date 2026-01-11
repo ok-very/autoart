@@ -4,8 +4,9 @@
  * Lists all users with soft delete functionality.
  */
 
-import { useState, useCallback } from 'react';
 import { Trash2, Users, Loader2, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
+import { useState, useCallback } from 'react';
+
 import { useAdminUsers, useSoftDeleteUser, type AdminUser } from '../../api/hooks';
 
 // ============================================================================

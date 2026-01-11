@@ -8,6 +8,7 @@
  */
 
 import type { FieldDef, FieldType } from '@autoart/shared';
+
 import type { RecordDefinition } from '../../db/schema.js';
 
 // ============================================================================

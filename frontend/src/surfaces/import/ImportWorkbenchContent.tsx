@@ -8,12 +8,13 @@
  * This is the WORKSPACE slot content - preview focused.
  */
 
-import { useState, useMemo } from 'react';
-import { FileSpreadsheet, Columns, Layers, Tag, AlertTriangle } from 'lucide-react';
 import { clsx } from 'clsx';
+import { FileSpreadsheet, Columns, Layers, Tag, AlertTriangle } from 'lucide-react';
+import { useState, useMemo } from 'react';
+
+import { ExecutionControls } from './ExecutionControls';
 import { HierarchyPreview } from './HierarchyPreview';
 import { StagePreview } from './StagePreview';
-import { ExecutionControls } from './ExecutionControls';
 import { useImportWorkbenchStore } from '../../stores/importWorkbenchStore';
 import { useUIStore } from '../../stores/uiStore';
 

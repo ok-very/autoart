@@ -1,14 +1,15 @@
 import { Plus } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+
+import { useUpdateNode } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
-import { useUpdateNode } from '../../api/hooks';
-import { Badge } from '../common/Badge';
-import { RichTextEditor } from '../editor/RichTextEditor';
-import { useState, useEffect, useMemo } from 'react';
-import { ProgressBar } from '../common/ProgressBar';
-import { calculateStatusDistribution, StatusKey, STATUS_COLORS, STATUS_LABELS } from '../../utils/statusUtils';
 import type { HierarchyNode } from '../../types';
 import { parseTaskMetadata, deriveTaskStatus } from '../../utils/nodeMetadata';
+import { calculateStatusDistribution, StatusKey, STATUS_COLORS, STATUS_LABELS } from '../../utils/statusUtils';
+import { Badge } from '../common/Badge';
+import { ProgressBar } from '../common/ProgressBar';
+import { RichTextEditor } from '../editor/RichTextEditor';
 
 // Helper to safely parse metadata
 const parseMetadata = (metadata: HierarchyNode['metadata']): Record<string, unknown> => {

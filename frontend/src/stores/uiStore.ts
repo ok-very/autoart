@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Selection, UIPanels, InspectorMode, DrawerConfig, InspectorTabId, normalizeInspectorTabId } from '../types/ui';
-import { deriveUIPanels } from '../utils/uiComposition';
+
 import type { ProjectViewMode, RecordsViewMode, FieldsViewMode, ViewMode } from '@autoart/shared';
 import {
   ProjectViewModeSchema,
@@ -11,6 +10,9 @@ import {
   RECORDS_VIEW_MODE_LABELS,
   FIELDS_VIEW_MODE_LABELS,
 } from '@autoart/shared';
+
+import { Selection, UIPanels, InspectorMode, DrawerConfig, InspectorTabId, normalizeInspectorTabId } from '../types/ui';
+import { deriveUIPanels } from '../utils/uiComposition';
 
 // Re-export for compatibility if needed, or prefer importing from types/ui
 export type { Selection, UIPanels, InspectorMode, InspectorTabId };

@@ -6,8 +6,9 @@
  * Wrapped in a collapsible bottom panel.
  */
 
-import { useState, useMemo, useCallback } from 'react';
 import { AlertTriangle, HelpCircle, Check, ChevronDown, ChevronUp, Save, Loader2, Lightbulb, Play, FileText, Inbox, Sparkles, Clock, ArrowUpRight, ArrowUpDown, MoreVertical, Trash2, Layers, Square, CheckSquare } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+
 import { useSaveResolutions, useClassificationSuggestions } from '../../api/hooks/imports';
 import type { ImportPlan, Resolution, ItemClassification, InterpretationOutput, ClassificationSuggestion } from '../../api/hooks/imports';
 import { humanizeFactKind, formatRuleSource, toFactKindKey } from '../../utils/formatFactKind';

@@ -1,27 +1,28 @@
-import Fastify, { FastifyInstance } from 'fastify';
-import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
+import cors from '@fastify/cors';
 import sensible from '@fastify/sensible';
+import Fastify, { FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
+
 import { env } from './config/env.js';
-import authPlugin from './plugins/auth.js';
-import { authRoutes } from './modules/auth/auth.routes.js';
-import { hierarchyRoutes } from './modules/hierarchy/hierarchy.routes.js';
-import { recordsRoutes } from './modules/records/records.routes.js';
-import { factKindsRoutes } from './modules/records/fact-kinds.routes.js';
-import { referencesRoutes } from './modules/references/references.routes.js';
-import { searchRoutes } from './modules/search/search.routes.js';
-import { linksRoutes } from './modules/links/links.routes.js';
-// ingestion module deprecated - use imports module instead
-import { actionsRoutes } from './modules/actions/actions.routes.js';
 import { actionReferencesRoutes } from './modules/actions/action-references.routes.js';
+import { actionsRoutes } from './modules/actions/actions.routes.js';
+import { containersRoutes } from './modules/actions/containers.routes.js';
+import { authRoutes } from './modules/auth/auth.routes.js';
+import { composerRoutes } from './modules/composer/composer.routes.js';
 import { eventsRoutes } from './modules/events/events.routes.js';
 import { workflowRoutes } from './modules/events/workflow.routes.js';
-import { workflowSurfaceRoutes } from './modules/projections/workflow-surface.routes.js';
-import { composerRoutes } from './modules/composer/composer.routes.js';
-import { containersRoutes } from './modules/actions/containers.routes.js';
+import { hierarchyRoutes } from './modules/hierarchy/hierarchy.routes.js';
 import { importsRoutes } from './modules/imports/imports.routes.js';
+import { linksRoutes } from './modules/links/links.routes.js';
+import { factKindsRoutes } from './modules/records/fact-kinds.routes.js';
+import { recordsRoutes } from './modules/records/records.routes.js';
+import { referencesRoutes } from './modules/references/references.routes.js';
+import { searchRoutes } from './modules/search/search.routes.js';
+// ingestion module deprecated - use imports module instead
+import { workflowSurfaceRoutes } from './modules/projections/workflow-surface.routes.js';
 import { connectionsRoutes } from './modules/imports/connections.routes.js';
+import authPlugin from './plugins/auth.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({

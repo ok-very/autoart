@@ -7,11 +7,12 @@
  *   npm run seed:reset    - Clear all data and re-seed with dev data
  */
 
-import { Kysely, PostgresDialect } from 'kysely';
-import { Pool } from 'pg';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { Kysely, PostgresDialect } from 'kysely';
+import path from 'path';
+import { Pool } from 'pg';
+import { fileURLToPath } from 'url';
+
 import type { Database } from '../schema.js';
 import { seed as seedRecordDefinitions } from './001_record_definitions.js';
 import { seedDevData } from './dev_sample_data.js';

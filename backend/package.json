@@ -20,8 +20,8 @@
     "db:consolidate": "tsx src/db/consolidate_migrations.ts",
     "db:status": "tsx src/db/status.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

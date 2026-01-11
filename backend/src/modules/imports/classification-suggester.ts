@@ -9,9 +9,9 @@
  * This helps users quickly resolve UNCLASSIFIED items during import review.
  */
 
+import { inferFactKind } from '../interpreter/fact-kind-inferrer.js';
 import { defaultMappingRules } from '../interpreter/mappings/index.js';
 import type { MappingRule, MappingContext, InterpretationOutput } from '../interpreter/mappings/types.js';
-import { inferFactKind } from '../interpreter/fact-kind-inferrer.js';
 
 // ============================================================================
 // TYPES

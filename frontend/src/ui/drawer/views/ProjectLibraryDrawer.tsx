@@ -1,8 +1,9 @@
-import { useState } from 'react';
 import { Library, Copy, Trash2, FileText, ExternalLink } from 'lucide-react';
-import { useUIStore } from '../../../stores/uiStore';
-import { useProjectTemplates, useRemoveFromLibrary, useCreateDefinition } from '../../../api/hooks';
-import type { RecordDefinition } from '../../../types';
+import { useState } from 'react';
+
+import { useProjectTemplates, useRemoveFromLibrary, useCreateDefinition } from '@/api/hooks';
+import { useUIStore } from '@/stores';
+import type { RecordDefinition } from '@/types';
 
 interface ProjectLibraryDrawerProps {
   projectId?: string;

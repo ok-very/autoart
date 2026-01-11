@@ -6,6 +6,7 @@
  */
 
 import { lazy, Suspense } from 'react';
+
 import type {
     DrawerDefinition,
     DrawerContextMap,

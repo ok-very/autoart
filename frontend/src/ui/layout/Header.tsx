@@ -5,11 +5,15 @@
  * Uses bespoke Menu and SegmentedControl components.
  */
 
-import { Link, useLocation } from 'react-router-dom';
 import {
   ChevronDown, Plus, Copy, FolderOpen, Check, Library, Database,
   TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings
 } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+
+import type { ProjectViewMode, RecordsViewMode, FieldsViewMode } from '@autoart/shared';
+
+import { useProjects } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import {
   useUIStore,
@@ -17,13 +21,11 @@ import {
   RECORDS_VIEW_MODE_LABELS,
   FIELDS_VIEW_MODE_LABELS,
 } from '../../stores/uiStore';
-import type { ProjectViewMode, RecordsViewMode, FieldsViewMode } from '@autoart/shared';
-import { useProjects } from '../../api/hooks';
+import { Badge } from '../atoms/Badge';
 import { Button } from '../atoms/Button';
 import { IconButton } from '../atoms/IconButton';
-import { Badge } from '../atoms/Badge';
-import { Text } from '../atoms/Text';
 import { Inline } from '../atoms/Inline';
+import { Text } from '../atoms/Text';
 import { Menu } from '../molecules/Menu';
 import { SegmentedControl } from '../molecules/SegmentedControl';
 

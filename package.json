@@ -29,8 +29,8 @@
     "start:frontend": "cd frontend && npm run dev",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
-    "lint": "npm run lint --workspaces --if-present",
-    "lint:fix": "npm run lint:fix --workspaces --if-present",
+    "lint": "eslint frontend/src backend/src shared/src",
+    "lint:fix": "eslint frontend/src backend/src shared/src --fix",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "keywords": [

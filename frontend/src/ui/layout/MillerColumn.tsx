@@ -1,4 +1,5 @@
 import { Plus, ChevronRight } from 'lucide-react';
+
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
 import type { NodeType, HierarchyNode } from '../../types';

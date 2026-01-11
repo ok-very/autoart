@@ -10,6 +10,7 @@
  */
 
 import type { ReactNode } from 'react';
+
 import type { TableColumn, TableRow, RowModel } from './types';
 
 // ============================================================================

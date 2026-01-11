@@ -11,8 +11,9 @@
 
 import { clsx } from 'clsx';
 import { Eye, EyeOff, Layers } from 'lucide-react';
-import { useUIStore } from '../../stores/uiStore';
+
 import { EVENT_CATEGORIES, type EventCategory } from './eventFormatters';
+import { useUIStore } from '../../stores/uiStore';
 
 interface ProjectLogFilterBarProps {
   /** Currently selected categories (empty = all) */

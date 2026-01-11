@@ -12,6 +12,7 @@
  */
 
 import { Kysely } from 'kysely';
+
 import type { Database } from '../schema.js';
 
 export async function seed(db: Kysely<Database>): Promise<void> {

@@ -11,9 +11,10 @@
  * - Receives options with optional colors from parent
  */
 
-import { useState, useRef, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
+import { useState, useRef, useCallback } from 'react';
+
 import { PortalMenu } from '../atoms/PortalMenu';
 
 export interface SelectOption {

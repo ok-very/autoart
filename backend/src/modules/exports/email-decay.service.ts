@@ -5,8 +5,8 @@
  * Suggests follow-up actions based on email activity.
  */
 
-import { db } from '../../db/client.js';
 import type { EmailDecayInfo } from './types.js';
+import { db } from '../../db/client.js';
 
 // ============================================================================
 // PUBLIC API

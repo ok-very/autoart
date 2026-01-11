@@ -6,11 +6,12 @@
  *
  * @layer composites
  */
-import { useState, useEffect, useRef, useCallback } from 'react';
 import { Upload, FileText, Play, Check, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+
+import { useIngestionParsers, useIngestionPreview, useRunIngestion } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
-import { useIngestionParsers, useIngestionPreview, useRunIngestion } from '../../api/hooks';
 
 interface IngestionViewProps {
     /**

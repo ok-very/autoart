@@ -5,8 +5,9 @@
  * Shows parsed entries with classification decisions and field mappings.
  */
 
-import { useMemo } from 'react';
 import { ScrollText, CheckCircle, AlertCircle, HelpCircle, ArrowRight } from 'lucide-react';
+import { useMemo } from 'react';
+
 import type { ImportPlan } from '../../api/hooks/imports';
 
 interface LogPreviewProps {

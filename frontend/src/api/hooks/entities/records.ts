@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import type { DataRecord, CreateRecordInput, UpdateRecordInput } from '../../../types';
 import { api } from '../../client';
 import { queryKeys } from '../queryKeys';
-import type { DataRecord, CreateRecordInput, UpdateRecordInput } from '../../../types';
 
 // ==================== RECORDS DATA ====================
 

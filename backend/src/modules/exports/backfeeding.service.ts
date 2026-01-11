@@ -10,9 +10,9 @@
  */
 
 import { GoogleDocsConnector, type ParsedProjectHeader } from './connectors/google-docs-connector.js';
-import { getGoogleToken } from '../imports/connections.service.js';
-import { db } from '../../db/client.js';
 import type { BackfeedAnalysis, BackfeedMatch } from './types.js';
+import { db } from '../../db/client.js';
+import { getGoogleToken } from '../imports/connections.service.js';
 
 // ============================================================================
 // FUZZY MATCHING

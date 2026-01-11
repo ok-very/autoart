@@ -11,7 +11,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../client';
+
 import type {
   Action,
   Event,
@@ -19,6 +19,8 @@ import type {
   CreateEventInput,
   ContextType,
 } from '@autoart/shared';
+
+import { api } from '../client';
 
 // ============================================================================
 // ACTIONS

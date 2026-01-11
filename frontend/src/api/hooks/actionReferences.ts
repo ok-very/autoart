@@ -10,8 +10,10 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../client';
+
 import type { AddActionReferenceInput, RemoveActionReferenceInput, Event } from '@autoart/shared';
+
+import { api } from '../client';
 
 // ============================================================================
 // TYPES

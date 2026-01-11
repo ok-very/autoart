@@ -1,14 +1,16 @@
-import { useState, useRef } from 'react';
 import { ExternalLink, Trash2 } from 'lucide-react';
-import { useUIStore } from '../../../stores/uiStore';
+import { useState, useRef } from 'react';
+
 import {
   useRecord,
   useRecordDefinition,
   useUpdateRecord,
   useDeleteRecord,
-} from '../../../api/hooks';
+} from '@/api/hooks';
+import { useUIStore } from '@/stores';
+import type { FieldDef } from '@/types';
+
 import { RichTextInput } from '../../editor/RichTextInput';
-import type { FieldDef } from '../../../types';
 
 interface ViewRecordDrawerProps {
   recordId: string;

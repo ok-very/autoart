@@ -17,8 +17,9 @@
  * 'task', or 'subtask'. These types are DEPRECATED and should use Actions.
  */
 
-import { Kysely } from 'kysely';
 import bcrypt from 'bcryptjs';
+import { Kysely } from 'kysely';
+
 import type { Database } from '../schema.js';
 
 export async function seedDevData(db: Kysely<Database>): Promise<void> {

@@ -9,6 +9,7 @@
  */
 
 import { ArrowDownRight, Info } from 'lucide-react';
+
 import type { Event } from '@autoart/shared';
 
 // ==================== TYPES ====================

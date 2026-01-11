@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import type { RecordDefinition, CreateDefinitionInput, UpdateDefinitionInput } from '../../../types';
 import { api } from '../../client';
 import { queryKeys } from '../queryKeys';
-import type { RecordDefinition, CreateDefinitionInput, UpdateDefinitionInput } from '../../../types';
 
 // ==================== RECORD DEFINITIONS ====================
 

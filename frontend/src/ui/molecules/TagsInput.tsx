@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef, KeyboardEvent } from 'react';
 import { clsx } from 'clsx';
 import { X } from 'lucide-react';
+import { useState, useCallback, useRef, KeyboardEvent } from 'react';
 
 interface TagsInputProps {
     /** Current value - array of strings or compatible format */

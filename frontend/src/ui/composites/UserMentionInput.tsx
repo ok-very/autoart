@@ -6,13 +6,14 @@
  * - Manages complex async search state
  */
 
-import { useState, useRef, useCallback, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { User, X, AtSign } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+
 import { useSearchUsers } from '../../api/hooks/auth';
 import { useDebounce } from '../../hooks/useDebounce';
-import { UserChip } from '../atoms/UserChip';
 import type { User as UserType } from '../../types';
+import { UserChip } from '../atoms/UserChip';
 
 export interface UserMentionInputProps {
     /** Current value - string (user ID or name) or { id: string, name: string } */

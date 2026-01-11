@@ -4,15 +4,19 @@
  * Confirmation dialog for delete operations. Uses bespoke components.
  */
 
-import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
+
+import { useUIStore } from '@/stores';
+
+import type { DrawerProps, ConfirmDeleteContext } from '../../../drawer/types';
+import { Alert } from '../../atoms/Alert';
 import { Button } from '../../atoms/Button';
 import { Inline } from '../../atoms/Inline';
 import { Stack } from '../../atoms/Stack';
 import { Text } from '../../atoms/Text';
-import { Alert } from '../../atoms/Alert';
-import { useUIStore } from '../../../stores/uiStore';
-import type { DrawerProps, ConfirmDeleteContext } from '../../../drawer/types';
+
+
 
 // Legacy props interface (deprecated - use DrawerProps)
 interface LegacyConfirmDeleteViewProps {

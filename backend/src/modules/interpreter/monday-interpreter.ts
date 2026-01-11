@@ -8,14 +8,14 @@
  * 3. Auto-inference from column types/names
  */
 
-import type { MondayDataNode, MondayColumnValue } from '../imports/connectors/monday-connector.js';
-import type { ImportPlanItem } from '../imports/types.js';
-import { listDefinitions } from '../records/records.service.js';
 import {
     getLearningsFor,
     applyLearnings,
     type ColumnMapping,
 } from './inference-learner.js';
+import type { MondayDataNode, MondayColumnValue } from '../imports/connectors/monday-connector.js';
+import type { ImportPlanItem } from '../imports/types.js';
+import { listDefinitions } from '../records/records.service.js';
 
 // ============================================================================
 // TYPES

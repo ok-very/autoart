@@ -1,5 +1,5 @@
-import { forwardRef, useEffect, useRef, InputHTMLAttributes } from 'react';
 import { clsx } from 'clsx';
+import { forwardRef, useEffect, useRef, InputHTMLAttributes } from 'react';
 
 interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange'> {
     label?: string;

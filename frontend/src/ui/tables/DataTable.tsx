@@ -2,9 +2,10 @@
  * @deprecated Use DataTableFlat or DataTableHierarchy from ui/composites instead.
  * This component uses the deprecated tables/EditableCell.
  */
-import { useState, useMemo, useCallback, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { ChevronUp, ChevronDown, Plus, GripVertical } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+
 import { EditableCell } from './EditableCell';
 import type { FieldDef } from '../../types';
 

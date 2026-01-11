@@ -1,5 +1,6 @@
-import { Eye, EyeOff } from 'lucide-react';
 import { clsx } from 'clsx';
+import { Eye, EyeOff } from 'lucide-react';
+
 import { useToggleCloneExcluded } from '../../api/hooks';
 import type { RecordDefinition } from '../../types';
 

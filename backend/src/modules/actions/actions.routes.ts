@@ -14,8 +14,9 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { z } from 'zod';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { z } from 'zod';
+
 import * as actionsService from './actions.service.js';
 import * as interpreterService from '../interpreter/interpreter.service.js';
 

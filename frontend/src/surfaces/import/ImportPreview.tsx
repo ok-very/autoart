@@ -6,10 +6,11 @@
  */
 
 import { FileQuestion } from 'lucide-react';
+
 import { HierarchyPreview } from './HierarchyPreview';
+import { LogPreview } from './LogPreview';
 import { StagePreview } from './StagePreview';
 import { TablePreview } from './TablePreview';
-import { LogPreview } from './LogPreview';
 import type { ImportPlan } from '../../api/hooks/imports';
 
 // ============================================================================

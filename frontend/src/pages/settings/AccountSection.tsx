@@ -6,8 +6,9 @@
  * - Logout button
  */
 
-import { useNavigate } from 'react-router-dom';
 import { LogOut, User, Mail, Calendar, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
 import { useCurrentUser, useLogout } from '../../api/hooks';
 
 export function AccountSection() {

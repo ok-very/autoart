@@ -2,9 +2,10 @@
  * @deprecated Use RecordList (for record pages) or DataTableFlat (for custom tables) instead.
  * This component uses the legacy DataTable → tables/EditableCell chain.
  */
-import { useState, useMemo, useCallback, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { Search, Plus, Trash2, Columns, ChevronDown } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+
 import {
     useRecords,
     useRecordDefinitions,
@@ -13,9 +14,9 @@ import {
     useBulkDeleteRecords,
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
-import { DataTable, type TableColumn } from '../tables/DataTable';
-import { DataFieldWidget, type DataFieldKind } from '../common/DataFieldWidget';
 import type { DataRecord, RecordDefinition, FieldDef } from '../../types';
+import { DataFieldWidget, type DataFieldKind } from '../common/DataFieldWidget';
+import { DataTable, type TableColumn } from '../tables/DataTable';
 
 // ==================== TYPES ====================
 

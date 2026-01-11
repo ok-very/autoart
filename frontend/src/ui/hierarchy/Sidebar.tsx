@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
 import { Settings, Plus, ChevronDown } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+import { TreeNode } from './TreeNode';
+import { useProjectTree } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
-import { useProjectTree } from '../../api/hooks';
-import { TreeNode } from './TreeNode';
 import type { NodeType } from '../../types';
 
 export function Sidebar() {

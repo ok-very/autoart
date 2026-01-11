@@ -5,15 +5,16 @@
  * Uses bespoke components for consistent styling.
  */
 
-import { useCallback } from 'react';
-import { X, Minimize2, Maximize2 } from 'lucide-react';
 import { clsx } from 'clsx';
-import { useUIStore } from '../../stores/uiStore';
-import { ResizeHandle } from '../common/ResizeHandle';
+import { X, Minimize2, Maximize2 } from 'lucide-react';
+import { useCallback } from 'react';
+
 import { DrawerRegistry } from './DrawerRegistry';
+import { useUIStore } from '../../stores/uiStore';
 import { IconButton } from '../atoms/IconButton';
-import { Text } from '../atoms/Text';
 import { Inline } from '../atoms/Inline';
+import { Text } from '../atoms/Text';
+import { ResizeHandle } from '../common/ResizeHandle';
 
 export function BottomDrawer() {
   const { activeDrawer, drawerHeight, drawerCollapsed, setDrawerHeight, toggleDrawer, closeDrawer } = useUIStore();

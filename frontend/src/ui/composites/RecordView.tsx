@@ -14,9 +14,11 @@
  * For page-level usage in RecordsPage.
  */
 
-import { useState, useMemo, useCallback } from 'react';
-import { Search, Plus, Trash2, FolderOpen, Upload } from 'lucide-react';
 import { clsx } from 'clsx';
+import { Search, Plus, Trash2, FolderOpen, Upload } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+
+import { DataTableFlat } from './DataTableFlat';
 import {
     useRecords,
     useRecordDefinitions,
@@ -25,7 +27,6 @@ import {
     useBulkDeleteRecords,
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
-import { DataTableFlat } from './DataTableFlat';
 import type { RecordDefinition } from '../../types';
 
 // ==================== DEFINITION SELECTOR ====================

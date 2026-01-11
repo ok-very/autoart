@@ -15,8 +15,9 @@
  * - ACTION_REFERENCE_REMOVED → delete row
  */
 
-import { db } from '../../db/client.js';
 import type { Event, ActionReferenceAddedPayload, ActionReferenceRemovedPayload } from '@autoart/shared';
+
+import { db } from '../../db/client.js';
 
 // ============================================================================
 // PROJECTOR FUNCTIONS

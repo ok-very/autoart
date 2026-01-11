@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
+
+import type { SearchResult } from '../../../types';
 import { api } from '../../client';
 import { queryKeys } from '../queryKeys';
-import type { SearchResult } from '../../../types';
 
 export function useSearch(query: string, projectId?: string, enabled = true) {
   return useQuery({

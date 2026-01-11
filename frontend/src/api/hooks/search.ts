@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../client';
+
 import type { SearchResult } from '../../types';
+import { api } from '../client';
 
 // ==================== SEARCH ====================
 

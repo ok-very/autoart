@@ -11,13 +11,16 @@
  * Now built on TableKit for consistent visual grammar.
  */
 
-import { useState, useMemo } from 'react';
 import { Search, Trash2, Edit3, X } from 'lucide-react';
-import { Checkbox } from '../atoms/Checkbox';
-import { useRecords, useUpdateRecord } from '../../api/hooks';
-import { TableFrame, TableHeaderRow, TableRow, TableHeaderCell, TableCell } from '../table';
-import { DataFieldWidget, type DataFieldKind } from '../common/DataFieldWidget';
+import { useState, useMemo } from 'react';
+
 import type { FieldDescriptor, DataRecord } from '@autoart/shared';
+
+import { useRecords, useUpdateRecord } from '../../api/hooks';
+import { Checkbox } from '../atoms/Checkbox';
+import { DataFieldWidget, type DataFieldKind } from '../common/DataFieldWidget';
+import { TableFrame, TableHeaderRow, TableRow, TableHeaderCell, TableCell } from '../table';
+
 
 interface FieldInstancesReviewProps {
     /** The field descriptor selected from Definitions tab */

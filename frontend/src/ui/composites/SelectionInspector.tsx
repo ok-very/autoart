@@ -14,13 +14,14 @@
  * - Pinned footer composer
  */
 
-import { FileText, Link2, ExternalLink, Wrench, Lightbulb, Info, History } from 'lucide-react';
 import { clsx } from 'clsx';
-import { useUIStore, type InspectorTabId } from '../../stores/uiStore';
-import { useNode, useRecord, useInterpretationAvailable } from '../../api/hooks';
+import { FileText, Link2, ExternalLink, Wrench, Lightbulb, Info, History } from 'lucide-react';
+
 import { RecordPropertiesView } from './RecordPropertiesView';
 import { SchemaEditor, ReferencesManager, LinksManager } from '../semantic';
 import { InterpretationInspectorView } from './interpretation/InterpretationInspectorView';
+import { useNode, useRecord, useInterpretationAvailable } from '../../api/hooks';
+import { useUIStore, type InspectorTabId } from '../../stores/uiStore';
 import { ActionDetailsPanel } from '../inspector/ActionDetailsPanel';
 import { ActionEventsPanel } from '../inspector/ActionEventsPanel';
 import { InspectorFooterComposer } from '../inspector/InspectorFooterComposer';

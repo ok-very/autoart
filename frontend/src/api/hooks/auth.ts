@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../client';
+
 import { useAuthStore } from '../../stores/authStore';
 import type { AuthResponse, User } from '../../types';
+import { api } from '../client';
 
 // ==================== AUTH ====================
 // These hooks are procedural (session management) and don't fit the CRUD pattern

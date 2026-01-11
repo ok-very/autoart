@@ -19,15 +19,19 @@
  * - Status/title/assignee come from pre-computed payload (no interpretation at render)
  */
 
-import { useState, useMemo, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { ChevronRight, Plus, AlertTriangle } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+
+import type { WorkflowSurfaceNode, DerivedStatus } from '@autoart/shared';
+import type { FieldViewModel } from '@autoart/shared/domain';
+
+import { buildChildrenMap } from '../../api/hooks/workflowSurface';
 import { EditableCell } from '../molecules/EditableCell';
 import { StatusFieldEditor } from '../semantic/StatusFieldEditor';
-import type { FieldViewModel } from '@autoart/shared/domain';
 import { UniversalTableCore, type TableColumn as CoreTableColumn, type TableRow, type RowModel } from '../table-core';
-import type { WorkflowSurfaceNode, DerivedStatus } from '@autoart/shared';
-import { buildChildrenMap } from '../../api/hooks/workflowSurface';
+
+
 
 // ==================== TYPES ====================
 

@@ -6,7 +6,9 @@
  */
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
 import { ComposerInputSchema, ComposerResponseSchema } from '@autoart/shared';
+
 import * as composerService from './composer.service.js';
 
 interface ComposerRequest {

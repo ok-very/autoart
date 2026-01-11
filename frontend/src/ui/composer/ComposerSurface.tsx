@@ -19,7 +19,7 @@
  * 4. Action Inputs - Schema-driven fields from recipe
  */
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { clsx } from 'clsx';
 import {
     Wand2,
     X,
@@ -31,7 +31,10 @@ import {
     Sparkles,
     CheckCircle2,
 } from 'lucide-react';
-import { clsx } from 'clsx';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+
+import type { DataRecord, SchemaConfig } from '@autoart/shared';
+
 import {
     useRecordDefinitions,
     useProjects,
@@ -41,7 +44,6 @@ import {
     useSubprocesses,
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
-import type { DataRecord, SchemaConfig } from '@autoart/shared';
 
 // ==================== TYPES ====================
 

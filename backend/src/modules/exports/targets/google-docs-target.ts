@@ -5,11 +5,12 @@
  * Supports creating new docs or updating existing ones.
  */
 
-import type { ExportTarget, ValidationResult } from './export-target.interface.js';
-import type { ExportOptions, BfaProjectExportModel, ExportResult } from '../types.js';
-import { projectBfaExportModels } from '../projectors/bfa-project.projector.js';
-import { GoogleDocsConnector } from '../connectors/google-docs-connector.js';
 import { getGoogleToken } from '@utils/auth.js';
+
+import type { ExportTarget, ValidationResult } from './export-target.interface.js';
+import { GoogleDocsConnector } from '../connectors/google-docs-connector.js';
+import { projectBfaExportModels } from '../projectors/bfa-project.projector.js';
+import type { ExportOptions, BfaProjectExportModel, ExportResult } from '../types.js';
 
 // ============================================================================
 // GOOGLE DOCS TARGET

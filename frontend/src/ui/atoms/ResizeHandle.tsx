@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
 import { clsx } from 'clsx';
+import { useCallback, useEffect, useState } from 'react';
 
 interface ResizeHandleProps {
     direction: 'left' | 'right' | 'top' | 'bottom';

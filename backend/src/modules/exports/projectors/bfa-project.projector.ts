@@ -7,6 +7,7 @@
  */
 
 import { db } from '@db/client.js';
+
 import type {
     BfaProjectExportModel,
     BfaMilestone,
@@ -189,7 +190,7 @@ async function getSelectionPanels(projectId: string) {
 async function getProjectTasks(projectId: string, openOnly: boolean) {
     // Get task nodes under this project
     // hierarchy_nodes uses 'type' not 'node_type'
-    let query = db
+    const query = db
         .selectFrom('hierarchy_nodes')
         .selectAll()
         .where('parent_id', '=', projectId)

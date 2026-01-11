@@ -8,7 +8,14 @@
  * - Track export history
  */
 
-import { db } from '../../db/client.js';
+import { GoogleDocsConnector } from './connectors/google-docs-connector.js';
+import { GoogleSheetsConnector, type SheetsExportOptions } from './connectors/google-sheets-connector.js';
+import { GoogleSlidesConnector, type SlidesExportOptions } from './connectors/google-slides-connector.js';
+import { formatAsMarkdown } from './formatters/markdown-formatter.js';
+import { formatAsPlainText } from './formatters/plaintext-formatter.js';
+import { formatAsRtf } from './formatters/rtf-formatter.js';
+import { projectBfaExportModels } from './projectors/bfa-project.projector.js';
+import { DEFAULT_EXPORT_OPTIONS } from './types.js';
 import type {
     ExportFormat,
     ExportOptions,
@@ -17,14 +24,7 @@ import type {
     BfaProjectExportModel,
     ExportSessionStatus,
 } from './types.js';
-import { DEFAULT_EXPORT_OPTIONS } from './types.js';
-import { projectBfaExportModels } from './projectors/bfa-project.projector.js';
-import { formatAsRtf } from './formatters/rtf-formatter.js';
-import { formatAsMarkdown } from './formatters/markdown-formatter.js';
-import { formatAsPlainText } from './formatters/plaintext-formatter.js';
-import { GoogleDocsConnector } from './connectors/google-docs-connector.js';
-import { GoogleSheetsConnector, type SheetsExportOptions } from './connectors/google-sheets-connector.js';
-import { GoogleSlidesConnector, type SlidesExportOptions } from './connectors/google-slides-connector.js';
+import { db } from '../../db/client.js';
 import { getGoogleToken } from '../imports/connections.service.js';
 
 // ============================================================================

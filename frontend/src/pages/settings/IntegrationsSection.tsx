@@ -8,7 +8,6 @@
  * Uses consistent card layout with status indicators and hints.
  */
 
-import { useState, useCallback } from 'react';
 import {
     Calendar,
     Key,
@@ -21,6 +20,7 @@ import {
     EyeOff,
     AlertCircle,
 } from 'lucide-react';
+import { useState, useCallback } from 'react';
 
 // ============================================================================
 // TYPES

@@ -1,6 +1,6 @@
-import { forwardRef, ButtonHTMLAttributes } from 'react';
 import { clsx } from 'clsx';
 import { LucideIcon } from 'lucide-react';
+import { forwardRef, ButtonHTMLAttributes } from 'react';
 
 interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     /** Lucide icon component */

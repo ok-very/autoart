@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
-import { Search, Plus, Trash2, FolderOpen, MoreHorizontal, ArrowUpDown, Upload, Copy } from 'lucide-react';
 import { clsx } from 'clsx';
+import { Search, Plus, Trash2, FolderOpen, MoreHorizontal, ArrowUpDown, Upload, Copy } from 'lucide-react';
+import { useState, useMemo } from 'react';
+
 import {
   useRecords,
   useRecordDefinitions,
@@ -66,7 +67,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
   const processedRecords = useMemo(() => {
     if (!records) return [];
 
-    let result = [...records];
+    const result = [...records];
 
     // Apply sorting
     if (sortConfig) {

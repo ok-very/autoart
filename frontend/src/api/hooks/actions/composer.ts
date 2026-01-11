@@ -5,13 +5,15 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../../client';
-import { queryKeys } from '../queryKeys';
+
 import type {
     ComposerInput,
     ComposerResponse,
     ContextType,
 } from '@autoart/shared';
+
+import { api } from '../../client';
+import { queryKeys } from '../queryKeys';
 
 // ============================================================================
 // FULL COMPOSER

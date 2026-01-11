@@ -5,22 +5,24 @@
  * Shows all field types with visual previews using bespoke components.
  */
 
-import { useState } from 'react';
 import {
   Type, AlignLeft, Hash, Mail, Link2, Calendar, List, CheckCircle,
   ToggleLeft, Percent, Tags, User, FileText
 } from 'lucide-react';
-import { TextInput } from '../../atoms/TextInput';
+import { useState } from 'react';
+
+import { useUIStore } from '@/stores';
+import type { FieldDef } from '@/types';
+
+import type { DrawerProps, AddFieldContext } from '../../../drawer/types';
+import { Badge } from '../../atoms/Badge';
 import { Button } from '../../atoms/Button';
+import { Checkbox } from '../../atoms/Checkbox';
 import { Inline } from '../../atoms/Inline';
+import { ProgressBar } from '../../atoms/ProgressBar';
 import { Stack } from '../../atoms/Stack';
 import { Text } from '../../atoms/Text';
-import { Checkbox } from '../../atoms/Checkbox';
-import { Badge } from '../../atoms/Badge';
-import { ProgressBar } from '../../atoms/ProgressBar';
-import { useUIStore } from '../../../stores/uiStore';
-import type { FieldDef } from '../../../types';
-import type { DrawerProps, AddFieldContext } from '../../../drawer/types';
+import { TextInput } from '../../atoms/TextInput';
 
 // ============================================================================
 // FIELD TYPE DEFINITIONS

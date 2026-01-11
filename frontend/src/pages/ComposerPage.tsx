@@ -5,10 +5,11 @@
  * All composer logic is now encapsulated in ComposerSurface.
  */
 
-import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { Header } from '../ui/layout/Header';
+import { Link } from 'react-router-dom';
+
 import { ComposerSurface } from '../ui/composer';
+import { Header } from '../ui/layout/Header';
 
 export function ComposerPage() {
     return (

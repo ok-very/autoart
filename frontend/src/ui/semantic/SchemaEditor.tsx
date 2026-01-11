@@ -13,12 +13,10 @@
  * - No external onChange - all updates go through API
  */
 
-import { useState, useMemo } from 'react';
-import { Copy, AlertCircle, Trash2, Pin, Edit2, Check, X } from 'lucide-react';
 import { clsx } from 'clsx';
-import { useUIStore } from '../../stores/uiStore';
-import { EmojiPicker } from '../common/EmojiPicker';
-import { CloneExcludedToggle } from '../common/CloneExcludedToggle';
+import { Copy, AlertCircle, Trash2, Pin, Edit2, Check, X } from 'lucide-react';
+import { useState, useMemo } from 'react';
+
 import {
     useNode,
     useRecord,
@@ -28,7 +26,10 @@ import {
     useDeleteDefinition,
     useUpdateNode,
 } from '../../api/hooks';
+import { useUIStore } from '../../stores/uiStore';
 import type { NodeType, FieldDef, RecordDefinition, HierarchyNode } from '../../types';
+import { CloneExcludedToggle } from '../common/CloneExcludedToggle';
+import { EmojiPicker } from '../common/EmojiPicker';
 
 const STYLE_COLORS = [
     { name: 'orange', class: 'bg-orange-500' },
@@ -70,6 +71,26 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
     const updateNode = useUpdateNode();
 
     const item = node || record;
+
+    // Get fields from the definition - no more hardcoded defaults
+    // Must be before early return to comply with hooks rules
+    const fields = useMemo(() => {
+        if (!item) return [];
+        const definitionId = !isNode
+            ? (item as { definition_id: string }).definition_id
+            : (item as unknown as HierarchyNode).default_record_def_id;
+        const nodeType = isNode ? (item as { type: NodeType }).type : 'record';
+        const typeName = nodeType.charAt(0).toUpperCase() + nodeType.slice(1);
+
+        let def: RecordDefinition | undefined;
+        if (definitionId && definitions) {
+            def = definitions.find((d) => d.id === definitionId);
+        } else if (isNode && definitions) {
+            def = definitions.find((d) => d.name === typeName);
+        }
+        return def?.schema_config?.fields || [];
+    }, [item, isNode, definitions]);
+
     if (!item) return null;
 
     const nodeType = isNode ? (item as { type: NodeType }).type : 'record';
@@ -111,11 +132,6 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
             setIsEditingName(true);
         }
     };
-
-    // Get fields from the definition - no more hardcoded defaults
-    const fields = useMemo(() => {
-        return definition?.schema_config?.fields || [];
-    }, [definition?.schema_config?.fields]);
 
     const currentColor = definition?.styling?.color || 'orange';
 

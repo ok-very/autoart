@@ -1,4 +1,3 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { NodeViewWrapper, NodeViewProps } from '@tiptap/react';
 import { clsx } from 'clsx';
 import {
@@ -10,6 +9,8 @@ import {
   FileCode,
   Type,
 } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+
 import {
   useResolveReference,
   useUpdateReferenceMode,

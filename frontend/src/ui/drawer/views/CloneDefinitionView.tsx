@@ -4,15 +4,17 @@
  * Drawer view for cloning a record definition using bespoke components.
  */
 
-import { useState } from 'react';
 import { Copy } from 'lucide-react';
-import { TextInput } from '../../atoms/TextInput';
-import { Button } from '../../atoms/Button';
-import { Stack } from '../../atoms/Stack';
-import { Inline } from '../../atoms/Inline';
-import { Text } from '../../atoms/Text';
-import { useUIStore } from '../../../stores/uiStore';
+import { useState } from 'react';
+
+import { useUIStore } from '@/stores';
+
 import type { DrawerProps, CloneDefinitionContext } from '../../../drawer/types';
+import { Button } from '../../atoms/Button';
+import { Inline } from '../../atoms/Inline';
+import { Stack } from '../../atoms/Stack';
+import { Text } from '../../atoms/Text';
+import { TextInput } from '../../atoms/TextInput';
 
 // Legacy props interface (deprecated - use DrawerProps)
 interface LegacyCloneDefinitionViewProps {

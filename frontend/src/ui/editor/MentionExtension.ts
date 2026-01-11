@@ -1,7 +1,10 @@
 import { Node, mergeAttributes } from '@tiptap/core';
-import { ReactNodeViewRenderer } from '@tiptap/react';
-import Suggestion, { SuggestionOptions } from '@tiptap/suggestion';
 import { PluginKey } from '@tiptap/pm/state';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Suggestion, { SuggestionOptions } from '@tiptap/suggestion';
+
+import type { RichTextEditorConfig } from './EditorConfig';
 import { MentionChip } from './MentionChip';
 
 export interface MentionAttributes {
@@ -212,9 +215,8 @@ export function createMentionExtension(
 // CONFIGURED EXTENSIONS FACTORY
 // ============================================================================
 
-import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import type { RichTextEditorConfig } from './EditorConfig';
+
 
 type SuggestionRenderFn = () => ReturnType<NonNullable<SuggestionOptions['render']>>;
 

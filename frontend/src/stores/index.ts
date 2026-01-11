@@ -1,0 +1,13 @@
+/**
+ * Stores Barrel Export
+ * 
+ * Re-exports all Zustand stores for consistent imports.
+ * Import from '@/stores' instead of individual store files.
+ */
+
+export { useUIStore, type DrawerType, type DrawerContext } from './uiStore';
+export { useAuthStore } from './authStore';
+export { useHierarchyStore } from './hierarchyStore';
+export { useImportWorkbenchStore } from './importWorkbenchStore';
+export { useExportWorkbenchStore } from './exportWorkbenchStore';
+export { useProjectionStore } from './projectionStore';

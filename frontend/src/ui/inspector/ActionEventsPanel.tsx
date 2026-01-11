@@ -6,6 +6,7 @@
  */
 
 import { History, Zap } from 'lucide-react';
+
 import { useActionEvents } from '../../api/hooks';
 
 interface ActionEventsPanelProps {

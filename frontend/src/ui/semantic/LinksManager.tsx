@@ -13,9 +13,10 @@
  */
 
 import { ExternalLink, Trash2 } from 'lucide-react';
-import { useUIStore } from '../../stores/uiStore';
+
 import { useRecordLinks, useDeleteLink, useLinkTypes } from '../../api/hooks';
 import type { RecordLink } from '../../api/hooks/links';
+import { useUIStore } from '../../stores/uiStore';
 
 export interface LinksManagerProps {
     /** ID of the record to manage links for */

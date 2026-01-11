@@ -8,12 +8,13 @@
  */
 
 import { useCallback } from 'react';
-import { Header } from '../ui/layout/Header';
-import { SelectionInspector } from '../ui/composites/SelectionInspector';
-import { ProjectView } from '../ui/composites/ProjectView';
-import { BottomDrawer } from '../ui/drawer/BottomDrawer';
-import { ResizeHandle } from '../ui/common/ResizeHandle';
+
 import { useUIStore, useUIPanels } from '../stores/uiStore';
+import { ResizeHandle } from '../ui/common/ResizeHandle';
+import { ProjectView } from '../ui/composites/ProjectView';
+import { SelectionInspector } from '../ui/composites/SelectionInspector';
+import { BottomDrawer } from '../ui/drawer/BottomDrawer';
+import { Header } from '../ui/layout/Header';
 
 export function ProjectPage() {
     const { activeProjectId, inspectorWidth, setInspectorWidth } = useUIStore();

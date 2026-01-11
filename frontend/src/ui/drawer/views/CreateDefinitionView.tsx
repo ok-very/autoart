@@ -4,16 +4,18 @@
  * Drawer view for creating new record or action definitions.
  */
 
-import { useState, useRef, useEffect } from 'react';
 import { Plus, Palette } from 'lucide-react';
-import { TextInput } from '../../atoms/TextInput';
-import { Button } from '../../atoms/Button';
-import { Stack } from '../../atoms/Stack';
-import { Inline } from '../../atoms/Inline';
-import { Text } from '../../atoms/Text';
-import { useUIStore } from '../../../stores/uiStore';
-import { useCreateDefinition } from '../../../api/hooks';
+import { useState, useRef, useEffect } from 'react';
+
+import { useCreateDefinition } from '@/api/hooks';
+import { useUIStore } from '@/stores';
+
 import type { DrawerProps, CreateDefinitionContext } from '../../../drawer/types';
+import { Button } from '../../atoms/Button';
+import { Inline } from '../../atoms/Inline';
+import { Stack } from '../../atoms/Stack';
+import { Text } from '../../atoms/Text';
+import { TextInput } from '../../atoms/TextInput';
 
 const PRESET_COLORS = [
   { name: 'slate', hex: '#64748b' },

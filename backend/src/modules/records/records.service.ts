@@ -1,6 +1,5 @@
 import { sql } from 'kysely';
-import { db } from '../../db/client.js';
-import { NotFoundError, ConflictError } from '../../utils/errors.js';
+
 import type {
   CreateDefinitionInput,
   UpdateDefinitionInput,
@@ -10,7 +9,9 @@ import type {
   UpdateRecordInput,
   ListRecordsQuery,
 } from './records.schemas.js';
+import { db } from '../../db/client.js';
 import type { RecordDefinition, DataRecord, NewRecordDefinition } from '../../db/schema.js';
+import { NotFoundError, ConflictError } from '../../utils/errors.js';
 
 // ==================== DEFINITIONS ====================
 

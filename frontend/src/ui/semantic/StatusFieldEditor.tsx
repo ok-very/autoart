@@ -13,11 +13,14 @@
  * - Used in both table cells and inspector fields
  */
 
-import { useState, useRef, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
-import { PortalMenu } from '../atoms/PortalMenu';
+import { useState, useRef, useCallback } from 'react';
+
 import { TASK_STATUS_CONFIG } from '@autoart/shared';
+
+import { PortalMenu } from '../atoms/PortalMenu';
+
 
 /** Config type for status display */
 type StatusConfig = Record<string, { label: string; colorClass: string }>;
