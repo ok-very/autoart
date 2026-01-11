@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { queryKeys } from '../queryKeys';
+import { queryKeys } from '../../queryKeys';
 
 export interface InterpretationOutput {
     kind: 'fact_candidate' | 'action_hint' | 'work_event' | 'field_value';

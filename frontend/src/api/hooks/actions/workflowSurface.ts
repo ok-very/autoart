@@ -16,7 +16,7 @@ import type {
 } from '@autoart/shared';
 
 import { api } from '../../client';
-import { queryKeys } from '../queryKeys';
+import { queryKeys } from '../../queryKeys';
 
 // ============================================================================
 // QUERIES
