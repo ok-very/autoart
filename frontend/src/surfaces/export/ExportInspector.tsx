@@ -9,6 +9,8 @@ import { Download, Settings, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 import type { ExportFormat, ExportOptions } from './types';
+import { FontSelector } from './components/FontSelector';
+import { getDefaultFont } from './utils/fonts';
 import {
     useCreateExportSession,
     useGenerateExportProjection,
@@ -28,6 +30,8 @@ interface ExportInspectorProps {
     onOptionChange: (key: keyof ExportOptions, value: boolean) => void;
     selectedCount: number;
     onExport: () => void;
+    font?: string;
+    onFontChange?: (font: string) => void;
 }
 
 // ============================================================================
@@ -41,6 +45,8 @@ export function ExportInspector({
     onOptionChange,
     selectedCount,
     onExport,
+    font,
+    onFontChange,
 }: ExportInspectorProps) {
     const [exportError, setExportError] = useState<string | null>(null);
 
@@ -129,6 +135,16 @@ export function ExportInspector({
                             )}
                         </div>
                     </Card>
+
+                    {/* Font Selection */}
+                    {onFontChange && (
+                        <div className="pt-4 border-t border-slate-200">
+                            <FontSelector
+                                selectedFont={font || getDefaultFont(format)}
+                                onChange={onFontChange}
+                            />
+                        </div>
+                    )}
                 </Stack>
             </div>
 
