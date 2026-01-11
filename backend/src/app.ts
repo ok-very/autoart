@@ -19,10 +19,11 @@ import { factKindsRoutes } from './modules/records/fact-kinds.routes.js';
 import { recordsRoutes } from './modules/records/records.routes.js';
 import { referencesRoutes } from './modules/references/references.routes.js';
 import { searchRoutes } from './modules/search/search.routes.js';
-// ingestion module deprecated - use imports module instead
 import { workflowSurfaceRoutes } from './modules/projections/workflow-surface.routes.js';
 import { connectionsRoutes } from './modules/imports/connections.routes.js';
 import authPlugin from './plugins/auth.js';
+import { errorHandler, notFoundHandler } from './utils/errorHandler.js';
+import { logger } from './utils/logger.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -92,26 +93,10 @@ export async function buildApp(): Promise<FastifyInstance> {
   // Fact kind definitions - Definition Review UI
   await fastify.register(factKindsRoutes, { prefix: '/api' });
 
-  // Global error handler
-  fastify.setErrorHandler((error: Error & { validation?: unknown; statusCode?: number; code?: string }, _request, reply) => {
-    fastify.log.error(error);
+  fastify.setErrorHandler(errorHandler);
+  fastify.setNotFoundHandler(notFoundHandler);
 
-    if (error.validation) {
-      return reply.code(400).send({
-        error: 'VALIDATION_ERROR',
-        message: 'Request validation failed',
-        details: error.validation,
-      });
-    }
-
-    const statusCode = error.statusCode || 500;
-    const message = statusCode === 500 ? 'Internal Server Error' : error.message;
-
-    return reply.code(statusCode).send({
-      error: error.code || 'ERROR',
-      message,
-    });
-  });
+  logger.info({ port: env.PORT, env: env.NODE_ENV }, 'App initialized');
 
   return fastify;
 }

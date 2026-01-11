@@ -5,6 +5,10 @@
  * These are interface/type definitions only.
  */
 
+// ==================== ERRORS ====================
+export type { ApiErrorResponse, ApiErrorDetails, ErrorCode } from './errors.js';
+export { ErrorCodes } from './errors.js';
+
 // ==================== PROJECTIONS ====================
 export type {
     ProjectionPreset,
