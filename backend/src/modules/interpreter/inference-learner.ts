@@ -27,8 +27,19 @@ export interface ColumnMapping {
     fieldName: string;
     fieldType: string;
     renderHint?: string;
-    // 'assignee' is the canonical field key (previously 'owner')
+    // Canonical field key is 'assignee'. Legacy 'owner' values are normalized on persist.
     specialMapping?: 'title' | 'assignee' | 'dueDate' | 'status' | 'description';
+}
+
+/**
+ * Normalize legacy 'owner' specialMapping to 'assignee'.
+ * Ensures consistency in stored learnings after Phase 6 migration.
+ */
+function normalizeMapping(mapping: ColumnMapping): ColumnMapping {
+    if ((mapping.specialMapping as string) === 'owner') {
+        return { ...mapping, specialMapping: 'assignee' };
+    }
+    return mapping;
 }
 
 // ============================================================================
@@ -46,11 +57,17 @@ export async function recordLearning(params: {
     projectId?: string;
     definitionId?: string;
 }): Promise<InferenceLearning> {
+    // Normalize any legacy 'owner' values to 'assignee' before persisting
+    const normalizedUserMapping = normalizeMapping(params.userMapping);
+    const normalizedSuggestedMapping = params.suggestedMapping
+        ? normalizeMapping(params.suggestedMapping)
+        : null;
+
     const learning: NewInferenceLearning = {
         source_type: params.sourceType,
         input_signature: params.inputSignature,
-        suggested_mapping: params.suggestedMapping,
-        user_mapping: params.userMapping,
+        suggested_mapping: normalizedSuggestedMapping,
+        user_mapping: normalizedUserMapping,
         project_id: params.projectId ?? null,
         definition_id: params.definitionId ?? null,
     };
@@ -170,9 +187,11 @@ export function applyLearnings(
 
         if (learning) {
             const userMapping = learning.user_mapping as ColumnMapping;
+            // Normalize legacy 'owner' values when reading from stored learnings
+            const normalizedMapping = normalizeMapping(userMapping);
             return {
                 ...item,
-                mapping: userMapping,
+                mapping: normalizedMapping,
                 source: 'learned' as const,
             };
         }
