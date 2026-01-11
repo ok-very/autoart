@@ -12,9 +12,9 @@ import { useState, useMemo } from 'react';
 import { DataFieldWidget } from '../molecules/DataFieldWidget';
 
 // Event types aligned with Action/Event architecture
-export type EventType = 
+export type EventType =
   | 'action_declared'
-  | 'work_started' 
+  | 'work_started'
   | 'work_finished'
   | 'blocked'
   | 'unblocked'
@@ -58,7 +58,7 @@ export function ProjectLogView({ projectId }: ProjectLogViewProps) {
   const cards: ActionCard[] = useMemo(() => {
     return [];
   }, [projectId]);
-  
+
   const isLoading = false; // TODO: Get from query hook
 
   const handleDeclareAction = () => {
@@ -94,7 +94,7 @@ export function ProjectLogView({ projectId }: ProjectLogViewProps) {
         {/* Timeline Stream */}
         <div className="space-y-8 relative">
           <div className="absolute left-[19px] top-0 bottom-0 w-px bg-slate-200 -z-10" />
-          
+
           {isLoading ? (
             <div className="space-y-6">
               {[1, 2, 3].map((i) => (
@@ -159,8 +159,8 @@ function ActionCardItem({ card }: { card: ActionCard }) {
                   <span>·</span>
                 </>
               )}
-              <DataFieldWidget 
-                kind="status" 
+              <DataFieldWidget
+                kind="status"
                 value={card.status}
                 statusConfig={card.statusConfig}
                 className="inline-flex"
@@ -175,9 +175,9 @@ function ActionCardItem({ card }: { card: ActionCard }) {
         {/* Event Timeline */}
         <div className="p-5 space-y-0 relative">
           {card.events.map((event, idx) => (
-            <EventRow 
-              key={event.id} 
-              event={event} 
+            <EventRow
+              key={event.id}
+              event={event}
               isLast={idx === card.events.length - 1}
             />
           ))}
@@ -193,15 +193,15 @@ function ActionCardItem({ card }: { card: ActionCard }) {
 function EventRow({ event, isLast }: { event: ExecutionEvent; isLast: boolean }) {
   const icon = getEventIcon(event.type);
   const colorClass = getEventColorClass(event.type);
-  const time = new Date(event.occurredAt).toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
+  const time = new Date(event.occurredAt).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit'
   });
 
   return (
     <div className="relative pl-8 pb-6">
       {!isLast && <div className="absolute left-0 top-6 bottom-0 w-0.5 bg-slate-200" />}
-      
+
       <div className={`absolute -left-1 top-0 w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm ${colorClass}`}>
         {icon}
       </div>
@@ -286,7 +286,7 @@ function ActionBar({ status, actionId }: { status: string; actionId: number }) {
 function getStatusIcon(status: string) {
   switch (status) {
     case 'in_progress': return <Play size={18} className="text-indigo-600" weight="fill" />;
-    case 'completed': return <CheckCircle size={18} className="text-emerald-600" weight="fill" />;
+    case 'done': return <CheckCircle size={18} className="text-emerald-600" weight="fill" />;
     case 'blocked': return <HandPalm size={18} className="text-red-600" weight="fill" />;
     default: return <Circle size={18} className="text-slate-400" />;
   }
