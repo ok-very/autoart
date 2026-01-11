@@ -6,6 +6,7 @@
 
 import { OAuth2Client } from 'google-auth-library';
 import crypto from 'crypto';
+import { sql } from 'kysely';
 
 import { db } from '../../db/client.js';
 import { AppError } from '../../utils/errors.js';
@@ -96,7 +97,8 @@ export async function handleGoogleCallback(code: string, state: string) {
     try {
         const response = await oauth2Client.getToken(code);
         tokens = response.tokens;
-        oauth2Client.setCredentials(tokens);
+        // Don't call setCredentials - it mutates the shared oauth2Client and creates race conditions
+        // Tokens are stored in the database and used per-request when needed
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         throw new AppError(500, `Failed to exchange authorization code: ${message}`, 'OAUTH_TOKEN_EXCHANGE_FAILED', { error: message });
@@ -149,7 +151,8 @@ export async function handleGoogleCallback(code: string, state: string) {
         .onConflict((oc) =>
             oc.columns(['user_id', 'provider']).doUpdateSet({
                 access_token: tokens.access_token!,
-                refresh_token: tokens.refresh_token || null,
+                // Preserve existing refresh_token if Google doesn't return a new one
+                refresh_token: tokens.refresh_token ? tokens.refresh_token : sql`refresh_token`,
                 expires_at: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
                 scopes: JSON.stringify(tokens.scope?.split(' ') || []),
                 metadata: JSON.stringify({
@@ -189,7 +192,13 @@ async function getGoogleProfile(accessToken: string): Promise<{ email: string; n
 
     // Validate email exists and is non-empty
     if (!data.email || typeof data.email !== 'string' || data.email.trim() === '') {
-        throw new AppError(400, 'Google profile missing email', 'OAUTH_PROFILE_MISSING_EMAIL', { profileData: data });
+        // Log only non-PII fields to avoid exposing sensitive profile data
+        throw new AppError(400, 'Google profile missing email', 'OAUTH_PROFILE_MISSING_EMAIL', {
+            provider: data.provider || 'google',
+            id: data.id || data.sub,
+            emailPresent: Boolean(data.email),
+            domain: data.hd || null,
+        });
     }
 
     return {
