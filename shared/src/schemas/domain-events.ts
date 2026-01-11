@@ -14,35 +14,6 @@
  *   5. Financial (INVOICE_PREPARED, PAYMENT_RECORDED)
  *   6. Contracts (CONTRACT_EXECUTED)
  *   7. Process (PROCESS_INITIATED, PROCESS_COMPLETED)
- *
- * ---------------------------------------------------------------------------
- * Conventions: Email-derived facts (AutoMail)
- * ---------------------------------------------------------------------------
- *
- * AutoMail is a local-first email ingestion + classification tool that can emit
- * fact payloads into the AutoArt event stream.
- *
- * The key design choice is that AutoMail facts are treated as "manual" when a
- * user (or a user-configured auto-approve include/exclude rule) approves them.
- * This preserves the semantics that these facts represent user-authorized
- * workstation-level actions.
- *
- * Recommended conventions (non-breaking; compatible with existing schemas):
- * - source:
- *   - Use `source: "manual"` for AutoMail facts, including auto-approved facts.
- * - confidence:
- *   - `high` for user-approved or rule-auto-approved facts.
- *   - `medium` / `low` for model-only suggestions not explicitly approved.
- * - INFORMATION_SENT for email:
- *   - Set `channel: "email"`.
- *   - Use `artifacts` as URI strings to reference source messages + local files.
- *     Examples:
- *       - "email://<message-id>" (stable message identifier)
- *       - "file://C:/Users/Alex/OneDrive/.../invoice.pdf" (local file reference)
- *       - "onedrive://..." (optional, if you have a stable OneDrive URI)
- * - notes:
- *   - Record audit breadcrumbs like `autoApprovedByRule=<ruleName>` to explain
- *     why a fact was emitted without introducing new schema fields.
  */
 
 import { z } from 'zod';
@@ -316,7 +287,9 @@ export function renderFact(payload: BaseFactPayload): string {
         case KnownFactKind.DOCUMENT_SUBMITTED: {
             const p = rest as { documentType?: string; submittedTo?: string };
             const docType = formatDocumentType(p.documentType);
-            return p.submittedTo ? `${docType} submitted to ${p.submittedTo}` : `${docType} submitted`;
+            return p.submittedTo
+                ? `${docType} submitted to ${p.submittedTo}`
+                : `${docType} submitted`;
         }
 
         // Meetings
