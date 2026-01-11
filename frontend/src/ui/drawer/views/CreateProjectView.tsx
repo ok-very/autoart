@@ -11,9 +11,8 @@ import { Inline } from '../../atoms/Inline';
 import { Stack } from '../../atoms/Stack';
 import { Text } from '../../atoms/Text';
 import { Alert } from '../../atoms/Alert';
-import { useUIStore } from '../../../stores/uiStore';
-import { useHierarchyStore } from '../../../stores/hierarchyStore';
-import { useCreateNode } from '../../../api/hooks';
+import { useUIStore, useHierarchyStore } from '@/stores';
+import { useCreateNode } from '@/api/hooks';
 import type { DrawerProps, CreateProjectContext } from '../../../drawer/types';
 
 // Legacy props interface (deprecated - use DrawerProps)

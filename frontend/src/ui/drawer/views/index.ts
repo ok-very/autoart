@@ -18,6 +18,3 @@ export { ViewRecordDrawer } from './ViewRecordDrawer';
 export { ViewDefinitionDrawer } from './ViewDefinitionDrawer';
 export { ProjectLibraryDrawer } from './ProjectLibraryDrawer';
 export { MondayBoardsDrawer } from './MondayBoardsDrawer';
-export { ClassificationDrawerView } from './ClassificationDrawerView';
-export { ImportWorkbenchDrawerView } from './ImportWorkbenchDrawerView';
-export { ExportWorkbenchDrawerView } from './ExportWorkbenchDrawerView';
