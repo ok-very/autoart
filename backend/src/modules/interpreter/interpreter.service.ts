@@ -17,9 +17,9 @@
  */
 
 import type { Action, Event } from '../../db/schema.js';
+import type { ContextType } from '../../db/schema.js';
 import * as actionsService from '../actions/actions.service.js';
 import * as eventsService from '../events/events.service.js';
-import type { ContextType } from '../../db/schema.js';
 
 // ============================================================================
 // TYPES
@@ -563,13 +563,13 @@ export async function getStatusSummary(
 // CSV INTERPRETATION LAYER
 // ============================================================================
 
+import { defaultMappingRules } from './mappings/index.js';
 import {
   MappingContext,
   MappingRule,
   applyMappingRules,
   type InterpretationOutput,
 } from './mappings/types.js';
-import { defaultMappingRules } from './mappings/index.js';
 
 export type { MappingContext, MappingRule, InterpretationOutput };
 

@@ -1,6 +1,7 @@
-import { useState, useRef, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { User, Link2, Type, ExternalLink, AtSign } from 'lucide-react';
+import { useState, useRef, useCallback } from 'react';
+
 import { PortalMenu } from './PortalMenu';
 
 interface UserValue {

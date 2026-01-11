@@ -13,9 +13,11 @@
 
 import { clsx } from 'clsx';
 import { Zap, Eye, EyeOff } from 'lucide-react';
+
+import type { Action } from '@autoart/shared';
+
 import { ActionCard } from './ActionCard';
 import { useActionEvents } from '../../api/hooks';
-import type { Action } from '@autoart/shared';
 
 // ==================== TYPES ====================
 

@@ -8,8 +8,9 @@
  * - Definitions | Instances tab switch (when applicable)
  */
 
-import { LucideIcon, Plus } from 'lucide-react';
 import { clsx } from 'clsx';
+import { LucideIcon, Plus } from 'lucide-react';
+
 import { RegistryTabSwitch, type RegistryTab } from './RegistryTabSwitch';
 
 interface RegistryPageHeaderProps {

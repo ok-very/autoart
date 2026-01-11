@@ -7,10 +7,10 @@
  * - Renders the UI state (resolved, broken, empty)
  */
 
-import { useState, useRef, useCallback } from 'react';
-import { Link2, X, ExternalLink, RefreshCw } from 'lucide-react';
 import { clsx } from 'clsx';
-import { RecordSearchCombobox } from '../common/RecordSearchCombobox';
+import { Link2, X, ExternalLink, RefreshCw } from 'lucide-react';
+import { useState, useRef, useCallback } from 'react';
+
 import {
     useResolveReference,
     useCreateReference,
@@ -19,6 +19,7 @@ import {
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
 import type { SearchResult } from '../../types';
+import { RecordSearchCombobox } from '../common/RecordSearchCombobox';
 
 export interface ReferenceEditorProps {
     /** The reference ID if a link exists, or empty string if not */

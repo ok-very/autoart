@@ -5,6 +5,7 @@
  */
 
 import { FastifyInstance } from 'fastify';
+
 import * as linksService from './links.service.js';
 
 // Request/Response schemas

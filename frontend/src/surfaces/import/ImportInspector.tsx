@@ -6,8 +6,9 @@
  */
 
 import { FileText, Tag, AlertCircle, Info } from 'lucide-react';
-import { Text, Stack, Inline, Badge, Card } from '../../ui/atoms';
+
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
+import { Text, Stack, Inline, Badge, Card } from '../../ui/atoms';
 
 // ============================================================================
 // TYPES

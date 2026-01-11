@@ -11,14 +11,15 @@
  * For page-level usage, see ProjectPage which wraps this with layout.
  */
 
-import { useEffect, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+
+import { DataTableFlat } from './DataTableFlat';
+import { DataTableHierarchy, type HierarchyFieldDef } from './DataTableHierarchy';
 import { ProjectLogView } from './ProjectLogView';
 import { useProjectTree, useRecordDefinitions, useRecords } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
-import { DataTableHierarchy, type HierarchyFieldDef } from './DataTableHierarchy';
-import { DataTableFlat } from './DataTableFlat';
 import type { HierarchyNode, DataRecord, RecordDefinition } from '../../types';
 import type { DataFieldKind } from '../molecules/DataFieldWidget';
 

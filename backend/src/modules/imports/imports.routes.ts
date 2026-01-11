@@ -11,8 +11,9 @@
 
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import * as importsService from './imports.service.js';
+
 import { suggestClassificationsForPlan, type ClassificationSuggestion } from './classification-suggester.js';
+import * as importsService from './imports.service.js';
 
 // ============================================================================
 // SCHEMAS

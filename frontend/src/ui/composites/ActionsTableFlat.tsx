@@ -14,12 +14,14 @@
  * - Clean separation between action types
  */
 
-import { useState, useMemo, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { Plus, Zap, Clock, Tag } from 'lucide-react';
-import { UniversalTableCore, makeFlatRowModel, type TableColumn as CoreTableColumn, type TableRow } from '../table-core';
-import type { RecordDefinition } from '../../types';
+import { useState, useMemo, useCallback } from 'react';
+
 import type { Action } from '@autoart/shared';
+
+import type { RecordDefinition } from '../../types';
+import { UniversalTableCore, makeFlatRowModel, type TableColumn as CoreTableColumn, type TableRow } from '../table-core';
 
 // ==================== TYPES ====================
 

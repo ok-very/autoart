@@ -5,8 +5,8 @@
  * Provides lookup and listing of available targets.
  */
 
-import type { ExportTarget, ExportTargetRegistry } from './export-target.interface.js';
 import { BfaRtfTarget } from './bfa-rtf-target.js';
+import type { ExportTarget, ExportTargetRegistry } from './export-target.interface.js';
 import { GoogleDocsTarget } from './google-docs-target.js';
 
 // ============================================================================

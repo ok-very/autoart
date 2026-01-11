@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+
+import type { FieldDescriptor } from '@autoart/shared';
+
 import { useRecordDefinitions } from '../../api/hooks';
 import { generateFieldIndex } from '../../utils/fieldIndexBuilder';
 import { MillerColumn, type MillerColumnItem } from '../molecules/MillerColumn';
-import type { FieldDescriptor } from '@autoart/shared';
 
 export interface FieldsMillerColumnsViewProps {
     className?: string;

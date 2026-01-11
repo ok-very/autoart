@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
 import * as searchService from './search.service.js';
 
 interface SearchQuery {

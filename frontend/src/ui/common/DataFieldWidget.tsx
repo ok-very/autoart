@@ -1,6 +1,7 @@
 import { clsx } from 'clsx';
-import { type TaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
+
 import { UserChip } from './UserChip';
+import { type TaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
 
 export type DataFieldKind = 'text' | 'status' | 'user' | 'date' | 'percent' | 'tags' | 'description';
 

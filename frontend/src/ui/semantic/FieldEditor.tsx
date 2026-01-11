@@ -12,15 +12,18 @@
  * - NO inline API calls (delegated to semantic layer logic)
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
 import { clsx } from 'clsx';
-import { useRecordFieldViewModels } from '../composites/hooks/useDomain';
-import { FieldRenderer, type FieldRendererCallbacks } from '../molecules/FieldRenderer';
-import { useUpdateRecord } from '../../api/hooks';
+import { useState, useCallback, useRef, useEffect } from 'react';
+
+import type { FieldViewModel } from '@autoart/shared/domain';
+
 import { ReferenceEditor } from './ReferenceEditor';
+import { useUpdateRecord } from '../../api/hooks';
+import { useRecordFieldViewModels } from '../composites/hooks/useDomain';
 import { UserMentionInput } from '../composites/UserMentionInput';
 import { RichTextEditor } from '../editor/RichTextEditor';
-import type { FieldViewModel } from '@autoart/shared/domain';
+import { FieldRenderer, type FieldRendererCallbacks } from '../molecules/FieldRenderer';
+
 
 export interface FieldEditorProps {
     /** ID of the record to edit */

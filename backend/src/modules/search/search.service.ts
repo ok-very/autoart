@@ -1,4 +1,5 @@
 import { sql } from 'kysely';
+
 import { db } from '../../db/client.js';
 
 interface SearchResult {

@@ -4,25 +4,27 @@
  * Drawer view for creating new records. Uses bespoke components.
  */
 
-import { useState } from 'react';
 import { Plus, FolderTree, X, ChevronDown } from 'lucide-react';
-import { useUIStore } from '../../../stores/uiStore';
+import { useState } from 'react';
+
 import {
   useRecordDefinition,
   useCreateRecord,
   useProjectTree,
-} from '../../../api/hooks';
-import { RichTextInput } from '../../editor/RichTextInput';
-import { TextInput } from '../../atoms/TextInput';
-import { Select } from '../../atoms/Select';
+} from '@/api/hooks';
+import { useUIStore } from '@/stores';
+import type { FieldDef, HierarchyNode } from '@/types';
+
+import type { DrawerProps, CreateRecordContext } from '../../../drawer/types';
 import { Button } from '../../atoms/Button';
+import { Checkbox } from '../../atoms/Checkbox';
 import { Inline } from '../../atoms/Inline';
+import { Select } from '../../atoms/Select';
+import { Spinner } from '../../atoms/Spinner';
 import { Stack } from '../../atoms/Stack';
 import { Text } from '../../atoms/Text';
-import { Checkbox } from '../../atoms/Checkbox';
-import { Spinner } from '../../atoms/Spinner';
-import type { FieldDef, HierarchyNode } from '../../../types';
-import type { DrawerProps, CreateRecordContext } from '../../../drawer/types';
+import { TextInput } from '../../atoms/TextInput';
+import { RichTextInput } from '../../editor/RichTextInput';
 
 // Legacy props interface (deprecated - use DrawerProps)
 interface LegacyCreateRecordViewProps {

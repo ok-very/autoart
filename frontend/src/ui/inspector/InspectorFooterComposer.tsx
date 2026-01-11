@@ -10,11 +10,12 @@
  * - Context auto-derived from selection (node/record/action)
  */
 
-import { useState, useMemo, useEffect } from 'react';
-import { Plus, ChevronUp, ChevronDown, Send, Loader2 } from 'lucide-react';
 import { clsx } from 'clsx';
-import { useUIStore } from '../../stores/uiStore';
+import { Plus, ChevronUp, ChevronDown, Send, Loader2 } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+
 import { useCompose, useRecordDefinitions, useNode, useAction, useSubprocesses } from '../../api/hooks';
+import { useUIStore } from '../../stores/uiStore';
 
 export function InspectorFooterComposer() {
     const {

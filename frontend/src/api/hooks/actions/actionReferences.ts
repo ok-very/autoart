@@ -6,9 +6,11 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import type { AddActionReferenceInput, RemoveActionReferenceInput, Event } from '@autoart/shared';
+
 import { api } from '../../client';
 import { queryKeys } from '../queryKeys';
-import type { AddActionReferenceInput, RemoveActionReferenceInput, Event } from '@autoart/shared';
 
 // ============================================================================
 // TYPES

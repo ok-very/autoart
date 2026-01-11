@@ -6,16 +6,17 @@
  * - moveNode: Circular reference prevention, root_project_id cascade
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { sql } from 'kysely';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+
 import { db } from '../../../db/client.js';
-import * as hierarchyService from '../hierarchy.service.js';
 import {
   cleanupTestData,
   generateTestPrefix,
   createTestProject,
   createTestRecord,
 } from '../../../test/setup.js';
+import * as hierarchyService from '../hierarchy.service.js';
 
 describe('hierarchy.service', () => {
   let testPrefix: string;

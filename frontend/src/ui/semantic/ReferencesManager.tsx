@@ -13,7 +13,7 @@
  * - No external onChange - all updates go through API
  */
 
-import { useState } from 'react';
+import { clsx } from 'clsx';
 import {
     Link2,
     Unlink,
@@ -21,8 +21,8 @@ import {
     RefreshCw,
     Trash2,
 } from 'lucide-react';
-import { clsx } from 'clsx';
-import { useUIStore } from '../../stores/uiStore';
+import { useState } from 'react';
+
 import {
     useTaskReferences,
     useResolveReference,
@@ -30,6 +30,7 @@ import {
     useUpdateReferenceSnapshot,
     useDeleteReference,
 } from '../../api/hooks';
+import { useUIStore } from '../../stores/uiStore';
 import type { TaskReference } from '../../types';
 
 export interface ReferencesManagerProps {

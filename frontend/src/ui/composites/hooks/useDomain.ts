@@ -9,7 +9,7 @@
  */
 
 import { useMemo } from 'react';
-import { useRecordDefinition, useRecord } from '../../../api/hooks';
+
 import {
     buildFieldViewModel,
     type BuildFieldViewModelOptions,
@@ -18,6 +18,8 @@ import {
     type ProjectState,
     type EntityContext,
 } from '@autoart/shared/domain';
+
+import { useRecordDefinition, useRecord } from '../../../api/hooks';
 
 /**
  * Create a minimal ProjectState for record-level operations.

@@ -5,8 +5,8 @@
  * Helps identify projects that may need attention before export.
  */
 
-import { db } from '../../db/client.js';
 import type { StaleProjectInfo } from './types.js';
+import { db } from '../../db/client.js';
 
 // ============================================================================
 // PUBLIC API

@@ -24,16 +24,18 @@
  * - Wrapper handles status special handling, nesting expansion
  */
 
-import { useState, useMemo, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { ChevronRight, Plus } from 'lucide-react';
-import { EditableCell } from '../molecules/EditableCell';
+import { useState, useMemo, useCallback } from 'react';
+
+import type { FieldViewModel } from '@autoart/shared/domain';
+
+import type { HierarchyNode, FieldDef } from '../../types';
 import { type DataFieldKind } from '../molecules/DataFieldWidget';
+import { EditableCell } from '../molecules/EditableCell';
 import { StatusColumnSummary } from '../molecules/StatusColumnSummary';
 import { StatusFieldEditor } from '../semantic/StatusFieldEditor';
-import type { FieldViewModel } from '@autoart/shared/domain';
 import { UniversalTableCore, makeHierarchyRowModel, type TableColumn as CoreTableColumn, type TableRow } from '../table-core';
-import type { HierarchyNode, FieldDef } from '../../types';
 
 // ==================== TYPES ====================
 

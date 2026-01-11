@@ -8,8 +8,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../../client';
-import { queryKeys, invalidationHelpers } from '../queryKeys';
+
 import type {
   Action,
   Event,
@@ -17,6 +16,9 @@ import type {
   CreateEventInput,
   ContextType,
 } from '@autoart/shared';
+
+import { api } from '../../client';
+import { queryKeys, invalidationHelpers } from '../queryKeys';
 
 // ============================================================================
 // ACTIONS

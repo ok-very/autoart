@@ -5,9 +5,9 @@
  * Pure presentational - no domain logic or API calls.
  */
 
-import { useState, ReactNode } from 'react';
 import { clsx } from 'clsx';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useState, ReactNode } from 'react';
 
 export interface PropertySectionProps {
     /** Section title */

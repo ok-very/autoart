@@ -10,16 +10,19 @@
  * Note: Fields are emergent - instances are derived from records using the field.
  */
 
-import { useState, useEffect } from 'react';
 import { TableProperties, ClipboardList } from 'lucide-react';
-import { Header } from '../ui/layout/Header';
+import { useState, useEffect } from 'react';
+
+import type { FieldDescriptor } from '@autoart/shared';
+
+import { useUIStore, isFieldsViewMode } from '../stores/uiStore';
 import { ResizeHandle } from '../ui/atoms/ResizeHandle';
 import { FieldsMillerColumnsView } from '../ui/composites/FieldsMillerColumnsView';
+import { Header } from '../ui/layout/Header';
+import { RegistryPageHeader, type RegistryTab } from '../ui/registry';
 import { FieldDefinitionEditor } from '../ui/semantic/FieldDefinitionEditor';
 import { FieldInstancesReview } from '../ui/semantic/FieldInstancesReview';
-import { RegistryPageHeader, type RegistryTab } from '../ui/registry';
-import { useUIStore, isFieldsViewMode } from '../stores/uiStore';
-import type { FieldDescriptor } from '@autoart/shared';
+
 
 export function FieldsPage() {
     const { viewMode, setViewMode, openDrawer } = useUIStore();

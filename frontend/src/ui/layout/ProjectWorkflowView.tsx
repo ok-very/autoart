@@ -1,5 +1,8 @@
-import { useEffect, useMemo, useCallback, useState } from 'react';
 import { Plus, ChevronDown, Wand2 } from 'lucide-react';
+import { useEffect, useMemo, useCallback, useState } from 'react';
+
+import type { DerivedStatus } from '@autoart/shared';
+
 import {
     useProjectTree,
     useRecordDefinitions,
@@ -17,9 +20,8 @@ import {
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
 import type { HierarchyNode, DataRecord, RecordDefinition } from '../../types';
-import type { DerivedStatus } from '@autoart/shared';
-import { DataTableHierarchy, type HierarchyFieldDef } from '../../ui/composites/DataTableHierarchy';
 import { DataTableFlat } from '../../ui/composites/DataTableFlat';
+import { DataTableHierarchy, type HierarchyFieldDef } from '../../ui/composites/DataTableHierarchy';
 import { WorkflowSurfaceTable } from '../../ui/composites/WorkflowSurfaceTable';
 import { deriveTaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
 import { ComposerSurface } from '../composer';

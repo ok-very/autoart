@@ -1,5 +1,5 @@
-import { forwardRef, ButtonHTMLAttributes } from 'react';
 import { clsx } from 'clsx';
+import { forwardRef, ButtonHTMLAttributes } from 'react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'light' | 'subtle';

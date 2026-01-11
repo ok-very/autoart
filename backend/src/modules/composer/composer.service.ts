@@ -14,11 +14,14 @@
  */
 
 import { sql } from 'kysely';
+
+import type { ComposerInput, ComposerResponse, ContextType, Action, Event, ActionReference } from '@autoart/shared';
+
+import { EventFactory } from './event-factory.js';
 import { db } from '../../db/client.js';
 import { ValidationError } from '../../utils/errors.js';
-import { EventFactory } from './event-factory.js';
 import * as interpreterService from '../interpreter/interpreter.service.js';
-import type { ComposerInput, ComposerResponse, ContextType, Action, Event, ActionReference } from '@autoart/shared';
+
 
 // Forbidden action types - these are legacy and should not be created
 const LEGACY_ACTION_TYPES = ['legacy_task', 'LEGACY_TASK', 'task_node', 'TASK_NODE'];

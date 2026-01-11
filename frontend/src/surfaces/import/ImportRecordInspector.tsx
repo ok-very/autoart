@@ -6,8 +6,9 @@
  */
 
 import { X, FileText, Zap, Database, TableProperties } from 'lucide-react';
-import type { ImportPlan } from '../../api/hooks/imports';
+
 import { FieldSchemaPreview } from './FieldSchemaPreview';
+import type { ImportPlan } from '../../api/hooks/imports';
 
 // ============================================================================
 // TYPES

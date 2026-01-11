@@ -6,6 +6,7 @@
 
 import { clsx } from 'clsx';
 import { ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react';
+
 import type { SortConfig } from '../../hooks';
 
 export interface TableSortHeaderProps {

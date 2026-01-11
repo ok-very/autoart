@@ -5,15 +5,17 @@
  */
 
 import { useState } from 'react';
-import { TextInput } from '../../atoms/TextInput';
+
+import { useCreateNode } from '@/api/hooks';
+import { useUIStore, useHierarchyStore } from '@/stores';
+
+import type { DrawerProps, CreateProjectContext } from '../../../drawer/types';
+import { Alert } from '../../atoms/Alert';
 import { Button } from '../../atoms/Button';
 import { Inline } from '../../atoms/Inline';
 import { Stack } from '../../atoms/Stack';
 import { Text } from '../../atoms/Text';
-import { Alert } from '../../atoms/Alert';
-import { useUIStore, useHierarchyStore } from '@/stores';
-import { useCreateNode } from '@/api/hooks';
-import type { DrawerProps, CreateProjectContext } from '../../../drawer/types';
+import { TextInput } from '../../atoms/TextInput';
 
 // Legacy props interface (deprecated - use DrawerProps)
 interface LegacyCreateProjectViewProps {

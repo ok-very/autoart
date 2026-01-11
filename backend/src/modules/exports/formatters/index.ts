@@ -5,9 +5,9 @@
  */
 
 import type { BfaProjectExportModel, ExportFormat, ExportOptions } from '../types.js';
-import { formatAsRtf } from './rtf-formatter.js';
 import { formatAsMarkdown } from './markdown-formatter.js';
 import { formatAsPlainText } from './plaintext-formatter.js';
+import { formatAsRtf } from './rtf-formatter.js';
 
 export { formatAsRtf } from './rtf-formatter.js';
 export { formatAsMarkdown } from './markdown-formatter.js';

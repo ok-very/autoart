@@ -17,7 +17,7 @@
  * - No free-form editing of fact kinds or payloads
  */
 
-import { useState } from 'react';
+import { clsx } from 'clsx';
 import {
     Lightbulb,
     CheckCircle2,
@@ -30,7 +30,8 @@ import {
     AlertTriangle,
     Loader2
 } from 'lucide-react';
-import { clsx } from 'clsx';
+import { useState } from 'react';
+
 import { useInterpretationPlan } from '../../../api/hooks';
 
 interface InterpretationInspectorViewProps {

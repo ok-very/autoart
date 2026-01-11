@@ -9,8 +9,8 @@
  * State is derived by interpreting the event stream.
  */
 
-import type { Event, ContextType } from '../../db/schema.js';
 import * as eventsService from './events.service.js';
+import type { Event, ContextType } from '../../db/schema.js';
 import * as actionsService from '../actions/actions.service.js';
 
 export interface WorkflowEventInput {

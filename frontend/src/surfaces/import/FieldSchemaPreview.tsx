@@ -9,10 +9,11 @@
  * Renders field recordings with their type information.
  */
 
-import { useMemo } from 'react';
 import { TableProperties, AlertCircle, CheckCircle } from 'lucide-react';
-import { DataTable, type TableColumn } from '../../ui/tables/DataTable';
+import { useMemo } from 'react';
+
 import type { ImportPlanItem } from '../../api/hooks/imports';
+import { DataTable, type TableColumn } from '../../ui/tables/DataTable';
 
 // ============================================================================
 // TYPES

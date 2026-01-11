@@ -1,8 +1,10 @@
-import { db } from '../../db/client.js';
-import { NotFoundError } from '../../utils/errors.js';
-import type { CreateReferenceInput, UpdateReferenceModeInput } from './references.schemas.js';
-import type { TaskReference } from '../../db/schema.js';
 import type { ResolvedReference, ReferenceStatus } from '@autoart/shared';
+
+import type { CreateReferenceInput, UpdateReferenceModeInput } from './references.schemas.js';
+import { db } from '../../db/client.js';
+import type { TaskReference } from '../../db/schema.js';
+import { NotFoundError } from '../../utils/errors.js';
+
 
 /**
  * Compute the reference status based on mode and resolution state

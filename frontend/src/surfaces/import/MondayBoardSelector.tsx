@@ -8,7 +8,6 @@
  * - Import button
  */
 
-import { useState, useMemo, useCallback } from 'react';
 import {
     Search,
     Loader2,
@@ -17,6 +16,8 @@ import {
     ChevronDown,
     AlertCircle,
 } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+
 import { useMondayBoards, useConnections, type MondayBoard } from '../../api/connections';
 
 // ============================================================================

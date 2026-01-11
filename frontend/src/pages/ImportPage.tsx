@@ -10,15 +10,16 @@
  */
 
 import { useCallback, useState, useMemo, useEffect } from 'react';
-import { Header } from '../ui/layout/Header';
+
+import type { ImportSession, ImportPlan } from '../api/hooks/imports';
+import { useUIStore } from '../stores/uiStore';
+import { ImportInspector } from '../surfaces/import/ImportInspector';
 import { ImportSidebar } from '../surfaces/import/ImportSidebar';
 import { ImportWorkbenchView } from '../surfaces/import/ImportWorkbenchView';
 import { MondayPreviewView } from '../surfaces/import/MondayPreviewView';
-import { ImportInspector } from '../surfaces/import/ImportInspector';
-import { BottomDrawer } from '../ui/drawer/BottomDrawer';
 import { ResizeHandle } from '../ui/common/ResizeHandle';
-import { useUIStore } from '../stores/uiStore';
-import type { ImportSession, ImportPlan } from '../api/hooks/imports';
+import { BottomDrawer } from '../ui/drawer/BottomDrawer';
+import { Header } from '../ui/layout/Header';
 
 // Source type lifted to page level for view swapping
 export type ImportSourceType = 'file' | 'monday' | 'api';

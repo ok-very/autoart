@@ -81,7 +81,7 @@ export interface DrawerUIContext {
  * DrawerDefinition - Metadata about a drawer type.
  * Used by DrawerRegistry to validate and render drawers.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export interface DrawerDefinition<TContext = unknown, _TResult = unknown> {
     /** Unique drawer type ID */
     id: string;

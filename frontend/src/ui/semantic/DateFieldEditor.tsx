@@ -11,9 +11,9 @@
  * - Used in table cells and inspector fields
  */
 
-import { useState, useRef, useCallback, useMemo } from 'react';
 import { clsx } from 'clsx';
 import { Calendar, X } from 'lucide-react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 
 export interface DateFieldEditorProps {
     /** Current date value (ISO string or Date) */

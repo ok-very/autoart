@@ -11,8 +11,9 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { emitEvent } from '../events/events.service.js';
+
 import * as actionsService from './actions.service.js';
+import { emitEvent } from '../events/events.service.js';
 import { getActionReferences } from '../projections/action-references.projector.js';
 
 // Response schema for references

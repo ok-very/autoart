@@ -15,8 +15,9 @@
  */
 
 import { FastifyInstance } from 'fastify';
-import { z } from 'zod';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { z } from 'zod';
+
 import * as eventsService from './events.service.js';
 import type { Event } from '../../db/schema.js';
 

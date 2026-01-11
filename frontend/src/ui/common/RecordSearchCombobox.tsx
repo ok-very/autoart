@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback, useMemo, useRef, RefObject } from 'react';
-import { createPortal } from 'react-dom';
 import { clsx } from 'clsx';
 import { Search, X, ArrowLeft } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo, useRef, RefObject } from 'react';
+import { createPortal } from 'react-dom';
+
 import { useSearch } from '../../api/hooks';
-import { useUIStore } from '../../stores/uiStore';
-import { fuzzySearch } from '../../utils/fuzzySearch';
 import { useClickOutside } from '../../hooks/useClickOutside';
+import { useUIStore } from '../../stores/uiStore';
 import type { SearchResult } from '../../types';
+import { fuzzySearch } from '../../utils/fuzzySearch';
 
 interface RecordSearchComboboxProps {
   /** Initial search query */

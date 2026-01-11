@@ -7,12 +7,13 @@
  * - Integrations: External service connections (Monday, Google)
  */
 
+import { Settings, User, Plug, Loader2 } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, User, Plug, Loader2 } from 'lucide-react';
-import { useCurrentUser } from '../api/hooks';
-import { useConnections, useConnectMonday, useDisconnectMonday } from '../api/connections';
+
 import { AccountSection, IntegrationsSection } from './settings';
+import { useConnections, useConnectMonday, useDisconnectMonday } from '../api/connections';
+import { useCurrentUser } from '../api/hooks';
 
 // ============================================================================
 // TYPES

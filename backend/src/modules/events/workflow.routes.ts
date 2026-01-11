@@ -24,6 +24,7 @@
  */
 
 import { FastifyInstance } from 'fastify';
+
 import * as workflowService from './workflow.service.js';
 
 // Response schema for events

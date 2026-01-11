@@ -1,5 +1,5 @@
-import { HTMLAttributes } from 'react';
 import { clsx } from 'clsx';
+import { HTMLAttributes } from 'react';
 
 interface AlertProps extends HTMLAttributes<HTMLDivElement> {
     variant?: 'info' | 'success' | 'warning' | 'error';

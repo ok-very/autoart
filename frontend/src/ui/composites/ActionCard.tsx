@@ -9,10 +9,13 @@
  * Used in ActionsList for the action log view.
  */
 
-import { useState, useMemo } from 'react';
 import { ChevronDown, XCircle, PencilLine } from 'lucide-react';
-import { EventRow } from '../primitives/EventRow';
+import { useState, useMemo } from 'react';
+
 import type { Action, Event } from '@autoart/shared';
+
+import { EventRow } from '../primitives/EventRow';
+
 
 // ==================== TYPES ====================
 

@@ -13,8 +13,9 @@
 
 import { Ban, CheckCircle2, AlertTriangle, Upload, Loader2 } from 'lucide-react';
 import { useState, useCallback, useMemo } from 'react';
-import { Card, Inline, Text, Button, Badge } from '../../ui/atoms';
+
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
+import { Card, Inline, Text, Button, Badge } from '../../ui/atoms';
 
 // ============================================================================
 // TYPES

@@ -1,16 +1,17 @@
-import { useCallback, Component, ReactNode, ErrorInfo } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { useCallback, Component, ReactNode, ErrorInfo } from 'react';
+
+import { CalendarView } from './CalendarView';
 import { Header } from './Header';
-import { Sidebar } from '../hierarchy/Sidebar';
-import { Workspace } from './Workspace';
 import { MillerColumnsView } from './MillerColumnsView';
 import { ProjectWorkflowView } from './ProjectWorkflowView';
-import { CalendarView } from './CalendarView';
-import { ProjectLogSurface } from '../projectLog';
-import { SelectionInspector } from '../../ui/composites';
-import { BottomDrawer } from '../drawer/BottomDrawer';
-import { ResizeHandle } from '../common/ResizeHandle';
+import { Workspace } from './Workspace';
 import { useUIStore, useUIPanels } from '../../stores/uiStore';
+import { SelectionInspector } from '../../ui/composites';
+import { ResizeHandle } from '../common/ResizeHandle';
+import { BottomDrawer } from '../drawer/BottomDrawer';
+import { Sidebar } from '../hierarchy/Sidebar';
+import { ProjectLogSurface } from '../projectLog';
 
 // Local error boundary for inspector to prevent full app crash
 interface InspectorErrorBoundaryState {

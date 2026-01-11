@@ -11,10 +11,11 @@
  */
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
-import { MillerColumn } from '../molecules/MillerColumn';
 import type { NodeType } from '../../types';
+import { MillerColumn } from '../molecules/MillerColumn';
 
 // ==================== TYPES ====================
 

@@ -10,15 +10,16 @@
  * Layout: Left sidebar (definition list) | Main content | Right inspector
  */
 
-import { useCallback, useState, useEffect } from 'react';
 import { Database } from 'lucide-react';
-import { Header } from '../ui/layout/Header';
+import { useCallback, useState, useEffect } from 'react';
+
+import { useUIStore, isRecordsViewMode } from '../stores/uiStore';
+import { ResizeHandle } from '../ui/common/ResizeHandle';
+import { SelectionInspector } from '../ui/composites';
 import { RecordView } from '../ui/composites/RecordView';
 import { BottomDrawer } from '../ui/drawer/BottomDrawer';
-import { ResizeHandle } from '../ui/common/ResizeHandle';
+import { Header } from '../ui/layout/Header';
 import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../ui/registry';
-import { useUIStore, isRecordsViewMode } from '../stores/uiStore';
-import { SelectionInspector } from '../ui/composites';
 
 export function RecordsPage() {
   const { inspectorWidth, setInspectorWidth, viewMode, setViewMode, openDrawer } = useUIStore();

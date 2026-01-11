@@ -1,5 +1,5 @@
-import { HTMLAttributes } from 'react';
 import { clsx } from 'clsx';
+import { HTMLAttributes } from 'react';
 
 interface TextProps extends HTMLAttributes<HTMLSpanElement> {
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';

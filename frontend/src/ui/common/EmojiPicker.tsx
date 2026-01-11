@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
-import { Smile } from 'lucide-react';
 import { clsx } from 'clsx';
+import { Smile } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface EmojiPickerProps {
   /** Current emoji value (e.g., "📋") */

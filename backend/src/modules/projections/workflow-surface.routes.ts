@@ -10,6 +10,7 @@
  */
 
 import { FastifyInstance } from 'fastify';
+
 import * as projector from './workflow-surface.projector.js';
 import type { ContextType } from '../../db/schema.js';
 

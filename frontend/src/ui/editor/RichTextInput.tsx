@@ -1,12 +1,14 @@
-import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
+import Placeholder from '@tiptap/extension-placeholder';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
+import { clsx } from 'clsx';
+import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
+
 import { createMentionExtension, MentionAttributes } from './MentionExtension';
-import { RecordSearchCombobox } from '../common/RecordSearchCombobox';
 import { useCreateReference } from '../../api/hooks';
 import type { SearchResult } from '../../types';
-import { clsx } from 'clsx';
+import { RecordSearchCombobox } from '../common/RecordSearchCombobox';
+
 
 interface RichTextInputProps {
   value: unknown; // string or JSON

@@ -1,9 +1,9 @@
-import { Kysely, Migrator, FileMigrationProvider, PostgresDialect } from 'kysely';
-import { Pool } from 'pg';
-import { promises as fs } from 'fs';
-import path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
 import dotenv from 'dotenv';
+import { promises as fs } from 'fs';
+import { Kysely, Migrator, FileMigrationProvider, PostgresDialect } from 'kysely';
+import path from 'path';
+import { Pool } from 'pg';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

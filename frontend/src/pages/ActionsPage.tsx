@@ -10,16 +10,17 @@
  * Note: + button opens Composer to create new action recipe.
  */
 
-import { useCallback, useState } from 'react';
 import { Zap } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header } from '../ui/layout/Header';
-import { ActionInstancesView } from '../ui/tables/ActionInstancesView';
-import { BottomDrawer } from '../ui/drawer/BottomDrawer';
-import { ResizeHandle } from '../ui/common/ResizeHandle';
-import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../ui/registry';
+
 import { useUIStore } from '../stores/uiStore';
+import { ResizeHandle } from '../ui/common/ResizeHandle';
 import { SelectionInspector } from '../ui/composites/SelectionInspector';
+import { BottomDrawer } from '../ui/drawer/BottomDrawer';
+import { Header } from '../ui/layout/Header';
+import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../ui/registry';
+import { ActionInstancesView } from '../ui/tables/ActionInstancesView';
 
 export function ActionsPage() {
     const navigate = useNavigate();

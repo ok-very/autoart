@@ -7,10 +7,10 @@
  * - Keyboard navigation (arrow keys, escape to close)
  * - Gallery mode for multiple images
  */
-import { useState, useCallback, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { clsx } from 'clsx';
 import { X, ChevronLeft, ChevronRight, ZoomIn, ExternalLink } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 export interface MediaItem {
     url: string;

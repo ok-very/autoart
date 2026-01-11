@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+
+import { MillerColumn } from './MillerColumn';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
-import { MillerColumn } from './MillerColumn';
 import type { NodeType } from '../../types';
 
 // Selection state for each level

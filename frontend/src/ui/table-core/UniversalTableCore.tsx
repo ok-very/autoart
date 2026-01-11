@@ -13,12 +13,13 @@
  * Wrappers provide cell(row) functions that return ReactNodes.
  */
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
 import { clsx } from 'clsx';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import type { TableColumn, TableRow, RowModel, RowId, SortState } from './types';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+
 import type { TableFeature, TableCtx } from './features';
 import { applyColumnDecorators, applyRowDecorators } from './features';
+import type { TableColumn, TableRow, RowModel, RowId, SortState } from './types';
 
 // ============================================================================
 // COLUMN RESIZE HANDLE

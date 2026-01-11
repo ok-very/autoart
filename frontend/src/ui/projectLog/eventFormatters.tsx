@@ -29,6 +29,7 @@ import {
   Sparkles,
   type LucideIcon,
 } from 'lucide-react';
+
 import { renderFact, type BaseFactPayload } from '@autoart/shared';
 
 export type EventCategory =

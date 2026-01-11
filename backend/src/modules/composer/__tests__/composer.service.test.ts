@@ -10,15 +10,17 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { db } from '../../../db/client.js';
-import * as composerService from '../composer.service.js';
+
 import type { Event } from '@autoart/shared';
+
+import { db } from '../../../db/client.js';
 import {
     cleanupTestData,
     generateTestPrefix,
     createTestProject,
     createTestRecord,
 } from '../../../test/setup.js';
+import * as composerService from '../composer.service.js';
 
 describe('composer.service', () => {
     let testPrefix: string;

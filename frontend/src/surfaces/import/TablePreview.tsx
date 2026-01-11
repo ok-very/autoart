@@ -7,12 +7,13 @@
  * Now built on TableKit for consistent visual grammar.
  */
 
-import { useMemo } from 'react';
 import { Table as TableIcon } from 'lucide-react';
-import { Badge } from '../../ui/atoms';
-import { TableFrame, TableHeaderRow, TableRow, TableHeaderCell, TableCell } from '../../ui/table';
-import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
+import { useMemo } from 'react';
+
 import type { ImportPlan } from '../../api/hooks/imports';
+import { Badge } from '../../ui/atoms';
+import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
+import { TableFrame, TableHeaderRow, TableRow, TableHeaderCell, TableCell } from '../../ui/table';
 
 interface TablePreviewProps {
     plan: ImportPlan;

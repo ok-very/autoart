@@ -8,13 +8,14 @@
  */
 
 import { useCallback, useState } from 'react';
+
+import { useUIStore } from '../stores/uiStore';
+import { ResizeHandle } from '../ui/common/ResizeHandle';
+import { RecordView } from '../ui/composites/RecordView';
+import { SelectionInspector } from '../ui/composites/SelectionInspector';
+import { BottomDrawer } from '../ui/drawer/BottomDrawer';
 import { Header } from '../ui/layout/Header';
 import { RecordTypeSidebar } from '../ui/records/RecordTypeSidebar';
-import { SelectionInspector } from '../ui/composites/SelectionInspector';
-import { RecordView } from '../ui/composites/RecordView';
-import { BottomDrawer } from '../ui/drawer/BottomDrawer';
-import { ResizeHandle } from '../ui/common/ResizeHandle';
-import { useUIStore } from '../stores/uiStore';
 
 export function RecordPage() {
     const { inspectorWidth, setInspectorWidth } = useUIStore();

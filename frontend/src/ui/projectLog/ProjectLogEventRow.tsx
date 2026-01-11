@@ -12,11 +12,14 @@
  * - Optional expandable payload details
  */
 
-import { useState } from 'react';
 import { clsx } from 'clsx';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { getEventFormatter } from './eventFormatters';
+import { useState } from 'react';
+
 import type { Event } from '@autoart/shared';
+
+import { getEventFormatter } from './eventFormatters';
+
 
 interface ProjectLogEventRowProps {
   event: Event;

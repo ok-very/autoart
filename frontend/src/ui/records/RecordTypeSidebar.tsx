@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Plus, FolderOpen, Search, Settings } from 'lucide-react';
 import { clsx } from 'clsx';
+import { Plus, FolderOpen, Search, Settings } from 'lucide-react';
+import { useState } from 'react';
+
 import { useRecordDefinitions, useRecordStats } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
 

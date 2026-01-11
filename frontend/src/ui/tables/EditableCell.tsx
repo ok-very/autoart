@@ -3,12 +3,13 @@
  * This version uses raw FieldDef; the modern version uses FieldViewModel.
  * Only retained for legacy DataTable compatibility.
  */
-import { useState, useRef, useEffect, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { Check, X } from 'lucide-react';
-import { DataFieldWidget, type DataFieldKind } from '../common/DataFieldWidget';
+import { useState, useRef, useEffect, useCallback } from 'react';
+
 import type { FieldDef } from '../../types';
 import { TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
+import { DataFieldWidget, type DataFieldKind } from '../common/DataFieldWidget';
 
 export interface EditableCellProps {
     /** Field definition from schema */

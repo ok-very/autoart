@@ -11,9 +11,10 @@
  * - Delegates rendering to ActionsTableFlat composite
  */
 
-import { useCallback } from 'react';
 import { clsx } from 'clsx';
 import { Plus } from 'lucide-react';
+import { useCallback } from 'react';
+
 import {
     useAllActionsByDefinition,
     useAllActions,

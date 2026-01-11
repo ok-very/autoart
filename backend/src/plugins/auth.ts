@@ -1,6 +1,7 @@
+import fastifyJwt from '@fastify/jwt';
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fp from 'fastify-plugin';
-import fastifyJwt from '@fastify/jwt';
+
 import { env } from '../config/env.js';
 
 declare module 'fastify' {

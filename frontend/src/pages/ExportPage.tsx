@@ -7,15 +7,18 @@
  */
 
 import { useCallback, useState } from 'react';
-import { Header } from '../ui/layout/Header';
+
+import { DEFAULT_EXPORT_OPTIONS } from '@autoart/shared';
+
+import type { ExportFormat, ExportOptions, BfaProjectExportModel } from './types';
+import { useUIStore } from '../stores/uiStore';
+import { ExportInspector } from '../surfaces/export/ExportInspector';
 import { ExportSidebar } from '../surfaces/export/ExportSidebar';
 import { ExportWorkbenchView } from '../surfaces/export/ExportWorkbenchView';
-import { ExportInspector } from '../surfaces/export/ExportInspector';
-import { BottomDrawer } from '../ui/drawer/BottomDrawer';
 import { ResizeHandle } from '../ui/common/ResizeHandle';
-import { useUIStore } from '../stores/uiStore';
-import type { ExportFormat, ExportOptions, BfaProjectExportModel } from './types';
-import { DEFAULT_EXPORT_OPTIONS } from '@autoart/shared';
+import { BottomDrawer } from '../ui/drawer/BottomDrawer';
+import { Header } from '../ui/layout/Header';
+
 
 export function ExportPage() {
     const { inspectorWidth, setInspectorWidth } = useUIStore();

@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
 import { Save, AlertTriangle, Plus, X } from 'lucide-react';
-import { useRecordDefinition, useUpdateDefinition } from '../../api/hooks';
+import { useState, useEffect } from 'react';
+
 import type { FieldDescriptor, FieldDef, StatusConfig } from '@autoart/shared';
+
+import { useRecordDefinition, useUpdateDefinition } from '../../api/hooks';
+
 
 // Available colors for status options
 const STATUS_COLORS = [

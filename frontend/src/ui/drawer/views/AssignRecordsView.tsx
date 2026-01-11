@@ -7,17 +7,21 @@
  * @deprecated Legacy props are deprecated. Use DrawerProps<ClassifyRecordsContext> instead.
  */
 
-import { useState } from 'react';
 import { FolderOpen, ChevronRight } from 'lucide-react';
-import { Button } from '../../atoms/Button';
-import { Stack } from '../../atoms/Stack';
-import { Inline } from '../../atoms/Inline';
-import { Text } from '../../atoms/Text';
-import { Alert } from '../../atoms/Alert';
-import { useUIStore } from '../../../stores/uiStore';
-import { useProjectTree, useBulkClassifyRecords } from '../../../api/hooks';
-import type { HierarchyNode } from '../../../types';
+import { useState } from 'react';
+
+import { useProjectTree, useBulkClassifyRecords } from '@/api/hooks';
+import { useUIStore } from '@/stores';
+import type { HierarchyNode } from '@/types';
+
 import type { DrawerProps, ClassifyRecordsContext } from '../../../drawer/types';
+import { Alert } from '../../atoms/Alert';
+import { Button } from '../../atoms/Button';
+import { Inline } from '../../atoms/Inline';
+import { Stack } from '../../atoms/Stack';
+import { Text } from '../../atoms/Text';
+
+
 
 /**
  * @deprecated Use DrawerProps<ClassifyRecordsContext> instead.

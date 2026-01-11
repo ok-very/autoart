@@ -1,0 +1,1276 @@
+
+E:\autoart_v02\backend\dist\app.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\app.d.ts
+
+E:\autoart_v02\backend\dist\app.js
+  38:5  error  'console' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\config\env.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\config\env.d.ts
+
+E:\autoart_v02\backend\dist\config\env.js
+  24:36  error  'process' is not defined  no-undef
+  26:5   error  'console' is not defined  no-undef
+  27:5   error  'console' is not defined  no-undef
+  28:5   error  'process' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\db\client.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\client.d.ts
+
+E:\autoart_v02\backend\dist\db\consolidate_migrations.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\consolidate_migrations.d.ts
+
+E:\autoart_v02\backend\dist\db\consolidate_migrations.js
+   72:16  error  'process' is not defined  no-undef
+   73:17  error  'process' is not defined  no-undef
+   83:5   error  'console' is not defined  no-undef
+   84:5   error  'console' is not defined  no-undef
+   85:5   error  'console' is not defined  no-undef
+   86:5   error  'console' is not defined  no-undef
+   87:5   error  'console' is not defined  no-undef
+   88:5   error  'console' is not defined  no-undef
+   89:5   error  'console' is not defined  no-undef
+   90:5   error  'console' is not defined  no-undef
+   93:9   error  'console' is not defined  no-undef
+   94:9   error  'process' is not defined  no-undef
+   99:35  error  'process' is not defined  no-undef
+  105:9   error  'console' is not defined  no-undef
+  116:9   error  'console' is not defined  no-undef
+  118:9   error  'console' is not defined  no-undef
+  122:9   error  'console' is not defined  no-undef
+  124:9   error  'console' is not defined  no-undef
+  136:17  error  'console' is not defined  no-undef
+  143:9   error  'console' is not defined  no-undef
+  148:9   error  'console' is not defined  no-undef
+  150:9   error  'console' is not defined  no-undef
+  151:9   error  'console' is not defined  no-undef
+  154:9   error  'console' is not defined  no-undef
+  155:9   error  'process' is not defined  no-undef
+  160:5   error  'console' is not defined  no-undef
+  161:5   error  'console' is not defined  no-undef
+  162:5   error  'console' is not defined  no-undef
+  163:5   error  'console' is not defined  no-undef
+  164:5   error  'console' is not defined  no-undef
+  165:5   error  'console' is not defined  no-undef
+  166:5   error  'console' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\db\migrate.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrate.d.ts
+
+E:\autoart_v02\backend\dist\db\migrate.js
+  15:35  error  'process' is not defined  no-undef
+  30:23  error  'process' is not defined  no-undef
+  41:13  error  'console' is not defined  no-undef
+  44:13  error  'console' is not defined  no-undef
+  48:9   error  'console' is not defined  no-undef
+  49:9   error  'console' is not defined  no-undef
+  50:9   error  'process' is not defined  no-undef
+  53:5   error  'process' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\db\migrations\001_extensions.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\001_extensions.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\001_extensions.js
+  19:28  error  'db' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\dist\db\migrations\002_enums.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\002_enums.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\003_users.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\003_users.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\004_record_definitions.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\004_record_definitions.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\005_hierarchy.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\005_hierarchy.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\006_records.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\006_records.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\006_records.js
+  63:9  error  'console' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\db\migrations\007_references.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\007_references.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\008_functions.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\008_functions.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\009_seed_definitions.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\009_seed_definitions.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\010_record_links.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\010_record_links.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\011_definition_templates.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\011_definition_templates.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\012_clone_excluded.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\012_clone_excluded.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\014_pinned_flag.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\014_pinned_flag.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\016_system_definitions.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\016_system_definitions.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\018_subtask_node_type.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\018_subtask_node_type.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\019_actions.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\019_actions.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\020_events.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\020_events.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\021_action_references.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\021_action_references.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\021_action_references.js
+  40:5  error  'console' is not defined  no-undef
+  44:5  error  'console' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\db\migrations\022_migrate_tasks_to_actions.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\022_migrate_tasks_to_actions.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\022_migrate_tasks_to_actions.js
+  14:26  error  '_db' is defined but never used  @typescript-eslint/no-unused-vars
+  15:5   error  'console' is not defined         no-undef
+  16:5   error  'console' is not defined         no-undef
+  18:28  error  '_db' is defined but never used  @typescript-eslint/no-unused-vars
+  19:5   error  'console' is not defined         no-undef
+
+E:\autoart_v02\backend\dist\db\migrations\023_workflow_surface_nodes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\023_workflow_surface_nodes.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\024_definition_kind.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\024_definition_kind.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\025_import_sessions.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\025_import_sessions.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\026_rename_kind_to_definition_kind.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\026_rename_kind_to_definition_kind.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\027_action_definition_id.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\027_action_definition_id.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\028_fact_kind_definitions.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\028_fact_kind_definitions.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\029_canonical_fact_kinds.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\029_canonical_fact_kinds.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\030_users_soft_delete.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\030_users_soft_delete.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\031_import_needs_review.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\031_import_needs_review.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\032_external_sync_tables.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\032_external_sync_tables.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\033_export_sessions.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\033_export_sessions.d.ts
+
+E:\autoart_v02\backend\dist\db\migrations\034_add_export_formats.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\migrations\034_add_export_formats.d.ts
+
+E:\autoart_v02\backend\dist\db\nuke.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\nuke.d.ts
+
+E:\autoart_v02\backend\dist\db\nuke.js
+  22:16  error  'process' is not defined  no-undef
+  23:17  error  'process' is not defined  no-undef
+  33:5   error  'console' is not defined  no-undef
+  34:5   error  'console' is not defined  no-undef
+  35:5   error  'console' is not defined  no-undef
+  36:5   error  'console' is not defined  no-undef
+  38:19  error  'process' is not defined  no-undef
+  42:13  error  'console' is not defined  no-undef
+  43:13  error  'process' is not defined  no-undef
+  49:35  error  'process' is not defined  no-undef
+  54:9   error  'console' is not defined  no-undef
+  58:9   error  'console' is not defined  no-undef
+  59:9   error  'console' is not defined  no-undef
+  62:9   error  'console' is not defined  no-undef
+  63:9   error  'process' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\db\repair_migrations.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\repair_migrations.d.ts
+
+E:\autoart_v02\backend\dist\db\repair_migrations.js
+  11:5   error  'console' is not defined  no-undef
+  15:35  error  'process' is not defined  no-undef
+  27:9   error  'console' is not defined  no-undef
+  35:9   error  'console' is not defined  no-undef
+  39:13  error  'console' is not defined  no-undef
+  42:13  error  'console' is not defined  no-undef
+  43:33  error  'console' is not defined  no-undef
+  44:13  error  'console' is not defined  no-undef
+  49:13  error  'console' is not defined  no-undef
+  53:9   error  'console' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\db\schema.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\schema.d.ts
+
+E:\autoart_v02\backend\dist\db\seeds\001_record_definitions.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\seeds\001_record_definitions.d.ts
+
+E:\autoart_v02\backend\dist\db\seeds\001_record_definitions.js
+  14:5  error  'console' is not defined  no-undef
+  90:5  error  'console' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\db\seeds\dev_sample_data.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\seeds\dev_sample_data.d.ts
+
+E:\autoart_v02\backend\dist\db\seeds\dev_sample_data.js
+   21:5  error  'console' is not defined  no-undef
+   33:5  error  'console' is not defined  no-undef
+   74:5  error  'console' is not defined  no-undef
+  118:5  error  'console' is not defined  no-undef
+  240:5  error  'console' is not defined  no-undef
+  313:5  error  'console' is not defined  no-undef
+  395:5  error  'console' is not defined  no-undef
+  396:5  error  'console' is not defined  no-undef
+  417:5  error  'console' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\db\seeds\run.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\seeds\run.d.ts
+
+E:\autoart_v02\backend\dist\db\seeds\run.js
+  21:18  error  'process' is not defined  no-undef
+  27:35  error  'process' is not defined  no-undef
+  31:5   error  'console' is not defined  no-undef
+  32:5   error  'console' is not defined  no-undef
+  33:5   error  'console' is not defined  no-undef
+  34:5   error  'console' is not defined  no-undef
+  35:5   error  'console' is not defined  no-undef
+  38:13  error  'console' is not defined  no-undef
+  46:13  error  'console' is not defined  no-undef
+  47:13  error  'console' is not defined  no-undef
+  50:9   error  'console' is not defined  no-undef
+  52:9   error  'console' is not defined  no-undef
+  55:13  error  'console' is not defined  no-undef
+  57:13  error  'console' is not defined  no-undef
+  59:9   error  'console' is not defined  no-undef
+  60:9   error  'console' is not defined  no-undef
+  62:13  error  'console' is not defined  no-undef
+  63:13  error  'console' is not defined  no-undef
+  64:13  error  'console' is not defined  no-undef
+  65:13  error  'console' is not defined  no-undef
+  67:9   error  'console' is not defined  no-undef
+  68:9   error  'console' is not defined  no-undef
+  71:9   error  'console' is not defined  no-undef
+  72:9   error  'console' is not defined  no-undef
+  73:9   error  'process' is not defined  no-undef
+  76:5   error  'process' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\db\status.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\db\status.d.ts
+
+E:\autoart_v02\backend\dist\db\status.js
+   18:5   error  'console' is not defined  no-undef
+   19:5   error  'console' is not defined  no-undef
+   20:5   error  'console' is not defined  no-undef
+   24:35  error  'process' is not defined  no-undef
+   36:9   error  'console' is not defined  no-undef
+   46:13  error  'console' is not defined  no-undef
+   49:13  error  'console' is not defined  no-undef
+   55:13  error  'console' is not defined  no-undef
+   56:34  error  'console' is not defined  no-undef
+   59:13  error  'console' is not defined  no-undef
+   60:35  error  'console' is not defined  no-undef
+   61:13  error  'console' is not defined  no-undef
+   64:9   error  'console' is not defined  no-undef
+   80:17  error  'console' is not defined  no-undef
+   83:17  error  'console' is not defined  no-undef
+   87:9   error  'console' is not defined  no-undef
+   95:17  error  'console' is not defined  no-undef
+   96:17  error  'console' is not defined  no-undef
+   97:17  error  'console' is not defined  no-undef
+  101:21  error  'console' is not defined  no-undef
+  106:13  error  'console' is not defined  no-undef
+  108:9   error  'console' is not defined  no-undef
+  111:9   error  'console' is not defined  no-undef
+  112:9   error  'process' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\index.d.ts
+
+E:\autoart_v02\backend\dist\index.js
+   7:9  error  'console' is not defined  no-undef
+   8:9  error  'console' is not defined  no-undef
+  12:9  error  'process' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\modules\actions\action-references.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\actions\action-references.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\actions\actions.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\actions\actions.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\actions\actions.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\actions\actions.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\actions\containers.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\actions\containers.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\actions\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\actions\index.d.ts
+
+E:\autoart_v02\backend\dist\modules\auth\auth.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\auth\auth.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\auth\auth.schemas.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\auth\auth.schemas.d.ts
+
+E:\autoart_v02\backend\dist\modules\auth\auth.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\auth\auth.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\composer\__tests__\composer.service.test.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\composer\__tests__\composer.service.test.d.ts
+
+E:\autoart_v02\backend\dist\modules\composer\composer.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\composer\composer.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\composer\composer.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\composer\composer.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\composer\composer.service.js
+  165:17  error  'console' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\modules\composer\event-factory.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\composer\event-factory.d.ts
+
+E:\autoart_v02\backend\dist\modules\composer\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\composer\index.d.ts
+
+E:\autoart_v02\backend\dist\modules\events\event-visibility.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\events\event-visibility.d.ts
+
+E:\autoart_v02\backend\dist\modules\events\events.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\events\events.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\events\events.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\events\events.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\events\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\events\index.d.ts
+
+E:\autoart_v02\backend\dist\modules\events\workflow.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\events\workflow.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\events\workflow.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\events\workflow.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\backfeeding.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\backfeeding.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\connectors\google-client.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\connectors\google-client.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\connectors\google-client.js
+   39:28  error  'URLSearchParams' is not defined  no-undef
+   55:28  error  'URLSearchParams' is not defined  no-undef
+  101:28  error  'URLSearchParams' is not defined  no-undef
+  130:28  error  'URLSearchParams' is not defined  no-undef
+  149:28  error  'URLSearchParams' is not defined  no-undef
+  160:28  error  'URLSearchParams' is not defined  no-undef
+  305:32  error  'fetch' is not defined            no-undef
+
+E:\autoart_v02\backend\dist\modules\exports\connectors\google-docs-client.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\connectors\google-docs-client.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\connectors\google-docs-client.js
+   95:28  error  'URLSearchParams' is not defined  no-undef
+  107:28  error  'URLSearchParams' is not defined  no-undef
+  128:32  error  'fetch' is not defined            no-undef
+
+E:\autoart_v02\backend\dist\modules\exports\connectors\google-docs-connector.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\connectors\google-docs-connector.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\connectors\google-docs-connector.js
+  311:42  error  '_projects' is defined but never used  @typescript-eslint/no-unused-vars
+  311:53  error  '_options' is defined but never used   @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\dist\modules\exports\connectors\google-sheets-connector.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\connectors\google-sheets-connector.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\connectors\google-slides-connector.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\connectors\google-slides-connector.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\connectors\google-slides-connector.js
+  16:7  error  'EMU_PER_POINT' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  20:7  error  'SLIDE_HEIGHT' is assigned a value but never used   @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\dist\modules\exports\connectors\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\connectors\index.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\email-decay.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\email-decay.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\exports.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\exports.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\exports.routes.js
+  141:9  error  Unnecessary try/catch wrapper  no-useless-catch
+
+E:\autoart_v02\backend\dist\modules\exports\exports.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\exports.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\exports.service.js
+  215:40  error  '_session' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\dist\modules\exports\formatters\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\formatters\index.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\formatters\markdown-formatter.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\formatters\markdown-formatter.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\formatters\plaintext-formatter.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\formatters\plaintext-formatter.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\formatters\rtf-formatter.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\formatters\rtf-formatter.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\formatters\rtf-formatter.js
+  20:10  error  'italic' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\dist\modules\exports\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\index.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\projectors\bfa-project.projector.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\projectors\bfa-project.projector.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\projectors\bfa-project.projector.js
+   38:9   error  'console' is not defined          no-undef
+  204:31  error  Unnecessary escape character: \/  no-useless-escape
+
+E:\autoart_v02\backend\dist\modules\exports\staleness.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\staleness.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\targets\bfa-rtf-target.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\targets\bfa-rtf-target.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\targets\bfa-rtf-target.js
+  20:20  error  'config' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\dist\modules\exports\targets\export-target.interface.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\targets\export-target.interface.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\targets\google-docs-target.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\targets\google-docs-target.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\targets\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\targets\index.d.ts
+
+E:\autoart_v02\backend\dist\modules\exports\types.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\exports\types.d.ts
+
+E:\autoart_v02\backend\dist\modules\hierarchy\__tests__\hierarchy.service.test.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\hierarchy\__tests__\hierarchy.service.test.d.ts
+
+E:\autoart_v02\backend\dist\modules\hierarchy\hierarchy.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\hierarchy\hierarchy.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\hierarchy\hierarchy.schemas.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\hierarchy\hierarchy.schemas.d.ts
+
+E:\autoart_v02\backend\dist\modules\hierarchy\hierarchy.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\hierarchy\hierarchy.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\hierarchy\hierarchy.service.js
+  253:16  error  'getDescendantIds' is defined but never used              @typescript-eslint/no-unused-vars
+  265:16  error  'updateDescendantsRootProject' is defined but never used  @typescript-eslint/no-unused-vars
+  331:28  error  'crypto' is not defined                                   no-undef
+
+E:\autoart_v02\backend\dist\modules\imports\classification-suggester.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\classification-suggester.d.ts
+
+E:\autoart_v02\backend\dist\modules\imports\connections.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\connections.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\imports\connections.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\connections.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\imports\connections.service.js
+  90:13  error  'console' is not defined  no-undef
+  97:22  error  'process' is not defined  no-undef
+  97:54  error  'process' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\modules\imports\connectors\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\connectors\index.d.ts
+
+E:\autoart_v02\backend\dist\modules\imports\connectors\monday-client.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\connectors\monday-client.d.ts
+
+E:\autoart_v02\backend\dist\modules\imports\connectors\monday-connector.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\connectors\monday-connector.d.ts
+
+E:\autoart_v02\backend\dist\modules\imports\imports.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\imports.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\imports\imports.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\imports.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\imports\imports.service.js
+  489:13  error  'console' is not defined                   no-undef
+  552:33  error  'kind' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  552:49  error  '_' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  552:64  error  '__' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  619:29  error  'kind' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  619:45  error  '_' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  619:60  error  '__' is assigned a value but never used    @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\dist\modules\imports\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\index.d.ts
+
+E:\autoart_v02\backend\dist\modules\imports\parsers\generic-csv-parser.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\parsers\generic-csv-parser.d.ts
+
+E:\autoart_v02\backend\dist\modules\imports\parsers\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\parsers\index.d.ts
+
+E:\autoart_v02\backend\dist\modules\imports\parsers\monday-csv-parser.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\parsers\monday-csv-parser.d.ts
+
+E:\autoart_v02\backend\dist\modules\imports\schema-matcher.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\schema-matcher.d.ts
+
+E:\autoart_v02\backend\dist\modules\imports\sync.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\sync.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\imports\types.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\imports\types.d.ts
+
+E:\autoart_v02\backend\dist\modules\ingestion\ingestion.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\ingestion\ingestion.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\ingestion\ingestion.schemas.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\ingestion\ingestion.schemas.d.ts
+
+E:\autoart_v02\backend\dist\modules\ingestion\ingestion.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\ingestion\ingestion.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\ingestion\ingestion.service.js
+  94:32  error  'crypto' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\modules\ingestion\parser.registry.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\ingestion\parser.registry.d.ts
+
+E:\autoart_v02\backend\dist\modules\ingestion\parser.types.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\ingestion\parser.types.d.ts
+
+E:\autoart_v02\backend\dist\modules\ingestion\parsers\airtable.parser.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\ingestion\parsers\airtable.parser.d.ts
+
+E:\autoart_v02\backend\dist\modules\ingestion\parsers\monday.parser.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\ingestion\parsers\monday.parser.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\fact-kind-inferrer.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\fact-kind-inferrer.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\inference-learner.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\inference-learner.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\interpreter.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\interpreter.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\interpreter.service.js
+  298:11  error  'visited' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\artwork-rules.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\mappings\artwork-rules.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\budget-rules.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\mappings\budget-rules.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\communication-rules.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\mappings\communication-rules.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\communication-rules.js
+  126:17  error  'ctx' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\decision-rules.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\mappings\decision-rules.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\document-rules.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\mappings\document-rules.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\mappings\index.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\intent-mapping-rules.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\mappings\intent-mapping-rules.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\intent-mapping-rules.js
+  128:17  error  'ctx' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\invoice-rules.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\mappings\invoice-rules.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\meeting-rules.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\mappings\meeting-rules.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\meeting-rules.js
+  71:17  error  'ctx' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\permit-rules.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\mappings\permit-rules.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\process-rules.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\mappings\process-rules.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\stage-rules.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\mappings\stage-rules.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\mappings\types.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\mappings\types.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\monday-interpreter.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\interpreter\monday-interpreter.d.ts
+
+E:\autoart_v02\backend\dist\modules\interpreter\monday-interpreter.js
+  134:11  error  '_definitions' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\dist\modules\links\links.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\links\links.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\links\links.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\links\links.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\projections\action-references.projector.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\projections\action-references.projector.d.ts
+
+E:\autoart_v02\backend\dist\modules\projections\action-references.projector.js
+  30:9  error  'console' is not defined  no-undef
+  74:9  error  'console' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\modules\projections\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\projections\index.d.ts
+
+E:\autoart_v02\backend\dist\modules\projections\presets\hierarchy-projection.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\projections\presets\hierarchy-projection.d.ts
+
+E:\autoart_v02\backend\dist\modules\projections\presets\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\projections\presets\index.d.ts
+
+E:\autoart_v02\backend\dist\modules\projections\presets\process-projection.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\projections\presets\process-projection.d.ts
+
+E:\autoart_v02\backend\dist\modules\projections\presets\stage-projection.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\projections\presets\stage-projection.d.ts
+
+E:\autoart_v02\backend\dist\modules\projections\workflow-surface.projector.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\projections\workflow-surface.projector.d.ts
+
+E:\autoart_v02\backend\dist\modules\projections\workflow-surface.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\projections\workflow-surface.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\records\fact-kinds.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\records\fact-kinds.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\records\fact-kinds.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\records\fact-kinds.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\records\index.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\records\index.d.ts
+
+E:\autoart_v02\backend\dist\modules\records\records.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\records\records.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\records\records.schemas.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\records\records.schemas.d.ts
+
+E:\autoart_v02\backend\dist\modules\records\records.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\records\records.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\references\__tests__\references.service.test.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\references\__tests__\references.service.test.d.ts
+
+E:\autoart_v02\backend\dist\modules\references\references.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\references\references.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\references\references.schemas.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\references\references.schemas.d.ts
+
+E:\autoart_v02\backend\dist\modules\references\references.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\references\references.service.d.ts
+
+E:\autoart_v02\backend\dist\modules\search\search.routes.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\search\search.routes.d.ts
+
+E:\autoart_v02\backend\dist\modules\search\search.service.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\modules\search\search.service.d.ts
+
+E:\autoart_v02\backend\dist\plugins\auth.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\plugins\auth.d.ts
+
+E:\autoart_v02\backend\dist\plugins\auth.js
+  15:16  error  'err' is defined but never used     @typescript-eslint/no-unused-vars
+  19:71  error  '_reply' is defined but never used  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\dist\plugins\uiContext.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\plugins\uiContext.d.ts
+
+E:\autoart_v02\backend\dist\test\setup.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\test\setup.d.ts
+
+E:\autoart_v02\backend\dist\test\setup.js
+  10:27  error  'process' is not defined  no-undef
+  10:60  error  'process' is not defined  no-undef
+
+E:\autoart_v02\backend\dist\utils\errors.d.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): dist\utils\errors.d.ts
+
+E:\autoart_v02\backend\src\app.ts
+   1:1  error  `fastify` import should occur after import of `@fastify/sensible`                                                                 import/order
+   2:1  error  `@fastify/cors` import should occur after import of `@fastify/cookie`                                                             import/order
+   5:1  error  There should be at least one empty line between import groups                                                                     import/order
+   7:1  error  `./plugins/auth.js` import should occur after import of `./modules/imports/connections.routes.js`                                 import/order
+   8:1  error  `./modules/auth/auth.routes.js` import should occur after import of `./modules/actions/containers.routes.js`                      import/order
+   9:1  error  `./modules/hierarchy/hierarchy.routes.js` import should occur after import of `./modules/actions/containers.routes.js`            import/order
+  10:1  error  `./modules/records/records.routes.js` import should occur after import of `./modules/imports/connections.routes.js`               import/order
+  11:1  error  `./modules/records/fact-kinds.routes.js` import should occur after import of `./modules/imports/connections.routes.js`            import/order
+  12:1  error  `./modules/references/references.routes.js` import should occur after import of `./modules/imports/connections.routes.js`         import/order
+  13:1  error  `./modules/search/search.routes.js` import should occur after import of `./modules/imports/connections.routes.js`                 import/order
+  14:1  error  `./modules/links/links.routes.js` import should occur after import of `./modules/imports/connections.routes.js`                   import/order
+  16:1  error  `./modules/actions/actions.routes.js` import should occur after import of `./modules/actions/action-references.routes.js`         import/order
+  18:1  error  `./modules/events/events.routes.js` import should occur after import of `./modules/actions/containers.routes.js`                  import/order
+  19:1  error  `./modules/events/workflow.routes.js` import should occur after import of `./modules/actions/containers.routes.js`                import/order
+  20:1  error  `./modules/projections/workflow-surface.routes.js` import should occur after import of `./modules/imports/connections.routes.js`  import/order
+  21:1  error  `./modules/composer/composer.routes.js` import should occur after import of `./modules/actions/containers.routes.js`              import/order
+  23:1  error  `./modules/imports/imports.routes.js` import should occur after import of `./modules/imports/connections.routes.js`               import/order
+
+E:\autoart_v02\backend\src\config\env.ts
+  2:1  error  `path` import should occur before import of `zod`    import/order
+  3:1  error  `url` import should occur before import of `zod`     import/order
+  4:1  error  `dotenv` import should occur before import of `zod`  import/order
+
+E:\autoart_v02\backend\src\db\client.ts
+  2:1  error  There should be at least one empty line between import groups               import/order
+  4:1  error  `./schema.js` type import should occur before import of `../config/env.js`  import/order
+
+E:\autoart_v02\backend\src\db\consolidate_migrations.ts
+   20:1   error    `fs` import should occur before import of `kysely`      import/order
+   21:1   error    `path` import should occur before import of `pg`        import/order
+   23:1   error    `dotenv` import should occur before import of `kysely`  import/order
+   24:1   error    `readline` import should occur before import of `url`   import/order
+  109:25  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\db\migrate.ts
+  3:1  error  `fs` import should occur before import of `kysely`      import/order
+  4:1  error  `path` import should occur before import of `pg`        import/order
+  6:1  error  `dotenv` import should occur before import of `kysely`  import/order
+
+E:\autoart_v02\backend\src\db\migrations\001_extensions.ts
+  22:28  error  'db' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\db\migrations\028_fact_kind_definitions.ts
+   1:1   error    There should be at least one empty line between import groups  import/order
+  83:52  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\db\migrations\029_canonical_fact_kinds.ts
+    1:1   error    There should be at least one empty line between import groups          import/order
+    1:18  error    'sql' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+   37:49  warning  Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+   71:52  warning  Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+  103:49  warning  Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+  120:48  warning  Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\db\migrations\030_users_soft_delete.ts
+  14:18  error  'sql' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\db\nuke.ts
+  14:1   error    `path` import should occur before import of `pg`        import/order
+  16:1   error    `dotenv` import should occur before import of `kysely`  import/order
+  17:1   error    `readline` import should occur before import of `url`   import/order
+  54:25  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\db\repair_migrations.ts
+   3:1   error    `fs` import should occur before import of `kysely`      import/order
+   4:1   error    `path` import should occur before import of `pg`        import/order
+   6:1   error    `dotenv` import should occur before import of `kysely`  import/order
+  15:25  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\db\seeds\001_record_definitions.ts
+  14:1  error  There should be at least one empty line between import groups  import/order
+
+E:\autoart_v02\backend\src\db\seeds\dev_sample_data.ts
+  21:1  error  There should be at least one empty line between import groups  import/order
+  21:1  error  `bcryptjs` import should occur before import of `kysely`       import/order
+
+E:\autoart_v02\backend\src\db\seeds\run.ts
+  12:1  error  `path` import should occur before import of `pg`               import/order
+  14:1  error  There should be at least one empty line between import groups  import/order
+  14:1  error  `dotenv` import should occur before import of `kysely`         import/order
+
+E:\autoart_v02\backend\src\db\status.ts
+  11:1   error    `fs` import should occur before import of `kysely`      import/order
+  12:1   error    `path` import should occur before import of `pg`        import/order
+  14:1   error    `dotenv` import should occur before import of `kysely`  import/order
+  25:25  warning  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\modules\actions\action-references.routes.ts
+  13:1  error  There should be at least one empty line between import groups                              import/order
+  15:1  error  `./actions.service.js` import should occur before import of `../events/events.service.js`  import/order
+
+E:\autoart_v02\backend\src\modules\actions\actions.routes.ts
+  18:1  error  There should be at least one empty line between import groups           import/order
+  18:1  error  `fastify-type-provider-zod` import should occur before import of `zod`  import/order
+
+E:\autoart_v02\backend\src\modules\actions\containers.routes.ts
+  10:1  error  There should be at least one empty line between import groups           import/order
+  10:1  error  `fastify-type-provider-zod` import should occur before import of `zod`  import/order
+
+E:\autoart_v02\backend\src\modules\auth\auth.routes.ts
+  1:1   error  There should be at least one empty line between import groups                    import/order
+  2:39  error  'refreshSchema' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\modules\auth\auth.service.ts
+  2:1  error  There should be at least one empty line between import groups                       import/order
+  5:1  error  `./auth.schemas.js` type import should occur before import of `../../db/client.js`  import/order
+
+E:\autoart_v02\backend\src\modules\composer\__tests__\composer.service.test.ts
+   12:1   error    There should be at least one empty line between import groups                                                                                                import/order
+   12:65  error    'afterEach' is defined but never used. Allowed unused vars must match /^_/u                                                                                  @typescript-eslint/no-unused-vars
+   13:1   error    '../../../db/client.js' import is restricted from being used by a pattern. Avoid deep relative imports. Use path aliases: @/, @modules/, @utils/, @config/   no-restricted-imports
+   14:1   error    There should be at least one empty line between import groups                                                                                                import/order
+   15:1   error    There should be at least one empty line between import groups                                                                                                import/order
+   15:1   error    `@autoart/shared` type import should occur before import of `../../../db/client.js`                                                                          import/order
+   16:1   error    '../../../test/setup.js' import is restricted from being used by a pattern. Avoid deep relative imports. Use path aliases: @/, @modules/, @utils/, @config/  no-restricted-imports
+   16:1   error    `../../../test/setup.js` import should occur before import of `../composer.service.js`                                                                       import/order
+  235:44  warning  Unexpected any. Specify a different type                                                                                                                     @typescript-eslint/no-explicit-any
+  264:47  warning  Unexpected any. Specify a different type                                                                                                                     @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\modules\composer\composer.routes.ts
+    8:1   error    There should be at least one empty line between import groups  import/order
+    9:1   error    There should be at least one empty line between import groups  import/order
+   42:46  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+   76:46  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  114:46  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\modules\composer\composer.service.ts
+   16:1   error    There should be at least one empty line between import groups                     import/order
+   19:1   error    `./event-factory.js` import should occur before import of `../../db/client.js`    import/order
+   20:1   error    There should be at least one empty line between import groups                     import/order
+   21:1   error    `@autoart/shared` type import should occur before import of `../../db/client.js`  import/order
+   21:61  error    'Action' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+   21:69  error    'Event' is defined but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+  234:57  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  265:44  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\modules\events\events.routes.ts
+  19:1   error    There should be at least one empty line between import groups           import/order
+  19:1   error    `fastify-type-provider-zod` import should occur before import of `zod`  import/order
+  86:30  warning  Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\modules\events\events.service.ts
+  13:1   error  There should be at least one empty line between import groups                      import/order
+  15:15  error  'NewEvent' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+  16:1   error  `./event-visibility.js` import should occur before import of `../../db/client.js`  import/order
+
+E:\autoart_v02\backend\src\modules\events\workflow.routes.ts
+   26:1   error    There should be at least one empty line between import groups  import/order
+   80:30  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  123:30  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  166:30  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  211:30  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  254:30  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  302:30  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  345:30  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  393:30  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  447:30  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  493:30  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  544:30  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\modules\events\workflow.service.ts
+  13:1  error  `./events.service.js` import should occur before type import of `../../db/schema.js`  import/order
+
+E:\autoart_v02\backend\src\modules\exports\backfeeding.service.ts
+  14:1  error  `../../db/client.js` import should occur before import of `../imports/connections.service.js`  import/order
+  15:1  error  `./types.js` type import should occur before import of `../imports/connections.service.js`     import/order
+
+E:\autoart_v02\backend\src\modules\exports\connectors\google-sheets-connector.ts
+  12:29  error  'Spreadsheet' is defined but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+  12:47  error  'SpreadsheetRequest' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\modules\exports\connectors\google-slides-connector.ts
+  12:29  error  'Presentation' is defined but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+  12:74  error  'SlideLayoutReference' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  49:7   error  'EMU_PER_POINT' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  54:7   error  'SLIDE_HEIGHT' is assigned a value but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\modules\exports\email-decay.service.ts
+  9:1  error  `./types.js` type import should occur before import of `../../db/client.js`  import/order
+
+E:\autoart_v02\backend\src\modules\exports\exports.routes.ts
+   14:1   error  There should be at least one empty line between import groups                                          import/order
+   17:1   error  `./connectors/google-docs-connector.js` import should occur before import of `./exports.service.js`    import/order
+   18:1   error  `./connectors/google-sheets-connector.js` import should occur before import of `./exports.service.js`  import/order
+   18:10  error  'GoogleSheetsConnector' is defined but never used. Allowed unused vars must match /^_/u                @typescript-eslint/no-unused-vars
+   19:1   error  `./connectors/google-slides-connector.js` import should occur before import of `./exports.service.js`  import/order
+   19:10  error  'GoogleSlidesConnector' is defined but never used. Allowed unused vars must match /^_/u                @typescript-eslint/no-unused-vars
+   20:1   error  `./connectors/google-client.js` import should occur before import of `./exports.service.js`            import/order
+   22:1   error  `./backfeeding.service.js` import should occur before import of `./exports.service.js`                 import/order
+   23:1   error  `./staleness.service.js` import should occur before type import of `./types.js`                        import/order
+   24:1   error  `./email-decay.service.js` import should occur before import of `./exports.service.js`                 import/order
+  167:9   error  Unnecessary try/catch wrapper                                                                          no-useless-catch
+
+E:\autoart_v02\backend\src\modules\exports\exports.service.ts
+  11:1  error  `../../db/client.js` import should occur after import of `./connectors/google-slides-connector.js`                     import/order
+  12:1  error  `./types.js` type import should occur after import of `./connectors/google-slides-connector.js`                        import/order
+  20:1  error  `./types.js` import should occur after import of `./connectors/google-slides-connector.js`                             import/order
+  21:1  error  `./projectors/bfa-project.projector.js` import should occur after import of `./connectors/google-slides-connector.js`  import/order
+  22:1  error  `./formatters/rtf-formatter.js` import should occur after import of `./connectors/google-slides-connector.js`          import/order
+  23:1  error  `./formatters/markdown-formatter.js` import should occur after import of `./connectors/google-slides-connector.js`     import/order
+  24:1  error  `./formatters/plaintext-formatter.js` import should occur after import of `./connectors/google-slides-connector.js`    import/order
+
+E:\autoart_v02\backend\src\modules\exports\formatters\index.ts
+  8:1  error  `./rtf-formatter.js` import should occur after import of `./plaintext-formatter.js`  import/order
+
+E:\autoart_v02\backend\src\modules\exports\formatters\rtf-formatter.ts
+  25:10  error  'italic' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\modules\exports\projectors\bfa-project.projector.ts
+    9:1   error  There should be at least one empty line between import groups  import/order
+  192:9   error  'query' is never reassigned. Use 'const' instead               prefer-const
+  252:31  error  Unnecessary escape character: \/                               no-useless-escape
+
+E:\autoart_v02\backend\src\modules\exports\staleness.service.ts
+  9:1  error  `./types.js` type import should occur before import of `../../db/client.js`  import/order
+
+E:\autoart_v02\backend\src\modules\exports\targets\bfa-rtf-target.ts
+  10:1   error  `../projectors/bfa-project.projector.js` import should occur before type import of `../types.js`  import/order
+  11:1   error  There should be at least one empty line between import groups                                     import/order
+  11:1   error  `../formatters/rtf-formatter.js` import should occur before type import of `../types.js`          import/order
+  12:1   error  `fs/promises` import should occur before type import of `./export-target.interface.js`            import/order
+  13:1   error  `path` import should occur before type import of `./export-target.interface.js`                   import/order
+  14:1   error  `os` import should occur before type import of `./export-target.interface.js`                     import/order
+  15:1   error  `crypto` import should occur before type import of `./export-target.interface.js`                 import/order
+  26:20  error  'config' is defined but never used. Allowed unused args must match /^_/u                          @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\modules\exports\targets\export-target.interface.ts
+  8:30  error  'BfaProjectExportModel' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\modules\exports\targets\google-docs-target.ts
+  10:1  error  `../projectors/bfa-project.projector.js` import should occur before type import of `../types.js`  import/order
+  11:1  error  There should be at least one empty line between import groups                                     import/order
+  11:1  error  `../connectors/google-docs-connector.js` import should occur before type import of `../types.js`  import/order
+  12:1  error  `@utils/auth.js` import should occur before type import of `./export-target.interface.js`         import/order
+
+E:\autoart_v02\backend\src\modules\exports\targets\index.ts
+  9:1  error  `./bfa-rtf-target.js` import should occur before type import of `./export-target.interface.js`  import/order
+
+E:\autoart_v02\backend\src\modules\hierarchy\__tests__\hierarchy.service.test.ts
+  10:1  error  There should be at least one empty line between import groups                                                                                                import/order
+  10:1  error  `kysely` import should occur before import of `vitest`                                                                                                       import/order
+  11:1  error  '../../../db/client.js' import is restricted from being used by a pattern. Avoid deep relative imports. Use path aliases: @/, @modules/, @utils/, @config/   no-restricted-imports
+  13:1  error  '../../../test/setup.js' import is restricted from being used by a pattern. Avoid deep relative imports. Use path aliases: @/, @modules/, @utils/, @config/  no-restricted-imports
+  13:1  error  `../../../test/setup.js` import should occur before import of `../hierarchy.service.js`                                                                      import/order
+
+E:\autoart_v02\backend\src\modules\hierarchy\hierarchy.routes.ts
+   1:1  error  There should be at least one empty line between import groups                                         import/order
+  14:1  error  `../../utils/errors.js` import should occur before import of `../interpreter/interpreter.service.js`  import/order
+
+E:\autoart_v02\backend\src\modules\hierarchy\hierarchy.service.ts
+    1:1   error  There should be at least one empty line between import groups                                   import/order
+    4:1   error  `./hierarchy.schemas.js` type import should occur before import of `../../db/client.js`         import/order
+    5:1   error  `../../db/schema.js` type import should occur before import of `../../utils/errors.js`          import/order
+  298:16  error  'getDescendantIds' is defined but never used. Allowed unused vars must match /^_/u              @typescript-eslint/no-unused-vars
+  312:16  error  'updateDescendantsRootProject' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\modules\imports\classification-suggester.ts
+  13:44  error  'InterpretationOutput' is defined but never used. Allowed unused vars must match /^_/u                          @typescript-eslint/no-unused-vars
+  14:1   error  `../interpreter/fact-kind-inferrer.js` import should occur before import of `../interpreter/mappings/index.js`  import/order
+
+E:\autoart_v02\backend\src\modules\imports\connections.routes.ts
+  12:1   error    There should be at least one empty line between import groups                     import/order
+  14:10  error    'getMondayToken' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  41:80  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\modules\imports\connectors\monday-client.ts
+  60:77   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:103  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:121  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\modules\imports\imports.routes.ts
+  13:1  error  There should be at least one empty line between import groups                                import/order
+  15:1  error  `./classification-suggester.js` import should occur before import of `./imports.service.js`  import/order
+
+E:\autoart_v02\backend\src\modules\imports\imports.service.ts
+   17:1   error    `./parsers/monday-csv-parser.js` import should occur before import of `../../db/client.js`                      import/order
+   18:1   error    `./parsers/generic-csv-parser.js` import should occur before import of `../../db/client.js`                     import/order
+   19:1   error    `./types.js` type import should occur before import of `../../db/client.js`                                     import/order
+   20:1   error    `./types.js` import should occur before import of `../../db/client.js`                                          import/order
+   21:31  error    'mapStatusToWorkEvent' is defined but never used. Allowed unused vars must match /^_/u                          @typescript-eslint/no-unused-vars
+   21:85  error    'InterpretationPlan' is defined but never used. Allowed unused vars must match /^_/u                            @typescript-eslint/no-unused-vars
+   24:1   error    `./schema-matcher.js` import should occur before import of `../../db/client.js`                                 import/order
+   25:1   error    There should be at least one empty line between import groups                                                   import/order
+   25:1   error    `../events/events.service.js` import should occur before import of `../interpreter/interpreter.service.js`      import/order
+   26:1   error    There should be at least one empty line between import groups                                                   import/order
+   26:1   error    `@autoart/shared` import should occur before import of `../../db/client.js`                                     import/order
+   27:1   error    There should be no empty line within import group                                                               import/order
+   27:1   error    `../../db/schema.js` type import should occur before import of `../interpreter/interpreter.service.js`          import/order
+   30:1   error    `./connectors/monday-connector.js` import should occur before import of `../../db/client.js`                    import/order
+   31:1   error    `./connections.service.js` import should occur before import of `../../db/client.js`                            import/order
+   32:1   error    `./sync.service.js` import should occur before import of `../../db/client.js`                                   import/order
+   33:1   error    `../interpreter/monday-interpreter.js` import should occur before import of `../records/fact-kinds.service.js`  import/order
+  449:57  warning  Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+  458:40  warning  Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+  694:33  error    'kind' is assigned a value but never used. Allowed unused vars must match /^_/u                                 @typescript-eslint/no-unused-vars
+  770:29  error    'kind' is assigned a value but never used. Allowed unused vars must match /^_/u                                 @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\modules\imports\schema-matcher.ts
+  10:1  error  There should be at least one empty line between import groups  import/order
+
+E:\autoart_v02\backend\src\modules\imports\sync.service.ts
+  13:1  error  `./connections.service.js` type import should occur before import of `../../db/client.js`  import/order
+
+E:\autoart_v02\backend\src\modules\interpreter\interpreter.service.ts
+   22:1  error  There should be no empty line within import group                                               import/order
+   22:1  error  `../../db/schema.js` type import should occur before import of `../actions/actions.service.js`  import/order
+  405:9  error  'visited' is assigned a value but never used. Allowed unused vars must match /^_/u              @typescript-eslint/no-unused-vars
+  572:1  error  `./mappings/index.js` import should occur before import of `./mappings/types.js`                import/order
+
+E:\autoart_v02\backend\src\modules\interpreter\mappings\communication-rules.ts
+  130:17  error  'ctx' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\modules\interpreter\mappings\index.ts
+  35:1  error  `./meeting-rules.js` import should occur after import of `./intent-mapping-rules.js`  import/order
+  37:1  error  `./document-rules.js` import should occur after import of `./decision-rules.js`       import/order
+  39:1  error  `./invoice-rules.js` import should occur after import of `./intent-mapping-rules.js`  import/order
+  40:1  error  `./process-rules.js` import should occur after import of `./intent-mapping-rules.js`  import/order
+
+E:\autoart_v02\backend\src\modules\interpreter\mappings\intent-mapping-rules.ts
+  140:17  error  'ctx' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\modules\interpreter\mappings\meeting-rules.ts
+  80:17  error  'ctx' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\modules\interpreter\monday-interpreter.ts
+  14:1  error  `./inference-learner.js` import should occur before type import of `../imports/connectors/monday-connector.js`  import/order
+
+E:\autoart_v02\backend\src\modules\links\links.routes.ts
+   7:1   error    There should be at least one empty line between import groups  import/order
+  89:34  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  93:23  warning  Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\modules\projections\action-references.projector.ts
+  18:1  error  There should be at least one empty line between import groups                     import/order
+  19:1  error  `@autoart/shared` type import should occur before import of `../../db/client.js`  import/order
+
+E:\autoart_v02\backend\src\modules\projections\workflow-surface.routes.ts
+  12:1  error  There should be at least one empty line between import groups  import/order
+
+E:\autoart_v02\backend\src\modules\records\fact-kinds.routes.ts
+  10:1  error  There should be at least one empty line between import groups  import/order
+
+E:\autoart_v02\backend\src\modules\records\fact-kinds.service.ts
+  187:52  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+E:\autoart_v02\backend\src\modules\records\records.routes.ts
+  3:1  error  There should be at least one empty line between import groups  import/order
+
+E:\autoart_v02\backend\src\modules\records\records.schemas.ts
+  1:1  error  There should be at least one empty line between import groups  import/order
+
+E:\autoart_v02\backend\src\modules\records\records.service.ts
+   1:1  error  There should be at least one empty line between import groups                           import/order
+   4:1  error  `./records.schemas.js` type import should occur before import of `../../db/client.js`   import/order
+  13:1  error  `../../db/schema.js` type import should occur before import of `../../utils/errors.js`  import/order
+
+E:\autoart_v02\backend\src\modules\references\__tests__\references.service.test.ts
+  14:1  error  There should be at least one empty line between import groups                                                                                                import/order
+  15:1  error  '../../../db/client.js' import is restricted from being used by a pattern. Avoid deep relative imports. Use path aliases: @/, @modules/, @utils/, @config/   no-restricted-imports
+  17:1  error  '../../../test/setup.js' import is restricted from being used by a pattern. Avoid deep relative imports. Use path aliases: @/, @modules/, @utils/, @config/  no-restricted-imports
+  17:1  error  `../../../test/setup.js` import should occur before import of `../references.service.js`                                                                     import/order
+
+E:\autoart_v02\backend\src\modules\references\references.routes.ts
+  1:1   error  There should be at least one empty line between import groups                     import/order
+  1:27  error  'FastifyRequest' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  1:43  error  'FastifyReply' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\modules\references\references.service.ts
+  3:1  error  `./references.schemas.js` type import should occur before import of `../../db/client.js`  import/order
+  4:1  error  There should be at least one empty line between import groups                             import/order
+  4:1  error  `../../db/schema.js` type import should occur before import of `../../utils/errors.js`    import/order
+  5:1  error  `@autoart/shared` type import should occur before import of `../../db/client.js`          import/order
+
+E:\autoart_v02\backend\src\modules\search\search.routes.ts
+  1:1  error  There should be at least one empty line between import groups  import/order
+
+E:\autoart_v02\backend\src\modules\search\search.service.ts
+  1:1  error  There should be at least one empty line between import groups  import/order
+
+E:\autoart_v02\backend\src\plugins\auth.ts
+   3:1   error  There should be at least one empty line between import groups  import/order
+   3:1   error  `@fastify/jwt` import should occur before import of `fastify`  import/order
+  31:14  error  'err' is defined but never used                                @typescript-eslint/no-unused-vars
+
+E:\autoart_v02\backend\src\test\setup.ts
+  9:1  error  There should be at least one empty line between import groups  import/order
+
+E:\autoart_v02\backend\vitest.config.ts
+  0:0  error  Parsing error: "parserOptions.project" has been provided for @typescript-eslint/parser.
+The file was not found in any of the provided project(s): vitest.config.ts
+
+✖ 589 problems (551 errors, 38 warnings)
+  163 errors and 0 warnings potentially fixable with the `--fix` option.
+

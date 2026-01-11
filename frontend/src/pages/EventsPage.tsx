@@ -7,10 +7,11 @@
  * Events are append-only facts in the system - they cannot be edited or deleted.
  */
 
-import { useState } from 'react';
-import { Header } from '../ui/layout/Header';
-import { BottomDrawer } from '../ui/drawer/BottomDrawer';
 import { Activity, Filter } from 'lucide-react';
+import { useState } from 'react';
+
+import { BottomDrawer } from '../ui/drawer/BottomDrawer';
+import { Header } from '../ui/layout/Header';
 
 /**
  * Events Registry Page

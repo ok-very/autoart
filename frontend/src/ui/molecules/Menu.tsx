@@ -5,6 +5,7 @@
  * Position dropdown below target using absolute positioning.
  */
 
+import { clsx } from 'clsx';
 import {
     createContext,
     useContext,
@@ -16,7 +17,6 @@ import {
     type ElementType,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { clsx } from 'clsx';
 
 interface MenuContextValue {
     isOpen: boolean;

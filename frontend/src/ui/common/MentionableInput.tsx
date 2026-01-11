@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+
 import { RecordSearchCombobox } from './RecordSearchCombobox';
 import { useCreateReference } from '../../api/hooks';
 import type { SearchResult } from '../../types';

@@ -22,15 +22,17 @@
  * - Wrapper provides cell() functions with domain factory calls
  */
 
-import { useState, useMemo, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { Columns, Plus } from 'lucide-react';
-import { EditableCell } from '../molecules/EditableCell';
-import { DataFieldWidget, type DataFieldKind } from '../molecules/DataFieldWidget';
-import { StatusColumnSummary } from '../molecules/StatusColumnSummary';
+import { useState, useMemo, useCallback } from 'react';
+
 import { buildFieldViewModel, type FieldViewModel, type FieldDefinition, type ProjectState, type EntityContext } from '@autoart/shared/domain';
-import { UniversalTableCore, makeFlatRowModel, type TableColumn as CoreTableColumn, type TableRow, type TableFeature } from '../table-core';
+
 import type { DataRecord, RecordDefinition, FieldDef } from '../../types';
+import { DataFieldWidget, type DataFieldKind } from '../molecules/DataFieldWidget';
+import { EditableCell } from '../molecules/EditableCell';
+import { StatusColumnSummary } from '../molecules/StatusColumnSummary';
+import { UniversalTableCore, makeFlatRowModel, type TableColumn as CoreTableColumn, type TableRow, type TableFeature } from '../table-core';
 
 // ==================== TYPES ====================
 

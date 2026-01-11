@@ -7,13 +7,14 @@
  * This is the CENTER VIEW when source type is 'monday'.
  */
 
-import { useState, useMemo } from 'react';
 import { Columns, Layers, Calendar } from 'lucide-react';
-import { Text, Stack, Badge } from '../../ui/atoms';
+import { useState, useMemo } from 'react';
+
+import { ExecutionControls } from './ExecutionControls';
 import { HierarchyPreview } from './HierarchyPreview';
 import { StagePreview } from './StagePreview';
-import { ExecutionControls } from './ExecutionControls';
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
+import { Text, Stack, Badge } from '../../ui/atoms';
 
 // ============================================================================
 // TYPES

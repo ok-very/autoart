@@ -4,19 +4,21 @@
  * Drawer view for creating record links.
  */
 
-import { useState } from 'react';
 import { Link2 } from 'lucide-react';
-import { TextInput } from '../../atoms/TextInput';
+import { useState } from 'react';
+
+import { useCreateLink, useLinkTypes, useSearch } from '@/api/hooks';
+import { useUIStore } from '@/stores';
+
+import type { DrawerProps, CreateLinkContext } from '../../../drawer/types';
+import { useDebounce } from '../../../hooks/useDebounce';
 import { Button } from '../../atoms/Button';
-import { Stack } from '../../atoms/Stack';
 import { Inline } from '../../atoms/Inline';
-import { Text } from '../../atoms/Text';
 import { Select } from '../../atoms/Select';
 import { Spinner } from '../../atoms/Spinner';
-import { useUIStore } from '../../../stores/uiStore';
-import { useCreateLink, useLinkTypes, useSearch } from '../../../api/hooks';
-import { useDebounce } from '../../../hooks/useDebounce';
-import type { DrawerProps, CreateLinkContext } from '../../../drawer/types';
+import { Stack } from '../../atoms/Stack';
+import { Text } from '../../atoms/Text';
+import { TextInput } from '../../atoms/TextInput';
 
 // Legacy props interface (deprecated - use DrawerProps)
 interface LegacyCreateLinkViewProps {

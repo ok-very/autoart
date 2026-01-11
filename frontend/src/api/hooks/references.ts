@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../client';
+
 import type { TaskReference, ResolvedReference } from '../../types';
+import { api } from '../client';
 
 // ==================== REFERENCES ====================
 // Procedural operations for static/dynamic reference management

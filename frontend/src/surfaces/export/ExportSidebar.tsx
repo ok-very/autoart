@@ -7,10 +7,11 @@
  * - Select all/none actions
  */
 
-import { useMemo, useState } from 'react';
 import { Eye, Filter, FolderOpen } from 'lucide-react';
-import { Text, Inline, Checkbox, Badge } from '../../ui/atoms';
+import { useMemo, useState } from 'react';
+
 import { useProjects } from '../../api/hooks';
+import { Text, Inline, Checkbox, Badge } from '../../ui/atoms';
 
 // ============================================================================
 // TYPES

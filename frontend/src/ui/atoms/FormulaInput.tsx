@@ -7,9 +7,10 @@
  * - Displays computed value on blur
  * - Formula builder button for complex expressions
  */
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { clsx } from 'clsx';
 import { Calculator, Hash, X } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+
 import {
   evaluateFormula,
   formatFormulaDisplay,

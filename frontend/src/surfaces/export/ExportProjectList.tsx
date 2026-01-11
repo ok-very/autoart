@@ -5,8 +5,10 @@
  */
 
 import { Eye } from 'lucide-react';
-import { Inline, Text, Checkbox } from '../../ui/atoms';
+
 import type { HierarchyNode } from '@autoart/shared';
+
+import { Inline, Text, Checkbox } from '../../ui/atoms';
 
 export interface ExportProjectListProps {
     projects: HierarchyNode[];

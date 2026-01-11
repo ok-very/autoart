@@ -6,17 +6,19 @@
  * @deprecated Legacy props are deprecated. Use DrawerProps<CreateNodeContext> instead.
  */
 
-import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { TextInput } from '../../atoms/TextInput';
-import { Button } from '../../atoms/Button';
-import { Stack } from '../../atoms/Stack';
-import { Inline } from '../../atoms/Inline';
-import { Text } from '../../atoms/Text';
-import { useUIStore } from '../../../stores/uiStore';
-import { useCreateNode } from '../../../api/hooks';
-import type { NodeType } from '../../../types';
+import { useState } from 'react';
+
+import { useCreateNode } from '@/api/hooks';
+import { useUIStore } from '@/stores';
+import type { NodeType } from '@/types';
+
 import type { DrawerProps, CreateNodeContext } from '../../../drawer/types';
+import { Button } from '../../atoms/Button';
+import { Inline } from '../../atoms/Inline';
+import { Stack } from '../../atoms/Stack';
+import { Text } from '../../atoms/Text';
+import { TextInput } from '../../atoms/TextInput';
 
 /**
  * @deprecated Use DrawerProps<CreateNodeContext> instead.

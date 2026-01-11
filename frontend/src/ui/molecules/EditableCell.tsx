@@ -8,12 +8,15 @@
  * - No API calls - pure presentational with callbacks
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { Check, X } from 'lucide-react';
-import { DataFieldWidget, type DataFieldKind } from './DataFieldWidget';
-import type { FieldViewModel } from '@autoart/shared/domain';
+import { useState, useRef, useEffect, useCallback } from 'react';
+
+
 import { TASK_STATUS_CONFIG } from '@autoart/shared';
+import type { FieldViewModel } from '@autoart/shared/domain';
+
+import { DataFieldWidget, type DataFieldKind } from './DataFieldWidget';
 
 export interface EditableCellProps {
     /** Field view model with all display state */

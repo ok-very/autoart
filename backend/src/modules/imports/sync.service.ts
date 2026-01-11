@@ -5,12 +5,12 @@
  * Tracks links between local entities and external sources (Monday, Asana, etc.)
  */
 
+import type { Provider } from './connections.service.js';
 import { db } from '../../db/client.js';
 import type {
     ExternalSourceMapping,
     NewExternalSourceMapping,
 } from '../../db/schema.js';
-import type { Provider } from './connections.service.js';
 
 // ============================================================================
 // TYPES

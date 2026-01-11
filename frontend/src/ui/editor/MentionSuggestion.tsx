@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { clsx } from 'clsx';
+import { useState, useEffect, useCallback, forwardRef, useImperativeHandle, useMemo } from 'react';
+
 import { useSearch } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
-import { fuzzySearch } from '../../utils/fuzzySearch';
 import type { SearchResult } from '../../types';
+import { fuzzySearch } from '../../utils/fuzzySearch';
 
 interface MentionSuggestionProps {
   query: string;

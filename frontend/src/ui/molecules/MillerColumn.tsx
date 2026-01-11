@@ -13,8 +13,9 @@
  * - Search filter (pass `enableSearch`)
  */
 
-import { useState, useMemo } from 'react';
 import { Plus, ChevronRight, Search } from 'lucide-react';
+import { useState, useMemo } from 'react';
+
 import type { HierarchyNode, NodeType } from '../../types';
 
 // ==================== TYPES ====================

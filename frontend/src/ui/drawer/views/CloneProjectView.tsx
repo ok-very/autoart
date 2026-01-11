@@ -4,20 +4,23 @@
  * Drawer view for cloning a project with configurable depth.
  */
 
-import { useState } from 'react';
 import { Copy, FileText, Database, Layers } from 'lucide-react';
-import { TextInput } from '../../atoms/TextInput';
-import { Button } from '../../atoms/Button';
-import { Stack } from '../../atoms/Stack';
-import { Inline } from '../../atoms/Inline';
-import { Text } from '../../atoms/Text';
+import { useState } from 'react';
+
+import { useCloneNode, useCloneStats } from '@/api/hooks';
+import { useUIStore } from '@/stores';
+import { useHierarchyStore } from '@/stores';
+
+import type { DrawerProps, CloneProjectContext } from '../../../drawer/types';
 import { Alert } from '../../atoms/Alert';
 import { Badge } from '../../atoms/Badge';
+import { Button } from '../../atoms/Button';
 import { Checkbox } from '../../atoms/Checkbox';
-import { useUIStore } from '../../../stores/uiStore';
-import { useHierarchyStore } from '../../../stores/hierarchyStore';
-import { useCloneNode, useCloneStats } from '../../../api/hooks';
-import type { DrawerProps, CloneProjectContext } from '../../../drawer/types';
+
+import { Inline } from '../../atoms/Inline';
+import { Stack } from '../../atoms/Stack';
+import { Text } from '../../atoms/Text';
+import { TextInput } from '../../atoms/TextInput';
 
 // Legacy props interface (deprecated - use DrawerProps)
 interface LegacyCloneProjectViewProps {

@@ -10,18 +10,22 @@
  * - Extensible: Add custom extensions via config.extensions
  */
 
-import { useRef, useMemo, useState, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
-import { createConfiguredExtensions, MentionAttributes } from './MentionExtension';
-import { RecordSearchCombobox } from '../common/RecordSearchCombobox';
-import { useCreateReference } from '../../api/hooks';
-import type { SearchResult } from '../../types';
+import { useRef, useMemo, useState, useCallback } from 'react';
+
 import type { ContextType } from '@autoart/shared';
+
 import {
   type RichTextEditorConfig,
   mergeEditorConfig,
   DEFAULT_EDITOR_CONFIG
 } from './EditorConfig';
+import { createConfiguredExtensions, MentionAttributes } from './MentionExtension';
+import { useCreateReference } from '../../api/hooks';
+import type { SearchResult } from '../../types';
+import { RecordSearchCombobox } from '../common/RecordSearchCombobox';
+
+
 
 // ============================================================================
 // TYPES

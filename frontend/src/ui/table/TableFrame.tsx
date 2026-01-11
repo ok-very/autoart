@@ -4,8 +4,8 @@
  * Provides consistent outer chrome: border, background, shadow, overflow handling.
  */
 
-import { forwardRef, type HTMLAttributes } from 'react';
 import { clsx } from 'clsx';
+import { forwardRef, type HTMLAttributes } from 'react';
 
 export interface TableFrameProps extends HTMLAttributes<HTMLDivElement> {
   /** Max height before scrolling (default: none) */

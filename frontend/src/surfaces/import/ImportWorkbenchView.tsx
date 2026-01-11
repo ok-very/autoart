@@ -7,13 +7,14 @@
  * This is the WORKSPACE slot content - receives state from ImportPage.
  */
 
-import { useState, useMemo } from 'react';
 import { FileSpreadsheet, Columns, Layers, AlertCircle } from 'lucide-react';
-import { Text, Stack, Badge } from '../../ui/atoms';
+import { useState, useMemo } from 'react';
+
+import { ExecutionControls } from './ExecutionControls';
 import { HierarchyPreview } from './HierarchyPreview';
 import { StagePreview } from './StagePreview';
-import { ExecutionControls } from './ExecutionControls';
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
+import { Text, Stack, Badge } from '../../ui/atoms';
 
 // ============================================================================
 // TYPES

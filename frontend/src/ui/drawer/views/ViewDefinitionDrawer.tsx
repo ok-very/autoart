@@ -1,8 +1,11 @@
 import { ExternalLink, Palette } from 'lucide-react';
-import { useUIStore } from '../../../stores/uiStore';
-import { useRecord, useRecordDefinition } from '../../../api/hooks';
+
+import { useRecord, useRecordDefinition } from '@/api/hooks';
+import { useUIStore } from '@/stores';
+import type { FieldDef } from '@/types';
+
 import { CloneExcludedToggle } from '../../common/CloneExcludedToggle';
-import type { FieldDef } from '../../../types';
+
 
 interface ViewDefinitionDrawerProps {
   recordId?: string;

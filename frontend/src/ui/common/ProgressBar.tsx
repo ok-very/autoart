@@ -1,4 +1,5 @@
 import { clsx } from 'clsx';
+
 import { StatusDistribution, STATUS_LABELS } from '../../utils/statusUtils';
 
 interface ProgressBarProps {
