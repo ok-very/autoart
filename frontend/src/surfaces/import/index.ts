@@ -2,13 +2,19 @@
  * Import Surface Components
  */
 
-export { ImportWorkbench } from './ImportWorkbench';
+// Views
+export { ImportWorkbenchView } from './ImportWorkbenchView';
+export { ImportWorkbenchContent } from './ImportWorkbenchContent';
+export { ImportSidebar } from './ImportSidebar';
+
+// Previews
 export { ProjectionSelector } from './ProjectionSelector';
 export { ImportPreview } from './ImportPreview';
 export { HierarchyPreview } from './HierarchyPreview';
 export { StagePreview } from './StagePreview';
-export { ImportRecordInspector } from './ImportRecordInspector';
-export { SessionConfigPanel } from './SessionConfigPanel';
+export { ImportInspector } from './ImportInspector';
+
+// Controls
 export { ExecutionControls } from './ExecutionControls';
 export { ClassificationPanel } from './ClassificationPanel';
 export { MondayBoardSelector } from './MondayBoardSelector';
@@ -21,3 +27,4 @@ export type {
     ImportPlanItem,
     ImportExecutionResult,
 } from '../../api/hooks/imports';
+

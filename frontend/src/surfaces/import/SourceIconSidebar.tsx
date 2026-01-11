@@ -18,6 +18,7 @@ export type SourceType = 'file' | 'monday' | 'api';
 interface SourceIconSidebarProps {
     activeSource: SourceType;
     onSourceChange: (source: SourceType) => void;
+    disabled?: boolean;
 }
 
 interface SourceIconProps {
@@ -41,10 +42,10 @@ function SourceIcon({ id, icon, label, isActive, isConnected, isDisabled, onClic
             disabled={isDisabled}
             title={label}
             className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all ${isActive
-                    ? 'bg-blue-100 text-blue-600 shadow-sm'
-                    : isDisabled
-                        ? 'text-slate-300 cursor-not-allowed'
-                        : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                ? 'bg-blue-100 text-blue-600 shadow-sm'
+                : isDisabled
+                    ? 'text-slate-300 cursor-not-allowed'
+                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
                 }`}
             data-aa-component="SourceIconSidebar"
             data-aa-id={`source-${id}`}

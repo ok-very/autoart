@@ -1,15 +1,16 @@
 /**
  * CreateDefinitionView
  *
- * Drawer view for creating new record or action definitions using Mantine.
+ * Drawer view for creating new record or action definitions.
  */
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Plus, Palette } from 'lucide-react';
-import {
-  TextInput, Button, Stack, Group, Text, Paper, SimpleGrid,
-  ColorSwatch, Popover, Box, ThemeIcon
-} from '@mantine/core';
+import { TextInput } from '../../atoms/TextInput';
+import { Button } from '../../atoms/Button';
+import { Stack } from '../../atoms/Stack';
+import { Inline } from '../../atoms/Inline';
+import { Text } from '../../atoms/Text';
 import { useUIStore } from '../../../stores/uiStore';
 import { useCreateDefinition } from '../../../api/hooks';
 import type { DrawerProps, CreateDefinitionContext } from '../../../drawer/types';
@@ -58,6 +59,21 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
   const [selectedColor, setSelectedColor] = useState('blue');
   const [selectedEmoji, setSelectedEmoji] = useState('📋');
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+
+  // Close emoji picker on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setEmojiPickerOpen(false);
+      }
+    }
+    if (emojiPickerOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [emojiPickerOpen]);
 
   // Close handler that works with both contracts
   const handleClose = () => {
@@ -111,26 +127,24 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
   const selectedColorConfig = PRESET_COLORS.find((c) => c.name === selectedColor) || PRESET_COLORS[1];
 
   return (
-    <Box maw={480} mx="auto">
+    <div className="max-w-lg mx-auto">
       {/* Header */}
-      <Group gap="sm" mb="lg">
-        <Box
-          w={48}
-          h={48}
-          className="rounded-lg flex items-center justify-center text-2xl"
+      <Inline gap="sm" className="mb-6">
+        <div
+          className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
           style={{ backgroundColor: `${selectedColorConfig.hex}20` }}
         >
           {selectedEmoji}
-        </Box>
-        <Stack gap={0}>
-          <Text size="xs" fw={700} c="dimmed" tt="uppercase">
+        </div>
+        <Stack gap="none">
+          <Text size="xs" weight="bold" color="muted" className="uppercase">
             Create New
           </Text>
-          <Text size="xl" fw={700}>
+          <Text size="xl" weight="bold">
             {isActionRecipe ? 'Action Definition' : 'Record Definition'}
           </Text>
         </Stack>
-      </Group>
+      </Inline>
 
       <form onSubmit={handleSubmit}>
         <Stack gap="lg">
@@ -147,137 +161,128 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
 
           {/* Styling Section */}
           <Stack gap="xs">
-            <Group gap="xs">
+            <Inline gap="xs">
               <Palette size={16} />
-              <Text size="sm" fw={500}>Appearance</Text>
-            </Group>
+              <Text size="sm" weight="medium">Appearance</Text>
+            </Inline>
 
             {/* Color Selection */}
-            <Box>
-              <Text size="xs" c="dimmed" mb={8}>Color</Text>
-              <Group gap="xs">
+            <div>
+              <Text size="xs" color="muted" className="mb-2">Color</Text>
+              <Inline gap="xs">
                 {PRESET_COLORS.map((color) => (
-                  <ColorSwatch
+                  <button
                     key={color.name}
-                    color={color.hex}
-                    size={32}
-                    onClick={() => setSelectedColor(color.name)}
+                    type="button"
+                    className="w-8 h-8 rounded-full cursor-pointer"
                     style={{
-                      cursor: 'pointer',
+                      backgroundColor: color.hex,
                       outline: selectedColor === color.name
                         ? `2px solid ${color.hex}`
                         : 'none',
                       outlineOffset: 2,
                     }}
+                    onClick={() => setSelectedColor(color.name)}
+                    aria-label={`Select ${color.name} color`}
                   />
                 ))}
-              </Group>
-            </Box>
+              </Inline>
+            </div>
 
             {/* Emoji Selection */}
-            <Box>
-              <Text size="xs" c="dimmed" mb={8}>Icon</Text>
-              <Popover
-                opened={emojiPickerOpen}
-                onChange={setEmojiPickerOpen}
-                position="bottom-start"
-                shadow="md"
-              >
-                <Popover.Target>
-                  <Box
-                    w={48}
-                    h={48}
-                    className="rounded-lg flex items-center justify-center text-2xl cursor-pointer hover:ring-2 hover:ring-slate-300 transition-all"
-                    style={{ backgroundColor: `${selectedColorConfig.hex}20` }}
-                    onClick={() => setEmojiPickerOpen(true)}
-                  >
-                    {selectedEmoji}
-                  </Box>
-                </Popover.Target>
-                <Popover.Dropdown>
-                  <SimpleGrid cols={6} spacing={4}>
-                    {PRESET_EMOJIS.map((emoji) => (
-                      <Box
-                        key={emoji}
-                        w={40}
-                        h={40}
-                        className="rounded-lg flex items-center justify-center text-xl cursor-pointer hover:bg-slate-100 transition-colors"
-                        style={{
-                          backgroundColor: selectedEmoji === emoji ? 'var(--mantine-color-blue-0)' : undefined,
-                        }}
-                        onClick={() => {
-                          setSelectedEmoji(emoji);
+            <div>
+              <Text size="xs" color="muted" className="mb-2">Icon</Text>
+              <div className="relative" ref={emojiPickerRef}>
+                <button
+                  type="button"
+                  className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl cursor-pointer hover:ring-2 hover:ring-slate-300 transition-all"
+                  style={{ backgroundColor: `${selectedColorConfig.hex}20` }}
+                  onClick={() => setEmojiPickerOpen(!emojiPickerOpen)}
+                >
+                  {selectedEmoji}
+                </button>
+                {emojiPickerOpen && (
+                  <div className="absolute top-full left-0 mt-1 z-10 bg-white border border-slate-200 rounded-lg shadow-md p-2">
+                    <div className="grid grid-cols-6 gap-1">
+                      {PRESET_EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          className="w-10 h-10 rounded-lg flex items-center justify-center text-xl cursor-pointer hover:bg-slate-100 transition-colors"
+                          style={{
+                            backgroundColor: selectedEmoji === emoji ? '#dbeafe' : undefined,
+                          }}
+                          onClick={() => {
+                            setSelectedEmoji(emoji);
+                            setEmojiPickerOpen(false);
+                          }}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                    <TextInput
+                      placeholder="Or type any emoji..."
+                      size="sm"
+                      className="mt-2"
+                      onChange={(e) => {
+                        if (e.currentTarget.value) {
+                          setSelectedEmoji(e.currentTarget.value);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
                           setEmojiPickerOpen(false);
-                        }}
-                      >
-                        {emoji}
-                      </Box>
-                    ))}
-                  </SimpleGrid>
-                  <TextInput
-                    placeholder="Or type any emoji..."
-                    size="xs"
-                    mt="sm"
-                    onChange={(e) => {
-                      if (e.currentTarget.value) {
-                        setSelectedEmoji(e.currentTarget.value);
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        setEmojiPickerOpen(false);
-                      }
-                    }}
-                  />
-                </Popover.Dropdown>
-              </Popover>
-            </Box>
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </Stack>
 
           {/* Preview */}
-          <Paper withBorder p="md" radius="md" className="bg-slate-50">
-            <Text size="xs" c="dimmed" mb="xs">Preview</Text>
-            <Group gap="sm">
-              <Box
-                w={40}
-                h={40}
-                className="rounded-lg flex items-center justify-center text-lg"
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+            <Text size="xs" color="muted" className="mb-2">Preview</Text>
+            <Inline gap="sm">
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
                 style={{ backgroundColor: `${selectedColorConfig.hex}20` }}
               >
                 {selectedEmoji}
-              </Box>
-              <Stack gap={0}>
-                <Text size="sm" fw={500}>
+              </div>
+              <Stack gap="none">
+                <Text size="sm" weight="medium">
                   {name.trim() || (isActionRecipe ? 'Action Definition Name' : 'Record Definition Name')}
                 </Text>
-                <Text size="xs" c="dimmed">0 records</Text>
+                <Text size="xs" color="muted">0 records</Text>
               </Stack>
-            </Group>
-          </Paper>
+            </Inline>
+          </div>
 
           {/* Actions */}
-          <Group justify="flex-end" gap="sm" pt="md" className="border-t border-slate-100">
-            <Button variant="default" onClick={handleClose}>
+          <Inline justify="end" gap="sm" className="pt-4 border-t border-slate-100">
+            <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={!name.trim()}
-              loading={createDefinition.isPending}
+              disabled={!name.trim() || createDefinition.isPending}
               leftSection={<Plus size={16} />}
             >
-              Create Definition
+              {createDefinition.isPending ? 'Creating...' : 'Create Definition'}
             </Button>
-          </Group>
+          </Inline>
 
           {createDefinition.isError && (
-            <Text size="sm" c="red">
+            <Text size="sm" color="error">
               Failed to create definition. Please try again.
             </Text>
           )}
         </Stack>
       </form>
-    </Box>
+    </div>
   );
 }

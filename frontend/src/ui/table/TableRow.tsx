@@ -2,13 +2,8 @@
  * TableRow / TableHeaderRow - Row primitives with consistent height and states
  */
 
-import { forwardRef } from 'react';
-import { Box, type BoxProps } from '@mantine/core';
+import { forwardRef, type HTMLAttributes } from 'react';
 import { clsx } from 'clsx';
-
-// ============================================================================
-// SHARED TOKENS
-// ============================================================================
 
 /** Row height variants */
 export type RowSize = 'xs' | 'sm' | 'md';
@@ -19,11 +14,7 @@ const ROW_HEIGHTS: Record<RowSize, string> = {
   md: 'h-11', // 44px - comfortable rows
 };
 
-// ============================================================================
-// TABLE HEADER ROW
-// ============================================================================
-
-export interface TableHeaderRowProps extends Omit<BoxProps, 'component'> {
+export interface TableHeaderRowProps extends HTMLAttributes<HTMLDivElement> {
   /** Row height size */
   size?: RowSize;
   /** Whether header sticks to top */
@@ -35,9 +26,8 @@ export interface TableHeaderRowProps extends Omit<BoxProps, 'component'> {
 export const TableHeaderRow = forwardRef<HTMLDivElement, TableHeaderRowProps>(
   function TableHeaderRow({ size = 'xs', sticky = true, className, children, ...props }, ref) {
     return (
-      <Box
+      <div
         ref={ref}
-        component="div"
         role="row"
         className={clsx(
           'flex items-center bg-slate-50 border-b border-slate-200',
@@ -48,16 +38,12 @@ export const TableHeaderRow = forwardRef<HTMLDivElement, TableHeaderRowProps>(
         {...props}
       >
         {children}
-      </Box>
+      </div>
     );
   }
 );
 
-// ============================================================================
-// TABLE ROW
-// ============================================================================
-
-export interface TableRowProps extends Omit<BoxProps, 'component' | 'onClick'> {
+export interface TableRowProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onClick'> {
   /** Row height size */
   size?: RowSize;
   /** Whether row is selected */
@@ -78,9 +64,8 @@ export const TableRow = forwardRef<HTMLDivElement, TableRowProps>(
     ref
   ) {
     return (
-      <Box
+      <div
         ref={ref}
-        component="div"
         role="row"
         tabIndex={onClick ? 0 : undefined}
         onClick={onClick}
@@ -92,14 +77,13 @@ export const TableRow = forwardRef<HTMLDivElement, TableRowProps>(
           hoverable && 'hover:bg-slate-50',
           selected && 'bg-blue-50 hover:bg-blue-100',
           onClick && 'cursor-pointer',
-          // Focus ring for keyboard navigation
           onClick && 'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset',
           className
         )}
         {...props}
       >
         {children}
-      </Box>
+      </div>
     );
   }
 );

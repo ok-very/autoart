@@ -1,0 +1,22 @@
+{
+  "timestamp": "20260111T012235",
+  "files": [
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\ui\\drawer\\views\\ImportWorkbenchDrawerView.tsx",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\001_20260111T012235\\ImportWorkbenchDrawerView.tsx"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\ui\\drawer\\views\\ExportWorkbenchDrawerView.tsx",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\001_20260111T012235\\ExportWorkbenchDrawerView.tsx"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\drawer\\types.ts",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\001_20260111T012235\\types.ts"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\drawer\\DrawerRegistry.tsx",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\001_20260111T012235\\DrawerRegistry.tsx"
+    }
+  ],
+  "prompt": "1. on close, 2. you are leaving the center panel, only parsing out what is associated with \"sidebar\". ImportWorkbench should be included under Workbench, next to its corrolarry ExporWorkbench. Thwey should probably be appended with \"view\" for consistance. 3. follow the conventions in our @frontend/src/ui/drawer/ view. if left and right drawers have somehow been deleted by our mantine refactor, they need to be replaced by these new elments. 5. I need clarity on this request"
+}

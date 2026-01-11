@@ -1,0 +1,2816 @@
+{
+  "backend/vitest.config.ts": {
+    "hash": "c131fd6eda584c6cd96cd1be9b9c8f7b8ac3288e90b29796de4f8c63b9ee7a26",
+    "mtime": 1767210994.2660217,
+    "size": 809,
+    "refined": true
+  },
+  "shared/vitest.config.ts": {
+    "hash": "cba0ac723a3407d63f49ee370e8c154b1b299d2349c18db47d3fe47ed39cbc5c",
+    "mtime": 1767311767.7489047,
+    "size": 200,
+    "refined": true
+  },
+  "frontend/vite.config.ts": {
+    "hash": "9b417d04915e9d2ad0fb594e381ada5c3b81188aa2ae1de61cf23695eeed73ad",
+    "mtime": 1767353188.4675481,
+    "size": 1079,
+    "refined": true
+  },
+  "backend/src/app.ts": {
+    "hash": "a0fdf433b3df9bf3b2c4996c16a65684961eb63a87d53888ac8e366905eb7f62",
+    "mtime": 1768070734.8445704,
+    "size": 5137,
+    "refined": true
+  },
+  "backend/src/index.ts": {
+    "hash": "848fd320fb8d301ba851380b3f949f080a4bdc566e4e4d161ade961fd5775c06",
+    "mtime": 1767761037.5027022,
+    "size": 410,
+    "refined": true
+  },
+  "backend/src/db/migrate.ts": {
+    "hash": "81c96f3d69d9117a1c5e6101171fbe7fd54dcf5a5f4aab2bfff9c2f3eb7c1817",
+    "mtime": 1766973030.371395,
+    "size": 1620,
+    "refined": true
+  },
+  "backend/src/db/client.ts": {
+    "hash": "efff652861f7842d5c15c178e0b6a68e94dd0af14c33e56987bd6e938e7a0d47",
+    "mtime": 1766909181.9026546,
+    "size": 536,
+    "refined": true
+  },
+  "backend/src/config/env.ts": {
+    "hash": "6a40dcb6a46ed24edd0660442ed0cc3985fca7abad344ca912f7140240b3d599",
+    "mtime": 1766972983.2451868,
+    "size": 1172,
+    "refined": true
+  },
+  "backend/src/db/consolidate_migrations.ts": {
+    "hash": "d497ec70f07f83c9cf01a0b86766fa0c8d3e2c4e28c7c9960bebf31403d8180d",
+    "mtime": 1767384588.7988708,
+    "size": 9235,
+    "refined": true
+  },
+  "backend/src/db/nuke.ts": {
+    "hash": "e6c9a15a7636b9079cae3946d4129f86b7c3a74fcda38a7f63f9d519c3728917",
+    "mtime": 1767384623.8183162,
+    "size": 2017,
+    "refined": true
+  },
+  "backend/src/db/repair_migrations.ts": {
+    "hash": "18e92c9ec24fe5f01fda0de802e5a3591adfdee2da7cc7c44af98904ee1ab4f8",
+    "mtime": 1767212218.2305386,
+    "size": 2145,
+    "refined": true
+  },
+  "backend/src/db/status.ts": {
+    "hash": "4e91aad4dd257c20d2d992b0655dd469a894c14cabae06b03d027ae2463be9cd",
+    "mtime": 1767384646.7615678,
+    "size": 3710,
+    "refined": true
+  },
+  "backend/src/plugins/auth.ts": {
+    "hash": "12c2d798a3da37423a441f066a122654f39385dcbfb7a308cd64bc111b69eee1",
+    "mtime": 1766909300.2366626,
+    "size": 1309,
+    "refined": true
+  },
+  "backend/src/db/schema.ts": {
+    "hash": "ee6a595641075c34647a184cdeadf2284037eb5b9e555548bb2c71189a88f356",
+    "mtime": 1768070798.8842106,
+    "size": 15238,
+    "refined": true
+  },
+  "backend/src/plugins/uiContext.ts": {
+    "hash": "b150574b86a3a85ced33b460dbe4a315119282a5bd113cabb016d9bf62024ff9",
+    "mtime": 1767311620.2314832,
+    "size": 2053,
+    "refined": true
+  },
+  "backend/src/db/migrations/001_extensions.ts": {
+    "hash": "869b1a01c5e1449c83f10ab6c17587d9f07c9e610b541e33e64343b7a6018ca6",
+    "mtime": 1766951654.30036,
+    "size": 952,
+    "refined": true
+  },
+  "backend/src/db/migrations/002_enums.ts": {
+    "hash": "56306cb58d35f405256583e54d77f50218bece29af00222f3f9daea31e2f0f1c",
+    "mtime": 1766951678.1011474,
+    "size": 1259,
+    "refined": true
+  },
+  "backend/src/test/setup.ts": {
+    "hash": "a7e0ba80c48e321a861e420a51c9528624d6a9a1fd124f249a8fb3dacc36ec87",
+    "mtime": 1767210980.244339,
+    "size": 5995,
+    "refined": true
+  },
+  "backend/src/utils/errors.ts": {
+    "hash": "87cc2582e5cefdf2ec0ff1f564fa6436c38065e81fc67e690041a183f98e70f2",
+    "mtime": 1766909318.269946,
+    "size": 918,
+    "refined": true
+  },
+  "backend/src/db/migrations/003_users.ts": {
+    "hash": "a8fc324d6360f87c104b0257547f33b3c52e9617d93fee306df89a871daa06d5",
+    "mtime": 1766951692.8060582,
+    "size": 1989,
+    "refined": true
+  },
+  "backend/src/db/migrations/005_hierarchy.ts": {
+    "hash": "dfca96d0dca3220f51742ad7d84867cfbb1b203f85da090b868b1946f33a7636",
+    "mtime": 1767224107.864128,
+    "size": 3177,
+    "refined": true
+  },
+  "backend/src/db/migrations/007_references.ts": {
+    "hash": "2cca0b50b1bd05ad8122b87fba4ce6126b4909b6f6df979c5cbf59db506fcee4",
+    "mtime": 1766951762.130973,
+    "size": 2309,
+    "refined": true
+  },
+  "backend/src/db/migrations/004_record_definitions.ts": {
+    "hash": "d8f114e32389ddad448c78a30f398468bb11d5d97463da3e863e4b20ac89d925",
+    "mtime": 1767224103.8416748,
+    "size": 1738,
+    "refined": true
+  },
+  "backend/src/db/migrations/006_records.ts": {
+    "hash": "d7aae0006cc6ef4ff702c8148f73acefd9bde24f69edb574126ae5f3223d3d84",
+    "mtime": 1766973097.1555734,
+    "size": 2787,
+    "refined": true
+  },
+  "backend/src/db/migrations/008_functions.ts": {
+    "hash": "e3eb31b280b09907b0ba69622e16a5472b61bf733d32c159a42f8bc129f82f41",
+    "mtime": 1766973164.7705245,
+    "size": 2763,
+    "refined": true
+  },
+  "backend/src/db/migrations/009_seed_definitions.ts": {
+    "hash": "ffe024d7cf99066a8b8b3adc68535c610eb2fc41fd7ca7156dbfa07264f00ce7",
+    "mtime": 1767224158.3862488,
+    "size": 3639,
+    "refined": true
+  },
+  "backend/src/db/migrations/010_record_links.ts": {
+    "hash": "0ffd780b3f77b01b0998fdbfa5fc466a55e5a3b550aab45e9530722d0fd30baf",
+    "mtime": 1766994600.8946023,
+    "size": 2749,
+    "refined": true
+  },
+  "backend/src/db/migrations/012_clone_excluded.ts": {
+    "hash": "a629adc53b514abb148f59db13fa68e2029f2e7998256f7031f9e066d0b800b5",
+    "mtime": 1767238231.143957,
+    "size": 1246,
+    "refined": true
+  },
+  "backend/src/db/migrations/011_definition_templates.ts": {
+    "hash": "7775156f488f3cd1d62f9f68a6f22088de4f09a41a825e34740b237c941c3d88",
+    "mtime": 1767238164.1105018,
+    "size": 1715,
+    "refined": true
+  },
+  "backend/src/db/migrations/014_pinned_flag.ts": {
+    "hash": "f5c698e2a191fd687cc8e18e126d91c629ede67e626045428c729bf06c46124e",
+    "mtime": 1767238407.3460648,
+    "size": 755,
+    "refined": true
+  },
+  "backend/src/db/migrations/019_actions.ts": {
+    "hash": "62bc3a148de43335f8d4b685a0220ba15f69dcaa2da76179126dfdd12aee4ff2",
+    "mtime": 1767554436.3139625,
+    "size": 2709,
+    "refined": true
+  },
+  "backend/src/db/migrations/018_subtask_node_type.ts": {
+    "hash": "0feeeabae0b639215d18b8f76bc84ec0c12ef78d10b21eb60bcbe37605b0f371",
+    "mtime": 1767348014.1577034,
+    "size": 1345,
+    "refined": true
+  },
+  "backend/src/db/migrations/016_system_definitions.ts": {
+    "hash": "7865b3ef7d4a71c60d5122ba9f20dfed83670585e18fb5a79b44a56addd83e0c",
+    "mtime": 1767384923.772621,
+    "size": 4261,
+    "refined": true
+  },
+  "backend/src/db/migrations/020_events.ts": {
+    "hash": "9119626762d47cb24a4380c068c151a634f3abcafb0278b469eb26157b661ecf",
+    "mtime": 1767470051.6426086,
+    "size": 4023,
+    "refined": true
+  },
+  "backend/src/db/migrations/021_action_references.ts": {
+    "hash": "cf19d76a94739be0d4bc2e9cc2f43a0a73abe51a5684698a9293777452b173a6",
+    "mtime": 1767477886.3119917,
+    "size": 2108,
+    "refined": true
+  },
+  "backend/src/db/migrations/023_workflow_surface_nodes.ts": {
+    "hash": "657a0fb8e45650c7b42e632499fc770ebeb60a66a0b9139a8f9fc1fd29eab71c",
+    "mtime": 1767507844.655075,
+    "size": 3333,
+    "refined": true
+  },
+  "backend/src/db/migrations/025_import_sessions.ts": {
+    "hash": "8a0efe1fbcc6af2c5333faef0513e2c88992e46e10afcb70057e2aa0db4bbb88",
+    "mtime": 1767577394.9008746,
+    "size": 4047,
+    "refined": true
+  },
+  "backend/src/db/migrations/022_migrate_tasks_to_actions.ts": {
+    "hash": "1c4b03cc5b235ae8fd6ad178450ead86ff20d5ab4582889e02a890ebd86dd8b5",
+    "mtime": 1767558837.2075646,
+    "size": 895,
+    "refined": true
+  },
+  "backend/src/db/migrations/024_definition_kind.ts": {
+    "hash": "608625fcebd9e953d96ab46e84fc318bd34d9c0b5b61836fc09d9fe97e9d90ad",
+    "mtime": 1767554466.162293,
+    "size": 1777,
+    "refined": true
+  },
+  "backend/src/db/migrations/026_rename_kind_to_definition_kind.ts": {
+    "hash": "132745bd349dab8c4236267b3db19eaf9855abf7f9918c8176146be53f2ca00e",
+    "mtime": 1767594169.513507,
+    "size": 1035,
+    "refined": true
+  },
+  "backend/src/db/migrations/028_fact_kind_definitions.ts": {
+    "hash": "15bbf11a93427b90d5e0a9aed84e38dfcf2001cf3e176ccd5dd90dd6d9ae60c8",
+    "mtime": 1767603822.1825957,
+    "size": 4639,
+    "refined": true
+  },
+  "backend/src/db/migrations/027_action_definition_id.ts": {
+    "hash": "8d27542a4301fc16db2d957716cd1b172b6ed1a1ee357e6221a9e4b3d5a36f85",
+    "mtime": 1767594171.270023,
+    "size": 1679,
+    "refined": true
+  },
+  "backend/src/db/migrations/030_users_soft_delete.ts": {
+    "hash": "f23a0b17691ecbc05279544455dc4e7182a668d8b46c30989e434b3224dc231f",
+    "mtime": 1767675314.3614824,
+    "size": 1496,
+    "refined": true
+  },
+  "backend/src/db/migrations/029_canonical_fact_kinds.ts": {
+    "hash": "3187b75ca81fdd257dc28bf711402c49a47061e04e67eda967e66a45d0b6f5ea",
+    "mtime": 1767667764.422532,
+    "size": 4789,
+    "refined": true
+  },
+  "backend/src/db/migrations/031_import_needs_review.ts": {
+    "hash": "2e97bbbbb989eb200dd7686dfecb699da6219a00475f1a370055a9fe90b18821",
+    "mtime": 1767679791.8776543,
+    "size": 1296,
+    "refined": true
+  },
+  "backend/src/db/migrations/033_export_sessions.ts": {
+    "hash": "c88a5538f9fcd7c2bf3968bb4a47378aa354605d094f4ac74f29dd2236a744e8",
+    "mtime": 1768070669.1733313,
+    "size": 2377,
+    "refined": true
+  },
+  "backend/src/db/seeds/dev_sample_data.ts": {
+    "hash": "417d245868ee515d2d017ef116078f7b5b59be62228aae86067e2bc39295eb65",
+    "mtime": 1767589822.7760334,
+    "size": 14449,
+    "refined": true
+  },
+  "backend/src/db/migrations/032_external_sync_tables.ts": {
+    "hash": "c7e78d8d9cf422a60e5bca2da9344b912519b4bc1062d58722076655a42b8b08",
+    "mtime": 1767928616.9654784,
+    "size": 5968,
+    "refined": true
+  },
+  "backend/src/db/seeds/001_record_definitions.ts": {
+    "hash": "7f867209ba6a693114b87cda794cb74b800a807f567a6119e67ef13554406e05",
+    "mtime": 1768037796.9508834,
+    "size": 19383,
+    "refined": true
+  },
+  "backend/src/db/seeds/run.ts": {
+    "hash": "707f4792a25917cc87c285823587ca0248f80e13bd225d7499e76d2af1667db5",
+    "mtime": 1766972990.7775285,
+    "size": 2775,
+    "refined": true
+  },
+  "backend/src/modules/actions/action-references.routes.ts": {
+    "hash": "61ff1ab29fd6b6c97e61579665d9fec2a49b7f9f897aad22d4c69793cc55961f",
+    "mtime": 1767517936.660881,
+    "size": 12395,
+    "refined": true
+  },
+  "backend/src/modules/actions/actions.routes.ts": {
+    "hash": "74da84896945b314218d68f53abaacdcec2db2b1a47e4e79ef83fb932df751b0",
+    "mtime": 1767594308.047734,
+    "size": 6699,
+    "refined": true
+  },
+  "backend/src/modules/actions/containers.routes.ts": {
+    "hash": "33431c9d7740ae03637a5561868151b0ae2bdedfb3673f52d613e31356bca6a7",
+    "mtime": 1767554890.1039066,
+    "size": 3443,
+    "refined": true
+  },
+  "backend/src/modules/actions/actions.service.ts": {
+    "hash": "8d7d62503bdae49fbf8fd2f746b14babeafb9e75f18cd311ccc6d7526aafd600",
+    "mtime": 1767671414.283686,
+    "size": 7629,
+    "refined": true
+  },
+  "backend/src/modules/actions/index.ts": {
+    "hash": "286de810411efe4d9c370822335598be8e803527a9f7a489a3d425dcd4306e16",
+    "mtime": 1767587386.002849,
+    "size": 269,
+    "refined": true
+  },
+  "backend/src/modules/auth/auth.schemas.ts": {
+    "hash": "4127121ca747f7c5e778d9c051e3d345581c56ed7cb46a4345890d0d901f53c8",
+    "mtime": 1766909327.2421222,
+    "size": 673,
+    "refined": true
+  },
+  "backend/src/modules/composer/composer.routes.ts": {
+    "hash": "202ea58f4842032112d88ca65d38356d25c9207a3e2c5f1aca9ca82da7d75799",
+    "mtime": 1767479381.5618334,
+    "size": 4464,
+    "refined": true
+  },
+  "backend/src/modules/auth/auth.routes.ts": {
+    "hash": "0fdf1fefa33059f6a77a5c9e58b734055d7eccdeab7533bfdb5d0f2357e5ae42",
+    "mtime": 1767675430.4690838,
+    "size": 5390,
+    "refined": true
+  },
+  "backend/src/modules/auth/auth.service.ts": {
+    "hash": "9c6306c2684938e3a70aa281a5cc47be30c37e92f627ed979f1bdeae9b5f13f2",
+    "mtime": 1767675373.038279,
+    "size": 4909,
+    "refined": true
+  },
+  "backend/src/modules/composer/composer.service.ts": {
+    "hash": "ba12e74dbffb955eae9545dc85b7382844e5a6aa01205370aa9c3977cd400620",
+    "mtime": 1767760259.5249953,
+    "size": 13828,
+    "refined": true
+  },
+  "backend/src/modules/composer/event-factory.ts": {
+    "hash": "f6613c855bef1254e958b53370258c98757f2b07b24d0e576e4390db95a83536",
+    "mtime": 1767479287.7196684,
+    "size": 3630,
+    "refined": true
+  },
+  "backend/src/modules/events/events.routes.ts": {
+    "hash": "31c1de62f7a672ee60349def8036eed386da913081fa072e584342c81f48bca7",
+    "mtime": 1767553291.250171,
+    "size": 5621,
+    "refined": true
+  },
+  "backend/src/modules/composer/index.ts": {
+    "hash": "3aed8eee51dece59e1dab65404530090a02d9706d314837b65b2553928c20177",
+    "mtime": 1767587375.3474236,
+    "size": 207,
+    "refined": true
+  },
+  "backend/src/modules/events/event-visibility.ts": {
+    "hash": "58b8584ce63fb37b15ce3b325376b4d94e047be8544a45ff8e4c57ea372cba2d",
+    "mtime": 1767527673.7483063,
+    "size": 1720,
+    "refined": true
+  },
+  "backend/src/modules/events/events.service.ts": {
+    "hash": "53a2c0c4df7c58df97e63aaffffc7ce15f087f9c6a2ed97703c62bc5d86cfc75",
+    "mtime": 1767760259.5249953,
+    "size": 9443,
+    "refined": true
+  },
+  "backend/src/modules/events/index.ts": {
+    "hash": "8fd0520fe1dd7c8cc750fcc7c63f7436bf9510987f3dfd6c55ca505b72acbdcd",
+    "mtime": 1767587394.8105266,
+    "size": 358,
+    "refined": true
+  },
+  "backend/src/modules/exports/exports.routes.ts": {
+    "hash": "331418df8aa89ad1de7e84e05e3ef0d219b79a7c9e50d3ee6e482a6c292ab4c5",
+    "mtime": 1768073066.5101135,
+    "size": 18200,
+    "refined": true
+  },
+  "backend/src/modules/events/workflow.service.ts": {
+    "hash": "ab727c1ac5e7e93b4909cefcc8689a995fa15c84c4186106c98177a059c83adc",
+    "mtime": 1767507679.109164,
+    "size": 8582,
+    "refined": true
+  },
+  "backend/src/modules/events/workflow.routes.ts": {
+    "hash": "83d16dc1bd6233204f3edce36eee55d6c32dbb8bce54a1c4fa514e7b7cf575c5",
+    "mtime": 1767507714.3100643,
+    "size": 14249,
+    "refined": true
+  },
+  "backend/src/modules/exports/exports.service.ts": {
+    "hash": "f7f35974be6804e02664b06e6b880fbee971618ca9d9fd1ff08bdce3237b70b8",
+    "mtime": 1768072923.4895258,
+    "size": 15824,
+    "refined": true
+  },
+  "backend/src/modules/exports/index.ts": {
+    "hash": "60f5ac492714ca0f19f6bc3cf4173123eca129e497204da24b7a9e71ef0ff853",
+    "mtime": 1768070709.942016,
+    "size": 598,
+    "refined": true
+  },
+  "backend/src/modules/hierarchy/hierarchy.schemas.ts": {
+    "hash": "ebcfd8e85538d603373695ed6778e405046d8f1cc62dd874ecb4a0cf1db3f355",
+    "mtime": 1767670414.605649,
+    "size": 2675,
+    "refined": true
+  },
+  "backend/src/modules/hierarchy/hierarchy.routes.ts": {
+    "hash": "e7bc32768d589084842ea93e4907e800951d6f3712342709508b556150ee956c",
+    "mtime": 1767494141.8863752,
+    "size": 12069,
+    "refined": true
+  },
+  "backend/src/modules/exports/types.ts": {
+    "hash": "06de130636c898ca25720fa84a210c7bf376885958069149c243f84240d9ca3c",
+    "mtime": 1768072810.1595862,
+    "size": 6213,
+    "refined": true
+  },
+  "backend/src/modules/hierarchy/hierarchy.service.ts": {
+    "hash": "fb5aae202aa69ed8969a953c835923d91b1326dbb78610cc635a9fc9ad062cbc",
+    "mtime": 1767478021.6019733,
+    "size": 17535,
+    "refined": true
+  },
+  "backend/src/modules/imports/connections.service.ts": {
+    "hash": "15b199d3dafded2c87646a84ac3cd67d37105ef0a34105f8fe725640495ae887",
+    "mtime": 1768072210.9338152,
+    "size": 7725,
+    "refined": true
+  },
+  "backend/src/modules/imports/connections.routes.ts": {
+    "hash": "4f45baf00d4dfb10694ea7cd674c3adde0d0b8102c5933a23a8c45697b03fe2f",
+    "mtime": 1767948372.6281729,
+    "size": 7020,
+    "refined": true
+  },
+  "backend/src/modules/imports/imports.routes.ts": {
+    "hash": "f89967764b8b4573b633316058fb195deeef08bc0e30ce9c6fa5b9eaa0f7134b",
+    "mtime": 1767860732.2988262,
+    "size": 6878,
+    "refined": true
+  },
+  "backend/src/modules/imports/classification-suggester.ts": {
+    "hash": "ab30c9ff28d82c1d45775d7ed897211dbbf522bff5ad9d493c61f01ad7b13c73",
+    "mtime": 1767854881.0813937,
+    "size": 9015,
+    "refined": true
+  },
+  "backend/src/modules/imports/imports.service.ts": {
+    "hash": "4188da58c9c30fcb0284cb9483a6cd13174b8382811184df98ef1cf666b39b66",
+    "mtime": 1767930191.7215662,
+    "size": 30176,
+    "refined": true
+  },
+  "backend/src/modules/imports/index.ts": {
+    "hash": "bb6d823247d4b9ede029b92af9886fd5da79f1494f4b1b6a00ed89f8476cb822",
+    "mtime": 1767932630.3459926,
+    "size": 261,
+    "refined": true
+  },
+  "backend/src/modules/imports/schema-matcher.ts": {
+    "hash": "d9d3e80699e5b4eff1e0f5c56293c04822e4555a7e7d7e43caa42baf9eca1a79",
+    "mtime": 1767934092.6180928,
+    "size": 11864,
+    "refined": true
+  },
+  "backend/src/modules/imports/types.ts": {
+    "hash": "14e87457775fa2984f6c265966b805e7e26573aa0400bf08c48bd2157589ee54",
+    "mtime": 1767950702.0203912,
+    "size": 6002,
+    "refined": true
+  },
+  "backend/src/modules/imports/sync.service.ts": {
+    "hash": "bdb81435066056821a3c54fd7325522c2c88a6dda9831d991eb3358bf1a3b63a",
+    "mtime": 1767928725.3846443,
+    "size": 5406,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/fact-kind-inferrer.ts": {
+    "hash": "c43bf4e593b61dde37f0ff71276342b07316d3c940372afb8835d0a2076f61af",
+    "mtime": 1767854848.9080179,
+    "size": 6154,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/inference-learner.ts": {
+    "hash": "a7694754cbd85c62b4be0fb8bae2a4f51ea6c37d4d66f1fea510329075ebf3df",
+    "mtime": 1767928957.6468608,
+    "size": 6382,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/monday-interpreter.ts": {
+    "hash": "e8dfd1093f48e4a254cbd20b790ae7d3cbda9035ebfe907799cd98cbb29ed944",
+    "mtime": 1767950746.7139676,
+    "size": 7773,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/interpreter.service.ts": {
+    "hash": "139fc59210de535d98e0144b80e383c289c52e279bf1b4db240522a123555174",
+    "mtime": 1767683266.844179,
+    "size": 21198,
+    "refined": true
+  },
+  "backend/src/modules/links/links.routes.ts": {
+    "hash": "3d331c2dfad6516ae3ec74a94131a91f2a82146dcfd69166b9697574396bc2e2",
+    "mtime": 1766994699.192924,
+    "size": 6932,
+    "refined": true
+  },
+  "backend/src/modules/links/links.service.ts": {
+    "hash": "d1d1987ed453cfb95d36b32f3b80f05a9a26ce90ec7b975ba4ecf597c3a53173",
+    "mtime": 1766994665.0158176,
+    "size": 5894,
+    "refined": true
+  },
+  "backend/src/modules/projections/workflow-surface.projector.ts": {
+    "hash": "ea60e3fc39c63edbe8b2800c607931d18c94dc40297877020a89b234a8033bc3",
+    "mtime": 1767507928.0203657,
+    "size": 5104,
+    "refined": true
+  },
+  "backend/src/modules/projections/action-references.projector.ts": {
+    "hash": "18df9d82b097f8bddaa8954b9989b061879939711870ad55d89feaa6a2a1e5a5",
+    "mtime": 1767510293.2516985,
+    "size": 4164,
+    "refined": true
+  },
+  "backend/src/modules/projections/index.ts": {
+    "hash": "2281e5491b57ca8c5006b7122cb4768ba0d9de18099501f003550a68acc3e056",
+    "mtime": 1767573591.89264,
+    "size": 162,
+    "refined": true
+  },
+  "backend/src/modules/projections/workflow-surface.routes.ts": {
+    "hash": "cccbf5e364835d4578c1d79277e4a8ba5c017fd7bba13c1dc3b4e6e2947323ae",
+    "mtime": 1767507986.459306,
+    "size": 4161,
+    "refined": true
+  },
+  "backend/src/modules/records/fact-kinds.routes.ts": {
+    "hash": "24bcea886dd2cd246b430b0af236b2e84ad63afa0cbc9580f123882ae1eb98ba",
+    "mtime": 1767604138.8877227,
+    "size": 6308,
+    "refined": true
+  },
+  "backend/src/modules/records/fact-kinds.service.ts": {
+    "hash": "56513b78632139e7f6f7abf3d2fd64f48a93c261350b724501ce6a38e7561426",
+    "mtime": 1767603903.2114935,
+    "size": 7290,
+    "refined": true
+  },
+  "backend/src/modules/records/records.routes.ts": {
+    "hash": "4a4af941e16ce4ab02a1653a34c3fc6bf5fa3ff9049adfe1f25f367ce2297e44",
+    "mtime": 1767935662.0164616,
+    "size": 12667,
+    "refined": true
+  },
+  "backend/src/modules/records/index.ts": {
+    "hash": "b1974a0391a6150f08e961003962ca62e453a1f6777957785d3454655012d527",
+    "mtime": 1767587402.340684,
+    "size": 207,
+    "refined": true
+  },
+  "backend/src/modules/records/records.schemas.ts": {
+    "hash": "17f03281cb36b4735884dd5a0f93bf0cc6ea2a6df2ec549e21168169ca7a5275",
+    "mtime": 1767250181.6904445,
+    "size": 2618,
+    "refined": true
+  },
+  "backend/src/modules/records/records.service.ts": {
+    "hash": "774ee437a38366f5243c02e1665238b56c8b9afce80499ee37d6d32629c4f270",
+    "mtime": 1767935631.8478925,
+    "size": 17503,
+    "refined": true
+  },
+  "backend/src/modules/search/search.routes.ts": {
+    "hash": "7d40d8e5ec4d7dbebe8e71cf972ec843dd33a65082aa5f2db4996bfd79012e62",
+    "mtime": 1767005617.1379707,
+    "size": 1164,
+    "refined": true
+  },
+  "backend/src/modules/references/references.service.ts": {
+    "hash": "946272b321d182c7461f5c200dac0446250cb7c466e3410408a73db990232ea4",
+    "mtime": 1767760259.5259943,
+    "size": 8667,
+    "refined": true
+  },
+  "backend/src/modules/references/references.routes.ts": {
+    "hash": "dd638a6b5cc374775c9a604488de25119e3593aff7b3feee2ed712ed590fe6c7",
+    "mtime": 1766979653.0623877,
+    "size": 5655,
+    "refined": true
+  },
+  "backend/src/modules/references/references.schemas.ts": {
+    "hash": "65c252682832baa171f0d103b8ae4cf394991e7946460e1d44c12b90c5b5b139",
+    "mtime": 1766909560.345187,
+    "size": 699,
+    "refined": true
+  },
+  "backend/src/modules/search/search.service.ts": {
+    "hash": "7fa62c839ef0c33cc82aab4495ef2cf09b8334c8585c8fc5b5f50bb668d5d743",
+    "mtime": 1766991883.1828878,
+    "size": 7206,
+    "refined": true
+  },
+  "backend/src/modules/exports/connectors/google-docs-client.ts": {
+    "hash": "3ef54ac5577d53019c658a27c241336f28b10d8672d80bc07fe84acb26ef6615",
+    "mtime": 1768072094.518631,
+    "size": 8763,
+    "refined": true
+  },
+  "backend/src/modules/exports/connectors/google-client.ts": {
+    "hash": "c64e39dcf6ee6c5632ce8d0523e9fd12cf3b02fbeea2d01ae5f028da7d6e8080",
+    "mtime": 1768072470.2666109,
+    "size": 21222,
+    "refined": true
+  },
+  "backend/src/modules/composer/__tests__/composer.service.test.ts": {
+    "hash": "7e654cc7bc6f01aec4d52c4c34a0ba48ae95e34c03693145b03adcc20e7d0cb9",
+    "mtime": 1767481519.052823,
+    "size": 11111,
+    "refined": true
+  },
+  "backend/src/modules/exports/connectors/google-docs-connector.ts": {
+    "hash": "d7b95b0b18006d1066271f972500d14165703509aff8ce7e1aacfcc0c2b5e5e5",
+    "mtime": 1768072158.6443124,
+    "size": 18347,
+    "refined": true
+  },
+  "backend/src/modules/exports/connectors/google-sheets-connector.ts": {
+    "hash": "8eef4e8aca4d84f31d55a05512f868ed257d81b2565e447d5b45872f92811524",
+    "mtime": 1768072514.7189338,
+    "size": 13933,
+    "refined": true
+  },
+  "backend/src/modules/exports/connectors/google-slides-connector.ts": {
+    "hash": "d3941bf88ac77ce7f68468b2f7980377a7da74aad898dc6b4188850971273d8d",
+    "mtime": 1768072579.7795875,
+    "size": 21391,
+    "refined": true
+  },
+  "backend/src/modules/exports/formatters/markdown-formatter.ts": {
+    "hash": "ef210fbc0b4395f6d989cc3a5c5974e877e87cc7d1bd6f1699e2edf09ba933a4",
+    "mtime": 1768070608.545441,
+    "size": 5528,
+    "refined": true
+  },
+  "backend/src/modules/exports/formatters/index.ts": {
+    "hash": "b94f34df8ac41eabaad8b6cf977d285a3442329d3954e483bcad0fbb8179533f",
+    "mtime": 1768070639.8717866,
+    "size": 2253,
+    "refined": true
+  },
+  "backend/src/modules/exports/connectors/index.ts": {
+    "hash": "2508cebce8103528a20d7be1dd4bbda4bdabdf583bad01f1fe0ad74838992544",
+    "mtime": 1768072793.7342532,
+    "size": 1867,
+    "refined": true
+  },
+  "backend/src/modules/exports/formatters/plaintext-formatter.ts": {
+    "hash": "86fc372a4beb2a0e335b5e6910f6592b3c2a5fa9e4b873c55c22a49b6178cc87",
+    "mtime": 1768070627.7889495,
+    "size": 5591,
+    "refined": true
+  },
+  "backend/src/modules/exports/formatters/rtf-formatter.ts": {
+    "hash": "834db96b4070b1aa05fd7c92c6f844982cc02b4dd1cef8b6d62d620d8829f8fd",
+    "mtime": 1768038451.5331008,
+    "size": 6971,
+    "refined": true
+  },
+  "backend/src/modules/hierarchy/__tests__/hierarchy.service.test.ts": {
+    "hash": "5350dd7e215a80217695b71db3d7ccffe0382c12f10a468b68a17f1244580439",
+    "mtime": 1767210679.1206827,
+    "size": 13520,
+    "refined": true
+  },
+  "backend/src/modules/imports/connectors/index.ts": {
+    "hash": "8031a5eabf7eb52524731883166d2f2d64acb8425d86db69a54f59eed31ac9b9",
+    "mtime": 1767928675.272136,
+    "size": 477,
+    "refined": true
+  },
+  "backend/src/modules/exports/projectors/bfa-project.projector.ts": {
+    "hash": "d7be70a0c718db329f251520bf7b0ef2cb1f8fc0db3952adf3efa2f2a36fa96a",
+    "mtime": 1768071067.6295576,
+    "size": 19501,
+    "refined": true
+  },
+  "backend/src/modules/imports/connectors/monday-client.ts": {
+    "hash": "c192932f940cea5280fe678b079e0aed10871fe3f40d7b9dfd9c43f446270f4a",
+    "mtime": 1767949942.2951784,
+    "size": 3006,
+    "refined": true
+  },
+  "backend/src/modules/imports/connectors/monday-connector.ts": {
+    "hash": "7b2e32caf847ac31425dce8573b73293d23c658fd2ee44cda80b245dafa03fc9",
+    "mtime": 1767950655.1189952,
+    "size": 14340,
+    "refined": true
+  },
+  "backend/src/modules/imports/parsers/index.ts": {
+    "hash": "1f37213481c0dbfc737b80d3392c2da938c8072d7f9f516f83a735a7d3ff09c6",
+    "mtime": 1767577764.6037455,
+    "size": 149,
+    "refined": true
+  },
+  "backend/src/modules/imports/parsers/monday-csv-parser.ts": {
+    "hash": "ef2d57594576f2242543856971f6eda949ade1794a1ebecbcd9cf681d2028e38",
+    "mtime": 1767938693.7969356,
+    "size": 14167,
+    "refined": true
+  },
+  "backend/src/modules/imports/parsers/generic-csv-parser.ts": {
+    "hash": "1b7368568f41511874f44f1397c1f7fceb692676ecee6e2bf3f4e240cf234b92",
+    "mtime": 1767938662.2616506,
+    "size": 7051,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/mappings/artwork-rules.ts": {
+    "hash": "b4dd9e38fa12a334affebd11a19d0dfec3570b28a8c5fc701a6613304bdaee53",
+    "mtime": 1768038009.5301483,
+    "size": 12699,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/mappings/budget-rules.ts": {
+    "hash": "ec5b9c828a78125330d6ff7d2435f66f5595cd39845fed88911d6f46c9f8dde5",
+    "mtime": 1768037236.7512712,
+    "size": 9079,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/mappings/communication-rules.ts": {
+    "hash": "ec9543490b732cfd714bf387c0f62fe84e0f8a019597cfd194d1224d6209b1f4",
+    "mtime": 1767685183.6509945,
+    "size": 7292,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/mappings/decision-rules.ts": {
+    "hash": "8f0398c353ef9f94cfead05184e64cea9917fdb52de85653465d7c09d824f5b7",
+    "mtime": 1767683198.8454955,
+    "size": 2783,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/mappings/document-rules.ts": {
+    "hash": "f6a9545ae30324abffa57cd29ca4d3b3bf42cc1dbabf40bd1f647413e2830a2c",
+    "mtime": 1767685201.7932534,
+    "size": 5669,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/mappings/index.ts": {
+    "hash": "d223bdf195682c488c607a7fdeba815b02864e7d97d0546a8b5e38568efa6c00",
+    "mtime": 1768038038.9878228,
+    "size": 3809,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/mappings/intent-mapping-rules.ts": {
+    "hash": "984842abfc46223f0bed25350cbb0046cd0d389cafde1a59fa5aeca5158b786d",
+    "mtime": 1767684425.5630305,
+    "size": 6360,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/mappings/invoice-rules.ts": {
+    "hash": "64187a22cbd39c2aea19c3185d8e6ab76464004cbc2aea64eefb97b2dcaeb91f",
+    "mtime": 1767685223.7523055,
+    "size": 4803,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/mappings/meeting-rules.ts": {
+    "hash": "e770c7b032ecc82e821369946c7bb30f01bea6cbe4b98e7099b6b4436b5606e1",
+    "mtime": 1767685221.4239228,
+    "size": 3375,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/mappings/permit-rules.ts": {
+    "hash": "945b4d941cea74dae40b80f68f7c46569a2f3b0af660a2e304076cf829dfa25f",
+    "mtime": 1768037195.3430898,
+    "size": 11913,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/mappings/process-rules.ts": {
+    "hash": "49c767edc43d096a03ebe98042e52d1c21782669218d02ffab21d691053094f6",
+    "mtime": 1767683211.5617366,
+    "size": 2416,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/mappings/stage-rules.ts": {
+    "hash": "bc402832087bacba496d79f7c0a21954196f8b15a3c065a984073fff01208bb3",
+    "mtime": 1768037101.1904852,
+    "size": 6170,
+    "refined": true
+  },
+  "backend/src/modules/interpreter/mappings/types.ts": {
+    "hash": "b6a804a5060db8595ebae041371f82eaaad6472c7ad506a784ec6fb5837f9394",
+    "mtime": 1768016140.1751225,
+    "size": 3613,
+    "refined": true
+  },
+  "backend/src/modules/projections/presets/hierarchy-projection.ts": {
+    "hash": "52bf44d5e62a950958e9122783f5e39cdda00a1bce8b137fa9667b25810e88de",
+    "mtime": 1767578499.8115487,
+    "size": 4446,
+    "refined": true
+  },
+  "backend/src/modules/projections/presets/index.ts": {
+    "hash": "f68552a70a04bed9a919b0cb5d3b7161f6b177ddc2b2226b557160dcfc0426c5",
+    "mtime": 1767950825.477116,
+    "size": 517,
+    "refined": true
+  },
+  "backend/src/modules/projections/presets/process-projection.ts": {
+    "hash": "6f698764fac437f8a2d614a712cfabdd6269072176235dddfebf0db549eb130f",
+    "mtime": 1767950929.7824278,
+    "size": 6244,
+    "refined": true
+  },
+  "backend/src/modules/projections/presets/stage-projection.ts": {
+    "hash": "a3006e2af9fd34310bd64936fe03deed3f6b8b77256b01e5b833e7780552fe0b",
+    "mtime": 1767578446.6651244,
+    "size": 4264,
+    "refined": true
+  },
+  "backend/src/modules/references/__tests__/references.service.test.ts": {
+    "hash": "df7b20e8faf2e8387fa3d4af88cef529723dfddd6ceef9c07325dc40e81e7383",
+    "mtime": 1767317431.7554207,
+    "size": 16604,
+    "refined": true
+  },
+  "frontend/src/vite-env.d.ts": {
+    "hash": "3aec08036de24637fbcfd48d25ce065e973a71aef6f1acb6b145005d776e54f5",
+    "mtime": 1767937459.0030055,
+    "size": 171,
+    "refined": true
+  },
+  "frontend/src/api/client.ts": {
+    "hash": "29bb040977f0d60427151e2b2bcc585b33236a6d43acbe998087f67a4f5952ea",
+    "mtime": 1767937457.0547254,
+    "size": 4147,
+    "refined": true
+  },
+  "frontend/src/api/connections.ts": {
+    "hash": "0482132b3d394c4881f4cc75e6184dc6faf19e4f890d33ad8703d62e56979532",
+    "mtime": 1767937457.0617468,
+    "size": 3180,
+    "refined": true
+  },
+  "frontend/src/constants/zIndex.ts": {
+    "hash": "47071f3bf35ac2fa9b5b3a733014f592394553047c715072cb99290aef69b221",
+    "mtime": 1767937457.0747428,
+    "size": 580,
+    "refined": true
+  },
+  "frontend/src/drawer/types.ts": {
+    "hash": "b56d847179004642e13da883df9275ac81ff54024c9d7a9a144694ce45bf6cf1",
+    "mtime": 1767944439.6770694,
+    "size": 9710,
+    "refined": true
+  },
+  "frontend/src/api/context.ts": {
+    "hash": "31983418ddc084ed2d2e225d7956ad4e9ebe90b930f43cab5078af336f1fe642",
+    "mtime": 1767937457.067746,
+    "size": 2945,
+    "refined": true
+  },
+  "frontend/src/drawer/index.ts": {
+    "hash": "d229b7b13d05b539a95b85eae177c3ca03d1f2b0ecce493ca242f936381c53a8",
+    "mtime": 1767937457.0923774,
+    "size": 239,
+    "refined": true
+  },
+  "frontend/src/hooks/index.ts": {
+    "hash": "014b44f8c18dc2755ed1bb27a5f89d7edab73a12b1dda65282179fa98bd9d3f9",
+    "mtime": 1767937457.106961,
+    "size": 470,
+    "refined": true
+  },
+  "frontend/src/hooks/useClickOutside.ts": {
+    "hash": "307936a58ab1d1625c49ca622abe6af69bf242c7b7cbb6adeeb7e3fb56287bd7",
+    "mtime": 1767937457.1104941,
+    "size": 1634,
+    "refined": true
+  },
+  "frontend/src/hooks/useDebounce.ts": {
+    "hash": "ace94501a28866bc05f3d0f9e34dd3a73f2b653f1951dd97f86f148d8f5eff52",
+    "mtime": 1767937457.1127074,
+    "size": 399,
+    "refined": true
+  },
+  "frontend/src/hooks/useInteractionHandlers.ts": {
+    "hash": "b48e97b58a81933ac52057e7a0d0cdb230eb4a6b7cbc0192c8285ec0b82c8ea0",
+    "mtime": 1767937457.1208265,
+    "size": 4957,
+    "refined": true
+  },
+  "frontend/src/hooks/useTablePagination.ts": {
+    "hash": "3d02329455de23a96073f5a94c995ce15825f94a16e13194e4726476f6521410",
+    "mtime": 1767937457.127824,
+    "size": 2566,
+    "refined": true
+  },
+  "frontend/src/hooks/useTableRowExpansion.ts": {
+    "hash": "1048e2bf1f6ae1170c5c417ad89c45af29f705be08126a44fb0008d9b7a91acc",
+    "mtime": 1767937457.1346524,
+    "size": 2467,
+    "refined": true
+  },
+  "frontend/src/hooks/useTableSelection.ts": {
+    "hash": "11b9cbbbbc1211aa6cee5891d144292af46fcefe43568db760ce5f1e37cea2e9",
+    "mtime": 1767937457.1409214,
+    "size": 2789,
+    "refined": true
+  },
+  "frontend/src/stores/hierarchyStore.ts": {
+    "hash": "4ada1a8a8c485db569d836a9a3f7aa73bf782fc3f2039b5ac6b60a7a4d8160cb",
+    "mtime": 1767937457.2377715,
+    "size": 2199,
+    "refined": true
+  },
+  "frontend/src/stores/authStore.ts": {
+    "hash": "07d6d01b58dc7d185ac4ebec15842e9edd17bff6c56d4b5567b781e1eece6b9e",
+    "mtime": 1767937457.2327726,
+    "size": 682,
+    "refined": true
+  },
+  "frontend/src/hooks/useTableSort.ts": {
+    "hash": "7d253fad48a241c544a253638c03f519e73300aeda5937153ab4cf2e7d7cc97d",
+    "mtime": 1767937457.1484966,
+    "size": 3609,
+    "refined": true
+  },
+  "frontend/src/stores/projectionStore.ts": {
+    "hash": "1cb21e620c56175ead17b31f95ff17eaba1e635f1c34683431a6e897adf54a6c",
+    "mtime": 1767940494.2195823,
+    "size": 3862,
+    "refined": true
+  },
+  "frontend/src/stores/uiStore.ts": {
+    "hash": "f529baffcb16ea42eb695f880f4f466b87ef6fa5a482f8e7b6b6831955360862",
+    "mtime": 1767937457.2589228,
+    "size": 8777,
+    "refined": true
+  },
+  "frontend/src/types/index.ts": {
+    "hash": "a9f16c3d7650547d5b18212245175541aa9308f0be13812a9a1427e66fefb29a",
+    "mtime": 1767937457.417035,
+    "size": 2560,
+    "refined": true
+  },
+  "frontend/src/surfaces/index.ts": {
+    "hash": "2f4917c145fdec132dd7d483e66f5d5460e284d816438294794448070c8c69d1",
+    "mtime": 1767937457.406109,
+    "size": 58,
+    "refined": true
+  },
+  "frontend/src/types/css.d.ts": {
+    "hash": "bf6c08d166709651dfd1c41fa6e5e491dae246594d42f4b69703f9864633c909",
+    "mtime": 1767937457.4093127,
+    "size": 153,
+    "refined": true
+  },
+  "frontend/src/types/ui.ts": {
+    "hash": "abf2b872f9a53553ec6e5b5d72f3b70974b3ef470b8ca7b78ba99f2c0d6d17df",
+    "mtime": 1767937457.4200332,
+    "size": 1474,
+    "refined": true
+  },
+  "frontend/src/utils/dragAndDrop.ts": {
+    "hash": "7397c2c4179f2e795210ea7779b9ac4c393a23beb4548a2609c209249aafa19a",
+    "mtime": 1767937458.888898,
+    "size": 3081,
+    "refined": true
+  },
+  "frontend/src/ui/index.ts": {
+    "hash": "5185b9f8c974c1d05a3c51ffaf8c93e5da2728818b629611dbbc78a90b135235",
+    "mtime": 1767937458.878915,
+    "size": 490,
+    "refined": true
+  },
+  "frontend/src/utils/formatFactKind.ts": {
+    "hash": "e0064dfa7f3720f4c6bababe9d6f38aa9bb7e4482443074cd96a225ad8a41469",
+    "mtime": 1767937458.9096718,
+    "size": 1269,
+    "refined": true
+  },
+  "frontend/src/utils/fieldIndexBuilder.ts": {
+    "hash": "b83ec719d7304c53b3a4721e55836b1b71af85d155363ae03b8b33e9cfe6fbc4",
+    "mtime": 1767937458.8946164,
+    "size": 2948,
+    "refined": true
+  },
+  "frontend/src/utils/formulaEvaluator.ts": {
+    "hash": "ed50d3365e9384dedf4ba391e94155b3daeb52c794ecec7d431accdf9c12c3e7",
+    "mtime": 1768022484.9787748,
+    "size": 8889,
+    "refined": true
+  },
+  "frontend/src/utils/fuzzySearch.ts": {
+    "hash": "3ee80f3eb66c0270053f305c2fc45697b024d0c98e72171ecbb186faed7316f8",
+    "mtime": 1767937458.9216254,
+    "size": 6717,
+    "refined": true
+  },
+  "frontend/src/utils/statusUtils.ts": {
+    "hash": "2d606e900d03c4bf4ce400d7c5f4c9715242a3c93f2ad1fb3513a7b9b1aee5aa",
+    "mtime": 1767937458.9858048,
+    "size": 2442,
+    "refined": true
+  },
+  "frontend/src/utils/uiComposition.ts": {
+    "hash": "5c3c320caf9d8b00e708547c7a5a69b28cf87b990e4b57c55b8d1abd3d7cc5c8",
+    "mtime": 1767937458.9920094,
+    "size": 2641,
+    "refined": true
+  },
+  "frontend/src/utils/nodeMetadata.ts": {
+    "hash": "69be3ca6e3377a7da38d6270d86114c8820b3d5beaeda8f6d5da28675005b6a4",
+    "mtime": 1767937458.9276242,
+    "size": 1103,
+    "refined": true
+  },
+  "frontend/src/api/hooks/actionReferences.ts": {
+    "hash": "1c67a0ba3306970b72b8ff68e2b7f864076558f1f5f71fb34c7eb3ba42d9cb51",
+    "mtime": 1767937456.8744078,
+    "size": 4841,
+    "refined": true
+  },
+  "frontend/src/api/hooks/actionViews.ts": {
+    "hash": "e03c4de3e2688fd5d5a420153c11ccc4d4d318e76238a8ed0c0d3f6bd058a963",
+    "mtime": 1767937456.8970673,
+    "size": 3228,
+    "refined": true
+  },
+  "frontend/src/api/hooks/admin.ts": {
+    "hash": "2a8801dbab3838aeedfe3b54a126b268f08f4a19b996c3bf786c84dece840f10",
+    "mtime": 1767937456.9033308,
+    "size": 1534,
+    "refined": true
+  },
+  "frontend/src/api/hooks/auth.ts": {
+    "hash": "9cd1b2a4e301e71e0eb44e0e8ee8bb7b9ee37acc29b3f3277157fc3f6742fd3a",
+    "mtime": 1767937456.9093275,
+    "size": 2334,
+    "refined": true
+  },
+  "frontend/src/api/hooks/actions.ts": {
+    "hash": "e008c97057f466f84f296f2b05a792cb9af4fba70253316d72c74638e269eac7",
+    "mtime": 1767937456.8920689,
+    "size": 15315,
+    "refined": true
+  },
+  "frontend/src/api/hooks/composer.ts": {
+    "hash": "e7a42553e8a982f6f8034613764412d20693eebf799b8adc80f593c66e7ead89",
+    "mtime": 1767937456.9223928,
+    "size": 7712,
+    "refined": true
+  },
+  "frontend/src/api/hooks/factKinds.ts": {
+    "hash": "a9cb056c3d766993f905192ca6003aea63e03d3a71fe12cfe7dd36a77617602e",
+    "mtime": 1767937456.935034,
+    "size": 4399,
+    "refined": true
+  },
+  "frontend/src/api/hooks/exports.ts": {
+    "hash": "3be08014341e653d184e3d81a2571a503aa53685f6d1f1d72a75295c02b8e7c9",
+    "mtime": 1768071378.9442043,
+    "size": 7469,
+    "refined": true
+  },
+  "frontend/src/api/hooks/factory.ts": {
+    "hash": "e2c7d2fa83a1e71b49dfae5484f62a36d19f9a5ac4a075f026825f2125c05ea6",
+    "mtime": 1767937456.9445767,
+    "size": 5055,
+    "refined": true
+  },
+  "frontend/src/api/hooks/definitions.ts": {
+    "hash": "e42cca029c9038823a027cea9a984561134935a08a55d5cd387cbfc32b7711f4",
+    "mtime": 1767937456.9273226,
+    "size": 5266,
+    "refined": true
+  },
+  "frontend/src/api/hooks/hierarchy.ts": {
+    "hash": "2b5555e93367efd8edda60020f61aee0db003c469d575754ed77161831850437",
+    "mtime": 1767937456.9541242,
+    "size": 4664,
+    "refined": true
+  },
+  "frontend/src/api/hooks/interpretation.ts": {
+    "hash": "0be7e67fb8b7609cb3f6cb37134ab586c510771f8174755f51ebd7f542a52167",
+    "mtime": 1767937456.9929168,
+    "size": 4925,
+    "refined": true
+  },
+  "frontend/src/api/hooks/ingestion.ts": {
+    "hash": "93ac3fccd00c029ae6556825ef6c28d51c0244232fea67a16d4a8ea3e16bcd40",
+    "mtime": 1767937456.9849663,
+    "size": 2140,
+    "refined": true
+  },
+  "frontend/src/api/hooks/imports.ts": {
+    "hash": "35551df8f494e23a97c6445c4d8337538ebf90ad5e75919953f3ba9dca7f82a3",
+    "mtime": 1767937456.967378,
+    "size": 8591,
+    "refined": true
+  },
+  "frontend/src/api/hooks/index.ts": {
+    "hash": "7d929308d3a8f46ab99e1d6fe4ff0031594dcd69316432eb74c549d14a886afc",
+    "mtime": 1768071862.1292784,
+    "size": 4965,
+    "refined": true
+  },
+  "frontend/src/api/hooks/links.ts": {
+    "hash": "073da0e70c91d4a1f9ca08a2a318a7b3d99826f4ff121d445cba39c325d00916",
+    "mtime": 1767937456.9989116,
+    "size": 2058,
+    "refined": true
+  },
+  "frontend/src/api/hooks/projectLog.ts": {
+    "hash": "778d38b1274a2a499be59000eb0fe38ceda25be353aedf59e197c4c4d06e3868",
+    "mtime": 1767937457.0083318,
+    "size": 2904,
+    "refined": true
+  },
+  "frontend/src/api/hooks/references.ts": {
+    "hash": "ee9adaeacf9d3bc2d768868ba39b9e68acd8ea1b68a56de0783d6d82f8ae48ca",
+    "mtime": 1767937457.026381,
+    "size": 3049,
+    "refined": true
+  },
+  "frontend/src/api/hooks/records.ts": {
+    "hash": "2e8ddacee50957ccf0a9bb72fd74de091a24240457901f0bc625cda64b227f46",
+    "mtime": 1767937457.016836,
+    "size": 3634,
+    "refined": true
+  },
+  "frontend/src/api/hooks/search.ts": {
+    "hash": "8673483400a1ce94cc2b835d943d879befb042c296daf12067011b878825e637",
+    "mtime": 1767937457.02938,
+    "size": 638,
+    "refined": true
+  },
+  "frontend/src/api/hooks/workflowSurface.ts": {
+    "hash": "35f091641f4f29b66a81b294738c98c760a936bbe9150dec3df9e12d3a86e771",
+    "mtime": 1767937457.0455108,
+    "size": 5899,
+    "refined": true
+  },
+  "frontend/src/pages/settings/index.ts": {
+    "hash": "4022b5ba22305b90a4a5b6e3b4dedbdaa07680f87c0566f284b5bfb3898d20f2",
+    "mtime": 1767937457.1585093,
+    "size": 114,
+    "refined": true
+  },
+  "frontend/src/surfaces/export/index.ts": {
+    "hash": "6561b949db004543a57bc9d11916cde0d262a6a5d382948ab482807b6c4088fe",
+    "mtime": 1768018843.412742,
+    "size": 290,
+    "refined": true
+  },
+  "frontend/src/surfaces/export/types.ts": {
+    "hash": "4b1429cfeed77c2047aa020ea3e4851ce0099c507b9397784e8f436f1e41dace",
+    "mtime": 1768072827.6858976,
+    "size": 5327,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/index.ts": {
+    "hash": "769f283fe580f4a3b6e2acd8597c88d047d8ea3c85bbbbad73e25e7cfc3673df",
+    "mtime": 1767937457.3600316,
+    "size": 802,
+    "refined": true
+  },
+  "frontend/src/ui/admin/index.ts": {
+    "hash": "6a4cf58f219dae1868d27d7ca2452c161306ca2122bf44769ff7dcf48eb9bcdc",
+    "mtime": 1767937457.4340887,
+    "size": 93,
+    "refined": true
+  },
+  "frontend/src/ui/composites/index.ts": {
+    "hash": "9610077c585520ef8efb89b0d800469bc0f8b0623ac0b4739abf45706336102a",
+    "mtime": 1768016140.1812713,
+    "size": 2768,
+    "refined": true
+  },
+  "frontend/src/ui/editor/EditorConfig.ts": {
+    "hash": "d6420bb4934b04363c4d12293a367ad3b2e140f50607ae75c0ac501c603f4e17",
+    "mtime": 1767937457.9711447,
+    "size": 5340,
+    "refined": true
+  },
+  "frontend/src/ui/composer/index.ts": {
+    "hash": "96bfd88d8a590085c832e81d5884d2e4c86cb7827253e5eafce3a9b22a04f48f",
+    "mtime": 1767937457.5991516,
+    "size": 309,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/index.ts": {
+    "hash": "57ed90341bb86a2224bec95834c209a0167ec3ca1584b24701f3a54038f557d7",
+    "mtime": 1768037947.804382,
+    "size": 1636,
+    "refined": true
+  },
+  "frontend/src/ui/editor/MentionExtension.ts": {
+    "hash": "26e68aa823d48d08dea29a32021f5d56d0fe857bc21650fe8e33c21665dbc517",
+    "mtime": 1767937458.0073078,
+    "size": 8363,
+    "refined": true
+  },
+  "frontend/src/ui/projectLog/index.ts": {
+    "hash": "cb418f78906bcb9796cfdf6bf42f76e0051505c0c81f5b702d7e777258f8bc43",
+    "mtime": 1767937458.3943686,
+    "size": 552,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/index.ts": {
+    "hash": "034a90961cbcd97519fddf8e60afb76ef77b9567034457bd31242d9067f81526",
+    "mtime": 1768017263.6028333,
+    "size": 1913,
+    "refined": true
+  },
+  "frontend/src/ui/projections/types.ts": {
+    "hash": "72f73bb220f85ccf317ba3f8cb6b416407d6813ad9c7b4d32564d46c86a1e67f",
+    "mtime": 1767937458.319192,
+    "size": 5319,
+    "refined": true
+  },
+  "frontend/src/ui/projections/index.ts": {
+    "hash": "4b90187fa1a7c2f9e2cec03b1e986783e65724fb0c42af8fcd4a9494d816a941",
+    "mtime": 1767937458.3091958,
+    "size": 514,
+    "refined": true
+  },
+  "frontend/src/ui/registry/index.ts": {
+    "hash": "c8ce137b18ade1266a8d82aea695684d92f652859f7090bc7bf298bbc361e878",
+    "mtime": 1767937458.508041,
+    "size": 241,
+    "refined": true
+  },
+  "frontend/src/ui/table-core/features.ts": {
+    "hash": "c6f638d26556410cd7304b0fec5cdb14571883697896b5d99e46d48bc059c0ac",
+    "mtime": 1767937458.7561607,
+    "size": 2557,
+    "refined": true
+  },
+  "frontend/src/ui/semantic/index.ts": {
+    "hash": "db5c00730c73a5855f2f33aec6381be49c89e27f5193cf7b93a67176b9a096e1",
+    "mtime": 1767937458.6006076,
+    "size": 400,
+    "refined": true
+  },
+  "frontend/src/ui/table/index.ts": {
+    "hash": "3d98eea3ba794fe77720d36084106ec8d30d72e762e7765b883d9bf9c0ee7058",
+    "mtime": 1767944351.4459481,
+    "size": 830,
+    "refined": true
+  },
+  "frontend/src/ui/table-core/index.ts": {
+    "hash": "d68576450ee3483e07af8f78cfe00d6e35f34155bcfabee2d0e892fc04041410",
+    "mtime": 1767937458.76016,
+    "size": 1069,
+    "refined": true
+  },
+  "frontend/src/ui/table-core/types.ts": {
+    "hash": "c932a9dc0950ab24c614ea5ec2e6c5df9148716201cc30324121fdc84e4bc601",
+    "mtime": 1767937458.7676682,
+    "size": 3777,
+    "refined": true
+  },
+  "frontend/src/ui/composites/hooks/index.ts": {
+    "hash": "8ce9ca4262015c17f4958dd937bff72ff709d77141848af7886f8d7f7b131782",
+    "mtime": 1767937457.6031506,
+    "size": 180,
+    "refined": true
+  },
+  "frontend/src/ui/composites/hooks/useDomain.ts": {
+    "hash": "eb35fa934c8516fcf2e0ecc68716f1f186b6ac5f4031294d870729566f8862b6",
+    "mtime": 1767937457.6117826,
+    "size": 3351,
+    "refined": true
+  },
+  "frontend/src/ui/projections/presets/index.ts": {
+    "hash": "1a6cc495f1a8251ac41ede7dfa7ea252dc0b59aad2c205cb2d36609c7572acfe",
+    "mtime": 1767937458.2991974,
+    "size": 164,
+    "refined": true
+  },
+  "frontend/src/ui/tables/index.ts": {
+    "hash": "52e8eef8db267898cdb95a827e849ba085142147e68eafee7b9207eefadfb11d",
+    "mtime": 1767937458.849817,
+    "size": 1002,
+    "refined": true
+  },
+  "frontend/src/ui/projections/presets/StageProjection.ts": {
+    "hash": "6485988216647dd64df2c0fa55edeaa45fa8eb0bea45c0fd67a0de1be26725ff",
+    "mtime": 1767937458.305197,
+    "size": 2294,
+    "refined": true
+  },
+  "frontend/src/ui/table-core/adapters/FlatRowModelAdapter.ts": {
+    "hash": "c38d777b3a9e7830fa281ac019ef03ef508735e4874df5658c15a7a26ed26a42",
+    "mtime": 1767937458.7376568,
+    "size": 1007,
+    "refined": true
+  },
+  "frontend/src/ui/table-core/adapters/index.ts": {
+    "hash": "4179289f95efb1ed9cc4963dc181d98f756bf897a1a3c037d04a141b0743ca71",
+    "mtime": 1767937458.747655,
+    "size": 590,
+    "refined": true
+  },
+  "frontend/src/ui/table-core/adapters/HierarchyRowModelAdapter.ts": {
+    "hash": "cf0a1d40c808995219f866f73124c7545e4bd15d03cc642fc4c12f8eb76e6f41",
+    "mtime": 1767937458.7436545,
+    "size": 3197,
+    "refined": true
+  },
+  "frontend/src/ui/table-core/adapters/ActionViewRowModelAdapter.ts": {
+    "hash": "895ed794c09de9d17add9cc14a06d3f4e662b3ce7bb1c5416770db0d1c10fe4c",
+    "mtime": 1767937458.7331512,
+    "size": 1664,
+    "refined": true
+  },
+  "shared/src/index.ts": {
+    "hash": "77dcd8c9bd087c3e9fd2e38b3aa918ef3760a6c43fadd57fb19527ad45b21847",
+    "mtime": 1767950973.8204653,
+    "size": 7912,
+    "refined": true
+  },
+  "shared/src/domain/completeness.ts": {
+    "hash": "f5bea17df85e2447cf923fb0b46a284f827b5d169487ee2fcf5c44a064a69abb",
+    "mtime": 1767760259.526995,
+    "size": 6658,
+    "refined": true
+  },
+  "shared/src/projections.ts": {
+    "hash": "105b3273f5822bd77248a4fa9cb3304dfc3e37d51c589779506f12e502327869",
+    "mtime": 1767950856.7850168,
+    "size": 5359,
+    "refined": true
+  },
+  "shared/src/domain/fieldViewModel.ts": {
+    "hash": "92dbc377fe73f240f518224d696e5468743fba958766d4d82451a709857dee17",
+    "mtime": 1767935344.7423716,
+    "size": 6299,
+    "refined": true
+  },
+  "shared/src/domain/domain.test.ts": {
+    "hash": "c944ad5907b82c86e1aecabebe317a196610e6222acf2b42badd90f4df907ae4",
+    "mtime": 1767312337.7038562,
+    "size": 12188,
+    "refined": true
+  },
+  "shared/src/domain/fieldVisibility.ts": {
+    "hash": "6955a683c3ae62c9770bad3f31eda9f3d7e0208f7adbf7890f3b6b557c2eb3bd",
+    "mtime": 1767760259.5289943,
+    "size": 4787,
+    "refined": true
+  },
+  "shared/src/domain/referenceResolution.ts": {
+    "hash": "5a6019bd8214bbb26f29b02be5fd46bae5b1669b33a797aa329f8122fcf67137",
+    "mtime": 1767760259.5319946,
+    "size": 5931,
+    "refined": true
+  },
+  "shared/src/domain/types.ts": {
+    "hash": "9bcfa4813aa5ba442a13f22537ada21e8a29b30cd1ff0b0f886c70460182ee63",
+    "mtime": 1767935337.384843,
+    "size": 7404,
+    "refined": true
+  },
+  "shared/src/domain/index.ts": {
+    "hash": "f2736aab2e8dc376040e32c4ba293a958ad580cee6163239447d63a3abc2c9c5",
+    "mtime": 1767760259.5299938,
+    "size": 2040,
+    "refined": true
+  },
+  "shared/src/domain/phaseProgression.ts": {
+    "hash": "ea6fac82ba1c201f441064af6f051802f9dbb7243ce0cd6cf4512f8cb2ceee74",
+    "mtime": 1767760259.5309935,
+    "size": 4396,
+    "refined": true
+  },
+  "shared/src/schemas/actions.ts": {
+    "hash": "9b5d38f4a4d9fb73dbdb549db66f06d7186a67fdab30da796687b40281bc67ac",
+    "mtime": 1768016140.183714,
+    "size": 13110,
+    "refined": true
+  },
+  "shared/src/schemas/auth.ts": {
+    "hash": "1b8c92c3988f5c541c226327f6594ec87bb059cbabad46d78b7114cd8c25a8da",
+    "mtime": 1767674127.2362843,
+    "size": 1172,
+    "refined": true
+  },
+  "shared/src/schemas/composer.ts": {
+    "hash": "b21ad5ba4dbec000406a11207604af2067a1aea8d825d1d5757cbeeaa9fb3c67",
+    "mtime": 1767760259.5346367,
+    "size": 5232,
+    "refined": true
+  },
+  "shared/src/schemas/classification.ts": {
+    "hash": "ea0d336b5acd2cfa55b0728fc8ffe722950aefc6790d5bec98ecd61cd4a997a3",
+    "mtime": 1767773906.9628758,
+    "size": 3579,
+    "refined": true
+  },
+  "shared/src/schemas/domain-events.ts": {
+    "hash": "4980c12c191946817e1790ca0727b178c055fbb47d427b0ffbd14c2cb225073a",
+    "mtime": 1768037758.398614,
+    "size": 25988,
+    "refined": true
+  },
+  "shared/src/schemas/enums.ts": {
+    "hash": "cbfb9b2c709efa108eff4e62edd3e20f6c30b80fbc10bb1fd2fef5d2ae914cc1",
+    "mtime": 1768037813.6028872,
+    "size": 3410,
+    "refined": true
+  },
+  "shared/src/schemas/fields.ts": {
+    "hash": "3ffff17f238245e370f044eae7b9c597a3ebc8af475f1ed98fb8325320a61102",
+    "mtime": 1767776932.199101,
+    "size": 4001,
+    "refined": true
+  },
+  "shared/src/schemas/hierarchy.ts": {
+    "hash": "347c29553ef5d518028a6fbc4638095db4d63b5583ea6574d104b51ee9707514",
+    "mtime": 1767760259.5366352,
+    "size": 2692,
+    "refined": true
+  },
+  "shared/src/schemas/links.ts": {
+    "hash": "e2f36ce1d39adc9e6bb3781b7955080bc2c25507b8754dc96e32f1c1a14acf51",
+    "mtime": 1767226093.853845,
+    "size": 982,
+    "refined": true
+  },
+  "shared/src/schemas/records.ts": {
+    "hash": "a074e49b4529ccb6ec65fb20b44c96b7ed1c8f5d3372b944c388c0c84a5778ff",
+    "mtime": 1767934963.5195234,
+    "size": 6847,
+    "refined": true
+  },
+  "shared/src/schemas/references.ts": {
+    "hash": "5a1857487d4b415259fe1903715135b192d3d3c91a080a1f3af3886bbf738cc9",
+    "mtime": 1767760259.53831,
+    "size": 5212,
+    "refined": true
+  },
+  "shared/src/schemas/search.ts": {
+    "hash": "d37285df1cafb709f601d825e44d234f294d59d2310593600cde10967977e475",
+    "mtime": 1767226083.4884267,
+    "size": 1075,
+    "refined": true
+  },
+  "frontend/src/App.tsx": {
+    "hash": "26ca9109cc21d781046eaf2008f4a03b32beae47dd2977411ff1aa57d9cefd67",
+    "mtime": 1768071683.3351,
+    "size": 3296,
+    "refined": true
+  },
+  "frontend/src/main.tsx": {
+    "hash": "1b687f0ede1c07e1a4da238d6e39c7f4d51a7f9993347cf0e0d1cf128351ded5",
+    "mtime": 1768018016.7171023,
+    "size": 755,
+    "refined": true
+  },
+  "shared/src/schemas/tasks.ts": {
+    "hash": "dc39db9bcb8e6b9f1eec97dd52f3f13f58280bda8a1914be2a2a390778eadd89",
+    "mtime": 1767760259.539307,
+    "size": 7735,
+    "refined": true
+  },
+  "frontend/src/drawer/DrawerRegistry.tsx": {
+    "hash": "b0daf09dc58e698d997f40d02b5b5e4691bc76ef02c3b9971dd98bb3432aad13",
+    "mtime": 1767941508.4754262,
+    "size": 10924,
+    "refined": true
+  },
+  "frontend/src/pages/ExportPage.tsx": {
+    "hash": "3c6b7b205480a57e862278f4586482993e7582e5d04e6a0d983abebeccabd8f7",
+    "mtime": 1768071404.3239465,
+    "size": 931,
+    "refined": true
+  },
+  "frontend/src/pages/ActionsPage.tsx": {
+    "hash": "a046731ac31e1210c6ee156140f90dd407d30983ef197c2a30a5ccf58382dc83",
+    "mtime": 1767937457.1810558,
+    "size": 4742,
+    "refined": true
+  },
+  "frontend/src/pages/EventsPage.tsx": {
+    "hash": "ab0ff0d104933bd7fdbef1828031f7a03286733a75d7e58b5fd4d3a33387f333",
+    "mtime": 1767937457.1890512,
+    "size": 4434,
+    "refined": true
+  },
+  "frontend/src/pages/ComposerPage.tsx": {
+    "hash": "d53e11febdc22de6621edd83ebac9412422ccbb82e7a6b1f210a5748af77207c",
+    "mtime": 1767937457.185052,
+    "size": 1520,
+    "refined": true
+  },
+  "frontend/src/pages/FieldsPage.tsx": {
+    "hash": "10eb2546df719afe101fdca92440f26352d1c184d32887e46fcaa352eaf36d73",
+    "mtime": 1767937457.193496,
+    "size": 5230,
+    "refined": true
+  },
+  "frontend/src/pages/LoginPage.tsx": {
+    "hash": "2d35b9a701ab503a3ba6925a67fac0ce9fefec7750654ba353d1e07fc1fa7f29",
+    "mtime": 1767937457.1990016,
+    "size": 5384,
+    "refined": true
+  },
+  "frontend/src/pages/ProjectPage.tsx": {
+    "hash": "8f5fddee9ec6257c11e27c6b34b563053eee915d479af93782b449db33361b2b",
+    "mtime": 1767937457.203999,
+    "size": 1761,
+    "refined": true
+  },
+  "frontend/src/pages/RecordPage.tsx": {
+    "hash": "f9ec06c2cf7c9969957cef227cad625b5016ac45bf9dbe3f95a7ffa70b80176f",
+    "mtime": 1767939931.9515688,
+    "size": 2641,
+    "refined": true
+  },
+  "frontend/src/pages/RecordsPage.tsx": {
+    "hash": "66083e9a9de8446053cf8e5aee2238520587000cf52a4f6761267f26e6314ee5",
+    "mtime": 1767939862.4368806,
+    "size": 4197,
+    "refined": true
+  },
+  "frontend/src/pages/RegisterPage.tsx": {
+    "hash": "16471e049fd6f8237057ace365aaeb6bf64763be41727a4699e707ef4b005a31",
+    "mtime": 1767937457.2205021,
+    "size": 213,
+    "refined": true
+  },
+  "frontend/src/pages/settings/AccountSection.tsx": {
+    "hash": "7dc9fa561c43b30c686916dfda1dc39397564e7cddde7bbd6ef23541624feaca",
+    "mtime": 1767948267.7488153,
+    "size": 3540,
+    "refined": true
+  },
+  "frontend/src/pages/SettingsPage.tsx": {
+    "hash": "84c98af0465a2ec2cdf731b3fe8ed9c370359f12d8008ae7d34cb98226c1fa22",
+    "mtime": 1767948210.2434742,
+    "size": 6408,
+    "refined": true
+  },
+  "frontend/src/pages/settings/IntegrationsSection.tsx": {
+    "hash": "07b5fdd8d8496bff79ab8cd27b48221422c3a0040373cb795b3842e5d841aef6",
+    "mtime": 1767948269.7376847,
+    "size": 14598,
+    "refined": true
+  },
+  "frontend/src/pages/WorkbenchPage.tsx": {
+    "hash": "370450939af27091e1093c20b73b7de89e3d9e10b00a50194ec6f6000e054ebf",
+    "mtime": 1767937457.2297788,
+    "size": 1051,
+    "refined": true
+  },
+  "frontend/src/surfaces/export/ExportPreview.tsx": {
+    "hash": "4d77ea46c51c7344bf58fb0607795bd4190fe6382e09edef70e9daf25457272c",
+    "mtime": 1768071783.9945383,
+    "size": 12280,
+    "refined": true
+  },
+  "frontend/src/surfaces/export/ExportProjectList.tsx": {
+    "hash": "0da2bc81b0fce49ee63667720796e3be466a14424f9a2de2531bd707a60ea527",
+    "mtime": 1768073130.5491102,
+    "size": 3518,
+    "refined": true
+  },
+  "frontend/src/surfaces/export/ExportWorkbench.tsx": {
+    "hash": "07e8eb33ed3d1e55000c5f52989bb0753bf98dff37bc3b0de26d6bc67743519c",
+    "mtime": 1768071758.6018856,
+    "size": 18663,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/ClassificationPanel.tsx": {
+    "hash": "8380b047312c688f43435b759f363ab2ae76e3b92349a7823b9cc4062b6e107e",
+    "mtime": 1767938876.285878,
+    "size": 48344,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/ExecutionControls.tsx": {
+    "hash": "da029b55e9e79d59dfc0025d60f5274ca9afa26c9d991947365dd096793b090e",
+    "mtime": 1768017717.5294964,
+    "size": 9973,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/FieldSchemaPreview.tsx": {
+    "hash": "ae1a1ba9dcd90078fd9f1721d40e1d9e815cfdc7ca6f003414c2ad55a1a5f24c",
+    "mtime": 1767937504.0872123,
+    "size": 7730,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/ImportPreview.tsx": {
+    "hash": "2d2197c4c00a78422b2174b9d38a111f1600cf6efe82eb2c777a1864eac22b98",
+    "mtime": 1767940580.2107291,
+    "size": 3696,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/ImportWorkbench.tsx": {
+    "hash": "d0da49fc9d8f3dc7111336db68bc2b209d12c28e7d7714103837a46ff9c1b0db",
+    "mtime": 1768017717.5314963,
+    "size": 7283,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/ImportRecordInspector.tsx": {
+    "hash": "f8850c358ac7876e255d29e0172d26f048368974c54a68dddc6dfa63a7663ddc",
+    "mtime": 1767937457.344035,
+    "size": 5982,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/HierarchyPreview.tsx": {
+    "hash": "f4bd526e32eea1c98fe722221fda05c06a8b666692b8ce01b039bd7a7e22cafb",
+    "mtime": 1767937457.3262317,
+    "size": 5968,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/LogPreview.tsx": {
+    "hash": "82b060dc20f1211e40084237de9dc971e9aa8e359e59d46ad703deb81b8ca877",
+    "mtime": 1767940672.910004,
+    "size": 6186,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/SessionConfigPanel.tsx": {
+    "hash": "33df958c163269b785ae6b32bafd2ead90354d5604e04ca4ca3a4bc51b92776c",
+    "mtime": 1767941485.844224,
+    "size": 13738,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/MondayBoardSelector.tsx": {
+    "hash": "b5a885e2ab9b21b8661b1ea5dc55449a0e2a4d6d7b34443493f97877a9c50d5c",
+    "mtime": 1767937457.3744156,
+    "size": 10535,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/ProjectionSelector.tsx": {
+    "hash": "f5c61726ee2884288a4dc791b7a065ec2ae9b10bb8e964e6dd2be2dd24b90052",
+    "mtime": 1767937457.3817146,
+    "size": 2220,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/SourceIconSidebar.tsx": {
+    "hash": "d2cf89b62480c74fa9e310dc34059a9fd48c0cadcc2f065e348e0c037a23eb09",
+    "mtime": 1767941397.2708466,
+    "size": 5020,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/StagePreview.tsx": {
+    "hash": "09062ba7d5ed773b82d6f51a3d97aaad128475a3ba71cca50f1512194d54d427",
+    "mtime": 1767937457.402593,
+    "size": 4692,
+    "refined": true
+  },
+  "frontend/src/surfaces/import/TablePreview.tsx": {
+    "hash": "49699d2401e2b52869d787b5529dd532b3a6839733862db12e5813835b839261",
+    "mtime": 1768017717.5294964,
+    "size": 4443,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/Badge.tsx": {
+    "hash": "19f19ed55d276020800cd6ac4f3bd7cd79eb952eea52b1600ef87906dde5afda",
+    "mtime": 1767937457.439088,
+    "size": 1014,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/Alert.tsx": {
+    "hash": "1b5c21e4246b36bbd2f74440335955c640e40728426160575b40071e94f86804",
+    "mtime": 1768017264.7482152,
+    "size": 832,
+    "refined": true
+  },
+  "frontend/src/ui/admin/AdminUsersPanel.tsx": {
+    "hash": "c2a5c8727b285ae7146200576419781a9a5d8731664eab7e61b37413dcdb8285",
+    "mtime": 1767937457.431091,
+    "size": 7508,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/Button.tsx": {
+    "hash": "26dc47bfcb0cf2c20b2ea1b81a58aa8e0aa54d279fd42f130de8fd23e270b92a",
+    "mtime": 1767937457.4450848,
+    "size": 1738,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/ColorPicker.tsx": {
+    "hash": "0bf0cc6c496b81eb2f01629c04d934dc42d8edaaa9420b99a6e1e77f4ad0ae9e",
+    "mtime": 1768017901.7924688,
+    "size": 1615,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/EmojiPicker.tsx": {
+    "hash": "4eca3841db7af0fb6bfa23c06cd19b108f8c5ec0ed9dd5518f631aae38953d90",
+    "mtime": 1767937457.4520829,
+    "size": 5128,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/Checkbox.tsx": {
+    "hash": "221fb27f4d75bbed41161f2b655812347fba03f9df35f075fea6f1d006c43bd5",
+    "mtime": 1768017638.946541,
+    "size": 2369,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/Card.tsx": {
+    "hash": "15ecadd06db100a74e4a39b1c455b1effd8fc3ea32f167f5f0618ddcbde42304",
+    "mtime": 1768017264.7482152,
+    "size": 1187,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/ErrorBoundary.tsx": {
+    "hash": "c0037c733af2fd6e9451b75a67e71c747964d686ce7b30e9e3ec96fe5cb4fbca",
+    "mtime": 1767937457.4587932,
+    "size": 4078,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/Inline.tsx": {
+    "hash": "90753a4e875fff715c6e8814520aa867f0101dceaf584fdf7c854c84b2e61a5f",
+    "mtime": 1768017264.7482152,
+    "size": 1304,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/FormulaInput.tsx": {
+    "hash": "00820d1783f8b996738fa88d7d4c8c77dcd2555d91a68d752c3fff1c754d5ca2",
+    "mtime": 1768022559.0389576,
+    "size": 11219,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/InlineError.tsx": {
+    "hash": "08f32dd40a580bba0436180118d443c8e5722940b5dea3baac4f117e23c3fa97",
+    "mtime": 1767937457.4697578,
+    "size": 780,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/IconButton.tsx": {
+    "hash": "427f259d7051988f1b84b1538c3e15617afc1f875274d66f315053426b8419cd",
+    "mtime": 1767937457.4637587,
+    "size": 2411,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/Label.tsx": {
+    "hash": "87d259eaf021909c5219b0b9995c6f4ff5f7567c9e197e42bee36c73c4428e74",
+    "mtime": 1767937457.4773166,
+    "size": 1158,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/ProgressBar.tsx": {
+    "hash": "fd27fbd3403e8bffa698a64525549a3b49d46a1a0c404395bd87d6cae1919375",
+    "mtime": 1767937457.488765,
+    "size": 2543,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/PortalMenu.tsx": {
+    "hash": "a244172e71d0876dc3c9f507c83264333f61670c4bb64836ab368bfc25762c14",
+    "mtime": 1767937457.4837663,
+    "size": 5595,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/MediaCell.tsx": {
+    "hash": "e5823db87d97bd675b746625073b4d51c8c50ea6a1613216aba9a4104ac12cee",
+    "mtime": 1768037932.911013,
+    "size": 9404,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/RadioGroup.tsx": {
+    "hash": "8be2a53ef306022c2eedb1cc65ef5e80e116eb6da57cf29c4b9f932cddded245",
+    "mtime": 1768017791.1984515,
+    "size": 1947,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/ResizeHandle.tsx": {
+    "hash": "c0a900ad708ecf2e12bae79cab3e4e5d12a0f6c9403d80194624317e700ea88f",
+    "mtime": 1767937457.494667,
+    "size": 3186,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/Spinner.tsx": {
+    "hash": "f3238c2d1b197485588694cfe4eb5ec59ef5127daeb6f7462a92c1ae0830cb12",
+    "mtime": 1768017264.7482152,
+    "size": 1066,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/Select.tsx": {
+    "hash": "5dd6d6bf4f7b290fe6e6332c0d2864fdfcafb1c4da30e37edfd0f3d9e2a7ccd6",
+    "mtime": 1768017901.7924688,
+    "size": 2614,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/Stack.tsx": {
+    "hash": "2929f61e9d9beee22448c2bddf29158be988cbd8a177e81e680a7d2a08620846",
+    "mtime": 1768017264.7482152,
+    "size": 753,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/Text.tsx": {
+    "hash": "96597bd3e7a730af9eb210b93ee8c280c9fdaee0c27e89206c3ed0d7b5abbc0a",
+    "mtime": 1768017264.7482152,
+    "size": 1218,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/TextInput.tsx": {
+    "hash": "4b7f1c09fb9981c7f73b29a5e8b8179edbdcd304ea8b4f07caf211dab1305754",
+    "mtime": 1768017264.7482152,
+    "size": 2364,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/UserChip.tsx": {
+    "hash": "d94d0be1cbdaa76defa77cafa0515fe71faef4e021dfd6c92fa3706dfcaa352a",
+    "mtime": 1767937457.503906,
+    "size": 9390,
+    "refined": true
+  },
+  "frontend/src/ui/atoms/ValueDisplay.tsx": {
+    "hash": "343093222b6c55291e15f8a3376a0d20b2d825164a3fcfd5255f3b156fa20c4f",
+    "mtime": 1767937457.5067017,
+    "size": 1489,
+    "refined": true
+  },
+  "frontend/src/ui/common/Badge.tsx": {
+    "hash": "1d29285170c0a63eb591cf774bfb2328e845d51d0a62cf069fc080ba58e614ce",
+    "mtime": 1767937457.5096352,
+    "size": 938,
+    "refined": true
+  },
+  "frontend/src/ui/common/Button.tsx": {
+    "hash": "7cb6e365bddc0b496d8e031535fcac858292f4396abc681035b03d4614da4ad6",
+    "mtime": 1767937457.5116346,
+    "size": 1496,
+    "refined": true
+  },
+  "frontend/src/ui/common/CloneExcludedToggle.tsx": {
+    "hash": "644d4f38469555877cc712427c8ff60f684d49a0d7f6b2a9025d65ba857d00db",
+    "mtime": 1767937457.5156324,
+    "size": 2185,
+    "refined": true
+  },
+  "frontend/src/ui/common/EmojiPicker.tsx": {
+    "hash": "3f452346509463a4afbd74f1bc19a37a83f0e0ff7349f35df76aaeb8e337afcb",
+    "mtime": 1767937457.525881,
+    "size": 4169,
+    "refined": true
+  },
+  "frontend/src/ui/common/MentionableInput.tsx": {
+    "hash": "7bea747443003779cf8fc276ed2d97337a3a459fa705b34a42916b4c2348ea19",
+    "mtime": 1767937457.5394194,
+    "size": 8412,
+    "refined": true
+  },
+  "frontend/src/ui/common/DataFieldWidget.tsx": {
+    "hash": "2cb3a62efe4988c0fae870054fec50e3119f798ffe3105b27040f3bab62ab53c",
+    "mtime": 1767937457.5218825,
+    "size": 4697,
+    "refined": true
+  },
+  "frontend/src/ui/common/ErrorBoundary.tsx": {
+    "hash": "f7ee508858d9e8b45190464c8d85ffb42c9acdd241e286021f772037cf6ab1cc",
+    "mtime": 1767937457.5308788,
+    "size": 3209,
+    "refined": true
+  },
+  "frontend/src/ui/common/PortalMenu.tsx": {
+    "hash": "201f286c105d339721408d8d52465e01560faefeb2f8b5f11690f1c44ba90fd5",
+    "mtime": 1767937457.5454173,
+    "size": 4747,
+    "refined": true
+  },
+  "frontend/src/ui/common/ProgressBar.tsx": {
+    "hash": "72c5fb861bb210ab2d15accad2bd24cd561161be529cb9361bc628ec3aae8087",
+    "mtime": 1767937457.5509694,
+    "size": 1679,
+    "refined": true
+  },
+  "frontend/src/ui/common/RecordSearchCombobox.tsx": {
+    "hash": "9c86497ad8c75d5830fbd8272bcd5bb9391230aa94590e93bb444edf0b23ac7d",
+    "mtime": 1767937457.559481,
+    "size": 10929,
+    "refined": true
+  },
+  "frontend/src/ui/common/UserChip.tsx": {
+    "hash": "d94d0be1cbdaa76defa77cafa0515fe71faef4e021dfd6c92fa3706dfcaa352a",
+    "mtime": 1767937457.5740268,
+    "size": 9390,
+    "refined": true
+  },
+  "frontend/src/ui/common/ResizeHandle.tsx": {
+    "hash": "529c0794d9f6e071d2fc82cc5a1ea66ffd9706de3649614957706b119e1305a1",
+    "mtime": 1767937457.5624812,
+    "size": 2727,
+    "refined": true
+  },
+  "frontend/src/ui/composer/ComposerSurface.tsx": {
+    "hash": "e414303308c48efeb1f0db56bf993cbff35df070ec185e15e03b41ace6eae0ca",
+    "mtime": 1767937457.595607,
+    "size": 37413,
+    "refined": true
+  },
+  "frontend/src/ui/composites/ActionsList.tsx": {
+    "hash": "39ed7297619d27be619be86ec49b7c3d1dba241dc0bdc6282f2c73e8b9d5f73c",
+    "mtime": 1767937457.6387784,
+    "size": 5379,
+    "refined": true
+  },
+  "frontend/src/ui/composites/ActionCard.tsx": {
+    "hash": "c7bc215d160e4b7c30906de74d6b1f39f8223e2ee2f1aa3a38a588021f089f02",
+    "mtime": 1767937457.6307812,
+    "size": 9926,
+    "refined": true
+  },
+  "frontend/src/ui/composites/ActionsTableFlat.tsx": {
+    "hash": "e3bc32243009a447cdb8eca2df38c7b71096599d602d121675e9e353d1ad2497",
+    "mtime": 1767937457.6540878,
+    "size": 16072,
+    "refined": true
+  },
+  "frontend/src/ui/composites/DataTableFlat.tsx": {
+    "hash": "0113216ede9211c00c662a27c31d4065e86325e6c7e76a9e0e7667dab6f3a2ef",
+    "mtime": 1767937457.67931,
+    "size": 26143,
+    "refined": true
+  },
+  "frontend/src/ui/composites/DataTableHierarchy.tsx": {
+    "hash": "024593cfe4297a0e4775b99e0990280451ab71594defccc36aae17ea315bf7d9",
+    "mtime": 1767937457.693306,
+    "size": 17619,
+    "refined": true
+  },
+  "frontend/src/ui/composites/FieldsMillerColumnsView.tsx": {
+    "hash": "32894361f6eebb3a8d18ce5c8ed7511a5348d50c9b86c26847b8e8308751c714",
+    "mtime": 1767937457.7017758,
+    "size": 7069,
+    "refined": true
+  },
+  "frontend/src/ui/composites/ProjectLogView.tsx": {
+    "hash": "9033d499e7701337a1f7f6b015ca0411c2f9b681b178e6a7ac3bdaf690cebefd",
+    "mtime": 1768016140.178718,
+    "size": 11945,
+    "refined": true
+  },
+  "frontend/src/ui/composites/IngestionView.tsx": {
+    "hash": "13f6b0cf1cc8fb4ca97c9f87891d1b0b0ef19da5bf080cacc79a4ed87455955a",
+    "mtime": 1767937457.7205176,
+    "size": 20300,
+    "refined": true
+  },
+  "frontend/src/ui/composites/MillerColumnsView.tsx": {
+    "hash": "b16dec077d9fe977d2f7a99599dfa09690f008b554d53c78b295af2a068c19a9",
+    "mtime": 1767937457.7277594,
+    "size": 8051,
+    "refined": true
+  },
+  "frontend/src/ui/composites/ProjectView.tsx": {
+    "hash": "94ce763394c8df24be95aed3db98091861941f423cfcee8d6ded9cc33fde77be",
+    "mtime": 1768016140.1802742,
+    "size": 17595,
+    "refined": true
+  },
+  "frontend/src/ui/composites/SelectionInspector.tsx": {
+    "hash": "3891f5f83a547567227da656d3fd6e40dded5369a014c3c0bc2a46aa1303e1d0",
+    "mtime": 1767937457.771559,
+    "size": 8910,
+    "refined": true
+  },
+  "frontend/src/ui/composites/RecordView.tsx": {
+    "hash": "5ef0f3d703d3af19e8ce05d07028648b1c3b79e186f74b7367ecf53befc564e0",
+    "mtime": 1767939844.1418567,
+    "size": 15594,
+    "refined": true
+  },
+  "frontend/src/ui/composites/RecordPropertiesView.tsx": {
+    "hash": "c1c41895445d452e3880cb4941ba248a6e894a955514e0936e8f3040e16d4867",
+    "mtime": 1767937457.7635622,
+    "size": 9241,
+    "refined": true
+  },
+  "frontend/src/ui/composites/UserMentionInput.tsx": {
+    "hash": "c55360284053725d15df204fd0bfd1c32ce18a9cffb53c47e8d9040b30704ec4",
+    "mtime": 1767937457.7818213,
+    "size": 8391,
+    "refined": true
+  },
+  "frontend/src/ui/composites/WorkflowSurfaceTable.tsx": {
+    "hash": "8a30fe9ed23a759a0d25e16ec6ffc855d43a768c4a12aac9b37f7e37a9242042",
+    "mtime": 1767937457.7923858,
+    "size": 13147,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/BottomDrawer.tsx": {
+    "hash": "07c2c6e5a306fe10d89d7b454a27bf628927562902741008ef8afa5b74af3946",
+    "mtime": 1768017411.7909048,
+    "size": 2206,
+    "refined": true
+  },
+  "frontend/src/ui/editor/MentionChip.tsx": {
+    "hash": "90db8ad871cbf97fb9f78828c1c8a1f4b7970c3ede6061a66ccab33fb05b57a6",
+    "mtime": 1767937457.993258,
+    "size": 14152,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/DrawerRegistry.tsx": {
+    "hash": "e0f6de15fa60de199a05a496e147d23acfd57c2e22ca9bd2133d3a91895bc107",
+    "mtime": 1767941369.4605837,
+    "size": 264,
+    "refined": true
+  },
+  "frontend/src/ui/editor/MentionSuggestion.tsx": {
+    "hash": "0dcdfa11355e2762659dfa79f41251be811554db40b3e2ed90a15eb9c16bb509",
+    "mtime": 1767937458.021302,
+    "size": 9326,
+    "refined": true
+  },
+  "frontend/src/ui/editor/RichTextEditor.tsx": {
+    "hash": "75f980ea22c5c8ac2c7f96a6968210edb087d0a3b4d2dd15d2de80f9dc9c82cf",
+    "mtime": 1767937458.031772,
+    "size": 8884,
+    "refined": true
+  },
+  "frontend/src/ui/editor/RichTextInput.tsx": {
+    "hash": "2031294898aadcf1ac1177bee786a2fe1908e07b870ad8b30b6fc0d2e225c68a",
+    "mtime": 1767937458.0454128,
+    "size": 9257,
+    "refined": true
+  },
+  "frontend/src/ui/hierarchy/TreeNode.tsx": {
+    "hash": "30cdbc787ace84f45272216565bf0b31540f8f52db5accbeeb6c21e83ee1bd15",
+    "mtime": 1767937458.0601995,
+    "size": 7547,
+    "refined": true
+  },
+  "frontend/src/ui/inspector/ActionDetailsPanel.tsx": {
+    "hash": "331618a6a90a2d9650aaa655eeb6c55bd29be680df8a8849ac6b9125a1f1d843",
+    "mtime": 1767937458.0711956,
+    "size": 4274,
+    "refined": true
+  },
+  "frontend/src/ui/hierarchy/Sidebar.tsx": {
+    "hash": "54dea37f578b511891d3f1fd665c5f051051a107eb1c17ab2c3a40601e269708",
+    "mtime": 1767937458.0524116,
+    "size": 6620,
+    "refined": true
+  },
+  "frontend/src/ui/inspector/ActionEventsPanel.tsx": {
+    "hash": "9c75d96d83966abbaf33635ef57fca9c61e08e146e18a4a011008e1861c2025d",
+    "mtime": 1767937458.0781941,
+    "size": 3166,
+    "refined": true
+  },
+  "frontend/src/ui/layout/Header.tsx": {
+    "hash": "ef8e057b1548c24fee203cea70d4597afd6c921683cbde1e220e52459e1bc2cd",
+    "mtime": 1768017395.2250595,
+    "size": 9415,
+    "refined": true
+  },
+  "frontend/src/ui/layout/CalendarView.tsx": {
+    "hash": "b8c862656d54ec6691224608108d47a69515112584222f285c1366721110509b",
+    "mtime": 1767937458.1094196,
+    "size": 9984,
+    "refined": true
+  },
+  "frontend/src/ui/layout/MainLayout.tsx": {
+    "hash": "5f7f73d84d4f0051a3ae6c25b6087940ff147405c68fa1a202131b0295a78849",
+    "mtime": 1767937458.1284132,
+    "size": 4003,
+    "refined": true
+  },
+  "frontend/src/ui/inspector/InspectorFooterComposer.tsx": {
+    "hash": "eb01c5c83b7086661d3c18503a74046c864c59cb45a3527591c439ce25458ed8",
+    "mtime": 1767937458.0959835,
+    "size": 11348,
+    "refined": true
+  },
+  "frontend/src/ui/layout/MillerColumn.tsx": {
+    "hash": "86370d3090a810b3c64540cbd63d12cede911a471a3830110f20bf1d03a706c0",
+    "mtime": 1767937458.136411,
+    "size": 5018,
+    "refined": true
+  },
+  "frontend/src/ui/layout/MillerColumnsView.tsx": {
+    "hash": "eb8a4e3f7e19a4d34bb2185ffe58ffc7add4120e15109a166d002ba73de179f6",
+    "mtime": 1767937458.1441689,
+    "size": 4731,
+    "refined": true
+  },
+  "frontend/src/ui/layout/Workspace.tsx": {
+    "hash": "316fb537400ff0d56fc4a44bfa765ed63f9f330a322940bf742df058322202c0",
+    "mtime": 1767937458.1806817,
+    "size": 12644,
+    "refined": true
+  },
+  "frontend/src/ui/layout/ProjectWorkflowView.tsx": {
+    "hash": "7fa8a02a42db211b27679ddcb0f40a630d810f3352cd3f3595598ff166fdd67e",
+    "mtime": 1767937458.166686,
+    "size": 43452,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/DataFieldWidget.tsx": {
+    "hash": "0b06057218ab46db23c42b2f71ea51a6e5f55e75168a06970a8763848868e5fd",
+    "mtime": 1767937458.190679,
+    "size": 5527,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/EditableCell.tsx": {
+    "hash": "bc2287bc46696aac3f1035bd6f0ac385c4e5b107649721bc7ba41c51ee74c9ec",
+    "mtime": 1767937458.2016757,
+    "size": 13412,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/FieldRenderer.tsx": {
+    "hash": "c8d06f0603014dda0a020a20a6904f8bea27a61e6e208b3c01d77cef9fdfd9d0",
+    "mtime": 1767937458.2208364,
+    "size": 13091,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/MillerColumn.tsx": {
+    "hash": "236ea155f737b081dec5c1e24d51b1f7c4efdd3efb5e8061fcbe663bba5ba0f5",
+    "mtime": 1767937458.2422924,
+    "size": 16168,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/Menu.tsx": {
+    "hash": "40cc4aeaa724c58c98d5a187726441a84fc870abe77055a72e5caf2fd987c5b2",
+    "mtime": 1768073159.6645021,
+    "size": 6130,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/FieldGroup.tsx": {
+    "hash": "8c0a82cfb5eaf423a5691ee42d072fde823cf5cebdfa08922fc4db09b341f348",
+    "mtime": 1767937458.208256,
+    "size": 2269,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/PropertySection.tsx": {
+    "hash": "e05d5ccc8b705f4c0eaeb1e73b26d0005915b50a50b7a3d5d82c1295f3d52395",
+    "mtime": 1767937458.2522893,
+    "size": 3546,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/SegmentedControl.tsx": {
+    "hash": "5ebd8c4ba6b99e46fe43565e61363abd4dd809298273f508edd09b582c2203f9",
+    "mtime": 1768017254.4316664,
+    "size": 2212,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/StatusColumnSummary.tsx": {
+    "hash": "400597b9d874e11693c685c08f52c08555f702d5ef82d9021e8360b56f78fe75",
+    "mtime": 1767937458.2736008,
+    "size": 3991,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/ReferenceBlock.tsx": {
+    "hash": "e9edc84106681b861ab817e45707b59388bfb5a626e9dd91650c36738cc4b528",
+    "mtime": 1767937458.2610967,
+    "size": 7146,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/ReferenceStatusBadge.tsx": {
+    "hash": "5f3d4fd49d784f9535acf938b7b6530ff4f810fd7dc045fc8c4a406f89297dfe",
+    "mtime": 1767937458.2676027,
+    "size": 3190,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/TableAddRow.tsx": {
+    "hash": "8b0179ee1429347c63d338e8924cd97e53fa5121e8cfb5d2a68ff31e27bdc316",
+    "mtime": 1767937458.277107,
+    "size": 1379,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/TagsInput.tsx": {
+    "hash": "bd33e7c646a84d37471c4351df902e317c3f071f0624913cf66e6831d6097545",
+    "mtime": 1767937458.2880955,
+    "size": 5960,
+    "refined": true
+  },
+  "frontend/src/ui/projectLog/eventFormatters.tsx": {
+    "hash": "dfe9f5ad62e91802d6f97dd39a8f4e241ec7dbf437403b927115c03ba24d929d",
+    "mtime": 1767937458.3923697,
+    "size": 13130,
+    "refined": true
+  },
+  "frontend/src/ui/molecules/TableSortHeader.tsx": {
+    "hash": "7b2cb07c1e35bb676484ded5d24ed22d3f3f137c925a9f622c75e3a30c6ed57b",
+    "mtime": 1767937458.2810986,
+    "size": 2286,
+    "refined": true
+  },
+  "frontend/src/ui/primitives/EventRow.tsx": {
+    "hash": "7ee1e3eb2d03fdfae22b98624818598769c5cc27ecc1269c64b777aded6a8725",
+    "mtime": 1767937458.296199,
+    "size": 3133,
+    "refined": true
+  },
+  "frontend/src/ui/projectLog/ProjectLogEventRow.tsx": {
+    "hash": "ce37a2dcf9d31e12acb4c1948a9cae4aba95c742fdbdfc59d0ae9628d4c41802",
+    "mtime": 1767937458.4023664,
+    "size": 6714,
+    "refined": true
+  },
+  "frontend/src/ui/projectLog/ProjectLogFilterBar.tsx": {
+    "hash": "815d16de015e4e65e05f5b4a66dd0753cd6b9670a6b27597f545f68ce949327e",
+    "mtime": 1767937458.409903,
+    "size": 4297,
+    "refined": true
+  },
+  "frontend/src/ui/projectLog/ProjectLogSurface.tsx": {
+    "hash": "c40c49c6de06e3a661c936c8adb9842beb5590b6c54895071c4c4f4f9d87f6a0",
+    "mtime": 1767937458.4238977,
+    "size": 14786,
+    "refined": true
+  },
+  "frontend/src/ui/records/RecordTypeSidebar.tsx": {
+    "hash": "34ed1aecbd136283c634f1517b6fba58d2a12903ebbdef13022d7249187b3ec1",
+    "mtime": 1767937458.4510047,
+    "size": 8404,
+    "refined": true
+  },
+  "frontend/src/ui/records/RecordGrid.tsx": {
+    "hash": "c96f57ebb0f58660bef2cbc1333abdc07e041665fd0ca55167e043d276bc0f71",
+    "mtime": 1767937458.4395027,
+    "size": 16507,
+    "refined": true
+  },
+  "frontend/src/ui/records/RegistrySidebar.tsx": {
+    "hash": "6e194f46a6dc8c6970398caaae9a7fba245124f6735498ffd4305c434e13063d",
+    "mtime": 1767937458.4715455,
+    "size": 15825,
+    "refined": true
+  },
+  "frontend/src/ui/registry/DefinitionListSidebar.tsx": {
+    "hash": "c98217e4351ce8dd5e72788c4c93cceddc6d691ecef3e9be3d1c32c8b6340e1b",
+    "mtime": 1767937458.4845426,
+    "size": 9869,
+    "refined": true
+  },
+  "frontend/src/ui/registry/RegistryTabSwitch.tsx": {
+    "hash": "83cd8894c76d5e1550eaf90539c0d8bbbd1a1eef262cfdf08f1f4c70da061ae7",
+    "mtime": 1767937458.5180385,
+    "size": 1620,
+    "refined": true
+  },
+  "frontend/src/ui/registry/RegistryPageHeader.tsx": {
+    "hash": "a875372dbb4743601e6b6b4362ddeb993ab38b5d713ab6a310b5744ee86d9dd4",
+    "mtime": 1767937458.5140402,
+    "size": 2693,
+    "refined": true
+  },
+  "frontend/src/ui/registry/FactKindReviewPanel.tsx": {
+    "hash": "f52e525e75f93871a0ccb5f37bb726a32248e07c0f707e8d5dd1900a934ac449",
+    "mtime": 1767937458.501043,
+    "size": 7786,
+    "refined": true
+  },
+  "frontend/src/ui/semantic/DateFieldEditor.tsx": {
+    "hash": "e43e92e4c71b18969f040626ec79ecab3624bbbc73099a5e161a1942e87bcd77",
+    "mtime": 1767937458.5300348,
+    "size": 5994,
+    "refined": true
+  },
+  "frontend/src/ui/semantic/FieldEditor.tsx": {
+    "hash": "d9718254f0d1f612ed14be56671721a9e82a2c4a201162534a5a28ccef0d2d87",
+    "mtime": 1767937458.5721087,
+    "size": 5991,
+    "refined": true
+  },
+  "frontend/src/ui/semantic/LinksManager.tsx": {
+    "hash": "8f89443cb026e9cfd134281107093b3b46774a8a2c835fd3816f6e0e80b5e15f",
+    "mtime": 1767937458.6183364,
+    "size": 9609,
+    "refined": true
+  },
+  "frontend/src/ui/semantic/FieldDefinitionEditor.tsx": {
+    "hash": "ff3a14029b155c9bf9ebeb9b31d294adcd78a69e8f3fcd6e87de9f13ed7d7945",
+    "mtime": 1767937458.5566075,
+    "size": 11968,
+    "refined": true
+  },
+  "frontend/src/ui/semantic/FieldInstancesReview.tsx": {
+    "hash": "39d1ac47ec54fe233d6d45cbf69fc1d6bf266c4e04db85c093b017f5216ca96f",
+    "mtime": 1768017658.168921,
+    "size": 13472,
+    "refined": true
+  },
+  "frontend/src/ui/semantic/NodeFieldEditor.tsx": {
+    "hash": "86907328c7dac797a5e97ccf84792eb88e9564cd37a732579fdb5aa071c4502a",
+    "mtime": 1767937458.6313343,
+    "size": 9414,
+    "refined": true
+  },
+  "frontend/src/ui/semantic/PersonFieldEditor.tsx": {
+    "hash": "30043994417c3a17e713bdd1386cf37457cca5b36dd95de66d5c8c58c4076b6c",
+    "mtime": 1767937458.645329,
+    "size": 8511,
+    "refined": true
+  },
+  "frontend/src/ui/semantic/ReferencesManager.tsx": {
+    "hash": "83e0bec491100f7345d5d05e05131344604247939a892ff9dd048c82976e773c",
+    "mtime": 1767937458.6803174,
+    "size": 12910,
+    "refined": true
+  },
+  "frontend/src/ui/semantic/ReferenceEditor.tsx": {
+    "hash": "ecd4af90040fb609a280c19d6496b97b058742a529809d7a0ed5a0fb766b10ee",
+    "mtime": 1767937458.660323,
+    "size": 9733,
+    "refined": true
+  },
+  "frontend/src/ui/semantic/SchemaEditor.tsx": {
+    "hash": "d9f91ec0e9af7d4a1e53c5dc895bdafc12920ff4cae9682d6f85f7a4b5a1f356",
+    "mtime": 1767937458.7084515,
+    "size": 21205,
+    "refined": true
+  },
+  "frontend/src/ui/semantic/SelectFieldEditor.tsx": {
+    "hash": "e34a16ee8fbd1ebae564eaa69e6373bdee53d6a17bd820a2d78ec13cf3a041f2",
+    "mtime": 1767937458.7184489,
+    "size": 5740,
+    "refined": true
+  },
+  "frontend/src/ui/table/TableFrame.tsx": {
+    "hash": "e5c798ea1b5bd3b78703869e77ad92560d985a6b69108c324b6f461ee4f74a58",
+    "mtime": 1768017307.3845284,
+    "size": 1269,
+    "refined": true
+  },
+  "frontend/src/ui/semantic/StatusFieldEditor.tsx": {
+    "hash": "80153f0a1f769ac69605d9e9038c0d51ca9da75457fbe00e74a21c645dba95cb",
+    "mtime": 1767937458.7254467,
+    "size": 5665,
+    "refined": true
+  },
+  "frontend/src/ui/table/TableCell.tsx": {
+    "hash": "ee4424c03c1c4aa8c94c19a3cb7b732c475ba894dcf72d29baf03a0607a5e220",
+    "mtime": 1768017342.6552722,
+    "size": 3664,
+    "refined": true
+  },
+  "frontend/src/ui/table/TableRow.tsx": {
+    "hash": "42756f8243739d6db22bfd4fa2d0da9d08293a492241b25fbb3fdfbaef8f601b",
+    "mtime": 1768017342.6552722,
+    "size": 3088,
+    "refined": true
+  },
+  "frontend/src/ui/table-core/UniversalTableCore.tsx": {
+    "hash": "5c71b4e7dd7f9a984cc69dd43859c4b3f4d804fe81840aee2f11e869ef8cfb8e",
+    "mtime": 1767937458.7846613,
+    "size": 16537,
+    "refined": true
+  },
+  "frontend/src/ui/tables/ActionInstancesView.tsx": {
+    "hash": "6cd2ab3f31000129f10909b9dff61602c199a42f2a93b8abd7bd3fe83d1ef11b",
+    "mtime": 1767937458.7948735,
+    "size": 4583,
+    "refined": true
+  },
+  "frontend/src/ui/tables/DataTable.tsx": {
+    "hash": "5dae40cf3bd43af56ed1cc432eb71f8b320366187a8f3c998ea3261de4e4b9ee",
+    "mtime": 1768018079.0646763,
+    "size": 22311,
+    "refined": true
+  },
+  "frontend/src/ui/tables/UniversalTableView.tsx": {
+    "hash": "eaafad1908ad59156bd2c8703250156c38da0e0e658ad1d0a1e959359a815083",
+    "mtime": 1768018087.1731448,
+    "size": 21367,
+    "refined": true
+  },
+  "frontend/src/ui/tables/EditableCell.tsx": {
+    "hash": "79f8727a40780f983317447528589632ad0fa5d8499a7d0b8a9fc7f37bb67e19",
+    "mtime": 1768022651.443895,
+    "size": 14472,
+    "refined": true
+  },
+  "frontend/src/ui/composites/interpretation/InterpretationInspectorView.tsx": {
+    "hash": "e9eb4ee7ecaa424d99002ed73f3d905d2993edeac437b0add34fff2f632fcfd5",
+    "mtime": 1767937457.6227784,
+    "size": 10982,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/views/ActionInspectorDrawer.tsx": {
+    "hash": "915e12ad40509d71d30778defa55f5ca7160e484a566f92694a89121c104cc0c",
+    "mtime": 1767937457.80489,
+    "size": 11775,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/views/AssignRecordsView.tsx": {
+    "hash": "4e4ca39671e4eeb3b718dab6aef49a8e25fe4cba0ad21282cb8ddcf61baa5563",
+    "mtime": 1768017488.3215632,
+    "size": 8863,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/views/CloneDefinitionView.tsx": {
+    "hash": "e6a07bb2d9d606412bfd0e6e88130e7357bffdf03583f72d569dfdfe6a29a930",
+    "mtime": 1768017563.4776678,
+    "size": 3574,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/views/AddFieldView.tsx": {
+    "hash": "db0b874dfd75d30ad86dcbdc21200adf045d05feecd60f0a14b632c2381d3278",
+    "mtime": 1768017586.339115,
+    "size": 11786,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/views/CloneProjectView.tsx": {
+    "hash": "8339d343699c3ba74f1685005417904449032b4c291162c065ee6b7e1351012a",
+    "mtime": 1768017916.742924,
+    "size": 10059,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/views/CreateDefinitionView.tsx": {
+    "hash": "580da8bd9205b3c4fe00c9e03d7f14c526098fa15ab87ffd7ffb21a4cdc049e0",
+    "mtime": 1768017843.3688562,
+    "size": 8791,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/views/ConfirmDeleteView.tsx": {
+    "hash": "4d0a7180810f4f82bf4b727fa269e314a49ffd2f18b3b406a0579a69bdd6dfff",
+    "mtime": 1768017510.7917945,
+    "size": 4312,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/views/CreateNodeView.tsx": {
+    "hash": "61dbbc887b8d0311c1571eeaf64ccf0e179ec5eac5be4e8dc81e15ede885d339",
+    "mtime": 1768017510.7917945,
+    "size": 4012,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/views/CreateLinkView.tsx": {
+    "hash": "ab9538df275bc286e74a5901f305ad5c01acf3d511872528f0342e229f7222d8",
+    "mtime": 1768017816.3682675,
+    "size": 6308,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/views/CreateProjectView.tsx": {
+    "hash": "adaab1e247300c6ae3d68222de9c362b1d59e9f71fa7f30b0afa6e865799759b",
+    "mtime": 1768017510.7907948,
+    "size": 4451,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/views/ProjectLibraryDrawer.tsx": {
+    "hash": "f0367c202d970dd459c3e63ef776f0162dce7d68e8326e0e42fbef5d36a9e35f",
+    "mtime": 1767937457.9278333,
+    "size": 6781,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/views/CreateRecordView.tsx": {
+    "hash": "c1256b39ba60e96cb2f246a066d880aa2f9ab3e2c86242ce7996a3b091c49ae9",
+    "mtime": 1768017953.9905624,
+    "size": 9236,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/views/ViewDefinitionDrawer.tsx": {
+    "hash": "6cdc22f68c8ce6ed6ecaa5ad21bc41aa3732f9743b7ab3445e4d9bd33cfd8aa2",
+    "mtime": 1767937457.940829,
+    "size": 7411,
+    "refined": true
+  },
+  "frontend/src/ui/drawer/views/ViewRecordDrawer.tsx": {
+    "hash": "5ffc0f45d16956a1565baba6ac43bc878bb1fd26e8f130173a80d56b55393215",
+    "mtime": 1767937457.953336,
+    "size": 8455,
+    "refined": true
+  },
+  "README.md": {
+    "hash": "1c767efe148fda1189adeffa82555d3dbcd266fae11d08e52969da93434333ba",
+    "mtime": 1768018067.3257735,
+    "size": 16349,
+    "refined": true
+  },
+  "SETUP.md": {
+    "hash": "40acc071e5707c34be559f2fa896b82319ee6ae07b598817f8808cbe20a65621",
+    "mtime": 1767229754.0774958,
+    "size": 8885,
+    "refined": true
+  },
+  "docs/1-3-2026_composer-creation-guide.md": {
+    "hash": "56f262b05202a8ced1e46ffb64bfd9733d00e79ea6e4166e51af78c53f37e56c",
+    "mtime": 1767768776.811383,
+    "size": 27916,
+    "refined": true
+  },
+  "docs/architecture-inventory.md": {
+    "hash": "9e965c20d3d8da2ba89f20ab080bcc7b0755ff5e49a8b7fd816c9db99bc5da43",
+    "mtime": 1767586614.3111815,
+    "size": 5553,
+    "refined": true
+  },
+  "docs/auto_art_architectural_inventory_refactor_plan.md": {
+    "hash": "6ea799b124a51c1cea1b9c14d92c068641fe1c9101dd85c31a6a5bf03fe87fb9",
+    "mtime": 1767302215.1233702,
+    "size": 18400,
+    "refined": true
+  },
+  "docs/auto_art_semantic_ui_refactor_plan.md": {
+    "hash": "561f4fb489688a758414cfa5f91f5afc95561dd07be9ac51d00256c6344c53da",
+    "mtime": 1767391032.8565683,
+    "size": 5361,
+    "refined": true
+  },
+  "docs/bfa-todo-document-schema.md": {
+    "hash": "d3e63c32c74289ec2d1a99519bc541830a6cfbf7a95794f6cca3d89a8ddfe287",
+    "mtime": 1768020557.5417545,
+    "size": 20707,
+    "refined": true
+  },
+  "docs/Composer-Docs.md": {
+    "hash": "97672e80759c9799fecf89f0e3ff411509676ff1d49468c1d78f26351adcd89a",
+    "mtime": 1767484342.4536045,
+    "size": 31884,
+    "refined": true
+  },
+  "docs/foundational_model_actions_events_and_downstream_interpretation.md": {
+    "hash": "6d94d37c6e9f8a2d3a73173287c3f0488650f3d2146b760cf3d9164a5a86e067",
+    "mtime": 1767427552.023885,
+    "size": 4610,
+    "refined": true
+  },
+  "docs/DIFF_CHECKLIST.md": {
+    "hash": "270e2554484aba1a5e80fdd822c0cc70a386807615f9fd4e469bda1580d4837b",
+    "mtime": 1767321238.8045685,
+    "size": 8646,
+    "refined": true
+  },
+  "docs/Implementation_Plan.md": {
+    "hash": "c1c57c978bdecfc3709a3739c0cf99aacba9b0b665a0c4398dc1e39f3dd43d3c",
+    "mtime": 1767585679.1486528,
+    "size": 7276,
+    "refined": true
+  },
+  "docs/plan-injestion-engine-refactor.md": {
+    "hash": "27cb7cea3454317aeced7079235b6f45d2f762c2664d9a5421cf8adffe6c2f2b",
+    "mtime": 1767561604.3141851,
+    "size": 38816,
+    "refined": true
+  },
+  "docs/LEGACY_AUDIT.md": {
+    "hash": "1b8f267a86000b63b9ff731bfddc74b095a3684a01901fe647c6b981079c01c2",
+    "mtime": 1767331684.0274608,
+    "size": 2403,
+    "refined": true
+  },
+  "docs/plan-intent-translation-layer.md": {
+    "hash": "32131b8083dfbc6cb9fa5a68e27c311cbbd41b41713067a4af75e56aab600819",
+    "mtime": 1767602422.4716172,
+    "size": 9715,
+    "refined": true
+  },
+  "docs/plan-composer-refactor.md": {
+    "hash": "81609ff9d8c18c53159cff97f15110ff2f3321e252ee8fde167cfbda2699ad7d",
+    "mtime": 1767523666.583084,
+    "size": 13192,
+    "refined": true
+  },
+  "docs/plan-project-log-implementation.md": {
+    "hash": "54bd76735c06c35cad701f3a03668bf700493b8b041b3a548257781b5dd7ab91",
+    "mtime": 1767526545.47154,
+    "size": 15753,
+    "refined": true
+  },
+  "docs/PR-medium-priority-log-polish.md": {
+    "hash": "0f2af0a19129d7bad202e37d6687f64196b8bec6467b4b4cd06347ced33e4181",
+    "mtime": 1768016140.1761546,
+    "size": 5348,
+    "refined": true
+  },
+  "docs/projection-invariants.md": {
+    "hash": "6507548400a8e6e3c7f2d46793f5bddaef63f053492aba9e1039b91c62e18f52",
+    "mtime": 1767507564.1719785,
+    "size": 5084,
+    "refined": true
+  },
+  "docs/ProjectLogView-QoL-Summary.md": {
+    "hash": "70798008534d3d209461a3f5e77be2ee3282dc803cf2a7456634991f8e4ab7d5",
+    "mtime": 1768016140.176663,
+    "size": 9014,
+    "refined": true
+  },
+  "docs/plan_nested-workflow-surface.md": {
+    "hash": "f7ba093bd3d571cfcefb1d43d6e8189995f8457550049e7128c442ac58c02b56",
+    "mtime": 1767507287.8233616,
+    "size": 12330,
+    "refined": true
+  },
+  "docs/REFACTOR_PLAN.md": {
+    "hash": "04d80811a7e77d3834ed394cd261711e151edff6ed7d92fa283aad4364e7763f",
+    "mtime": 1767318340.388459,
+    "size": 25215,
+    "refined": true
+  },
+  "docs/todo.md": {
+    "hash": "fcd829363fd04fd4e3506cc5eff283863824a8ae0a02e1e19fdaf901b4669cf9",
+    "mtime": 1767395513.4546976,
+    "size": 1236,
+    "refined": true
+  },
+  "package-lock.json": {
+    "hash": "95af8a0dafd12ac8dc0501b41713b077ad95aa051ee1fba68ae634b8ea890ef4",
+    "mtime": 1768018252.836443,
+    "size": 208420,
+    "refined": true
+  },
+  "docs/ui-traceability.md": {
+    "hash": "09c5f6bc0055c063e9247f8481ae8675363998984946fd8fa6b87beac789171b",
+    "mtime": 1767311523.3548234,
+    "size": 3108,
+    "refined": true
+  },
+  "docs/refactor_plan_foundational_events.md": {
+    "hash": "016c9237ae4e0c51409e0a717a10379b0970007cc96ac189881222b4f50a062e",
+    "mtime": 1767469418.9732206,
+    "size": 5710,
+    "refined": true
+  },
+  "package.json": {
+    "hash": "a50a011dcfe553b81b68fb4cedf0fa56ee606754cbb810568d64ac5c26596edf",
+    "mtime": 1767762025.254742,
+    "size": 1515,
+    "refined": true
+  },
+  "frontend/package-lock.json": {
+    "hash": "b2445ec5346daf1f2aaf1eaeb0c6925bb0a71b3acfc85d93a117cfa1c77b68ba",
+    "mtime": 1767155500.3734572,
+    "size": 126318,
+    "refined": true
+  },
+  "backend/package-lock.json": {
+    "hash": "d2c39137c6c06c8e312d7133a360128d6c3fbe6905f7b50d7278622f6fb11088",
+    "mtime": 1767210472.7673008,
+    "size": 108725,
+    "refined": true
+  },
+  "backend/tsconfig.json": {
+    "hash": "3e8848e6087112020a0c4db7ca14ab920d6ecc3516b06cfc38e0531939eb0bb1",
+    "mtime": 1766909157.4255388,
+    "size": 717,
+    "refined": true
+  },
+  "backend/package.json": {
+    "hash": "32d379c90122a710a51a7d5c8abe65b823e2aed674cff18d51052b9745ca2c05",
+    "mtime": 1767949107.238109,
+    "size": 1727,
+    "refined": true
+  },
+  "frontend/package.json": {
+    "hash": "cf79e25e00a3eea5e8677f2e0455ded986d31a9d17cfe93f61135bada06ac315",
+    "mtime": 1768018034.3930075,
+    "size": 1287,
+    "refined": true
+  },
+  "shared/package.json": {
+    "hash": "571931ebdf110313d99f23852a729418ec7e92a05193b9dfa64b951ac39a55e2",
+    "mtime": 1767315536.7184825,
+    "size": 608,
+    "refined": true
+  },
+  "frontend/tsconfig.node.json": {
+    "hash": "c6042807e5ebc0b7fc17f36f1ba4ff21c035db58eda17cb03f506588d6c736ee",
+    "mtime": 1767352142.0051112,
+    "size": 275,
+    "refined": true
+  },
+  "shared/package-lock.json": {
+    "hash": "1fb7399cfc4002eccfeecb879d840399fcd8bcb067b1256490038905e63c6c39",
+    "mtime": 1767226130.5757034,
+    "size": 1128,
+    "refined": true
+  },
+  "frontend/tsconfig.json": {
+    "hash": "703249b1adb8b18b01f96f93ff0697385244d057c963dd1223ca2ac804853a46",
+    "mtime": 1766909727.538691,
+    "size": 802,
+    "refined": true
+  },
+  "shared/tsconfig.json": {
+    "hash": "4878de73338639156393710fd8499fb88c37050a0b4473fa86a4f1884aa9d934",
+    "mtime": 1767760259.539307,
+    "size": 532,
+    "refined": true
+  },
+  "docs/demo-composer.html": {
+    "hash": "35b04fa135baaedfdd7cf16c1b4bd39f7b3a19fc40577684f555962232de4471",
+    "mtime": 1767491348.8829412,
+    "size": 21329,
+    "refined": true
+  },
+  "config/state-saves/example-state.json": {
+    "hash": "7c045c4c5c43c41ac38ffc6961d84bc58fe2c292fb01aa00b8f399d676da2fd9",
+    "mtime": 1766910299.2079365,
+    "size": 616,
+    "refined": true
+  },
+  "docs/demo-execution-log.html": {
+    "hash": "f874dea445a210ce8b260efe39c594fa6d723fc6fba14373e29ec62a673d94b3",
+    "mtime": 1767526992.6764624,
+    "size": 25700,
+    "refined": true
+  },
+  "docs/demo-columns.html": {
+    "hash": "500db03763f01f208baf2a5cd6eb95b3597f33a4a51a26f63febf3d367b061a7",
+    "mtime": 1767152477.8983583,
+    "size": 21121,
+    "refined": true
+  },
+  "docs/demo-injestion.html": {
+    "hash": "8791e7315438d5aa0ba02e5e51b596c0c669b128f8130f7148862d5b063e5196",
+    "mtime": 1767153966.154116,
+    "size": 25799,
+    "refined": true
+  },
+  "docs/demo.html": {
+    "hash": "06f20999a69d4b94473e4a2a3e3bfca77b224f5f92ca57e946d6c3e7afc7b3b0",
+    "mtime": 1766907072.8860483,
+    "size": 26767,
+    "refined": true
+  },
+  "docs/demo-monday.html": {
+    "hash": "48522fafba4976d0f256ae1e6f155ddb1720dcfd6eb2743f97912f0176bab4f0",
+    "mtime": 1767235065.3141687,
+    "size": 25503,
+    "refined": true
+  },
+  "docs/demo-inspector.html": {
+    "hash": "3c2a5d6b2410b213530cd9c6df5eb16cb16c27cd71f63a86ff7e49ff7ffcad4b",
+    "mtime": 1767582089.9092784,
+    "size": 18588,
+    "refined": true
+  },
+  "frontend/index.html": {
+    "hash": "e9a247de06e3ffd10fe640b6ce6c967eb171d2e14a9ce781ab1982a03c7b4d34",
+    "mtime": 1766909765.7370403,
+    "size": 532,
+    "refined": true
+  },
+  "docs/exportworkbench-plan.md": {
+    "hash": "42785a535e352c8dc63527bfbab158019efd730e0c69efd2d84eed4914999b69",
+    "mtime": 1768076582.1064053,
+    "size": 21222,
+    "refined": true
+  },
+  "shared/src/schemas/exports.ts": {
+    "hash": "96403bdc1c248759eaf5c2ae8bbf6f55b24b5af4a8b01082db9f9b7a7b7ac5df",
+    "mtime": 1768084148.8364267,
+    "size": 6558,
+    "refined": true
+  },
+  "backend/src/modules/exports/email-decay.service.ts": {
+    "hash": "6d48b6310991ebacf4fedf7a2f6a5fc62d4a00518a90c305eb382cd14c795ead",
+    "mtime": 1768085487.9645934,
+    "size": 4852,
+    "refined": true
+  },
+  "backend/src/modules/exports/staleness.service.ts": {
+    "hash": "3aa2b7e89411f41149e9d44e0d9b4e85bc6227190498496d24e96fb24e8a1b85",
+    "mtime": 1768085405.9132037,
+    "size": 4464,
+    "refined": true
+  },
+  "backend/src/modules/exports/backfeeding.service.ts": {
+    "hash": "a3a5e5976c1c91ba54b156a8f61b66c389ba525e799b86ad746add0eedb7908c",
+    "mtime": 1768085390.0898788,
+    "size": 6098,
+    "refined": true
+  },
+  "backend/src/modules/exports/targets/bfa-rtf-target.ts": {
+    "hash": "7553dacd38780be6aed4cecc15027e5c19efb48db1d5082e5912d4661f380f83",
+    "mtime": 1768085549.92757,
+    "size": 2569,
+    "refined": true
+  },
+  "backend/src/modules/exports/targets/export-target.interface.ts": {
+    "hash": "c6542bda3aa5beded6f65b46f53d953ff49425c07f2a3d28d71610370917cb78",
+    "mtime": 1768085521.1569133,
+    "size": 2763,
+    "refined": true
+  },
+  "backend/src/db/migrations/034_add_export_formats.ts": {
+    "hash": "8f977830b55d4877bd6047a0799fbc4362d04369d827077214d65cf4d6884906",
+    "mtime": 1768084113.2640018,
+    "size": 1375,
+    "refined": true
+  },
+  "backend/src/modules/exports/targets/index.ts": {
+    "hash": "9082f59fbfeabeb625f986f967ea77f16f6e4cf4991deeeb08bfecac4a20eb8b",
+    "mtime": 1768085557.5550795,
+    "size": 2239,
+    "refined": true
+  },
+  "backend/src/modules/exports/targets/google-docs-target.ts": {
+    "hash": "8fc9d3af0fb586a89b87886c5f5ef3703cde631cf1f84c6200f79063a1ef7d5a",
+    "mtime": 1768085555.554947,
+    "size": 3626,
+    "refined": true
+  }
+}

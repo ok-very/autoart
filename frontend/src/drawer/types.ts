@@ -158,6 +158,7 @@ export interface DrawerContextMap {
     'project-library': ProjectLibraryContext;
     'ingestion': IngestionContext;
     'integrations': IntegrationsContext;
+    'monday-boards': MondayBoardsContext;
 }
 
 // ==================== CONTEXT TYPES ====================
@@ -293,6 +294,14 @@ export interface IngestionContext {
 export interface IntegrationsContext {
     /** Optional: pre-select a specific integration tab */
     activeTab?: 'monday' | 'google' | 'api';
+}
+
+/** Context for Monday boards selection drawer */
+export interface MondayBoardsContext {
+    /** Callback when board(s) are selected for import */
+    onBoardImport: (boardIds: string[]) => Promise<void>;
+    /** Whether import is currently in progress */
+    isImporting?: boolean;
 }
 
 // ==================== HELPER FUNCTIONS ====================

@@ -5,7 +5,6 @@
  * Features:
  * - Searchable board list
  * - Multi-select with checkboxes
- * - "Include subitems" toggle
  * - Import button
  */
 
@@ -17,7 +16,6 @@ import {
     CheckCircle2,
     ChevronDown,
     AlertCircle,
-    Layers,
 } from 'lucide-react';
 import { useMondayBoards, useConnections, type MondayBoard } from '../../api/connections';
 
@@ -26,7 +24,7 @@ import { useMondayBoards, useConnections, type MondayBoard } from '../../api/con
 // ============================================================================
 
 interface MondayBoardSelectorProps {
-    onImport: (boardIds: string[], options: { includeSubitems: boolean }) => void;
+    onImport: (boardIds: string[]) => void;
     isImporting?: boolean;
 }
 
@@ -40,7 +38,6 @@ export function MondayBoardSelector({ onImport, isImporting }: MondayBoardSelect
 
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedBoardIds, setSelectedBoardIds] = useState<Set<string>>(new Set());
-    const [includeSubitems, setIncludeSubitems] = useState(true);
 
     // Filter boards by search query
     const filteredBoards = useMemo(() => {
@@ -81,8 +78,8 @@ export function MondayBoardSelector({ onImport, isImporting }: MondayBoardSelect
     // Handle import
     const handleImport = useCallback(() => {
         if (selectedBoardIds.size === 0) return;
-        onImport(Array.from(selectedBoardIds), { includeSubitems });
-    }, [selectedBoardIds, includeSubitems, onImport]);
+        onImport(Array.from(selectedBoardIds));
+    }, [selectedBoardIds, onImport]);
 
     // Not connected state
     if (!connections?.monday?.connected && !boards) {
@@ -166,14 +163,14 @@ export function MondayBoardSelector({ onImport, isImporting }: MondayBoardSelect
                                             key={board.id}
                                             onClick={() => toggleBoard(board.id)}
                                             className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors text-left ${selectedBoardIds.has(board.id)
-                                                    ? 'border-amber-300 bg-amber-50'
-                                                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                                                ? 'border-amber-300 bg-amber-50'
+                                                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                                                 }`}
                                         >
                                             <div
                                                 className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${selectedBoardIds.has(board.id)
-                                                        ? 'bg-amber-500 text-white'
-                                                        : 'border border-slate-300'
+                                                    ? 'bg-amber-500 text-white'
+                                                    : 'border border-slate-300'
                                                     }`}
                                             >
                                                 {selectedBoardIds.has(board.id) && (
@@ -199,18 +196,6 @@ export function MondayBoardSelector({ onImport, isImporting }: MondayBoardSelect
 
             {/* Options & Import */}
             <div className="p-4 border-t border-slate-200 bg-slate-50">
-                {/* Include subitems toggle */}
-                <label className="flex items-center gap-2 mb-3 cursor-pointer">
-                    <input
-                        type="checkbox"
-                        checked={includeSubitems}
-                        onChange={(e) => setIncludeSubitems(e.target.checked)}
-                        className="w-4 h-4 text-amber-500 border-slate-300 rounded focus:ring-amber-500"
-                    />
-                    <Layers className="w-4 h-4 text-slate-400" />
-                    <span className="text-sm text-slate-600">Include subitems</span>
-                </label>
-
                 {/* Import button */}
                 <button
                     onClick={handleImport}

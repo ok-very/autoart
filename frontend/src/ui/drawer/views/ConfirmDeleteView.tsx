@@ -1,12 +1,16 @@
 /**
  * ConfirmDeleteView
  *
- * Confirmation dialog for delete operations. Uses Mantine components.
+ * Confirmation dialog for delete operations. Uses bespoke components.
  */
 
 import { useState } from 'react';
-import { Button, Group, Text, ThemeIcon, Alert, Stack } from '@mantine/core';
 import { AlertTriangle } from 'lucide-react';
+import { Button } from '../../atoms/Button';
+import { Inline } from '../../atoms/Inline';
+import { Stack } from '../../atoms/Stack';
+import { Text } from '../../atoms/Text';
+import { Alert } from '../../atoms/Alert';
 import { useUIStore } from '../../../stores/uiStore';
 import type { DrawerProps, ConfirmDeleteContext } from '../../../drawer/types';
 
@@ -86,51 +90,50 @@ export function ConfirmDeleteView(props: ConfirmDeleteViewProps | LegacyConfirmD
   };
 
   const isDanger = variant === 'danger';
-  const color = isDanger ? 'red' : 'yellow';
 
   return (
     <div className="max-w-lg mx-auto">
       <Stack gap="lg">
         {/* Header */}
-        <Group align="flex-start" gap="md">
-          <ThemeIcon size="xl" radius="xl" variant="light" color={color}>
+        <Inline gap="md" align="start">
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDanger ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'}`}>
             <AlertTriangle size={24} />
-          </ThemeIcon>
+          </div>
           <div className="flex-1">
-            <Text size="lg" fw={500} mb="xs">{title}</Text>
-            <Text size="sm" c="dimmed">{message}</Text>
+            <Text size="lg" weight="medium" className="mb-1">{title}</Text>
+            <Text size="sm" color="muted">{message}</Text>
             {itemName && (
-              <Text size="sm" fw={500} mt="sm" className="bg-slate-100 px-3 py-1.5 rounded inline-block">
+              <Text size="sm" weight="medium" className="mt-2 bg-slate-100 px-3 py-1.5 rounded inline-block">
                 {itemName}
               </Text>
             )}
           </div>
-        </Group>
+        </Inline>
 
         {/* Error */}
         {error && (
-          <Alert color="red" variant="light">
+          <Alert variant="error">
             {error}
           </Alert>
         )}
 
         {/* Actions */}
-        <Group justify="flex-end" gap="sm" pt="md" className="border-t border-slate-100">
+        <Inline justify="end" gap="sm" className="pt-4 border-t border-slate-100">
           <Button
-            variant="default"
+            variant="secondary"
             onClick={handleClose}
             disabled={isDeleting}
           >
             {cancelLabel || 'Cancel'}
           </Button>
           <Button
-            color={color}
+            variant="danger"
             onClick={handleConfirm}
-            loading={isDeleting}
+            disabled={isDeleting}
           >
-            {confirmLabel || 'Delete'}
+            {isDeleting ? 'Deleting...' : (confirmLabel || 'Delete')}
           </Button>
-        </Group>
+        </Inline>
       </Stack>
     </div>
   );

@@ -2,15 +2,18 @@
  * BottomDrawer
  *
  * Collapsible drawer positioned at the bottom of the workspace.
- * Uses Mantine Paper + ActionIcon for consistent styling.
+ * Uses bespoke components for consistent styling.
  */
 
 import { useCallback } from 'react';
-import { Paper, ActionIcon, Group, Text, Collapse } from '@mantine/core';
 import { X, Minimize2, Maximize2 } from 'lucide-react';
+import { clsx } from 'clsx';
 import { useUIStore } from '../../stores/uiStore';
 import { ResizeHandle } from '../common/ResizeHandle';
 import { DrawerRegistry } from './DrawerRegistry';
+import { IconButton } from '../atoms/IconButton';
+import { Text } from '../atoms/Text';
+import { Inline } from '../atoms/Inline';
 
 export function BottomDrawer() {
   const { activeDrawer, drawerHeight, drawerCollapsed, setDrawerHeight, toggleDrawer, closeDrawer } = useUIStore();
@@ -27,52 +30,45 @@ export function BottomDrawer() {
   const effectiveHeight = drawerCollapsed ? 40 : drawerHeight;
 
   return (
-    <Paper
-      shadow="md"
-      radius={0}
-      className="border-t border-slate-200 flex flex-col shrink-0 relative z-40 transition-all duration-200"
+    <div
+      className="bg-white shadow-md border-t border-slate-200 flex flex-col shrink-0 relative z-40 transition-all duration-200"
       style={{ height: effectiveHeight }}
     >
       {!drawerCollapsed && <ResizeHandle direction="top" onResize={handleResize} />}
 
       {/* Header */}
-      <Group
-        justify="space-between"
-        px="md"
-        py="xs"
-        className="border-b border-slate-100 bg-slate-50 shrink-0"
-      >
-        <Text size="xs" fw={700} c="slate.7" tt="uppercase" className="tracking-wide">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100 bg-slate-50 shrink-0">
+        <Text size="xs" weight="bold" color="default" className="uppercase tracking-wide">
           {activeDrawer.type.replace(/-/g, ' ')}
         </Text>
-        <Group gap={4}>
-          <ActionIcon
-            variant="subtle"
-            color="gray"
+        <Inline gap="xs">
+          <IconButton
+            icon={drawerCollapsed ? Maximize2 : Minimize2}
+            variant="ghost"
             size="sm"
             onClick={toggleDrawer}
-            title={drawerCollapsed ? 'Expand drawer' : 'Collapse drawer'}
-          >
-            {drawerCollapsed ? <Maximize2 size={14} /> : <Minimize2 size={14} />}
-          </ActionIcon>
-          <ActionIcon
-            variant="subtle"
-            color="gray"
+            label={drawerCollapsed ? 'Expand drawer' : 'Collapse drawer'}
+          />
+          <IconButton
+            icon={X}
+            variant="ghost"
             size="sm"
             onClick={closeDrawer}
-            title="Close drawer"
-          >
-            <X size={16} />
-          </ActionIcon>
-        </Group>
-      </Group>
+            label="Close drawer"
+          />
+        </Inline>
+      </div>
 
       {/* Content */}
-      <Collapse in={!drawerCollapsed}>
-        <div className="flex-1 overflow-auto p-4 custom-scroll" style={{ height: drawerHeight - 40 }}>
-          <DrawerRegistry type={activeDrawer.type} context={activeDrawer.props} onClose={closeDrawer} />
-        </div>
-      </Collapse>
-    </Paper>
+      <div
+        className={clsx(
+          'flex-1 overflow-auto p-4 custom-scroll transition-all duration-200',
+          drawerCollapsed && 'hidden'
+        )}
+        style={{ height: drawerHeight - 40 }}
+      >
+        <DrawerRegistry type={activeDrawer.type} context={activeDrawer.props} onClose={closeDrawer} />
+      </div>
+    </div>
   );
 }

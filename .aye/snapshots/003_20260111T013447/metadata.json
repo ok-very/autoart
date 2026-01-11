@@ -1,0 +1,42 @@
+{
+  "timestamp": "20260111T013447",
+  "files": [
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\pages\\WorkbenchPage.tsx",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\003_20260111T013447\\WorkbenchPage.tsx"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\surfaces\\import\\ImportWorkbenchSidebar.tsx",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\003_20260111T013447\\ImportWorkbenchSidebar.tsx"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\surfaces\\import\\ImportWorkbenchContent.tsx",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\003_20260111T013447\\ImportWorkbenchContent.tsx"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\surfaces\\export\\ExportWorkbenchSidebar.tsx",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\003_20260111T013447\\ExportWorkbenchSidebar.tsx"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\surfaces\\export\\ExportWorkbenchContent.tsx",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\003_20260111T013447\\ExportWorkbenchContent.tsx"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\stores\\importWorkbenchStore.ts",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\003_20260111T013447\\importWorkbenchStore.ts"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\stores\\exportWorkbenchStore.ts",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\003_20260111T013447\\exportWorkbenchStore.ts"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\surfaces\\import\\index.ts",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\003_20260111T013447\\index.ts"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\surfaces\\export\\index.ts",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\003_20260111T013447\\index.ts"
+    }
+  ],
+  "prompt": "these are the proper structures. you're close. it really should still be in flexible drawers. and you want it just needs to be in a drawer and so dows the drawer. The page should be called WorkbenchPage that holds the import and export wrapper. once you get this right we can do export workbench"
+}

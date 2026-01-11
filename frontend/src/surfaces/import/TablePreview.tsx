@@ -9,7 +9,7 @@
 
 import { useMemo } from 'react';
 import { Table as TableIcon } from 'lucide-react';
-import { Badge } from '@mantine/core';
+import { Badge } from '../../ui/atoms';
 import { TableFrame, TableHeaderRow, TableRow, TableHeaderCell, TableCell } from '../../ui/table';
 import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
 import type { ImportPlan } from '../../api/hooks/imports';
@@ -80,7 +80,7 @@ export function TablePreview({ plan, selectedRecordId, onSelect }: TablePreviewP
                         <TableHeaderCell key={col.key} width="flex">
                             <span className="flex items-center gap-1.5">
                                 {col.label}
-                                <Badge size="xs" variant="light" color="gray" className="font-mono">
+                                <Badge variant="light" className="font-mono text-[9px]">
                                     {col.renderHint}
                                 </Badge>
                             </span>

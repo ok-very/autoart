@@ -1,11 +1,16 @@
 /**
  * CreateProjectView
  *
- * Drawer view for creating new projects. Uses Mantine form components.
+ * Drawer view for creating new projects.
  */
 
 import { useState } from 'react';
-import { TextInput, Button, Group, Stack, Text, Alert } from '@mantine/core';
+import { TextInput } from '../../atoms/TextInput';
+import { Button } from '../../atoms/Button';
+import { Inline } from '../../atoms/Inline';
+import { Stack } from '../../atoms/Stack';
+import { Text } from '../../atoms/Text';
+import { Alert } from '../../atoms/Alert';
 import { useUIStore } from '../../../stores/uiStore';
 import { useHierarchyStore } from '../../../stores/hierarchyStore';
 import { useCreateNode } from '../../../api/hooks';
@@ -97,7 +102,7 @@ export function CreateProjectView(props: CreateProjectViewProps | LegacyCreatePr
 
   return (
     <div className="max-w-lg mx-auto">
-      <Text size="sm" c="dimmed" mb="md">
+      <Text size="sm" color="muted" className="mb-4">
         Create a new project to organize your work. Projects contain processes, stages, subprocesses, and tasks.
       </Text>
 
@@ -107,7 +112,7 @@ export function CreateProjectView(props: CreateProjectViewProps | LegacyCreatePr
             label="Project Name"
             placeholder="Enter project name..."
             value={title}
-            onChange={(e) => setTitle(e.currentTarget.value)}
+            onChange={(e) => setTitle(e.target.value)}
             required
             autoFocus
           />
@@ -116,25 +121,24 @@ export function CreateProjectView(props: CreateProjectViewProps | LegacyCreatePr
             label="Default Process Name"
             placeholder="Main Process"
             value={processName}
-            onChange={(e) => setProcessName(e.currentTarget.value)}
+            onChange={(e) => setProcessName(e.target.value)}
             description="Every project needs at least one process. This will be created automatically."
           />
 
-          <Group justify="flex-end" gap="sm" pt="md">
-            <Button variant="default" onClick={handleClose}>
+          <Inline justify="end" gap="sm" className="pt-4">
+            <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={!title.trim()}
-              loading={createNode.isPending}
+              disabled={!title.trim() || createNode.isPending}
             >
-              Create Project
+              {createNode.isPending ? 'Creating...' : 'Create Project'}
             </Button>
-          </Group>
+          </Inline>
 
           {createNode.isError && (
-            <Alert color="red" variant="light">
+            <Alert variant="error">
               Failed to create project. Please try again.
             </Alert>
           )}

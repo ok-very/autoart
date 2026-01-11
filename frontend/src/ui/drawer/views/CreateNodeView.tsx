@@ -1,14 +1,18 @@
 /**
  * CreateNodeView
  *
- * Drawer view for creating hierarchy nodes using Mantine.
+ * Drawer view for creating hierarchy nodes.
  *
  * @deprecated Legacy props are deprecated. Use DrawerProps<CreateNodeContext> instead.
  */
 
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { TextInput, Button, Stack, Group, Text, Box } from '@mantine/core';
+import { TextInput } from '../../atoms/TextInput';
+import { Button } from '../../atoms/Button';
+import { Stack } from '../../atoms/Stack';
+import { Inline } from '../../atoms/Inline';
+import { Text } from '../../atoms/Text';
 import { useUIStore } from '../../../stores/uiStore';
 import { useCreateNode } from '../../../api/hooks';
 import type { NodeType } from '../../../types';
@@ -96,8 +100,8 @@ export function CreateNodeView(props: CreateNodeViewProps | LegacyCreateNodeView
   };
 
   return (
-    <Box maw={480} mx="auto">
-      <Text size="sm" c="dimmed" mb="md">
+    <div className="max-w-lg mx-auto">
+      <Text size="sm" color="dimmed" className="mb-4">
         Add a new {nodeLabel.toLowerCase()} to the hierarchy.
       </Text>
 
@@ -111,27 +115,26 @@ export function CreateNodeView(props: CreateNodeViewProps | LegacyCreateNodeView
             autoFocus
           />
 
-          <Group justify="flex-end" gap="sm" pt="md">
-            <Button variant="default" onClick={handleClose}>
+          <Inline justify="end" gap="sm" className="pt-4">
+            <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={!title.trim()}
-              loading={createNode.isPending}
+              disabled={!title.trim() || createNode.isPending}
               leftSection={<Plus size={16} />}
             >
-              Create {nodeLabel}
+              {createNode.isPending ? 'Creating...' : `Create ${nodeLabel}`}
             </Button>
-          </Group>
+          </Inline>
 
           {createNode.isError && (
-            <Text size="sm" c="red">
+            <Text size="sm" color="error">
               Failed to create {nodeLabel.toLowerCase()}. Please try again.
             </Text>
           )}
         </Stack>
       </form>
-    </Box>
+    </div>
   );
 }

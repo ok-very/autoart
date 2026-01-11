@@ -261,3 +261,27 @@ export function useSaveResolutions() {
         },
     });
 }
+
+// ============================================================================
+// CONNECTOR SESSION HOOKS
+// ============================================================================
+
+/**
+ * Create an import session from an external connector (Monday, etc.)
+ * Returns both the session and generated plan in one call.
+ */
+export function useCreateConnectorSession() {
+    return useMutation({
+        mutationFn: async (data: {
+            connectorType: 'monday';
+            boardId: string;
+            targetProjectId?: string;
+        }) => {
+            return api.post<{ session: ImportSession; plan: ImportPlan }>(
+                '/imports/sessions/connector',
+                data
+            );
+        },
+    });
+}
+

@@ -1,15 +1,11 @@
 /**
  * CreateRecordView
  *
- * Drawer view for creating new records. Uses Mantine form components.
+ * Drawer view for creating new records. Uses bespoke components.
  */
 
 import { useState } from 'react';
-import {
-  TextInput, Select, Button, Group, Stack, Text, Paper, Loader,
-  Checkbox, ThemeIcon, Combobox, InputBase, useCombobox, ScrollArea
-} from '@mantine/core';
-import { Plus, FolderTree, X } from 'lucide-react';
+import { Plus, FolderTree, X, ChevronDown } from 'lucide-react';
 import { useUIStore } from '../../../stores/uiStore';
 import {
   useRecordDefinition,
@@ -17,6 +13,14 @@ import {
   useProjectTree,
 } from '../../../api/hooks';
 import { RichTextInput } from '../../editor/RichTextInput';
+import { TextInput } from '../../atoms/TextInput';
+import { Select } from '../../atoms/Select';
+import { Button } from '../../atoms/Button';
+import { Inline } from '../../atoms/Inline';
+import { Stack } from '../../atoms/Stack';
+import { Text } from '../../atoms/Text';
+import { Checkbox } from '../../atoms/Checkbox';
+import { Spinner } from '../../atoms/Spinner';
 import type { FieldDef, HierarchyNode } from '../../../types';
 import type { DrawerProps, CreateRecordContext } from '../../../drawer/types';
 
@@ -59,23 +63,19 @@ export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateReco
   const [uniqueName, setUniqueName] = useState('');
   const [fieldValues, setFieldValues] = useState<Record<string, unknown>>({});
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(initialNodeId || null);
-
-  // Combobox for node selection
-  const nodeCombobox = useCombobox({
-    onDropdownClose: () => nodeCombobox.resetSelectedOption(),
-  });
+  const [nodeDropdownOpen, setNodeDropdownOpen] = useState(false);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader size="md" />
+        <Spinner size="md" />
       </div>
     );
   }
 
   if (!definition) {
     return (
-      <Text c="dimmed" ta="center" py="xl">
+      <Text color="dimmed" className="text-center py-8">
         Definition not found
       </Text>
     );
@@ -162,17 +162,17 @@ export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateReco
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
-      <Group gap="md" mb="lg">
-        <ThemeIcon size="xl" radius="md" variant="light" color="blue">
+      <Inline gap="md" className="mb-6">
+        <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center">
           <Text size="xl">{icon || definition.name.charAt(0).toUpperCase()}</Text>
-        </ThemeIcon>
+        </div>
         <div>
-          <Text size="xs" fw={700} c="dimmed" tt="uppercase">
+          <Text size="xs" weight="bold" color="dimmed" className="uppercase">
             Create New
           </Text>
-          <Text size="xl" fw={700}>{definition.name}</Text>
+          <Text size="xl" weight="bold">{definition.name}</Text>
         </div>
-      </Group>
+      </Inline>
 
       <form onSubmit={handleSubmit}>
         <Stack gap="md">
@@ -188,21 +188,21 @@ export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateReco
 
           {/* Classification Node Selector */}
           <div>
-            <Text size="xs" fw={500} c="dimmed" mb={4}>
-              <Group gap={4}>
-                <FolderTree size={12} />
+            <Inline gap="xs" className="mb-1">
+              <FolderTree size={12} className="text-slate-500" />
+              <Text size="xs" weight="medium" color="dimmed">
                 Classify Under
-              </Group>
-            </Text>
+              </Text>
+            </Inline>
 
             {selectedNode ? (
-              <Paper withBorder p="sm" radius="sm" className="bg-slate-50">
-                <Group justify="space-between">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                <Inline justify="between">
                   <div className="min-w-0 flex-1">
-                    <Text size="sm" fw={500} truncate>
+                    <Text size="sm" weight="medium" truncate>
                       {getNodeLabel(selectedNode)}
                     </Text>
-                    <Text size="xs" c="dimmed" truncate>
+                    <Text size="xs" color="dimmed" truncate>
                       {getNodePath(selectedNode.id)}
                     </Text>
                   </div>
@@ -211,56 +211,59 @@ export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateReco
                     color="gray"
                     size="xs"
                     onClick={() => setSelectedNodeId(null)}
-                    p={4}
+                    className="p-1"
                   >
                     <X size={14} />
                   </Button>
-                </Group>
-              </Paper>
+                </Inline>
+              </div>
             ) : (
-              <Combobox
-                store={nodeCombobox}
-                onOptionSubmit={(val) => {
-                  setSelectedNodeId(val === '__none__' ? null : val);
-                  nodeCombobox.closeDropdown();
-                }}
-              >
-                <Combobox.Target>
-                  <InputBase
-                    component="button"
-                    type="button"
-                    pointer
-                    rightSection={<Combobox.Chevron />}
-                    onClick={() => nodeCombobox.toggleDropdown()}
-                    className="text-left"
-                  >
-                    <Text size="sm" c="dimmed">
-                      Select a project/task to classify under (optional)
-                    </Text>
-                  </InputBase>
-                </Combobox.Target>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setNodeDropdownOpen(!nodeDropdownOpen)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-left border border-slate-300 rounded-lg bg-white hover:bg-slate-50 transition-colors"
+                >
+                  <Text size="sm" color="dimmed">
+                    Select a project/task to classify under (optional)
+                  </Text>
+                  <ChevronDown size={16} className="text-slate-400" />
+                </button>
 
-                <Combobox.Dropdown>
-                  <ScrollArea.Autosize mah={200}>
-                    <Combobox.Options>
-                      <Combobox.Option value="__none__">
-                        <Text size="sm" c="dimmed">No classification</Text>
-                      </Combobox.Option>
-                      {classifiableNodes.map((node) => (
-                        <Combobox.Option key={node.id} value={node.id}>
-                          <Text size="sm" fw={500}>{getNodeLabel(node)}</Text>
-                          <Text size="xs" c="dimmed">
-                            {node.type} - {getNodePath(node.id)}
-                          </Text>
-                        </Combobox.Option>
-                      ))}
-                    </Combobox.Options>
-                  </ScrollArea.Autosize>
-                </Combobox.Dropdown>
-              </Combobox>
+                {nodeDropdownOpen && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-52 overflow-auto">
+                    <button
+                      type="button"
+                      className="w-full px-3 py-2 text-left hover:bg-slate-50 transition-colors"
+                      onClick={() => {
+                        setSelectedNodeId(null);
+                        setNodeDropdownOpen(false);
+                      }}
+                    >
+                      <Text size="sm" color="dimmed">No classification</Text>
+                    </button>
+                    {classifiableNodes.map((node) => (
+                      <button
+                        type="button"
+                        key={node.id}
+                        className="w-full px-3 py-2 text-left hover:bg-slate-50 transition-colors"
+                        onClick={() => {
+                          setSelectedNodeId(node.id);
+                          setNodeDropdownOpen(false);
+                        }}
+                      >
+                        <Text size="sm" weight="medium">{getNodeLabel(node)}</Text>
+                        <Text size="xs" color="dimmed" as="div">
+                          {node.type} - {getNodePath(node.id)}
+                        </Text>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
 
-            <Text size="xs" c="dimmed" mt={4}>
+            <Text size="xs" color="dimmed" className="mt-1">
               Optionally tag this record to a project, subprocess, or task.
             </Text>
           </div>
@@ -278,22 +281,21 @@ export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateReco
             ))}
 
           {/* Actions */}
-          <Group justify="flex-end" gap="sm" pt="md" mt="sm" className="border-t border-slate-100">
-            <Button variant="default" onClick={handleClose}>
+          <Inline justify="end" gap="sm" className="pt-4 mt-2 border-t border-slate-100">
+            <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={!uniqueName.trim()}
-              loading={createRecord.isPending}
-              leftSection={!createRecord.isPending && <Plus size={16} />}
+              disabled={!uniqueName.trim() || createRecord.isPending}
+              leftSection={createRecord.isPending ? <Spinner size="sm" /> : <Plus size={16} />}
             >
               Create {definition.name}
             </Button>
-          </Group>
+          </Inline>
 
           {createRecord.isError && (
-            <Text size="sm" c="red">
+            <Text size="sm" color="error">
               Failed to create record. Please try again.
             </Text>
           )}
@@ -303,7 +305,7 @@ export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateReco
   );
 }
 
-// Field input component using Mantine
+// Field input component using bespoke components
 interface FieldInputProps {
   fieldDef: FieldDef;
   value: unknown;
@@ -316,7 +318,7 @@ function FieldInput({ fieldDef, value, onChange }: FieldInputProps) {
   if (type === 'textarea') {
     return (
       <div>
-        <Text size="xs" fw={500} c="dimmed" mb={4}>
+        <Text size="xs" weight="medium" color="dimmed" className="mb-1">
           {fieldDef.label}
           {fieldDef.required && <span className="text-red-500 ml-1">*</span>}
         </Text>
@@ -330,15 +332,16 @@ function FieldInput({ fieldDef, value, onChange }: FieldInputProps) {
   }
 
   if (type === 'select' && fieldDef.options) {
+    const selectData = fieldDef.options.map((opt: string | { value: string; label: string }) => 
+      typeof opt === 'string' ? { value: opt, label: opt } : opt
+    );
     return (
       <Select
         label={fieldDef.label}
         placeholder="Select..."
         value={String(value || '')}
         onChange={(val) => onChange(val)}
-        data={fieldDef.options}
-        required={fieldDef.required}
-        clearable
+        data={selectData}
       />
     );
   }
@@ -349,7 +352,7 @@ function FieldInput({ fieldDef, value, onChange }: FieldInputProps) {
       <Checkbox
         label={fieldDef.label}
         checked={isChecked}
-        onChange={(e) => onChange(String(e.currentTarget.checked))}
+        onChange={(checked) => onChange(String(checked))}
       />
     );
   }
@@ -369,7 +372,7 @@ function FieldInput({ fieldDef, value, onChange }: FieldInputProps) {
   if (type === 'text') {
     return (
       <div>
-        <Text size="xs" fw={500} c="dimmed" mb={4}>
+        <Text size="xs" weight="medium" color="dimmed" className="mb-1">
           {fieldDef.label}
           {fieldDef.required && <span className="text-red-500 ml-1">*</span>}
         </Text>

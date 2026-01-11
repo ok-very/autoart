@@ -2,11 +2,10 @@
  * Header
  *
  * Main application header with navigation, project selector, and view controls.
- * Uses Mantine Menu for dropdowns and SegmentedControl for view toggles.
+ * Uses bespoke Menu and SegmentedControl components.
  */
 
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, Button, SegmentedControl, ActionIcon, Group, Text, Badge as MantineBadge, Divider } from '@mantine/core';
 import {
   ChevronDown, Plus, Copy, FolderOpen, Check, Library, Database,
   TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings
@@ -20,6 +19,13 @@ import {
 } from '../../stores/uiStore';
 import type { ProjectViewMode, RecordsViewMode, FieldsViewMode } from '@autoart/shared';
 import { useProjects } from '../../api/hooks';
+import { Button } from '../atoms/Button';
+import { IconButton } from '../atoms/IconButton';
+import { Badge } from '../atoms/Badge';
+import { Text } from '../atoms/Text';
+import { Inline } from '../atoms/Inline';
+import { Menu } from '../molecules/Menu';
+import { SegmentedControl } from '../molecules/SegmentedControl';
 
 export function Header() {
   const location = useLocation();
@@ -68,7 +74,6 @@ export function Header() {
     });
   };
 
-  // Build view mode data for SegmentedControl
   const getViewModeData = () => {
     if (isRecordsPage) {
       return Object.entries(RECORDS_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }));
@@ -81,26 +86,26 @@ export function Header() {
 
   return (
     <header className="h-14 bg-white flex items-center justify-between px-4 shrink-0">
-      <Group gap="sm">
+      <Inline gap="sm" align="center">
         {/* Logo */}
         <Link to="/" className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold hover:bg-slate-800 transition-colors">
           A
         </Link>
 
         {/* Navigation Links */}
-        <Group gap={4} ml="xs">
-          <Button
-            component={Link}
-            to="/"
-            variant={!isRegistryPage && !isComposerPage ? 'light' : 'subtle'}
-            color="gray"
-            size="sm"
-          >
-            Projects
-          </Button>
+        <Inline gap="xs" className="ml-2">
+          <Link to="/">
+            <Button
+              variant={!isRegistryPage && !isComposerPage ? 'light' : 'subtle'}
+              color="gray"
+              size="sm"
+            >
+              Projects
+            </Button>
+          </Link>
 
           {/* Registry Dropdown */}
-          <Menu shadow="md" width={180}>
+          <Menu>
             <Menu.Target>
               <Button
                 variant={isRegistryPage ? 'light' : 'subtle'}
@@ -150,36 +155,36 @@ export function Header() {
           </Menu>
 
           {/* Composer Link */}
-          <Button
-            component={Link}
-            to="/composer"
-            variant={isComposerPage ? 'light' : 'subtle'}
-            color={isComposerPage ? 'violet' : 'gray'}
-            size="sm"
-            leftSection={<Wand2 size={14} />}
-          >
-            Composer
-          </Button>
+          <Link to="/composer">
+            <Button
+              variant={isComposerPage ? 'light' : 'subtle'}
+              color={isComposerPage ? 'violet' : 'gray'}
+              size="sm"
+              leftSection={<Wand2 size={14} />}
+            >
+              Composer
+            </Button>
+          </Link>
 
           {/* Workbench Link */}
-          <Button
-            component={Link}
-            to="/workbench"
-            variant={isWorkbenchPage ? 'light' : 'subtle'}
-            color={isWorkbenchPage ? 'yellow' : 'gray'}
-            size="sm"
-            leftSection={<Hammer size={14} />}
-          >
-            Workbench
-          </Button>
-        </Group>
+          <Link to="/workbench">
+            <Button
+              variant={isWorkbenchPage ? 'light' : 'subtle'}
+              color={isWorkbenchPage ? 'yellow' : 'gray'}
+              size="sm"
+              leftSection={<Hammer size={14} />}
+            >
+              Workbench
+            </Button>
+          </Link>
+        </Inline>
 
         {!isRegistryPage && !isComposerPage && (
           <>
-            <Divider orientation="vertical" className="h-6 mx-1" />
+            <div className="h-6 w-px bg-slate-200 mx-1" />
 
             {/* Project Selector */}
-            <Menu shadow="md" width={280}>
+            <Menu>
               <Menu.Target>
                 <Button
                   variant="subtle"
@@ -189,20 +194,19 @@ export function Header() {
                   className="max-w-[280px]"
                 >
                   {selectedProject ? (
-                    <Group gap="xs">
-                      <MantineBadge size="xs" variant="light" color="blue">Project</MantineBadge>
-                      <Text size="sm" fw={600} truncate className="max-w-[160px]">
+                    <Inline gap="xs" align="center">
+                      <Badge variant="project">Project</Badge>
+                      <Text size="sm" weight="semibold" truncate className="max-w-[160px]">
                         {selectedProject.title}
                       </Text>
-                    </Group>
+                    </Inline>
                   ) : (
-                    <Text size="sm" c="dimmed">Select a project...</Text>
+                    <Text size="sm" color="muted">Select a project...</Text>
                   )}
                 </Button>
               </Menu.Target>
 
-              <Menu.Dropdown>
-                {/* Actions Section */}
+              <Menu.Dropdown className="min-w-[280px]">
                 <Menu.Item leftSection={<Plus size={16} />} onClick={handleCreateProject}>
                   New Project
                 </Menu.Item>
@@ -222,7 +226,6 @@ export function Header() {
 
                 <Menu.Divider />
 
-                {/* Project List */}
                 <Menu.Label>Your Projects</Menu.Label>
                 {projects && projects.length > 0 ? (
                   projects.map((project) => (
@@ -237,7 +240,7 @@ export function Header() {
                     </Menu.Item>
                   ))
                 ) : (
-                  <Text size="sm" c="dimmed" ta="center" py="md">
+                  <Text size="sm" color="muted" className="text-center py-3">
                     No projects yet
                   </Text>
                 )}
@@ -257,10 +260,10 @@ export function Header() {
             )}
           </>
         )}
-      </Group>
+      </Inline>
 
       {/* Right side controls */}
-      <Group gap="sm">
+      <Inline gap="sm" align="center">
         {/* View Toggle */}
         <SegmentedControl
           size="xs"
@@ -270,16 +273,10 @@ export function Header() {
         />
 
         {/* Settings */}
-        <ActionIcon
-          component={Link}
-          to="/settings"
-          variant="subtle"
-          color="gray"
-          size="lg"
-        >
-          <Settings size={18} />
-        </ActionIcon>
-      </Group>
+        <Link to="/settings">
+          <IconButton icon={Settings} variant="ghost" size="md" label="Settings" />
+        </Link>
+      </Inline>
     </header>
   );
 }

@@ -13,7 +13,7 @@
 
 import { useState, useMemo } from 'react';
 import { Search, Trash2, Edit3, X } from 'lucide-react';
-import { Checkbox } from '@mantine/core';
+import { Checkbox } from '../atoms/Checkbox';
 import { useRecords, useUpdateRecord } from '../../api/hooks';
 import { TableFrame, TableHeaderRow, TableRow, TableHeaderCell, TableCell } from '../table';
 import { DataFieldWidget, type DataFieldKind } from '../common/DataFieldWidget';
@@ -259,7 +259,6 @@ export function FieldInstancesReview({ field }: FieldInstancesReviewProps) {
                                     checked={allSelected}
                                     indeterminate={someSelected && !allSelected}
                                     onChange={toggleSelectAll}
-                                    size="sm"
                                 />
                             </TableCell>
                             <TableHeaderCell width="flex">Record Name</TableHeaderCell>
@@ -283,7 +282,6 @@ export function FieldInstancesReview({ field }: FieldInstancesReviewProps) {
                                         <Checkbox
                                             checked={isSelected}
                                             onChange={() => toggleSelection(record.id)}
-                                            size="sm"
                                         />
                                     </TableCell>
                                     <TableCell width="flex" className="font-medium">

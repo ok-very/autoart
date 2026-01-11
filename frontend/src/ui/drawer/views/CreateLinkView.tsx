@@ -1,14 +1,18 @@
 /**
  * CreateLinkView
  *
- * Drawer view for creating record links using Mantine.
+ * Drawer view for creating record links.
  */
 
 import { useState } from 'react';
 import { Link2 } from 'lucide-react';
-import {
-  TextInput, Button, Stack, Group, Text, Select, Paper, Box, Loader
-} from '@mantine/core';
+import { TextInput } from '../../atoms/TextInput';
+import { Button } from '../../atoms/Button';
+import { Stack } from '../../atoms/Stack';
+import { Inline } from '../../atoms/Inline';
+import { Text } from '../../atoms/Text';
+import { Select } from '../../atoms/Select';
+import { Spinner } from '../../atoms/Spinner';
 import { useUIStore } from '../../../stores/uiStore';
 import { useCreateLink, useLinkTypes, useSearch } from '../../../api/hooks';
 import { useDebounce } from '../../../hooks/useDebounce';
@@ -90,10 +94,10 @@ export function CreateLinkView(props: CreateLinkViewProps | LegacyCreateLinkView
   const records = searchResults?.filter(r => r.type === 'record' && r.id !== sourceRecordId) || [];
 
   return (
-    <Box maw={560} mx="auto" className="flex flex-col h-full">
-      <Stack gap={4} mb="md">
-        <Text size="lg" fw={700}>Create Record Link</Text>
-        <Text size="sm" c="dimmed">
+    <div className="max-w-xl mx-auto flex flex-col h-full">
+      <Stack gap="xs" className="mb-4">
+        <Text size="lg" weight="bold">Create Record Link</Text>
+        <Text size="sm" color="dimmed">
           Search for a target record and select a relationship type.
         </Text>
       </Stack>
@@ -107,77 +111,71 @@ export function CreateLinkView(props: CreateLinkViewProps | LegacyCreateLinkView
             data={linkTypes?.map(t => ({ value: t, label: t })) || [{ value: 'related_to', label: 'related_to' }]}
           />
 
-          <Box className="flex-1 flex flex-col min-h-0">
-            <TextInput
-              label="Target Record"
-              placeholder="Search for a record..."
-              value={query}
-              onChange={(e) => setQuery(e.currentTarget.value)}
-              autoFocus
-              mb="xs"
-            />
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="mb-2">
+              <TextInput
+                label="Target Record"
+                placeholder="Search for a record..."
+                value={query}
+                onChange={(e) => setQuery(e.currentTarget.value)}
+                autoFocus
+              />
+            </div>
 
-            <Paper
-              withBorder
-              p="xs"
-              radius="md"
-              className="flex-1 overflow-y-auto bg-slate-50"
+            <div
+              className="flex-1 overflow-y-auto bg-slate-50 border border-slate-200 rounded-lg p-2"
               style={{ minHeight: 200 }}
             >
               {isSearching ? (
-                <Group justify="center" p="lg">
-                  <Loader size="sm" />
-                  <Text size="sm" c="dimmed">Searching...</Text>
-                </Group>
+                <Inline justify="center" className="p-6">
+                  <Spinner size="sm" />
+                  <Text size="sm" color="dimmed">Searching...</Text>
+                </Inline>
               ) : records.length === 0 ? (
-                <Text size="sm" c="dimmed" ta="center" p="lg">
+                <Text size="sm" color="dimmed" className="text-center block p-6">
                   {query.length < 2 ? 'Type at least 2 characters to search' : 'No records found'}
                 </Text>
               ) : (
                 <Stack gap="xs">
                   {records.map(record => (
-                    <Paper
+                    <div
                       key={record.id}
-                      withBorder
-                      p="sm"
-                      radius="sm"
-                      className={`cursor-pointer transition-colors ${selectedTargetId === record.id
+                      className={`cursor-pointer transition-colors border rounded p-3 ${selectedTargetId === record.id
                         ? 'bg-blue-50 border-blue-300'
-                        : 'bg-white hover:border-blue-300'
+                        : 'bg-white border-slate-200 hover:border-blue-300'
                         }`}
                       onClick={() => setSelectedTargetId(record.id)}
                     >
-                      <Group gap="xs" wrap="nowrap">
+                      <Inline gap="xs" wrap={false}>
                         <Link2 size={14} className={selectedTargetId === record.id ? 'text-blue-500' : 'text-slate-400'} />
-                        <Stack gap={0}>
-                          <Text size="sm" fw={500}>{record.name}</Text>
+                        <Stack gap="none">
+                          <Text size="sm" weight="medium">{record.name}</Text>
                           {record.definitionName && (
-                            <Text size="xs" c="dimmed">{record.definitionName}</Text>
+                            <Text size="xs" color="dimmed">{record.definitionName}</Text>
                           )}
                         </Stack>
-                      </Group>
-                    </Paper>
+                      </Inline>
+                    </div>
                   ))}
                 </Stack>
               )}
-            </Paper>
-          </Box>
+            </div>
+          </div>
 
-          <Group justify="flex-end" gap="sm" pt="md" className="border-t border-slate-100">
-            <Button variant="default" onClick={handleClose}>
+          <Inline justify="end" gap="sm" className="pt-4 border-t border-slate-100">
+            <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={!selectedTargetId}
-              loading={createLink.isPending}
+              disabled={!selectedTargetId || createLink.isPending}
               leftSection={<Link2 size={16} />}
             >
-              Create Link
+              {createLink.isPending ? 'Creating...' : 'Create Link'}
             </Button>
-          </Group>
+          </Inline>
         </Stack>
       </form>
-    </Box>
+    </div>
   );
 }

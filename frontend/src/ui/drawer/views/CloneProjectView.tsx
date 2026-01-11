@@ -1,15 +1,19 @@
 /**
  * CloneProjectView
  *
- * Drawer view for cloning a project with configurable depth using Mantine.
+ * Drawer view for cloning a project with configurable depth.
  */
 
 import { useState } from 'react';
 import { Copy, FileText, Database, Layers } from 'lucide-react';
-import {
-  TextInput, Button, Stack, Group, Text, Paper, Radio, Checkbox,
-  Box, Alert, ThemeIcon, Badge
-} from '@mantine/core';
+import { TextInput } from '../../atoms/TextInput';
+import { Button } from '../../atoms/Button';
+import { Stack } from '../../atoms/Stack';
+import { Inline } from '../../atoms/Inline';
+import { Text } from '../../atoms/Text';
+import { Alert } from '../../atoms/Alert';
+import { Badge } from '../../atoms/Badge';
+import { Checkbox } from '../../atoms/Checkbox';
 import { useUIStore } from '../../../stores/uiStore';
 import { useHierarchyStore } from '../../../stores/hierarchyStore';
 import { useCloneNode, useCloneStats } from '../../../api/hooks';
@@ -115,17 +119,17 @@ export function CloneProjectView(props: CloneProjectViewProps | LegacyCloneProje
   };
 
   return (
-    <Box maw={480} mx="auto">
+    <div className="max-w-lg mx-auto">
       {/* Header */}
-      <Group gap="sm" mb="md">
-        <ThemeIcon size={40} variant="light" color="blue" radius="md">
+      <Inline gap="sm" className="mb-4">
+        <div className="w-10 h-10 flex items-center justify-center bg-blue-100 text-blue-600 rounded-lg">
           <Copy size={20} />
-        </ThemeIcon>
-        <Stack gap={0}>
-          <Text size="lg" fw={600}>Clone Project</Text>
-          <Text size="sm" c="dimmed">"{sourceProjectTitle}"</Text>
+        </div>
+        <Stack gap="none">
+          <Text size="lg" weight="semibold">Clone Project</Text>
+          <Text size="sm" color="muted">"{sourceProjectTitle}"</Text>
         </Stack>
-      </Group>
+      </Inline>
 
       <form onSubmit={handleSubmit}>
         <Stack gap="lg">
@@ -139,130 +143,125 @@ export function CloneProjectView(props: CloneProjectViewProps | LegacyCloneProje
           />
 
           {/* Clone Depth */}
-          <Box>
-            <Group gap="xs" mb="xs">
+          <div>
+            <Inline gap="xs" className="mb-2">
               <Layers size={16} />
-              <Text size="sm" fw={500}>Clone Depth</Text>
-            </Group>
-            <Radio.Group value={depth} onChange={(val) => setDepth(val as CloneDepth)}>
-              <Stack gap="xs">
-                {DEPTH_OPTIONS.map((option) => (
-                  <Paper
-                    key={option.value}
-                    withBorder
-                    p="sm"
-                    radius="md"
-                    className={`cursor-pointer transition-colors ${depth === option.value ? 'border-blue-500 bg-blue-50' : ''
-                      }`}
-                    onClick={() => setDepth(option.value)}
-                  >
-                    <Group wrap="nowrap">
-                      <Radio value={option.value} />
-                      <Stack gap={0}>
-                        <Text size="sm" fw={500}>{option.label}</Text>
-                        <Text size="xs" c="dimmed">{option.description}</Text>
-                      </Stack>
-                    </Group>
-                  </Paper>
-                ))}
-              </Stack>
-            </Radio.Group>
-          </Box>
+              <Text size="sm" weight="medium">Clone Depth</Text>
+            </Inline>
+            <Stack gap="xs">
+              {DEPTH_OPTIONS.map((option) => (
+                <div
+                  key={option.value}
+                  className={`bg-white border rounded-lg p-3 cursor-pointer transition-colors ${depth === option.value ? 'border-blue-500 bg-blue-50' : 'border-slate-200'
+                    }`}
+                  onClick={() => setDepth(option.value)}
+                >
+                  <Inline wrap={false}>
+                    <input
+                      type="radio"
+                      name="cloneDepth"
+                      value={option.value}
+                      checked={depth === option.value}
+                      onChange={() => setDepth(option.value)}
+                      className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                    />
+                    <Stack gap="none">
+                      <Text size="sm" weight="medium">{option.label}</Text>
+                      <Text size="xs" color="muted">{option.description}</Text>
+                    </Stack>
+                  </Inline>
+                </div>
+              ))}
+            </Stack>
+          </div>
 
           {/* Include Options */}
           <Stack gap="xs">
             {/* Include Definitions */}
-            <Paper
-              withBorder
-              p="sm"
-              radius="md"
-              className={`cursor-pointer transition-colors ${includeDefinitions ? 'border-purple-500 bg-purple-50' : ''
+            <div
+              className={`bg-white border rounded-lg p-3 cursor-pointer transition-colors ${includeDefinitions ? 'border-purple-500 bg-purple-50' : 'border-slate-200'
                 }`}
               onClick={() => setIncludeDefinitions(!includeDefinitions)}
             >
-              <Group wrap="nowrap">
+              <Inline wrap={false}>
                 <Checkbox
                   checked={includeDefinitions}
-                  onChange={(e) => setIncludeDefinitions(e.currentTarget.checked)}
+                  onChange={(checked) => setIncludeDefinitions(checked)}
                 />
-                <Stack gap={2} style={{ flex: 1 }}>
-                  <Group gap="xs">
+                <Stack gap="none" className="flex-1">
+                  <Inline gap="xs">
                     <FileText size={16} className="text-purple-600" />
-                    <Text size="sm" fw={500}>Include Record Definitions</Text>
+                    <Text size="sm" weight="medium">Include Record Definitions</Text>
                     {includedCount > 0 && (
-                      <Badge size="xs" color="purple" variant="light">
+                      <Badge variant="process">
                         {includedCount} definition{includedCount !== 1 ? 's' : ''}
                       </Badge>
                     )}
                     {excludedCount > 0 && (
-                      <Badge size="xs" color="yellow" variant="light">
+                      <Badge variant="warning">
                         {excludedCount} excluded
                       </Badge>
                     )}
-                  </Group>
-                  <Text size="xs" c="dimmed">
+                  </Inline>
+                  <Text size="xs" color="muted">
                     Clone all non-excluded record definitions to the new project
                   </Text>
                 </Stack>
-              </Group>
-            </Paper>
+              </Inline>
+            </div>
 
             {/* Include Records */}
-            <Paper
-              withBorder
-              p="sm"
-              radius="md"
-              className={`cursor-pointer transition-colors ${includeRecords ? 'border-green-500 bg-green-50' : ''
+            <div
+              className={`bg-white border rounded-lg p-3 cursor-pointer transition-colors ${includeRecords ? 'border-green-500 bg-green-50' : 'border-slate-200'
                 }`}
               onClick={() => setIncludeRecords(!includeRecords)}
             >
-              <Group wrap="nowrap">
+              <Inline wrap={false}>
                 <Checkbox
                   checked={includeRecords}
-                  onChange={(e) => setIncludeRecords(e.currentTarget.checked)}
+                  onChange={(checked) => setIncludeRecords(checked)}
                 />
-                <Stack gap={2} style={{ flex: 1 }}>
-                  <Group gap="xs">
+                <Stack gap="none" className="flex-1">
+                  <Inline gap="xs">
                     <Database size={16} className="text-green-600" />
-                    <Text size="sm" fw={500}>Include Records</Text>
-                  </Group>
-                  <Text size="xs" c="dimmed">
+                    <Text size="sm" weight="medium">Include Records</Text>
+                  </Inline>
+                  <Text size="xs" color="muted">
                     Copy data records classified under this project's hierarchy
                   </Text>
                 </Stack>
-              </Group>
-            </Paper>
+              </Inline>
+            </div>
           </Stack>
 
           {/* Info Box */}
-          <Alert color="yellow" variant="light">
+          <Alert variant="warning">
             <Text size="xs">
               <strong>Note:</strong> Task references will be cloned but will still point to the original records (unless you include records).
             </Text>
           </Alert>
 
           {/* Actions */}
-          <Group justify="flex-end" gap="sm" pt="md" className="border-t border-slate-100">
-            <Button variant="default" onClick={handleClose}>
+          <Inline justify="end" gap="sm" className="pt-4 border-t border-slate-100">
+            <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={!title.trim()}
-              loading={cloneNode.isPending}
+              disabled={!title.trim() || cloneNode.isPending}
               leftSection={<Copy size={16} />}
             >
-              Clone Project
+              {cloneNode.isPending ? 'Cloning...' : 'Clone Project'}
             </Button>
-          </Group>
+          </Inline>
 
           {cloneNode.isError && (
-            <Text size="sm" c="red">
+            <Text size="sm" color="error">
               Failed to clone project. Please try again.
             </Text>
           )}
         </Stack>
       </form>
-    </Box>
+    </div>
   );
 }

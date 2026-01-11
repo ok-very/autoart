@@ -149,6 +149,14 @@ export const DRAWER_DEFINITIONS: Record<keyof DrawerContextMap, DrawerDefinition
         dismissible: true,
         showClose: true,
     },
+    'monday-boards': {
+        id: 'monday-boards',
+        title: 'Select Monday Boards',
+        size: 'lg',
+        sideEffects: [],
+        dismissible: true,
+        showClose: true,
+    },
 };
 
 // ==================== LAZY LOADED VIEWS ====================
@@ -192,6 +200,9 @@ const ViewDefinitionDrawer = lazy(() =>
 );
 const ProjectLibraryDrawer = lazy(() =>
     import('../ui/drawer/views/ProjectLibraryDrawer').then((m) => ({ default: m.ProjectLibraryDrawer }))
+);
+const MondayBoardsDrawer = lazy(() =>
+    import('../ui/drawer/views/MondayBoardsDrawer').then((m) => ({ default: m.MondayBoardsDrawer }))
 );
 
 // ==================== LOADING FALLBACK ====================
@@ -291,6 +302,8 @@ export function DrawerRegistry({ type, context, onClose, onResult }: DrawerRegis
                 return <ViewDefinitionDrawer {...(context as any)} />;
             case 'project-library':
                 return <ProjectLibraryDrawer {...(context as any)} />;
+            case 'monday-boards':
+                return <MondayBoardsDrawer {...(context as any)} />;
             default:
                 return (
                     <div className="p-4 text-slate-500">

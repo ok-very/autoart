@@ -1,7 +1,7 @@
 /**
  * Execution Controls
  *
- * Footer with explicit commit phase button using Mantine components.
+ * Footer with explicit commit phase button using bespoke atoms.
  * 
  * Commit behavior by output kind:
  * - fact_candidate: Commit only if approved by user
@@ -11,9 +11,9 @@
  * - unclassified: Never commit
  */
 
-import { Ban, CheckCircle2, AlertTriangle, Upload } from 'lucide-react';
+import { Ban, CheckCircle2, AlertTriangle, Upload, Loader2 } from 'lucide-react';
 import { useState, useCallback, useMemo } from 'react';
-import { Paper, Group, Text, Button, Badge, Loader } from '@mantine/core';
+import { Card, Inline, Text, Button, Badge } from '../../ui/atoms';
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
 
 // ============================================================================
@@ -79,24 +79,18 @@ function getCommitStats(plan: ImportPlan | null): CommitStats {
             continue;
         }
 
-        if (c.outcome === 'DERIVED_STATE') {
-            stats.workEvents++;
-            continue;
-        }
-
-        if (c.outcome === 'FACT_EMITTED') {
-            // Check if it has fact_candidate outputs
-            const hasFactCandidate = outputs.some(o => o.kind === 'fact_candidate');
-            if (hasFactCandidate) {
-                if (c.resolution?.resolvedOutcome === 'FACT_EMITTED') {
-                    stats.factCandidatesApproved++;
-                } else {
-                    stats.factCandidatesPending++;
-                }
+        // Count fact_candidates in outputs
+        const factCandidates = outputs.filter(o => o.kind === 'fact_candidate');
+        for (const fc of factCandidates) {
+            // Use optional access as approved may not be on the base type
+            if ((fc as { approved?: boolean }).approved) {
+                stats.factCandidatesApproved++;
+            } else {
+                stats.factCandidatesPending++;
             }
         }
 
-        // Count work_events from status
+        // Count work_events
         if (statusEvent?.kind === 'work_event') {
             stats.workEvents++;
         }
@@ -191,90 +185,101 @@ export function ExecutionControls({
     // No session yet
     if (!session || !plan) {
         return (
-            <Paper h={64} shadow="none" className="border-t border-slate-200">
-                <Group justify="flex-end" h="100%" px="md">
-                    <Text size="sm" c="dimmed">
+            <Card className="h-16 border-t border-slate-200 rounded-none shadow-none">
+                <Inline justify="end" className="h-full px-4">
+                    <Text size="sm" color="dimmed">
                         Configure and parse data to continue
                     </Text>
-                </Group>
-            </Paper>
+                </Inline>
+            </Card>
         );
     }
 
     return (
-        <Paper h={64} shadow="none" className="border-t border-slate-200">
-            <Group justify="space-between" h="100%" px="md">
+        <Card className="h-16 border-t border-slate-200 rounded-none shadow-none">
+            <Inline justify="between" className="h-full px-4">
                 {/* Stats summary */}
-                <Group gap="md">
-                    <Text size="sm" c="dimmed">
+                <Inline gap="md">
+                    <Text size="sm" color="dimmed">
                         Ready to import{' '}
-                        <Text span fw={500} c="dark">{plan.items.length}</Text> items
+                        <span className="font-medium text-slate-800">{plan.items.length}</span> items
                         {plan.containers.length > 0 && (
-                            <> in <Text span fw={500} c="dark">{plan.containers.length}</Text> containers</>
+                            <> in <span className="font-medium text-slate-800">{plan.containers.length}</span> containers</>
                         )}
                     </Text>
 
                     {/* Commit will produce */}
-                    <Text size="sm" c="dimmed" className="border-l border-slate-200 pl-4">
-                        Will commit: <Text span fw={500} c="dark">{commitSummary}</Text>
+                    <Text size="sm" color="dimmed" className="border-l border-slate-200 pl-4">
+                        Will commit: <span className="font-medium text-slate-800">{commitSummary}</span>
                     </Text>
 
                     {/* Pending items warning */}
                     {(stats.factCandidatesPending > 0 || stats.unclassified > 0) && (
-                        <Badge color="yellow" variant="light" leftSection={<AlertTriangle size={12} />}>
+                        <Badge variant="warning" className="flex items-center gap-1">
+                            <AlertTriangle size={12} />
                             {stats.factCandidatesPending + stats.unclassified} need review
                         </Badge>
                     )}
 
                     {/* Non-committed items info */}
                     {stats.actionHints > 0 && (
-                        <Text size="xs" c="dimmed">
+                        <Text size="xs" color="dimmed">
                             ({stats.actionHints} action hint{stats.actionHints !== 1 ? 's' : ''} stored as classification only)
                         </Text>
                     )}
-                </Group>
+                </Inline>
 
                 {/* Action buttons */}
-                <Group gap="sm">
+                <Inline gap="sm">
                     {/* Success message */}
                     {executionStatus === 'success' && (
-                        <Group gap="xs" c="green">
+                        <Inline gap="xs" className="text-green-600">
                             <CheckCircle2 size={16} />
                             <Text size="sm">Import completed!</Text>
-                        </Group>
+                        </Inline>
                     )}
 
                     {/* Blocked message */}
                     {executionStatus === 'blocked' && (
-                        <Group gap="xs" c="yellow.7">
+                        <Inline gap="xs" className="text-amber-600">
                             <AlertTriangle size={16} />
                             <Text size="sm">Approve or skip pending items first</Text>
-                        </Group>
+                        </Inline>
                     )}
 
                     {/* Cancel button */}
                     <Button
-                        variant="default"
-                        leftSection={<Ban size={16} />}
+                        variant="secondary"
                         disabled={isExecuting}
                         onClick={onReset}
                     >
+                        <Ban size={16} className="mr-1" />
                         Cancel
                     </Button>
 
                     {/* Commit button - explicit action */}
                     <Button
-                        color="green"
-                        leftSection={isExecuting ? <Loader size={16} color="white" /> : <Upload size={16} />}
+                        variant="primary"
                         disabled={!canExecute}
                         onClick={handleExecute}
                         title={!commitAllowed ? 'Approve or skip pending fact candidates first' : undefined}
+                        className="bg-green-600 hover:bg-green-700"
                     >
-                        {isExecuting ? 'Committing...' : 'Commit Approved Events'}
+                        {isExecuting ? (
+                            <>
+                                <Loader2 size={16} className="mr-1 animate-spin" />
+                                Committing...
+                            </>
+                        ) : (
+                            <>
+                                <Upload size={16} className="mr-1" />
+                                Commit Approved Events
+                            </>
+                        )}
                     </Button>
-                </Group>
-            </Group>
-        </Paper>
+                </Inline>
+            </Inline>
+        </Card>
     );
 }
 

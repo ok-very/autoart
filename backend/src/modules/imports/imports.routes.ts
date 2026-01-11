@@ -29,6 +29,12 @@ const SessionIdParamSchema = z.object({
     id: z.string().uuid(),
 });
 
+const CreateConnectorSessionBodySchema = z.object({
+    connectorType: z.enum(['monday', 'asana', 'notion']),
+    boardId: z.string().min(1),
+    targetProjectId: z.string().uuid().optional(),
+});
+
 // ============================================================================
 // ROUTES
 // ============================================================================
@@ -50,6 +56,26 @@ export async function importsRoutes(app: FastifyInstance) {
         });
 
         return reply.status(201).send(session);
+    });
+
+    /**
+     * Create a new import session from an external connector (Monday, etc.)
+     * Always includes subitems - no toggle option.
+     */
+    app.post('/sessions/connector', async (request, reply) => {
+        const body = CreateConnectorSessionBodySchema.parse(request.body);
+        const userId = (request.user as { id?: string })?.id;
+
+        const session = await importsService.createConnectorSession({
+            connectorType: body.connectorType,
+            connectorConfig: { boardId: body.boardId },
+            targetProjectId: body.targetProjectId,
+            userId,
+        });
+
+        const plan = await importsService.generatePlanFromConnector(session.id);
+
+        return reply.status(201).send({ session, plan });
     });
 
     /**

@@ -1,5 +1,5 @@
 /**
- * TableKit - Unified table primitives built on Mantine
+ * TableKit - Unified table primitives
  *
  * Provides consistent visual grammar for all table/grid surfaces:
  * - TableFrame: Scroll container with border and background

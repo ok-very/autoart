@@ -1,7 +1,7 @@
 /**
  * AssignRecordsView (formerly ClassifyRecordsView)
  *
- * Bulk hierarchy assignment UI for records using Mantine.
+ * Bulk hierarchy assignment UI for records using bespoke components.
  * This assigns records to hierarchy nodes - NOT semantic classification.
  *
  * @deprecated Legacy props are deprecated. Use DrawerProps<ClassifyRecordsContext> instead.
@@ -9,9 +9,11 @@
 
 import { useState } from 'react';
 import { FolderOpen, ChevronRight } from 'lucide-react';
-import {
-    Button, Stack, Group, Text, Paper, Box, ThemeIcon, Alert
-} from '@mantine/core';
+import { Button } from '../../atoms/Button';
+import { Stack } from '../../atoms/Stack';
+import { Inline } from '../../atoms/Inline';
+import { Text } from '../../atoms/Text';
+import { Alert } from '../../atoms/Alert';
 import { useUIStore } from '../../../stores/uiStore';
 import { useProjectTree, useBulkClassifyRecords } from '../../../api/hooks';
 import type { HierarchyNode } from '../../../types';
@@ -144,88 +146,80 @@ export function AssignRecordsView(props: AssignRecordsViewProps | LegacyAssignRe
     const renderNode = (node: HierarchyNode & { children: HierarchyNode[] }, depth = 0) => {
         const isSelected = selectedNodeId === node.id;
         return (
-            <Box key={node.id}>
-                <Paper
-                    withBorder={isSelected}
-                    p="xs"
-                    radius="sm"
-                    className={`cursor-pointer transition-colors ${isSelected
-                        ? 'bg-blue-50 border-blue-300'
+            <div key={node.id}>
+                <div
+                    className={`cursor-pointer transition-colors p-2 rounded-md ${isSelected
+                        ? 'bg-blue-50 border border-blue-300'
                         : 'hover:bg-slate-100'
                         }`}
                     style={{ marginLeft: depth * 16 }}
                     onClick={() => setSelectedNodeId(node.id)}
                 >
-                    <Group gap="xs" wrap="nowrap">
+                    <Inline gap="xs" wrap={false}>
                         {node.children.length > 0 && (
                             <ChevronRight size={14} className="text-slate-400" />
                         )}
                         <Text size="sm" truncate className="flex-1">{node.title}</Text>
-                        <Text size="xs" c="dimmed" tt="capitalize">{node.type}</Text>
-                    </Group>
-                </Paper>
+                        <Text size="xs" color="muted" className="capitalize">{node.type}</Text>
+                    </Inline>
+                </div>
                 {node.children.map((child) => renderNode(child as typeof node, depth + 1))}
-            </Box>
+            </div>
         );
     };
 
     return (
-        <Box maw={480} mx="auto">
-            <Group gap="md" mb="lg" align="flex-start">
-                <ThemeIcon size={48} variant="light" color="blue" radius="xl">
+        <div className="max-w-lg mx-auto">
+            <Inline gap="md" className="mb-6" align="start">
+                <div className="w-12 h-12 flex items-center justify-center bg-blue-100 text-blue-600 rounded-full">
                     <FolderOpen size={24} />
-                </ThemeIcon>
-                <Stack gap={2}>
-                    <Text size="lg" fw={500}>Assign Records</Text>
-                    <Text size="sm" c="dimmed">
+                </div>
+                <Stack gap="none">
+                    <Text size="lg" weight="medium">Assign Records</Text>
+                    <Text size="sm" color="muted">
                         Select a project, process, or stage to assign {recordIds.length} record
                         {recordIds.length > 1 ? 's' : ''}.
                     </Text>
                 </Stack>
-            </Group>
+            </Inline>
 
             {/* Node selection tree */}
-            <Paper
-                withBorder
-                p="xs"
-                radius="md"
-                className="bg-slate-50 overflow-y-auto"
+            <div
+                className="bg-slate-50 border border-slate-200 rounded-lg p-2 overflow-y-auto mb-4"
                 style={{ maxHeight: 256 }}
-                mb="md"
             >
                 {tree.length === 0 ? (
-                    <Text size="sm" c="dimmed" p="sm">No hierarchy nodes available</Text>
+                    <Text size="sm" color="muted" className="p-2">No hierarchy nodes available</Text>
                 ) : (
-                    <Stack gap={4}>
+                    <Stack gap="xs">
                         {tree.map((node) => renderNode(node))}
                     </Stack>
                 )}
-            </Paper>
+            </div>
 
             {selectedNodeId && (
-                <Text size="sm" c="blue" mb="md">
+                <Text size="sm" className="text-blue-600 mb-4">
                     Selected: {hierarchy?.find((n: HierarchyNode) => n.id === selectedNodeId)?.title || 'Unknown'}
                 </Text>
             )}
 
             {error && (
-                <Alert color="red" variant="light" mb="md">
+                <Alert variant="error" className="mb-4">
                     {error}
                 </Alert>
             )}
 
-            <Group justify="space-between" pt="md" className="border-t border-slate-100">
+            <Inline justify="between" className="pt-4 border-t border-slate-100">
                 <Button
-                    variant="subtle"
-                    color="gray"
+                    variant="ghost"
                     onClick={handleRemoveAssignment}
                     disabled={bulkAssign.isPending}
                 >
                     Remove Assignment
                 </Button>
-                <Group gap="sm">
+                <Inline gap="sm">
                     <Button
-                        variant="default"
+                        variant="secondary"
                         onClick={handleClose}
                         disabled={bulkAssign.isPending}
                     >
@@ -233,14 +227,13 @@ export function AssignRecordsView(props: AssignRecordsViewProps | LegacyAssignRe
                     </Button>
                     <Button
                         onClick={handleAssign}
-                        disabled={!selectedNodeId}
-                        loading={bulkAssign.isPending}
+                        disabled={!selectedNodeId || bulkAssign.isPending}
                     >
-                        Assign
+                        {bulkAssign.isPending ? 'Assigning...' : 'Assign'}
                     </Button>
-                </Group>
-            </Group>
-        </Box>
+                </Inline>
+            </Inline>
+        </div>
     );
 }
 

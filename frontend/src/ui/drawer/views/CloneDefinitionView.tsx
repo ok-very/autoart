@@ -1,12 +1,16 @@
 /**
  * CloneDefinitionView
  *
- * Drawer view for cloning a record definition using Mantine.
+ * Drawer view for cloning a record definition using bespoke components.
  */
 
 import { useState } from 'react';
 import { Copy } from 'lucide-react';
-import { TextInput, Button, Stack, Group, Text, Box } from '@mantine/core';
+import { TextInput } from '../../atoms/TextInput';
+import { Button } from '../../atoms/Button';
+import { Stack } from '../../atoms/Stack';
+import { Inline } from '../../atoms/Inline';
+import { Text } from '../../atoms/Text';
 import { useUIStore } from '../../../stores/uiStore';
 import type { DrawerProps, CloneDefinitionContext } from '../../../drawer/types';
 
@@ -81,9 +85,9 @@ export function CloneDefinitionView(props: CloneDefinitionViewProps | LegacyClon
   };
 
   return (
-    <Box maw={480} mx="auto">
+    <div className="max-w-lg mx-auto">
       <Stack gap="md">
-        <Text size="sm" c="dimmed">
+        <Text size="sm" color="muted">
           Create a new record type based on "{definitionName}". The new type will inherit all fields and styling.
         </Text>
 
@@ -95,20 +99,19 @@ export function CloneDefinitionView(props: CloneDefinitionViewProps | LegacyClon
           autoFocus
         />
 
-        <Group justify="flex-end" gap="sm" pt="md" className="border-t border-slate-100">
-          <Button variant="default" onClick={handleClose} disabled={isCloning}>
+        <Inline justify="end" gap="sm" className="pt-4 border-t border-slate-100">
+          <Button variant="secondary" onClick={handleClose} disabled={isCloning}>
             Cancel
           </Button>
           <Button
             onClick={handleClone}
-            disabled={!cloneName.trim()}
-            loading={isCloning}
+            disabled={!cloneName.trim() || isCloning}
             leftSection={<Copy size={16} />}
           >
-            Clone Type
+            {isCloning ? 'Cloning...' : 'Clone Type'}
           </Button>
-        </Group>
+        </Inline>
       </Stack>
-    </Box>
+    </div>
   );
 }

@@ -2,18 +2,22 @@
  * AddFieldView
  *
  * Drawer view for adding new fields to a definition.
- * Shows all field types with visual previews using Mantine components.
+ * Shows all field types with visual previews using bespoke components.
  */
 
 import { useState } from 'react';
 import {
-  TextInput, Button, Group, Stack, Text, Checkbox, Paper,
-  SimpleGrid, Badge, Progress, ThemeIcon, Code
-} from '@mantine/core';
-import {
   Type, AlignLeft, Hash, Mail, Link2, Calendar, List, CheckCircle,
   ToggleLeft, Percent, Tags, User, FileText
 } from 'lucide-react';
+import { TextInput } from '../../atoms/TextInput';
+import { Button } from '../../atoms/Button';
+import { Inline } from '../../atoms/Inline';
+import { Stack } from '../../atoms/Stack';
+import { Text } from '../../atoms/Text';
+import { Checkbox } from '../../atoms/Checkbox';
+import { Badge } from '../../atoms/Badge';
+import { ProgressBar } from '../../atoms/ProgressBar';
 import { useUIStore } from '../../../stores/uiStore';
 import type { FieldDef } from '../../../types';
 import type { DrawerProps, AddFieldContext } from '../../../drawer/types';
@@ -141,41 +145,46 @@ function FieldTypePreview({ type }: { type: FieldDef['type'] }) {
   switch (type) {
     case 'status':
       return (
-        <Group gap={4}>
-          <Badge size="sm" color="gray">Not Started</Badge>
-          <Badge size="sm" color="blue">In Progress</Badge>
-          <Badge size="sm" color="green">Complete</Badge>
-        </Group>
+        <Inline gap="xs">
+          <Badge variant="default">Not Started</Badge>
+          <Badge variant="project">In Progress</Badge>
+          <Badge variant="task">Complete</Badge>
+        </Inline>
       );
     case 'percent':
       return (
-        <Group gap="xs" className="w-32">
-          <Progress value={65} size="sm" className="flex-1" />
-          <Text size="xs" c="dimmed">65%</Text>
-        </Group>
+        <Inline gap="xs" className="w-32">
+          <ProgressBar
+            segments={[{ key: 'progress', percentage: 65, color: '#3b82f6', label: 'Progress', count: 65 }]}
+            height={8}
+            showTooltip={false}
+            className="flex-1"
+          />
+          <Text size="xs" color="muted">65%</Text>
+        </Inline>
       );
     case 'tags':
       return (
-        <Group gap={4}>
-          <Badge size="xs" variant="light" color="gray">Tag 1</Badge>
-          <Badge size="xs" variant="light" color="gray">Tag 2</Badge>
-        </Group>
+        <Inline gap="xs">
+          <Badge variant="light">Tag 1</Badge>
+          <Badge variant="light">Tag 2</Badge>
+        </Inline>
       );
     case 'user':
       return (
-        <Group gap={4}>
-          <ThemeIcon size="xs" radius="xl" color="blue">J</ThemeIcon>
+        <Inline gap="xs">
+          <div className="w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center font-medium">J</div>
           <Text size="xs">John Doe</Text>
-        </Group>
+        </Inline>
       );
     case 'date':
-      return <Text size="xs" c="dimmed">Jan 15, 2025</Text>;
+      return <Text size="xs" color="muted">Jan 15, 2025</Text>;
     case 'checkbox':
-      return <Checkbox size="xs" checked readOnly label="Yes" />;
+      return <Checkbox checked readOnly label="Yes" />;
     case 'textarea':
-      return <Text size="xs" c="dimmed" lineClamp={1}>Rich text with formatting...</Text>;
+      return <Text size="xs" color="muted" truncate>Rich text with formatting...</Text>;
     default:
-      return <Text size="xs" c="dimmed">Sample value</Text>;
+      return <Text size="xs" color="muted">Sample value</Text>;
   }
 }
 
@@ -270,7 +279,7 @@ export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps)
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Text size="sm" c="dimmed" mb="lg">
+      <Text size="sm" color="muted" className="mb-6">
         Define a new field for this record type. Choose a field type to see how it will be displayed.
       </Text>
 
@@ -278,47 +287,42 @@ export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps)
         <Stack gap="lg">
           {/* Field Type Selection */}
           <div>
-            <Text size="sm" fw={500} mb="xs">Field Type</Text>
-            <SimpleGrid cols={3} spacing="xs">
+            <Text size="sm" weight="medium" className="mb-2">Field Type</Text>
+            <div className="grid grid-cols-3 gap-2">
               {FIELD_TYPES.map((ft) => (
-                <Paper
+                <div
                   key={ft.value}
-                  withBorder
-                  p="sm"
-                  radius="sm"
-                  className={`cursor-pointer transition-all ${
+                  className={`cursor-pointer transition-all bg-white border rounded-lg p-3 ${
                     type === ft.value
                       ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
-                      : 'hover:border-slate-300 hover:bg-slate-50'
+                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                   }`}
                   onClick={() => setType(ft.value)}
                 >
-                  <Group gap="xs" mb={4}>
-                    <ThemeIcon
-                      size="sm"
-                      variant={type === ft.value ? 'filled' : 'light'}
-                      color={type === ft.value ? 'blue' : 'gray'}
-                    >
+                  <Inline gap="xs" className="mb-1">
+                    <div className={`w-5 h-5 rounded flex items-center justify-center ${
+                      type === ft.value ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-600'
+                    }`}>
                       {ft.icon}
-                    </ThemeIcon>
-                    <Text size="sm" fw={500}>{ft.label}</Text>
-                  </Group>
-                  <Text size="xs" c="dimmed">{ft.description}</Text>
-                </Paper>
+                    </div>
+                    <Text size="sm" weight="medium">{ft.label}</Text>
+                  </Inline>
+                  <Text size="xs" color="muted">{ft.description}</Text>
+                </div>
               ))}
-            </SimpleGrid>
+            </div>
           </div>
 
           {/* Field Preview */}
           {selectedType && (
-            <Paper withBorder p="sm" radius="sm" className="bg-slate-50">
-              <Text size="xs" fw={500} c="dimmed" mb="xs">Preview</Text>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+              <Text size="xs" weight="medium" color="muted" className="mb-2">Preview</Text>
               <FieldTypePreview type={type} />
-            </Paper>
+            </div>
           )}
 
           {/* Field Details */}
-          <SimpleGrid cols={2} spacing="md">
+          <div className="grid grid-cols-2 gap-4">
             <TextInput
               label="Label"
               placeholder="e.g., Email Address"
@@ -328,20 +332,20 @@ export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps)
               autoFocus
             />
 
-            <TextInput
-              label="Field Key"
-              placeholder="e.g., email_address"
-              value={key}
-              onChange={(e) => setKey(e.currentTarget.value)}
-              required
-              description={
-                <Text size="xs" c="dimmed">
-                  Reference: <Code>#record:{key || 'field_key'}</Code>
-                </Text>
-              }
-              styles={{ input: { fontFamily: 'monospace' } }}
-            />
-          </SimpleGrid>
+            <div className="flex flex-col gap-1">
+              <TextInput
+                label="Field Key"
+                placeholder="e.g., email_address"
+                value={key}
+                onChange={(e) => setKey(e.currentTarget.value)}
+                required
+                className="font-mono"
+              />
+              <Text size="xs" color="muted">
+                Reference: <code className="bg-slate-100 px-1 rounded text-xs">#record:{key || 'field_key'}</code>
+              </Text>
+            </div>
+          </div>
 
           {/* Options for select/status types */}
           {selectedType?.hasOptions && (
@@ -362,22 +366,21 @@ export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps)
           <Checkbox
             label="Required field"
             checked={required}
-            onChange={(e) => setRequired(e.currentTarget.checked)}
+            onChange={(checked) => setRequired(checked)}
           />
 
           {/* Actions */}
-          <Group justify="flex-end" gap="sm" pt="md" className="border-t border-slate-100">
-            <Button variant="default" onClick={handleClose}>
+          <Inline justify="end" gap="sm" className="pt-4 border-t border-slate-100">
+            <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={!key.trim() || !label.trim()}
-              loading={isPending}
+              disabled={!key.trim() || !label.trim() || isPending}
             >
-              Add Field
+              {isPending ? 'Adding...' : 'Add Field'}
             </Button>
-          </Group>
+          </Inline>
         </Stack>
       </form>
     </div>

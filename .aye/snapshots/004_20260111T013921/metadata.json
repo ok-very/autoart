@@ -1,0 +1,34 @@
+{
+  "timestamp": "20260111T013921",
+  "files": [
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\ui\\drawer\\views\\ClassificationDrawerView.tsx",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\004_20260111T013921\\ClassificationDrawerView.tsx"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\surfaces\\import\\ImportWorkbenchContent.tsx",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\004_20260111T013921\\ImportWorkbenchContent.tsx"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\drawer\\types.ts",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\004_20260111T013921\\types.ts"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\drawer\\DrawerRegistry.tsx",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\004_20260111T013921\\DrawerRegistry.tsx"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\pages\\WorkbenchPage.tsx",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\004_20260111T013921\\WorkbenchPage.tsx"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\surfaces\\import\\index.ts",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\004_20260111T013921\\index.ts"
+    },
+    {
+      "original": "E:\\autoart_v02\\frontend\\src\\ui\\drawer\\views\\index.ts",
+      "snapshot": "E:\\autoart_v02\\.aye\\snapshots\\004_20260111T013921\\index.ts"
+    }
+  ],
+  "prompt": "bottom drawer is for the classification panel and the center interface has reappeared. the monday boards"
+}

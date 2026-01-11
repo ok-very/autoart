@@ -2,17 +2,12 @@
  * TableCell / TableHeaderCell - Cell primitives with alignment and sizing
  */
 
-import { forwardRef } from 'react';
-import { Box, type BoxProps } from '@mantine/core';
+import { forwardRef, type HTMLAttributes } from 'react';
 import { clsx } from 'clsx';
-
-// ============================================================================
-// SHARED TYPES
-// ============================================================================
 
 export type CellAlign = 'left' | 'center' | 'right';
 
-interface BaseCellProps extends Omit<BoxProps, 'component'> {
+interface BaseCellProps extends HTMLAttributes<HTMLDivElement> {
   /** Cell width in pixels, or 'flex' to fill remaining space */
   width?: number | 'flex';
   /** Minimum width for resizable columns */
@@ -23,7 +18,7 @@ interface BaseCellProps extends Omit<BoxProps, 'component'> {
   children?: React.ReactNode;
 }
 
-const getWidthStyle = (width?: number | 'flex', minWidth?: number) => {
+const getWidthStyle = (width?: number | 'flex', minWidth?: number): React.CSSProperties => {
   if (width === 'flex') {
     return { flex: 1, minWidth: minWidth ?? 0 };
   }
@@ -41,10 +36,6 @@ const getAlignClass = (align?: CellAlign) => {
   }
 };
 
-// ============================================================================
-// TABLE HEADER CELL
-// ============================================================================
-
 export interface TableHeaderCellProps extends BaseCellProps {
   /** Whether column is sortable (shows cursor) */
   sortable?: boolean;
@@ -60,9 +51,8 @@ export const TableHeaderCell = forwardRef<HTMLDivElement, TableHeaderCellProps>(
     ref
   ) {
     return (
-      <Box
+      <div
         ref={ref}
-        component="div"
         role="columnheader"
         onClick={sortable ? onSort : undefined}
         style={{ ...getWidthStyle(width, minWidth), ...style }}
@@ -82,14 +72,10 @@ export const TableHeaderCell = forwardRef<HTMLDivElement, TableHeaderCellProps>(
             {sortDir === 'asc' ? '\u25B2' : '\u25BC'}
           </span>
         )}
-      </Box>
+      </div>
     );
   }
 );
-
-// ============================================================================
-// TABLE CELL
-// ============================================================================
 
 export interface TableCellProps extends BaseCellProps {
   /** Whether cell content should truncate */
@@ -100,14 +86,14 @@ export interface TableCellProps extends BaseCellProps {
 
 export const TableCell = forwardRef<HTMLDivElement, TableCellProps>(
   function TableCell(
-    { width, minWidth, align, truncate = true, className, children, style, ...props },
+    { width, minWidth, align, truncate = true, className, children, style, onClick, ...props },
     ref
   ) {
     return (
-      <Box
+      <div
         ref={ref}
-        component="div"
         role="cell"
+        onClick={onClick}
         style={{ ...getWidthStyle(width, minWidth), ...style }}
         className={clsx(
           'px-3 flex items-center overflow-hidden text-sm text-slate-700',
@@ -118,7 +104,7 @@ export const TableCell = forwardRef<HTMLDivElement, TableCellProps>(
         {...props}
       >
         {children}
-      </Box>
+      </div>
     );
   }
 );
