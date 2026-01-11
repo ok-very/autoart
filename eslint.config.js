@@ -1,0 +1,74 @@
+import js from '@eslint/js';
+import importPlugin from 'eslint-plugin-import';
+import tseslint from 'typescript-eslint';
+
+export default [
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    plugins: {
+      import: importPlugin,
+    },
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      parserOptions: {
+        project: ['./tsconfig.json', './*/tsconfig.json'],
+      },
+    },
+    rules: {
+      'import/no-cycle': ['error', { maxDepth: 2, ignoreExternal: true }],
+      'import/order': [
+        'error',
+        {
+          groups: [
+            ['builtin', 'external'],
+            ['internal'],
+            ['parent', 'sibling', 'index'],
+          ],
+          pathGroups: [
+            {
+              pattern: '@autoart/**',
+              group: 'internal',
+              position: 'before',
+            },
+            {
+              pattern: '@/**',
+              group: 'internal',
+              position: 'after',
+            },
+          ],
+          pathGroupsExcludedImportTypes: ['builtin'],
+          'newlines-between': 'always',
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+        },
+      ],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../../../*'],
+              message: 'Avoid deep relative imports. Use path aliases instead (e.g., @/ or @modules/).',
+            },
+            {
+              group: ['../../shared/src/*'],
+              message: "Import from '@autoart/shared' instead of relative path.",
+            },
+          ],
+        },
+      ],
+    },
+    settings: {
+      'import/resolver': {
+        typescript: {
+          alwaysTryTypes: true,
+          project: ['./tsconfig.json', './*/tsconfig.json'],
+        },
+      },
+    },
+  },
+];
