@@ -328,9 +328,9 @@ export class GoogleSheetsConnector {
             'Client',
             'Project',
             'Next Step',
-            'Owner',
+            'Assignee',
             'Due',
-            'Completed',
+            'Done',
         ];
 
         const rows: unknown[][] = [headers];

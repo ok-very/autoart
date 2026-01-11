@@ -246,11 +246,10 @@ export function ExportWorkbench({ onExportComplete, onClose }: ExportWorkbenchPr
                                 <button
                                     key={fmt.id}
                                     onClick={() => setFormat(fmt.id)}
-                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                                        format === fmt.id
+                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${format === fmt.id
                                             ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent'
-                                    }`}
+                                        }`}
                                 >
                                     {fmt.label}
                                 </button>
@@ -328,7 +327,7 @@ export function ExportWorkbench({ onExportComplete, onClose }: ExportWorkbenchPr
                                 </Text>
                                 <Checkbox
                                     label="Only open items"
-                                    description="Exclude completed next steps from export"
+                                    description="Exclude done next steps from export"
                                     checked={options.includeOnlyOpenNextSteps}
                                     onChange={(checked) => handleOptionChange('includeOnlyOpenNextSteps', checked)}
                                 />
