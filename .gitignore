@@ -56,3 +56,4 @@ postgres_data/
 
 .aye/
 .well-known/
+.coderabbit.yaml
