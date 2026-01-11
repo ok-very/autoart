@@ -103,10 +103,13 @@ export async function deleteCredential(
 // ============================================================================
 
 /**
- * Get Monday.com API token with fallback chain:
- * 1. User-specific credential from DB
- * 2. System-wide credential from DB
- * 3. Environment variable MONDAY_API_TOKEN or MONDAY_API_KEY
+ * Retrieve the Monday.com API token for the given user or, if none is available or valid, from environment variables.
+ *
+ * Checks a user-specific credential first, then a system-wide credential, and finally the MONDAY_API_TOKEN or MONDAY_API_KEY environment variables.
+ *
+ * @param userId - Optional user ID to prefer a user-scoped credential; pass undefined to use only system-wide or env credentials.
+ * @returns The Monday.com API access token.
+ * @throws Error if no valid credential is found and no MONDAY_API_TOKEN or MONDAY_API_KEY environment variable is set.
  */
 export async function getMondayToken(userId?: string): Promise<string> {
     const credential = await getCredential(userId ?? null, 'monday');
@@ -133,10 +136,11 @@ export async function getMondayToken(userId?: string): Promise<string> {
 }
 
 /**
- * Get Google OAuth access token with fallback chain:
- * 1. User-specific credential from DB
- * 2. System-wide credential from DB
- * 3. Environment variable GOOGLE_ACCESS_TOKEN
+ * Obtain a Google OAuth access token, preferring a user-specific credential with fallbacks to a system credential and an environment variable.
+ *
+ * @param userId - Optional user id to look up a user-specific credential; if omitted, only system-wide credentials are considered before falling back to the environment variable
+ * @returns The Google OAuth access token
+ * @throws Error if a found credential is expired (requires re-authentication) or if no token is available from credentials or the `GOOGLE_ACCESS_TOKEN` environment variable
  */
 export async function getGoogleToken(userId?: string): Promise<string> {
     const credential = await getCredential(userId ?? null, 'google');
@@ -163,7 +167,11 @@ export async function getGoogleToken(userId?: string): Promise<string> {
 }
 
 /**
- * Check if a provider is connected for a user.
+ * Determines whether a provider has a valid (unexpired) credential for the given user or the system.
+ *
+ * @param userId - User ID to check; pass `null` to check for a system-wide credential
+ * @param provider - The provider to check connection status for
+ * @returns `true` if a credential exists and is not expired, `false` otherwise
  */
 export async function isProviderConnected(
     userId: string | null,
@@ -179,4 +187,3 @@ export async function isProviderConnected(
 
     return true;
 }
-
