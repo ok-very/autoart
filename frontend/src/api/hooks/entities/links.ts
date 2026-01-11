@@ -33,7 +33,7 @@ interface CreateLinkInput {
 
 export function useRecordLinks(recordId: string | null, direction: 'outgoing' | 'incoming' | 'both' = 'both') {
   return useQuery({
-    queryKey: queryKeys.links.recordLinks(recordId!),
+    queryKey: queryKeys.links.recordLinks(recordId!, direction),
     queryFn: () =>
       api.get<{ outgoing: RecordLink[]; incoming: RecordLink[] }>(
         `/links/record/${recordId}?direction=${direction}`
@@ -49,8 +49,9 @@ export function useCreateLink() {
     mutationFn: (input: CreateLinkInput) =>
       api.post<{ link: RecordLink }>('/links', input),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.links.recordLinks(variables.sourceRecordId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.links.recordLinks(variables.targetRecordId) });
+      // Invalidate all direction variants for both records
+      queryClient.invalidateQueries({ queryKey: ['links', 'record', variables.sourceRecordId] });
+      queryClient.invalidateQueries({ queryKey: ['links', 'record', variables.targetRecordId] });
     },
   });
 }

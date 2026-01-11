@@ -33,7 +33,7 @@ export function useActionViews(
     const { view = 'task-like', status } = options || {};
 
     return useQuery({
-        queryKey: queryKeys.actionViews.byContext(contextId!),
+        queryKey: queryKeys.actionViews.byContext(contextId!, contextType, view, status),
         queryFn: () => {
             const params = new URLSearchParams();
             params.set('view', view);
@@ -76,7 +76,7 @@ export function useActionViewsSummary(
     contextType: ContextType
 ) {
     return useQuery({
-        queryKey: queryKeys.actionViews.summary(contextId!),
+        queryKey: queryKeys.actionViews.summary(contextId!, contextType),
         queryFn: () => {
             let endpoint = '';
             if (['subprocess', 'stage', 'process'].includes(contextType)) {

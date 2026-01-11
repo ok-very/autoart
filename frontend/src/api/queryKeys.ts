@@ -10,7 +10,7 @@
  * @see https://tanstack.com/query/latest/docs/react/guides/query-keys
  */
 
-import type { ContextType } from '@autoart/shared';
+import type { ContextType, ActionViewType, DerivedStatus } from '@autoart/shared';
 
 /**
  * Query Keys Registry
@@ -77,7 +77,8 @@ export const queryKeys = {
   // ============================================================================
   links: {
     all: () => ['links'] as const,
-    recordLinks: (recordId: string) => ['links', 'record', recordId] as const,
+    recordLinks: (recordId: string, direction: 'outgoing' | 'incoming' | 'both') => 
+      ['links', 'record', recordId, direction] as const,
     linkTypes: () => ['links', 'types'] as const,
   },
 
@@ -102,9 +103,15 @@ export const queryKeys = {
   // ============================================================================
   actionViews: {
     all: () => ['actionViews'] as const,
-    byContext: (contextId: string) => ['actionViews', contextId] as const,
+    byContext: (
+      contextId: string,
+      contextType: ContextType,
+      view?: ActionViewType,
+      status?: DerivedStatus
+    ) => ['actionViews', contextId, contextType, view, status] as const,
     detail: (actionId: string) => ['actionView', actionId] as const,
-    summary: (contextId: string) => ['actionViewsSummary', contextId] as const,
+    summary: (contextId: string, contextType: ContextType) => 
+      ['actionViewsSummary', contextId, contextType] as const,
   },
 
   // ============================================================================
@@ -137,8 +144,17 @@ export const queryKeys = {
   // PROJECT LOG (Event Stream)
   // ============================================================================
   projectLog: {
-    events: (projectId: string, options?: { includeSystem?: boolean }) => 
-      ['projectLog', 'events', projectId, options] as const,
+    events: (
+      projectId: string,
+      contextType: ContextType,
+      options: {
+        includeSystem?: boolean;
+        types?: string[];
+        actorId?: string;
+        limit?: number;
+        offset?: number;
+      }
+    ) => ['projectLog', 'events', projectId, contextType, options] as const,
     eventCount: (projectId: string, options?: { includeSystem?: boolean }) => 
       ['projectLog', 'eventCount', projectId, options] as const,
   },
@@ -215,7 +231,8 @@ export const invalidationHelpers = {
   },
   invalidateContext: (queryClient: any, contextId: string, contextType: ContextType) => {
     queryClient.invalidateQueries({ queryKey: queryKeys.actions.byContext(contextId, contextType) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.actionViews.byContext(contextId) });
+    // Invalidate all action views for this context (partial match)
+    queryClient.invalidateQueries({ queryKey: ['actionViews', contextId] });
     queryClient.invalidateQueries({ queryKey: queryKeys.events.byContext(contextId, contextType) });
     queryClient.invalidateQueries({ queryKey: queryKeys.workflowSurface.nodes(contextId) });
   },

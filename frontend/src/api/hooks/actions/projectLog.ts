@@ -45,12 +45,14 @@ export function useProjectLogEvents(options: UseProjectLogEventsOptions) {
   } = options;
 
   return useQuery({
-    queryKey: queryKeys.projectLog.events(contextId!, { includeSystem }),
+    queryKey: queryKeys.projectLog.events(contextId!, contextType, {
+      includeSystem,
+      types,
+      actorId,
+      limit,
+      offset,
+    }),
     queryFn: async (): Promise<EventsPageResponse> => {
-      if (!contextId) {
-        return { events: [], total: 0, hasMore: false };
-      }
-
       const params = new URLSearchParams();
       params.set('limit', String(limit));
       params.set('offset', String(offset));
