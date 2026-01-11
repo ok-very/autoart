@@ -61,14 +61,8 @@ export function useUpdateNode() {
       const updated = result?.node;
 
       if (updated) {
-        // Update Zustand store immediately for instant UI reactivity
         storeUpdateNode(updated);
-
-        // Keep the inspected node query in sync.
         queryClient.setQueryData(queryKeys.hierarchy.node(variables.id), updated);
-
-        // Update any cached hierarchy trees in-place so views update immediately
-        // (instead of waiting for a refetch to complete).
         queryClient.setQueriesData(
           { queryKey: queryKeys.hierarchy.all() },
           (oldData: unknown) => {
@@ -77,10 +71,6 @@ export function useUpdateNode() {
           }
         );
       }
-
-      // Note: We intentionally do NOT invalidate queries here to avoid a refetch
-      // race condition that could overwrite our direct store/cache updates with
-      // stale data. The store and cache are already updated above.
     },
   });
 }
