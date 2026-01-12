@@ -61,15 +61,11 @@ export function BottomDrawer() {
       </div>
 
       {/* Content */}
-      <div
-        className={clsx(
-          'flex-1 overflow-auto p-4 custom-scroll transition-all duration-200',
-          drawerCollapsed && 'hidden'
-        )}
-        style={{ height: drawerHeight - 40 }}
-      >
-        <DrawerRegistry type={activeDrawer.type} context={activeDrawer.props} onClose={closeDrawer} />
-      </div>
+      {!drawerCollapsed && (
+        <div className="flex-1 overflow-auto p-4 custom-scroll">
+          <DrawerRegistry type={activeDrawer.type} context={activeDrawer.props} onClose={closeDrawer} />
+        </div>
+      )}
     </div>
   );
 }

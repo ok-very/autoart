@@ -118,7 +118,7 @@ export const useUIStore = create<UIState>()(
       sidebarCollapsed: false,
       inspectorCollapsed: false,
       drawerCollapsed: false,
-      drawerHeight: 300,
+      drawerHeight: 380,
 
       activeDrawer: null,
       theme: 'light',
