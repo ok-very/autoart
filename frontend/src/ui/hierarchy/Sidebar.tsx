@@ -119,7 +119,7 @@ export function Sidebar() {
                   onClick={() => setActiveProject(p.id)}
                   className={p.id === activeProjectId ? 'bg-blue-50' : ''}
                 >
-                  <Text size="sm" truncate>{p.title}</Text>
+                  <Text size="sm" truncate className="max-w-[180px]">{p.title}</Text>
                 </Menu.Item>
               ))
             ) : (
