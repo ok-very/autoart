@@ -90,7 +90,7 @@ export interface ItemClassification {
 
 export interface ImportPlanContainer {
     tempId: string;
-    type: 'project' | 'process' | 'subprocess';
+    type: 'project' | 'process' | 'stage' | 'subprocess';
     title: string;
     parentTempId: string | null;
     /** Optional hint for classification (e.g., 'process', 'stage', 'subprocess') */

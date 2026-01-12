@@ -44,7 +44,8 @@ export function ActionInstancesView({
 
     // Fetch actions - use specific definition lookup if ID provided, otherwise all actions
     const { data: filteredActions = [], isLoading: filteredLoading } = useAllActionsByDefinition(definitionId);
-    const { data: allActions = [], isLoading: allLoading } = useAllActions();
+    const { data: allActionsResult, isLoading: allLoading } = useAllActions({ refetch: !definitionId });
+    const allActions = allActionsResult?.actions ?? [];
 
     // Use appropriate data source
     const actions = definitionId ? filteredActions : allActions;

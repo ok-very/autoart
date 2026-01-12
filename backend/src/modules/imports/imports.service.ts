@@ -616,12 +616,34 @@ async function executePlanViaComposer(
 
     // Step 2: Create work items via Actions + Events (proper Composer pattern)
     for (const item of plan.items) {
-        // Use parent container if specified, otherwise fall back to target project
-        const contextId = item.parentTempId
-            ? createdIds[item.parentTempId]
-            : targetProjectId;
+        // Determine action type from entityType (Task vs Subtask)
+        const actionType = item.entityType === 'subtask' ? 'Subtask' : 'Task';
+
+        // For subtasks, parent is the action (task) not the container
+        // For tasks, parent is the container (subprocess)
+        let contextId: string | undefined;
+        let parentActionId: string | null = null;
+
+        if (item.entityType === 'subtask' && item.parentTempId) {
+            // Subtask: parent is the task action
+            parentActionId = createdIds[item.parentTempId] ?? null;
+            // Context is still the subprocess (inherited from parent task)
+            // Find the parent item to get its context
+            const parentItem = plan.items.find(i => i.tempId === item.parentTempId);
+            if (parentItem?.parentTempId) {
+                contextId = createdIds[parentItem.parentTempId];
+            } else {
+                contextId = targetProjectId ?? undefined;
+            }
+        } else {
+            // Task: parent is the container
+            contextId = item.parentTempId
+                ? createdIds[item.parentTempId]
+                : targetProjectId ?? undefined;
+        }
+
         if (!contextId) {
-            console.warn(`Parent container not found for item: ${item.tempId}`);
+            console.warn(`Context not found for item: ${item.tempId} (${item.title})`);
             continue;
         }
 
@@ -631,7 +653,8 @@ async function executePlanViaComposer(
             .values({
                 context_type: 'subprocess',
                 context_id: contextId,
-                type: 'Task', // Default to Task type
+                parent_action_id: parentActionId,
+                type: actionType,
                 field_bindings: JSON.stringify([
                     { fieldKey: 'title', value: item.title },
                     ...item.fieldRecordings.map((fr: { fieldName: string; value: unknown }) => ({
@@ -652,9 +675,10 @@ async function executePlanViaComposer(
             actionId: action.id,
             type: 'ACTION_DECLARED',
             payload: {
-                actionType: 'Task',
+                actionType,
                 title: item.title,
                 metadata: item.metadata,
+                parentActionId,
             },
             actorId: userId,
         });

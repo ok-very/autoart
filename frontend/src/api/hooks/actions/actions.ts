@@ -24,13 +24,16 @@ import { queryKeys, invalidationHelpers } from '../../queryKeys';
 // ACTIONS
 // ============================================================================
 
-export function useAllActions(limit = 100) {
+export function useAllActions(options: { limit?: number; offset?: number; refetch?: boolean } = {}) {
+  const { limit = 100, offset = 0, refetch = false } = options;
   return useQuery({
     queryKey: queryKeys.actions.list(limit),
     queryFn: () =>
       api
-        .get<{ actions: Action[] }>(`/actions?limit=${limit}`)
-        .then((r) => r.actions),
+        .get<{ actions: Action[]; total?: number }>(`/actions?limit=${limit}&offset=${offset}`)
+        .then((r) => ({ actions: r.actions, total: r.total })),
+    // Enable polling every 30 seconds for Registry real-time updates
+    refetchInterval: refetch ? 30000 : false,
   });
 }
 
