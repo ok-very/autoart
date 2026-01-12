@@ -219,9 +219,17 @@ export async function interpretMondayBoard(
 
     // Second pass: Resolve parent references for subitems
     for (const item of items) {
-        const parentItemId = (item.metadata as { monday?: { parentItemId?: string } })?.monday?.parentItemId;
-        if (parentItemId && nodeIdToTempId.has(parentItemId)) {
-            item.parentTempId = nodeIdToTempId.get(parentItemId);
+        const mondayMeta = item.metadata?.monday as { parentItemId?: string } | undefined;
+        const parentItemId = mondayMeta?.parentItemId;
+        if (parentItemId) {
+            if (nodeIdToTempId.has(parentItemId)) {
+                item.parentTempId = nodeIdToTempId.get(parentItemId);
+            } else {
+                // Parent item not in this import batch - may indicate separate board import
+                console.warn(
+                    `[monday-interpreter] Subitem "${item.title}" (${item.tempId}) references parent ${parentItemId} not in current import batch`
+                );
+            }
         }
     }
 

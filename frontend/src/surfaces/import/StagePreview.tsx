@@ -70,8 +70,8 @@ export function StagePreview({
                                 key={item.tempId}
                                 onClick={() => onSelect(item.tempId)}
                                 className={`w-full text-left px-4 py-3 transition-colors ${item.tempId === selectedRecordId
-                                        ? 'bg-blue-50 border-l-2 border-blue-500'
-                                        : 'hover:bg-slate-50'
+                                    ? 'bg-blue-50 border-l-2 border-blue-500'
+                                    : 'hover:bg-slate-50'
                                     }`}
                             >
                                 <div className="text-sm font-medium text-slate-800">
@@ -79,11 +79,14 @@ export function StagePreview({
                                 </div>
                                 {item.fieldRecordings.length > 0 && (
                                     <div className="text-xs text-slate-500 mt-1">
-                                        {item.fieldRecordings.slice(0, 2).map((f) => (
-                                            <span key={f.fieldName} className="mr-2">
-                                                {f.fieldName}: {String(f.value).slice(0, 20)}
-                                            </span>
-                                        ))}
+                                        {item.fieldRecordings
+                                            .filter(f => f.value != null && String(f.value) !== 'null' && f.value !== '')
+                                            .slice(0, 2)
+                                            .map((f) => (
+                                                <span key={f.fieldName} className="mr-2">
+                                                    {f.fieldName}: {String(f.value).slice(0, 20)}
+                                                </span>
+                                            ))}
                                     </div>
                                 )}
                             </button>
