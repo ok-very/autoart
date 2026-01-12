@@ -615,42 +615,47 @@ async function executePlanViaComposer(
     }
 
     // Step 2: Create work items via Actions + Events (proper Composer pattern)
-    // Sort items so tasks are created before subtasks (ensures parent exists in createdIds)
+    // Build itemsByTempId lookup for parent resolution
+    const itemsByTempId = new Map(plan.items.map(i => [i.tempId, i]));
+
+    // Sort items by parentage depth (items with container parents first, then children of items)
+    // This ensures parents exist in createdIds before children are processed
     const sortedItems = [...plan.items].sort((a, b) => {
-        // Tasks come before subtasks
-        if (a.entityType === 'subtask' && b.entityType !== 'subtask') return 1;
-        if (a.entityType !== 'subtask' && b.entityType === 'subtask') return -1;
+        // Items whose parent is a container come first
+        const aParentIsItem = a.parentTempId && itemsByTempId.has(a.parentTempId);
+        const bParentIsItem = b.parentTempId && itemsByTempId.has(b.parentTempId);
+        if (aParentIsItem && !bParentIsItem) return 1;
+        if (!aParentIsItem && bParentIsItem) return -1;
         return 0;
     });
 
-    // Build itemsByTempId lookup for O(1) parent context resolution
-    const itemsByTempId = new Map(plan.items.map(i => [i.tempId, i]));
-
     for (const item of sortedItems) {
-        // Determine action type from entityType (Task vs Subtask)
-        const actionType = item.entityType === 'subtask' ? 'Subtask' : 'Task';
+        // Derive parent relationship from parentTempId:
+        // - If parentTempId refers to another item → this is a child action (parent_action_id set)
+        // - If parentTempId refers to a container → this is a container-scoped action
+        // - Type is derived by projection system from context, not set explicitly here
+        const parentIsItem = item.parentTempId && itemsByTempId.has(item.parentTempId);
 
-        // For subtasks, parent is the action (task) not the container
-        // For tasks, parent is the container (subprocess)
         let contextId: string | undefined;
         let parentActionId: string | null = null;
 
-        if (item.entityType === 'subtask' && item.parentTempId) {
-            // Subtask: parent is the task action
-            parentActionId = createdIds[item.parentTempId] ?? null;
-            // Context is still the subprocess (inherited from parent task)
-            // Find the parent item to get its context (O(1) lookup via map)
-            const parentItem = itemsByTempId.get(item.parentTempId);
+        if (parentIsItem) {
+            // Parent is another action (child relationship)
+            parentActionId = createdIds[item.parentTempId!] ?? null;
+            // Context inherited from parent item's context
+            const parentItem = itemsByTempId.get(item.parentTempId!);
             if (parentItem?.parentTempId) {
-                contextId = createdIds[parentItem.parentTempId];
+                // Parent item's parent could be a container
+                contextId = createdIds[parentItem.parentTempId] ?? targetProjectId ?? undefined;
             } else {
                 contextId = targetProjectId ?? undefined;
             }
+        } else if (item.parentTempId) {
+            // Parent is a container (container-scoped action)
+            contextId = createdIds[item.parentTempId] ?? targetProjectId ?? undefined;
         } else {
-            // Task: parent is the container
-            contextId = item.parentTempId
-                ? createdIds[item.parentTempId]
-                : targetProjectId ?? undefined;
+            // No parent, use project context
+            contextId = targetProjectId ?? undefined;
         }
 
         if (!contextId) {
@@ -658,14 +663,15 @@ async function executePlanViaComposer(
             continue;
         }
 
-        // Create action for the work item
+        // Create action - type will be derived by projection from context and parent relationships
+        // Use entityType hint if available for initial categorization, but projection is authoritative
         const action = await db
             .insertInto('actions')
             .values({
                 context_type: 'subprocess',
                 context_id: contextId,
                 parent_action_id: parentActionId,
-                type: actionType,
+                type: 'Task', // Base type - projection derives actual type from relationships
                 field_bindings: JSON.stringify([
                     { fieldKey: 'title', value: item.title },
                     ...item.fieldRecordings.map((fr: { fieldName: string; value: unknown }) => ({
@@ -679,14 +685,13 @@ async function executePlanViaComposer(
 
         createdIds[item.tempId] = action.id;
 
-        // Record ACTION_DECLARED event via emitEvent (ensures projection refresh)
+        // Record ACTION_DECLARED event - projection system updates views
         await emitEvent({
             contextId: contextId,
             contextType: 'subprocess',
             actionId: action.id,
             type: 'ACTION_DECLARED',
             payload: {
-                actionType,
                 title: item.title,
                 metadata: item.metadata,
                 parentActionId,
