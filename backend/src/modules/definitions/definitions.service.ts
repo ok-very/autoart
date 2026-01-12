@@ -62,18 +62,52 @@ export async function getWorkflowStatuses(): Promise<{
         return { statuses: [] };
     }
 
-    const schemaConfig = taskDef.schema_config as { fields?: Array<{ key: string; type: string; statusConfig?: Record<string, { label: string; colorClass: string }> }> };
-    const statusField = schemaConfig?.fields?.find((f) => f.type === 'status');
-
-    if (!statusField?.statusConfig) {
+    // Validate schema_config exists and is an object
+    if (!taskDef.schema_config || typeof taskDef.schema_config !== 'object') {
         return { statuses: [] };
     }
 
-    const statuses = Object.entries(statusField.statusConfig).map(([key, config]) => ({
-        key,
-        label: config.label,
-        colorClass: config.colorClass,
-    }));
+    const schemaConfig = taskDef.schema_config as Record<string, unknown>;
+
+    // Validate fields is an array
+    if (!Array.isArray(schemaConfig.fields)) {
+        return { statuses: [] };
+    }
+
+    // Safely find status field
+    const statusField = schemaConfig.fields.find(
+        (f): f is { key: string; type: string; statusConfig?: Record<string, unknown> } =>
+            typeof f === 'object' &&
+            f !== null &&
+            'type' in f &&
+            f.type === 'status'
+    );
+
+    // Validate statusConfig exists and is an object
+    if (!statusField?.statusConfig || typeof statusField.statusConfig !== 'object') {
+        return { statuses: [] };
+    }
+
+    // Map statusConfig to statuses array with validation
+    const statuses = Object.entries(statusField.statusConfig)
+        .filter(([_, config]) => {
+            return (
+                typeof config === 'object' &&
+                config !== null &&
+                'label' in config &&
+                'colorClass' in config &&
+                typeof config.label === 'string' &&
+                typeof config.colorClass === 'string'
+            );
+        })
+        .map(([key, config]) => {
+            const validConfig = config as { label: string; colorClass: string };
+            return {
+                key,
+                label: validConfig.label,
+                colorClass: validConfig.colorClass,
+            };
+        });
 
     return { statuses };
 }
