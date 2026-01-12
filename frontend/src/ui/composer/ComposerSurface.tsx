@@ -268,6 +268,22 @@ export function ComposerSurface({
     const isLoading = compose.isPending;
     const error = compose.error;
 
+    // Keyboard shortcuts (Ctrl+Enter to submit)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                if (title.trim() && selectedSubprocessId && selectedRecipe && !isLoading) {
+                    e.preventDefault();
+                    // Submit form programmatically
+                    const form = document.querySelector('.composer-surface form') as HTMLFormElement;
+                    form?.requestSubmit();
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [title, selectedSubprocessId, selectedRecipe, isLoading]);
+
     // ==================== RENDER ====================
 
     const containerClass = clsx('composer-surface', {
@@ -593,19 +609,19 @@ export function ComposerSurface({
                         </div>
                     )}
 
-                    {/* Advanced Panel (Events Preview) */}
-                    <div className="composer-section">
-                        <button
-                            type="button"
-                            onClick={() => setShowAdvanced(!showAdvanced)}
-                            className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700"
-                        >
-                            {showAdvanced ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                            <Sparkles size={14} />
-                            Advanced: Events Preview
-                        </button>
-                        {showAdvanced && (
-                            <div className="mt-4 composer-events-preview">
+                    {/* Action Preview Panel (Always visible when form has content) */}
+                    {(title || description || fieldValues.some(f => f.value) || linkedRecords.length > 0) && (
+                        <div className="composer-section composer-section-accent-purple composer-slide-up">
+                            <div className="composer-section-header">
+                                <div className="composer-section-badge">
+                                    <Sparkles size={12} />
+                                </div>
+                                <div className="composer-section-title">Action Preview</div>
+                                <div className="composer-section-subtitle">
+                                    What will happen when you create
+                                </div>
+                            </div>
+                            <div className="composer-events-preview">
                                 <div className="composer-event-item">
                                     <span className="composer-event-type">ACTION_DECLARED</span>
                                     <span className="composer-event-payload">
@@ -649,8 +665,8 @@ export function ComposerSurface({
                                     </div>
                                 ))}
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
 
                     {/* Success */}
                     {successMessage && (
