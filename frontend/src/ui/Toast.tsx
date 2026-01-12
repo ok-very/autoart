@@ -33,6 +33,7 @@ export function ToastContainer() {
           <button
             onClick={() => removeToast(toast.id)}
             className="text-slate-400 hover:text-slate-600"
+            aria-label="Dismiss"
           >
             <X className="w-4 h-4" />
           </button>

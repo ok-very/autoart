@@ -5,7 +5,7 @@
  */
 
 import { ChevronDown } from 'lucide-react';
-import { useState, useRef, useEffect, KeyboardEvent } from 'react';
+import { useState, useRef, useEffect, KeyboardEvent, useId } from 'react';
 import { COMMON_FONTS, type FontOption } from '../utils/fonts';
 
 interface FontSelectorProps {
@@ -27,6 +27,8 @@ export function FontSelector({
     const listboxRef = useRef<HTMLDivElement>(null);
     const optionsRef = useRef<(HTMLButtonElement | null)[]>([]);
 
+    const id = useId();
+    const labelId = `${id}-label`;
     const selectedFontOption = availableFonts.find((f) => f.family === selectedFont);
 
     // Initialize/Reset focused index when opening
@@ -39,7 +41,7 @@ export function FontSelector({
                 optionsRef.current[index >= 0 ? index : 0]?.focus();
             });
         }
-    }, [isOpen]);
+    }, [isOpen, availableFonts, selectedFont]);
 
     // Update focus when index changes
     useEffect(() => {
@@ -61,6 +63,8 @@ export function FontSelector({
     };
 
     const handleListKeyDown = (e: KeyboardEvent) => {
+        if (availableFonts.length === 0) return;
+
         if (e.key === 'Escape') {
             e.preventDefault();
             setIsOpen(false);
@@ -83,7 +87,7 @@ export function FontSelector({
 
     return (
         <div className="relative">
-            <label id="font-selector-label" className="block text-sm font-medium text-slate-700 mb-1">
+            <label id={labelId} className="block text-sm font-medium text-slate-700 mb-1">
                 Font Family
             </label>
             <button
@@ -94,7 +98,7 @@ export function FontSelector({
                 disabled={disabled}
                 aria-haspopup="listbox"
                 aria-expanded={isOpen}
-                aria-labelledby="font-selector-label"
+                aria-labelledby={labelId}
                 className="w-full flex items-center justify-between px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 <span className="flex items-center gap-2">
@@ -112,7 +116,7 @@ export function FontSelector({
                     <div
                         ref={listboxRef}
                         role="listbox"
-                        aria-labelledby="font-selector-label"
+                        aria-labelledby={labelId}
                         onKeyDown={handleListKeyDown}
                         className="absolute z-20 mt-1 w-full bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-auto focus:outline-none"
                     >
