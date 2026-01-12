@@ -1,16 +1,21 @@
-import { Settings, Plus, ChevronDown } from 'lucide-react';
+import { Settings, Plus, ChevronDown, FolderOpen, Check, Copy, Library, Hammer } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { TreeNode } from './TreeNode';
-import { useProjectTree } from '../../api/hooks';
+import { useProjectTree, useProjects } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
 import type { NodeType } from '../../types';
+import { Badge } from '../atoms/Badge';
+import { Text } from '../atoms/Text';
+import { Menu } from '../molecules/Menu';
 
 export function Sidebar() {
   const { setNodes, getChildren, getNode } = useHierarchyStore();
-  const { activeProjectId, selection, setSelection, sidebarWidth, openDrawer } = useUIStore();
+  const { activeProjectId, selection, setSelection, sidebarWidth, openDrawer, setActiveProject } = useUIStore();
   const { data: nodes } = useProjectTree(activeProjectId);
+  const { data: projects } = useProjects();
 
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
   const [isProcessDropdownOpen, setIsProcessDropdownOpen] = useState(false);
@@ -65,7 +70,66 @@ export function Sidebar() {
       className="bg-slate-50 border-r border-slate-200 flex flex-col shrink-0"
       style={{ width: sidebarWidth }}
     >
-      {/* Process Selector */}
+      {/* Project Selector */}
+      <div className="p-3 border-b border-slate-200 bg-white">
+        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">
+          Project
+        </label>
+        <Menu>
+          <Menu.Target>
+            <button className="w-full flex items-center justify-between bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-2 rounded-lg transition-colors text-left">
+              {project ? (
+                <div className="flex items-center gap-2 min-w-0">
+                  <Badge variant="project" size="xs">Project</Badge>
+                  <Text size="sm" weight="semibold" truncate className="max-w-[140px]">
+                    {project.title}
+                  </Text>
+                </div>
+              ) : (
+                <Text size="sm" color="muted">Select a project...</Text>
+              )}
+              <ChevronDown size={14} className="text-slate-400 shrink-0" />
+            </button>
+          </Menu.Target>
+          <Menu.Dropdown className="min-w-[240px]">
+            <Menu.Item leftSection={<Plus size={16} />} onClick={() => openDrawer('create-project', {})}>
+              New Project
+            </Menu.Item>
+            {project && (
+              <>
+                <Menu.Item leftSection={<Copy size={16} />} onClick={() => openDrawer('clone-project', { sourceProjectId: project.id, sourceProjectTitle: project.title })}>
+                  Clone Current
+                </Menu.Item>
+                <Menu.Item leftSection={<Library size={16} />} onClick={() => openDrawer('project-library', { projectId: project.id, projectTitle: project.title })}>
+                  Template Library
+                </Menu.Item>
+                <Menu.Item component={Link} to="/import" leftSection={<Hammer size={16} />}>
+                  Import Data
+                </Menu.Item>
+              </>
+            )}
+            <Menu.Divider />
+            <Menu.Label>Your Projects</Menu.Label>
+            {projects && projects.length > 0 ? (
+              projects.map((p) => (
+                <Menu.Item
+                  key={p.id}
+                  leftSection={<FolderOpen size={16} />}
+                  rightSection={p.id === activeProjectId ? <Check size={16} className="text-blue-600" /> : null}
+                  onClick={() => setActiveProject(p.id)}
+                  className={p.id === activeProjectId ? 'bg-blue-50' : ''}
+                >
+                  <Text size="sm" truncate>{p.title}</Text>
+                </Menu.Item>
+              ))
+            ) : (
+              <Text size="sm" color="muted" className="text-center py-3">
+                No projects yet
+              </Text>
+            )}
+          </Menu.Dropdown>
+        </Menu>
+      </div>
       {processes.length > 0 && (
         <div className="p-3 border-b border-slate-200 bg-white">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">

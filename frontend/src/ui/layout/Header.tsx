@@ -204,99 +204,19 @@ export function Header() {
             </Menu.Dropdown>
           </Menu>
         </Inline>
-
-        {!isRegistryPage && !isComposerPage && (
-          <>
-            <div className="h-6 w-px bg-slate-200 mx-1" />
-
-            {/* Project Selector */}
-            <Menu>
-              <Menu.Target>
-                <Button
-                  variant="subtle"
-                  color="gray"
-                  size="sm"
-                  rightSection={<ChevronDown size={14} />}
-                  className="max-w-[280px]"
-                >
-                  {selectedProject ? (
-                    <Inline gap="xs" align="center">
-                      <Badge variant="project">Project</Badge>
-                      <Text size="sm" weight="semibold" truncate className="max-w-[160px]">
-                        {selectedProject.title}
-                      </Text>
-                    </Inline>
-                  ) : (
-                    <Text size="sm" color="muted">Select a project...</Text>
-                  )}
-                </Button>
-              </Menu.Target>
-
-              <Menu.Dropdown className="min-w-[280px]">
-                <Menu.Item leftSection={<Plus size={16} />} onClick={handleCreateProject}>
-                  New Project
-                </Menu.Item>
-                {selectedProject && (
-                  <>
-                    <Menu.Item leftSection={<Copy size={16} />} onClick={handleCloneProject}>
-                      Clone Current Project
-                    </Menu.Item>
-                    <Menu.Item leftSection={<Library size={16} />} onClick={handleOpenLibrary}>
-                      Template Library
-                    </Menu.Item>
-                    <Menu.Item component={Link} to="/import" leftSection={<Hammer size={16} />}>
-                      Import Data
-                    </Menu.Item>
-                  </>
-                )}
-
-                <Menu.Divider />
-
-                <Menu.Label>Your Projects</Menu.Label>
-                {projects && projects.length > 0 ? (
-                  projects.map((project) => (
-                    <Menu.Item
-                      key={project.id}
-                      leftSection={<FolderOpen size={16} />}
-                      rightSection={project.id === activeProjectId ? <Check size={16} className="text-blue-600" /> : null}
-                      onClick={() => handleSelectProject(project.id)}
-                      className={project.id === activeProjectId ? 'bg-blue-50' : ''}
-                    >
-                      <Text size="sm" truncate>{project.title}</Text>
-                    </Menu.Item>
-                  ))
-                ) : (
-                  <Text size="sm" color="muted" className="text-center py-3">
-                    No projects yet
-                  </Text>
-                )}
-              </Menu.Dropdown>
-            </Menu>
-
-            {/* Edit button */}
-            {selectedProject && (
-              <Button
-                variant="subtle"
-                color="gray"
-                size="xs"
-                onClick={() => setSelection({ type: 'node', id: selectedProject.id })}
-              >
-                Edit
-              </Button>
-            )}
-          </>
-        )}
       </Inline>
 
       {/* Right side controls */}
       <Inline gap="sm" align="center">
-        {/* View Toggle */}
-        <SegmentedControl
-          size="xs"
-          value={viewMode as string}
-          onChange={(value) => setViewMode(value as ProjectViewMode | RecordsViewMode | FieldsViewMode)}
-          data={getViewModeData()}
-        />
+        {/* View Toggle - only on project pages */}
+        {!isRegistryPage && !isComposerPage && !isWorkbenchPage && (
+          <SegmentedControl
+            size="xs"
+            value={viewMode as string}
+            onChange={(value) => setViewMode(value as ProjectViewMode | RecordsViewMode | FieldsViewMode)}
+            data={getViewModeData()}
+          />
+        )}
 
         {/* Settings */}
         <Link to="/settings">
