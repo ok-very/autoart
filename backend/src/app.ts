@@ -21,6 +21,7 @@ import { referencesRoutes } from './modules/references/references.routes.js';
 import { searchRoutes } from './modules/search/search.routes.js';
 import { workflowSurfaceRoutes } from './modules/projections/workflow-surface.routes.js';
 import { connectionsRoutes } from './modules/imports/connections.routes.js';
+import { definitionsRoutes } from './modules/definitions/index.js';
 import authPlugin from './plugins/auth.js';
 import { errorHandler, notFoundHandler } from './utils/errorHandler.js';
 import { logger } from './utils/logger.js';
@@ -92,6 +93,9 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Fact kind definitions - Definition Review UI
   await fastify.register(factKindsRoutes, { prefix: '/api' });
+
+  // Soft-intrinsic definitions (action types, workflow statuses)
+  await fastify.register(definitionsRoutes, { prefix: '/api/definitions' });
 
   fastify.setErrorHandler(errorHandler);
   fastify.setNotFoundHandler(notFoundHandler);
