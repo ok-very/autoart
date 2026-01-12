@@ -615,7 +615,18 @@ async function executePlanViaComposer(
     }
 
     // Step 2: Create work items via Actions + Events (proper Composer pattern)
-    for (const item of plan.items) {
+    // Sort items so tasks are created before subtasks (ensures parent exists in createdIds)
+    const sortedItems = [...plan.items].sort((a, b) => {
+        // Tasks come before subtasks
+        if (a.entityType === 'subtask' && b.entityType !== 'subtask') return 1;
+        if (a.entityType !== 'subtask' && b.entityType === 'subtask') return -1;
+        return 0;
+    });
+
+    // Build itemsByTempId lookup for O(1) parent context resolution
+    const itemsByTempId = new Map(plan.items.map(i => [i.tempId, i]));
+
+    for (const item of sortedItems) {
         // Determine action type from entityType (Task vs Subtask)
         const actionType = item.entityType === 'subtask' ? 'Subtask' : 'Task';
 
@@ -628,8 +639,8 @@ async function executePlanViaComposer(
             // Subtask: parent is the task action
             parentActionId = createdIds[item.parentTempId] ?? null;
             // Context is still the subprocess (inherited from parent task)
-            // Find the parent item to get its context
-            const parentItem = plan.items.find(i => i.tempId === item.parentTempId);
+            // Find the parent item to get its context (O(1) lookup via map)
+            const parentItem = itemsByTempId.get(item.parentTempId);
             if (parentItem?.parentTempId) {
                 contextId = createdIds[parentItem.parentTempId];
             } else {
