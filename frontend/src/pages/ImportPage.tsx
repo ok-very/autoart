@@ -98,29 +98,18 @@ export function ImportPage() {
     // Auto-switch source type based on session connector type
     useEffect(() => {
         if (session) {
-            console.log('[ImportPage] Session changed:', {
-                id: session.id,
-                parser_name: session.parser_name,
-                hasConnectorPrefix: session.parser_name?.startsWith('connector:'),
-            });
             // Connector sessions use parser_name like 'connector:monday'
             if (session.parser_name?.startsWith('connector:monday')) {
-                console.log('[ImportPage] Switching to monday view');
                 setSourceType('monday');
             } else if (session.parser_name && !session.parser_name.startsWith('connector:')) {
                 // File-based session
-                console.log('[ImportPage] Switching to file view');
                 setSourceType('file');
             }
         }
     }, [session]);
 
-    // DEBUG: Log current state
-    console.log('[ImportPage] Render:', { sourceType, hasSession: !!session, hasPlan: !!plan });
-
     // Render center view based on source type
     const renderCenterView = () => {
-        console.log('[ImportPage] renderCenterView called, sourceType:', sourceType);
         switch (sourceType) {
             case 'monday':
                 return (

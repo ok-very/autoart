@@ -151,23 +151,28 @@ export async function generatePlanFromConnector(
         projectId: session.target_project_id ?? undefined,
     });
 
-    // DEBUG: Log what we received from interpreter
-    console.log('[imports.service] ===== DEBUG: Monday Import =====');
-    console.log('[imports.service] Total nodes from Monday:', allNodes.length);
-    console.log('[imports.service] Total items from interpreter:', allItems.length);
-    console.log('[imports.service] hasTargetProject:', !!session.target_project_id);
-    console.log('[imports.service] Node types:', allNodes.map(n => n.type).reduce((acc, t) => {
-        acc[t] = (acc[t] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>));
-    console.log('[imports.service] Items by mondayType:', allItems.map(i => (i.metadata?.monday as any)?.type).reduce((acc, t) => {
-        acc[t] = (acc[t] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>));
-    console.log('[imports.service] Items by entityType:', allItems.map(i => i.entityType).reduce((acc, t) => {
-        acc[t || 'undefined'] = (acc[t || 'undefined'] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>));
+    // DEBUG: Log what we received from interpreter (gated to avoid noise in production)
+    if (process.env.NODE_ENV !== 'production') {
+        const nodeTypeCounts = allNodes.reduce((acc, n) => {
+            const key = n.type ?? 'unknown';
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+
+        const itemTypeCounts = allItems.reduce((acc, i) => {
+            const key = i.entityType || 'undefined';
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+
+        console.debug('[imports.service] Monday import summary', {
+            totalNodes: allNodes.length,
+            totalItems: allItems.length,
+            hasTargetProject: !!session.target_project_id,
+            nodeTypeCounts,
+            itemTypeCounts,
+        });
+    }
 
     // Separate containers (board → project only if no target, group → subprocess) from items
     const containers: ImportPlanContainer[] = [];
@@ -835,7 +840,9 @@ async function executePlanViaComposer(
 
         // Create action - type will be derived by projection from context and parent relationships
         // Use entityType hint if available for initial categorization, but projection is authoritative
-        // For templates without context, use empty string as they're hierarchy-agnostic
+        // For templates without context, use empty string to mark as hierarchy-agnostic.
+        // Note: Empty string is intentional - null would violate FK constraints and emitEvent types.
+        // Downstream logic should check for empty string to skip context-based projections.
         const effectiveContextId = contextId ?? '';
 
         const action = await db

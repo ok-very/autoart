@@ -23,10 +23,11 @@
  */
 
 import { clsx } from 'clsx';
-import { ChevronRight, ChevronDown, Folder, FileText, Box, AlertCircle, CheckCircle2, Columns } from 'lucide-react';
-import { useState, useMemo, useCallback } from 'react';
+import { ChevronRight, ChevronDown, Folder, FileText, Box, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useMemo, useCallback } from 'react';
 
 import type { ImportPlan, ImportPlanItem, ItemClassification } from '../../api/hooks/imports';
+import { ColumnPicker } from '../molecules/ColumnPicker';
 import { DataFieldWidget, type DataFieldKind } from '../molecules/DataFieldWidget';
 import { UniversalTableCore, makeImportPlanRowModel, getImportPlanMeta, getImportPlanNode, type TableColumn as CoreTableColumn, type TableRow } from '../table-core';
 
@@ -261,62 +262,6 @@ function FieldValueCell({ value, renderHint }: { value: unknown; renderHint?: st
     const kind = mapRenderHintToKind(renderHint);
 
     return <DataFieldWidget kind={kind} value={value} />;
-}
-
-// ============================================================================
-// COLUMN PICKER
-// ============================================================================
-
-interface ColumnPickerProps {
-    allFields: ImportFieldDef[];
-    visibleKeys: Set<string>;
-    onToggle: (key: string) => void;
-}
-
-function ColumnPicker({ allFields, visibleKeys, onToggle }: ColumnPickerProps) {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-        <div className="relative">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="p-2 rounded hover:bg-slate-100 text-slate-500"
-                title="Toggle columns"
-            >
-                <Columns size={16} />
-            </button>
-
-            {isOpen && (
-                <>
-                    <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-                    <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
-                        <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase">
-                            Visible Columns
-                        </div>
-                        {allFields.map((field) => (
-                            <label
-                                key={field.fieldName}
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-50 cursor-pointer"
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={visibleKeys.has(field.fieldName)}
-                                    onChange={() => onToggle(field.fieldName)}
-                                    className="rounded border-slate-300"
-                                />
-                                <span className="truncate">{field.label || field.fieldName}</span>
-                            </label>
-                        ))}
-                        {allFields.length === 0 && (
-                            <div className="px-3 py-2 text-xs text-slate-400">
-                                No fields discovered
-                            </div>
-                        )}
-                    </div>
-                </>
-            )}
-        </div>
-    );
 }
 
 // ============================================================================
