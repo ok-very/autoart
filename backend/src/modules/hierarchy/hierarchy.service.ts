@@ -7,6 +7,7 @@ import { NotFoundError, ValidationError } from '../../utils/errors.js';
 import * as recordsService from '../records/records.service.js';
 
 // Validate hierarchy rules
+// Templates are hierarchy-agnostic (null parent) - they float outside normal structure
 const VALID_PARENTS: Record<NodeType, NodeType | null> = {
   project: null,
   process: 'project',
@@ -14,6 +15,7 @@ const VALID_PARENTS: Record<NodeType, NodeType | null> = {
   subprocess: 'stage',
   task: 'subprocess',
   subtask: 'task',
+  template: null, // Templates are hierarchy-agnostic singletons
 };
 
 export async function getProjectTree(projectId: string): Promise<HierarchyNode[]> {
@@ -324,6 +326,7 @@ async function updateDescendantsRootProject(nodeId: string, newRootProjectId: st
 }
 
 // Depth limits for clone filtering
+// Templates are excluded from cloning - they're singletons
 const DEPTH_LIMITS: Record<string, NodeType[]> = {
   all: ['project', 'process', 'stage', 'subprocess', 'task'],
   process: ['project', 'process'],

@@ -80,7 +80,7 @@ function buildImportTree(plan: ImportPlan): ImportPlanNode[] {
             title: item.title,
             nodeType: 'item',
             entityType,
-            parentId: item.parentTempId,
+            parentId: item.parentTempId ?? null,
             data: item,
             classification: classificationMap.get(item.tempId),
             children: [],

@@ -159,6 +159,8 @@ export async function connectionsRoutes(app: FastifyInstance) {
                     id: string;
                     name: string;
                     state: string;
+                    type: string;
+                    board_kind: string;
                     workspace: { id: string; name: string } | null;
                     items_count: number;
                 }>;
@@ -168,6 +170,8 @@ export async function connectionsRoutes(app: FastifyInstance) {
                         id
                         name
                         state
+                        type
+                        board_kind
                         workspace {
                             id
                             name
@@ -177,17 +181,37 @@ export async function connectionsRoutes(app: FastifyInstance) {
                 }
             `);
 
-            // Filter to active boards only and format response
+            // Filter to actual project boards only:
+            // 1. Active state
+            // 2. type = 'board' (not 'document' or 'dashboard')  
+            // 3. board_kind = 'public' or 'private' (excludes 'share' linked boards)
+            // 4. Exclude "Subitems of X" boards (Monday auto-creates these)
+            // 5. Require meaningful item count (> 0) to exclude empty/template boards
             const boards = result.boards
                 .filter(b => b.state === 'active')
+                .filter(b => b.type === 'board')
+                .filter(b => b.board_kind === 'public' || b.board_kind === 'private')
+                .filter(b => !b.name.startsWith('Subitems of '))
+                .filter(b => b.items_count > 0)
                 .map(b => ({
                     id: b.id,
                     name: b.name,
                     workspace: b.workspace?.name ?? 'Main workspace',
                     itemCount: b.items_count,
+                    boardKind: b.board_kind,
                 }));
 
-            return reply.send({ boards });
+            // Deduplicate by ID
+            const seenIds = new Set<string>();
+            const uniqueBoards: typeof boards = [];
+            for (const board of boards) {
+                if (!seenIds.has(board.id)) {
+                    seenIds.add(board.id);
+                    uniqueBoards.push(board);
+                }
+            }
+
+            return reply.send({ boards: uniqueBoards });
         } catch (err) {
             if ((err as Error).message.includes('No Monday API token')) {
                 return reply.status(401).send({

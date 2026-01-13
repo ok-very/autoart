@@ -174,8 +174,9 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
         setError(null);
     }, [onReset]);
 
-    // If session exists, show session info
-    if (session) {
+    // If session exists and NOT Monday source, show session info only
+    // For Monday source, we persist the board list below the session header
+    if (session && sourceType !== 'monday') {
         return (
             <aside style={{ width }} className="shrink-0 border-r border-slate-200 bg-white flex flex-col">
                 <div className="flex-1 flex flex-col overflow-hidden">
@@ -342,6 +343,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                         onBoardSelect={handleBoardSelect}
                         isLoading={isLoading}
                         error={error}
+                        activeSession={session}
                     />
                 )}
 
@@ -370,9 +372,10 @@ interface MondayBoardListProps {
     onBoardSelect: (boardId: string) => void;
     isLoading: boolean;
     error: string | null;
+    activeSession: ImportSession | null;
 }
 
-function MondayBoardList({ onBoardSelect, isLoading, error }: MondayBoardListProps) {
+function MondayBoardList({ onBoardSelect, isLoading, error, activeSession }: MondayBoardListProps) {
     const { data: boards, isLoading: boardsLoading } = useMondayBoards();
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -406,6 +409,23 @@ function MondayBoardList({ onBoardSelect, isLoading, error }: MondayBoardListPro
 
     return (
         <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Active Session Header (when session exists) */}
+            {activeSession && (
+                <div className="p-3 border-b border-slate-200 bg-amber-50/50">
+                    <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-amber-600" />
+                        <div className="flex-1 min-w-0">
+                            <div className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">
+                                monday:connector
+                            </div>
+                            <div className="text-sm font-medium text-slate-700 truncate">
+                                {activeSession.parser_name}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Search */}
             <div className="p-3 border-b border-slate-100">
                 <div className="relative">

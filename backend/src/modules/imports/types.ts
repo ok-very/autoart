@@ -104,7 +104,7 @@ export interface ImportPlanItem {
     parentTempId?: string;
     metadata: Record<string, unknown>;
     /** Entity type inferred from source (project, stage, action, task, subtask, record) */
-    entityType?: 'project' | 'stage' | 'action' | 'task' | 'subtask' | 'record';
+    entityType?: 'project' | 'stage' | 'action' | 'task' | 'subtask' | 'record' | 'template';
     /** Planned action for execution (optional for connector imports) */
     plannedAction?: {
         type: string;
