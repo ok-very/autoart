@@ -191,6 +191,26 @@ export async function generatePlanFromConnector(
     // Track if we're importing into an existing project
     const hasTargetProject = !!session.target_project_id;
 
+    /**
+     * Extract Monday board ID from metadata.
+     * For board nodes: prefer board_id, fallback to id (which IS the board ID for board-type nodes)
+     * For other nodes: only use board_id if present (id would be item/group ID, not board ID)
+     */
+    function extractMondayBoardId(
+        meta: { type?: string; id?: string; board_id?: string } | undefined,
+        entityType?: string
+    ): string | null {
+        if (!meta) return null;
+        // board_id is always authoritative when present
+        if (meta.board_id) return meta.board_id;
+        // For board-type nodes, id IS the board ID
+        if (meta.type === 'board') return meta.id ?? null;
+        // For items with entityType 'project', id might be board ID (from interpreter inference)
+        if (entityType === 'project') return meta.id ?? null;
+        // For all other nodes, don't use id as it's the node's own ID, not board ID
+        return null;
+    }
+
     // First pass: identify containers and build hierarchy
     for (const item of allItems) {
         const mondayMeta = item.metadata?.monday as {
@@ -214,8 +234,8 @@ export async function generatePlanFromConnector(
                 tempIdToContainer.set(item.tempId, container);
             }
             // Track this board ID to prevent it from also appearing as an item
-            const boardId = (mondayMeta as { id?: string; board_id?: string })?.board_id
-                ?? (mondayMeta as { id?: string })?.id;
+            // Safe to use id here because nodeType === 'board' means id IS the board ID
+            const boardId = extractMondayBoardId(mondayMeta as { type?: string; id?: string; board_id?: string }, item.entityType);
             if (boardId) {
                 boardsAsContainers.add(boardId);
             }
@@ -247,10 +267,14 @@ export async function generatePlanFromConnector(
             // Items and subitems go to items array
 
             // BOARD DEDUPLICATION: Skip items that represent boards already added as containers
-            const mondayBoardId = (mondayMeta as { board_id?: string })?.board_id
-                ?? (item.entityType === 'project' ? (mondayMeta as { id?: string })?.id : null);
+            const mondayBoardId = extractMondayBoardId(
+                mondayMeta as { type?: string; id?: string; board_id?: string },
+                item.entityType
+            );
             if (mondayBoardId && boardsAsContainers.has(mondayBoardId)) {
-                console.log(`[imports.service] Deduping board item "${item.title}" (board_id: ${mondayBoardId}) - already a container`);
+                if (process.env.NODE_ENV !== 'production') {
+                    console.debug(`[imports.service] Deduping board item "${item.title}" (board_id: ${mondayBoardId}) - already a container`);
+                }
                 continue; // Skip duplicate board
             }
 
@@ -259,7 +283,9 @@ export async function generatePlanFromConnector(
             const mondayId = (mondayMeta as { id?: string })?.id;
             if (item.entityType === 'template' && mondayId) {
                 if (seenExternalIds.has(mondayId)) {
-                    console.log(`[imports.service] Deduping template "${item.title}" (external_id: ${mondayId})`);
+                    if (process.env.NODE_ENV !== 'production') {
+                        console.debug(`[imports.service] Deduping template "${item.title}" (external_id: ${mondayId})`);
+                    }
                     continue; // Skip duplicate template
                 }
                 seenExternalIds.set(mondayId, item.tempId);
@@ -294,16 +320,20 @@ export async function generatePlanFromConnector(
     const definitions = await listDefinitions();
     const classifications = generateClassifications(items, definitions);
 
-    // DEBUG: Log final result
-    console.log('[imports.service] ===== DEBUG: Final Plan =====');
-    console.log('[imports.service] Containers:', containers.length, containers.map(c => ({ type: c.type, title: c.title })));
-    console.log('[imports.service] Items:', items.length, items.slice(0, 5).map(i => ({
-        title: i.title,
-        entityType: i.entityType,
-        parentTempId: i.parentTempId?.slice(0, 10),
-        groupTitle: (i.metadata?.monday as any)?.groupTitle,
-    })));
-    console.log('[imports.service] ================================');
+    // DEBUG: Log final result (non-production only)
+    if (process.env.NODE_ENV !== 'production') {
+        console.debug('[imports.service] Final Plan Summary', {
+            containersCount: containers.length,
+            containers: containers.map(c => ({ type: c.type, title: c.title })),
+            itemsCount: items.length,
+            sampleItems: items.slice(0, 5).map(i => ({
+                title: i.title,
+                entityType: i.entityType,
+                parentTempId: i.parentTempId?.slice(0, 10),
+                groupTitle: (i.metadata?.monday as any)?.groupTitle,
+            })),
+        });
+    }
 
     // Create the plan
     const plan: ImportPlan = {
