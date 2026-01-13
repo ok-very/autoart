@@ -11,7 +11,7 @@
  * - Index on deleted_at for efficient "active users" queries
  */
 
-import { Kysely, sql } from 'kysely';
+import { Kysely } from 'kysely';
 
 export async function up(db: Kysely<unknown>): Promise<void> {
     // Add soft delete columns to users table

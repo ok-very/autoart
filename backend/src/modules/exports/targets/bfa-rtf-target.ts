@@ -25,7 +25,7 @@ export class BfaRtfTarget implements ExportTarget {
     readonly name = 'BFA To-Do (RTF)';
     readonly description = 'Rich Text Format matching BFA document structure';
 
-    async validate(config: Record<string, unknown>): Promise<ValidationResult> {
+    async validate(_config: Record<string, unknown>): Promise<ValidationResult> {
         // RTF export doesn't require special configuration
         // Just validate we have write permissions (implicitly via OS)
         return { valid: true };

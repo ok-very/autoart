@@ -26,7 +26,7 @@ import { hasUnresolvedClassifications, countUnresolved } from './types.js';
 import { db } from '../../db/client.js';
 import type { RecordDefinition } from '../../db/schema.js';
 import { emitEvent } from '../events/events.service.js';
-import { interpretCsvRowPlan, mapStatusToWorkEvent, type InterpretationOutput, type InterpretationPlan } from '../interpreter/interpreter.service.js';
+import { interpretCsvRowPlan, type InterpretationOutput } from '../interpreter/interpreter.service.js';
 import { interpretMondayBoard } from '../interpreter/monday-interpreter.js';
 import { ensureFactKindDefinition } from '../records/fact-kinds.service.js';
 import { listDefinitions } from '../records/records.service.js';
@@ -913,7 +913,7 @@ async function executePlanViaComposer(
                     if (output.kind === 'fact_candidate') {
                         const factKind = output.factKind as string;
                         const confidence = (output.confidence as 'low' | 'medium' | 'high') || 'medium';
-                        const { kind, factKind: _, confidence: __, ...cleanPayload } = output;
+                        const { kind: _kind, factKind: _, confidence: __, ...cleanPayload } = output;
 
                         // Ensure fact kind definition exists (auto-create if needed)
                         await ensureFactKindDefinition({
@@ -989,7 +989,7 @@ async function executePlanViaComposer(
                 if (output.kind === 'fact_candidate') {
                     const factKind = output.factKind as string;
                     const confidence = (output.confidence as 'low' | 'medium' | 'high') || 'medium';
-                    const { kind, factKind: _, confidence: __, ...cleanPayload } = output;
+                    const { kind: _kind2, factKind: _, confidence: __, ...cleanPayload } = output;
 
                     await ensureFactKindDefinition({
                         factKind,

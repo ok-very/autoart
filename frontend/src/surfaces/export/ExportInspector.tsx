@@ -15,7 +15,6 @@ import {
     useCreateExportSession,
     useGenerateExportProjection,
     useExecuteExport,
-    type ExportFormat as ApiExportFormat,
 } from '../../api/hooks/exports';
 import { Text, Stack, Inline, Checkbox, Button, Card } from '../../ui/atoms';
 
@@ -48,7 +47,7 @@ export function ExportInspector({
     font,
     onFontChange,
 }: ExportInspectorProps) {
-    const [exportError, setExportError] = useState<string | null>(null);
+    const [exportError, _setExportError] = useState<string | null>(null);
 
     // API mutations
     const createSession = useCreateExportSession();

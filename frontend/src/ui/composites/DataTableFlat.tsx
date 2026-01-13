@@ -449,7 +449,7 @@ export function DataTableFlat({
         }
 
         return cols;
-    }, [displayColumns, multiSelect, selectedIds, buildCellViewModel, editable, handleCellSave, handleSelectOne]);
+    }, [displayColumns, multiSelect, selectedIds, buildCellViewModel, editable, handleCellSave, handleSelectOne, handleSelectAll, paginatedRecords]);
 
     // Row model from paginated records
     const rowModel = useMemo(() => {

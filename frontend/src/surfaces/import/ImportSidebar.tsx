@@ -65,7 +65,7 @@ interface SourceIconProps {
     onClick: () => void;
 }
 
-function SourceIcon({ id, icon, label, isActive, isConnected, isDisabled, onClick }: SourceIconProps) {
+function SourceIcon({ id: _id, icon, label, isActive, isConnected, isDisabled, onClick }: SourceIconProps) {
     return (
         <button
             onClick={onClick}

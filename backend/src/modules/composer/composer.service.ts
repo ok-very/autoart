@@ -15,7 +15,7 @@
 
 import { sql } from 'kysely';
 
-import type { ComposerInput, ComposerResponse, ContextType, Action, Event, ActionReference } from '@autoart/shared';
+import type { ComposerInput, ComposerResponse, ContextType, ActionReference } from '@autoart/shared';
 
 import { EventFactory } from './event-factory.js';
 import { db } from '../../db/client.js';

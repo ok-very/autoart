@@ -6,7 +6,7 @@
  */
 
 import {
-  ChevronDown, Plus, Copy, FolderOpen, Check, Library, Database,
+  ChevronDown, FolderOpen, Database,
   TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
@@ -21,24 +21,22 @@ import {
   RECORDS_VIEW_MODE_LABELS,
   FIELDS_VIEW_MODE_LABELS,
 } from '../../stores/uiStore';
-import { Badge } from '../atoms/Badge';
 import { Button } from '../atoms/Button';
 import { IconButton } from '../atoms/IconButton';
 import { Inline } from '../atoms/Inline';
-import { Text } from '../atoms/Text';
 import { Menu } from '../molecules/Menu';
 import { SegmentedControl } from '../molecules/SegmentedControl';
 
 export function Header() {
   const location = useLocation();
-  const { data: projects } = useProjects();
+  const { data: _projects } = useProjects();
   const { getNode } = useHierarchyStore();
   const {
     viewMode,
     setViewMode,
     activeProjectId,
-    setActiveProject,
-    setSelection,
+    setActiveProject: _setActiveProject,
+    setSelection: _setSelection,
     openDrawer
   } = useUIStore();
 
@@ -54,15 +52,15 @@ export function Header() {
 
   const selectedProject = activeProjectId ? getNode(activeProjectId) : null;
 
-  const handleSelectProject = (projectId: string) => {
-    setActiveProject(projectId);
+  const _handleSelectProject = (_projectId: string) => {
+    _setActiveProject(_projectId);
   };
 
-  const handleCreateProject = () => {
+  const _handleCreateProject = () => {
     openDrawer('create-project', {});
   };
 
-  const handleCloneProject = () => {
+  const _handleCloneProject = () => {
     if (!selectedProject) return;
     openDrawer('clone-project', {
       sourceProjectId: selectedProject.id,
@@ -70,7 +68,7 @@ export function Header() {
     });
   };
 
-  const handleOpenLibrary = () => {
+  const _handleOpenLibrary = () => {
     if (!selectedProject) return;
     openDrawer('project-library', {
       projectId: selectedProject.id,

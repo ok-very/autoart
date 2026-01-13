@@ -402,7 +402,7 @@ export function buildWorkflowSurfaceTree(
 
   // 9. Build tree with DFS
   const result: WorkflowSurfaceNode[] = [];
-  const visited = new Set<string>();
+  const _visited = new Set<string>();
 
   function buildNode(
     actionId: string,

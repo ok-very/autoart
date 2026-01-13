@@ -137,7 +137,7 @@ export const intentMappingRules: MappingRule[] = [
         id: 'orientation-meeting',
         description: 'Orientation meeting (low confidence unless status=Done)',
         pattern: /\b(orientation|introduction)\s*(meeting)?/i,
-        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+        emits: (_ctx: MappingContext): InterpretationOutput[] => [{
             kind: 'fact_candidate',
             factKind: 'MEETING_HELD',
             payload: {

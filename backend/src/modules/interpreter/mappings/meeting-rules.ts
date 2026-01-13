@@ -77,7 +77,7 @@ export const meetingMappingRules: MappingRule[] = [
         id: 'kickoff-meeting',
         description: 'Kickoff meeting (ambiguous - could be planned or held)',
         pattern: /(project\s*)?(kickoff|kick-off)\s*(meeting)?/i,
-        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+        emits: (_ctx: MappingContext): InterpretationOutput[] => [{
             kind: 'fact_candidate',
             factKind: MEETING_HELD,
             payload: {

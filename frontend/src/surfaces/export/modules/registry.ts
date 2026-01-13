@@ -4,7 +4,7 @@
  * Defines the modular export system architecture
  */
 
-import type { ExportFormat, ExportOptions } from '@autoart/shared';
+import type { ExportFormat } from '@autoart/shared';
 
 export interface ExportModule {
     id: ExportFormat;
