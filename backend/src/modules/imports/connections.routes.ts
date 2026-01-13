@@ -12,7 +12,6 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
 import * as connectionsService from './connections.service.js';
-import { getMondayToken } from './connections.service.js';
 import { MondayClient } from './connectors/monday-client.js';
 
 // ============================================================================

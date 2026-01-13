@@ -37,8 +37,8 @@ export function ExportWorkbenchView({
     onFormatChange,
     options,
     previewProjectId,
-    projectionCache,
-    onProjectionLoaded,
+    projectionCache: _projectionCache,
+    onProjectionLoaded: _onProjectionLoaded,
 }: ExportWorkbenchViewProps) {
     const selectedCount = selectedProjectIds.size;
 

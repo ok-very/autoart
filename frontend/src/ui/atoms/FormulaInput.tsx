@@ -182,7 +182,7 @@ export function FormulaInput({
         setShowAutocomplete(false);
       }
     },
-    [showAutocomplete, filteredFields, selectedIndex, insertReference, value]
+    [showAutocomplete, filteredFields, selectedIndex, insertReference, value, handleCommit]
   );
 
   // Commit the current value

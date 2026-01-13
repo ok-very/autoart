@@ -19,7 +19,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await sql`CREATE EXTENSION IF NOT EXISTS "pgcrypto"`.execute(db);
 }
 
-export async function down(db: Kysely<unknown>): Promise<void> {
+export async function down(_db: Kysely<unknown>): Promise<void> {
   // Note: We don't drop extensions on rollback as other schemas may depend on them
   // If you need to drop: await sql`DROP EXTENSION IF EXISTS "pgcrypto"`.execute(db);
 }

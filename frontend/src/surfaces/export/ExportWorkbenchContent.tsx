@@ -30,7 +30,7 @@ export function ExportWorkbenchContent() {
         options,
         previewProjectId,
         setFormat,
-        setOption,
+        setOption: _setOption,
     } = useExportWorkbenchStore();
 
     const createSession = useCreateExportSession();

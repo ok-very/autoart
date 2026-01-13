@@ -51,7 +51,7 @@ export function useUpdateReferenceSnapshot() {
   return useMutation({
     mutationFn: ({ id, value }: { id: string; value: unknown }) =>
       api.patch<{ reference: TaskReference }>(`/references/${id}/snapshot`, { value }),
-    onSuccess: (_data, variables) => {
+    onSuccess: (_data, _variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.references.all() });
     },
   });

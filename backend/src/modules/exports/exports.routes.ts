@@ -16,8 +16,6 @@ import { z } from 'zod';
 import * as backfeedingService from './backfeeding.service.js';
 import { GoogleClient } from './connectors/google-client.js';
 import { GoogleDocsConnector } from './connectors/google-docs-connector.js';
-import { GoogleSheetsConnector } from './connectors/google-sheets-connector.js';
-import { GoogleSlidesConnector } from './connectors/google-slides-connector.js';
 import * as emailDecayService from './email-decay.service.js';
 import * as exportsService from './exports.service.js';
 import * as stalenessService from './staleness.service.js';

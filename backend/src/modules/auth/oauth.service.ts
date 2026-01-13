@@ -10,7 +10,7 @@ import { sql } from 'kysely';
 
 import { db } from '../../db/client.js';
 import { AppError } from '../../utils/errors.js';
-import * as authService from './auth.service.js';
+
 
 // Environment validation
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;

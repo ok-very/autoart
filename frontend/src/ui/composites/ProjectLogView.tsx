@@ -51,13 +51,13 @@ interface ProjectLogViewProps {
   contextId?: string;
 }
 
-export function ProjectLogView({ projectId }: ProjectLogViewProps) {
+export function ProjectLogView({ projectId: _projectId }: ProjectLogViewProps) {
   const [composerDraft, setComposerDraft] = useState('');
 
   // TODO: Replace with API fetch + TanStack Query
   const cards: ActionCard[] = useMemo(() => {
     return [];
-  }, [projectId]);
+  }, []);
 
   const isLoading = false; // TODO: Get from query hook
 

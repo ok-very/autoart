@@ -223,7 +223,7 @@ export const useUIStore = create<UIState>()(
       }),
       // Migrate stale persisted values to valid InspectorTabId
       migrate: (persistedState, version) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         const state = persistedState as any;
         if (version < 1) {
           // Normalize any stale inspectorTabMode values

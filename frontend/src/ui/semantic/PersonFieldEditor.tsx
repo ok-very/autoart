@@ -13,7 +13,7 @@
 
 import { clsx } from 'clsx';
 import { User, ChevronDown, X } from 'lucide-react';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 
 import { PortalMenu } from '../atoms/PortalMenu';
 
@@ -85,11 +85,11 @@ export function PersonFieldEditor({
     const buttonRef = useRef<HTMLButtonElement>(null);
 
     // Normalize value to array
-    const selectedPersons: Person[] = value
+    const selectedPersons: Person[] = useMemo(() => value
         ? Array.isArray(value)
             ? value
             : [value]
-        : [];
+        : [], [value]);
 
     const handleToggle = useCallback(() => {
         if (!readOnly) {

@@ -1,5 +1,5 @@
 import { Settings, Plus, ChevronDown, FolderOpen, Check, Copy, Library, Hammer } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
 import { TreeNode } from './TreeNode';
@@ -28,7 +28,7 @@ export function HierarchySidebar() {
   }, [nodes, setNodes]);
 
   const project = activeProjectId ? getNode(activeProjectId) : null;
-  const processes = project ? getChildren(project.id) : [];
+  const processes = useMemo(() => project ? getChildren(project.id) : [], [project, getChildren]);
 
   // Auto-select first process when processes change or none selected
   useEffect(() => {

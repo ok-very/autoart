@@ -16,13 +16,9 @@ import {
     ActionSchema,
     CreateActionInputSchema,
     EventSchema,
-    CreateEventInputSchema,
     ActionViewSchema,
 } from './actions.js';
-import {
-    ActionReferenceSchema,
-    CreateActionReferenceInputSchema,
-} from './references.js';
+import { ActionReferenceSchema } from './references.js';
 
 // ============================================================================
 // COMPOSER FIELD VALUE

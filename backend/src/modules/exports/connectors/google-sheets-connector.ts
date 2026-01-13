@@ -9,7 +9,7 @@
  * - Timeline/milestone tracking
  */
 
-import { GoogleClient, type Spreadsheet, type SpreadsheetRequest, type RowData, type CellData } from './google-client.js';
+import { GoogleClient, type RowData, type CellData } from './google-client.js';
 import type { BfaProjectExportModel, ExportOptions } from '../types.js';
 
 // ============================================================================

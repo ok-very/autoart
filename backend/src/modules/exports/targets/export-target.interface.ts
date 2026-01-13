@@ -5,7 +5,7 @@
  * Allows modular addition of new export formats (invoices, budgets, InDesign, etc.)
  */
 
-import type { ExportOptions, BfaProjectExportModel, ExportResult } from '../types.js';
+import type { ExportOptions, ExportResult } from '../types.js';
 
 // ============================================================================
 // VALIDATION
