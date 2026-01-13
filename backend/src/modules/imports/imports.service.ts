@@ -184,6 +184,10 @@ export async function generatePlanFromConnector(
     // Templates with the same Monday ID are deduplicated (linked/mirrored items)
     const seenExternalIds = new Map<string, string>(); // monday_id → tempId
 
+    // Track boards already processed as containers (by Monday board ID)
+    // This prevents boards from also appearing as items in the plan
+    const boardsAsContainers = new Set<string>();
+
     // Track if we're importing into an existing project
     const hasTargetProject = !!session.target_project_id;
 
@@ -208,6 +212,12 @@ export async function generatePlanFromConnector(
                 };
                 containers.push(container);
                 tempIdToContainer.set(item.tempId, container);
+            }
+            // Track this board ID to prevent it from also appearing as an item
+            const boardId = (mondayMeta as { id?: string; board_id?: string })?.board_id
+                ?? (mondayMeta as { id?: string })?.id;
+            if (boardId) {
+                boardsAsContainers.add(boardId);
             }
             // Skip adding board as an item - it's structural only
             continue;
@@ -235,6 +245,14 @@ export async function generatePlanFromConnector(
             continue; // Groups don't go in items array
         } else {
             // Items and subitems go to items array
+
+            // BOARD DEDUPLICATION: Skip items that represent boards already added as containers
+            const mondayBoardId = (mondayMeta as { board_id?: string })?.board_id
+                ?? (item.entityType === 'project' ? (mondayMeta as { id?: string })?.id : null);
+            if (mondayBoardId && boardsAsContainers.has(mondayBoardId)) {
+                console.log(`[imports.service] Deduping board item "${item.title}" (board_id: ${mondayBoardId}) - already a container`);
+                continue; // Skip duplicate board
+            }
 
             // TEMPLATE DEDUPLICATION: Templates with the same Monday external_id
             // are deduplicated (e.g., "Vancouver Template" linked across multiple boards)
