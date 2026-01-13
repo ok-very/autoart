@@ -1,7 +1,7 @@
 /**
  * ImportPage - Page wrapper for Import Workbench
  *
- * Layout: ImportSidebar | Center View (swappable) | ImportInspector + BottomDrawer
+ * Layout: ImportSidebar | Center View (swappable) | SelectionInspector + BottomDrawer
  *
  * Center view swaps based on source type:
  * - file: ImportWorkbenchView
@@ -13,11 +13,11 @@ import { useCallback, useState, useMemo, useEffect } from 'react';
 
 import type { ImportSession, ImportPlan } from '../api/hooks/imports';
 import { useUIStore } from '../stores/uiStore';
-import { ImportInspector } from '../surfaces/import/ImportInspector';
 import { ImportSidebar } from '../surfaces/import/ImportSidebar';
 import { ImportWorkbenchView } from '../surfaces/import/ImportWorkbenchView';
 import { MondayPreviewView } from '../surfaces/import/MondayPreviewView';
 import { ResizeHandle } from '../ui/common/ResizeHandle';
+import { SelectionInspector } from '../ui/composites/SelectionInspector';
 import { BottomDrawer } from '../ui/drawer/BottomDrawer';
 import { Header } from '../ui/layout/Header';
 
@@ -25,16 +25,26 @@ import { Header } from '../ui/layout/Header';
 export type ImportSourceType = 'file' | 'monday' | 'api';
 
 export function ImportPage() {
-    const { inspectorWidth, setInspectorWidth, openDrawer, activeDrawer } = useUIStore();
+    const {
+        inspectorWidth,
+        setInspectorWidth,
+        openDrawer,
+        activeDrawer,
+        importSession,
+        importPlan,
+        setImportSession,
+        setImportPlan,
+        selectImportItem,
+        clearSelection,
+    } = useUIStore();
     const [sidebarWidth, setSidebarWidth] = useState(280);
 
     // Source type controls which center view is shown
     const [sourceType, setSourceType] = useState<ImportSourceType>('file');
 
-    // Import session state (lifted to page level for cross-component access)
-    const [session, setSession] = useState<ImportSession | null>(null);
-    const [plan, setPlan] = useState<ImportPlan | null>(null);
-    const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+    // Use uiStore for session/plan (aliased for compatibility with child components)
+    const session = importSession;
+    const plan = importPlan;
 
     // Check if there are unresolved classifications
     const hasUnresolvedClassifications = useMemo(() => {
@@ -59,20 +69,20 @@ export function ImportPage() {
     );
 
     const handleSessionCreated = useCallback((newSession: ImportSession, newPlan: ImportPlan) => {
-        setSession(newSession);
-        setPlan(newPlan);
-        setSelectedItemId(null);
-    }, []);
+        setImportSession(newSession);
+        setImportPlan(newPlan);
+        clearSelection();
+    }, [setImportSession, setImportPlan, clearSelection]);
 
     const handlePlanUpdated = useCallback((updatedPlan: ImportPlan) => {
-        setPlan(updatedPlan);
-    }, []);
+        setImportPlan(updatedPlan);
+    }, [setImportPlan]);
 
     const handleReset = useCallback(() => {
-        setSession(null);
-        setPlan(null);
-        setSelectedItemId(null);
-    }, []);
+        setImportSession(null);
+        setImportPlan(null);
+        clearSelection();
+    }, [setImportSession, setImportPlan, clearSelection]);
 
     // Open classification drawer when unresolved items exist
     useEffect(() => {
@@ -85,6 +95,19 @@ export function ImportPage() {
         }
     }, [hasUnresolvedClassifications, session, plan, openDrawer, activeDrawer, handlePlanUpdated]);
 
+    // Auto-switch source type based on session connector type
+    useEffect(() => {
+        if (session) {
+            // Connector sessions use parser_name like 'connector:monday'
+            if (session.parser_name?.startsWith('connector:monday')) {
+                setSourceType('monday');
+            } else if (session.parser_name && !session.parser_name.startsWith('connector:')) {
+                // File-based session
+                setSourceType('file');
+            }
+        }
+    }, [session]);
+
     // Render center view based on source type
     const renderCenterView = () => {
         switch (sourceType) {
@@ -93,8 +116,7 @@ export function ImportPage() {
                     <MondayPreviewView
                         session={session}
                         plan={plan}
-                        selectedItemId={selectedItemId}
-                        onSelectItem={setSelectedItemId}
+                        onSelectItem={selectImportItem}
                         onReset={handleReset}
                     />
                 );
@@ -104,8 +126,7 @@ export function ImportPage() {
                     <ImportWorkbenchView
                         session={session}
                         plan={plan}
-                        selectedItemId={selectedItemId}
-                        onSelectItem={setSelectedItemId}
+                        onSelectItem={selectImportItem}
                         onReset={handleReset}
                     />
                 );
@@ -136,12 +157,7 @@ export function ImportPage() {
 
                 {/* Right Inspector: Selected item details */}
                 <ResizeHandle direction="left" onResize={handleInspectorResize} />
-                <ImportInspector
-                    width={inspectorWidth}
-                    session={session}
-                    plan={plan}
-                    selectedItemId={selectedItemId}
-                />
+                <SelectionInspector />
             </div>
         </div>
     );

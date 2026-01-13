@@ -32,7 +32,7 @@ export function BottomDrawer() {
 
   return (
     <div
-      className="bg-white shadow-md border-t border-slate-200 flex flex-col shrink-0 relative z-40 transition-all duration-200"
+      className="bg-white shadow-md border-t border-slate-200 flex flex-col shrink-0 relative z-40"
       style={{ height: effectiveHeight }}
     >
       {!drawerCollapsed && <ResizeHandle direction="top" onResize={handleResize} />}

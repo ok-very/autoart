@@ -1,6 +1,10 @@
 /**
  * ImportInspector
  *
+ * @deprecated Use SelectionInspector with import_item selection type instead.
+ * This component has been superseded by the unified SelectionInspector.
+ * Import selection is now handled via uiStore.selectImportItem().
+ *
  * Right inspector panel for Import Workbench.
  * Shows details of the selected import item.
  */
@@ -43,7 +47,7 @@ export function ImportInspector({
     // Find selected item
     const selectedItem = selectedItemId
         ? plan?.items.find((i) => i.tempId === selectedItemId) ||
-          plan?.containers.find((c) => c.tempId === selectedItemId)
+        plan?.containers.find((c) => c.tempId === selectedItemId)
         : null;
 
     // Find classification for selected item
@@ -149,11 +153,9 @@ export function ImportInspector({
                                         <Text size="xs" color="muted">Outcome</Text>
                                         <Badge
                                             size="sm"
-                                            className={`mt-0.5 ${
-                                                OUTCOME_COLORS[classification.outcome]?.bg || 'bg-slate-100'
-                                            } ${
-                                                OUTCOME_COLORS[classification.outcome]?.text || 'text-slate-600'
-                                            }`}
+                                            className={`mt-0.5 ${OUTCOME_COLORS[classification.outcome]?.bg || 'bg-slate-100'
+                                                } ${OUTCOME_COLORS[classification.outcome]?.text || 'text-slate-600'
+                                                }`}
                                         >
                                             {classification.outcome.replace(/_/g, ' ')}
                                         </Badge>

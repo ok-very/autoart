@@ -1,47 +1,31 @@
 /**
  * Hierarchy Preview
  *
- * Renders import plan as a tree view (hierarchy projection).
- * Shows inline classification badges on items that need attention.
+ * Renders import plan as a hierarchical table using NestedDataTable.
+ * Each hierarchy level gets its own column headers based on available fields.
+ * Supports both flat view (DataTableImport) and nested view (NestedDataTable).
  */
 
-import { ChevronRight, ChevronDown, Folder, FileText, Box, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { LayoutGrid, Layers } from 'lucide-react';
 
-import type { ImportPlan, ImportPlanContainer, ImportPlanItem, ItemClassification } from '../../api/hooks/imports';
-
-// ============================================================================
-// CLASSIFICATION COLORS
-// ============================================================================
-
-const OUTCOME_STYLES: Record<string, { bg: string; text: string; icon: 'alert' | 'check' | 'none' }> = {
-    FACT_EMITTED: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: 'check' },
-    DERIVED_STATE: { bg: 'bg-blue-100', text: 'text-blue-700', icon: 'check' },
-    INTERNAL_WORK: { bg: 'bg-slate-100', text: 'text-slate-600', icon: 'none' },
-    EXTERNAL_WORK: { bg: 'bg-purple-100', text: 'text-purple-700', icon: 'check' },
-    AMBIGUOUS: { bg: 'bg-amber-100', text: 'text-amber-700', icon: 'alert' },
-    UNCLASSIFIED: { bg: 'bg-red-100', text: 'text-red-700', icon: 'alert' },
-};
+import type { ImportPlan, ItemClassification } from '../../api/hooks/imports';
+import {
+    DataTableImport,
+    NestedDataTable,
+    discoverImportFields,
+} from '../../ui/composites/DataTableImport';
 
 // ============================================================================
-// TYPES
+// PROPS
 // ============================================================================
 
 interface HierarchyPreviewProps {
     plan: ImportPlan;
     selectedRecordId: string | null;
     onSelect: (recordId: string) => void;
-}
-
-interface TreeNode {
-    id: string;
-    title: string;
-    type: 'container' | 'item';
-    nodeType: string;
-    parentId: string | null;
-    children: TreeNode[];
-    data: ImportPlanContainer | ImportPlanItem;
-    classification?: ItemClassification;
+    /** View mode: 'flat' (traditional) or 'nested' (per-level headers) */
+    viewMode?: 'flat' | 'nested';
 }
 
 // ============================================================================
@@ -52,189 +36,130 @@ export function HierarchyPreview({
     plan,
     selectedRecordId,
     onSelect,
+    viewMode: initialViewMode = 'nested',
 }: HierarchyPreviewProps) {
-    // Build tree from plan
-    const tree = useMemo(() => buildTree(plan), [plan]);
+    // View mode toggle
+    const [viewMode, setViewMode] = useState<'flat' | 'nested'>(initialViewMode);
+
+    // Discover fields from plan data
+    const discoveredFields = useMemo(() => discoverImportFields(plan), [plan]);
+
+    // Visible fields state - default to top 5 most common
+    const [visibleFields, setVisibleFields] = useState<Set<string>>(() => {
+        const defaultFields = discoveredFields.slice(0, 5).map(f => f.fieldName);
+        return new Set(defaultFields);
+    });
+
+    // Expansion state - start with all expanded
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
+        const ids = new Set<string>();
+        for (const container of plan.containers) {
+            ids.add(container.tempId);
+        }
+        for (const item of plan.items) {
+            ids.add(item.tempId);
+        }
+        return ids;
+    });
+
+    // Build classification map for nested view
+    const classificationMap = useMemo(() => {
+        return new Map<string, ItemClassification>(
+            plan.classifications?.map(c => [c.itemTempId, c]) ?? []
+        );
+    }, [plan.classifications]);
+
+    // DEBUG
+    console.log('[HierarchyPreview] Render:', {
+        viewMode,
+        itemCount: plan.items.length,
+        containerCount: plan.containers.length,
+        fieldCount: discoveredFields.length,
+        visibleFieldCount: visibleFields.size,
+    });
+
+    // Handle field visibility toggle
+    const handleToggleField = useCallback((fieldName: string) => {
+        setVisibleFields(prev => {
+            const next = new Set(prev);
+            if (next.has(fieldName)) {
+                next.delete(fieldName);
+            } else {
+                next.add(fieldName);
+            }
+            return next;
+        });
+    }, []);
+
+    // Handle expansion toggle
+    const handleToggleExpanded = useCallback((id: string) => {
+        setExpandedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    }, []);
 
     return (
-        <div className="p-4">
-            {tree.map((node) => (
-                <TreeNodeView
-                    key={node.id}
-                    node={node}
-                    depth={0}
-                    selectedRecordId={selectedRecordId}
-                    onSelect={onSelect}
-                />
-            ))}
-        </div>
-    );
-}
-
-// ============================================================================
-// CLASSIFICATION BADGE COMPONENT
-// ============================================================================
-
-interface ClassificationBadgeProps {
-    classification: ItemClassification;
-}
-
-function ClassificationBadge({ classification }: ClassificationBadgeProps) {
-    // Show resolved outcome if available, otherwise current outcome
-    const outcome = classification.resolution?.resolvedOutcome || classification.outcome;
-    const isResolved = !!classification.resolution;
-    const needsAttention = !isResolved && (outcome === 'AMBIGUOUS' || outcome === 'UNCLASSIFIED');
-
-    const styles = OUTCOME_STYLES[outcome] || OUTCOME_STYLES.UNCLASSIFIED;
-
-    return (
-        <span
-            className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold uppercase rounded ${styles.bg} ${styles.text}`}
-            title={classification.rationale}
-        >
-            {needsAttention && <AlertCircle className="w-3 h-3" />}
-            {isResolved && <CheckCircle2 className="w-3 h-3" />}
-            {outcome.replace(/_/g, ' ')}
-        </span>
-    );
-}
-
-// ============================================================================
-// TREE NODE COMPONENT
-// ============================================================================
-
-interface TreeNodeViewProps {
-    node: TreeNode;
-    depth: number;
-    selectedRecordId: string | null;
-    onSelect: (recordId: string) => void;
-}
-
-function TreeNodeView({ node, depth, selectedRecordId, onSelect }: TreeNodeViewProps) {
-    const [isExpanded, setIsExpanded] = useState(true);
-    const hasChildren = node.children.length > 0;
-    const isSelected = node.id === selectedRecordId;
-
-    const Icon = node.type === 'container' ? (
-        node.nodeType === 'project' ? Folder :
-            node.nodeType === 'process' ? Box :
-                Folder
-    ) : FileText;
-
-    return (
-        <div>
-            <button
-                onClick={() => {
-                    if (node.type === 'item') {
-                        onSelect(node.id);
-                    } else if (hasChildren) {
-                        setIsExpanded(!isExpanded);
-                    }
-                }}
-                className={`w-full flex items-center gap-2 py-1.5 px-2 rounded-md text-left transition-colors ${isSelected
-                        ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200'
-                        : 'hover:bg-slate-50 text-slate-700'
-                    }`}
-                style={{ paddingLeft: `${depth * 20 + 8}px` }}
-            >
-                {/* Expand/collapse chevron */}
-                {hasChildren ? (
-                    <span className="w-4 h-4 flex items-center justify-center text-slate-400">
-                        {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                    </span>
-                ) : (
-                    <span className="w-4" />
-                )}
-
-                {/* Icon */}
-                <Icon className={`w-4 h-4 ${node.type === 'container' ? 'text-blue-500' : 'text-slate-400'
-                    }`} />
-
-                {/* Title */}
-                <span className="text-sm font-medium truncate flex-1">{node.title}</span>
-
-                {/* Classification badge (for items) */}
-                {node.classification && (
-                    <ClassificationBadge classification={node.classification} />
-                )}
-
-                {/* Type badge */}
-                <span className="text-[10px] font-bold uppercase text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                    {node.nodeType}
-                </span>
-            </button>
-
-            {/* Children */}
-            {isExpanded && hasChildren && (
-                <div>
-                    {node.children.map((child) => (
-                        <TreeNodeView
-                            key={child.id}
-                            node={child}
-                            depth={depth + 1}
-                            selectedRecordId={selectedRecordId}
-                            onSelect={onSelect}
-                        />
-                    ))}
+        <div className="h-full flex flex-col">
+            {/* Toolbar with view mode toggle */}
+            <div className="flex items-center justify-end px-3 py-2 border-b border-slate-200 bg-white gap-2">
+                <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+                    <button
+                        onClick={() => setViewMode('flat')}
+                        className={`p-1.5 rounded-md transition-colors ${viewMode === 'flat'
+                            ? 'bg-white shadow-sm text-slate-700'
+                            : 'text-slate-400 hover:text-slate-600'
+                            }`}
+                        title="Flat view (traditional)"
+                    >
+                        <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={() => setViewMode('nested')}
+                        className={`p-1.5 rounded-md transition-colors ${viewMode === 'nested'
+                            ? 'bg-white shadow-sm text-slate-700'
+                            : 'text-slate-400 hover:text-slate-600'
+                            }`}
+                        title="Nested view (per-level headers)"
+                    >
+                        <Layers className="w-4 h-4" />
+                    </button>
                 </div>
-            )}
+            </div>
+
+            {/* Table content */}
+            <div className="flex-1 overflow-auto p-3">
+                {viewMode === 'flat' ? (
+                    <DataTableImport
+                        plan={plan}
+                        fields={discoveredFields}
+                        visibleFields={visibleFields}
+                        onToggleField={handleToggleField}
+                        selectedItemId={selectedRecordId}
+                        onRowSelect={onSelect}
+                        expandedIds={expandedIds}
+                        onToggleExpanded={handleToggleExpanded}
+                    />
+                ) : (
+                    <NestedDataTable
+                        items={plan.items}
+                        classificationMap={classificationMap}
+                        visibleFields={visibleFields}
+                        selectedItemId={selectedRecordId}
+                        onRowSelect={onSelect}
+                        expandedIds={expandedIds}
+                        onToggleExpanded={handleToggleExpanded}
+                    />
+                )}
+            </div>
         </div>
     );
-}
-
-// ============================================================================
-// TREE BUILDER
-// ============================================================================
-
-function buildTree(plan: ImportPlan): TreeNode[] {
-    const nodeMap = new Map<string, TreeNode>();
-
-    // Build classification lookup by item tempId
-    const classificationMap = new Map<string, ItemClassification>();
-    if (plan.classifications) {
-        for (const c of plan.classifications) {
-            classificationMap.set(c.itemTempId, c);
-        }
-    }
-
-    // Add containers
-    for (const container of plan.containers) {
-        nodeMap.set(container.tempId, {
-            id: container.tempId,
-            title: container.title,
-            type: 'container',
-            nodeType: container.type,
-            parentId: container.parentTempId,
-            children: [],
-            data: container,
-        });
-    }
-
-    // Add items with their classifications
-    for (const item of plan.items) {
-        nodeMap.set(item.tempId, {
-            id: item.tempId,
-            title: item.title,
-            type: 'item',
-            nodeType: 'task',
-            parentId: item.parentTempId,
-            children: [],
-            data: item,
-            classification: classificationMap.get(item.tempId),
-        });
-    }
-
-    // Build parent-child relationships
-    const roots: TreeNode[] = [];
-    for (const node of nodeMap.values()) {
-        if (node.parentId && nodeMap.has(node.parentId)) {
-            nodeMap.get(node.parentId)!.children.push(node);
-        } else {
-            roots.push(node);
-        }
-    }
-
-    return roots;
 }
 
 export default HierarchyPreview;
+

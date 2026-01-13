@@ -140,7 +140,7 @@ export function FieldRenderer({
             : String(value || '');
         return (
             <div className={clsx('text-sm text-slate-600', className)}>
-                {userName || '-'}
+                {userName}
             </div>
         );
     }

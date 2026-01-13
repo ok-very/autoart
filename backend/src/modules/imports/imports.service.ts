@@ -147,19 +147,151 @@ export async function generatePlanFromConnector(
     }
 
     // Interpret nodes into ImportPlanItems
-    const items = await interpretMondayBoard(allNodes, {
+    const allItems = await interpretMondayBoard(allNodes, {
         projectId: session.target_project_id ?? undefined,
     });
 
-    // Generate classifications
+    // DEBUG: Log what we received from interpreter (gated to avoid noise in production)
+    if (process.env.NODE_ENV !== 'production') {
+        const nodeTypeCounts = allNodes.reduce((acc, n) => {
+            const key = n.type ?? 'unknown';
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+
+        const itemTypeCounts = allItems.reduce((acc, i) => {
+            const key = i.entityType || 'undefined';
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+
+        console.debug('[imports.service] Monday import summary', {
+            totalNodes: allNodes.length,
+            totalItems: allItems.length,
+            hasTargetProject: !!session.target_project_id,
+            nodeTypeCounts,
+            itemTypeCounts,
+        });
+    }
+
+    // Separate containers (board → project only if no target, group → subprocess) from items
+    const containers: ImportPlanContainer[] = [];
+    const items: ImportPlanItem[] = [];
+    const tempIdToContainer = new Map<string, ImportPlanContainer>();
+    const groupIdToContainer = new Map<string, ImportPlanContainer>();
+
+    // Track seen external IDs for template deduplication
+    // Templates with the same Monday ID are deduplicated (linked/mirrored items)
+    const seenExternalIds = new Map<string, string>(); // monday_id → tempId
+
+    // Track if we're importing into an existing project
+    const hasTargetProject = !!session.target_project_id;
+
+    // First pass: identify containers and build hierarchy
+    for (const item of allItems) {
+        const mondayMeta = item.metadata?.monday as {
+            type?: string;
+            groupId?: string;
+            groupTitle?: string;
+        } | undefined;
+        const nodeType = mondayMeta?.type;
+
+        if (nodeType === 'board') {
+            // Board → Project container ONLY if no target project
+            // When importing into existing project, board is just metadata
+            if (!hasTargetProject) {
+                const container: ImportPlanContainer = {
+                    tempId: item.tempId,
+                    type: 'project',
+                    title: item.title,
+                    parentTempId: null,
+                };
+                containers.push(container);
+                tempIdToContainer.set(item.tempId, container);
+            }
+            // Skip adding board as an item - it's structural only
+            continue;
+        } else if (nodeType === 'group') {
+            // Groups become subprocesses - they provide organizational structure
+            // This keeps "Templates", "Contact Lists", "Artist Lists" as containers
+            const container: ImportPlanContainer = {
+                tempId: item.tempId,
+                type: 'subprocess',
+                title: item.title,
+                // Parent is either target project or the board-as-project
+                parentTempId: hasTargetProject
+                    ? null  // Will be resolved to target on execution
+                    : (containers.find(c => c.type === 'project')?.tempId ?? null),
+            };
+            containers.push(container);
+            tempIdToContainer.set(item.tempId, container);
+
+            // Map group ID to container for child item assignment
+            // Use both groupId (self-reference) and id (node ID) to ensure mapping
+            const groupId = mondayMeta?.groupId ?? (mondayMeta as { id?: string })?.id;
+            if (groupId) {
+                groupIdToContainer.set(groupId, container);
+            }
+            continue; // Groups don't go in items array
+        } else {
+            // Items and subitems go to items array
+
+            // TEMPLATE DEDUPLICATION: Templates with the same Monday external_id
+            // are deduplicated (e.g., "Vancouver Template" linked across multiple boards)
+            const mondayId = (mondayMeta as { id?: string })?.id;
+            if (item.entityType === 'template' && mondayId) {
+                if (seenExternalIds.has(mondayId)) {
+                    console.log(`[imports.service] Deduping template "${item.title}" (external_id: ${mondayId})`);
+                    continue; // Skip duplicate template
+                }
+                seenExternalIds.set(mondayId, item.tempId);
+            }
+
+            // Parent assignment:
+            // 1. Explicit subitem → parent item relationship (already set by interpreter)
+            // 2. Group membership → subprocess container
+            // 3. Fallback to project/target
+            // NOTE: Templates skip parent assignment (hierarchy-agnostic)
+
+            if (!item.parentTempId && item.entityType !== 'template') {
+                const itemGroupId = mondayMeta?.groupId;
+                const groupContainer = itemGroupId ? groupIdToContainer.get(itemGroupId) : null;
+
+                if (groupContainer) {
+                    // Item belongs to a group → parent is the group's subprocess
+                    item.parentTempId = groupContainer.tempId;
+                } else if (!hasTargetProject) {
+                    // No group, no target → use first project container
+                    const parentProject = containers.find(c => c.type === 'project');
+                    item.parentTempId = parentProject?.tempId;
+                }
+                // When hasTargetProject && no group: leave parentTempId undefined
+                // It will be resolved to target_project_id during execution
+            }
+            items.push(item);
+        }
+    }
+
+    // Generate classifications (only for actual items, not containers)
     const definitions = await listDefinitions();
     const classifications = generateClassifications(items, definitions);
+
+    // DEBUG: Log final result
+    console.log('[imports.service] ===== DEBUG: Final Plan =====');
+    console.log('[imports.service] Containers:', containers.length, containers.map(c => ({ type: c.type, title: c.title })));
+    console.log('[imports.service] Items:', items.length, items.slice(0, 5).map(i => ({
+        title: i.title,
+        entityType: i.entityType,
+        parentTempId: i.parentTempId?.slice(0, 10),
+        groupTitle: (i.metadata?.monday as any)?.groupTitle,
+    })));
+    console.log('[imports.service] ================================');
 
     // Create the plan
     const plan: ImportPlan = {
         sessionId,
         items,
-        containers: [], // Monday groups become stages, not containers
+        containers,
         classifications,
         validationIssues: [],
     };
@@ -291,6 +423,22 @@ function generateClassifications(items: ImportPlanItem[], definitions: RecordDef
         const stageName = (item.metadata as { 'import.stage_name'?: string })?.['import.stage_name'];
 
         let baseClassification: ItemClassification;
+
+        // Check for parent resolution failures first - these need review
+        const parentFailed = (item.metadata as { _parentResolutionFailed?: boolean })?._parentResolutionFailed;
+        if (parentFailed) {
+            const orphanedParentId = (item.metadata as { _orphanedParentId?: string })?._orphanedParentId;
+            const reason = (item.metadata as { _reason?: string })?._reason;
+            return addSchemaMatch({
+                itemTempId: item.tempId,
+                outcome: 'AMBIGUOUS' as ClassificationOutcome,
+                confidence: 'low' as const,
+                rationale: orphanedParentId
+                    ? `Subitem parent (${orphanedParentId}) not in import batch - needs manual parent assignment`
+                    : `Subitem missing parent reference: ${reason || 'unknown'}`,
+                candidates: ['assign_parent', 'promote_to_item', 'skip'],
+            }, item.fieldRecordings, definitions);
+        }
 
         // Check for internal work patterns first
         if (isInternalWork(text)) {
@@ -630,6 +778,30 @@ async function executePlanViaComposer(
     });
 
     for (const item of sortedItems) {
+        // CROSS-IMPORT TEMPLATE DEDUPLICATION
+        // Templates are singletons - check if already imported from same external source
+        if (item.entityType === 'template') {
+            const mondayMeta = item.metadata?.monday as { id?: string } | undefined;
+            const mondayId = mondayMeta?.id;
+
+            if (mondayId) {
+                // Check if this template already exists via external_source_mapping
+                const existingMapping = await db
+                    .selectFrom('external_source_mappings')
+                    .select('local_entity_id')
+                    .where('provider', '=', 'monday')
+                    .where('external_id', '=', mondayId)
+                    .executeTakeFirst();
+
+                if (existingMapping) {
+                    // Link to existing template instead of creating new
+                    console.log(`[imports.service] Template "${item.title}" already exists (mapped from ${mondayId}), reusing entity ${existingMapping.local_entity_id}`);
+                    createdIds[item.tempId] = existingMapping.local_entity_id;
+                    continue;
+                }
+            }
+        }
+
         // Derive parent relationship from parentTempId:
         // - If parentTempId refers to another item → this is a child action (parent_action_id set)
         // - If parentTempId refers to a container → this is a container-scoped action
@@ -655,21 +827,29 @@ async function executePlanViaComposer(
             contextId = createdIds[item.parentTempId] ?? targetProjectId ?? undefined;
         } else {
             // No parent, use project context
+            // Templates can be context-free, use target project if available
             contextId = targetProjectId ?? undefined;
         }
 
-        if (!contextId) {
+        // Templates without context can still be created (they're hierarchy-agnostic)
+        // For non-templates, context is required
+        if (!contextId && item.entityType !== 'template') {
             console.warn(`Context not found for item: ${item.tempId} (${item.title})`);
             continue;
         }
 
         // Create action - type will be derived by projection from context and parent relationships
         // Use entityType hint if available for initial categorization, but projection is authoritative
+        // For templates without context, use empty string to mark as hierarchy-agnostic.
+        // Note: Empty string is intentional - null would violate FK constraints and emitEvent types.
+        // Downstream logic should check for empty string to skip context-based projections.
+        const effectiveContextId = contextId ?? '';
+
         const action = await db
             .insertInto('actions')
             .values({
                 context_type: 'subprocess',
-                context_id: contextId,
+                context_id: effectiveContextId,
                 parent_action_id: parentActionId,
                 type: 'Task', // Base type - projection derives actual type from relationships
                 field_bindings: JSON.stringify([
@@ -687,7 +867,7 @@ async function executePlanViaComposer(
 
         // Record ACTION_DECLARED event - projection system updates views
         await emitEvent({
-            contextId: contextId,
+            contextId: effectiveContextId,
             contextType: 'subprocess',
             actionId: action.id,
             type: 'ACTION_DECLARED',
@@ -744,7 +924,7 @@ async function executePlanViaComposer(
                         });
 
                         await emitEvent({
-                            contextId: contextId,
+                            contextId: effectiveContextId,
                             contextType: 'subprocess',
                             actionId: action.id,
                             type: 'FACT_RECORDED',
@@ -779,7 +959,7 @@ async function executePlanViaComposer(
                     source?: string;
                 };
                 await emitEvent({
-                    contextId: contextId,
+                    contextId: effectiveContextId,
                     contextType: 'subprocess',
                     actionId: action.id,
                     type: statusEvent.eventType,
@@ -819,7 +999,7 @@ async function executePlanViaComposer(
                     });
 
                     await emitEvent({
-                        contextId: contextId,
+                        contextId: effectiveContextId,
                         contextType: 'subprocess',
                         actionId: action.id,
                         type: 'FACT_RECORDED',
@@ -843,7 +1023,7 @@ async function executePlanViaComposer(
                     source?: string;
                 };
                 await emitEvent({
-                    contextId: contextId,
+                    contextId: effectiveContextId,
                     contextType: 'subprocess',
                     actionId: action.id,
                     type: statusEvent.eventType,

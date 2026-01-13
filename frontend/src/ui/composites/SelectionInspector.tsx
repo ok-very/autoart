@@ -1,12 +1,13 @@
 /**
  * SelectionInspector - Unified Workbench Inspector
  *
- * Routes by selection.type (node | record | action) to show context-appropriate tabs.
+ * Routes by selection.type (node | record | action | import_item) to show context-appropriate tabs.
  * Includes always-visible composer footer for quick action declaration.
  *
  * Tab Structure:
  * - Node/Record: Record | Interpretation | References | Links | Schema
  * - Action: Details | Execution Log
+ * - Import Item: Details | Classification | Fields
  *
  * Layout:
  * - Tab header (dynamic based on selection type)
@@ -15,9 +16,10 @@
  */
 
 import { clsx } from 'clsx';
-import { FileText, Link2, ExternalLink, Wrench, Lightbulb, Info, History } from 'lucide-react';
+import { FileText, Link2, ExternalLink, Wrench, Lightbulb, Info, History, Tag, List } from 'lucide-react';
 
 import { RecordPropertiesView } from './RecordPropertiesView';
+import { ImportItemDetailsView } from './ImportItemDetailsView';
 import { SchemaEditor, ReferencesManager, LinksManager } from '../semantic';
 import { InterpretationInspectorView } from './interpretation/InterpretationInspectorView';
 import { useNode, useRecord, useInterpretationAvailable } from '../../api/hooks';
@@ -41,13 +43,21 @@ const ACTION_TABS: Tab[] = [
     { id: 'execution_log', label: 'Events', icon: History },
 ];
 
+// Import item-specific tabs
+const IMPORT_TABS: Tab[] = [
+    { id: 'import_details', label: 'Details', icon: FileText },
+    { id: 'import_classification', label: 'Classification', icon: Tag },
+    { id: 'import_fields', label: 'Fields', icon: List },
+];
+
 export function SelectionInspector() {
     const { selection, inspectorTabMode, setInspectorMode, inspectorWidth } = useUIStore();
 
-    // Derive node/record IDs from selection
+    // Derive IDs from selection
     const inspectedNodeId = selection?.type === 'node' ? selection.id : null;
     const inspectedRecordId = selection?.type === 'record' ? selection.id : null;
     const inspectedActionId = selection?.type === 'action' ? selection.id : null;
+    const inspectedImportItemId = selection?.type === 'import_item' ? selection.id : null;
     const inspectorMode = inspectorTabMode;
 
     const { data: node } = useNode(inspectedNodeId);
@@ -62,12 +72,13 @@ export function SelectionInspector() {
     const isTask = node?.type === 'task';
     const isRecord = !!record;
     const isAction = !!inspectedActionId;
+    const isImportItem = !!inspectedImportItemId;
 
     // Determine selection type for routing
-    const selectionType = isAction ? 'action' : (inspectedItem ? 'node_record' : null);
+    const selectionType = isImportItem ? 'import_item' : isAction ? 'action' : (inspectedItem ? 'node_record' : null);
 
     // Empty state
-    if (!inspectedItem && !isAction) {
+    if (!inspectedItem && !isAction && !isImportItem) {
         return (
             <aside
                 className="bg-white border-l border-slate-200 flex flex-col shrink-0"
@@ -84,15 +95,17 @@ export function SelectionInspector() {
     }
 
     // Build available tabs based on selection type
-    const tabs: Tab[] = selectionType === 'action'
-        ? ACTION_TABS
-        : [
-            { id: 'record', label: 'Record', icon: FileText },
-            ...(hasInterpretation ? [{ id: 'interpretation' as const, label: 'Interpretation', icon: Lightbulb }] : []),
-            ...(isTask ? [{ id: 'references' as const, label: 'References', icon: Link2 }] : []),
-            ...(isRecord ? [{ id: 'links' as const, label: 'Links', icon: ExternalLink }] : []),
-            { id: 'schema', label: 'Schema', icon: Wrench },
-        ];
+    const tabs: Tab[] = selectionType === 'import_item'
+        ? IMPORT_TABS
+        : selectionType === 'action'
+            ? ACTION_TABS
+            : [
+                { id: 'record', label: 'Record', icon: FileText },
+                ...(hasInterpretation ? [{ id: 'interpretation' as const, label: 'Interpretation', icon: Lightbulb }] : []),
+                ...(isTask ? [{ id: 'references' as const, label: 'References', icon: Link2 }] : []),
+                ...(isRecord ? [{ id: 'links' as const, label: 'Links', icon: ExternalLink }] : []),
+                { id: 'schema', label: 'Schema', icon: Wrench },
+            ];
 
     // Auto-correct tab mode if current mode is invalid for selection type
     const validTabIds = tabs.map(t => t.id);
@@ -102,6 +115,11 @@ export function SelectionInspector() {
 
     // Determine which view to render
     const renderView = () => {
+        // Import item selection routing
+        if (selectionType === 'import_item' && inspectedImportItemId) {
+            return <ImportItemDetailsView itemId={inspectedImportItemId} tab={effectiveTab} />;
+        }
+
         // Action selection routing
         if (selectionType === 'action' && inspectedActionId) {
             switch (effectiveTab) {

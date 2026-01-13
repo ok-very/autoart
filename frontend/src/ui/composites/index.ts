@@ -47,10 +47,21 @@ export { UserMentionInput, type UserMentionInputProps } from './UserMentionInput
 // View Composites (orchestrate molecules with domain data)
 export { RecordPropertiesView } from './RecordPropertiesView';
 export { SelectionInspector, RecordInspector, type InspectorTabId } from './SelectionInspector';
+export { ImportItemDetailsView } from './ImportItemDetailsView';
 
 // Reusable Table Composites (UI Patterns)
 export { DataTableFlat, type DataTableFlatProps, type TableColumn } from './DataTableFlat';
 export { DataTableHierarchy, type DataTableHierarchyProps, type HierarchyFieldDef } from './DataTableHierarchy';
+export {
+    DataTableImport,
+    NestedDataTable,
+    discoverImportFields,
+    discoverFieldsForItems,
+    buildItemHierarchy,
+    type DataTableImportProps,
+    type NestedDataTableProps,
+    type ImportFieldDef,
+} from './DataTableImport';
 export { ActionsTableFlat, type ActionsTableFlatProps } from './ActionsTableFlat';
 
 // Action Inspector Components

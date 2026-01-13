@@ -17,3 +17,13 @@ export {
     type HierarchyNodeLike,
     type HierarchyRowModelOptions,
 } from './HierarchyRowModelAdapter';
+
+// ImportPlan adapter (for import preview)
+export {
+    makeImportPlanRowModel,
+    getImportPlanMeta,
+    getImportPlanNode,
+    type ImportPlanNode,
+    type ImportPlanRowMeta,
+    type ImportPlanAdapterOptions,
+} from './ImportPlanRowModelAdapter';

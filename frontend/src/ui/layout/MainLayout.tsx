@@ -10,7 +10,7 @@ import { useUIStore, useUIPanels } from '../../stores/uiStore';
 import { SelectionInspector } from '../../ui/composites';
 import { ResizeHandle } from '../common/ResizeHandle';
 import { BottomDrawer } from '../drawer/BottomDrawer';
-import { Sidebar } from '../hierarchy/Sidebar';
+import { HierarchySidebar } from '../hierarchy/HierarchySidebar';
 import { ProjectLogSurface } from '../projectLog';
 
 // Local error boundary for inspector to prevent full app crash
@@ -80,7 +80,7 @@ export function MainLayout() {
         {/* Sidebar Slot */}
         {panels.sidebar === 'projectTree' && (
           <>
-            <Sidebar />
+            <HierarchySidebar />
             <ResizeHandle direction="right" onResize={handleSidebarResize} />
           </>
         )}

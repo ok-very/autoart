@@ -24,6 +24,7 @@ export { EditableCell, type EditableCellProps } from './EditableCell';
 export { StatusColumnSummary, type StatusColumnSummaryProps, type StatusCount, type StatusColorConfig } from './StatusColumnSummary';
 export { TableSortHeader, type TableSortHeaderProps } from './TableSortHeader';
 export { TableAddRow, type TableAddRowProps } from './TableAddRow';
+export { ColumnPicker, type ColumnPickerProps, type ColumnPickerField } from './ColumnPicker';
 
 // Layout molecules
 export { PropertySection, type PropertySectionProps } from './PropertySection';

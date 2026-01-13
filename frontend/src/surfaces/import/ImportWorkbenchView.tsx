@@ -14,6 +14,7 @@ import { ExecutionControls } from './ExecutionControls';
 import { HierarchyPreview } from './HierarchyPreview';
 import { StagePreview } from './StagePreview';
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
+import { useUIStore } from '../../stores/uiStore';
 import { Text, Stack, Badge } from '../../ui/atoms';
 
 // ============================================================================
@@ -25,7 +26,6 @@ type PreviewMode = 'hierarchy' | 'stage';
 interface ImportWorkbenchViewProps {
     session: ImportSession | null;
     plan: ImportPlan | null;
-    selectedItemId: string | null;
     onSelectItem: (itemId: string | null) => void;
     onReset: () => void;
 }
@@ -50,11 +50,14 @@ const OUTCOME_COLORS: Record<string, { bg: string; text: string }> = {
 export function ImportWorkbenchView({
     session,
     plan,
-    selectedItemId,
     onSelectItem,
     onReset,
 }: ImportWorkbenchViewProps) {
     const [previewMode, setPreviewMode] = useState<PreviewMode>('hierarchy');
+
+    // Get selected item ID from uiStore
+    const { selection } = useUIStore();
+    const selectedItemId = selection?.type === 'import_item' ? selection.id : null;
 
     // Count classifications by outcome
     const outcomeCounts = useMemo(() => {

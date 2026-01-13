@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import type { ProjectViewMode, RecordsViewMode, FieldsViewMode, ViewMode } from '@autoart/shared';
+import type { ImportSession, ImportPlan } from '../api/hooks/imports';
 import {
   ProjectViewModeSchema,
   RecordsViewModeSchema,
@@ -102,6 +103,13 @@ interface UIState {
   inspectAction: (actionId: string) => void;
   clearSelection: () => void;
   clearInspection: () => void;
+
+  // Import workbench state
+  importSession: ImportSession | null;
+  importPlan: ImportPlan | null;
+  setImportSession: (session: ImportSession | null) => void;
+  setImportPlan: (plan: ImportPlan | null) => void;
+  selectImportItem: (itemId: string | null) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -181,6 +189,17 @@ export const useUIStore = create<UIState>()(
       inspectAction: (actionId) => set({ selection: { type: 'action', id: actionId }, inspectorCollapsed: false }),
       clearSelection: () => set({ selection: null }),
       clearInspection: () => set({ selection: null }),
+
+      // Import workbench state
+      importSession: null,
+      importPlan: null,
+      setImportSession: (session) => set({ importSession: session }),
+      setImportPlan: (plan) => set({ importPlan: plan }),
+      selectImportItem: (itemId) => set({
+        selection: itemId ? { type: 'import_item', id: itemId } : null,
+        inspectorCollapsed: false,
+        inspectorTabMode: itemId ? 'import_details' : get().inspectorTabMode,
+      }),
     }),
     {
       name: 'ui-storage',

@@ -81,3 +81,16 @@ When replacing a component:
 2. Keep backward-compatible export for 1 release
 3. Update all internal usages to new component
 4. Remove deprecated file after verification
+
+## Sidebar Conventions
+
+### Placement Rules
+- **Page-specific sidebars**: Co-locate with their page in `surfaces/{pageName}/`
+  - Example: `surfaces/import/ImportSidebar.tsx`
+- **Reusable sidebars**: Export from `ui/sidebars/index.ts`
+  - Example: `ui/hierarchy/HierarchySidebar.tsx`
+
+### Naming
+- All sidebars end with `Sidebar` suffix
+- Name after domain/purpose, not appearance
+

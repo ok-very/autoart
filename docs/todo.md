@@ -24,3 +24,12 @@ Templating (Large Feature)
 
     Create an output engine to compile fields. Will work like a highlighter view, where you are able to activate a special state and then go through the project views and flag every field that will be compiled. It will have an output module that will determine the output formatting (injection into a spreadsheet or document). These output modules can use the interface to map or upload js/py scripts.
 
+Board Sync Settings Panel (Medium Feature)
+    Per-board settings drawer for Monday.com connector sync:
+    - Toggle sync on/off for imported templates
+    - View linked template records and their sync status
+    - Manual sync trigger to pull updates from Monday
+    - Unsync option to detach local templates from external source
+    Context: Template singleton records imported from Monday need lifecycle management.
+    See: implementation_plan.md for template singleton architecture.
+

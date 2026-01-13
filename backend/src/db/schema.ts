@@ -77,7 +77,7 @@ export interface HierarchyNodesTable {
   id: Generated<string>;
   parent_id: string | null;
   root_project_id: string | null;
-  type: 'project' | 'process' | 'stage' | 'subprocess' | 'task' | 'subtask';
+  type: 'project' | 'process' | 'stage' | 'subprocess' | 'task' | 'subtask' | 'template';
   title: string;
   description: unknown | null; // TipTap JSON document
   position: Generated<number>;

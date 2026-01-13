@@ -19,6 +19,7 @@ const COLUMN_CONFIG: Record<NodeType, { label: string; badge: string; bgColor: s
   subprocess: { label: 'Subprocesses', badge: 'S', bgColor: 'bg-orange-100', textColor: 'text-orange-600' },
   task: { label: 'Tasks', badge: 'T', bgColor: 'bg-slate-200', textColor: 'text-slate-600' },
   subtask: { label: 'Subtasks', badge: 'ST', bgColor: 'bg-teal-100', textColor: 'text-teal-600' },
+  template: { label: 'Templates', badge: 'TP', bgColor: 'bg-pink-100', textColor: 'text-pink-600' },
 };
 
 export function MillerColumn({

@@ -4,6 +4,7 @@ export type Selection =
   | { type: 'definition'; id: string }
   | { type: 'project'; id: string }
   | { type: 'action'; id: string }
+  | { type: 'import_item'; id: string }
   | null;
 
 /** Valid inspector tab IDs */
@@ -11,14 +12,20 @@ export type InspectorTabId =
   // Node/Record tabs
   | 'record' | 'interpretation' | 'references' | 'links' | 'schema'
   // Action tabs
-  | 'details' | 'execution_log' | 'declare';
+  | 'details' | 'execution_log' | 'declare'
+  // Import item tabs
+  | 'import_details' | 'import_classification' | 'import_fields';
 
 /** Default inspector tab */
 export const DEFAULT_INSPECTOR_TAB: InspectorTabId = 'record';
 
 /** Validate and normalize inspector tab ID (handles stale persisted values) */
 export function normalizeInspectorTabId(value: string | undefined): InspectorTabId {
-  const validTabs: InspectorTabId[] = ['record', 'interpretation', 'references', 'links', 'schema', 'details', 'execution_log', 'declare'];
+  const validTabs: InspectorTabId[] = [
+    'record', 'interpretation', 'references', 'links', 'schema',
+    'details', 'execution_log', 'declare',
+    'import_details', 'import_classification', 'import_fields'
+  ];
   return validTabs.includes(value as InspectorTabId) ? (value as InspectorTabId) : DEFAULT_INSPECTOR_TAB;
 }
 

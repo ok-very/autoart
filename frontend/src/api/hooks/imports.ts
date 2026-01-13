@@ -31,9 +31,13 @@ export interface ImportPlanContainer {
 export interface ImportPlanItem {
     tempId: string;
     title: string;
-    parentTempId: string;
+    /** Parent container or item temp ID (optional for top-level items) */
+    parentTempId?: string;
     metadata: Record<string, unknown>;
-    plannedAction: {
+    /** Entity type inferred from source (project, process, stage, subprocess, task, subtask, record, template) */
+    entityType?: 'project' | 'process' | 'stage' | 'subprocess' | 'action' | 'task' | 'subtask' | 'record' | 'template';
+    /** Planned action for execution (optional for connector imports) */
+    plannedAction?: {
         type: string;
         payload: Record<string, unknown>;
     };

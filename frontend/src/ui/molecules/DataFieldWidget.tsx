@@ -27,7 +27,7 @@ export interface DataFieldWidgetProps {
 }
 
 function formatText(value: unknown): string {
-    if (value === undefined || value === null) return '';
+    if (value === undefined || value === null || value === '') return '';
     if (typeof value === 'string') return value;
     if (typeof value === 'number') return String(value);
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
@@ -97,7 +97,7 @@ export function DataFieldWidget({ kind, value, className, statusConfig }: DataFi
     if (kind === 'percent') {
         const n = typeof value === 'number' ? value : null;
         if (n == null || Number.isNaN(n)) {
-            return <div className={clsx('text-xs text-slate-400', className)}>-</div>;
+            return <div className={clsx('text-xs text-slate-400', className)} />;
         }
         return (
             <div className={className}>
@@ -116,12 +116,12 @@ export function DataFieldWidget({ kind, value, className, statusConfig }: DataFi
 
     if (kind === 'date') {
         const t = formatText(value);
-        return <div className={clsx('text-xs text-slate-600 text-center', className)}>{t || '-'}</div>;
+        return <div className={clsx('text-xs text-slate-600 text-center', className)}>{t}</div>;
     }
 
     if (kind === 'tags') {
         const tags = Array.isArray(value) ? value : [];
-        if (tags.length === 0) return <div className={clsx('text-xs text-slate-400', className)}>-</div>;
+        if (tags.length === 0) return <div className={clsx('text-xs text-slate-400', className)} />;
         return (
             <div className={clsx('flex flex-wrap gap-1', className)}>
                 {tags.map((tag, i) => (
@@ -149,7 +149,7 @@ export function DataFieldWidget({ kind, value, className, statusConfig }: DataFi
                 .join(' ')
                 .trim() || '';
         }
-        if (!text) return <div className={clsx('text-xs text-slate-400 italic', className)}>No description</div>;
+        if (!text) return <div className={clsx('text-xs text-slate-400 italic', className)} />;
         return (
             <div className={clsx('text-xs text-slate-600 line-clamp-2', className)}>
                 {text}
@@ -159,5 +159,5 @@ export function DataFieldWidget({ kind, value, className, statusConfig }: DataFi
 
     // text (default)
     const t = formatText(value);
-    return <div className={clsx('text-xs text-slate-700', className)}>{t || '-'}</div>;
+    return <div className={clsx('text-xs text-slate-700', className)}>{t}</div>;
 }

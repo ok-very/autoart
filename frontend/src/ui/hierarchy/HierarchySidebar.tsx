@@ -11,7 +11,7 @@ import { Badge } from '../atoms/Badge';
 import { Text } from '../atoms/Text';
 import { Menu } from '../molecules/Menu';
 
-export function Sidebar() {
+export function HierarchySidebar() {
   const { setNodes, getChildren, getNode } = useHierarchyStore();
   const { activeProjectId, selection, setSelection, sidebarWidth, openDrawer, setActiveProject } = useUIStore();
   const { data: nodes } = useProjectTree(activeProjectId);
