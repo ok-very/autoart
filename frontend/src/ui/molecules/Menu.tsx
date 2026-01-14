@@ -12,6 +12,7 @@ import {
     useState,
     useRef,
     useEffect,
+    useLayoutEffect,
     useCallback,
     type ReactNode,
     type ElementType,
@@ -91,7 +92,8 @@ function MenuDropdown({ children, className }: MenuDropdownProps) {
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
 
-    useEffect(() => {
+    // Use useLayoutEffect to calculate position synchronously before browser paint
+    useLayoutEffect(() => {
         if (isOpen && targetRef.current) {
             const rect = targetRef.current.getBoundingClientRect();
             setPosition({
