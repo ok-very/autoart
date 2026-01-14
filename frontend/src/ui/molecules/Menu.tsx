@@ -134,7 +134,7 @@ function MenuDropdown({ children, className }: MenuDropdownProps) {
             ref={dropdownRef}
             className={clsx(
                 'absolute z-50 min-w-[160px] py-1 bg-white rounded-lg border border-slate-200 shadow-lg',
-                'animate-in fade-in-0 zoom-in-95 duration-100',
+                'animate-slideDown',
                 className
             )}
             style={{ top: position.top, left: position.left }}
