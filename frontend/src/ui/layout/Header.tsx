@@ -30,14 +30,13 @@ import { SegmentedControl } from '../molecules/SegmentedControl';
 export function Header() {
   const location = useLocation();
   const { data: _projects } = useProjects();
-  const { getNode } = useHierarchyStore();
+  const { getNode: _getNode } = useHierarchyStore();
   const {
     viewMode,
     setViewMode,
-    activeProjectId,
+    activeProjectId: _activeProjectId,
     setActiveProject: _setActiveProject,
     setSelection: _setSelection,
-    openDrawer
   } = useUIStore();
 
   const isRecordsPage = location.pathname.startsWith('/records');
@@ -50,31 +49,7 @@ export function Header() {
   const isComposerPage = location.pathname.startsWith('/composer');
   const isRegistryPage = isRecordsPage || isFieldsPage || isActionsPage || isEventsPage;
 
-  const selectedProject = activeProjectId ? getNode(activeProjectId) : null;
 
-  const _handleSelectProject = (_projectId: string) => {
-    _setActiveProject(_projectId);
-  };
-
-  const _handleCreateProject = () => {
-    openDrawer('create-project', {});
-  };
-
-  const _handleCloneProject = () => {
-    if (!selectedProject) return;
-    openDrawer('clone-project', {
-      sourceProjectId: selectedProject.id,
-      sourceProjectTitle: selectedProject.title,
-    });
-  };
-
-  const _handleOpenLibrary = () => {
-    if (!selectedProject) return;
-    openDrawer('project-library', {
-      projectId: selectedProject.id,
-      projectTitle: selectedProject.title,
-    });
-  };
 
   const getViewModeData = () => {
     if (isRecordsPage) {

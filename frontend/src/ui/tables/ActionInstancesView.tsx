@@ -17,9 +17,9 @@ import { useCallback } from 'react';
 
 import {
     useAllActionsByDefinition,
-    useAllActions,
     useRecordDefinition,
 } from '../../api/hooks';
+import { useAllActions } from '../../api/hooks/actions/actions';
 import { useUIStore } from '../../stores/uiStore';
 import { ActionsTableFlat } from '../../ui/composites';
 
@@ -44,8 +44,8 @@ export function ActionInstancesView({
 
     // Fetch actions - use specific definition lookup if ID provided, otherwise all actions
     const { data: filteredActions = [], isLoading: filteredLoading } = useAllActionsByDefinition(definitionId);
-    const { data: allActionsResult, isLoading: allLoading } = useAllActions({ refetch: !definitionId });
-    const allActions = allActionsResult?.actions ?? [];
+    const { data: allActionsData, isLoading: allLoading } = useAllActions();
+    const allActions = allActionsData?.actions ?? [];
 
     // Use appropriate data source
     const actions = definitionId ? filteredActions : allActions;

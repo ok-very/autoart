@@ -21,7 +21,7 @@ import { GenericCSVParser } from './parsers/generic-csv-parser.js';
 import { MondayCSVParser } from './parsers/monday-csv-parser.js';
 import { matchSchema } from './schema-matcher.js';
 import { createMapping } from './sync.service.js';
-import type { ImportPlan, ImportPlanContainer, ImportPlanItem, ItemClassification } from './types.js';
+import type { ImportPlan, ImportPlanContainer, ImportPlanItem, ItemClassification, PendingLinkReference } from './types.js';
 import { hasUnresolvedClassifications, countUnresolved } from './types.js';
 import { db } from '../../db/client.js';
 import type { RecordDefinition } from '../../db/schema.js';
@@ -178,11 +178,14 @@ export async function generatePlanFromConnector(
     const containers: ImportPlanContainer[] = [];
     const items: ImportPlanItem[] = [];
     const tempIdToContainer = new Map<string, ImportPlanContainer>();
-    const groupIdToContainer = new Map<string, ImportPlanContainer>();
+    // Use compound key ${boardId}:${groupId} for multi-board disambiguation
+    const groupKeyToContainer = new Map<string, ImportPlanContainer>();
+    // Track board → project container mapping for multi-board imports
+    const boardIdToProjectContainer = new Map<string, ImportPlanContainer>();
 
-    // Track seen external IDs for template deduplication
-    // Templates with the same Monday ID are deduplicated (linked/mirrored items)
-    const seenExternalIds = new Map<string, string>(); // monday_id → tempId
+    // Track seen template titles for cross-board deduplication within same import
+    // Templates with the same TITLE across boards are deduplicated (linked/mirrored items)
+    const seenTemplateTitles = new Map<string, string>(); // lowercase title → tempId
 
     // Track if we're importing into an existing project
     const hasTargetProject = !!session.target_project_id;
@@ -191,10 +194,13 @@ export async function generatePlanFromConnector(
     for (const item of allItems) {
         const mondayMeta = item.metadata?.monday as {
             type?: string;
+            boardId?: string;
+            boardName?: string;
             groupId?: string;
             groupTitle?: string;
         } | undefined;
         const nodeType = mondayMeta?.type;
+        const boardId = mondayMeta?.boardId;
 
         if (nodeType === 'board') {
             // Board → Project container ONLY if no target project
@@ -208,61 +214,75 @@ export async function generatePlanFromConnector(
                 };
                 containers.push(container);
                 tempIdToContainer.set(item.tempId, container);
+                // Track for multi-board: groups from this board parent to this project
+                if (boardId) {
+                    boardIdToProjectContainer.set(boardId, container);
+                }
             }
             // Skip adding board as an item - it's structural only
             continue;
         } else if (nodeType === 'group') {
             // Groups become subprocesses - they provide organizational structure
-            // This keeps "Templates", "Contact Lists", "Artist Lists" as containers
+            // Find the correct parent project for this group's board
+            const parentProject = boardId 
+                ? boardIdToProjectContainer.get(boardId) 
+                : containers.find(c => c.type === 'project');
+
             const container: ImportPlanContainer = {
                 tempId: item.tempId,
                 type: 'subprocess',
                 title: item.title,
-                // Parent is either target project or the board-as-project
+                // Parent is either target project or the board-as-project for this group's board
                 parentTempId: hasTargetProject
                     ? null  // Will be resolved to target on execution
-                    : (containers.find(c => c.type === 'project')?.tempId ?? null),
+                    : (parentProject?.tempId ?? null),
             };
             containers.push(container);
             tempIdToContainer.set(item.tempId, container);
 
-            // Map group ID to container for child item assignment
-            // Use both groupId (self-reference) and id (node ID) to ensure mapping
+            // Map compound key ${boardId}:${groupId} for multi-board disambiguation
             const groupId = mondayMeta?.groupId ?? (mondayMeta as { id?: string })?.id;
             if (groupId) {
-                groupIdToContainer.set(groupId, container);
+                const groupKey = boardId ? `${boardId}:${groupId}` : groupId;
+                groupKeyToContainer.set(groupKey, container);
             }
             continue; // Groups don't go in items array
         } else {
             // Items and subitems go to items array
 
-            // TEMPLATE DEDUPLICATION: Templates with the same Monday external_id
-            // are deduplicated (e.g., "Vancouver Template" linked across multiple boards)
-            const mondayId = (mondayMeta as { id?: string })?.id;
-            if (item.entityType === 'template' && mondayId) {
-                if (seenExternalIds.has(mondayId)) {
-                    console.log(`[imports.service] Deduping template "${item.title}" (external_id: ${mondayId})`);
+            // TEMPLATE DEDUPLICATION: Templates with the same TITLE are deduplicated.
+            // Monday linked/mirrored items have DIFFERENT IDs per board but same title.
+            // This is CROSS-BOARD dedup within the same import session.
+            if (item.entityType === 'template') {
+                const dedupeKey = item.title.toLowerCase().trim();
+                if (seenTemplateTitles.has(dedupeKey)) {
+                    console.log(`[imports.service] Deduping template "${item.title}" (key: ${dedupeKey})`);
                     continue; // Skip duplicate template
                 }
-                seenExternalIds.set(mondayId, item.tempId);
+                seenTemplateTitles.set(dedupeKey, item.tempId);
+                console.log(`[imports.service] First template "${item.title}" (key: ${dedupeKey}), keeping`);
             }
 
             // Parent assignment:
             // 1. Explicit subitem → parent item relationship (already set by interpreter)
-            // 2. Group membership → subprocess container
+            // 2. Group membership → subprocess container (using compound key)
             // 3. Fallback to project/target
-            // NOTE: Templates skip parent assignment (hierarchy-agnostic)
+            // ALL items including templates get parent assignment
 
-            if (!item.parentTempId && item.entityType !== 'template') {
+            if (!item.parentTempId) {
                 const itemGroupId = mondayMeta?.groupId;
-                const groupContainer = itemGroupId ? groupIdToContainer.get(itemGroupId) : null;
+                // Use compound key for multi-board disambiguation
+                const groupKey = boardId && itemGroupId ? `${boardId}:${itemGroupId}` : itemGroupId;
+                const groupContainer = groupKey ? groupKeyToContainer.get(groupKey) : null;
 
                 if (groupContainer) {
                     // Item belongs to a group → parent is the group's subprocess
                     item.parentTempId = groupContainer.tempId;
                 } else if (!hasTargetProject) {
-                    // No group, no target → use first project container
-                    const parentProject = containers.find(c => c.type === 'project');
+                    // No group, no target → use the project for this item's board
+                    const parentProject = boardId 
+                        ? boardIdToProjectContainer.get(boardId)
+                        : containers.find(c => c.type === 'project');
                     item.parentTempId = parentProject?.tempId;
                 }
                 // When hasTargetProject && no group: leave parentTempId undefined
@@ -276,6 +296,21 @@ export async function generatePlanFromConnector(
     const definitions = await listDefinitions();
     const classifications = generateClassifications(items, definitions);
 
+    // Collect pending link references from board_relation/mirror columns
+    const pendingLinks: PendingLinkReference[] = [];
+    for (const item of items) {
+        for (const field of item.fieldRecordings) {
+            const fieldWithLinks = field as { _pendingLinks?: string[] };
+            if (fieldWithLinks._pendingLinks && fieldWithLinks._pendingLinks.length > 0) {
+                pendingLinks.push({
+                    sourceTempId: item.tempId,
+                    fieldName: field.fieldName,
+                    linkedExternalIds: fieldWithLinks._pendingLinks,
+                });
+            }
+        }
+    }
+
     // DEBUG: Log final result
     console.log('[imports.service] ===== DEBUG: Final Plan =====');
     console.log('[imports.service] Containers:', containers.length, containers.map(c => ({ type: c.type, title: c.title })));
@@ -285,6 +320,7 @@ export async function generatePlanFromConnector(
         parentTempId: i.parentTempId?.slice(0, 10),
         groupTitle: (i.metadata?.monday as any)?.groupTitle,
     })));
+    console.log('[imports.service] Pending links:', pendingLinks.length);
     console.log('[imports.service] ================================');
 
     // Create the plan
@@ -294,6 +330,7 @@ export async function generatePlanFromConnector(
         containers,
         classifications,
         validationIssues: [],
+        pendingLinks: pendingLinks.length > 0 ? pendingLinks : undefined,
     };
 
     // Save plan to database

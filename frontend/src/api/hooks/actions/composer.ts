@@ -27,7 +27,7 @@ export function useCompose() {
             api.post<ComposerResponse>('/composer', data),
         onSuccess: (result) => {
             queryClient.invalidateQueries({
-                queryKey: queryKeys.actionViews.byContext(result.action.contextId),
+                queryKey: queryKeys.actionViews.byContext(result.action.contextId, result.action.contextType),
             });
             queryClient.invalidateQueries({
                 queryKey: queryKeys.actions.byContext(result.action.contextId, result.action.contextType),
@@ -74,7 +74,7 @@ export function useQuickTask() {
             api.post<ComposerResponse>('/composer/quick/task', data),
         onSuccess: (result) => {
             queryClient.invalidateQueries({
-                queryKey: queryKeys.actionViews.byContext(result.action.contextId),
+                queryKey: queryKeys.actionViews.byContext(result.action.contextId, result.action.contextType),
             });
             queryClient.invalidateQueries({
                 queryKey: queryKeys.actions.byContext(result.action.contextId, result.action.contextType),
@@ -91,7 +91,7 @@ export function useQuickBug() {
             api.post<ComposerResponse>('/composer/quick/bug', data),
         onSuccess: (result) => {
             queryClient.invalidateQueries({
-                queryKey: queryKeys.actionViews.byContext(result.action.contextId),
+                queryKey: queryKeys.actionViews.byContext(result.action.contextId, result.action.contextType),
             });
             queryClient.invalidateQueries({
                 queryKey: queryKeys.actions.byContext(result.action.contextId, result.action.contextType),

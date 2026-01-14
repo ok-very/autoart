@@ -5,7 +5,7 @@
  * Import from '@/stores' instead of individual store files.
  */
 
-export { useUIStore, type DrawerType, type DrawerContext } from './uiStore';
+export { useUIStore } from './uiStore';
 export { useAuthStore } from './authStore';
 export { useHierarchyStore } from './hierarchyStore';
 export { useImportWorkbenchStore } from './importWorkbenchStore';

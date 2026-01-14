@@ -135,9 +135,9 @@ export function ExportWorkbenchSidebar() {
                                                 <p className="text-sm font-medium text-slate-700 truncate">
                                                     {project.title}
                                                 </p>
-                                                {metadata?.client && (
+                                                {typeof metadata?.client === 'string' && metadata.client && (
                                                     <p className="text-xs text-slate-400 truncate">
-                                                        {String(metadata.client)}
+                                                        {metadata.client}
                                                     </p>
                                                 )}
                                             </div>
