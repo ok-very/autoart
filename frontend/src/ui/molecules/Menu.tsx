@@ -89,7 +89,7 @@ export interface MenuDropdownProps {
 function MenuDropdown({ children, className }: MenuDropdownProps) {
     const { isOpen, setIsOpen, targetRef } = useMenuContext();
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const [position, setPosition] = useState({ top: 0, left: 0 });
+    const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
 
     useEffect(() => {
         if (isOpen && targetRef.current) {
@@ -98,6 +98,8 @@ function MenuDropdown({ children, className }: MenuDropdownProps) {
                 top: rect.bottom + window.scrollY + 4,
                 left: rect.left + window.scrollX,
             });
+        } else {
+            setPosition(null);
         }
     }, [isOpen, targetRef]);
 
@@ -127,7 +129,8 @@ function MenuDropdown({ children, className }: MenuDropdownProps) {
         };
     }, [isOpen, setIsOpen, targetRef]);
 
-    if (!isOpen) return null;
+    // Don't render until position is calculated
+    if (!isOpen || !position) return null;
 
     return createPortal(
         <div
