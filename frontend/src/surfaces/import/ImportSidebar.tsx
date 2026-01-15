@@ -379,6 +379,9 @@ function MondayBoardList({ onBoardSelect, isLoading, error, activeSession }: Mon
     const { data: boards, isLoading: boardsLoading } = useMondayBoards();
     const [searchQuery, setSearchQuery] = useState('');
 
+    // DEBUG: Log raw API response
+    console.log('[MondayBoardList] Raw boards from API:', boards?.length, boards?.map(b => ({ id: b.id, name: b.name, items: b.itemCount })));
+
     // Filter boards by search
     const filteredBoards = useMemo(() => {
         if (!boards) return [];
@@ -388,6 +391,16 @@ function MondayBoardList({ onBoardSelect, isLoading, error, activeSession }: Mon
             (b) => b.name.toLowerCase().includes(q) || b.workspace.toLowerCase().includes(q)
         );
     }, [boards, searchQuery]);
+
+    // DEBUG: Check for duplicate names
+    const nameCount = new Map<string, number>();
+    for (const b of filteredBoards) {
+        nameCount.set(b.name, (nameCount.get(b.name) ?? 0) + 1);
+    }
+    const duplicateNames = Array.from(nameCount.entries()).filter(([_, count]) => count > 1);
+    if (duplicateNames.length > 0) {
+        console.warn('[MondayBoardList] DUPLICATE BOARD NAMES:', duplicateNames);
+    }
 
     // Group by workspace
     const boardsByWorkspace = useMemo(() => {

@@ -180,6 +180,16 @@ export async function connectionsRoutes(app: FastifyInstance) {
                 }
             `);
 
+            // DEBUG: Log raw response from Monday
+            console.log('[monday/boards] Raw from Monday API:', result.boards.length, 'boards');
+            console.log('[monday/boards] Sample:', result.boards.slice(0, 5).map(b => ({
+                id: b.id,
+                name: b.name,
+                type: b.type,
+                board_kind: b.board_kind,
+                items_count: b.items_count,
+            })));
+
             // Filter to actual project boards only:
             // 1. Active state
             // 2. type = 'board' (not 'document' or 'dashboard')  
@@ -200,6 +210,17 @@ export async function connectionsRoutes(app: FastifyInstance) {
                     boardKind: b.board_kind,
                 }));
 
+            // DEBUG: Check for duplicate names after filtering
+            const nameCount = new Map<string, number>();
+            for (const b of boards) {
+                nameCount.set(b.name, (nameCount.get(b.name) ?? 0) + 1);
+            }
+            const duplicates = Array.from(nameCount.entries()).filter(([_, count]) => count > 1);
+            if (duplicates.length > 0) {
+                console.warn('[monday/boards] DUPLICATE NAMES DETECTED:', duplicates);
+                console.warn('[monday/boards] Duplicate details:', boards.filter(b => duplicates.some(([name]) => name === b.name)));
+            }
+
             // Deduplicate by ID
             const seenIds = new Set<string>();
             const uniqueBoards: typeof boards = [];
@@ -210,6 +231,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
                 }
             }
 
+            console.log('[monday/boards] Final unique boards:', uniqueBoards.length);
             return reply.send({ boards: uniqueBoards });
         } catch (err) {
             if ((err as Error).message.includes('No Monday API token')) {

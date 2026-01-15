@@ -21,6 +21,7 @@ import { referencesRoutes } from './modules/references/references.routes.js';
 import { searchRoutes } from './modules/search/search.routes.js';
 import { workflowSurfaceRoutes } from './modules/projections/workflow-surface.routes.js';
 import { connectionsRoutes } from './modules/imports/connections.routes.js';
+import { mondayWorkspaceRoutes } from './modules/imports/monday/monday-workspace.routes.js';
 import { definitionsRoutes } from './modules/definitions/index.js';
 import authPlugin from './plugins/auth.js';
 import { errorHandler, notFoundHandler } from './utils/errorHandler.js';
@@ -90,6 +91,9 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // External connections management (Monday, Google OAuth)
   await fastify.register(connectionsRoutes, { prefix: '/api' });
+
+  // Monday workspace configuration (advanced import path)
+  await fastify.register(mondayWorkspaceRoutes, { prefix: '/api/monday' });
 
   // Fact kind definitions - Definition Review UI
   await fastify.register(factKindsRoutes, { prefix: '/api' });
