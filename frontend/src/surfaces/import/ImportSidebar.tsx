@@ -380,7 +380,7 @@ function MondayBoardList({ onBoardSelect, isLoading, error, activeSession }: Mon
     const [searchQuery, setSearchQuery] = useState('');
 
     // DEBUG: Log raw API response
-    console.log('[MondayBoardList] Raw boards from API:', boards?.length, boards?.map(b => ({ id: b.id, name: b.name, items: b.itemCount })));
+    // console.log('[MondayBoardList] Raw boards from API:', boards?.length, boards?.map(b => ({ id: b.id, name: b.name, items: b.itemCount })));
 
     // Filter boards by search
     const filteredBoards = useMemo(() => {
@@ -399,7 +399,7 @@ function MondayBoardList({ onBoardSelect, isLoading, error, activeSession }: Mon
     }
     const duplicateNames = Array.from(nameCount.entries()).filter(([_, count]) => count > 1);
     if (duplicateNames.length > 0) {
-        console.warn('[MondayBoardList] DUPLICATE BOARD NAMES:', duplicateNames);
+        // console.warn('[MondayBoardList] DUPLICATE BOARD NAMES:', duplicateNames);
     }
 
     // Group by workspace

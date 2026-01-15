@@ -12,6 +12,7 @@ import { getMondayToken } from '../connections.service.js';
 import { MondayConnector } from '../connectors/monday-connector.js';
 
 import { inferBoardConfig } from './monday-domain-interpreter.js';
+import { mondaySyncService } from './monday-sync.service.js';
 import * as workspaceService from './monday-workspace.service.js';
 
 // ============================================================================
@@ -408,6 +409,103 @@ export async function mondayWorkspaceRoutes(app: FastifyInstance) {
             schema,
             inferredConfig: inferred,
         });
+    });
+
+
+    // ========================================================================
+    // SYNC OPERATIONS
+    // ========================================================================
+
+    /**
+     * Synchronize a board
+     */
+    app.post('/workspaces/:id/boards/:boardConfigId/sync', async (request, reply) => {
+        const { boardConfigId } = BoardConfigIdParamSchema.parse(request.params);
+        const userId = (request.user as { id?: string })?.id;
+
+        if (!userId) {
+            return reply.status(401).send({ error: 'Unauthorized' });
+        }
+
+        const result = await mondaySyncService.syncBoard(boardConfigId, userId);
+        return reply.send(result);
+    });
+
+    /**
+     * Get sync status
+     */
+    app.get('/workspaces/:id/boards/:boardConfigId/sync/status', async (request, reply) => {
+        const { boardConfigId } = BoardConfigIdParamSchema.parse(request.params);
+        const status = await mondaySyncService.getSyncStatus(boardConfigId);
+        return reply.send(status || { sync_status: 'idle' });
+    });
+    /**
+     * List board configurations by external IDs
+     */
+    app.get('/boards/configs', async (request, reply) => {
+        const { ids } = request.query as { ids: string };
+        if (!ids) {
+            return reply.code(400).send({ message: 'ids query param required' });
+        }
+
+        const boardIds = ids.split(',');
+        const configs = await workspaceService.listBoardConfigsByExternalIds(boardIds);
+
+        // Map to domain entity (camelCase)
+        // We need nested groups/columns for full config?
+        // Step 2 only needs roles. But subsequent steps need groups/columns.
+        // Let's fetch full details for each.
+        // Optimization: listBoardConfigsByExternalIds only gives board rows.
+        // We should probably iterate and get full config for each?
+        // OR just map the board props for now if that's all we need.
+        // But headers might need full info. 
+        // Let's map board props + fetch children if possible?
+        // For now, let's just map board props.
+
+        const mapped = await Promise.all(configs.map(async (bc) => {
+            // Fetch children for complete config?
+            // Yes, safer for wizard.
+            const groups = await workspaceService.listGroupConfigs(bc.id);
+            const columns = await workspaceService.listColumnConfigs(bc.id);
+
+            return {
+                id: bc.id, // DB ID
+                boardId: bc.board_id,
+                boardName: bc.board_name,
+                role: bc.role,
+                workspaceId: bc.workspace_id, // Needed for update url
+                linkedProjectId: bc.linked_project_id ?? undefined,
+                templateScope: bc.template_scope,
+                syncDirection: bc.sync_direction,
+                syncEnabled: bc.sync_enabled,
+                settings: bc.settings,
+                groups: groups.map((g) => ({
+                    boardId: bc.board_id,
+                    groupId: g.group_id,
+                    groupTitle: g.group_title,
+                    role: g.role,
+                    stageOrder: g.stage_order ?? undefined,
+                    stageKind: g.stage_kind,
+                    subprocessNameOverride: g.subprocess_name_override ?? undefined,
+                    settings: g.settings,
+                })),
+                columns: columns.map((c) => ({
+                    boardId: bc.board_id,
+                    columnId: c.column_id,
+                    columnTitle: c.column_title,
+                    columnType: c.column_type,
+                    semanticRole: c.semantic_role,
+                    localFieldKey: c.local_field_key ?? undefined,
+                    factKindId: c.fact_kind_id ?? undefined,
+                    renderHint: c.render_hint ?? undefined,
+                    isRequired: c.is_required,
+                    multiValued: c.multi_valued,
+                    settings: c.settings,
+                })),
+            };
+        }));
+
+        return reply.send(mapped);
     });
 }
 

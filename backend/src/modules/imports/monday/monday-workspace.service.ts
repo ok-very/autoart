@@ -168,6 +168,21 @@ export async function listBoardConfigs(
 }
 
 /**
+ * List board configs by external board IDs.
+ */
+export async function listBoardConfigsByExternalIds(
+    boardIds: string[]
+): Promise<MondayBoardConfig[]> {
+    if (boardIds.length === 0) return [];
+
+    return db
+        .selectFrom('monday_board_configs')
+        .selectAll()
+        .where('board_id', 'in', boardIds)
+        .execute();
+}
+
+/**
  * Update a board configuration.
  */
 export async function updateBoardConfig(
