@@ -165,7 +165,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
                 }>;
             }>(`
                 query {
-                    boards(limit: 50, order_by: created_at) {
+                    boards(limit: 500, order_by: created_at) {
                         id
                         name
                         state
@@ -192,44 +192,36 @@ export async function connectionsRoutes(app: FastifyInstance) {
 
             // Filter to actual project boards only:
             // 1. Active state
-            // 2. type = 'board' (not 'document' or 'dashboard')  
-            // 3. board_kind = 'public' or 'private' (excludes 'share' linked boards)
-            // 4. Exclude "Subitems of X" boards (Monday auto-creates these)
-            // 5. Require meaningful item count (> 0) to exclude empty/template boards
-            const boards = result.boards
+            // 2. type = 'board'
+            // 3. Exclude "Subitems of"
+            // 4. Exclude 'share' boards (often single-item ghosts)
+            const rawBoards = result.boards
                 .filter(b => b.state === 'active')
                 .filter(b => b.type === 'board')
-                .filter(b => b.board_kind === 'public' || b.board_kind === 'private')
-                .filter(b => !b.name.startsWith('Subitems of '))
-                .filter(b => b.items_count > 0)
+                .filter(b => b.board_kind !== 'share')
+                .filter(b => !b.name.startsWith('Subitems of '));
+
+            // Smart Deduplication:
+            // If multiple boards have the exact same name, keep only the one with the most items.
+            // This handles "split-outs" where a template might have a shadow copy.
+            const bestBoardsByName = new Map<string, typeof rawBoards[0]>();
+
+            for (const board of rawBoards) {
+                const existing = bestBoardsByName.get(board.name);
+                if (!existing || board.items_count > existing.items_count) {
+                    bestBoardsByName.set(board.name, board);
+                }
+            }
+
+            const uniqueBoards = Array.from(bestBoardsByName.values())
                 .map(b => ({
                     id: b.id,
                     name: b.name,
                     workspace: b.workspace?.name ?? 'Main workspace',
                     itemCount: b.items_count,
                     boardKind: b.board_kind,
-                }));
-
-            // DEBUG: Check for duplicate names after filtering
-            const nameCount = new Map<string, number>();
-            for (const b of boards) {
-                nameCount.set(b.name, (nameCount.get(b.name) ?? 0) + 1);
-            }
-            const duplicates = Array.from(nameCount.entries()).filter(([_, count]) => count > 1);
-            if (duplicates.length > 0) {
-                console.warn('[monday/boards] DUPLICATE NAMES DETECTED:', duplicates);
-                console.warn('[monday/boards] Duplicate details:', boards.filter(b => duplicates.some(([name]) => name === b.name)));
-            }
-
-            // Deduplicate by ID
-            const seenIds = new Set<string>();
-            const uniqueBoards: typeof boards = [];
-            for (const board of boards) {
-                if (!seenIds.has(board.id)) {
-                    seenIds.add(board.id);
-                    uniqueBoards.push(board);
-                }
-            }
+                }))
+                .sort((a, b) => a.name.localeCompare(b.name));
 
             console.log('[monday/boards] Final unique boards:', uniqueBoards.length);
             return reply.send({ boards: uniqueBoards });

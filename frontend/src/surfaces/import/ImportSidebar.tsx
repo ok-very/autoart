@@ -229,8 +229,9 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                     label="Monday.com"
                     isActive={sourceType === 'monday'}
                     isConnected={isMondayConnected}
-                    isDisabled={!isMondayConnected}
-                    onClick={() => isMondayConnected && onSourceChange('monday')}
+                    isConnected={isMondayConnected}
+                    isDisabled={false}
+                    onClick={() => onSourceChange('monday')}
                 />
                 <SourceIcon
                     id="api"
@@ -337,14 +338,17 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                     </>
                 )}
 
-                {/* Monday Source - Board list directly in sidebar */}
+                {/* Monday Source - Board list managed by Wizard now */}
                 {sourceType === 'monday' && (
-                    <MondayBoardList
-                        onBoardSelect={handleBoardSelect}
-                        isLoading={isLoading}
-                        error={error}
-                        activeSession={session}
-                    />
+                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                        <Calendar className="w-12 h-12 text-slate-300 mb-4" />
+                        <div className="text-sm font-medium text-slate-600 mb-2">
+                            Monday.com Connected
+                        </div>
+                        <p className="text-xs text-slate-400 max-w-48">
+                            Select a board in the main window to begin import.
+                        </p>
+                    </div>
                 )}
 
                 {/* API Source (placeholder) */}

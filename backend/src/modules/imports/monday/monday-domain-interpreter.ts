@@ -263,7 +263,9 @@ function createContainerFromGroup(
         subprocess: 'subprocess',
         backlog: 'subprocess',
         done: 'subprocess',
+        done: 'subprocess',
         template_group: 'subprocess',
+        reference_group: null, // References are flattened (items attached to board/project)
         ignore: null,
     };
 
@@ -319,6 +321,7 @@ function createItemFromNode(
             mondayId: node.id,
             boardId: node.metadata.boardId,
             groupId: node.metadata.groupId,
+            importStrategy: groupConfig?.settings?.referenceStrategy ?? 'create',
             createdAt: node.metadata.createdAt,
             updatedAt: node.metadata.updatedAt,
         },
@@ -545,6 +548,11 @@ function determineEntityType(
     // Template groups produce templates
     if (groupConfig?.role === 'template_group') {
         return 'template';
+    }
+
+    // Reference groups produce records
+    if (groupConfig?.role === 'reference_group') {
+        return 'record';
     }
 
     // Default: action

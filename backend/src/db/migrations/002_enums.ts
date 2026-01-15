@@ -21,7 +21,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       'process',
       'stage',
       'subprocess',
-      'task'
+      'template'
     )
   `.execute(db);
 

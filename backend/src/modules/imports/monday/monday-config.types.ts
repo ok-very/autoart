@@ -38,6 +38,7 @@ export type MondayGroupRole =
     | 'backlog'         // Backlog/to-triage items
     | 'done'            // Completed/archived items
     | 'template_group'  // Group of template items
+    | 'reference_group' // Group of reference items (records)
     | 'ignore';         // Excluded from import
 
 /**
@@ -300,6 +301,7 @@ export const DEFAULT_INFERENCE_HEURISTICS: MondayInferenceHeuristics = {
         backlog: [/backlog/i, /triage/i, /inbox/i, /new/i],
         done: [/done/i, /complete/i, /finished/i, /archive/i],
         template_group: [/template/i],
+        reference_group: [/reference/i, /resource/i, /file/i, /doc/i],
         ignore: [],
     },
     columnNamePatterns: {

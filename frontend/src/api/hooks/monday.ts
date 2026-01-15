@@ -43,3 +43,53 @@ export function useUpdateMondayBoardConfig() {
         },
     });
 }
+
+/**
+ * Update group configurations for a board.
+ * Note: Replaces all groups for the board.
+ */
+export function useUpdateMondayGroupConfigs() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ workspaceId, boardConfigId, groups }: {
+            workspaceId: string;
+            boardConfigId: string;
+            groups: any[]; // MondayGroupConfig[] but allowing partials if needed
+        }) => {
+            return api.put<{ groups: any[] }>(
+                `/monday/workspaces/${workspaceId}/boards/${boardConfigId}/groups`,
+                { groups }
+            );
+        },
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['monday', 'boards', 'configs'] });
+            queryClient.invalidateQueries({ queryKey: ['monday', 'workspaces', variables.workspaceId] });
+        },
+    });
+}
+
+/**
+ * Update column configurations for a board.
+ * Note: Replaces all columns for the board.
+ */
+export function useUpdateMondayColumnConfigs() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ workspaceId, boardConfigId, columns }: {
+            workspaceId: string;
+            boardConfigId: string;
+            columns: any[];
+        }) => {
+            return api.put<{ columns: any[] }>(
+                `/monday/workspaces/${workspaceId}/boards/${boardConfigId}/columns`,
+                { columns }
+            );
+        },
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['monday', 'boards', 'configs'] });
+            queryClient.invalidateQueries({ queryKey: ['monday', 'workspaces', variables.workspaceId] });
+        },
+    });
+}

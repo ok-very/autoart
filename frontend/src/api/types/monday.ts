@@ -12,6 +12,7 @@ export type MondayGroupRole =
     | 'backlog'
     | 'done'
     | 'template_group'
+    | 'reference_group'
     | 'ignore';
 
 export type MondayColumnSemanticRole =
@@ -35,7 +36,9 @@ export type MondayColumnSemanticRole =
     | 'ignore';
 
 export interface MondayBoardConfig {
-    boardId: string;
+    id?: string; // DB ID
+    workspaceId?: string;
+    boardId: string; // External ID
     boardName: string;
     role: MondayBoardRole;
     linkedProjectId?: string;

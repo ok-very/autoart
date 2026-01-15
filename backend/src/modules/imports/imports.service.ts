@@ -162,7 +162,7 @@ export async function generatePlanFromConnector(
 
     if (!workspaceConfig) {
         // Create new default workspace
-        workspaceId = `ws_${randomUUID()}`;
+        workspaceId = randomUUID();
         const newWorkspace = await mondayWorkspaceService.createWorkspace({
             id: workspaceId,
             name: 'Monday.com Workspace',

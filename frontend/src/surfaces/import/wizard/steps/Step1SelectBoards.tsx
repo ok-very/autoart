@@ -197,7 +197,13 @@ export function Step1SelectBoards({ onNext, session, onSessionCreated }: StepPro
                                                 </div>
                                                 <div>
                                                     <div className={`font-medium ${isSelected ? 'text-blue-700' : 'text-slate-900'}`}>{board.name}</div>
-                                                    <div className="text-xs text-slate-500">{board.itemCount} items</div>
+                                                    <div className="text-xs text-slate-500 flex gap-2">
+                                                        <span>{board.itemCount} items</span>
+                                                        <span>•</span>
+                                                        <span className="capitalize">{board.boardKind}</span>
+                                                        <span>•</span>
+                                                        <span className="font-mono text-[10px] opacity-70">{board.id}</span>
+                                                    </div>
                                                 </div>
                                             </button>
                                         );
