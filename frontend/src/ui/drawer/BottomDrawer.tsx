@@ -8,7 +8,7 @@
 import { X, Minimize2, Maximize2 } from 'lucide-react';
 import { useCallback } from 'react';
 
-import { DrawerRegistry } from './DrawerRegistry';
+import { DrawerRegistry } from '../../drawer/DrawerRegistry';
 import { useUIStore } from '../../stores/uiStore';
 import { IconButton } from '../atoms/IconButton';
 import { Inline } from '../atoms/Inline';

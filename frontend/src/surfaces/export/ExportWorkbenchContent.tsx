@@ -57,11 +57,11 @@ export function ExportWorkbenchContent() {
             // 3. Execute export
             const result = await executeExport.mutateAsync(session.id);
 
-            // 4. Handle result (download or open Google Doc)
+            // 4. Handle result (download or open external doc)
             if (result.downloadUrl) {
                 window.open(result.downloadUrl, '_blank');
-            } else if (result.googleDocUrl) {
-                window.open(result.googleDocUrl, '_blank');
+            } else if (result.externalUrl) {
+                window.open(result.externalUrl, '_blank');
             }
         } catch (error) {
             console.error('Export failed:', error);

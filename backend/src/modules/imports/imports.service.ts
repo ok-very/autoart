@@ -13,6 +13,7 @@
  * projection refresh and central validation guarantees.
  */
 
+import { randomUUID } from 'node:crypto';
 import { isInternalWork, type ClassificationOutcome } from '@autoart/shared';
 
 import { getMondayToken } from './connections.service.js';
@@ -21,15 +22,17 @@ import { GenericCSVParser } from './parsers/generic-csv-parser.js';
 import { MondayCSVParser } from './parsers/monday-csv-parser.js';
 import { matchSchema } from './schema-matcher.js';
 import { createMapping } from './sync.service.js';
-import type { ImportPlan, ImportPlanContainer, ImportPlanItem, ItemClassification } from './types.js';
+import type { ImportPlan, ImportPlanContainer, ImportPlanItem, ItemClassification, PendingLinkReference } from './types.js';
 import { hasUnresolvedClassifications, countUnresolved } from './types.js';
 import { db } from '../../db/client.js';
 import type { RecordDefinition } from '../../db/schema.js';
 import { emitEvent } from '../events/events.service.js';
 import { interpretCsvRowPlan, type InterpretationOutput } from '../interpreter/interpreter.service.js';
-import { interpretMondayBoard } from '../interpreter/monday-interpreter.js';
+import { interpretMondayData, inferBoardConfig } from './monday/monday-domain-interpreter.js';
+import type { MondayWorkspaceConfig } from './monday/monday-config.types.js';
+import * as mondayWorkspaceService from './monday/monday-workspace.service.js';
 import { ensureFactKindDefinition } from '../records/fact-kinds.service.js';
-import { listDefinitions } from '../records/records.service.js';
+import { listDefinitions, createRecord } from '../records/records.service.js';
 
 
 // Connector imports
@@ -137,7 +140,7 @@ export async function generatePlanFromConnector(
     const connector = new MondayConnector(token);
 
     // Collect all nodes from all boards
-    const allNodes: Parameters<typeof interpretMondayBoard>[0] = [];
+    const allNodes: any[] = [];
     for (const boardId of boardIds) {
         for await (const node of connector.traverseHierarchy(boardId, {
             includeSubitems: config.includeSubitems ?? true,
@@ -146,155 +149,106 @@ export async function generatePlanFromConnector(
         }
     }
 
-    // Interpret nodes into ImportPlanItems
-    const allItems = await interpretMondayBoard(allNodes, {
-        projectId: session.target_project_id ?? undefined,
-    });
+    // 1. Identify/Ensure Workspace
+    // For V1, we try to use an existing workspace created by this user or create a default one.
+    // In future, UI should allow selecting workspace.
+    const existingWorkspaces = await mondayWorkspaceService.listWorkspaces(userId);
+    let workspaceConfig: MondayWorkspaceConfig | null = null;
+    let workspaceId = existingWorkspaces[0]?.id;
 
-    // DEBUG: Log what we received from interpreter (gated to avoid noise in production)
-    if (process.env.NODE_ENV !== 'production') {
-        const nodeTypeCounts = allNodes.reduce((acc, n) => {
-            const key = n.type ?? 'unknown';
-            acc[key] = (acc[key] || 0) + 1;
-            return acc;
-        }, {} as Record<string, number>);
-
-        const itemTypeCounts = allItems.reduce((acc, i) => {
-            const key = i.entityType || 'undefined';
-            acc[key] = (acc[key] || 0) + 1;
-            return acc;
-        }, {} as Record<string, number>);
-
-        console.debug('[imports.service] Monday import summary', {
-            totalNodes: allNodes.length,
-            totalItems: allItems.length,
-            hasTargetProject: !!session.target_project_id,
-            nodeTypeCounts,
-            itemTypeCounts,
-        });
+    if (workspaceId) {
+        workspaceConfig = await mondayWorkspaceService.getFullWorkspaceConfig(workspaceId);
     }
 
-    // Separate containers (board → project only if no target, group → subprocess) from items
-    const containers: ImportPlanContainer[] = [];
-    const items: ImportPlanItem[] = [];
-    const tempIdToContainer = new Map<string, ImportPlanContainer>();
-    const groupIdToContainer = new Map<string, ImportPlanContainer>();
+    if (!workspaceConfig) {
+        // Create new default workspace
+        workspaceId = randomUUID();
+        const newWorkspace = await mondayWorkspaceService.createWorkspace({
+            id: workspaceId,
+            name: 'Monday.com Workspace',
+            created_by: userId,
+            settings: {},
+        });
 
-    // Track seen external IDs for template deduplication
-    // Templates with the same Monday ID are deduplicated (linked/mirrored items)
-    const seenExternalIds = new Map<string, string>(); // monday_id → tempId
+        // Hydrate empty config
+        workspaceConfig = {
+            id: newWorkspace.id,
+            name: newWorkspace.name,
+            providerAccountId: newWorkspace.provider_account_id ?? undefined,
+            defaultProjectId: newWorkspace.default_project_id ?? undefined,
+            settings: newWorkspace.settings as any,
+            boards: [],
+            createdAt: newWorkspace.created_at,
+            updatedAt: newWorkspace.updated_at,
+        };
+    }
 
-    // Track if we're importing into an existing project
-    const hasTargetProject = !!session.target_project_id;
+    // 2. Resolve Board Configs
+    const uniqueBoardIds = Array.from(new Set(allNodes.filter((n) => n.type === 'board').map((n) => n.id)));
 
-    // First pass: identify containers and build hierarchy
-    for (const item of allItems) {
-        const mondayMeta = item.metadata?.monday as {
-            type?: string;
-            groupId?: string;
-            groupTitle?: string;
-        } | undefined;
-        const nodeType = mondayMeta?.type;
+    // We already have board configs in `workspaceConfig.boards` if we fetched full config
+    const existingBoardConfigMap = new Map(workspaceConfig!.boards.map(b => [b.boardId, b]));
 
-        if (nodeType === 'board') {
-            // Board → Project container ONLY if no target project
-            // When importing into existing project, board is just metadata
-            if (!hasTargetProject) {
-                const container: ImportPlanContainer = {
-                    tempId: item.tempId,
-                    type: 'project',
-                    title: item.title,
-                    parentTempId: null,
-                };
-                containers.push(container);
-                tempIdToContainer.set(item.tempId, container);
-            }
-            // Skip adding board as an item - it's structural only
-            continue;
-        } else if (nodeType === 'group') {
-            // Groups become subprocesses - they provide organizational structure
-            // This keeps "Templates", "Contact Lists", "Artist Lists" as containers
-            const container: ImportPlanContainer = {
-                tempId: item.tempId,
-                type: 'subprocess',
-                title: item.title,
-                // Parent is either target project or the board-as-project
-                parentTempId: hasTargetProject
-                    ? null  // Will be resolved to target on execution
-                    : (containers.find(c => c.type === 'project')?.tempId ?? null),
-            };
-            containers.push(container);
-            tempIdToContainer.set(item.tempId, container);
+    const boardConfigsToUpsert: any[] = [];
 
-            // Map group ID to container for child item assignment
-            // Use both groupId (self-reference) and id (node ID) to ensure mapping
-            const groupId = mondayMeta?.groupId ?? (mondayMeta as { id?: string })?.id;
-            if (groupId) {
-                groupIdToContainer.set(groupId, container);
-            }
-            continue; // Groups don't go in items array
-        } else {
-            // Items and subitems go to items array
+    for (const boardId of uniqueBoardIds) {
+        if (existingBoardConfigMap.has(boardId)) {
+            continue; // Already configured
+        }
 
-            // TEMPLATE DEDUPLICATION: Templates with the same Monday external_id
-            // are deduplicated (e.g., "Vancouver Template" linked across multiple boards)
-            const mondayId = (mondayMeta as { id?: string })?.id;
-            if (item.entityType === 'template' && mondayId) {
-                if (seenExternalIds.has(mondayId)) {
-                    console.log(`[imports.service] Deduping template "${item.title}" (external_id: ${mondayId})`);
-                    continue; // Skip duplicate template
+        // Infer config for new board
+        const boardNode = allNodes.find(n => n.type === 'board' && n.id === boardId);
+        const boardName = boardNode?.name || `Board ${boardId}`;
+
+        const groups = allNodes
+            .filter(n => n.type === 'group' && n.metadata.boardId === boardId)
+            .map(g => ({ id: g.id, title: g.name }));
+
+        // Collect unique columns
+        const columnMap = new Map<string, { id: string, title: string, type: string }>();
+        for (const node of allNodes) {
+            // Inspect column values from items to discover columns
+            if (node.metadata.boardId === boardId && node.columnValues) {
+                for (const cv of node.columnValues) {
+                    if (!columnMap.has(cv.id)) {
+                        columnMap.set(cv.id, { id: cv.id, title: cv.title, type: cv.type });
+                    }
                 }
-                seenExternalIds.set(mondayId, item.tempId);
             }
+        }
+        const columns = Array.from(columnMap.values());
 
-            // Parent assignment:
-            // 1. Explicit subitem → parent item relationship (already set by interpreter)
-            // 2. Group membership → subprocess container
-            // 3. Fallback to project/target
-            // NOTE: Templates skip parent assignment (hierarchy-agnostic)
+        const inferred = inferBoardConfig(boardId, boardName, groups, columns);
+        boardConfigsToUpsert.push(inferred);
+    }
 
-            if (!item.parentTempId && item.entityType !== 'template') {
-                const itemGroupId = mondayMeta?.groupId;
-                const groupContainer = itemGroupId ? groupIdToContainer.get(itemGroupId) : null;
+    // Upsert Inferred Configs (Persist to DB)
+    if (boardConfigsToUpsert.length > 0) {
+        // We utilize saveFullWorkspaceConfig to merge new boards. 
+        // We construct a composite config.
+        const updatedConfig: MondayWorkspaceConfig = {
+            ...workspaceConfig!,
+            boards: [...workspaceConfig!.boards, ...boardConfigsToUpsert],
+        };
 
-                if (groupContainer) {
-                    // Item belongs to a group → parent is the group's subprocess
-                    item.parentTempId = groupContainer.tempId;
-                } else if (!hasTargetProject) {
-                    // No group, no target → use first project container
-                    const parentProject = containers.find(c => c.type === 'project');
-                    item.parentTempId = parentProject?.tempId;
-                }
-                // When hasTargetProject && no group: leave parentTempId undefined
-                // It will be resolved to target_project_id during execution
-            }
-            items.push(item);
+        // Save to DB
+        await mondayWorkspaceService.saveFullWorkspaceConfig(updatedConfig, userId);
+
+        // Refresh local config variable
+        const refetched = await mondayWorkspaceService.getFullWorkspaceConfig(workspaceId!);
+        if (refetched) {
+            workspaceConfig = refetched;
         }
     }
 
-    // Generate classifications (only for actual items, not containers)
-    const definitions = await listDefinitions();
-    const classifications = generateClassifications(items, definitions);
+    // 3. Interpret using Domain Interpreter
+    if (!workspaceConfig) throw new Error('Failed to resolve workspace config');
 
-    // DEBUG: Log final result
-    console.log('[imports.service] ===== DEBUG: Final Plan =====');
-    console.log('[imports.service] Containers:', containers.length, containers.map(c => ({ type: c.type, title: c.title })));
-    console.log('[imports.service] Items:', items.length, items.slice(0, 5).map(i => ({
-        title: i.title,
-        entityType: i.entityType,
-        parentTempId: i.parentTempId?.slice(0, 10),
-        groupTitle: (i.metadata?.monday as any)?.groupTitle,
-    })));
-    console.log('[imports.service] ================================');
-
-    // Create the plan
-    const plan: ImportPlan = {
-        sessionId,
-        items,
-        containers,
-        classifications,
-        validationIssues: [],
-    };
+    const plan = interpretMondayData(
+        allNodes,
+        workspaceConfig,
+        sessionId
+    );
 
     // Save plan to database
     await db
@@ -352,6 +306,14 @@ export async function listSessions(params: {
 export async function generatePlan(sessionId: string): Promise<ImportPlan> {
     const session = await getSession(sessionId);
     if (!session) throw new Error('Session not found');
+
+    // Handle connector sessions
+    if (session.parser_name.startsWith('connector:')) {
+        if (session.parser_name === 'connector:monday') {
+            return generatePlanFromConnector(sessionId, session.created_by ?? undefined);
+        }
+        throw new Error(`Connector ${session.parser_name} not supported for regeneration`);
+    }
 
     const parser = PARSERS[session.parser_name];
     if (!parser) throw new Error(`Parser ${session.parser_name} not found`);
@@ -844,6 +806,53 @@ async function executePlanViaComposer(
         // Note: Empty string is intentional - null would violate FK constraints and emitEvent types.
         // Downstream logic should check for empty string to skip context-based projections.
         const effectiveContextId = contextId ?? '';
+
+        // Check if this item is marked as a 'record' entity type
+        if (item.entityType === 'record') {
+            const classification = classificationMap.get(item.tempId);
+            const definitionId = classification?.schemaMatch?.definitionId;
+
+            if (definitionId) {
+                // 1. Construct record data
+                // Combine title into data if needed, or just use field recordings
+                const recordData = item.fieldRecordings.reduce((acc, fr) => {
+                    acc[fr.fieldName] = fr.value;
+                    return acc;
+                }, {} as Record<string, unknown>);
+
+                // Add title as a standard field if not present (convention)
+                if (!recordData.name && !recordData.title) {
+                    recordData.title = item.title;
+                }
+
+                // 2. Create the record
+                const record = await createRecord({
+                    definitionId,
+                    uniqueName: item.title, // Use title as unique name identifier
+                    data: recordData,
+                    classificationNodeId: null, // Optional: could map to a container/project
+                }, userId);
+
+                createdIds[item.tempId] = record.id;
+
+                // 3. Create external source mapping
+                const mondayMeta = (item.metadata as { monday?: { id: string; type: string } })?.monday;
+                if (mondayMeta?.id) {
+                    await createMapping({
+                        provider: 'monday',
+                        externalId: mondayMeta.id,
+                        externalType: mondayMeta.type || 'item',
+                        localEntityType: 'record',
+                        localEntityId: record.id,
+                    });
+                }
+
+                // Skip action creation for records
+                continue;
+            } else {
+                console.warn(`[imports.service] Item "${item.title}" has entityType='record' but no matching definition. Falling back to Action creation.`);
+            }
+        }
 
         const action = await db
             .insertInto('actions')

@@ -229,8 +229,9 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                     label="Monday.com"
                     isActive={sourceType === 'monday'}
                     isConnected={isMondayConnected}
-                    isDisabled={!isMondayConnected}
-                    onClick={() => isMondayConnected && onSourceChange('monday')}
+                    isConnected={isMondayConnected}
+                    isDisabled={false}
+                    onClick={() => onSourceChange('monday')}
                 />
                 <SourceIcon
                     id="api"
@@ -337,14 +338,17 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                     </>
                 )}
 
-                {/* Monday Source - Board list directly in sidebar */}
+                {/* Monday Source - Board list managed by Wizard now */}
                 {sourceType === 'monday' && (
-                    <MondayBoardList
-                        onBoardSelect={handleBoardSelect}
-                        isLoading={isLoading}
-                        error={error}
-                        activeSession={session}
-                    />
+                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                        <Calendar className="w-12 h-12 text-slate-300 mb-4" />
+                        <div className="text-sm font-medium text-slate-600 mb-2">
+                            Monday.com Connected
+                        </div>
+                        <p className="text-xs text-slate-400 max-w-48">
+                            Select a board in the main window to begin import.
+                        </p>
+                    </div>
                 )}
 
                 {/* API Source (placeholder) */}
@@ -379,6 +383,9 @@ function MondayBoardList({ onBoardSelect, isLoading, error, activeSession }: Mon
     const { data: boards, isLoading: boardsLoading } = useMondayBoards();
     const [searchQuery, setSearchQuery] = useState('');
 
+    // DEBUG: Log raw API response
+    // console.log('[MondayBoardList] Raw boards from API:', boards?.length, boards?.map(b => ({ id: b.id, name: b.name, items: b.itemCount })));
+
     // Filter boards by search
     const filteredBoards = useMemo(() => {
         if (!boards) return [];
@@ -388,6 +395,16 @@ function MondayBoardList({ onBoardSelect, isLoading, error, activeSession }: Mon
             (b) => b.name.toLowerCase().includes(q) || b.workspace.toLowerCase().includes(q)
         );
     }, [boards, searchQuery]);
+
+    // DEBUG: Check for duplicate names
+    const nameCount = new Map<string, number>();
+    for (const b of filteredBoards) {
+        nameCount.set(b.name, (nameCount.get(b.name) ?? 0) + 1);
+    }
+    const duplicateNames = Array.from(nameCount.entries()).filter(([_, count]) => count > 1);
+    if (duplicateNames.length > 0) {
+        // console.warn('[MondayBoardList] DUPLICATE BOARD NAMES:', duplicateNames);
+    }
 
     // Group by workspace
     const boardsByWorkspace = useMemo(() => {

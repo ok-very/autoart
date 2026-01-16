@@ -447,7 +447,7 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
   // This prevents regression to the old architecture
   // =========================================================================
 
-  const legacyNodeTypes = ['process', 'stage', 'subprocess', 'task', 'subtask'] as const;
+  const legacyNodeTypes = ['process', 'stage', 'subprocess'] as const;
   const legacyNodes = await db
     .selectFrom('hierarchy_nodes')
     .select(['type'])

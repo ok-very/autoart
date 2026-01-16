@@ -72,40 +72,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
         )
         .execute();
 
-    // Create Task system definition with complete schema
-    await sql`
-    INSERT INTO record_definitions (name, schema_config, styling, is_system, pinned)
-    VALUES (
-      'Task',
-      ${JSON.stringify(TASK_SCHEMA)}::jsonb,
-      ${JSON.stringify({ color: 'blue', icon: '✅' })}::jsonb,
-      true,
-      true
-    )
-    ON CONFLICT (name) DO UPDATE SET
-      is_system = true,
-      pinned = true,
-      schema_config = EXCLUDED.schema_config,
-      styling = EXCLUDED.styling
-  `.execute(db);
-
-    // Create Subtask system definition with complete schema
-    await sql`
-    INSERT INTO record_definitions (name, schema_config, styling, is_system, pinned, parent_definition_id)
-    SELECT
-      'Subtask',
-      ${JSON.stringify(SUBTASK_SCHEMA)}::jsonb,
-      ${JSON.stringify({ color: 'sky', icon: '☑️' })}::jsonb,
-      true,
-      false,
-      id
-    FROM record_definitions WHERE name = 'Task'
-    ON CONFLICT (name) DO UPDATE SET
-      is_system = true,
-      parent_definition_id = EXCLUDED.parent_definition_id,
-      schema_config = EXCLUDED.schema_config,
-      styling = EXCLUDED.styling
-  `.execute(db);
+    // Task and Subtask definitions are now deprecated (replaced by Actions)
+    // We no longer seed them here.
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {

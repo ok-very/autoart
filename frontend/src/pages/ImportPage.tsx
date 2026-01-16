@@ -15,7 +15,8 @@ import type { ImportSession, ImportPlan } from '../api/hooks/imports';
 import { useUIStore } from '../stores/uiStore';
 import { ImportSidebar } from '../surfaces/import/ImportSidebar';
 import { ImportWorkbenchView } from '../surfaces/import/ImportWorkbenchView';
-import { MondayPreviewView } from '../surfaces/import/MondayPreviewView';
+import { MondayImportWizardView } from '../surfaces/import/wizard/MondayImportWizardView';
+// import { MondayPreviewView } from '../surfaces/import/MondayPreviewView'; // Replaced by Wizard
 import { ResizeHandle } from '../ui/common/ResizeHandle';
 import { SelectionInspector } from '../ui/composites/SelectionInspector';
 import { BottomDrawer } from '../ui/drawer/BottomDrawer';
@@ -113,11 +114,12 @@ export function ImportPage() {
         switch (sourceType) {
             case 'monday':
                 return (
-                    <MondayPreviewView
+                    <MondayImportWizardView
                         session={session}
                         plan={plan}
                         onSelectItem={selectImportItem}
                         onReset={handleReset}
+                        onSessionCreated={handleSessionCreated}
                     />
                 );
             case 'file':

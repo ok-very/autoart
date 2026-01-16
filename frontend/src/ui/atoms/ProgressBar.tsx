@@ -16,15 +16,21 @@ export interface ProgressSegment {
     count: number;
 }
 
-interface ProgressBarProps {
-    /** Array of segments to display */
-    segments: ProgressSegment[];
+export interface ProgressBarProps {
+    /** Array of segments to display (for multi-segment bars) */
+    segments?: ProgressSegment[];
+    /** Simple percentage value 0-100 (alternative to segments) */
+    value?: number;
     /** Height of the bar */
     height?: number | string;
+    /** Size preset */
+    size?: 'xs' | 'sm' | 'md' | 'lg';
     /** Additional className */
     className?: string;
     /** Whether to show tooltips on hover */
     showTooltip?: boolean;
+    /** Color for simple value mode */
+    color?: string;
 }
 
 /**
@@ -33,18 +39,48 @@ interface ProgressBarProps {
  * Displays a segmented progress bar. Receives pre-computed segments
  * with colors and percentages - no domain logic here.
  */
+const sizeToHeight = {
+    xs: '4px',
+    sm: '8px',
+    md: '16px',
+    lg: '24px',
+};
+
 export function ProgressBar({
     segments,
-    height = '24px',
+    value,
+    height,
+    size = 'md',
     className,
-    showTooltip = true
+    showTooltip = true,
+    color = '#3b82f6', // blue-500
 }: ProgressBarProps) {
+    const resolvedHeight = height ?? sizeToHeight[size];
+
+    // Simple value mode (0-100 percentage)
+    if (value !== undefined) {
+        return (
+            <div
+                className={clsx("w-full bg-slate-200 rounded overflow-hidden", className)}
+                style={{ height: resolvedHeight }}
+            >
+                <div
+                    className="h-full transition-all duration-300"
+                    style={{
+                        width: `${Math.min(100, Math.max(0, value))}%`,
+                        backgroundColor: color,
+                    }}
+                />
+            </div>
+        );
+    }
+
     // If no segments, show empty bar
     if (!segments || segments.length === 0) {
         return (
             <div
                 className={clsx("w-full bg-slate-200 rounded overflow-hidden", className)}
-                style={{ height }}
+                style={{ height: resolvedHeight }}
             />
         );
     }
@@ -52,7 +88,7 @@ export function ProgressBar({
     return (
         <div
             className={clsx("flex rounded overflow-hidden shadow-sm bg-slate-200 w-full", className)}
-            style={{ height }}
+            style={{ height: resolvedHeight }}
         >
             {segments.map((segment) => (
                 <div

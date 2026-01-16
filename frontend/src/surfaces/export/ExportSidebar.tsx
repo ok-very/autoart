@@ -139,9 +139,9 @@ export function ExportSidebar({
                                                 <Text size="sm" weight="medium" truncate className="block">
                                                     {project.title}
                                                 </Text>
-                                                {metadata?.client && (
+                                                {typeof metadata?.client === 'string' && metadata.client && (
                                                     <Text size="xs" color="dimmed">
-                                                        {String(metadata.client)}
+                                                        {metadata.client}
                                                     </Text>
                                                 )}
                                             </div>

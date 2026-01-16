@@ -12,7 +12,6 @@ export { ProjectionSelector } from './ProjectionSelector';
 export { ImportPreview } from './ImportPreview';
 export { HierarchyPreview } from './HierarchyPreview';
 export { StagePreview } from './StagePreview';
-export { ImportInspector } from './ImportInspector';
 
 // Controls
 export { ExecutionControls } from './ExecutionControls';

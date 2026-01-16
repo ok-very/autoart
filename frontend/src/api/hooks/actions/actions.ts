@@ -89,7 +89,7 @@ export function useCreateAction() {
         queryKey: queryKeys.actions.byContext(variables.contextId, variables.contextType),
       });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.actionViews.byContext(variables.contextId),
+        queryKey: queryKeys.actionViews.byContext(variables.contextId, variables.contextType),
       });
     },
   });
@@ -183,7 +183,7 @@ export function useEmitEvent() {
         invalidationHelpers.invalidateAction(queryClient, variables.actionId);
       }
       queryClient.invalidateQueries({
-        queryKey: queryKeys.actionViews.byContext(variables.contextId),
+        queryKey: queryKeys.actionViews.byContext(variables.contextId, variables.contextType),
       });
     },
   });
@@ -219,7 +219,7 @@ export function useEmitActionEvents() {
     onSuccess: (_, variables) => {
       invalidationHelpers.invalidateAction(queryClient, variables.actionId);
       queryClient.invalidateQueries({
-        queryKey: queryKeys.actionViews.byContext(variables.contextId),
+        queryKey: queryKeys.actionViews.byContext(variables.contextId, variables.contextType),
       });
     },
   });

@@ -57,6 +57,8 @@ export interface MondayDataNode {
     children: MondayDataNode[];
     parent?: MondayDataNode;
     metadata: {
+        boardId?: string;
+        boardName?: string;
         groupId?: string;
         groupTitle?: string;
         parentItemId?: string;
@@ -289,10 +291,13 @@ export class MondayConnector {
             name: schema.boardName,
             columnValues: [],
             children: [],
-            metadata: {},
+            metadata: {
+                boardId: schema.boardId,
+                boardName: schema.boardName,
+            },
         };
 
-        // Yield group nodes
+        // Yield group nodes with boardId for multi-board disambiguation
         for (const group of schema.groups) {
             yield {
                 type: 'group',
@@ -301,6 +306,8 @@ export class MondayConnector {
                 columnValues: [],
                 children: [],
                 metadata: {
+                    boardId: schema.boardId,
+                    boardName: schema.boardName,
                     groupId: group.id,
                     groupTitle: group.title,
                 },
@@ -317,15 +324,20 @@ export class MondayConnector {
 
             for (const item of page.items) {
                 const itemNode = this.createItemNode(item, schema.columns);
+                // Add board context to all items for multi-board imports
+                itemNode.metadata.boardId = schema.boardId;
+                itemNode.metadata.boardName = schema.boardName;
                 itemNode.metadata.groupId = item.group?.id;
                 itemNode.metadata.groupTitle = item.group?.title;
 
                 yield itemNode;
 
-                // Yield subitems with parent reference
+                // Yield subitems with parent reference and board context
                 if (config?.includeSubitems !== false && item.subitems) {
                     for (const subitem of item.subitems) {
                         const subitemNode = this.createItemNode(subitem, schema.columns, 'subitem');
+                        subitemNode.metadata.boardId = schema.boardId;
+                        subitemNode.metadata.boardName = schema.boardName;
                         subitemNode.metadata.parentItemId = item.id;
                         yield subitemNode;
                     }

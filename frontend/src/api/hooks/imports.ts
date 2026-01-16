@@ -17,6 +17,7 @@ export interface ImportSession {
     parser_name: string;
     status: 'pending' | 'planned' | 'needs_review' | 'executing' | 'completed' | 'failed';
     created_at: string;
+    parser_config: Record<string, any>;
 }
 
 export interface ImportPlanContainer {

@@ -5,17 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { queryKeys } from '../../queryKeys';
-
-export interface InterpretationOutput {
-    kind: 'fact_candidate' | 'action_hint' | 'work_event' | 'field_value';
-    [key: string]: unknown;
-}
-
-export interface InterpretationPlan {
-    outputs: InterpretationOutput[];
-    statusEvent?: InterpretationOutput;
-    raw?: unknown;
-}
+import type { InterpretationPlan } from './imports';
 
 export interface InterpretationAvailability {
     available: boolean;
@@ -44,9 +34,10 @@ export function useInterpretationPlan(actionId: string | null) {
                     { kind: 'action_hint', hintType: 'prepare', text: 'Prepare proposal document' },
                     { kind: 'fact_candidate', factKind: 'MEETING_HELD', confidence: 'low', payload: { subject: 'kickoff meeting' } },
                     { kind: 'fact_candidate', factKind: 'DOCUMENT_SUBMITTED', confidence: 'medium', payload: { documentType: 'ppap' } },
-                    { kind: 'field_value', field: 'targetDate', value: '2026-01-15' },
+                    { kind: 'field_value', field: 'targetDate', value: '2026-01-15', confidence: 'high' },
                 ],
                 statusEvent: { kind: 'work_event', eventType: 'WORK_FINISHED', source: 'status' },
+                raw: { text: '', status: 'completed' },
             };
             return mockPlan;
         },

@@ -25,9 +25,10 @@ export interface ImportPlanContainer {
 export interface ImportPlanItem {
     tempId: string;
     title: string;
-    parentTempId: string;
+    parentTempId?: string;
     metadata: Record<string, unknown>;
-    plannedAction: {
+    entityType?: 'project' | 'stage' | 'action' | 'task' | 'subtask' | 'record' | 'template';
+    plannedAction?: {
         type: string;
         payload: Record<string, unknown>;
     };
