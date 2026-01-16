@@ -298,7 +298,7 @@ export async function moveNode(nodeId: string, input: MoveNodeInput): Promise<Hi
   });
 }
 
-async function getDescendantIds(nodeId: string): Promise<string[]> {
+async function _getDescendantIds(nodeId: string): Promise<string[]> {
   const result = await sql<{ id: string }>`
     WITH RECURSIVE descendants AS (
       SELECT id FROM hierarchy_nodes WHERE parent_id = ${nodeId}
@@ -312,7 +312,7 @@ async function getDescendantIds(nodeId: string): Promise<string[]> {
   return result.rows.map(r => r.id);
 }
 
-async function updateDescendantsRootProject(nodeId: string, newRootProjectId: string | null): Promise<void> {
+async function _updateDescendantsRootProject(nodeId: string, newRootProjectId: string | null): Promise<void> {
   await sql`
     WITH RECURSIVE descendants AS (
       SELECT id FROM hierarchy_nodes WHERE id = ${nodeId}

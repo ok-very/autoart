@@ -107,6 +107,22 @@ body {
   }
 }
 
+/* Dropdown slide-down animation */
+.animate-slideDown {
+  animation: slideDown 0.2s ease-out forwards;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* TipTap Editor Styles */
 .ProseMirror {
   outline: none;

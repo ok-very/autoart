@@ -31,7 +31,7 @@ export function useRecordDefinitionsFiltered(options: DefinitionFilterOptions) {
   const url = queryString ? `/records/definitions?${queryString}` : '/records/definitions';
 
   return useQuery({
-    queryKey: queryKeys.definitions.filtered(options),
+    queryKey: queryKeys.definitions.filtered(options as Record<string, unknown>),
     queryFn: () => api.get<{ definitions: RecordDefinition[] }>(url).then(r => r.definitions),
   });
 }

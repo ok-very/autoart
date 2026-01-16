@@ -22,7 +22,7 @@ function bold(text: string): string {
 }
 
 // RTF italic wrapper
-function italic(text: string): string {
+function _italic(text: string): string {
     return `{\\i ${escapeRtf(text)}}`;
 }
 

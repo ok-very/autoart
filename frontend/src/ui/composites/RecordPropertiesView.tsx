@@ -117,6 +117,7 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
         task: 'bg-green-50 border-green-100 text-green-900',
         subtask: 'bg-teal-50 border-teal-100 text-teal-900',
         record: 'bg-slate-50 border-slate-100 text-slate-900',
+        template: 'bg-amber-50 border-amber-100 text-amber-900',
     }[nodeType];
 
     const handleDescriptionChange = (newContent: unknown) => {

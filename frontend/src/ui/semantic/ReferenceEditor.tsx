@@ -9,7 +9,7 @@
 
 import { clsx } from 'clsx';
 import { Link2, X, ExternalLink, RefreshCw } from 'lucide-react';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 
 import {
     useResolveReference,
@@ -69,7 +69,7 @@ export function ReferenceEditor({
     );
 
     // Unified resolved data
-    const resolved = isReferenceMode
+    const resolved = useMemo(() => isReferenceMode
         ? resolvedRef
         : targetRecord
             ? {
@@ -79,7 +79,7 @@ export function ReferenceEditor({
                 status: 'dynamic' as const,
                 drift: false,
             }
-            : null;
+            : null, [isReferenceMode, resolvedRef, targetRecord]);
 
     const isLoading = isReferenceMode ? isLoadingRef : isLoadingRecord;
 

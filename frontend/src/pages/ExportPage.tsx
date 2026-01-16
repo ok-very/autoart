@@ -8,9 +8,7 @@
 
 import { useCallback, useState } from 'react';
 
-import { DEFAULT_EXPORT_OPTIONS } from '@autoart/shared';
-
-import type { ExportFormat, ExportOptions, BfaProjectExportModel } from './types';
+import { DEFAULT_EXPORT_OPTIONS, type ExportFormat, type ExportOptions, type BfaProjectExportModel } from '@autoart/shared';
 import { useUIStore } from '../stores/uiStore';
 import { ExportInspector } from '../surfaces/export/ExportInspector';
 import { ExportSidebar } from '../surfaces/export/ExportSidebar';
@@ -103,7 +101,7 @@ export function ExportPage() {
                     width={inspectorWidth}
                     format={format}
                     options={options}
-                    onOptionChange={(key, value) => setOptions((prev) => ({ ...prev, [key]: value }))}
+                    onOptionChange={(key, value) => setOptions((prev: ExportOptions) => ({ ...prev, [key]: value }))}
                     selectedCount={selectedProjectIds.size}
                     onExport={() => {
                         // Trigger export flow - will be wired to API

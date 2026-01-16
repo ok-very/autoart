@@ -59,7 +59,7 @@ export function MillerColumnsView({ className }: MillerColumnsViewProps) {
                 task: null,
             });
         }
-    }, [activeProjectId]);
+    }, [activeProjectId, selections.project, setSelections]);
 
     // Auto-scroll right when new columns appear
     useEffect(() => {

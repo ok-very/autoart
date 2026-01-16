@@ -127,7 +127,7 @@ export const communicationMappingRules: MappingRule[] = [
         id: 'send-invite',
         description: 'Send meeting invite',
         pattern: /(send|send\s*out)\s*(meeting\s*)?invite/i,
-        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+        emits: (_ctx: MappingContext): InterpretationOutput[] => [{
             kind: 'fact_candidate',
             factKind: INFORMATION_SENT,
             payload: {
@@ -174,7 +174,7 @@ export const communicationMappingRules: MappingRule[] = [
         id: 'send-notes',
         description: 'Send meeting notes',
         pattern: /send\s*(out\s*)?(meeting\s*)?notes/i,
-        emits: (): InterpretationOutput[] => [{
+        emits: (_ctx: MappingContext): InterpretationOutput[] => [{
             kind: 'fact_candidate',
             factKind: INFORMATION_SENT,
             payload: {

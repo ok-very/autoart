@@ -23,7 +23,7 @@ export const COMMON_FONTS: FontOption[] = [
 /**
  * Get fonts compatible with a specific export format
  */
-export function getFontsForFormat(format: string): FontOption[] {
+export function getFontsForFormat(_format: string): FontOption[] {
     // For now, all fonts work with all formats
     // Can be refined per-format later
     return COMMON_FONTS;

@@ -57,3 +57,8 @@ postgres_data/
 .aye/
 .well-known/
 .coderabbit.yaml
+
+# Deprecated files that keep reappearing
+frontend/src/surfaces/import/ImportInspector.tsx
+frontend/src/surfaces/import/ImportRecordInspector.tsx
+frontend/src/ui/atoms/FormulaInput.tsx

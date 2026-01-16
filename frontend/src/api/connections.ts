@@ -97,6 +97,7 @@ export interface MondayBoard {
     name: string;
     workspace: string;
     itemCount: number;
+    boardKind: string;
 }
 
 /**

@@ -316,7 +316,7 @@ export function UniversalTableView({
             const defaultVisible = allColumns.slice(0, 6).map((c) => c.key);
             setVisibleColumnKeys(new Set(defaultVisible));
         }
-    }, [selectedDefinitionId, allColumns.length]);
+    }, [selectedDefinitionId, allColumns, visibleColumnKeys.size, setVisibleColumnKeys]);
 
     // Filter visible columns
     const visibleColumns = useMemo(() => {

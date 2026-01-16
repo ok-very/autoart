@@ -26,6 +26,8 @@ export interface FieldRecording {
     fieldName: string;
     value: unknown;
     renderHint?: string;
+    /** Pending linked item IDs from board_relation/mirror columns for post-import resolution */
+    _pendingLinks?: string[];
 }
 
 // ============================================================================
@@ -96,10 +98,12 @@ const SPECIAL_COLUMN_PATTERNS: Array<{
 // ============================================================================
 
 /**
- * Generate a unique temporary ID for an import item
+ * Generate a unique temporary ID for an import item.
+ * Includes boardId prefix for multi-board imports to ensure consistent parent refs.
  */
-function generateTempId(): string {
-    return `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+function generateTempId(boardId?: string): string {
+    const prefix = boardId ? `b${boardId}_` : '';
+    return `temp_${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
 // ============================================================================
@@ -220,17 +224,53 @@ function autoMapColumn(column: MondayColumnValue): ColumnMapping {
 }
 
 /**
- * Convert a Monday column value to a field recording
+ * Extract linked item IDs from board_relation or mirror column values.
+ * Monday stores these as JSON with linkedPulseIds or linked_item_ids.
+ */
+function extractLinkedItemIds(column: MondayColumnValue): string[] {
+    if (column.type !== 'board_relation' && column.type !== 'mirror') {
+        return [];
+    }
+
+    const value = column.value;
+    if (!value || typeof value !== 'object') {
+        return [];
+    }
+
+    // board_relation format: { linkedPulseIds: [{ linkedPulseId: 123 }, ...] }
+    // or: { linked_item_ids: [123, 456, ...] }
+    const linkedPulseIds = (value as { linkedPulseIds?: Array<{ linkedPulseId: number }> }).linkedPulseIds;
+    if (Array.isArray(linkedPulseIds)) {
+        return linkedPulseIds.map(p => String(p.linkedPulseId));
+    }
+
+    const linkedItemIds = (value as { linked_item_ids?: number[] }).linked_item_ids;
+    if (Array.isArray(linkedItemIds)) {
+        return linkedItemIds.map(id => String(id));
+    }
+
+    return [];
+}
+
+/**
+ * Convert a Monday column value to a field recording.
+ * For relation/mirror columns, extracts linked item IDs for post-import resolution.
  */
 function columnToFieldRecording(
     column: MondayColumnValue,
     mapping: ColumnMapping
 ): FieldRecording {
+    // For relation/mirror columns, extract linked item IDs for resolution
+    const linkedIds = (column.type === 'board_relation' || column.type === 'mirror')
+        ? extractLinkedItemIds(column)
+        : [];
+
     return {
         fieldId: mapping.fieldId,
         fieldName: mapping.fieldName || column.title,
         value: column.text ?? column.value,
         renderHint: mapping.renderHint,
+        ...(linkedIds.length > 0 && { _pendingLinks: linkedIds }),
     };
 }
 
@@ -271,8 +311,11 @@ export async function interpretMondayBoard(
             return columnToFieldRecording(cv, mapping);
         });
 
-        const tempId = generateTempId();
-        nodeIdToTempId.set(node.id, tempId);
+        const boardId = node.metadata.boardId;
+        const tempId = generateTempId(boardId);
+        // Use compound key for multi-board disambiguation
+        const nodeKey = boardId ? `${boardId}:${node.id}` : node.id;
+        nodeIdToTempId.set(nodeKey, tempId);
 
         // Check if this item has subitems (look ahead in nodes list)
         const hasSubitems = node.type === 'item' && nodes.some(
@@ -286,26 +329,28 @@ export async function interpretMondayBoard(
             itemName: node.name, // Pass name for template pattern matching
         });
 
-        // Templates are hierarchy-agnostic singletons - they float outside stage projections
         const isTemplate = entityType === 'template';
 
         items.push({
             tempId,
             title: node.name,
             entityType,
-            // Templates get NO parentTempId - they float outside hierarchy
-            parentTempId: isTemplate ? undefined : undefined, // Will be resolved in second pass
+            // parentTempId will be resolved in second pass for all items
+            // Templates stay nested in their group within the same import
+            parentTempId: undefined,
             fieldRecordings,
             metadata: {
                 monday: {
                     id: node.id,
                     type: node.type,
+                    boardId: node.metadata.boardId,
+                    boardName: node.metadata.boardName,
                     groupId: node.metadata.groupId,
                     groupTitle: node.metadata.groupTitle,
                     parentItemId: node.metadata.parentItemId,
-                    hasSubitems, // Preserve for downstream use
+                    hasSubitems,
                 },
-                // Template singleton flag for deduplication and UI filtering
+                // Template flag for UI filtering (deduplication happens in imports.service cross-import)
                 ...(isTemplate && { isTemplateSingleton: true }),
             },
         });
@@ -313,23 +358,24 @@ export async function interpretMondayBoard(
 
     // Second pass: Resolve parent references for subitems
     // If parent can't be resolved, flag metadata for classification review
-    // Templates are SKIPPED - they remain hierarchy-agnostic
+    // ALL items (including templates) get parent assignment - they stay nested in their group
     for (const item of items) {
-        // Templates don't get parent assignment - they float outside hierarchy
-        if (item.entityType === 'template') {
-            continue;
-        }
-
-        const mondayMeta = item.metadata?.monday as { parentItemId?: string; type?: string } | undefined;
+        const mondayMeta = item.metadata?.monday as { 
+            parentItemId?: string; 
+            type?: string;
+            boardId?: string;
+        } | undefined;
         const parentItemId = mondayMeta?.parentItemId;
+        const boardId = mondayMeta?.boardId;
 
         if (parentItemId) {
-            if (nodeIdToTempId.has(parentItemId)) {
+            // Use compound key for multi-board disambiguation
+            const parentKey = boardId ? `${boardId}:${parentItemId}` : parentItemId;
+            if (nodeIdToTempId.has(parentKey)) {
                 // Explicit parent resolution - subitem → parent item
-                item.parentTempId = nodeIdToTempId.get(parentItemId);
+                item.parentTempId = nodeIdToTempId.get(parentKey);
             } else {
                 // Parent not in batch - flag for classification review
-                // This makes the implicit relationship explicit via metadata
                 item.metadata = {
                     ...item.metadata,
                     _parentResolutionFailed: true,

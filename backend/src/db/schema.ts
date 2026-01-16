@@ -362,6 +362,9 @@ export interface ExternalSourceMappingsTable {
   last_synced_at: Date | null;
   last_sync_hash: string | null;
   created_at: Generated<Date>;
+  workspace_id: string | null; // Added in migration 038
+  external_board_id: string | null; // Added in migration 038
+  external_group_id: string | null; // Added in migration 038
 }
 
 export type ExternalSourceMapping = Selectable<ExternalSourceMappingsTable>;
@@ -444,6 +447,103 @@ export type ActionTypeDefinition = Selectable<ActionTypeDefinitionsTable>;
 export type NewActionTypeDefinition = Insertable<ActionTypeDefinitionsTable>;
 export type ActionTypeDefinitionUpdate = Updateable<ActionTypeDefinitionsTable>;
 
+// ============================================
+// MONDAY WORKSPACE TABLES (Migration 038)
+// Configuration-driven Monday.com integration
+// ============================================
+
+// Monday Workspaces Table
+export interface MondayWorkspacesTable {
+    id: Generated<string>;
+    name: string;
+    provider_account_id: string | null;
+    default_project_id: string | null;
+    settings: Generated<unknown>; // JSONB
+    created_by: string | null;
+    created_at: Generated<Date>;
+    updated_at: Generated<Date>;
+}
+
+export type MondayWorkspace = Selectable<MondayWorkspacesTable>;
+export type NewMondayWorkspace = Insertable<MondayWorkspacesTable>;
+export type MondayWorkspaceUpdate = Updateable<MondayWorkspacesTable>;
+
+// Monday Board Configs Table
+export interface MondayBoardConfigsTable {
+    id: Generated<string>;
+    workspace_id: string;
+    board_id: string;
+    board_name: string;
+    role: string;
+    linked_project_id: string | null;
+    template_scope: string | null;
+    sync_direction: Generated<string>;
+    sync_enabled: Generated<boolean>;
+    settings: Generated<unknown>; // JSONB
+    created_at: Generated<Date>;
+    updated_at: Generated<Date>;
+}
+
+export type MondayBoardConfig = Selectable<MondayBoardConfigsTable>;
+export type NewMondayBoardConfig = Insertable<MondayBoardConfigsTable>;
+export type MondayBoardConfigUpdate = Updateable<MondayBoardConfigsTable>;
+
+// Monday Group Configs Table
+export interface MondayGroupConfigsTable {
+    id: Generated<string>;
+    board_config_id: string;
+    group_id: string;
+    group_title: string;
+    role: string;
+    stage_order: number | null;
+    stage_kind: string | null;
+    subprocess_name_override: string | null;
+    settings: Generated<unknown>; // JSONB
+    created_at: Generated<Date>;
+}
+
+export type MondayGroupConfig = Selectable<MondayGroupConfigsTable>;
+export type NewMondayGroupConfig = Insertable<MondayGroupConfigsTable>;
+export type MondayGroupConfigUpdate = Updateable<MondayGroupConfigsTable>;
+
+// Monday Column Configs Table
+export interface MondayColumnConfigsTable {
+    id: Generated<string>;
+    board_config_id: string;
+    column_id: string;
+    column_title: string;
+    column_type: string;
+    semantic_role: string;
+    local_field_key: string | null;
+    fact_kind_id: string | null;
+    render_hint: string | null;
+    is_required: Generated<boolean>;
+    multi_valued: Generated<boolean>;
+    settings: Generated<unknown>; // JSONB
+    created_at: Generated<Date>;
+}
+
+export type MondayColumnConfig = Selectable<MondayColumnConfigsTable>;
+export type NewMondayColumnConfig = Insertable<MondayColumnConfigsTable>;
+export type MondayColumnConfigUpdate = Updateable<MondayColumnConfigsTable>;
+
+// Monday Sync States Table
+export interface MondaySyncStatesTable {
+    id: Generated<string>;
+    board_config_id: string;
+    last_activity_log_id: string | null;
+    last_synced_at: Date | null;
+    sync_cursor: unknown | null; // JSONB
+    items_synced: Generated<number>;
+    errors: Generated<unknown>; // JSONB
+    created_at: Generated<Date>;
+    updated_at: Generated<Date>;
+}
+
+export type MondaySyncState = Selectable<MondaySyncStatesTable>;
+export type NewMondaySyncState = Insertable<MondaySyncStatesTable>;
+export type MondaySyncStateUpdate = Updateable<MondaySyncStatesTable>;
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -468,6 +568,11 @@ export interface Database {
   inference_learnings: InferenceLearningsTable;
   export_sessions: ExportSessionsTable;
   action_type_definitions: ActionTypeDefinitionsTable;
+  monday_workspaces: MondayWorkspacesTable;
+  monday_board_configs: MondayBoardConfigsTable;
+  monday_group_configs: MondayGroupConfigsTable;
+  monday_column_configs: MondayColumnConfigsTable;
+  monday_sync_states: MondaySyncStatesTable;
 }
 
 

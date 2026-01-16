@@ -5,7 +5,6 @@
  * Uses bespoke components for consistent styling.
  */
 
-import { clsx } from 'clsx';
 import { X, Minimize2, Maximize2 } from 'lucide-react';
 import { useCallback } from 'react';
 

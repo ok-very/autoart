@@ -129,6 +129,8 @@ export interface ImportPlan {
     }>;
     /** Classification results for each item (gating execution) */
     classifications: ItemClassification[];
+    /** Pending link references to resolve after import (from board_relation/mirror columns) */
+    pendingLinks?: PendingLinkReference[];
 }
 
 export interface ParseResult {
@@ -141,7 +143,27 @@ export interface ParseResult {
     }>;
 }
 
-export type FieldRecording = { fieldName: string; value: unknown };
+export type FieldRecording = { 
+    fieldName: string; 
+    value: unknown;
+    /** Rendering hint for UI component selection */
+    renderHint?: string;
+    /** Pending linked item IDs from board_relation/mirror columns for post-import resolution */
+    _pendingLinks?: string[];
+};
+
+/**
+ * Pending link reference to be resolved after import execution.
+ * Maps source item's relation field to target external IDs.
+ */
+export interface PendingLinkReference {
+    /** Source item tempId that has the relation field */
+    sourceTempId: string;
+    /** Field name containing the relation */
+    fieldName: string;
+    /** External IDs of linked items (Monday item IDs) */
+    linkedExternalIds: string[];
+}
 
 // ============================================================================
 // IMPORT SESSION STATUS

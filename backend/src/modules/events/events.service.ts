@@ -14,7 +14,7 @@ import { sql } from 'kysely';
 
 import { getSystemEventTypes } from './event-visibility.js';
 import { db } from '../../db/client.js';
-import type { NewEvent, Event, ContextType } from '../../db/schema.js';
+import type { Event, ContextType } from '../../db/schema.js';
 
 export interface CreateEventInput {
   contextId: string;

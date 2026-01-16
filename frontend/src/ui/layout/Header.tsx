@@ -6,7 +6,7 @@
  */
 
 import {
-  ChevronDown, Plus, Copy, FolderOpen, Check, Library, Database,
+  ChevronDown, FolderOpen, Database,
   TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
@@ -21,25 +21,22 @@ import {
   RECORDS_VIEW_MODE_LABELS,
   FIELDS_VIEW_MODE_LABELS,
 } from '../../stores/uiStore';
-import { Badge } from '../atoms/Badge';
 import { Button } from '../atoms/Button';
 import { IconButton } from '../atoms/IconButton';
 import { Inline } from '../atoms/Inline';
-import { Text } from '../atoms/Text';
 import { Menu } from '../molecules/Menu';
 import { SegmentedControl } from '../molecules/SegmentedControl';
 
 export function Header() {
   const location = useLocation();
-  const { data: projects } = useProjects();
-  const { getNode } = useHierarchyStore();
+  const { data: _projects } = useProjects();
+  const { getNode: _getNode } = useHierarchyStore();
   const {
     viewMode,
     setViewMode,
-    activeProjectId,
-    setActiveProject,
-    setSelection,
-    openDrawer
+    activeProjectId: _activeProjectId,
+    setActiveProject: _setActiveProject,
+    setSelection: _setSelection,
   } = useUIStore();
 
   const isRecordsPage = location.pathname.startsWith('/records');
@@ -52,31 +49,7 @@ export function Header() {
   const isComposerPage = location.pathname.startsWith('/composer');
   const isRegistryPage = isRecordsPage || isFieldsPage || isActionsPage || isEventsPage;
 
-  const selectedProject = activeProjectId ? getNode(activeProjectId) : null;
 
-  const handleSelectProject = (projectId: string) => {
-    setActiveProject(projectId);
-  };
-
-  const handleCreateProject = () => {
-    openDrawer('create-project', {});
-  };
-
-  const handleCloneProject = () => {
-    if (!selectedProject) return;
-    openDrawer('clone-project', {
-      sourceProjectId: selectedProject.id,
-      sourceProjectTitle: selectedProject.title,
-    });
-  };
-
-  const handleOpenLibrary = () => {
-    if (!selectedProject) return;
-    openDrawer('project-library', {
-      projectId: selectedProject.id,
-      projectTitle: selectedProject.title,
-    });
-  };
 
   const getViewModeData = () => {
     if (isRecordsPage) {

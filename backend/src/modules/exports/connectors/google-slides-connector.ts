@@ -9,7 +9,7 @@
  * - Budget overview slides
  */
 
-import { GoogleClient, type Presentation, type PresentationRequest, type SlideLayoutReference } from './google-client.js';
+import { GoogleClient, type PresentationRequest } from './google-client.js';
 import type { BfaProjectExportModel, ExportOptions } from '../types.js';
 
 // ============================================================================
@@ -46,12 +46,12 @@ export interface WritePresentationResult {
 // ============================================================================
 
 // EMU (English Metric Units) - Google Slides uses these for positioning
-const EMU_PER_POINT = 12700;
+const _EMU_PER_POINT = 12700;
 const EMU_PER_INCH = 914400;
 
 // Standard slide dimensions (16:9 widescreen)
 const SLIDE_WIDTH = 10 * EMU_PER_INCH;
-const SLIDE_HEIGHT = 5.625 * EMU_PER_INCH;
+const _SLIDE_HEIGHT = 5.625 * EMU_PER_INCH;
 
 // Margins
 const MARGIN = 0.5 * EMU_PER_INCH;

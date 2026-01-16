@@ -23,8 +23,6 @@ import { clsx } from 'clsx';
 import {
     Wand2,
     X,
-    ChevronDown,
-    ChevronRight,
     Plus,
     Trash2,
     Link as LinkIcon,
@@ -92,7 +90,7 @@ export function ComposerSurface({
     const [description, setDescription] = useState('');
     const [fieldValues, setFieldValues] = useState<FieldValue[]>([]);
     const [linkedRecords, setLinkedRecords] = useState<LinkedRecord[]>([]);
-    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [_showAdvanced, _setShowAdvanced] = useState(false);
     const [showRecordPicker, setShowRecordPicker] = useState(false);
     const [currentSlot, setCurrentSlot] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -142,7 +140,7 @@ export function ComposerSurface({
 
     // Get subprocesses from container actions API
     // These are action-based containers, not legacy hierarchy nodes
-    const subprocesses = containerSubprocesses || [];
+    const subprocesses = useMemo(() => containerSubprocesses || [], [containerSubprocesses]);
 
     // Auto-select first subprocess
     useEffect(() => {

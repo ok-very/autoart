@@ -14,7 +14,7 @@ interface RecordFilters {
 
 export function useRecords(filters?: RecordFilters) {
   return useQuery({
-    queryKey: queryKeys.records.list(filters),
+    queryKey: queryKeys.records.list(filters as Record<string, unknown>),
     queryFn: () => {
       const params = new URLSearchParams();
       if (filters?.definitionId) params.set('definitionId', filters.definitionId);

@@ -63,6 +63,7 @@ export function CreateNodeView(props: CreateNodeViewProps | LegacyCreateNodeView
     task: 'Task',
     subtask: 'Subtask',
     process: 'Process',
+    template: 'Template',
   }[nodeType] || nodeType;
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -11,7 +11,7 @@
 
 import { inferFactKind } from '../interpreter/fact-kind-inferrer.js';
 import { defaultMappingRules } from '../interpreter/mappings/index.js';
-import type { MappingRule, MappingContext, InterpretationOutput } from '../interpreter/mappings/types.js';
+import type { MappingRule, MappingContext } from '../interpreter/mappings/types.js';
 
 // ============================================================================
 // TYPES

@@ -12,7 +12,6 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
 import * as connectionsService from './connections.service.js';
-import { getMondayToken } from './connections.service.js';
 import { MondayClient } from './connectors/monday-client.js';
 
 // ============================================================================
@@ -166,7 +165,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
                 }>;
             }>(`
                 query {
-                    boards(limit: 50, order_by: created_at) {
+                    boards(limit: 500, order_by: created_at) {
                         id
                         name
                         state
@@ -181,36 +180,50 @@ export async function connectionsRoutes(app: FastifyInstance) {
                 }
             `);
 
+            // DEBUG: Log raw response from Monday
+            console.log('[monday/boards] Raw from Monday API:', result.boards.length, 'boards');
+            console.log('[monday/boards] Sample:', result.boards.slice(0, 5).map(b => ({
+                id: b.id,
+                name: b.name,
+                type: b.type,
+                board_kind: b.board_kind,
+                items_count: b.items_count,
+            })));
+
             // Filter to actual project boards only:
             // 1. Active state
-            // 2. type = 'board' (not 'document' or 'dashboard')  
-            // 3. board_kind = 'public' or 'private' (excludes 'share' linked boards)
-            // 4. Exclude "Subitems of X" boards (Monday auto-creates these)
-            // 5. Require meaningful item count (> 0) to exclude empty/template boards
-            const boards = result.boards
+            // 2. type = 'board'
+            // 3. Exclude "Subitems of"
+            // 4. Exclude 'share' boards (often single-item ghosts)
+            const rawBoards = result.boards
                 .filter(b => b.state === 'active')
                 .filter(b => b.type === 'board')
-                .filter(b => b.board_kind === 'public' || b.board_kind === 'private')
-                .filter(b => !b.name.startsWith('Subitems of '))
-                .filter(b => b.items_count > 0)
+                .filter(b => b.board_kind !== 'share')
+                .filter(b => !b.name.startsWith('Subitems of '));
+
+            // Smart Deduplication:
+            // If multiple boards have the exact same name, keep only the one with the most items.
+            // This handles "split-outs" where a template might have a shadow copy.
+            const bestBoardsByName = new Map<string, typeof rawBoards[0]>();
+
+            for (const board of rawBoards) {
+                const existing = bestBoardsByName.get(board.name);
+                if (!existing || board.items_count > existing.items_count) {
+                    bestBoardsByName.set(board.name, board);
+                }
+            }
+
+            const uniqueBoards = Array.from(bestBoardsByName.values())
                 .map(b => ({
                     id: b.id,
                     name: b.name,
                     workspace: b.workspace?.name ?? 'Main workspace',
                     itemCount: b.items_count,
                     boardKind: b.board_kind,
-                }));
+                }))
+                .sort((a, b) => a.name.localeCompare(b.name));
 
-            // Deduplicate by ID
-            const seenIds = new Set<string>();
-            const uniqueBoards: typeof boards = [];
-            for (const board of boards) {
-                if (!seenIds.has(board.id)) {
-                    seenIds.add(board.id);
-                    uniqueBoards.push(board);
-                }
-            }
-
+            console.log('[monday/boards] Final unique boards:', uniqueBoards.length);
             return reply.send({ boards: uniqueBoards });
         } catch (err) {
             if ((err as Error).message.includes('No Monday API token')) {

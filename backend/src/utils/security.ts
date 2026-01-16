@@ -23,11 +23,7 @@ async function getDerivedKey(): Promise<Buffer> {
     return cachedKey;
 }
 
-interface EncryptedData {
-    encrypted: string;
-    iv: string;
-    authTag: string;
-}
+
 
 /**
  * Encrypt sensitive string data
@@ -75,7 +71,7 @@ export async function decrypt(text: string): Promise<string> {
         decrypted += decipher.final('utf8');
 
         return decrypted;
-    } catch (error) {
+    } catch {
         // Log minimal non-sensitive error message
         console.error('Decryption failed: authentication error or corrupt data');
         // Return original text for migration compatibility
