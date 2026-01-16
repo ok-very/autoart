@@ -3,7 +3,7 @@ import { Stack } from '../../../../ui/atoms/Stack';
 import { Text } from '../../../../ui/atoms/Text';
 import { Button } from '../../../../ui/atoms/Button';
 import { Inline } from '../../../../ui/atoms/Inline';
-import { Select } from '../../../../ui/atoms/Select';
+import { PortalSelect } from '../../../../ui/atoms/PortalSelect';
 import { Badge } from '../../../../ui/atoms/Badge';
 import { Spinner } from '../../../../ui/atoms/Spinner';
 import { useMondayBoardConfigs, useUpdateMondayGroupConfigs } from '../../../../api/hooks/monday';
@@ -145,7 +145,7 @@ export function Step3GroupRoles({ onNext, onBack, session, onSessionCreated }: S
                                                 {group.groupTitle}
                                             </td>
                                             <td className="px-4 py-2">
-                                                <Select
+                                                <PortalSelect
                                                     value={group.role}
                                                     onChange={(val) => {
                                                         if (val && board.id && board.workspaceId) {
@@ -163,7 +163,7 @@ export function Step3GroupRoles({ onNext, onBack, session, onSessionCreated }: S
                                             </td>
                                             <td className="px-4 py-2">
                                                 {group.role === 'stage' && (
-                                                    <Select
+                                                    <PortalSelect
                                                         value={group.stageKind || 'todo'}
                                                         onChange={(val) => {
                                                             if (val && board.id && board.workspaceId) {
@@ -175,7 +175,7 @@ export function Step3GroupRoles({ onNext, onBack, session, onSessionCreated }: S
                                                     />
                                                 )}
                                                 {group.role === 'reference_group' && (
-                                                    <Select
+                                                    <PortalSelect
                                                         value={group.settings?.referenceStrategy || 'create'}
                                                         onChange={(val) => {
                                                             if (val && board.id && board.workspaceId) {
