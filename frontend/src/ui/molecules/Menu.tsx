@@ -148,10 +148,6 @@ function MenuDropdown({ children, className }: MenuDropdownProps) {
             ref={dropdownRef}
             className={clsx(
                 'absolute z-50 min-w-[160px] py-1 bg-white rounded-lg border border-slate-200 shadow-lg',
-                'transition-[opacity,transform] duration-100 ease-out',
-                isAnimating
-                    ? 'opacity-100 translate-y-0'
-                    : 'opacity-0 -translate-y-1',
                 className
             )}
             style={{ top: position.top, left: position.left }}
