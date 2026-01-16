@@ -83,4 +83,8 @@ export interface MondayColumnConfig {
     isRequired?: boolean;
     multiValued?: boolean;
     settings?: Record<string, any>;
+    inferenceSource?: 'type_match' | 'name_pattern' | 'combined' | 'manual' | 'default';
+    inferenceConfidence?: number;
+    inferenceReasons?: string[];
+    sampleValues?: string[];
 }

@@ -32,8 +32,10 @@ const GROUP_ROLE_OPTIONS: { value: MondayGroupRole; label: string }[] = [
 
 const STAGE_KIND_OPTIONS = [
     { value: 'todo', label: 'To Do' },
-    { value: 'doing', label: 'Doing' },
+    { value: 'in_progress', label: 'In Progress' },
+    { value: 'blocked', label: 'Blocked' },
     { value: 'done', label: 'Done' },
+    { value: 'archive', label: 'Archive' },
 ];
 
 export function Step3GroupRoles({ onNext, onBack, session, onSessionCreated }: StepProps) {
@@ -147,7 +149,12 @@ export function Step3GroupRoles({ onNext, onBack, session, onSessionCreated }: S
                                                     value={group.role}
                                                     onChange={(val) => {
                                                         if (val && board.id && board.workspaceId) {
-                                                            handleGroupUpdate(board.id, board.workspaceId, group.groupId, { role: val });
+                                                            const update: any = { role: val };
+                                                            // Set default stageKind if switching to stage
+                                                            if (val === 'stage' && !group.stageKind) {
+                                                                update.stageKind = 'todo';
+                                                            }
+                                                            handleGroupUpdate(board.id, board.workspaceId, group.groupId, update);
                                                         }
                                                     }}
                                                     data={GROUP_ROLE_OPTIONS}

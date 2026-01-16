@@ -32,8 +32,7 @@ import { interpretMondayData, inferBoardConfig } from './monday/monday-domain-in
 import type { MondayWorkspaceConfig } from './monday/monday-config.types.js';
 import * as mondayWorkspaceService from './monday/monday-workspace.service.js';
 import { ensureFactKindDefinition } from '../records/fact-kinds.service.js';
-import { listDefinitions, createRecord } from '../records/records.service.js';
-
+import { listDefinitions, createRecord, bulkCreateRecords } from '../records/records.service.js';
 
 // Connector imports
 
@@ -53,6 +52,10 @@ const PARSERS: Record<string, Parser> = {
     'monday': new MondayCSVParser(),
     'generic-csv': new GenericCSVParser(),
 };
+
+// ... (skipping to executePlanViaComposer content)
+
+// Execute bulk creation per definition
 
 // ============================================================================
 // SESSION MANAGEMENT
@@ -724,6 +727,82 @@ async function executePlanViaComposer(
         createdIds[container.tempId] = created.id;
     }
 
+    // Step 1.5: Bulk Create Records (Optimization)
+    // Identify valid records and group by definition for bulk processing
+    const recordsByDef = new Map<string, ImportPlanItem[]>();
+
+    // Helper to check if an item is a creatable record
+    const isCreatableRecord = (item: ImportPlanItem) => {
+        if (item.entityType !== 'record') return false;
+        const classification = classificationMap.get(item.tempId);
+        return !!classification?.schemaMatch?.definitionId;
+    };
+
+    for (const item of plan.items) {
+        if (isCreatableRecord(item)) {
+            const classification = classificationMap.get(item.tempId)!;
+            // We checked existence above
+            const definitionId = classification.schemaMatch!.definitionId!;
+
+            const list = recordsByDef.get(definitionId) || [];
+            list.push(item);
+            recordsByDef.set(definitionId, list);
+        }
+    }
+
+    // Execute bulk creation per definition
+    for (const [defId, items] of recordsByDef) {
+        const bulkInput = items.map(item => {
+            const recordData = item.fieldRecordings.reduce((acc, fr) => {
+                acc[fr.fieldName] = fr.value;
+                return acc;
+            }, {} as Record<string, unknown>);
+
+            // Add title as a standard field if not present (convention)
+            if (!recordData.name && !recordData.title) {
+                recordData.title = item.title;
+            }
+
+            return {
+                uniqueName: item.title,
+                data: recordData,
+                classificationNodeId: null // Records are currently flat/global
+            };
+        });
+
+        // Execute bulk upsert
+        // Returns { created, updated, errors, records[] }
+        const result = await bulkCreateRecords(defId, bulkInput, userId);
+
+        if (result.errors.length > 0) {
+            console.warn(`[imports.service] Bulk record creation had ${result.errors.length} errors`, result.errors);
+        }
+
+        // Map created records back to items to populate createdIds and mappings
+        const recordsByName = new Map(result.records.map(r => [r.unique_name, r]));
+
+        for (const item of items) {
+            const record = recordsByName.get(item.title);
+            if (record) {
+                createdIds[item.tempId] = record.id;
+
+                // Create external source mapping
+                const mondayMeta = (item.metadata as { monday?: { id: string; type: string } })?.monday;
+                if (mondayMeta?.id) {
+                    await createMapping({
+                        provider: 'monday',
+                        externalId: mondayMeta.id,
+                        externalType: mondayMeta.type || 'item',
+                        localEntityType: 'record',
+                        localEntityId: record.id,
+                    });
+                }
+            } else {
+                console.error(`[imports.service] Failed to match created record for item "${item.title}"`);
+            }
+        }
+    }
+
     // Step 2: Create work items via Actions + Events (proper Composer pattern)
     // Build itemsByTempId lookup for parent resolution
     const itemsByTempId = new Map(plan.items.map(i => [i.tempId, i]));
@@ -740,6 +819,11 @@ async function executePlanViaComposer(
     });
 
     for (const item of sortedItems) {
+        // SKIP if already created (e.g. Bulk Records or Templates)
+        if (createdIds[item.tempId]) {
+            continue;
+        }
+
         // CROSS-IMPORT TEMPLATE DEDUPLICATION
         // Templates are singletons - check if already imported from same external source
         if (item.entityType === 'template') {
@@ -807,52 +891,8 @@ async function executePlanViaComposer(
         // Downstream logic should check for empty string to skip context-based projections.
         const effectiveContextId = contextId ?? '';
 
-        // Check if this item is marked as a 'record' entity type
-        if (item.entityType === 'record') {
-            const classification = classificationMap.get(item.tempId);
-            const definitionId = classification?.schemaMatch?.definitionId;
-
-            if (definitionId) {
-                // 1. Construct record data
-                // Combine title into data if needed, or just use field recordings
-                const recordData = item.fieldRecordings.reduce((acc, fr) => {
-                    acc[fr.fieldName] = fr.value;
-                    return acc;
-                }, {} as Record<string, unknown>);
-
-                // Add title as a standard field if not present (convention)
-                if (!recordData.name && !recordData.title) {
-                    recordData.title = item.title;
-                }
-
-                // 2. Create the record
-                const record = await createRecord({
-                    definitionId,
-                    uniqueName: item.title, // Use title as unique name identifier
-                    data: recordData,
-                    classificationNodeId: null, // Optional: could map to a container/project
-                }, userId);
-
-                createdIds[item.tempId] = record.id;
-
-                // 3. Create external source mapping
-                const mondayMeta = (item.metadata as { monday?: { id: string; type: string } })?.monday;
-                if (mondayMeta?.id) {
-                    await createMapping({
-                        provider: 'monday',
-                        externalId: mondayMeta.id,
-                        externalType: mondayMeta.type || 'item',
-                        localEntityType: 'record',
-                        localEntityId: record.id,
-                    });
-                }
-
-                // Skip action creation for records
-                continue;
-            } else {
-                console.warn(`[imports.service] Item "${item.title}" has entityType='record' but no matching definition. Falling back to Action creation.`);
-            }
-        }
+        // NOTE: Record creation logic removed from here as it is handled by Bulk processing above.
+        // Only Actions fall through to here.
 
         const action = await db
             .insertInto('actions')

@@ -261,9 +261,10 @@ export interface MondayBoardDiscovery {
     /** Inferred role based on heuristics */
     inferredRole: MondayBoardRole;
     /** Confidence of inference (0-1) */
-    inferenceConfidence: number;
-    /** Reasons for inference */
-    inferenceReasons: string[];
+    inferenceConfidence?: number; // 0.0 - 1.0
+    inferenceReasons?: string[];  // Human-readable explanations
+    /** Sample values from the board */
+    sampleValues?: string[];
 }
 
 /**
@@ -303,6 +304,7 @@ export const DEFAULT_INFERENCE_HEURISTICS: MondayInferenceHeuristics = {
         done: [/done/i, /complete/i, /finished/i, /archive/i],
         template_group: [/template/i],
         reference_group: [/reference/i, /resource/i, /file/i, /doc/i],
+        archive: [/archive/i, /old/i],
         ignore: [],
     },
     columnNamePatterns: {

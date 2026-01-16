@@ -183,7 +183,7 @@ export class MondayConnector {
             throw new Error(`Board ${boardId} not found`);
         }
 
-        return {
+        const boardSchema: MondayBoardSchema = {
             boardId: board.id,
             boardName: board.name,
             hierarchyType: board.hierarchy_type as 'classic' | 'multi_level',
@@ -194,9 +194,42 @@ export class MondayConnector {
                 title: col.title,
                 type: col.type,
                 settings: col.settings_str ? JSON.parse(col.settings_str) : undefined,
-                sampleValues: [], // Populated during traversal
+                sampleValues: [], // Will be populated below
             })),
         };
+
+        try {
+            // Fetch a small sample of items to populate sampleValues
+            // We only need a few items to get representative samples
+            const sampleItemsPage = await this.fetchItemsPage(boardId, null, 10);
+
+            if (sampleItemsPage.items.length > 0) {
+                for (const col of boardSchema.columns) {
+                    const samples = new Set<string>();
+
+                    for (const item of sampleItemsPage.items) {
+                        if (samples.size >= 3) break;
+
+                        const cv = item.column_values.find(c => c.id === col.id);
+                        if (cv) {
+                            // Extract meaningful text representation
+                            const text = cv.text;
+                            // Skip empty/null values
+                            if (text && text.trim() !== '') {
+                                samples.add(text);
+                            }
+                        }
+                    }
+
+                    col.sampleValues = Array.from(samples);
+                }
+            }
+        } catch (err) {
+            console.warn(`Failed to capture sample values for board ${boardId}:`, err);
+            // Non-critical, continue without samples
+        }
+
+        return boardSchema;
     }
 
     /**

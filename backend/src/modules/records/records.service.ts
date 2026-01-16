@@ -565,14 +565,19 @@ export async function bulkCreateRecords(
   definitionId: string,
   records: BulkCreateRecordInput[],
   userId?: string
-): Promise<BulkCreateResult> {
+): Promise<BulkCreateResult & { records: DataRecord[] }> {
   // Verify definition exists
   const def = await getDefinitionById(definitionId);
   if (!def) {
     throw new NotFoundError('Record definition', definitionId);
   }
 
-  const result: BulkCreateResult = { created: 0, updated: 0, errors: [] };
+  const result: BulkCreateResult & { records: DataRecord[] } = {
+    created: 0,
+    updated: 0,
+    errors: [],
+    records: []
+  };
 
   if (records.length === 0) return result;
 
@@ -590,7 +595,7 @@ export async function bulkCreateRecords(
 
         if (existing) {
           // Update existing record
-          await trx
+          const updated = await trx
             .updateTable('records')
             .set({
               data: JSON.stringify(record.data),
@@ -598,11 +603,14 @@ export async function bulkCreateRecords(
               updated_at: new Date(),
             })
             .where('id', '=', existing.id)
-            .execute();
+            .returningAll()
+            .executeTakeFirstOrThrow();
+
           result.updated++;
+          result.records.push(updated);
         } else {
           // Create new record
-          await trx
+          const created = await trx
             .insertInto('records')
             .values({
               definition_id: definitionId,
@@ -611,8 +619,11 @@ export async function bulkCreateRecords(
               classification_node_id: record.classificationNodeId ?? null,
               created_by: userId ?? null,
             })
-            .execute();
+            .returningAll()
+            .executeTakeFirstOrThrow();
+
           result.created++;
+          result.records.push(created);
         }
       } catch (error) {
         result.errors.push({

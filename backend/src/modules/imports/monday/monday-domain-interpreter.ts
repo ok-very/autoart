@@ -387,7 +387,8 @@ function convertColumnValues(
 
     for (const cv of columnValues) {
         const config = configMap?.get(cv.id);
-        const semanticRole = config?.semanticRole ?? inferSemanticRole(cv);
+        const inference = inferSemanticRole(cv);
+        const semanticRole = config?.semanticRole ?? inference.role;
 
         if (semanticRole === 'ignore') continue;
 
@@ -417,21 +418,48 @@ function convertColumnValues(
     return { fieldRecordings, pendingLinks };
 }
 
-function inferSemanticRole(cv: MondayColumnValue): MondayColumnSemanticRole {
-    // Check type-based mapping first
+function inferSemanticRole(cv: MondayColumnValue): {
+    role: MondayColumnSemanticRole;
+    source: 'type_match' | 'name_pattern' | 'combined' | 'default';
+    confidence: number;
+    reasons: string[];
+} {
+    const reasons: string[] = [];
+    let role: MondayColumnSemanticRole = 'custom';
+    let confidence = 0.3;
+    let source: 'type_match' | 'name_pattern' | 'combined' | 'default' = 'default';
+
+    // Check type mapping
     const typeRole = heuristics.columnTypeToRole[cv.type];
-    if (typeRole) return typeRole;
+    if (typeRole) {
+        role = typeRole;
+        source = 'type_match';
+        confidence = 0.7;
+        reasons.push(`Column type "${cv.type}" typically maps to ${typeRole}`);
+    }
 
     // Check name patterns
-    for (const [role, patterns] of Object.entries(heuristics.columnNamePatterns)) {
-        for (const pattern of patterns) {
-            if (pattern.test(cv.title)) {
-                return role as MondayColumnSemanticRole;
+    for (const [patternRole, patterns] of Object.entries(heuristics.columnNamePatterns)) {
+        if (patterns.some(p => p.test(cv.title))) {
+            if (typeRole === patternRole) {
+                confidence = 0.9;
+                source = 'combined';
+                reasons.push(`Column name "${cv.title}" matches ${patternRole} pattern`);
+            } else if (!typeRole) {
+                role = patternRole as MondayColumnSemanticRole;
+                source = 'name_pattern';
+                confidence = 0.6;
+                reasons.push(`Column name "${cv.title}" matches ${patternRole} pattern`);
             }
+            break;
         }
     }
 
-    return 'custom';
+    if (reasons.length === 0) {
+        reasons.push('No strong match found; defaulted to Custom');
+    }
+
+    return { role, source, confidence, reasons };
 }
 
 function isLinkSemanticRole(role: MondayColumnSemanticRole): boolean {
@@ -571,7 +599,7 @@ export function inferBoardConfig(
     boardId: string,
     boardName: string,
     groups: Array<{ id: string; title: string }>,
-    columns: Array<{ id: string; title: string; type: string }>
+    columns: Array<{ id: string; title: string; type: string; sampleValues?: string[] }>
 ): MondayBoardConfig {
     // Infer board role from name
     let role: MondayBoardRole = 'project_board';
@@ -607,13 +635,17 @@ export function inferBoardConfig(
 
     // Infer column roles
     const columnConfigs: MondayColumnConfig[] = columns.map((c) => {
-        const semanticRole = inferColumnSemanticRole(c.title, c.type);
+        const inference = inferColumnSemanticRole(c.title, c.type);
         return {
             boardId,
             columnId: c.id,
             columnTitle: c.title,
             columnType: c.type,
-            semanticRole,
+            semanticRole: inference.role,
+            inferenceSource: inference.source,
+            inferenceConfidence: inference.confidence,
+            inferenceReasons: inference.reasons,
+            sampleValues: c.sampleValues,
         };
     });
 
@@ -631,19 +663,46 @@ export function inferBoardConfig(
 function inferColumnSemanticRole(
     title: string,
     type: string
-): MondayColumnSemanticRole {
+): {
+    role: MondayColumnSemanticRole;
+    source: 'type_match' | 'name_pattern' | 'combined' | 'default';
+    confidence: number;
+    reasons: string[];
+} {
+    const reasons: string[] = [];
+    let role: MondayColumnSemanticRole = 'custom';
+    let confidence = 0.3;
+    let source: 'type_match' | 'name_pattern' | 'combined' | 'default' = 'default';
+
     // Type-based inference
     const typeRole = heuristics.columnTypeToRole[type];
-    if (typeRole) return typeRole;
+    if (typeRole) {
+        role = typeRole;
+        source = 'type_match';
+        confidence = 0.7;
+        reasons.push(`Column type "${type}" typically maps to ${typeRole}`);
+    }
 
     // Name-based inference
-    for (const [role, patterns] of Object.entries(heuristics.columnNamePatterns)) {
-        for (const pattern of patterns) {
-            if (pattern.test(title)) {
-                return role as MondayColumnSemanticRole;
+    for (const [patternRole, patterns] of Object.entries(heuristics.columnNamePatterns)) {
+        if (patterns.some(p => p.test(title))) {
+            if (typeRole === patternRole) {
+                confidence = 0.9;
+                source = 'combined';
+                reasons.push(`Column name "${title}" matches ${patternRole} pattern`);
+            } else if (!typeRole) {
+                role = patternRole as MondayColumnSemanticRole;
+                source = 'name_pattern';
+                confidence = 0.6;
+                reasons.push(`Column name "${title}" matches ${patternRole} pattern`);
             }
+            break;
         }
     }
 
-    return 'custom';
+    if (reasons.length === 0) {
+        reasons.push('No strong match found; defaulted to Custom');
+    }
+
+    return { role, source, confidence, reasons };
 }
