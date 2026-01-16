@@ -16,6 +16,7 @@ export const SearchResultSchema = z.object({
     key: z.string(),
     label: z.string(),
   })).optional(),
+  matchedAlias: z.string().optional(),
 });
 
 export type SearchResult = z.infer<typeof SearchResultSchema>;

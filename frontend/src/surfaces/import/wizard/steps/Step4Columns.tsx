@@ -12,6 +12,7 @@ import { useGenerateImportPlan, type ImportSession, type ImportPlan } from '../.
 import { MondayColumnSemanticRole } from '../../../../api/types/monday';
 import { ImportPreviewDrawer } from '../components/ImportPreviewDrawer';
 import { ROLE_METADATA, SEMANTIC_ROLE_OPTIONS } from '../constants/monday-roles';
+import { DebouncedInput } from '../../../../ui/atoms/DebouncedInput';
 
 interface StepProps {
     onNext: () => void;
@@ -306,6 +307,16 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-2">
+                                                    <DebouncedInput
+                                                        value={column.localFieldKey || ''}
+                                                        onCommit={(val) => {
+                                                            if (board.id && board.workspaceId) {
+                                                                handleColumnUpdate(board.id, board.workspaceId, column.columnId, { localFieldKey: val });
+                                                            }
+                                                        }}
+                                                        placeholder={column.columnTitle.toLowerCase().replace(/\s+/g, '_')}
+                                                        size="sm"
+                                                    />
                                                 </td>
                                                 <td className="px-4 py-2">
                                                     {warning ? (
