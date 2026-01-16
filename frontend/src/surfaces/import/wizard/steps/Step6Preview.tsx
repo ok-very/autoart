@@ -24,6 +24,8 @@ type ProjectionType = 'hierarchy-projection' | 'stage-projection' | 'table-proje
 export function Step6Preview({ onNext, onBack, session, plan, onSelectItem, onSessionCreated }: StepProps) {
     const [projection, setProjection] = useState<ProjectionType>('hierarchy-projection');
     const { setSelection, setInspectorWidth } = useUIStore();
+    // Reactively track selection
+    const selectedRecordId = useUIStore(state => state.selection?.id) || null;
 
     // Reset layout on mount
     useEffect(() => {
@@ -108,7 +110,7 @@ export function Step6Preview({ onNext, onBack, session, plan, onSelectItem, onSe
                         <ImportPreview
                             plan={plan}
                             projectionId={projection}
-                            selectedRecordId={useUIStore.getState().selection?.id || null}
+                            selectedRecordId={selectedRecordId}
                             onRecordSelect={handleSelect}
                         />
                     </div>

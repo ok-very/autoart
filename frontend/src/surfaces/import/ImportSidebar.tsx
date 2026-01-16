@@ -18,16 +18,13 @@ import {
     Loader2,
     Check,
     RefreshCw,
-    Search,
-    ChevronDown,
 } from 'lucide-react';
-import { useRef, useCallback, useState, useMemo } from 'react';
+import { useRef, useCallback, useState } from 'react';
 
-import { useConnections, useMondayBoards } from '../../api/connections';
+import { useConnections } from '../../api/connections';
 import {
     useCreateImportSession,
     useGenerateImportPlan,
-    useCreateConnectorSession,
     type ImportSession,
     type ImportPlan,
 } from '../../api/hooks/imports';
@@ -111,7 +108,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
     // Mutations
     const createSession = useCreateImportSession();
     const generatePlan = useGenerateImportPlan();
-    const createConnectorSession = useCreateConnectorSession();
+
 
     // Handle file upload
     const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -149,23 +146,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
         }
     }, [rawData, parserName, createSession, generatePlan, onSessionCreated]);
 
-    // Handle Monday board selection - direct import (no drawer)
-    const handleBoardSelect = useCallback(async (boardId: string) => {
-        setIsLoading(true);
-        setError(null);
 
-        try {
-            const result = await createConnectorSession.mutateAsync({
-                connectorType: 'monday',
-                boardId,
-            });
-            onSessionCreated(result.session, result.plan);
-        } catch (err) {
-            setError((err as Error).message || 'Failed to import from Monday');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [createConnectorSession, onSessionCreated]);
 
     // Handle reset
     const handleReset = useCallback(() => {
@@ -229,7 +210,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                     label="Monday.com"
                     isActive={sourceType === 'monday'}
                     isConnected={isMondayConnected}
-                    isConnected={isMondayConnected}
+
                     isDisabled={false}
                     onClick={() => onSourceChange('monday')}
                 />
@@ -372,148 +353,6 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
 // MONDAY BOARD LIST (inline in sidebar)
 // ============================================================================
 
-interface MondayBoardListProps {
-    onBoardSelect: (boardId: string) => void;
-    isLoading: boolean;
-    error: string | null;
-    activeSession: ImportSession | null;
-}
 
-function MondayBoardList({ onBoardSelect, isLoading, error, activeSession }: MondayBoardListProps) {
-    const { data: boards, isLoading: boardsLoading } = useMondayBoards();
-    const [searchQuery, setSearchQuery] = useState('');
-
-    // DEBUG: Log raw API response
-    // console.log('[MondayBoardList] Raw boards from API:', boards?.length, boards?.map(b => ({ id: b.id, name: b.name, items: b.itemCount })));
-
-    // Filter boards by search
-    const filteredBoards = useMemo(() => {
-        if (!boards) return [];
-        if (!searchQuery.trim()) return boards;
-        const q = searchQuery.toLowerCase();
-        return boards.filter(
-            (b) => b.name.toLowerCase().includes(q) || b.workspace.toLowerCase().includes(q)
-        );
-    }, [boards, searchQuery]);
-
-    // DEBUG: Check for duplicate names
-    const nameCount = new Map<string, number>();
-    for (const b of filteredBoards) {
-        nameCount.set(b.name, (nameCount.get(b.name) ?? 0) + 1);
-    }
-    const duplicateNames = Array.from(nameCount.entries()).filter(([_, count]) => count > 1);
-    if (duplicateNames.length > 0) {
-        // console.warn('[MondayBoardList] DUPLICATE BOARD NAMES:', duplicateNames);
-    }
-
-    // Group by workspace
-    const boardsByWorkspace = useMemo(() => {
-        const grouped = new Map<string, typeof boards>();
-        for (const board of filteredBoards) {
-            const existing = grouped.get(board.workspace) ?? [];
-            grouped.set(board.workspace, [...existing, board]);
-        }
-        return grouped;
-    }, [filteredBoards]);
-
-    if (boardsLoading) {
-        return (
-            <div className="flex-1 flex items-center justify-center">
-                <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
-            </div>
-        );
-    }
-
-    return (
-        <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Active Session Header (when session exists) */}
-            {activeSession && (
-                <div className="p-3 border-b border-slate-200 bg-amber-50/50">
-                    <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-amber-600" />
-                        <div className="flex-1 min-w-0">
-                            <div className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">
-                                monday:connector
-                            </div>
-                            <div className="text-sm font-medium text-slate-700 truncate">
-                                {activeSession.parser_name}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Search */}
-            <div className="p-3 border-b border-slate-100">
-                <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search boards..."
-                        className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-amber-500"
-                    />
-                </div>
-            </div>
-
-            {/* Error */}
-            {error && (
-                <div className="mx-3 mt-2 px-2 py-1.5 bg-red-50 text-red-700 text-xs rounded flex items-center gap-1.5">
-                    <AlertCircle className="w-3 h-3" />
-                    {error}
-                </div>
-            )}
-
-            {/* Loading overlay when importing */}
-            {isLoading && (
-                <div className="mx-3 mt-2 px-2 py-1.5 bg-amber-50 text-amber-700 text-xs rounded flex items-center gap-1.5">
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    Importing...
-                </div>
-            )}
-
-            {/* Board list */}
-            <div className="flex-1 overflow-auto p-2">
-                {filteredBoards.length === 0 ? (
-                    <div className="text-center py-4 text-slate-400 text-sm">
-                        No boards found
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {Array.from(boardsByWorkspace.entries()).map(([workspace, workspaceBoards]) => (
-                            <div key={workspace}>
-                                <div className="flex items-center gap-1 px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                                    <ChevronDown className="w-3 h-3" />
-                                    {workspace}
-                                </div>
-                                <div className="space-y-0.5">
-                                    {workspaceBoards?.map((board) => (
-                                        <button
-                                            key={board.id}
-                                            onClick={() => onBoardSelect(board.id)}
-                                            disabled={isLoading}
-                                            className="w-full flex items-center gap-2 px-2 py-1.5 text-left rounded hover:bg-amber-50 transition-colors disabled:opacity-50"
-                                        >
-                                            <Calendar className="w-4 h-4 text-amber-500 shrink-0" />
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-sm font-medium text-slate-700 truncate">
-                                                    {board.name}
-                                                </div>
-                                                <div className="text-[10px] text-slate-400">
-                                                    {board.itemCount} items
-                                                </div>
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
 
 export default ImportSidebar;

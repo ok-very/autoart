@@ -34,7 +34,7 @@ export function useUpdateMondayBoardConfig() {
                 update
             );
         },
-        onSuccess: (data, variables) => {
+        onSuccess: (_data, variables) => {
             // Invalidate batch query
             queryClient.invalidateQueries({ queryKey: ['monday', 'boards', 'configs'] });
 
@@ -62,7 +62,7 @@ export function useUpdateMondayGroupConfigs() {
                 { groups }
             );
         },
-        onSuccess: (data, variables) => {
+        onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['monday', 'boards', 'configs'] });
             queryClient.invalidateQueries({ queryKey: ['monday', 'workspaces', variables.workspaceId] });
         },
@@ -87,7 +87,7 @@ export function useUpdateMondayColumnConfigs() {
                 { columns }
             );
         },
-        onSuccess: (data, variables) => {
+        onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['monday', 'boards', 'configs'] });
             queryClient.invalidateQueries({ queryKey: ['monday', 'workspaces', variables.workspaceId] });
         },

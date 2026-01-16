@@ -179,7 +179,23 @@ export async function listBoardConfigsByExternalIds(
         .selectFrom('monday_board_configs')
         .selectAll()
         .where('board_id', 'in', boardIds)
+        .where('board_id', 'in', boardIds)
         .execute();
+}
+
+/**
+ * Get board config by external board ID (Monday ID).
+ */
+export async function getBoardConfigByExternalBoardId(
+    boardId: string
+): Promise<MondayBoardConfig | null> {
+    const result = await db
+        .selectFrom('monday_board_configs')
+        .selectAll()
+        .where('board_id', '=', boardId)
+        .executeTakeFirst();
+
+    return result ?? null;
 }
 
 /**

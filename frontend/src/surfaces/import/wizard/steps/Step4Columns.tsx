@@ -98,6 +98,9 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
     const [glossaryOpen, setGlossaryOpen] = useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
+    // Local state for alias inputs to avoid network spam
+    // const [localAliases, setLocalAliases] = useState<Record<string, string>>({});
+
     // Extract board IDs
     const boardIds = useMemo(() => {
         if (!session?.parser_config) return [];
@@ -303,17 +306,6 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-2">
-                                                    <input
-                                                        type="text"
-                                                        className="w-full text-sm px-2 py-1 rounded border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-                                                        placeholder={column.columnTitle}
-                                                        value={column.localFieldKey || ''}
-                                                        onChange={(e) => {
-                                                            if (board.id && board.workspaceId) {
-                                                                handleColumnUpdate(board.id, board.workspaceId, column.columnId, { localFieldKey: e.target.value || undefined });
-                                                            }
-                                                        }}
-                                                    />
                                                 </td>
                                                 <td className="px-4 py-2">
                                                     {warning ? (

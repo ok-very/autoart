@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { Stack } from '../../../ui/atoms/Stack';
 import { Card } from '../../../ui/atoms/Card';
 import { Text } from '../../../ui/atoms/Text';
-import { Button } from '../../../ui/atoms/Button';
+
 import { ProgressBar } from '../../../ui/atoms/ProgressBar';
 import { Inline } from '../../../ui/atoms/Inline';
 
@@ -40,7 +40,6 @@ export function MondayImportWizardView({
     session,
     plan,
     onSelectItem,
-    onReset,
     onSessionCreated,
 }: MondayImportWizardViewProps) {
     const [currentStep, setCurrentStep] = useState(1);

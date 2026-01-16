@@ -1,13 +1,11 @@
 import { useMemo } from 'react';
-import { X, ArrowRight, Table, LayoutTemplate, FileText } from 'lucide-react';
-import { DataFieldWidget, DataFieldKind } from '../../../../../ui/molecules/DataFieldWidget';
-import { Badge } from '../../../../../ui/atoms/Badge';
-import { Button } from '../../../../../ui/atoms/Button';
-import { Card } from '../../../../../ui/atoms/Card';
-import { Stack } from '../../../../../ui/atoms/Stack';
-import { Text } from '../../../../../ui/atoms/Text';
-import { ValueDisplay } from '../../../../../ui/atoms/ValueDisplay';
-import { MondayColumnConfig, MondayColumnSemanticRole } from '../../../../../api/types/monday';
+import { X, ArrowRight, LayoutTemplate } from 'lucide-react';
+import { DataFieldWidget, DataFieldKind } from '../../../../ui/molecules/DataFieldWidget';
+import { Button } from '../../../../ui/atoms/Button';
+import { Card } from '../../../../ui/atoms/Card';
+import { Stack } from '../../../../ui/atoms/Stack';
+import { Text } from '../../../../ui/atoms/Text';
+import { MondayColumnConfig, MondayColumnSemanticRole } from '../../../../api/types/monday';
 
 interface ImportPreviewDrawerProps {
     isOpen: boolean;
@@ -26,12 +24,12 @@ export function ImportPreviewDrawer({
     itemTitle = "Sample Item Name",
     boardName,
 }: ImportPreviewDrawerProps) {
-    if (!isOpen) return null;
-
     // Filter relevant mapped columns
     const mappedColumns = useMemo(() => {
         return columns.filter(c => c.semanticRole !== 'ignore' && c.semanticRole !== 'custom');
     }, [columns]);
+
+    if (!isOpen) return null;
 
     // Helper to determine widget kind from semantic role
     const getFieldKind = (role: MondayColumnSemanticRole): DataFieldKind => {
@@ -45,15 +43,6 @@ export function ImportPreviewDrawer({
             case 'priority': return 'status';
             default: return 'text';
         }
-    };
-
-    // Helper to get formatted value for widget
-    const getFormattedValue = (column: MondayColumnConfig, rawValue: any) => {
-        if (!rawValue) return null;
-
-        // Simple transformations for preview purposes
-        // In reality, this would need complex parsing similar to backend
-        return rawValue;
     };
 
     return (
@@ -93,7 +82,7 @@ export function ImportPreviewDrawer({
                         <Card className="overflow-hidden border-slate-200 shadow-sm">
                             {/* Card Header (Title) */}
                             <div className="px-4 py-3 border-b border-slate-100 bg-white">
-                                <Text size="base" weight="medium" className="text-slate-800">
+                                <Text size="md" weight="medium" className="text-slate-800">
                                     {itemTitle}
                                 </Text>
                             </div>
@@ -151,7 +140,7 @@ export function ImportPreviewDrawer({
 
             {/* Footer */}
             <div className="p-4 border-t border-slate-100 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                <Button fullWidth onClick={onClose}>
+                <Button className="w-full" onClick={onClose}>
                     Close Preview
                 </Button>
             </div>

@@ -13,7 +13,7 @@ import {
     useRef,
     useEffect,
     useCallback,
-    useLayoutEffect,
+
     type ReactNode,
     type ElementType,
 } from 'react';
@@ -91,19 +91,10 @@ function MenuDropdown({ children, className }: MenuDropdownProps) {
     const { isOpen, setIsOpen, targetRef } = useMenuContext();
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [position, setPosition] = useState({ top: 0, left: 0 });
-    const [isAnimating, setIsAnimating] = useState(false);
+
 
     // Trigger animation after mount
-    useLayoutEffect(() => {
-        if (isOpen) {
-            // Force reflow, then enable animation
-            requestAnimationFrame(() => {
-                setIsAnimating(true);
-            });
-        } else {
-            setIsAnimating(false);
-        }
-    }, [isOpen]);
+
 
     useEffect(() => {
         if (isOpen && targetRef.current) {

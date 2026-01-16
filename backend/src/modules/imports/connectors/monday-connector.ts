@@ -24,6 +24,12 @@ export interface MondayConnectorConfig {
     includeArchived?: boolean;
 }
 
+export type MondayWebhookEventType =
+    | 'create_item'
+    | 'change_column_value'
+    | 'create_subitem'
+    | 'change_subitem_column_value';
+
 export interface MondayColumnValue {
     id: string;
     title: string;
@@ -72,6 +78,24 @@ export interface MondayDataNode {
 // ============================================================================
 // GRAPHQL QUERIES
 // ============================================================================
+
+const CREATE_WEBHOOK_MUTATION = `
+  mutation CreateWebhook($boardId: Int!, $url: String!, $event: WebhookEventType!, $config: JSON) {
+    create_webhook(board_id: $boardId, url: $url, event: $event, config: $config) {
+      id
+      board_id
+    }
+  }
+`;
+
+const DELETE_WEBHOOK_MUTATION = `
+  mutation DeleteWebhook($id: ID!) {
+    delete_webhook(id: $id) {
+      id
+      board_id
+    }
+  }
+`;
 
 const BOARD_SCHEMA_QUERY = `
   query DiscoverSchema($boardId: ID!) {
@@ -377,6 +401,56 @@ export class MondayConnector {
                 }
             }
         } while (cursor);
+    }
+
+    // ============================================================================
+    // MUTATIONS
+    // ============================================================================
+
+    /**
+     * Create a webhook on a board.
+     */
+    async createWebhook(
+        boardId: string,
+        url: string,
+        event: MondayWebhookEventType,
+        config?: Record<string, unknown>
+    ): Promise<number> {
+        interface MutationResponse {
+            create_webhook: {
+                id: string;
+                board_id: number;
+            };
+        }
+
+        const response = await this.client.mutate<MutationResponse>(CREATE_WEBHOOK_MUTATION, {
+            boardId: parseInt(boardId, 10),
+            url,
+            event,
+            config,
+        });
+
+        if (!response.create_webhook?.id) {
+            throw new Error('Failed to create webhook: No ID returned');
+        }
+
+        return parseInt(response.create_webhook.id, 10);
+    }
+
+    /**
+     * Delete a webhook by ID.
+     */
+    async deleteWebhook(webhookId: number): Promise<void> {
+        interface MutationResponse {
+            delete_webhook: {
+                id: string;
+                board_id: number;
+            };
+        }
+
+        await this.client.mutate<MutationResponse>(DELETE_WEBHOOK_MUTATION, {
+            id: webhookId,
+        });
     }
 
     // ============================================================================

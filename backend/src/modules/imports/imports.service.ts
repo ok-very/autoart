@@ -753,7 +753,7 @@ async function executePlanViaComposer(
     // Execute bulk creation per definition
     for (const [defId, items] of recordsByDef) {
         const bulkInput = items.map(item => {
-            const recordData = item.fieldRecordings.reduce((acc, fr) => {
+            const recordData = (item.fieldRecordings || []).reduce((acc, fr) => {
                 acc[fr.fieldName] = fr.value;
                 return acc;
             }, {} as Record<string, unknown>);

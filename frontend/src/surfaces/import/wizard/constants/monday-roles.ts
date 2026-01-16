@@ -1,4 +1,4 @@
-import { MondayColumnSemanticRole } from '../../../../../api/types/monday';
+import { MondayColumnSemanticRole } from '../../../../api/types/monday';
 
 // Role metadata with descriptions and preferred types
 export const ROLE_METADATA: Record<MondayColumnSemanticRole, {
