@@ -11,6 +11,7 @@ export type MondayGroupRole =
     | 'subprocess'
     | 'backlog'
     | 'done'
+    | 'archive'
     | 'template_group'
     | 'reference_group'
     | 'ignore';

@@ -263,9 +263,9 @@ function createContainerFromGroup(
         subprocess: 'subprocess',
         backlog: 'subprocess',
         done: 'subprocess',
-        done: 'subprocess',
+        archive: 'subprocess',
         template_group: 'subprocess',
-        reference_group: null, // References are flattened (items attached to board/project)
+        reference_group: null, // Records are flattened (items attached to board/project)
         ignore: null,
     };
 

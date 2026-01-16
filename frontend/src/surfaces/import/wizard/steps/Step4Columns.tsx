@@ -109,15 +109,15 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
     }
 
     return (
-        <Stack className="h-full" gap="lg">
-            <Stack gap="sm">
+        <div className="flex flex-col h-full">
+            <Stack gap="sm" className="shrink-0">
                 <Text size="lg" weight="bold">Step 4: Map Columns</Text>
-                <Text color="dimmed">
+                <Text color="muted">
                     Map Monday columns to AutoArt fields. Ensure critical fields like Title, Status, and Due Date are mapped correctly.
                 </Text>
             </Stack>
 
-            <div className="flex-1 overflow-auto space-y-6">
+            <div className="flex-1 overflow-auto space-y-6 mt-4 min-h-0">
                 {boardConfigs.map((board) => (
                     <div key={board.boardId} className="border border-slate-200 rounded-lg bg-white overflow-hidden">
                         <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
@@ -164,7 +164,7 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
                 ))}
             </div>
 
-            <Inline justify="between" className="pt-4 border-t border-slate-200">
+            <Inline justify="between" className="pt-4 mt-4 border-t border-slate-200 shrink-0">
                 <Button onClick={onBack} variant="secondary" disabled={isRefreshing}>
                     Back
                 </Button>
@@ -176,6 +176,6 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
                     {isRefreshing ? 'Regenerating Plan...' : 'Next: Templates'}
                 </Button>
             </Inline>
-        </Stack>
+        </div>
     );
 }

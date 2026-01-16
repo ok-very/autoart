@@ -50,7 +50,7 @@ export function Step7Execute({ onBack, session, plan }: StepProps) {
                     <CheckCircle className="w-10 h-10 text-green-600" />
                 </div>
                 <Text size="xl" weight="bold">Import Complete!</Text>
-                <Text color="dimmed">
+                <Text color="muted">
                     Your Monday.com data has been successfully imported.
                 </Text>
                 <div className="mt-8">
@@ -66,7 +66,7 @@ export function Step7Execute({ onBack, session, plan }: StepProps) {
         <Stack className="h-full max-w-2xl mx-auto" gap="lg">
             <Stack gap="sm" className="text-center py-6">
                 <Text size="xl" weight="bold">Ready to Import?</Text>
-                <Text color="dimmed">
+                <Text color="muted">
                     You are about to import {plan.items.length} items from {session.parser_name}.
                 </Text>
             </Stack>
@@ -100,7 +100,7 @@ export function Step7Execute({ onBack, session, plan }: StepProps) {
                 <Stack gap="sm" className="py-8">
                     <Inline justify="between">
                         <Text weight="medium">Importing...</Text>
-                        <Text color="dimmed">Please wait</Text>
+                        <Text color="muted">Please wait</Text>
                     </Inline>
                     <ProgressBar
                         segments={[{

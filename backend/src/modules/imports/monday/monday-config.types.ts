@@ -36,7 +36,8 @@ export type MondayGroupRole =
     | 'stage'           // Pipeline stage (ordered, with stage kind)
     | 'subprocess'      // Subprocess container
     | 'backlog'         // Backlog/to-triage items
-    | 'done'            // Completed/archived items
+    | 'done'            // Completed items
+    | 'archive'         // Archived/historical items
     | 'template_group'  // Group of template items
     | 'reference_group' // Group of reference items (records)
     | 'ignore';         // Excluded from import

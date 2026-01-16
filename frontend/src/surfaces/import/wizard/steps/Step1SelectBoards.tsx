@@ -117,7 +117,7 @@ export function Step1SelectBoards({ onNext, session, onSessionCreated }: StepPro
         return (
             <Stack align="center" justify="center" className="h-full">
                 <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
-                <Text color="dimmed">Loading boards...</Text>
+                <Text color="muted">Loading boards...</Text>
             </Stack>
         );
     }
@@ -141,7 +141,7 @@ export function Step1SelectBoards({ onNext, session, onSessionCreated }: StepPro
                 </div>
                 <div className="text-center">
                     <Text size="lg" weight="bold">Monday.com Not Connected</Text>
-                    <Text color="dimmed">Connect your account in Settings to continue.</Text>
+                    <Text color="muted">Connect your account in Settings to continue.</Text>
                 </div>
 
                 {/* We could link to settings or show nothing */}
@@ -154,7 +154,7 @@ export function Step1SelectBoards({ onNext, session, onSessionCreated }: StepPro
         <Stack className="h-full" gap="md">
             <Stack gap="sm">
                 <Text size="lg" weight="bold">Step 1: Select a Monday Board</Text>
-                <Text color="dimmed">Choose a board to import into AutoArt.</Text>
+                <Text color="muted">Choose a board to import into AutoArt.</Text>
             </Stack>
 
             {/* Search */}
@@ -173,7 +173,7 @@ export function Step1SelectBoards({ onNext, session, onSessionCreated }: StepPro
             <div className="flex-1 overflow-auto border rounded-lg bg-white relative">
                 {filteredBoards.length === 0 ? (
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <Text color="dimmed">No boards found</Text>
+                        <Text color="muted">No boards found</Text>
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-100">

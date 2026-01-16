@@ -91,15 +91,15 @@ export function Step5Templates({ onNext, onBack, session, onSessionCreated }: St
     ];
 
     return (
-        <Stack className="h-full" gap="lg">
-            <Stack gap="sm">
+        <div className="flex flex-col h-full">
+            <Stack gap="sm" className="shrink-0">
                 <Text size="lg" weight="bold">Step 5: Templates & Links</Text>
-                <Text color="dimmed">
+                <Text color="muted">
                     Configure advanced settings for templates and project linking.
                 </Text>
             </Stack>
 
-            <div className="flex-1 overflow-auto border border-slate-200 rounded-lg bg-white">
+            <div className="flex-1 overflow-auto border border-slate-200 rounded-lg bg-white mt-4 min-h-0">
                 <table className="w-full text-left text-sm">
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
                         <tr>
@@ -164,7 +164,7 @@ export function Step5Templates({ onNext, onBack, session, onSessionCreated }: St
                                             />
                                         )}
                                         {!showSettings && (
-                                            <Text color="dimmed" size="xs">No settings available for this role</Text>
+                                            <Text color="muted" size="xs">No settings available for this role</Text>
                                         )}
                                     </td>
                                 </tr>
@@ -174,7 +174,7 @@ export function Step5Templates({ onNext, onBack, session, onSessionCreated }: St
                 </table>
             </div>
 
-            <Inline justify="between" className="pt-4 border-t border-slate-200">
+            <Inline justify="between" className="pt-4 mt-4 border-t border-slate-200 shrink-0">
                 <Button onClick={onBack} variant="secondary" disabled={isRefreshing}>
                     Back
                 </Button>
@@ -186,6 +186,6 @@ export function Step5Templates({ onNext, onBack, session, onSessionCreated }: St
                     {isRefreshing ? 'Regenerating Plan...' : 'Next: Preview'}
                 </Button>
             </Inline>
-        </Stack>
+        </div>
     );
 }

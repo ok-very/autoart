@@ -41,7 +41,7 @@ export function Step6Preview({ onNext, onBack, session, plan, onSelectItem }: St
             <Inline justify="between" align="center">
                 <Stack gap="xs">
                     <Text size="lg" weight="bold">Step 6: Preview Import</Text>
-                    <Text color="dimmed">
+                    <Text color="muted">
                         Review the interpreted plan. This is how your data will be imported.
                     </Text>
                 </Stack>

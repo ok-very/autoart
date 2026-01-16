@@ -95,15 +95,15 @@ export function Step2BoardRoles({ onNext, onBack, session, onSessionCreated }: S
     }
 
     return (
-        <Stack className="h-full" gap="lg">
-            <Stack gap="sm">
+        <div className="flex flex-col h-full">
+            <Stack gap="sm" className="shrink-0">
                 <Text size="lg" weight="bold">Step 2: Configure Board Roles</Text>
-                <Text color="dimmed">
+                <Text color="muted">
                     Define how each board should be interpreted. This determines the entity types created (Projects vs Tasks vs Templates).
                 </Text>
             </Stack>
 
-            <div className="flex-1 overflow-auto border border-slate-200 rounded-lg bg-white">
+            <div className="flex-1 overflow-auto border border-slate-200 rounded-lg bg-white mt-4 min-h-0">
                 <table className="w-full text-left text-sm">
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
                         <tr>
@@ -164,7 +164,7 @@ export function Step2BoardRoles({ onNext, onBack, session, onSessionCreated }: S
                 </table>
             </div>
 
-            <Inline justify="between" className="pt-4 border-t border-slate-200">
+            <Inline justify="between" className="pt-4 mt-4 border-t border-slate-200 shrink-0">
                 <Button onClick={onBack} variant="secondary" disabled={isRefreshing}>
                     Back
                 </Button>
@@ -176,6 +176,6 @@ export function Step2BoardRoles({ onNext, onBack, session, onSessionCreated }: S
                     {isRefreshing ? 'Regenerating Plan...' : 'Next: Group Roles'}
                 </Button>
             </Inline>
-        </Stack>
+        </div>
     );
 }

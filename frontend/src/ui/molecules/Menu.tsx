@@ -13,6 +13,7 @@ import {
     useRef,
     useEffect,
     useCallback,
+    useLayoutEffect,
     type ReactNode,
     type ElementType,
 } from 'react';
@@ -90,6 +91,19 @@ function MenuDropdown({ children, className }: MenuDropdownProps) {
     const { isOpen, setIsOpen, targetRef } = useMenuContext();
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [position, setPosition] = useState({ top: 0, left: 0 });
+    const [isAnimating, setIsAnimating] = useState(false);
+
+    // Trigger animation after mount
+    useLayoutEffect(() => {
+        if (isOpen) {
+            // Force reflow, then enable animation
+            requestAnimationFrame(() => {
+                setIsAnimating(true);
+            });
+        } else {
+            setIsAnimating(false);
+        }
+    }, [isOpen]);
 
     useEffect(() => {
         if (isOpen && targetRef.current) {
@@ -134,7 +148,10 @@ function MenuDropdown({ children, className }: MenuDropdownProps) {
             ref={dropdownRef}
             className={clsx(
                 'absolute z-50 min-w-[160px] py-1 bg-white rounded-lg border border-slate-200 shadow-lg',
-                'animate-in fade-in-0 zoom-in-95 duration-100',
+                'transition-[opacity,transform] duration-100 ease-out',
+                isAnimating
+                    ? 'opacity-100 translate-y-0'
+                    : 'opacity-0 -translate-y-1',
                 className
             )}
             style={{ top: position.top, left: position.left }}

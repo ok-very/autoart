@@ -68,7 +68,7 @@ export function MondayImportWizardView({
                 <Stack gap="sm">
                     <Inline align="center" justify="between">
                         <Text size="lg" weight="bold">Monday.com Import Wizard</Text>
-                        <Text size="sm" color="dimmed">Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1].title}</Text>
+                        <Text size="sm" color="muted">Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1].title}</Text>
                     </Inline>
                     <ProgressBar value={progress} size="sm" />
                 </Stack>
