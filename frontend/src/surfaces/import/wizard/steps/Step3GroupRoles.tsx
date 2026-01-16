@@ -128,12 +128,12 @@ export function Step3GroupRoles({ onNext, onBack, session, onSessionCreated }: S
                         </div>
 
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
+                            <table className="w-full text-left text-sm table-fixed">
                                 <thead className="text-slate-500 font-medium border-b border-slate-100">
                                     <tr>
-                                        <th className="px-4 py-2 w-1/3">Group Name</th>
-                                        <th className="px-4 py-2 w-1/3">Role</th>
-                                        <th className="px-4 py-2 w-1/3">Options</th>
+                                        <th className="px-4 py-2 w-[30%]">Group Name</th>
+                                        <th className="px-4 py-2 w-[30%]">Role</th>
+                                        <th className="px-4 py-2 w-[40%]">Options</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">

@@ -32,7 +32,7 @@ import { interpretMondayData, inferBoardConfig } from './monday/monday-domain-in
 import type { MondayWorkspaceConfig } from './monday/monday-config.types.js';
 import * as mondayWorkspaceService from './monday/monday-workspace.service.js';
 import { ensureFactKindDefinition } from '../records/fact-kinds.service.js';
-import { listDefinitions } from '../records/records.service.js';
+import { listDefinitions, createRecord } from '../records/records.service.js';
 
 
 // Connector imports
@@ -806,6 +806,53 @@ async function executePlanViaComposer(
         // Note: Empty string is intentional - null would violate FK constraints and emitEvent types.
         // Downstream logic should check for empty string to skip context-based projections.
         const effectiveContextId = contextId ?? '';
+
+        // Check if this item is marked as a 'record' entity type
+        if (item.entityType === 'record') {
+            const classification = classificationMap.get(item.tempId);
+            const definitionId = classification?.schemaMatch?.definitionId;
+
+            if (definitionId) {
+                // 1. Construct record data
+                // Combine title into data if needed, or just use field recordings
+                const recordData = item.fieldRecordings.reduce((acc, fr) => {
+                    acc[fr.fieldName] = fr.value;
+                    return acc;
+                }, {} as Record<string, unknown>);
+
+                // Add title as a standard field if not present (convention)
+                if (!recordData.name && !recordData.title) {
+                    recordData.title = item.title;
+                }
+
+                // 2. Create the record
+                const record = await createRecord({
+                    definitionId,
+                    uniqueName: item.title, // Use title as unique name identifier
+                    data: recordData,
+                    classificationNodeId: null, // Optional: could map to a container/project
+                }, userId);
+
+                createdIds[item.tempId] = record.id;
+
+                // 3. Create external source mapping
+                const mondayMeta = (item.metadata as { monday?: { id: string; type: string } })?.monday;
+                if (mondayMeta?.id) {
+                    await createMapping({
+                        provider: 'monday',
+                        externalId: mondayMeta.id,
+                        externalType: mondayMeta.type || 'item',
+                        localEntityType: 'record',
+                        localEntityId: record.id,
+                    });
+                }
+
+                // Skip action creation for records
+                continue;
+            } else {
+                console.warn(`[imports.service] Item "${item.title}" has entityType='record' but no matching definition. Falling back to Action creation.`);
+            }
+        }
 
         const action = await db
             .insertInto('actions')

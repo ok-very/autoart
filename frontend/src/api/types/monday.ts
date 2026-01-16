@@ -17,22 +17,31 @@ export type MondayGroupRole =
     | 'ignore';
 
 export type MondayColumnSemanticRole =
+    // Core action fields
     | 'title'
     | 'description'
     | 'status'
-    | 'dueDate'
-    | 'startDate'
+    | 'due_date'
     | 'assignee'
-    | 'priority'
     | 'tags'
-    | 'effort'
-    | 'cost'
+    | 'priority'
+    | 'estimate'
+    | 'identifier'
+    // Data/fact fields
+    | 'fact'
+    | 'note'
+    | 'metric'
+    // Template fields
+    | 'template_name'
+    | 'template_key'
+    // Linking fields
+    | 'link_to_template'
     | 'link_to_project'
     | 'link_to_subprocess'
     | 'link_to_action'
     | 'link_to_record'
-    | 'link_to_template'
-    | 'dependency' // implicit link to same type
+    | 'dependency'
+    // Other
     | 'custom'
     | 'ignore';
 
