@@ -346,7 +346,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
         return reply.send({
             connected: sessions.length > 0,
             instances: sessions.map(s => ({
-                sessionId: s.sessionId.substring(0, 8) + '...', // Masked for security
+                displayId: s.displayId,
                 instanceName: s.instanceName,
                 connectedAt: s.connectedAt.toISOString(),
                 lastSeen: s.lastSeen.toISOString(),
@@ -356,18 +356,34 @@ export async function connectionsRoutes(app: FastifyInstance) {
 
     /**
      * Disconnect AutoHelper instance
-     * Requires authentication
+     * Requires authentication and verifies session ownership
      */
-    app.delete('/connections/autohelper/:sessionId', {
+    app.delete('/connections/autohelper/:displayId', {
         preHandler: app.authenticate
     }, async (request, reply) => {
-        const { sessionId } = request.params as { sessionId: string };
+        const userId = (request.user as { userId?: string })?.userId;
+        if (!userId) {
+            return reply.status(401).send({ error: 'Authentication required' });
+        }
 
-        const success = connectionsService.disconnectAutoHelper(sessionId);
+        const { displayId } = request.params as { displayId: string };
+
+        // Look up session by displayId and verify ownership
+        const session = connectionsService.getSessionByDisplayId(userId, displayId);
+
+        if (!session) {
+            return reply.status(404).send({
+                error: 'Session not found',
+                message: 'Session not found or you do not have permission to disconnect it'
+            });
+        }
+
+        // Session is verified to belong to this user, disconnect it
+        const success = connectionsService.disconnectAutoHelper(session.sessionId);
 
         return reply.send({
             disconnected: success,
-            message: success ? 'AutoHelper disconnected' : 'Session not found'
+            message: success ? 'AutoHelper disconnected' : 'Failed to disconnect'
         });
     });
 }

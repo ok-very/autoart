@@ -325,6 +325,36 @@ function AutoHelperIntegration({ status, onGenerateCode }: AutoHelperIntegration
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    /**
+     * Extract a user-friendly error message from various error types.
+     * Handles Axios-style errors, standard Errors, and unknown types.
+     */
+    const getErrorMessage = (err: unknown): string => {
+        if (!err) return 'Failed to generate code';
+
+        // Handle Axios-style API errors
+        if (typeof err === 'object') {
+            const anyErr = err as {
+                response?: { data?: { error?: string; message?: string } };
+                message?: string;
+            };
+            const apiMessage =
+                anyErr.response?.data?.error ??
+                anyErr.response?.data?.message ??
+                anyErr.message;
+            if (typeof apiMessage === 'string' && apiMessage.trim()) {
+                return apiMessage;
+            }
+        }
+
+        // Handle standard Error objects
+        if (err instanceof Error && err.message) {
+            return err.message;
+        }
+
+        return 'Failed to generate code';
+    };
+
     const handleGenerateCode = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -334,7 +364,7 @@ function AutoHelperIntegration({ status, onGenerateCode }: AutoHelperIntegration
             setPairingCode(result.code);
             setExpiresAt(result.expiresAt);
         } catch (err) {
-            setError((err as Error).message || 'Failed to generate code');
+            setError(getErrorMessage(err));
         } finally {
             setIsLoading(false);
         }

@@ -10,7 +10,7 @@ import type {
     ConnectionCredential,
     NewConnectionCredential,
 } from '../../db/schema.js';
-import { randomBytes, createHmac } from 'crypto';
+import { randomBytes, randomInt, createHmac } from 'crypto';
 
 export type Provider = 'monday' | 'asana' | 'notion' | 'jira' | 'google' | 'autohelper';
 
@@ -196,13 +196,18 @@ interface PairingCode {
 
 const pendingPairingCodes = new Map<string, PairingCode>();
 
+// Session TTL: 24 hours
+const AUTOHELPER_SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
 // Active sessions (AutoHelper instances connected to this AutoArt)
 interface AutoHelperSession {
     sessionId: string;
+    displayId: string; // First 8 chars for UI display
     userId: string;
     instanceName: string;
     connectedAt: Date;
     lastSeen: Date;
+    expiresAt: Date;
 }
 
 const autohelperSessions = new Map<string, AutoHelperSession>();
@@ -212,8 +217,21 @@ const autohelperSessions = new Map<string, AutoHelperSession>();
  * Code expires in 5 minutes and is single-use.
  */
 export function generatePairingCode(userId: string): { code: string; expiresAt: Date } {
-    // Generate 6-digit numeric code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate 6-digit numeric code using crypto for security
+    let code: string;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    // Generate unique code with collision detection
+    do {
+        code = randomInt(100000, 1000000).toString();
+        attempts++;
+    } while (pendingPairingCodes.has(code) && attempts < maxAttempts);
+
+    if (attempts >= maxAttempts && pendingPairingCodes.has(code)) {
+        // Extremely unlikely, but handle gracefully
+        throw new Error('Unable to generate unique pairing code, please try again');
+    }
 
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes
@@ -259,14 +277,18 @@ export function validatePairingCode(
 
     // Generate session ID
     const sessionId = randomBytes(32).toString('hex');
+    const displayId = sessionId.substring(0, 8);
+    const sessionExpiresAt = new Date(Date.now() + AUTOHELPER_SESSION_TTL_MS);
 
     // Create session
     const session: AutoHelperSession = {
         sessionId,
+        displayId,
         userId: pairingData.userId,
         instanceName,
         connectedAt: new Date(),
         lastSeen: new Date(),
+        expiresAt: sessionExpiresAt,
     };
 
     autohelperSessions.set(sessionId, session);
@@ -280,6 +302,12 @@ export function validatePairingCode(
 export function validateSession(sessionId: string): string | null {
     const session = autohelperSessions.get(sessionId);
     if (!session) return null;
+
+    // Check session expiry
+    if (new Date() > session.expiresAt) {
+        autohelperSessions.delete(sessionId);
+        return null;
+    }
 
     // Update last seen
     session.lastSeen = new Date();
@@ -319,4 +347,49 @@ export function getAutoHelperSessions(userId: string): AutoHelperSession[] {
  */
 export function disconnectAutoHelper(sessionId: string): boolean {
     return autohelperSessions.delete(sessionId);
+}
+
+/**
+ * Get a session by display ID for a specific user.
+ * Returns the full session if found and owned by user, null otherwise.
+ */
+export function getSessionByDisplayId(userId: string, displayId: string): AutoHelperSession | null {
+    for (const session of autohelperSessions.values()) {
+        if (session.userId === userId && session.displayId === displayId) {
+            return session;
+        }
+    }
+    return null;
+}
+
+/**
+ * Cleanup expired pairing codes.
+ * Call periodically to prevent memory growth.
+ */
+export function cleanupExpiredPairingCodes(): number {
+    const now = new Date();
+    let cleaned = 0;
+    for (const [code, data] of pendingPairingCodes.entries()) {
+        if (now > data.expiresAt) {
+            pendingPairingCodes.delete(code);
+            cleaned++;
+        }
+    }
+    return cleaned;
+}
+
+/**
+ * Cleanup expired AutoHelper sessions.
+ * Call periodically to prevent memory growth.
+ */
+export function cleanupExpiredAutohelperSessions(): number {
+    const now = new Date();
+    let cleaned = 0;
+    for (const [id, session] of autohelperSessions.entries()) {
+        if (now > session.expiresAt) {
+            autohelperSessions.delete(id);
+            cleaned++;
+        }
+    }
+    return cleaned;
 }
