@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Mail,
     RefreshCw,
@@ -234,9 +234,11 @@ export function MailPanel(_props: IDockviewPanelProps) {
     };
 
     // Guard against offset drifting out of range
-    if (data && offset > 0 && offset >= data.total) {
-        setOffset(Math.max(0, Math.floor((data.total - 1) / ITEMS_PER_PAGE) * ITEMS_PER_PAGE));
-    }
+    useEffect(() => {
+        if (data && offset > 0 && offset >= data.total) {
+            setOffset(Math.max(0, Math.floor((data.total - 1) / ITEMS_PER_PAGE) * ITEMS_PER_PAGE));
+        }
+    }, [data?.total, offset]);
 
     const handleNextPage = () => {
         if (data && offset + ITEMS_PER_PAGE < data.total) {
