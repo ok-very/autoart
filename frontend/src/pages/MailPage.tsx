@@ -1,13 +1,24 @@
 import { useState } from 'react';
-import { Mail, RefreshCw, ChevronLeft, ChevronRight, AlertCircle, Loader2, Circle } from 'lucide-react';
+import {
+  Mail,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+  Loader2,
+  Circle,
+  Sparkles,
+  Paperclip,
+} from 'lucide-react';
 
-import { useInbox, useMailStatus } from '../api/hooks/mail';
-import type { ProcessedEmail } from '../api/types/mail';
+import { useInbox, useEnrichedInbox, useMailStatus } from '../api/hooks/mail';
+import type { ProcessedEmail, Priority, TriageStatus as TriageStatusType } from '../api/types/mail';
 
 const ITEMS_PER_PAGE = 25;
 
-function PriorityBadge({ priority }: { priority: 'high' | 'medium' | 'low' }) {
-  const colors = {
+function PriorityBadge({ priority }: { priority: Priority }) {
+  const colors: Record<Priority, string> = {
+    urgent: 'bg-red-200 text-red-800',
     high: 'bg-red-100 text-red-700',
     medium: 'bg-amber-100 text-amber-700',
     low: 'bg-slate-100 text-slate-600',
@@ -20,15 +31,25 @@ function PriorityBadge({ priority }: { priority: 'high' | 'medium' | 'low' }) {
   );
 }
 
-function TriageStatus({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    pending: 'text-slate-400',
-    actionRequired: 'text-red-500',
-    informational: 'text-blue-500',
-    archived: 'text-slate-300',
+function TriageStatusIndicator({ status, confidence }: { status: TriageStatusType; confidence?: number }) {
+  const config: Record<TriageStatusType, { color: string; label: string }> = {
+    pending: { color: 'text-slate-400', label: 'Pending' },
+    action_required: { color: 'text-red-500', label: 'Action Required' },
+    informational: { color: 'text-blue-500', label: 'Info' },
+    archived: { color: 'text-slate-300', label: 'Archived' },
   };
 
-  return <Circle size={8} className={`${colors[status] || colors.pending} fill-current`} />;
+  const { color, label } = config[status] || config.pending;
+  const showConfidence = confidence !== undefined && confidence > 0;
+
+  return (
+    <div className="flex items-center gap-1.5" title={`${label}${showConfidence ? ` (${Math.round(confidence * 100)}%)` : ''}`}>
+      <Circle size={8} className={`${color} fill-current`} />
+      {showConfidence && (
+        <span className="text-[10px] text-slate-400">{Math.round(confidence * 100)}%</span>
+      )}
+    </div>
+  );
 }
 
 function EmailRow({ email }: { email: ProcessedEmail }) {
@@ -43,16 +64,31 @@ function EmailRow({ email }: { email: ProcessedEmail }) {
 
   return (
     <tr className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer">
-      <td className="px-4 py-3 w-8">
-        <TriageStatus status={email.triage?.status || 'pending'} />
+      <td className="px-4 py-3 w-12">
+        <TriageStatusIndicator
+          status={email.triage?.status || 'pending'}
+          confidence={email.triage?.confidence}
+        />
       </td>
       <td className="px-4 py-3 w-48">
         <div className="font-medium text-slate-900 truncate">{email.senderName}</div>
         <div className="text-xs text-slate-500 truncate">{email.sender}</div>
       </td>
       <td className="px-4 py-3">
-        <div className="font-medium text-slate-900 truncate">{email.subject}</div>
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-slate-900 truncate">{email.subject}</span>
+          {email.hasAttachments && <Paperclip size={14} className="text-slate-400 flex-shrink-0" />}
+        </div>
         <div className="text-sm text-slate-500 truncate">{email.bodyPreview}</div>
+        {email.extractedKeywords.length > 0 && (
+          <div className="flex gap-1 mt-1 flex-wrap">
+            {email.extractedKeywords.slice(0, 3).map((keyword) => (
+              <span key={keyword} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded">
+                {keyword}
+              </span>
+            ))}
+          </div>
+        )}
       </td>
       <td className="px-4 py-3 w-20">
         <PriorityBadge priority={email.priority} />
@@ -88,10 +124,21 @@ function StatusIndicator() {
 
 export function MailPage() {
   const [offset, setOffset] = useState(0);
-  const { data, isLoading, isError, error, refetch, isFetching } = useInbox({
+  const [useEnrichment, setUseEnrichment] = useState(true);
+
+  const basicQuery = useInbox({
     limit: ITEMS_PER_PAGE,
     offset,
   });
+
+  const enrichedQuery = useEnrichedInbox({
+    limit: ITEMS_PER_PAGE,
+    offset,
+  });
+
+  const { data, isLoading, isError, error, refetch, isFetching } = useEnrichment
+    ? enrichedQuery
+    : basicQuery;
 
   const totalPages = data ? Math.ceil(data.total / ITEMS_PER_PAGE) : 0;
   const currentPage = Math.floor(offset / ITEMS_PER_PAGE) + 1;
@@ -120,14 +167,28 @@ export function MailPage() {
               <StatusIndicator />
             </div>
           </div>
-          <button
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-          >
-            <RefreshCw size={16} className={isFetching ? 'animate-spin' : ''} />
-            Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setUseEnrichment(!useEnrichment)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                useEnrichment
+                  ? 'bg-violet-100 text-violet-700'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+              title={useEnrichment ? 'AI triage enabled' : 'AI triage disabled'}
+            >
+              <Sparkles size={14} />
+              AI Triage
+            </button>
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <RefreshCw size={16} className={isFetching ? 'animate-spin' : ''} />
+              Refresh
+            </button>
+          </div>
         </div>
       </header>
 

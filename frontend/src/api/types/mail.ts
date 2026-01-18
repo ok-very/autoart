@@ -38,14 +38,45 @@ export interface ProcessedEmail {
   projectId: string | null;
   bodyPreview: string;
   triage: TriageInfo | null;
-  priority: 'high' | 'medium' | 'low';
+  priority: Priority;
+  priorityFactors: string[];
+  extractedKeywords: string[];
+  hasAttachments: boolean;
+  threadCount: number;
   metadata: Record<string, unknown> | null;
 }
 
+export type TriageStatus = 'pending' | 'action_required' | 'informational' | 'archived';
+export type Priority = 'low' | 'medium' | 'high' | 'urgent';
+
 export interface TriageInfo {
-  status: 'pending' | 'actionRequired' | 'informational' | 'archived';
+  status: TriageStatus;
   confidence: number;
   reasoning: string | null;
+  suggestedAction: string | null;
+}
+
+export interface EnrichedTransientEmail {
+  id: string;
+  subject: string | null;
+  sender: string | null;
+  received_at: string | null;
+  project_id: string | null;
+  body_preview: string | null;
+  metadata: Record<string, unknown> | null;
+  ingestion_id: number | null;
+  created_at: string | null;
+  triage: {
+    status: TriageStatus;
+    confidence: number;
+    reasoning: string | null;
+    suggested_action: string | null;
+  } | null;
+  priority: Priority;
+  priority_factors: string[];
+  extracted_keywords: string[];
+  has_attachments: boolean;
+  thread_count: number;
 }
 
 export interface InboxFilters {

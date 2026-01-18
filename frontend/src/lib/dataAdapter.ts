@@ -3,7 +3,13 @@
  * Transforms backend schemas to frontend view models
  */
 
-import type { TransientEmail, ProcessedEmail, TriageInfo } from '../api/types/mail';
+import type {
+  TransientEmail,
+  EnrichedTransientEmail,
+  ProcessedEmail,
+  TriageInfo,
+  Priority,
+} from '../api/types/mail';
 
 /**
  * Extract sender name from email address
@@ -29,7 +35,7 @@ function extractSenderName(sender: string | null): string {
 /**
  * Infer priority from email metadata/subject
  */
-function inferPriority(email: TransientEmail): 'high' | 'medium' | 'low' {
+function inferPriority(email: TransientEmail): Priority {
   const subject = (email.subject || '').toLowerCase();
   const metadata = email.metadata || {};
 
@@ -52,6 +58,7 @@ function createPlaceholderTriage(): TriageInfo {
     status: 'pending',
     confidence: 0,
     reasoning: null,
+    suggestedAction: null,
   };
 }
 
@@ -69,6 +76,41 @@ export function adaptTransientEmail(email: TransientEmail): ProcessedEmail {
     bodyPreview: email.body_preview || '',
     triage: createPlaceholderTriage(),
     priority: inferPriority(email),
+    priorityFactors: [],
+    extractedKeywords: [],
+    hasAttachments: false,
+    threadCount: 1,
+    metadata: email.metadata,
+  };
+}
+
+/**
+ * Adapt EnrichedTransientEmail from backend to ProcessedEmail for frontend
+ */
+export function adaptEnrichedEmail(email: EnrichedTransientEmail): ProcessedEmail {
+  const triage: TriageInfo | null = email.triage
+    ? {
+        status: email.triage.status,
+        confidence: email.triage.confidence,
+        reasoning: email.triage.reasoning,
+        suggestedAction: email.triage.suggested_action,
+      }
+    : null;
+
+  return {
+    id: email.id,
+    subject: email.subject || '(No Subject)',
+    sender: email.sender || 'Unknown',
+    senderName: extractSenderName(email.sender),
+    receivedAt: email.received_at ? new Date(email.received_at) : null,
+    projectId: email.project_id,
+    bodyPreview: email.body_preview || '',
+    triage,
+    priority: email.priority,
+    priorityFactors: email.priority_factors,
+    extractedKeywords: email.extracted_keywords,
+    hasAttachments: email.has_attachments,
+    threadCount: email.thread_count,
     metadata: email.metadata,
   };
 }
@@ -78,4 +120,11 @@ export function adaptTransientEmail(email: TransientEmail): ProcessedEmail {
  */
 export function adaptTransientEmailList(emails: TransientEmail[]): ProcessedEmail[] {
   return emails.map(adaptTransientEmail);
+}
+
+/**
+ * Adapt a list of EnrichedTransientEmails
+ */
+export function adaptEnrichedEmailList(emails: EnrichedTransientEmail[]): ProcessedEmail[] {
+  return emails.map(adaptEnrichedEmail);
 }

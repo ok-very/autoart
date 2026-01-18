@@ -235,6 +235,7 @@ export {
 // Mail (AutoHelper integration)
 export {
   useInbox,
+  useEnrichedInbox,
   useEmail,
   useMailStatus,
   mailQueryKeys,
