@@ -33,9 +33,18 @@ export const mailQueryKeys = {
 /**
  * Fetch paginated inbox emails
  */
+import { useMemo } from 'react';
+
+// ... imports
+
+/**
+ * Fetch paginated inbox emails
+ */
 export function useInbox(filters?: InboxFilters) {
+  const queryKey = useMemo(() => mailQueryKeys.emails(filters), [JSON.stringify(filters)]);
+
   return useQuery({
-    queryKey: mailQueryKeys.emails(filters),
+    queryKey,
     queryFn: async (): Promise<{ emails: ProcessedEmail[]; total: number; limit: number; offset: number }> => {
       const params = new URLSearchParams();
       if (filters?.projectId) params.set('project_id', filters.projectId);
@@ -61,9 +70,14 @@ export function useInbox(filters?: InboxFilters) {
 /**
  * Fetch paginated inbox emails with AI enrichment (triage analysis)
  */
+/**
+ * Fetch paginated inbox emails with AI enrichment (triage analysis)
+ */
 export function useEnrichedInbox(filters?: InboxFilters) {
+  const queryKey = useMemo(() => mailQueryKeys.enrichedEmails(filters), [JSON.stringify(filters)]);
+
   return useQuery({
-    queryKey: mailQueryKeys.enrichedEmails(filters),
+    queryKey,
     queryFn: async (): Promise<{ emails: ProcessedEmail[]; total: number }> => {
       const params = new URLSearchParams();
       if (filters?.projectId) params.set('project_id', filters.projectId);

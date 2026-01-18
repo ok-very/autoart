@@ -9,9 +9,20 @@ import {
   Circle,
   Sparkles,
   Paperclip,
+  MoreHorizontal,
+  AlertTriangle,
+  Info,
+  Archive,
 } from 'lucide-react';
 
-import { useInbox, useEnrichedInbox, useMailStatus } from '../api/hooks/mail';
+import {
+  useInbox,
+  useEnrichedInbox,
+  useMailStatus,
+  useArchiveEmail,
+  useMarkActionRequired,
+  useMarkInformational
+} from '../api/hooks/mail';
 import type { ProcessedEmail, Priority, TriageStatus as TriageStatusType } from '../api/types/mail';
 
 const ITEMS_PER_PAGE = 25;
@@ -126,21 +137,21 @@ function EmailActions({ email, onAction }: { email: ProcessedEmail; onAction?: (
 function EmailRow({ email, onAction }: { email: ProcessedEmail; onAction?: () => void }) {
   const formattedDate = email.receivedAt
     ? new Intl.DateTimeFormat('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-      }).format(email.receivedAt)
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(email.receivedAt)
     : '—';
 
-  const isArchived = email.triage.status === 'archived';
+
 
   return (
     <tr className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer">
       <td className="px-4 py-3 w-12">
         <TriageStatusIndicator
-          status={email.triage?.status || 'pending'}
-          confidence={email.triage?.confidence}
+          status={email.triage.status}
+          confidence={email.triage.confidence}
         />
       </td>
       <td className="px-4 py-3 w-48">
@@ -223,6 +234,11 @@ export function MailPage() {
     setOffset(Math.max(0, offset - ITEMS_PER_PAGE));
   };
 
+  // Guard against offset drifting out of range
+  if (data && offset > 0 && offset >= data.total) {
+    setOffset(Math.max(0, Math.floor((data.total - 1) / ITEMS_PER_PAGE) * ITEMS_PER_PAGE));
+  }
+
   const handleNextPage = () => {
     if (data && offset + ITEMS_PER_PAGE < data.total) {
       setOffset(offset + ITEMS_PER_PAGE);
@@ -246,11 +262,10 @@ export function MailPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setUseEnrichment(!useEnrichment)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                useEnrichment
-                  ? 'bg-violet-100 text-violet-700'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors ${useEnrichment
+                ? 'bg-violet-100 text-violet-700'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
               title={useEnrichment ? 'AI triage enabled' : 'AI triage disabled'}
             >
               <Sparkles size={14} />

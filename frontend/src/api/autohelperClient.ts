@@ -45,7 +45,6 @@ class AutoHelperClient {
       });
     } catch (error) {
       clearTimeout(timeoutId);
-      // Differentiate timeout/abort from other request failures
       if (
         (typeof DOMException !== 'undefined' &&
           error instanceof DOMException &&
@@ -55,9 +54,11 @@ class AutoHelperClient {
         throw new RequestTimeoutError();
       }
       throw error;
+    } finally {
+      clearTimeout(timeoutId);
     }
 
-    clearTimeout(timeoutId);
+
 
     if (!response.ok) {
       // Guard against non-JSON error bodies
@@ -67,7 +68,8 @@ class AutoHelperClient {
       if (contentType?.includes('application/json')) {
         try {
           const errorData = await response.json();
-          errorMessage = errorData.detail || errorData.message || errorMessage;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          errorMessage = (errorData as any).detail || (errorData as any).message || errorMessage;
         } catch {
           // JSON parsing failed, use default message
         }

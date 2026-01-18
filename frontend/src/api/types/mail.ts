@@ -47,6 +47,10 @@ export interface TriageInfo {
 // PROCESSED EMAIL (Frontend View Model)
 // =============================================================================
 
+// =============================================================================
+// PROCESSED EMAIL (Frontend View Model)
+// =============================================================================
+
 export interface ProcessedEmail {
   id: string;
   subject: string;
@@ -55,23 +59,13 @@ export interface ProcessedEmail {
   receivedAt: Date | null;
   projectId: string | null;
   bodyPreview: string;
-  triage: TriageInfo | null;
+  triage: TriageInfo;
   priority: Priority;
   priorityFactors: string[];
   extractedKeywords: string[];
   hasAttachments: boolean;
   threadCount: number;
   metadata: Record<string, unknown> | null;
-}
-
-export type TriageStatus = 'pending' | 'action_required' | 'informational' | 'archived';
-export type Priority = 'low' | 'medium' | 'high' | 'urgent';
-
-export interface TriageInfo {
-  status: TriageStatus;
-  confidence: number;
-  reasoning: string | null;
-  suggestedAction: string | null;
 }
 
 export interface EnrichedTransientEmail {
