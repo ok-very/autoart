@@ -232,6 +232,14 @@ export {
   type AdminUser,
 } from './admin';
 
+// Mail (AutoHelper integration)
+export {
+  useInbox,
+  useEmail,
+  useMailStatus,
+  mailQueryKeys,
+} from './mail';
+
 // Interpretation (Also exported via ./operations)
 export {
   useInterpretationAvailable,

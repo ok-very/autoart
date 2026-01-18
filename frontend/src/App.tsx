@@ -9,6 +9,7 @@ import { ExportPage } from './pages/ExportPage';
 import { FieldsPage } from './pages/FieldsPage';
 import { ImportPage } from './pages/ImportPage';
 import { LoginPage } from './pages/LoginPage';
+import { MailPage } from './pages/MailPage';
 import { RecordsPage } from './pages/RecordsPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -76,6 +77,7 @@ function App() {
       <Route path="/composer" element={<ComposerPage />} />
       <Route path="/import" element={<ImportPage />} />
       <Route path="/export" element={<ExportPage />} />
+      <Route path="/mail" element={<MailPage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/" element={<MainLayout />} />
       <Route path="/project/:projectId" element={<MainLayout />} />
