@@ -33,3 +33,32 @@ Board Sync Settings Panel (Medium Feature)
     Context: Template singleton records imported from Monday need lifecycle management.
     See: implementation_plan.md for template singleton architecture.
 
+Floating Search / Command Palette (Medium Feature)
+    A headless, context-aware search component that can be invoked globally:
+
+    Phase 1: Floating Project Selector
+    - Trigger via hotkey (Cmd+K or Cmd+P)
+    - Shows searchable list of projects
+    - Selecting a project sets activeProjectId and loads it
+    - Dismisses on Escape or click-outside
+    - Can use existing RecordSearchCombobox patterns
+
+    Phase 2: Universal Search
+    - Search across projects, records, definitions, actions
+    - Return results grouped by type
+    - Each result type has its own action (navigate, select, open panel)
+    - Similar to VSCode command palette or Spotlight
+
+    Phase 3: Command Palette
+    - Add command actions (not just search results)
+    - "Create new project", "Open settings", "Switch view mode"
+    - Keyboard navigation through results
+    - Extensible command registry
+
+    Context: No global search UI exists currently. RecordSearchCombobox shows
+    the pattern but is scoped to record selection only. The infrastructure for
+    search exists in backend (search.ts module) but frontend needs a floating
+    invokable component.
+
+    Related: useSearch() hook in api/hooks/search.ts
+

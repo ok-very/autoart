@@ -17,6 +17,7 @@ import { ConfirmDeleteView } from '../drawer/views/ConfirmDeleteView';
 import { ViewDefinitionDrawer } from '../drawer/views/ViewDefinitionDrawer';
 import { ProjectLibraryDrawer } from '../drawer/views/ProjectLibraryDrawer';
 import { MondayBoardsDrawer } from '../drawer/views/MondayBoardsDrawer';
+import { QuickDeclareModal } from '../drawer/views/QuickDeclareModal';
 // import { ActionInspectorDrawer } from '../drawer/views/ActionInspectorDrawer'; // Not in types map explicitly but in file list
 
 // Map types to components
@@ -35,6 +36,7 @@ const MODAL_COMPONENTS: Record<string, React.ComponentType<any>> = {
     'view-definition': ViewDefinitionDrawer,
     'project-library': ProjectLibraryDrawer,
     'monday-boards': MondayBoardsDrawer,
+    'quick-declare': QuickDeclareModal,
 };
 
 // Map types to titles/sizes if needed, or let component handle it.

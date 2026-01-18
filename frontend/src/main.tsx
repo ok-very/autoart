@@ -8,7 +8,32 @@ import { ErrorBoundary } from '@autoart/ui';
 import { ToastContainer } from './ui/Toast';
 import { toast } from './stores/toastStore';
 import { getUserFriendlyMessage, isAuthError } from './utils/errors';
+import { LAYOUT_VERSION } from './stores/workspaceStore';
+
+// Clear corrupted workspace layout before React mounts
+// This prevents crashes from incompatible persisted state
+try {
+  const stored = localStorage.getItem('autoart-workspace');
+  if (stored) {
+    const parsed = JSON.parse(stored);
+    if (parsed?.state?.layoutVersion !== LAYOUT_VERSION) {
+      console.log('Clearing outdated workspace layout (version mismatch)');
+      localStorage.removeItem('autoart-workspace');
+    }
+  }
+} catch {
+  // If parsing fails, clear the corrupted data
+  console.log('Clearing corrupted workspace layout');
+  localStorage.removeItem('autoart-workspace');
+}
+
+// CSS imports - order matters!
+// 1. Tailwind base/utilities first
 import './index.css';
+// 2. Third-party component base styles
+// import 'dockview/dist/styles/dockview.css'; // Moved to dockview-theme.css
+// 3. Custom overrides last
+import './styles/dockview-theme.css';
 import './styles/composer.css';
 
 const queryClient = new QueryClient({

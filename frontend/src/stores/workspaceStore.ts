@@ -7,8 +7,12 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { DockviewApi } from 'dockview';
 import type { PanelId } from '../workspace/panelRegistry';
 import { isPermanentPanel } from '../workspace/panelRegistry';
+
+// Layout version - increment when layout schema changes to force reset
+export const LAYOUT_VERSION = 2;
 
 // Serialized layout state from Dockview
 export interface SerializedDockviewState {
@@ -33,6 +37,9 @@ interface WorkspaceState {
     // User-overridden visibility (manual show/hide takes precedence over context)
     userOverrides: Map<PanelId, boolean>;
 
+    // Dockview API reference for direct panel manipulation
+    dockviewApi: DockviewApi | null;
+
     // Actions
     openPanel: (panelId: PanelId, params?: unknown) => void;
     closePanel: (panelId: PanelId) => void;
@@ -41,6 +48,7 @@ interface WorkspaceState {
     setUserOverride: (panelId: PanelId, visible: boolean) => void;
     clearUserOverride: (panelId: PanelId) => void;
     resetLayout: () => void;
+    setDockviewApi: (api: DockviewApi | null) => void;
 }
 
 // Initial state
@@ -49,6 +57,7 @@ const initialState = {
     openPanelIds: [...DEFAULT_OPEN_PANELS] as PanelId[],
     panelParams: new Map<PanelId, unknown>(),
     userOverrides: new Map<PanelId, boolean>(),
+    dockviewApi: null as DockviewApi | null,
 };
 
 export const useWorkspaceStore = create<WorkspaceState>()(
@@ -63,7 +72,15 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     newParams.set(panelId, params);
                 }
                 if (state.openPanelIds.includes(panelId)) {
-                    // Already open, but update params if provided
+                    // Already open - focus it using Dockview API
+                    const api = state.dockviewApi;
+                    if (api) {
+                        const panel = api.getPanel(panelId);
+                        if (panel) {
+                            panel.api.setActive();
+                        }
+                    }
+                    // Update params if provided
                     if (params !== undefined) {
                         set({ panelParams: newParams });
                     }
@@ -73,6 +90,10 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     openPanelIds: [...state.openPanelIds, panelId],
                     panelParams: newParams,
                 });
+            },
+
+            setDockviewApi: (api: DockviewApi | null) => {
+                set({ dockviewApi: api });
             },
 
             getPanelParams: <T = unknown>(panelId: PanelId): T | undefined => {
@@ -126,13 +147,21 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         {
             name: 'autoart-workspace',
             partialize: (state) => ({
+                layoutVersion: LAYOUT_VERSION,
                 layout: state.layout,
                 openPanelIds: state.openPanelIds,
                 // Map needs special serialization
                 userOverrides: Array.from(state.userOverrides.entries()),
             }),
             merge: (persisted: unknown, current: WorkspaceState) => {
-                const p = persisted as { layout?: SerializedDockviewState | null; openPanelIds?: PanelId[]; userOverrides?: [PanelId, boolean][] } | undefined;
+                const p = persisted as { layoutVersion?: number; layout?: SerializedDockviewState | null; openPanelIds?: PanelId[]; userOverrides?: [PanelId, boolean][] } | undefined;
+
+                // If layout version doesn't match, reset to defaults
+                if (p?.layoutVersion !== LAYOUT_VERSION) {
+                    console.log('Layout version mismatch, resetting to defaults');
+                    return current;
+                }
+
                 return {
                     ...current,
                     layout: p?.layout ?? current.layout,

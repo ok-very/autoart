@@ -15,6 +15,13 @@ import {
     Layers,
     Search,
     Layout,
+    Database,
+    TableProperties,
+    Zap,
+    Activity,
+    FolderOpen,
+    Hammer,
+    Wand2,
     type LucideIcon,
 } from 'lucide-react';
 
@@ -22,9 +29,15 @@ import {
 // PANEL IDS
 // ============================================================================
 
+// ============================================================================
+// PANEL IDS
+// ============================================================================
+
 export type CorePanelId = 'center-workspace';
 export type ToolPanelId = 'selection-inspector' | 'classification' | 'search-results';
-export type PanelId = CorePanelId | ToolPanelId;
+export type RegistryPanelId = 'records-list' | 'fields-list' | 'actions-list' | 'events-list';
+export type WorkbenchPanelId = 'import-workbench' | 'export-workbench' | 'composer-workbench';
+export type PanelId = CorePanelId | ToolPanelId | RegistryPanelId | WorkbenchPanelId;
 
 // Permanent panels cannot be closed by user
 export const PERMANENT_PANELS: readonly PanelId[] = ['center-workspace'] as const;
@@ -75,7 +88,7 @@ export const DEFAULT_CONTEXT: AppContext = {
 // ============================================================================
 
 export type DefaultPlacement = {
-    area: 'center' | 'right' | 'bottom';
+    area: 'center' | 'right' | 'bottom' | 'left';
     size?: number; // percentage or pixels depending on area
 };
 
@@ -107,6 +120,8 @@ export const PANEL_DEFINITIONS: Record<PanelId, PanelDefinition> = {
         canActOn: () => true,   // Always active
     },
 
+    // ... (rest)
+
     // Tools - on-demand, context-aware
     'selection-inspector': {
         id: 'selection-inspector',
@@ -136,6 +151,73 @@ export const PANEL_DEFINITIONS: Record<PanelId, PanelDefinition> = {
         defaultPlacement: { area: 'bottom', size: 300 },
         shouldShow: (ctx) => ctx.search.query.length > 0 && ctx.search.hasResults,
         canActOn: (ctx) => ctx.search.hasResults,
+    },
+
+    // Registry Panels - Managed by Header
+    'records-list': {
+        id: 'records-list',
+        title: 'Records',
+        icon: Database, // Will need import
+        permanent: false,
+        defaultPlacement: { area: 'center' },
+        shouldShow: () => false, // On-demand
+        canActOn: () => true,
+    },
+    'fields-list': {
+        id: 'fields-list',
+        title: 'Fields',
+        icon: TableProperties, // Will need import
+        permanent: false,
+        defaultPlacement: { area: 'center' },
+        shouldShow: () => false, // On-demand
+        canActOn: () => true,
+    },
+    'actions-list': {
+        id: 'actions-list',
+        title: 'Actions',
+        icon: Zap, // Will need import
+        permanent: false,
+        defaultPlacement: { area: 'center' },
+        shouldShow: () => false, // On-demand
+        canActOn: () => true,
+    },
+    'events-list': {
+        id: 'events-list',
+        title: 'Events',
+        icon: Activity, // Will need import
+        permanent: false,
+        defaultPlacement: { area: 'center' },
+        shouldShow: () => false, // On-demand
+        canActOn: () => true,
+    },
+
+    // Workbench Panels
+    'import-workbench': {
+        id: 'import-workbench',
+        title: 'Import',
+        icon: FolderOpen, // Will need import
+        permanent: false,
+        defaultPlacement: { area: 'center' },
+        shouldShow: (ctx) => ctx.importSession.sessionId !== null,
+        canActOn: () => true,
+    },
+    'export-workbench': {
+        id: 'export-workbench',
+        title: 'Export',
+        icon: Hammer, // Will need import, or default to Hammer/Database
+        permanent: false,
+        defaultPlacement: { area: 'center' },
+        shouldShow: () => false,
+        canActOn: () => true,
+    },
+    'composer-workbench': {
+        id: 'composer-workbench',
+        title: 'Composer',
+        icon: Wand2,
+        permanent: false,
+        defaultPlacement: { area: 'center' },
+        shouldShow: () => false,
+        canActOn: () => true,
     },
 };
 
