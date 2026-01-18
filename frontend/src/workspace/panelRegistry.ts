@@ -22,6 +22,7 @@ import {
     FolderOpen,
     Hammer,
     Wand2,
+    Mail,
     type LucideIcon,
 } from 'lucide-react';
 
@@ -34,7 +35,7 @@ import {
 // ============================================================================
 
 export type CorePanelId = 'center-workspace';
-export type ToolPanelId = 'selection-inspector' | 'classification' | 'search-results';
+export type ToolPanelId = 'selection-inspector' | 'classification' | 'search-results' | 'mail-panel';
 export type RegistryPanelId = 'records-list' | 'fields-list' | 'actions-list' | 'events-list';
 export type WorkbenchPanelId = 'import-workbench' | 'export-workbench' | 'composer-workbench';
 export type PanelId = CorePanelId | ToolPanelId | RegistryPanelId | WorkbenchPanelId;
@@ -151,6 +152,16 @@ export const PANEL_DEFINITIONS: Record<PanelId, PanelDefinition> = {
         defaultPlacement: { area: 'bottom', size: 300 },
         shouldShow: (ctx) => ctx.search.query.length > 0 && ctx.search.hasResults,
         canActOn: (ctx) => ctx.search.hasResults,
+    },
+
+    'mail-panel': {
+        id: 'mail-panel',
+        title: 'Mail',
+        icon: Mail,
+        permanent: false,
+        defaultPlacement: { area: 'center' },
+        shouldShow: () => false, // On-demand
+        canActOn: () => true,
     },
 
     // Registry Panels - Managed by Header

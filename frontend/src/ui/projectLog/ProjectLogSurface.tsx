@@ -176,7 +176,7 @@ export function ProjectLogSurface() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden">
+    <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden relative" style={{ position: 'relative' }}>
       {/* Header */}
       <div className="h-12 border-b border-slate-200 bg-white px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">

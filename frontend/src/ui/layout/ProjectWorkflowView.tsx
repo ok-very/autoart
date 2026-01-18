@@ -26,7 +26,7 @@ import { DataTableHierarchy, type HierarchyFieldDef } from '../../ui/composites/
 import { WorkflowSurfaceTable } from '../../ui/composites/WorkflowSurfaceTable';
 import { deriveTaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
 import { ComposerSurface } from '../composer';
-import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownLabel, DropdownSeparator } from '@autoart/ui';
+import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownSeparator } from '@autoart/ui';
 
 /**
  * Extract metadata from a node, parsing JSON string if needed
@@ -247,7 +247,7 @@ export function ProjectWorkflowView() {
         }
     }, [processes, selectedProcessId]);
 
-    const selectedProcess = selectedProcessId ? getNode(selectedProcessId) : null;
+
 
     // Collect subprocesses - filter by selected process if there are multiple
     const subprocesses = useMemo(() => {
@@ -452,7 +452,7 @@ export function ProjectWorkflowView() {
     const selectedRecordId = selection?.type === 'record' ? selection.id : null;
 
     return (
-        <div className="flex-1 flex overflow-hidden bg-white relative">
+        <div className="flex-1 flex overflow-hidden bg-white relative" style={{ position: 'relative' }}>
             {/* Collapsed Sidebar Toggle (Floating when collapsed) */}
             {isSidebarCollapsed && (
                 <div className="absolute top-3 left-3 z-20">

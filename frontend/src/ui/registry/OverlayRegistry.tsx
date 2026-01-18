@@ -1,4 +1,3 @@
-
 import { useUIStore } from '../../stores/uiStore';
 import { Modal } from '@autoart/ui';
 import { createUIContext } from '../../drawer/types';
@@ -18,10 +17,9 @@ import { ViewDefinitionDrawer } from '../drawer/views/ViewDefinitionDrawer';
 import { ProjectLibraryDrawer } from '../drawer/views/ProjectLibraryDrawer';
 import { MondayBoardsDrawer } from '../drawer/views/MondayBoardsDrawer';
 import { QuickDeclareModal } from '../drawer/views/QuickDeclareModal';
-// import { ActionInspectorDrawer } from '../drawer/views/ActionInspectorDrawer'; // Not in types map explicitly but in file list
 
 // Map types to components
-const MODAL_COMPONENTS: Record<string, React.ComponentType<any>> = {
+export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
     'create-node': CreateNodeView,
     'create-record': CreateRecordView,
     'create-project': CreateProjectView,
@@ -37,19 +35,16 @@ const MODAL_COMPONENTS: Record<string, React.ComponentType<any>> = {
     'project-library': ProjectLibraryDrawer,
     'monday-boards': MondayBoardsDrawer,
     'quick-declare': QuickDeclareModal,
+    'template-library': ProjectLibraryDrawer, // Alias for template library
 };
 
-// Map types to titles/sizes if needed, or let component handle it.
-// Ideally components should render their own titles or we infer from type.
-// For now we'll rely on the components being mostly self-contained or add title wrappers here.
-
-export function ModalRegistry() {
+export function OverlayRegistry() {
     const { activeDrawer, closeDrawer } = useUIStore();
 
     if (!activeDrawer) return null;
 
     const { type, props } = activeDrawer;
-    const Component = MODAL_COMPONENTS[type];
+    const Component = OVERLAY_VIEWS[type];
 
     // Default size can be overridden per type if needed
     let size: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full' = 'md';
@@ -75,13 +70,12 @@ export function ModalRegistry() {
             open={!!activeDrawer}
             onOpenChange={(open) => !open && closeDrawer()}
             size={size}
-        // Title is often inside the view, so we might not pass it to Modal unless we extract it
         >
             {Component ? (
                 <Component {...componentProps} />
             ) : (
                 <div className="p-4 text-red-500">
-                    Unknown drawer type: {type}
+                    Unknown overlay type: {type}
                 </div>
             )}
         </Modal>

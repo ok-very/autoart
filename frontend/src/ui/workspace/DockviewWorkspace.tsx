@@ -46,6 +46,7 @@ import { EventsPanel } from '../panels/EventsPanel';
 import { ImportPanel } from '../panels/ImportPanel';
 import { ExportPanel } from '../panels/ExportPanel';
 import { ComposerPanel } from '../panels/ComposerPanel';
+import { MailPanel } from '../panels/MailPanel';
 
 // ============================================================================
 // PANEL SPAWN HANDLE
@@ -129,6 +130,9 @@ function SpawnHandle({ api }: SpawnHandleProps) {
                     <DropdownItem onSelect={() => handleSpawn('composer-workbench', 'tab')}>
                         <span>Composer</span>
                     </DropdownItem>
+                    <DropdownItem onSelect={() => handleSpawn('mail-panel', 'tab')}>
+                        <span>Mail</span>
+                    </DropdownItem>
 
                     <DropdownSeparator />
 
@@ -207,6 +211,7 @@ const COMPONENTS: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
     'import-workbench': ImportPanel,
     'export-workbench': ExportPanel,
     'composer-workbench': ComposerPanel,
+    'mail-panel': MailPanel,
 };
 
 // ============================================================================
