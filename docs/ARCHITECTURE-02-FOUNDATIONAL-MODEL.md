@@ -1,16 +1,19 @@
 # AutoArt Foundational Model
 
+**Part of:** [Architecture Documentation Series](./ARCHITECTURE-00-INDEX.md)  
+**Last Updated:** 2026-01-17
+
 ## Purpose
 
-This document formalizes AutoArt's **final architectural reduction** and defines the **maximum allowable complexity layer** of the system. It replaces task‑centric and workflow‑centric models with an interpretive system built on four irreducible primitives.
+This document formalizes AutoArt's **final architectural reduction** and defines the **maximum allowable complexity layer** of the system. It replaces task-centric and workflow-centric models with an interpretive system built on four irreducible primitives.
 
 This is not a stylistic preference. It is a **hard constraint** intended to prevent semantic drift, state corruption, and ontology sprawl.
 
 ---
 
-## The Four First‑Class Objects (Final)
+## The Four First-Class Objects (Final)
 
-AutoArt recognizes exactly **four first‑class objects**. Only these may store independent truth.
+AutoArt recognizes exactly **four first-class objects**. Only these may store independent truth.
 
 ### 1. Record
 **Context container**
@@ -29,7 +32,7 @@ Records answer:
 **Declarative data surface**
 
 - Typed, named, reusable
-- May be user‑entered, computed, or derived
+- May be user-entered, computed, or derived
 - May attach to Records, Actions, or projections
 - May be empty without semantic failure
 
@@ -54,8 +57,8 @@ Actions answer:
 ### 4. Event
 **Historical fact**
 
-- Append‑only
-- Time‑bound and actor‑bound
+- Append-only
+- Time-bound and actor-bound
 - Irreversible
 - Sole source of truth about what happened
 
@@ -104,7 +107,7 @@ Their UI behavior may remain identical, but their payload is **procedural**, not
 
 ### Action Entity (Logical)
 
-Actions are first‑class, but intentionally thin.
+Actions are first-class, but intentionally thin.
 
 ```typescript
 Action {
@@ -143,7 +146,7 @@ Event {
 ```
 
 **Rules**:
-- Events are append‑only
+- Events are append-only
 - Events may reference Actions, but Actions do not reference Events
 - Deleting or editing Events is forbidden
 
@@ -157,7 +160,7 @@ Downstream objects are **interpretations**, not entities.
 
 ### Item (Projection)
 
-An Item is a UI‑level construct derived from interpretation logic:
+An Item is a UI-level construct derived from interpretation logic:
 
 ```
 Item := interpret(Action, Fields, Events)
@@ -192,7 +195,7 @@ Subtasks:
 
 Processes are **compositions of Actions and Events**.
 
-They are not first‑class.
+They are not first-class.
 
 A workflow is an *interpretation over time*, not a stored object.
 
@@ -203,15 +206,47 @@ This allows:
 
 ---
 
-## System Invariants (Non‑Negotiable)
+## System Invariants (Non-Negotiable)
 
 1. No stored status fields
 2. No mutable truth
 3. No implicit transitions
-4. No fifth first‑class object
+4. No fifth first-class object
 5. No UI construct may own data
 
 Violating any invariant is a regression.
+
+---
+
+## Examples: What's Allowed vs Prohibited
+
+### ✅ Allowed
+
+- Computing "task completion" by interpreting events for an action
+- Storing a "priority" field on an action (it's declarative data)
+- Caching derived views in a projection table (as long as it's rebuildable)
+- Multiple UI surfaces showing different interpretations of the same events
+
+### ❌ Prohibited
+
+- Adding a `status` column to the `actions` table
+- Storing `completedAt` timestamp on an action
+- Creating a `workflows` table that tracks state transitions
+- Adding a `tasks` table that owns completion data
+- Updating an event after it's created
+
+---
+
+## Migration Strategy
+
+When refactoring legacy code:
+
+1. Identify stored state (status fields, completion flags, etc.)
+2. Determine which events would produce that state
+3. Create event types if needed
+4. Build interpreter logic to derive the state
+5. Remove the stored state column
+6. Update UI to use interpreted state
 
 ---
 
@@ -229,19 +264,20 @@ Anything not expressible as:
 
 ---
 
-## North‑Star Constraint
+## North-Star Constraint
 
-> Records hold context.
-> Fields hold data.
-> Actions hold intent.
-> Events hold truth.
+> Records hold context.  
+> Fields hold data.  
+> Actions hold intent.  
+> Events hold truth.  
 > Everything else is interpretation.
 
 This sentence defines the architecture.
 
 ---
 
-## See Also
+## Related Reading
 
-- [ARCHITECTURE-03-BACKEND.md](./ARCHITECTURE-03-BACKEND.md) - How these concepts map to backend modules
-- [ARCHITECTURE-04-FRONTEND.md](./ARCHITECTURE-04-FRONTEND.md) - How interpretation manifests in the UI
+- [Backend Architecture](./ARCHITECTURE-01-BACKEND.md) - Module structure and communication patterns
+- [Composer Documentation](./Composer-Docs.md) - How to create actions and emit events
+- [Execution Log Implementation](./plan-project-log-implementation.md) - Event stream views

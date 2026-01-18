@@ -1,35 +1,102 @@
 # AutoArt Architecture Documentation
 
-This directory contains the complete architectural documentation for AutoArt, organized as a numbered series.
+**Branch:** `experiment/foundational-model-refactor`  
+**Status:** Living documentation series  
+**Last Updated:** 2026-01-17
 
-## Reading Order
+## Navigation
 
-1. **[ARCHITECTURE-01-OVERVIEW.md](./ARCHITECTURE-01-OVERVIEW.md)** - System overview, technology stack, and core principles
-2. **[ARCHITECTURE-02-FOUNDATIONAL-MODEL.md](./ARCHITECTURE-02-FOUNDATIONAL-MODEL.md)** - The four first-class objects and interpretive model
-3. **[ARCHITECTURE-03-BACKEND.md](./ARCHITECTURE-03-BACKEND.md)** - Backend modules, structure, and API patterns
-4. **[ARCHITECTURE-04-FRONTEND.md](./ARCHITECTURE-04-FRONTEND.md)** - Frontend organization, surfaces, and UI patterns
-5. **[ARCHITECTURE-05-WORKSPACE.md](./ARCHITECTURE-05-WORKSPACE.md)** - SPA workspace model (panels, overlays, popouts)
-6. **[ARCHITECTURE-06-SHARED.md](./ARCHITECTURE-06-SHARED.md)** - Shared package and cross-cutting concerns
+This documentation series describes AutoArt's architecture across multiple dimensions. Read in order for a complete understanding, or jump to specific topics.
+
+### Core Architecture Documents
+
+1. **[Backend Architecture](./ARCHITECTURE-01-BACKEND.md)**  
+   Module structure, import rules, path aliases, and backend module boundaries.
+
+2. **[Foundational Model: Actions & Events](./ARCHITECTURE-02-FOUNDATIONAL-MODEL.md)**  
+   The four first-class objects (Record, Field, Action, Event) and the interpretive model. This is the **north star constraint** for the entire system.
+
+3. **[Frontend Workspace & Surfaces](./ARCHITECTURE-03-FRONTEND-WORKSPACE.md)**  
+   SPA workspace model: Surfaces (panels), Overlays, left drawers, registries, persistence, and multi-window synchronization.
+
+### Supplementary Documents
+
+- **[Architecture Inventory & Deprecation Plan](./architecture-inventory.md)**  
+  Living inventory of active vs deprecated modules, migration status, and cleanup proposals.
+
+- **[Composer Documentation](./Composer-Docs.md)**  
+  Deep dive into the Composer module (action creation, quick endpoints, event emission).
+
+- **[Execution Log Implementation](./plan-project-log-implementation.md)**  
+  Technical plan for context-scoped event log views.
 
 ## Quick Reference
 
-### Core Concepts
-- **Four First-Class Objects**: Record, Field, Action, Event (see 02)
-- **No Stored State**: All meaning is computed via interpretation (see 02)
-- **Action-Event Architecture**: Composer as single entry point (see 02, 03)
-- **Surfaces**: Long-lived workspace panels (Mail, Inspector, Workbench) (see 04, 05)
-- **Overlays**: Transient global workflows (create, confirm, pickers) (see 04, 05)
+### The Four First-Class Objects
 
-### Technology Stack
-- **Backend**: Fastify + TypeScript + Kysely + PostgreSQL
-- **Frontend**: React + Vite + TailwindCSS + Zustand + TanStack Query
-- **Shared**: Zod schemas for end-to-end type safety
-- **Workspace**: Dockview for panel management
+AutoArt recognizes exactly **four first-class objects** that store independent truth:
 
-## For New Contributors
+1. **Record** – Context container ("What is this about?")
+2. **Field** – Declarative data surface ("What information exists?")
+3. **Action** – Intent declaration ("What should occur?")
+4. **Event** – Historical fact ("What actually occurred?")
 
-Start with documents 01 and 02 to understand the foundational model, then proceed to 03-06 based on whether you're working on backend or frontend.
+Everything else is **interpretation** (derived views, projections, UI constructs).
 
-## For Existing Contributors
+### System Invariants (Non-Negotiable)
 
-This series replaces the previous standalone `ARCHITECTURE.md` and consolidates scattered architectural docs. The foundational model remains unchanged; backend and frontend sections have been updated to reflect current codebase structure.
+1. No stored status fields
+2. No mutable truth
+3. No implicit transitions
+4. No fifth first-class object
+5. No UI construct may own data
+
+### Frontend Workspace Primitives
+
+- **Surface (Panel)**: Long-lived workspace area (Mail, Composer, Projects, Inspector)
+- **Overlay**: Global, transient workflow host (create/confirm/picker flows)
+- **Left drawers**: View-specific sidebars (stay local to Surface)
+
+### Backend Module Communication
+
+Modules communicate through `@autoart/shared`, not direct imports.
+
+```
+✅ import { ActionSchema } from '@autoart/shared';
+❌ import { createRecord } from '../records/service.js';
+```
+
+## Architecture Principles
+
+### Backend
+- **Action-Event architecture**: All mutations flow through Composer → Actions → Events
+- **Shared schemas**: End-to-end type safety via `@autoart/shared` (Zod)
+- **Module isolation**: No cross-module imports; use service layer or shared package
+
+### Frontend
+- **Panel-based workspace**: Dockview for tabs/splits/docking
+- **Overlay for transient workflows**: Global registry for create/confirm/picker flows
+- **Selection context**: Shared bus for cross-surface coordination
+- **Persistence via Zustand**: Whitelisted fields in `partialize`
+
+### Data Model
+- **No stored state**: All status/progress/completion are derived views
+- **Append-only events**: Events are immutable historical facts
+- **Actions declare intent**: Actions never track execution outcomes
+
+## Contributing to Architecture Docs
+
+When adding new architectural decisions:
+
+1. Update the relevant `ARCHITECTURE-##-*.md` document
+2. Add entry to this index if creating a new doc
+3. Update "Last Updated" timestamp
+4. Ensure consistency with the four first-class objects and system invariants
+5. If proposing a new stored entity, verify it fits the foundational model
+
+## Related Issues
+
+- [#63 Dockview workspace layout](https://github.com/ok-very/autoart/issues/63)
+- [#67 OverlayRegistry refactor](https://github.com/ok-very/autoart/issues/67)
+- [#65 SelectionInspector surface](https://github.com/ok-very/autoart/issues/65)
+- [#66 Mail surface](https://github.com/ok-very/autoart/issues/66)
