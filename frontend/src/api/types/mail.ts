@@ -53,3 +53,15 @@ export interface InboxFilters {
   limit?: number;
   offset?: number;
 }
+
+export interface UpdateTriageRequest {
+  status: TriageStatus;
+  notes?: string;
+}
+
+export interface TriageActionResponse {
+  status: string;
+  email_id: string;
+  triage_status: TriageStatus;
+  triaged_at: string;
+}
