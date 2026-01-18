@@ -7,9 +7,9 @@ import { useProjectTree, useProjects } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
 import type { NodeType } from '../../types';
-import { Badge } from '../atoms/Badge';
-import { Text } from '../atoms/Text';
-import { Menu } from '../molecules/Menu';
+import { Badge } from '@autoart/ui';
+import { Text } from '@autoart/ui';
+import { Menu } from '@autoart/ui';
 
 export function HierarchySidebar() {
   const { setNodes, getChildren, getNode } = useHierarchyStore();

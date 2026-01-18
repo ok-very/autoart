@@ -21,11 +21,10 @@ import {
   RECORDS_VIEW_MODE_LABELS,
   FIELDS_VIEW_MODE_LABELS,
 } from '../../stores/uiStore';
-import { Button } from '../atoms/Button';
-import { IconButton } from '../atoms/IconButton';
-import { Inline } from '../atoms/Inline';
-import { Menu } from '../molecules/Menu';
-import { SegmentedControl } from '../molecules/SegmentedControl';
+import { Button } from '@autoart/ui';
+import { IconButton } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
+import { Menu, SegmentedControl } from '@autoart/ui';
 
 export function Header() {
   const location = useLocation();

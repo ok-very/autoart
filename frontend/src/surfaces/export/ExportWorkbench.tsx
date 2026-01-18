@@ -29,7 +29,7 @@ import {
     useExecuteExport,
     type ExportFormat as ApiExportFormat,
 } from '../../api/hooks/exports';
-import { Card, Inline, Text, Stack, Button, Checkbox, Badge } from '../../ui/atoms';
+import { Card, Inline, Text, Stack, Button, Checkbox, Badge } from '@autoart/ui';
 
 // ============================================================================
 // TYPES
@@ -247,8 +247,8 @@ export function ExportWorkbench({ onExportComplete, onClose }: ExportWorkbenchPr
                                     key={fmt.id}
                                     onClick={() => setFormat(fmt.id)}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${format === fmt.id
-                                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent'
+                                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent'
                                         }`}
                                 >
                                     {fmt.label}

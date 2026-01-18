@@ -12,6 +12,6 @@
  * - composites import from atoms/ and molecules/
  */
 
-export * from './atoms';
+export * from '@autoart/ui';
 export * from './molecules';
 export * from './composites';

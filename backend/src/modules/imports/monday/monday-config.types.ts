@@ -312,10 +312,9 @@ export const DEFAULT_INFERENCE_HEURISTICS: MondayInferenceHeuristics = {
         subprocess: [/subprocess/i, /workstream/i],
         backlog: [/backlog/i, /triage/i, /inbox/i, /new/i],
         done: [/done/i, /complete/i, /finished/i],
-        archive: [/archive/i, /archived/i],
+        archive: [/archive/i, /archived/i, /old/i],
         template_group: [/template/i],
         reference_group: [/reference/i, /resource/i, /file/i, /doc/i],
-        archive: [/archive/i, /old/i],
         ignore: [],
     },
     columnNamePatterns: {

@@ -123,7 +123,7 @@ export interface AutoHelperStatus extends ConnectionStatus {
 }
 
 export interface AutoHelperInstance {
-    sessionId: string;
+    displayId: string;
     instanceName: string;
     connectedAt: string;
     lastSeen: string;
@@ -170,8 +170,8 @@ export function useDisconnectAutoHelper() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (sessionId: string): Promise<{ disconnected: boolean }> => {
-            return api.delete<{ disconnected: boolean }>(`/connections/autohelper/${sessionId}`);
+        mutationFn: async (displayId: string): Promise<{ disconnected: boolean }> => {
+            return api.delete<{ disconnected: boolean }>(`/connections/autohelper/${displayId}`);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['connections'] });

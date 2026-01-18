@@ -19,7 +19,7 @@ import { useState, useRef, useCallback } from 'react';
 
 import { TASK_STATUS_CONFIG } from '@autoart/shared';
 
-import { PortalMenu } from '../atoms/PortalMenu';
+import { PortalMenu } from '@autoart/ui';
 
 
 /** Config type for status display */

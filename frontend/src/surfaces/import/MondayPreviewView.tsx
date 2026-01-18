@@ -15,7 +15,7 @@ import { HierarchyPreview } from './HierarchyPreview';
 import { StagePreview } from './StagePreview';
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
 import { useUIStore } from '../../stores/uiStore';
-import { Text, Stack, Badge } from '../../ui/atoms';
+import { Text, Stack, Badge } from '@autoart/ui';
 
 // ============================================================================
 // TYPES
@@ -107,8 +107,8 @@ export function MondayPreviewView({
                     <button
                         onClick={() => setPreviewMode('hierarchy')}
                         className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${previewMode === 'hierarchy'
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'text-slate-600 hover:bg-slate-100'
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'text-slate-600 hover:bg-slate-100'
                             }`}
                     >
                         <Columns className="w-4 h-4" />
@@ -117,8 +117,8 @@ export function MondayPreviewView({
                     <button
                         onClick={() => setPreviewMode('stage')}
                         className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${previewMode === 'stage'
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'text-slate-600 hover:bg-slate-100'
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'text-slate-600 hover:bg-slate-100'
                             }`}
                     >
                         <Layers className="w-4 h-4" />

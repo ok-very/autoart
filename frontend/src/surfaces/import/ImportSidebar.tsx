@@ -23,8 +23,8 @@ import { useRef, useCallback, useState } from 'react';
 
 import { useConnections } from '../../api/connections';
 import {
-    useCreateImportSession,
     useGenerateImportPlan,
+    useCreateImportSession,
     type ImportSession,
     type ImportPlan,
 } from '../../api/hooks/imports';

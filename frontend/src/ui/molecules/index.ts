@@ -17,7 +17,7 @@ export { ReferenceBlock, type ReferenceBlockProps, type ReferenceStatus, type Re
 export { ReferenceStatusBadge, type ReferenceStatusBadgeProps, getStatusBgClass, getStatusTextClass } from './ReferenceStatusBadge';
 
 // Input molecules
-export { TagsInput } from './TagsInput';
+
 
 // Table molecules
 export { EditableCell, type EditableCellProps } from './EditableCell';

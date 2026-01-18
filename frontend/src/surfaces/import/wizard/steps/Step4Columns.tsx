@@ -1,18 +1,19 @@
 import { useState, useMemo } from 'react';
 import { ChevronDown, ChevronRight, AlertTriangle, Info, HelpCircle } from 'lucide-react';
-import { Stack } from '../../../../ui/atoms/Stack';
-import { Text } from '../../../../ui/atoms/Text';
-import { Button } from '../../../../ui/atoms/Button';
-import { Inline } from '../../../../ui/atoms/Inline';
-import { Select } from '../../../../ui/atoms/Select';
-import { Badge } from '../../../../ui/atoms/Badge';
-import { Spinner } from '../../../../ui/atoms/Spinner';
+import { Stack } from '@autoart/ui';
+import { Text } from '@autoart/ui';
+import { Button } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
+import { Select } from '@autoart/ui';
+import { Badge } from '@autoart/ui';
+import { Spinner } from '@autoart/ui';
+import { DebouncedInput } from '@autoart/ui';
 import { useMondayBoardConfigs, useUpdateMondayColumnConfigs } from '../../../../api/hooks/monday';
 import { useGenerateImportPlan, type ImportSession, type ImportPlan } from '../../../../api/hooks/imports';
 import { MondayColumnSemanticRole } from '../../../../api/types/monday';
 import { ImportPreviewDrawer } from '../components/ImportPreviewDrawer';
 import { ROLE_METADATA, SEMANTIC_ROLE_OPTIONS } from '../constants/monday-roles';
-import { DebouncedInput } from '../../../../ui/atoms/DebouncedInput';
+
 
 interface StepProps {
     onNext: () => void;

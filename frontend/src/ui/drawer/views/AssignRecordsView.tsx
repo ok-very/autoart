@@ -15,11 +15,11 @@ import { useUIStore } from '@/stores';
 import type { HierarchyNode } from '@/types';
 
 import type { DrawerProps, ClassifyRecordsContext } from '../../../drawer/types';
-import { Alert } from '../../atoms/Alert';
-import { Button } from '../../atoms/Button';
-import { Inline } from '../../atoms/Inline';
-import { Stack } from '../../atoms/Stack';
-import { Text } from '../../atoms/Text';
+import { Alert } from '@autoart/ui';
+import { Button } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
+import { Stack } from '@autoart/ui';
+import { Text } from '@autoart/ui';
 
 
 

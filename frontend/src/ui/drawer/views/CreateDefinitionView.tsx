@@ -11,11 +11,11 @@ import { useCreateDefinition } from '@/api/hooks';
 import { useUIStore } from '@/stores';
 
 import type { DrawerProps, CreateDefinitionContext } from '../../../drawer/types';
-import { Button } from '../../atoms/Button';
-import { Inline } from '../../atoms/Inline';
-import { Stack } from '../../atoms/Stack';
-import { Text } from '../../atoms/Text';
-import { TextInput } from '../../atoms/TextInput';
+import { Button } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
+import { Stack } from '@autoart/ui';
+import { Text } from '@autoart/ui';
+import { TextInput } from '@autoart/ui';
 
 const PRESET_COLORS = [
   { name: 'slate', hex: '#64748b' },

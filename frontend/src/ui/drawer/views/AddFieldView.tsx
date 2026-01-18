@@ -15,14 +15,14 @@ import { useUIStore } from '@/stores';
 import type { FieldDef } from '@/types';
 
 import type { DrawerProps, AddFieldContext } from '../../../drawer/types';
-import { Badge } from '../../atoms/Badge';
-import { Button } from '../../atoms/Button';
-import { Checkbox } from '../../atoms/Checkbox';
-import { Inline } from '../../atoms/Inline';
-import { ProgressBar } from '../../atoms/ProgressBar';
-import { Stack } from '../../atoms/Stack';
-import { Text } from '../../atoms/Text';
-import { TextInput } from '../../atoms/TextInput';
+import { Badge } from '@autoart/ui';
+import { Button } from '@autoart/ui';
+import { Checkbox } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
+import { ProgressBar } from '@autoart/ui';
+import { Stack } from '@autoart/ui';
+import { Text } from '@autoart/ui';
+import { TextInput } from '@autoart/ui';
 
 // ============================================================================
 // FIELD TYPE DEFINITIONS

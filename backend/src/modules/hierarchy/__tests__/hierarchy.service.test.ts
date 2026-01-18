@@ -143,7 +143,9 @@ describe('hierarchy.service', () => {
 
       // Get cloned task
       const clonedTree = await hierarchyService.getProjectTree(clonedProject.id);
-      const clonedLeaf = clonedTree.filter((n) => n.type === 'subprocess').pop(); // Get the deepest subprocess
+      const subprocessNodes = clonedTree.filter((n) => n.type === 'subprocess');
+      expect(subprocessNodes).toHaveLength(2); // subprocess and leaf subprocess
+      const clonedLeaf = subprocessNodes[1]; // Get the leaf
       expect(clonedLeaf).toBeDefined();
 
       // Assert: Reference was cloned

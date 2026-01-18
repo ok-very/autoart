@@ -1,7 +1,7 @@
 import { clsx } from 'clsx';
 
-import { InlineError } from '../atoms/InlineError';
-import { Label } from '../atoms/Label';
+import { InlineError } from '@autoart/ui';
+import { Label } from '@autoart/ui';
 
 interface FieldGroupProps {
     /** Field label */

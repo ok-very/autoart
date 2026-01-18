@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Columns, Layers, Table as TableIcon, Play } from 'lucide-react';
-import { Stack } from '../../../../ui/atoms/Stack';
-import { Text } from '../../../../ui/atoms/Text';
-import { Button } from '../../../../ui/atoms/Button';
-
+import { Stack } from '@autoart/ui';
+import { Text } from '@autoart/ui';
+import { Button } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
 import { ImportPreview } from '../../ImportPreview';
 import { ClassificationPanel } from '../../ClassificationPanel';
 import { SelectionInspector } from '../../../../ui/composites/SelectionInspector';

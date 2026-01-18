@@ -16,14 +16,14 @@ import { useUIStore } from '@/stores';
 import type { FieldDef, HierarchyNode } from '@/types';
 
 import type { DrawerProps, CreateRecordContext } from '../../../drawer/types';
-import { Button } from '../../atoms/Button';
-import { Checkbox } from '../../atoms/Checkbox';
-import { Inline } from '../../atoms/Inline';
-import { Select } from '../../atoms/Select';
-import { Spinner } from '../../atoms/Spinner';
-import { Stack } from '../../atoms/Stack';
-import { Text } from '../../atoms/Text';
-import { TextInput } from '../../atoms/TextInput';
+import { Button } from '@autoart/ui';
+import { Checkbox } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
+import { Select } from '@autoart/ui';
+import { Spinner } from '@autoart/ui';
+import { Stack } from '@autoart/ui';
+import { Text } from '@autoart/ui';
+import { TextInput } from '@autoart/ui';
 import { RichTextInput } from '../../editor/RichTextInput';
 
 // Legacy props interface (deprecated - use DrawerProps)

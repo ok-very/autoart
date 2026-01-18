@@ -2,10 +2,10 @@
 import { useState, useMemo } from 'react';
 import { Search, Loader2, Calendar, CheckCircle2, ChevronDown, AlertCircle } from 'lucide-react';
 
-import { Stack } from '../../../../ui/atoms/Stack';
-import { Text } from '../../../../ui/atoms/Text';
-import { Button } from '../../../../ui/atoms/Button';
-import { Inline } from '../../../../ui/atoms/Inline';
+import { Stack } from '@autoart/ui';
+import { Text } from '@autoart/ui';
+import { Button } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
 
 import { useMondayBoards, useConnections, type MondayBoard } from '../../../../api/connections';
 import { useCreateConnectorSession, type ImportSession, type ImportPlan } from '../../../../api/hooks/imports';
@@ -104,7 +104,7 @@ export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
 
     if (isLoading) {
         return (
-            <Stack className="h-full items-center justify-center">
+            <Stack className="items-center justify-center h-full">
                 <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
                 <Text color="muted">Loading boards...</Text>
             </Stack>
@@ -113,7 +113,7 @@ export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
 
     if (error) {
         return (
-            <Stack className="h-full items-center justify-center">
+            <Stack className="items-center justify-center h-full">
                 <AlertCircle className="w-8 h-8 text-red-500" />
                 <Text color="error">Failed to load boards</Text>
                 <Text size="sm">{error instanceof Error ? error.message : 'Unknown error'}</Text>
@@ -124,7 +124,7 @@ export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
     // Not Connected State
     if (!connections?.monday?.connected && !boards) {
         return (
-            <Stack className="h-full items-center justify-center" gap="lg">
+            <Stack className="items-center justify-center h-full" gap="lg">
                 <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
                     <Calendar className="w-8 h-8 text-amber-600" />
                 </div>

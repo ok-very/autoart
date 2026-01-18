@@ -93,6 +93,9 @@ function MenuDropdown({ children, className }: MenuDropdownProps) {
     const [position, setPosition] = useState({ top: 0, left: 0 });
 
 
+    // Silence unused warning for now as it's used in effect but maybe not rendered
+
+
     // Trigger animation after mount
 
 

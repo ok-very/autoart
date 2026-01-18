@@ -135,7 +135,7 @@ describe('references.service', () => {
       // Assert
       expect(resolved.status).toBe('dynamic');
       expect(resolved.value).toBe('live value');
-      expect(resolved.drift).toBeFalsy();
+      expect(resolved.drift).toBe(false);
 
       // Cleanup
       await cleanupTestData(db, testPrefix);
@@ -187,7 +187,7 @@ describe('references.service', () => {
       const resolved = await referencesService.resolveReference(ref.id);
 
       // Assert
-      expect(resolved.drift).toBeFalsy();
+      expect(resolved.drift).toBe(false);
       expect(resolved.liveValue).toBeUndefined(); // Not included when no drift
 
       // Cleanup

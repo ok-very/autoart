@@ -15,7 +15,7 @@ import { clsx } from 'clsx';
 import { User, ChevronDown, X } from 'lucide-react';
 import { useState, useRef, useCallback, useMemo } from 'react';
 
-import { PortalMenu } from '../atoms/PortalMenu';
+import { PortalMenu } from '@autoart/ui';
 
 export interface Person {
     id: string;

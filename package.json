@@ -6,7 +6,9 @@
   "workspaces": [
     "shared",
     "backend",
-    "frontend"
+    "frontend",
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "build:shared": "cd shared && npm run build",
@@ -27,9 +29,11 @@
     "db:status": "cd backend && npm run db:status",
     "start:backend": "cd backend && npm run dev",
     "start:frontend": "cd frontend && npm run dev",
+    "start:mail": "cd apps/mail && npm run dev",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
-    "lint": "eslint frontend/src backend/src shared/src",
+    "build:mail": "cd apps/mail && npm run build",
+    "lint": "eslint frontend/src backend/src shared/src apps/mail/src",
     "lint:fix": "eslint frontend/src backend/src shared/src --fix",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",

@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { CheckCircle, AlertTriangle } from 'lucide-react';
-import { Stack } from '../../../../ui/atoms/Stack';
-import { Text } from '../../../../ui/atoms/Text';
-import { Button } from '../../../../ui/atoms/Button';
-import { Inline } from '../../../../ui/atoms/Inline';
-import { ProgressBar } from '../../../../ui/atoms/ProgressBar';
-import { Card } from '../../../../ui/atoms/Card';
+import { Stack } from '@autoart/ui';
+import { Text } from '@autoart/ui';
+import { Button } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
+import { ProgressBar } from '@autoart/ui';
+import { Card } from '@autoart/ui';
 import { useExecuteImport, type ImportSession, type ImportPlan } from '../../../../api/hooks/imports';
 
 interface StepProps {

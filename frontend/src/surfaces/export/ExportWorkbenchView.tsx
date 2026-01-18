@@ -11,7 +11,7 @@ import { Eye, FileText } from 'lucide-react';
 
 import { ExportPreview } from './ExportPreview';
 import { EXPORT_FORMATS, type ExportFormat, type ExportOptions, type BfaProjectExportModel } from './types';
-import { Text, Stack } from '../../ui/atoms';
+import { Text, Stack } from '@autoart/ui';
 
 // ============================================================================
 // TYPES
@@ -55,11 +55,10 @@ export function ExportWorkbenchView({
                             <button
                                 key={fmt.id}
                                 onClick={() => onFormatChange(fmt.id)}
-                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                                    format === fmt.id
+                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${format === fmt.id
                                         ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent'
-                                }`}
+                                    }`}
                             >
                                 {fmt.label}
                             </button>
