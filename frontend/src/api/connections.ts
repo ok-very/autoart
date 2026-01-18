@@ -160,6 +160,8 @@ export function useAutoHelperInstances() {
         queryFn: async (): Promise<AutoHelperListResult> => {
             return api.get<AutoHelperListResult>('/connections/autohelper');
         },
+        // Poll every 5 seconds to detect new connections from AutoHelper
+        refetchInterval: 5000,
     });
 }
 
