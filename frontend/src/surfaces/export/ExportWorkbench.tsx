@@ -12,6 +12,7 @@ import { Download, X } from 'lucide-react';
 
 import { CollectionPanel } from './CollectionPanel';
 import { CollectionPreview } from './CollectionPreview';
+import { GenerationPanel } from './GenerationPanel';
 import { CollectionModeProvider } from './CollectionModeProvider';
 import { Card, Inline, Text, Button } from '@autoart/ui';
 import { useCollectionStore } from '../../stores';
@@ -95,6 +96,11 @@ export function ExportWorkbench({ onExportComplete, onClose }: ExportWorkbenchPr
                     {/* Preview Area */}
                     <div className="flex-1 overflow-hidden bg-white">
                         <CollectionPreview />
+                    </div>
+
+                    {/* Right Sidebar - Generation */}
+                    <div className="w-80 border-l border-slate-200 bg-slate-50">
+                        <GenerationPanel />
                     </div>
                 </div>
 
