@@ -19,8 +19,8 @@ export function GenerationPanel() {
     const handleGenerateManifest = async () => {
         if (!activeCollection) return;
 
-        const defaultPath = 'C:/Users/silen/Documents/automatiq/Intake';
-        const folder = window.prompt("Enter absolute intake folder path:", defaultPath);
+        const defaultPath = '';
+        const folder = window.prompt("Enter absolute intake folder path (e.g. C:/Users/USERNAME/Documents/automatiq/Intake):", defaultPath);
         if (!folder) return;
 
         setIsLoading(true);
@@ -42,8 +42,8 @@ export function GenerationPanel() {
     const handleGenerateReport = async () => {
         if (!activeCollection) return;
 
-        const defaultPath = 'C:/Users/silen/Documents/automatiq/Reports';
-        const outputFolder = window.prompt("Enter output folder for report:", defaultPath);
+        const defaultPath = '';
+        const outputFolder = window.prompt("Enter output folder for report (e.g. C:/Users/USERNAME/Documents/automatiq/Reports):", defaultPath);
         if (!outputFolder) return;
 
         // Simple template for MVP
