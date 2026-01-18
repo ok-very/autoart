@@ -14,7 +14,7 @@
 import { Tag, AlertCircle, List, CheckCircle2, User, Calendar, Hash, FileText } from 'lucide-react';
 
 import { useUIStore } from '../../stores/uiStore';
-import { Text, Stack, Inline, Badge, Card } from '../atoms';
+import { Text, Stack, Inline, Badge, Card } from '@autoart/ui';
 import type { InspectorTabId } from '../../types/ui';
 import type { ImportPlanItem } from '../../api/hooks/imports';
 

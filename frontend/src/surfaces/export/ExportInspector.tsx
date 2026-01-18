@@ -16,7 +16,7 @@ import {
     useGenerateExportProjection,
     useExecuteExport,
 } from '../../api/hooks/exports';
-import { Text, Stack, Inline, Checkbox, Button, Card } from '../../ui/atoms';
+import { Text, Stack, Inline, Checkbox, Button, Card } from '@autoart/ui';
 
 // ============================================================================
 // TYPES

@@ -15,7 +15,7 @@ import { Ban, CheckCircle2, AlertTriangle, Upload, Loader2 } from 'lucide-react'
 import { useState, useCallback, useMemo } from 'react';
 
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
-import { Card, Inline, Text, Button, Badge } from '../../ui/atoms';
+import { Card, Inline, Text, Button, Badge } from '@autoart/ui';
 
 // ============================================================================
 // TYPES

@@ -13,7 +13,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useSearchUsers } from '../../api/hooks/auth';
 import { useDebounce } from '../../hooks/useDebounce';
 import type { User as UserType } from '../../types';
-import { UserChip } from '../atoms/UserChip';
+import { UserChip } from '@autoart/ui';
 
 export interface UserMentionInputProps {
     /** Current value - string (user ID or name) or { id: string, name: string } */

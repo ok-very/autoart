@@ -93,6 +93,9 @@ function MenuDropdown({ children, className }: MenuDropdownProps) {
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const [isAnimating, setIsAnimating] = useState(false);
 
+    // Silence unused warning for now as it's used in effect but maybe not rendered
+    void isAnimating;
+
     // Trigger animation after mount
     useLayoutEffect(() => {
         if (isOpen) {

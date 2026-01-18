@@ -15,7 +15,7 @@ import { HierarchyPreview } from './HierarchyPreview';
 import { StagePreview } from './StagePreview';
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
 import { useUIStore } from '../../stores/uiStore';
-import { Text, Stack, Badge } from '../../ui/atoms';
+import { Text, Stack, Badge } from '@autoart/ui';
 
 // ============================================================================
 // TYPES
@@ -102,22 +102,20 @@ export function ImportWorkbenchView({
                 <div className="flex items-center gap-1 h-12">
                     <button
                         onClick={() => setPreviewMode('hierarchy')}
-                        className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                            previewMode === 'hierarchy'
+                        className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${previewMode === 'hierarchy'
                                 ? 'bg-blue-100 text-blue-700'
                                 : 'text-slate-600 hover:bg-slate-100'
-                        }`}
+                            }`}
                     >
                         <Columns className="w-4 h-4" />
                         Hierarchy
                     </button>
                     <button
                         onClick={() => setPreviewMode('stage')}
-                        className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                            previewMode === 'stage'
+                        className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${previewMode === 'stage'
                                 ? 'bg-blue-100 text-blue-700'
                                 : 'text-slate-600 hover:bg-slate-100'
-                        }`}
+                            }`}
                     >
                         <Layers className="w-4 h-4" />
                         Stages
@@ -168,7 +166,7 @@ export function ImportWorkbenchView({
                     session={session}
                     plan={plan}
                     isExecuting={false}
-                    onExecuteStart={() => {}}
+                    onExecuteStart={() => { }}
                     onExecuteComplete={(success) => {
                         if (success) {
                             // Could trigger navigation or callback

@@ -14,11 +14,11 @@ import { useUIStore } from '@/stores';
 import type { NodeType } from '@/types';
 
 import type { DrawerProps, CreateNodeContext } from '../../../drawer/types';
-import { Button } from '../../atoms/Button';
-import { Inline } from '../../atoms/Inline';
-import { Stack } from '../../atoms/Stack';
-import { Text } from '../../atoms/Text';
-import { TextInput } from '../../atoms/TextInput';
+import { Button } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
+import { Stack } from '@autoart/ui';
+import { Text } from '@autoart/ui';
+import { TextInput } from '@autoart/ui';
 
 /**
  * @deprecated Use DrawerProps<CreateNodeContext> instead.

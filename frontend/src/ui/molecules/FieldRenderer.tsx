@@ -2,7 +2,7 @@ import { clsx } from 'clsx';
 
 import type { FieldViewModel } from '@autoart/shared/domain';
 
-import { TagsInput } from './TagsInput';
+import { TagsInput } from '@autoart/ui';
 import { DateFieldEditor } from '../semantic/DateFieldEditor';
 import { StatusFieldEditor } from '../semantic/StatusFieldEditor';
 

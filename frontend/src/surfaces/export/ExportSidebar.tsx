@@ -11,7 +11,7 @@ import { Eye, Filter, FolderOpen } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { useProjects } from '../../api/hooks';
-import { Text, Inline, Checkbox, Badge } from '../../ui/atoms';
+import { Text, Inline, Checkbox, Badge } from '@autoart/ui';
 
 // ============================================================================
 // TYPES
@@ -124,9 +124,8 @@ export function ExportSidebar({
                             return (
                                 <div
                                     key={project.id}
-                                    className={`px-3 py-2 hover:bg-slate-50 transition-colors ${
-                                        isSelected ? 'bg-emerald-50' : ''
-                                    } ${isPreviewing ? 'ring-2 ring-inset ring-blue-400' : ''}`}
+                                    className={`px-3 py-2 hover:bg-slate-50 transition-colors ${isSelected ? 'bg-emerald-50' : ''
+                                        } ${isPreviewing ? 'ring-2 ring-inset ring-blue-400' : ''}`}
                                 >
                                     <Inline justify="between" align="start">
                                         <Inline gap="sm" className="flex-1 min-w-0">
@@ -149,11 +148,10 @@ export function ExportSidebar({
 
                                         <button
                                             onClick={() => onPreviewProject(isPreviewing ? null : project.id)}
-                                            className={`p-1.5 rounded-md transition-colors ${
-                                                isPreviewing
+                                            className={`p-1.5 rounded-md transition-colors ${isPreviewing
                                                     ? 'bg-blue-100 text-blue-600'
                                                     : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
-                                            }`}
+                                                }`}
                                             title="Preview export"
                                         >
                                             <Eye size={16} />

@@ -8,7 +8,7 @@ import { Eye } from 'lucide-react';
 
 import type { HierarchyNode } from '@autoart/shared';
 
-import { Inline, Text, Checkbox } from '../../ui/atoms';
+import { Inline, Text, Checkbox } from '@autoart/ui';
 
 export interface ExportProjectListProps {
     projects: HierarchyNode[];
@@ -74,8 +74,8 @@ export function ExportProjectList({
                             <button
                                 onClick={() => onPreview(isPreviewing ? null : project.id)}
                                 className={`p-1.5 rounded-md transition-colors ${isPreviewing
-                                        ? 'bg-blue-100 text-blue-600'
-                                        : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                                    ? 'bg-blue-100 text-blue-600'
+                                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
                                     }`}
                                 title="Preview export"
                             >

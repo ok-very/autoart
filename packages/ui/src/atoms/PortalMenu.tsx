@@ -12,8 +12,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Z_INDEX } from '../../constants/zIndex';
-import { useClickOutside } from '../../hooks/useClickOutside';
+import { Z_INDEX } from '../constants/zIndex';
+import { useClickOutside } from '../hooks/useClickOutside';
 
 type Placement = 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end';
 

@@ -10,7 +10,7 @@ import { useMemo } from 'react';
 
 import type { ExportFormat, ExportOptions, BfaProjectExportModel } from './types';
 import { useExportProjection } from '../../api/hooks/exports';
-import { Card, Inline, Text, Stack, Badge } from '../../ui/atoms';
+import { Card, Inline, Text, Stack, Badge } from '@autoart/ui';
 
 export interface ExportPreviewProps {
     projectId: string;

@@ -17,7 +17,7 @@ import { useState, useMemo } from 'react';
 import type { FieldDescriptor, DataRecord } from '@autoart/shared';
 
 import { useRecords, useUpdateRecord } from '../../api/hooks';
-import { Checkbox } from '../atoms/Checkbox';
+import { Checkbox } from '@autoart/ui';
 import { DataFieldWidget, type DataFieldKind } from '../common/DataFieldWidget';
 import { TableFrame, TableHeaderRow, TableRow, TableHeaderCell, TableCell } from '../table';
 

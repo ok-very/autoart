@@ -12,13 +12,13 @@ import { useUIStore } from '@/stores';
 
 import type { DrawerProps, CreateLinkContext } from '../../../drawer/types';
 import { useDebounce } from '../../../hooks/useDebounce';
-import { Button } from '../../atoms/Button';
-import { Inline } from '../../atoms/Inline';
-import { Select } from '../../atoms/Select';
-import { Spinner } from '../../atoms/Spinner';
-import { Stack } from '../../atoms/Stack';
-import { Text } from '../../atoms/Text';
-import { TextInput } from '../../atoms/TextInput';
+import { Button } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
+import { Select } from '@autoart/ui';
+import { Spinner } from '@autoart/ui';
+import { Stack } from '@autoart/ui';
+import { Text } from '@autoart/ui';
+import { TextInput } from '@autoart/ui';
 
 // Legacy props interface (deprecated - use DrawerProps)
 interface LegacyCreateLinkViewProps {

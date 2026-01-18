@@ -16,7 +16,7 @@ import { useState, useEffect } from 'react';
 import type { FieldDescriptor } from '@autoart/shared';
 
 import { useUIStore, isFieldsViewMode } from '../stores/uiStore';
-import { ResizeHandle } from '../ui/atoms/ResizeHandle';
+import { ResizeHandle } from '@autoart/ui';
 import { FieldsMillerColumnsView } from '../ui/composites/FieldsMillerColumnsView';
 import { Header } from '../ui/layout/Header';
 import { RegistryPageHeader, type RegistryTab } from '../ui/registry';

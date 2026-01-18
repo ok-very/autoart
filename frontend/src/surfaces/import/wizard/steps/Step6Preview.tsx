@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Columns, Layers, Table as TableIcon } from 'lucide-react';
-import { Stack } from '../../../../ui/atoms/Stack';
-import { Text } from '../../../../ui/atoms/Text';
-import { Button } from '../../../../ui/atoms/Button';
-import { Inline } from '../../../../ui/atoms/Inline';
+import { Stack } from '@autoart/ui';
+import { Text } from '@autoart/ui';
+import { Button } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
 import { ImportPreview } from '../../ImportPreview';
 import type { ImportSession, ImportPlan } from '../../../../api/hooks/imports';
 

@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 
-import { UserChip } from '../atoms/UserChip';
+import { UserChip } from '@autoart/ui';
 
 /**
  * Field display kinds supported by the widget
