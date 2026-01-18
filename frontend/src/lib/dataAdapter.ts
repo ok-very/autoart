@@ -88,14 +88,14 @@ export function adaptTransientEmail(email: TransientEmail): ProcessedEmail {
  * Adapt EnrichedTransientEmail from backend to ProcessedEmail for frontend
  */
 export function adaptEnrichedEmail(email: EnrichedTransientEmail): ProcessedEmail {
-  const triage: TriageInfo = email.triage
+  const triage: TriageInfo | null = email.triage
     ? {
         status: email.triage.status,
         confidence: email.triage.confidence,
         reasoning: email.triage.reasoning,
         suggestedAction: email.triage.suggested_action,
       }
-    : createPlaceholderTriage();
+    : null;
 
   return {
     id: email.id,

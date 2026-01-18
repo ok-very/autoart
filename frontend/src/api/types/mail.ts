@@ -55,7 +55,7 @@ export interface ProcessedEmail {
   receivedAt: Date | null;
   projectId: string | null;
   bodyPreview: string;
-  triage: TriageInfo;
+  triage: TriageInfo | null;
   priority: Priority;
   priorityFactors: string[];
   extractedKeywords: string[];
@@ -64,9 +64,15 @@ export interface ProcessedEmail {
   metadata: Record<string, unknown> | null;
 }
 
-// =============================================================================
-// ENRICHED EMAIL (Backend Response)
-// =============================================================================
+export type TriageStatus = 'pending' | 'action_required' | 'informational' | 'archived';
+export type Priority = 'low' | 'medium' | 'high' | 'urgent';
+
+export interface TriageInfo {
+  status: TriageStatus;
+  confidence: number;
+  reasoning: string | null;
+  suggestedAction: string | null;
+}
 
 export interface EnrichedTransientEmail {
   id: string;

@@ -22,23 +22,10 @@ import {
   adaptEnrichedEmailList,
 } from '../../lib/dataAdapter';
 
-/**
- * Serialize filters to a stable string for query key comparison.
- * This prevents unnecessary refetches when filter objects have the same values but different identity.
- */
-function serializeFilters(filters?: InboxFilters): string {
-  if (!filters) return '';
-  return JSON.stringify({
-    projectId: filters.projectId ?? null,
-    limit: filters.limit ?? null,
-    offset: filters.offset ?? null,
-  });
-}
-
 export const mailQueryKeys = {
   all: () => ['mail'] as const,
-  emails: (filters?: InboxFilters) => ['mail', 'emails', serializeFilters(filters)] as const,
-  enrichedEmails: (filters?: InboxFilters) => ['mail', 'enriched', serializeFilters(filters)] as const,
+  emails: (filters?: InboxFilters) => ['mail', 'emails', filters] as const,
+  enrichedEmails: (filters?: InboxFilters) => ['mail', 'enriched', filters] as const,
   email: (id: string) => ['mail', 'email', id] as const,
   status: () => ['mail', 'status'] as const,
 };
