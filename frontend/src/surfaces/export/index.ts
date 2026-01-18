@@ -13,5 +13,13 @@ export { ExportWorkbench } from './ExportWorkbench';
 export { ExportPreview } from './ExportPreview';
 export { ExportProjectList } from './ExportProjectList';
 
+// Collection system
+export { CollectionModeProvider, useCollectionMode, useCollectionModeOptional } from './CollectionModeProvider';
+export { SelectableWrapper } from './SelectableWrapper';
+export { CollectionFlashOverlay } from './CollectionFlashOverlay';
+export { CollectionItemCard } from './CollectionItemCard';
+export { TemplatePresetSelector } from './TemplatePresetSelector';
+
 // Re-export types
 export * from './types';
+

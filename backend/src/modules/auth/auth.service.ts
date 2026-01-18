@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
+import { generateId } from '@autoart/shared';
 
 import type { RegisterInput, LoginInput } from './auth.schemas.js';
 import { db } from '../../db/client.js';
@@ -74,7 +74,7 @@ export async function loginUser(input: LoginInput) {
 }
 
 export async function createSession(userId: string): Promise<string> {
-  const refreshToken = uuidv4();
+  const refreshToken = generateId();
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_DAYS);
 
