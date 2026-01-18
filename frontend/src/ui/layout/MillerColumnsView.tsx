@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 import { MillerColumn } from './MillerColumn';
+import { useProjects, useProjectTree } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
 import type { NodeType } from '../../types';
@@ -15,8 +16,8 @@ interface ColumnSelections {
 }
 
 export function MillerColumnsView() {
-  const { getChildren, getNode } = useHierarchyStore();
-  const { activeProjectId, setSelection } = useUIStore();
+  const { getChildren, getNode, setNodes } = useHierarchyStore();
+  const { activeProjectId, setSelection, setActiveProject } = useUIStore();
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Track selection at each level
@@ -27,6 +28,26 @@ export function MillerColumnsView() {
     subprocess: null,
     task: null,
   });
+
+  // Load projects list
+  const { data: projects } = useProjects();
+
+  // Load project tree when a project is selected
+  const { data: projectTree } = useProjectTree(selections.project);
+
+  // Populate hierarchy store with projects
+  useEffect(() => {
+    if (projects) {
+      setNodes(projects);
+    }
+  }, [projects, setNodes]);
+
+  // Populate hierarchy store with project tree
+  useEffect(() => {
+    if (projectTree) {
+      setNodes(projectTree);
+    }
+  }, [projectTree, setNodes]);
 
   // Sync with external project selection
   useEffect(() => {
@@ -52,8 +73,10 @@ export function MillerColumnsView() {
   }, [selections]);
 
   const handleSelect = (level: NodeType, id: string) => {
+    // For projects, we may not have the node in store yet (first click loads it)
+    // So we allow selection even if getNode returns undefined for projects
     const node = getNode(id);
-    if (!node) return;
+    if (!node && level !== 'project') return;
 
     // Clear selections for all levels below this one
     const newSelections: ColumnSelections = { ...selections };
@@ -65,6 +88,8 @@ export function MillerColumnsView() {
         newSelections.stage = null;
         newSelections.subprocess = null;
         newSelections.task = null;
+        // Also set active project in UI store so other components know
+        setActiveProject(id);
         break;
       case 'process':
         newSelections.process = id;

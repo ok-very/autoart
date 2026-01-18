@@ -1,20 +1,17 @@
 /**
- * QUARANTINED ATOM
+ * EmojiPicker - Emoji selection component using Radix Popover
  * 
- * This component breaks atom rules:
- * - Uses internal state
- * - Uses createPortal (global DOM access)
- * - Imports external library (@emoji-mart)
- * 
- * TODO: Consider refactoring to molecule or accepting picker via render prop
+ * Refactored to use Radix UI for reliable positioning and accessibility.
+ * Uses @emoji-mart for the actual picker UI.
  */
 
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
 import { clsx } from 'clsx';
 import { Smile } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { useState } from 'react';
+
+import { PopoverRoot, PopoverTrigger, PopoverContent } from './Popover';
 
 interface EmojiPickerProps {
     /** Current emoji value (e.g., "📋") */
@@ -36,68 +33,6 @@ interface EmojiData {
 
 export function EmojiPicker({ value, onChange, triggerClassName, size = 'md' }: EmojiPickerProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const triggerRef = useRef<HTMLButtonElement>(null);
-    const pickerRef = useRef<HTMLDivElement>(null);
-    const [position, setPosition] = useState({ top: 0, left: 0 });
-
-    // Calculate position when opening
-    useEffect(() => {
-        if (isOpen && triggerRef.current) {
-            const rect = triggerRef.current.getBoundingClientRect();
-            const pickerHeight = 435; // emoji-mart default height
-            const pickerWidth = 352; // emoji-mart default width
-
-            // Position below the trigger, but flip if not enough space
-            let top = rect.bottom + 8;
-            let left = rect.left;
-
-            // Check if picker would overflow bottom of viewport
-            if (top + pickerHeight > window.innerHeight) {
-                top = rect.top - pickerHeight - 8;
-            }
-
-            // Check if picker would overflow right of viewport
-            if (left + pickerWidth > window.innerWidth) {
-                left = window.innerWidth - pickerWidth - 16;
-            }
-
-            // Ensure left is not negative
-            if (left < 16) {
-                left = 16;
-            }
-
-            setPosition({ top, left });
-        }
-    }, [isOpen]);
-
-    // Close on click outside
-    useEffect(() => {
-        if (!isOpen) return;
-
-        function handleClickOutside(event: MouseEvent) {
-            if (
-                pickerRef.current &&
-                !pickerRef.current.contains(event.target as Node) &&
-                triggerRef.current &&
-                !triggerRef.current.contains(event.target as Node)
-            ) {
-                setIsOpen(false);
-            }
-        }
-
-        function handleEscape(event: KeyboardEvent) {
-            if (event.key === 'Escape') {
-                setIsOpen(false);
-            }
-        }
-
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleEscape);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('keydown', handleEscape);
-        };
-    }, [isOpen]);
 
     const handleSelect = (emoji: EmojiData) => {
         onChange(emoji.native);
@@ -111,43 +46,38 @@ export function EmojiPicker({ value, onChange, triggerClassName, size = 'md' }: 
     };
 
     return (
-        <>
-            <button
-                ref={triggerRef}
-                type="button"
-                onClick={() => setIsOpen(!isOpen)}
-                className={clsx(
-                    'flex items-center justify-center rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-colors',
-                    sizeClasses[size],
-                    triggerClassName
-                )}
-                title={value ? 'Change emoji' : 'Select emoji'}
+        <PopoverRoot open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger asChild>
+                <button
+                    type="button"
+                    className={clsx(
+                        'flex items-center justify-center rounded-lg border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 transition-colors',
+                        sizeClasses[size],
+                        triggerClassName
+                    )}
+                    title={value ? 'Change emoji' : 'Select emoji'}
+                >
+                    {value ? (
+                        <span>{value}</span>
+                    ) : (
+                        <Smile size={size === 'sm' ? 14 : size === 'md' ? 18 : 22} className="text-slate-400" />
+                    )}
+                </button>
+            </PopoverTrigger>
+            <PopoverContent
+                className="p-0 overflow-hidden"
+                sideOffset={8}
+                align="start"
             >
-                {value ? (
-                    <span>{value}</span>
-                ) : (
-                    <Smile size={size === 'sm' ? 14 : size === 'md' ? 18 : 22} className="text-slate-400" />
-                )}
-            </button>
-
-            {isOpen &&
-                createPortal(
-                    <div
-                        ref={pickerRef}
-                        className="fixed z-[500] shadow-xl rounded-lg overflow-hidden"
-                        style={{ top: position.top, left: position.left }}
-                    >
-                        <Picker
-                            data={data}
-                            onEmojiSelect={handleSelect}
-                            theme="light"
-                            previewPosition="none"
-                            skinTonePosition="search"
-                            maxFrequentRows={2}
-                        />
-                    </div>,
-                    document.body
-                )}
-        </>
+                <Picker
+                    data={data}
+                    onEmojiSelect={handleSelect}
+                    theme="light"
+                    previewPosition="none"
+                    skinTonePosition="search"
+                    maxFrequentRows={2}
+                />
+            </PopoverContent>
+        </PopoverRoot>
     );
 }

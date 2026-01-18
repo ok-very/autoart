@@ -13,7 +13,6 @@ import { useUIStore, useUIPanels } from '../stores/uiStore';
 import { ResizeHandle } from '../ui/common/ResizeHandle';
 import { ProjectView } from '../ui/composites/ProjectView';
 import { SelectionInspector } from '../ui/composites/SelectionInspector';
-import { BottomDrawer } from '../ui/drawer/BottomDrawer';
 import { Header } from '../ui/layout/Header';
 
 export function ProjectPage() {
@@ -34,7 +33,6 @@ export function ProjectPage() {
                 {/* Main workspace - ProjectView composite */}
                 <div className="flex-1 flex flex-col overflow-hidden relative">
                     <ProjectView projectId={activeProjectId} />
-                    <BottomDrawer />
                 </div>
 
                 {/* Inspector Slot */}

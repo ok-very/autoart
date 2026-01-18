@@ -19,7 +19,6 @@ import { MondayImportWizardView } from '../surfaces/import/wizard/MondayImportWi
 // import { MondayPreviewView } from '../surfaces/import/MondayPreviewView'; // Replaced by Wizard
 import { ResizeHandle } from '@autoart/ui';
 import { SelectionInspector } from '../ui/composites/SelectionInspector';
-import { BottomDrawer } from '../ui/drawer/BottomDrawer';
 import { Header } from '../ui/layout/Header';
 
 // Source type lifted to page level for view swapping
@@ -154,7 +153,6 @@ export function ImportPage() {
                 {/* Center: Preview workspace (swappable based on source) */}
                 <div className="flex-1 flex flex-col overflow-hidden relative">
                     {renderCenterView()}
-                    <BottomDrawer />
                 </div>
 
                 {/* Right Inspector: Selected item details */}

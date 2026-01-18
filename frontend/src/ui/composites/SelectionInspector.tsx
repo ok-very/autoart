@@ -2,7 +2,6 @@
  * SelectionInspector - Unified Workbench Inspector
  *
  * Routes by selection.type (node | record | action | import_item) to show context-appropriate tabs.
- * Includes always-visible composer footer for quick action declaration.
  *
  * Tab Structure:
  * - Node/Record: Record | Interpretation | References | Links | Schema
@@ -12,7 +11,8 @@
  * Layout:
  * - Tab header (dynamic based on selection type)
  * - Scrollable content area
- * - Pinned footer composer
+ *
+ * Note: Quick Declare has been moved to a transient modal (Cmd/Ctrl+D)
  */
 
 import { clsx } from 'clsx';
@@ -26,7 +26,6 @@ import { useNode, useRecord, useInterpretationAvailable } from '../../api/hooks'
 import { useUIStore, type InspectorTabId } from '../../stores/uiStore';
 import { ActionDetailsPanel } from '../inspector/ActionDetailsPanel';
 import { ActionEventsPanel } from '../inspector/ActionEventsPanel';
-import { InspectorFooterComposer } from '../inspector/InspectorFooterComposer';
 
 // Re-export from canonical location for backward compatibility
 export type { InspectorTabId } from '../../types/ui';
@@ -87,9 +86,14 @@ export function SelectionInspector() {
                 <div className="h-14 border-b border-slate-100 flex items-center justify-center px-5 bg-slate-50/50">
                     <span className="text-xs text-slate-400">Select an item to inspect</span>
                 </div>
-                {/* Footer composer still available even without selection */}
-                <div className="flex-1" />
-                <InspectorFooterComposer />
+                <div className="flex-1 flex items-center justify-center text-xs text-slate-400 p-4 text-center">
+                    <div>
+                        <p className="mb-2">No selection</p>
+                        <p className="text-slate-300">
+                            Press <kbd className="px-1 py-0.5 bg-slate-100 rounded text-slate-500">Ctrl+D</kbd> to quick declare
+                        </p>
+                    </div>
+                </div>
             </aside>
         );
     }
@@ -216,9 +220,6 @@ export function SelectionInspector() {
 
             {/* View Content (scrollable) */}
             <div className="flex-1 overflow-y-auto custom-scroll p-5">{renderView()}</div>
-
-            {/* Footer Composer (pinned) */}
-            <InspectorFooterComposer />
         </aside>
     );
 }

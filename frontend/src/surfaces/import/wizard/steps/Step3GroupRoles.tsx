@@ -3,10 +3,9 @@ import { Stack } from '@autoart/ui';
 import { Text } from '@autoart/ui';
 import { Button } from '@autoart/ui';
 import { Inline } from '@autoart/ui';
-// Select replaced by PortalSelect below
 import { Badge } from '@autoart/ui';
 import { Spinner } from '@autoart/ui';
-import { PortalSelect } from '@autoart/ui';
+import { RadixSelect } from '@autoart/ui';
 import { useMondayBoardConfigs, useUpdateMondayGroupConfigs } from '../../../../api/hooks/monday';
 import { useGenerateImportPlan, type ImportSession, type ImportPlan } from '../../../../api/hooks/imports';
 import type { MondayGroupRole } from '../../../../api/types/monday';
@@ -146,7 +145,7 @@ export function Step3GroupRoles({ onNext, onBack, session, onSessionCreated }: S
                                                 {group.groupTitle}
                                             </td>
                                             <td className="px-4 py-2">
-                                                <PortalSelect
+                                                <RadixSelect
                                                     value={group.role}
                                                     onChange={(val) => {
                                                         if (val && board.id && board.workspaceId) {
@@ -164,7 +163,7 @@ export function Step3GroupRoles({ onNext, onBack, session, onSessionCreated }: S
                                             </td>
                                             <td className="px-4 py-2">
                                                 {group.role === 'stage' && (
-                                                    <PortalSelect
+                                                    <RadixSelect
                                                         value={group.stageKind || 'todo'}
                                                         onChange={(val) => {
                                                             if (val && board.id && board.workspaceId) {
@@ -176,7 +175,7 @@ export function Step3GroupRoles({ onNext, onBack, session, onSessionCreated }: S
                                                     />
                                                 )}
                                                 {group.role === 'reference_group' && (
-                                                    <PortalSelect
+                                                    <RadixSelect
                                                         value={group.settings?.referenceStrategy || 'create'}
                                                         onChange={(val) => {
                                                             if (val && board.id && board.workspaceId) {

@@ -1,0 +1,211 @@
+@import 'dockview/dist/styles/dockview.css';
+/**
+ * Dockview Theme
+ *
+ * Custom styling for Dockview panels to match AutoArt design system.
+ * Uses slate colors and blue accents.
+ * 
+ * Note: Base dockview.css is imported in main.tsx to avoid @import ordering issues.
+ */
+
+/* Override Dockview theme variables */
+.dockview-theme-light {
+  --dv-background-color: #f8fafc;
+  /* slate-50 */
+  /* slate-50 */
+  --dv-tabs-and-actions-container-background-color: #f8fafc;
+  /* slate-50 */
+  /* Add food pattern to tab headers */
+  /* Using simplified SVG shapes for food items as background image data uri would be too large to inline here without external assets */
+  /* Instead, we'll use a simple geometric pattern for now, as icons require SVG encoding */
+  --dv-tabs-and-actions-container-background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+  --dv-tabs-and-actions-container-background-size: 20px 20px;
+
+  --dv-activegroup-hiddenpanel-tab-background-color: #f1f5f9;
+  /* slate-100 */
+  --dv-inactivegroup-visiblepanel-tab-background-color: #f1f5f9;
+  --dv-inactivegroup-hiddenpanel-tab-background-color: #e2e8f0;
+  /* slate-200 */
+  --dv-tab-divider-color: #e2e8f0;
+  /* slate-200 */
+  --dv-separator-border: #e2e8f0;
+  --dv-drag-over-background-color: rgba(59, 130, 246, 0.1);
+  /* blue-500/10 */
+  --dv-drag-over-border-color: #3b82f6;
+  /* blue-500 */
+
+  /* Tab text colors - these CSS variables control the actual text color */
+  --dv-activegroup-visiblepanel-tab-color: #0f172a;
+  /* slate-900 - active tab text */
+  --dv-activegroup-hiddenpanel-tab-color: #475569;
+  /* slate-600 - inactive tab text */
+  --dv-inactivegroup-visiblepanel-tab-color: #475569;
+  /* slate-600 */
+  --dv-inactivegroup-hiddenpanel-tab-color: #64748b;
+  /* slate-500 */
+
+  /* Explicit text colors for light theme */
+  color: #0f172a;
+  /* slate-900 */
+}
+
+/* Tab styling */
+.dockview-theme-light .dv-tab {
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  /* slate-600 */
+  padding: 6px 12px;
+  /* Dark grey border for tabs */
+  border: 1px solid #475569;
+  border-bottom: none;
+  transition: all 0.15s ease;
+  border-radius: 6px 6px 0 0;
+  /* Rounded top corners */
+  margin-right: 2px;
+  background: #f1f5f9;
+  /* Ensure inactive tabs have background */
+  background: linear-gradient(to bottom, #ffffff, #f1f5f9);
+}
+
+.dockview-theme-light .dv-tab:hover {
+  color: #1e293b;
+  /* slate-800 */
+  background: #e2e8f0 !important;
+  /* slate-200 */
+}
+
+/* Fix for black background on click/focus */
+.dockview-theme-light .dv-tab:focus,
+.dockview-theme-light .dv-tab:active,
+.dockview-theme-light .dv-tab.focused {
+  background: #e2e8f0 !important;
+  color: #0f172a;
+}
+
+.dockview-theme-light .dv-tab.active {
+  color: #0f172a;
+  /* slate-900 */
+  background: #ffffff;
+  /* Connect active tab to panel by hiding bottom border */
+  border-bottom: 1px solid #ffffff;
+  /* We actually need to cover the panel border, usually done by z-index or margin -1px */
+  margin-bottom: -1px;
+  z-index: 10;
+  font-weight: 600;
+  box-shadow: none;
+  /* Borders handle definition now */
+}
+
+/* Hide close button for permanent Workspace tab */
+.dockview-theme-light .dv-tab[title="Workspace"] .dv-default-tab-action {
+  display: none !important;
+}
+
+/* Tab close button */
+.dockview-theme-light .dv-default-tab-action {
+  color: #64748b;
+  /* slate-500 */
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.dockview-theme-light .dv-tab:hover .dv-default-tab-action {
+  opacity: 1;
+}
+
+.dockview-theme-light .dv-default-tab-action:hover {
+  color: #0f172a;
+  /* slate-900 */
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+/* Add tab button */
+.dockview-theme-light .dv-tabs-container .dv-void-container button {
+  color: #94a3b8;
+  /* slate-400 */
+}
+
+.dockview-theme-light .dv-tabs-container .dv-void-container button:hover {
+  color: #475569;
+  /* slate-600 */
+  background: #f1f5f9;
+  /* slate-100 */
+}
+
+/* Panel content area - add border */
+.dockview-theme-light .dv-groupview-panel {
+  background: #ffffff;
+  border: 1px solid #475569;
+  /* Dark grey border matching tabs */
+  border-top: none;
+  /* Top border handled by tab container bottom border */
+}
+
+/* Ensure the active tab connects by covering the panel border */
+/* This might require position relative on header */
+.dockview-theme-light .dv-tabs-and-actions-container {
+  border-bottom: 1px solid #475569;
+  /* The line under tabs */
+  /* margin-bottom not needed if panel has no top border */
+  z-index: 10;
+  position: relative;
+}
+
+.dockview-theme-light .dv-tab.active {
+  color: #0f172a;
+  /* slate-900 */
+  background: #ffffff !important;
+  /* Force white solid background for active tab */
+
+  /* Thicken border when selected as requested */
+  border: 2px solid #0f172a;
+  border-bottom: 2px solid #ffffff !important;
+  /* Connect to panel */
+
+  /* Make it rounder */
+  border-radius: 8px 8px 0 0;
+
+  /* Adjust overlap to account for thicker border */
+  margin-bottom: -2px;
+  z-index: 20;
+  position: relative;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+/* Pill highlight for text in active tab */
+.dockview-theme-light .dv-tab.active .dv-tab-label {
+  background-color: #f1f5f9;
+  /* slate-100 */
+  color: #0f172a;
+  /* slate-900 */
+  padding: 2px 10px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.dockview-theme-light .dv-tab:not(.active) .dv-tab-label {
+  padding: 2px 0;
+  /* Maintain height alignment */
+}
+
+/* Scrollbars */
+.dockview-theme-light ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.dockview-theme-light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.dockview-theme-light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.dockview-theme-light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

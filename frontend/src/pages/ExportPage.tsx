@@ -14,7 +14,6 @@ import { ExportInspector } from '../surfaces/export/ExportInspector';
 import { ExportSidebar } from '../surfaces/export/ExportSidebar';
 import { ExportWorkbenchView } from '../surfaces/export/ExportWorkbenchView';
 import { ResizeHandle } from '../ui/common/ResizeHandle';
-import { BottomDrawer } from '../ui/drawer/BottomDrawer';
 import { Header } from '../ui/layout/Header';
 
 
@@ -92,7 +91,6 @@ export function ExportPage() {
                             setProjectionCache((prev) => new Map(prev).set(id, model));
                         }}
                     />
-                    <BottomDrawer />
                 </div>
 
                 {/* Right Inspector: Export options & actions */}

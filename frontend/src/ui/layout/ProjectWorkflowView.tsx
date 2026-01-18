@@ -1,6 +1,7 @@
-import { Plus, ChevronDown, Wand2 } from 'lucide-react';
+import { Plus, ChevronDown, Wand2, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useEffect, useMemo, useCallback, useState } from 'react';
-
+import { ProjectSidebarPanel } from '../panels/ProjectSidebarPanel';
+import { ResizeHandle } from '../common/ResizeHandle';
 import type { DerivedStatus } from '@autoart/shared';
 
 import {
@@ -25,6 +26,7 @@ import { DataTableHierarchy, type HierarchyFieldDef } from '../../ui/composites/
 import { WorkflowSurfaceTable } from '../../ui/composites/WorkflowSurfaceTable';
 import { deriveTaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
 import { ComposerSurface } from '../composer';
+import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownLabel, DropdownSeparator } from '@autoart/ui';
 
 /**
  * Extract metadata from a node, parsing JSON string if needed
@@ -89,6 +91,30 @@ export function ProjectWorkflowView() {
     const getNode = useHierarchyStore((state) => state.getNode);
     const getChildren = useHierarchyStore((state) => state.getChildren);
     const { activeProjectId, selection, inspectNode, setInspectorMode, openDrawer } = useUIStore();
+
+    // Sidebar state
+    const [sidebarWidth, setSidebarWidth] = useState(320);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+    const handleSidebarResize = useCallback((delta: number) => {
+        setSidebarWidth((prev) => Math.max(200, Math.min(600, prev + delta)));
+    }, []);
+
+
+
+
+
+    // Let's scroll down to where other useState calls are (around line 216 or 303).
+    // line 303: const [useWorkflowSurface, setUseWorkflowSurface] = useState(true);
+    // I will add my state there.
+
+    // Then I will replace the return block.
+
+    // Actually, let's do the return block replacement first, as it contains the main visual changes.
+    // And for the state, I can insert it after `useWorkflowSurface`.
+
+
+
 
     // Fetch record definitions to get Task schema
     const { data: definitions } = useRecordDefinitions();
@@ -213,7 +239,6 @@ export function ProjectWorkflowView() {
 
     // Track selected process (for multi-process projects)
     const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
-    const [isProcessDropdownOpen, setIsProcessDropdownOpen] = useState(false);
 
     // Auto-select first process when processes change
     useEffect(() => {
@@ -245,8 +270,6 @@ export function ProjectWorkflowView() {
 
     // Track locally selected subprocess (can be changed via sidebar or header dropdown)
     const [localSubprocessId, setLocalSubprocessId] = useState<string | null>(null);
-    const [isSubprocessDropdownOpen, setIsSubprocessDropdownOpen] = useState(false);
-    const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
     const [isComposerOpen, setIsComposerOpen] = useState(false);
 
     // Track last focused table for contextual Add button
@@ -428,377 +451,290 @@ export function ProjectWorkflowView() {
     // Selected record ID for floating tables
     const selectedRecordId = selection?.type === 'record' ? selection.id : null;
 
-    if (!activeProjectId) {
-        return (
-            <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
-                <div className="text-center">
-                    <p className="text-lg font-medium">No project selected</p>
-                    <p className="text-sm">Select a project from the top menu</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (!project) {
-        return (
-            <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
-                <div className="text-center">
-                    <p className="text-lg font-medium">Loading project…</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className="flex-1 flex overflow-hidden bg-white">
-            {/* Left navigation (merged from old sidebar) */}
-            <aside className="w-[320px] shrink-0 border-r border-slate-200 bg-slate-50 flex flex-col">
-                <div className="p-3 border-b border-slate-200 bg-white flex items-start justify-between">
-                    <div className="min-w-0 flex-1">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Workflow</div>
-                        {/* Show dropdown when multiple processes, otherwise just project title */}
-                        {processes.length > 1 ? (
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsProcessDropdownOpen(!isProcessDropdownOpen)}
-                                    className="flex items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors"
-                                >
-                                    <span className="truncate" title={selectedProcess?.title || project.title}>
-                                        {selectedProcess?.title || project.title}
-                                    </span>
-                                    <ChevronDown
-                                        size={14}
-                                        className={`shrink-0 transition-transform ${isProcessDropdownOpen ? 'rotate-180' : ''}`}
-                                    />
-                                </button>
-                                {isProcessDropdownOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-10" onClick={() => setIsProcessDropdownOpen(false)} />
-                                        <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
-                                            <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase">Processes</div>
-                                            {processes.map((process) => (
-                                                <button
-                                                    key={process.id}
-                                                    onClick={() => {
-                                                        setSelectedProcessId(process.id);
-                                                        setLocalSubprocessId(null); // Reset to show first subprocess of new process
-                                                        setIsProcessDropdownOpen(false);
-                                                    }}
-                                                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-slate-50 ${
-                                                        process.id === selectedProcessId ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
-                                                    }`}
-                                                >
-                                                    <span className="truncate block" title={process.title}>
-                                                        {process.title}
-                                                    </span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="text-sm font-semibold text-slate-800 truncate" title={project.title}>
-                                {project.title}
-                            </div>
-                        )}
-                    </div>
+        <div className="flex-1 flex overflow-hidden bg-white relative">
+            {/* Collapsed Sidebar Toggle (Floating when collapsed) */}
+            {isSidebarCollapsed && (
+                <div className="absolute top-3 left-3 z-20">
                     <button
-                        onClick={() => openDrawer('create-node', { parentId: project.id, nodeType: 'process' })}
-                        className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-                        title="Add Process"
+                        onClick={() => setIsSidebarCollapsed(false)}
+                        className="p-1.5 bg-white border border-slate-200 rounded-md shadow-sm text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors"
+                        title="Expand Sidebar"
                     >
-                        <Plus size={16} />
+                        <PanelLeftOpen size={16} />
+                    </button>
+                </div>
+            )}
+
+            {/* Left navigation (merged from old sidebar) - Now reusing shared ProjectSidebarPanel */}
+            <aside
+                className={`shrink-0 border-r border-slate-200 bg-slate-50 overflow-hidden flex flex-col relative transition-all duration-300 ease-in-out ${isSidebarCollapsed ? 'w-0 opacity-0 border-r-0' : 'opacity-100'
+                    }`}
+                style={{ width: isSidebarCollapsed ? 0 : sidebarWidth }}
+            >
+                <div className="flex-1 overflow-hidden relative">
+                    <ProjectSidebarPanel />
+
+                    {/* Collapse Button inside sidebar */}
+                    <button
+                        onClick={() => setIsSidebarCollapsed(true)}
+                        className="absolute top-2 right-2 p-1 rounded-md text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors z-10"
+                        title="Collapse Sidebar"
+                    >
+                        <PanelLeftClose size={14} />
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-2 custom-scroll">
-                    {subprocesses.length === 0 ? (
-                        <div className="p-3 text-xs text-slate-400">No subprocesses yet.</div>
-                    ) : (
-                        <div className="space-y-1">
-                            {subprocesses.map((sp) => {
-                                const isActive = sp.id === activeSubprocessId;
-                                return (
-                                    <button
-                                        key={sp.id}
-                                        onClick={() => handleSubprocessClick(sp.id)}
-                                        className={
-                                            isActive
-                                                ? 'w-full text-left px-3 py-2 rounded bg-blue-50 text-blue-700 border border-blue-100'
-                                                : 'w-full text-left px-3 py-2 rounded hover:bg-white text-slate-700 border border-transparent'
-                                        }
-                                    >
-                                        <div className="text-xs font-semibold truncate" title={sp.title}>
-                                            {sp.title}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
+                {/* Resize Handle */}
+                {!isSidebarCollapsed && (
+                    <div className="absolute top-0 right-0 bottom-0 w-1 cursor-col-resize z-20 hover:bg-blue-300 transition-colors">
+                        <ResizeHandle
+                            direction="right"
+                            onResize={handleSidebarResize}
+                            className="w-full h-full opacity-0 hover:opacity-100"
+                        />
+                    </div>
+                )}
             </aside>
 
-            {/* Task table (merged from old project list view) */}
+            {/* Main Content Area */}
             <main className="flex-1 flex flex-col overflow-hidden">
-                <div className="h-12 border-b border-slate-200 bg-white px-4 flex items-center justify-between">
-                    <div className="min-w-0 flex-1">
-                        <div className="text-xs text-slate-400">Subprocess</div>
-                        {/* Subprocess dropdown when multiple exist */}
-                        {subprocesses.length > 1 ? (
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsSubprocessDropdownOpen(!isSubprocessDropdownOpen)}
-                                    className="flex items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors"
-                                >
-                                    <span className="truncate" title={activeSubprocess?.title}>
+                {!activeProjectId ? (
+                    <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
+                        <div className="text-center">
+                            <p className="text-lg font-medium">No project selected</p>
+                            <p className="text-sm">Select a project from the top menu</p>
+                        </div>
+                    </div>
+                ) : !project ? (
+                    <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
+                        <div className="text-center">
+                            <p className="text-lg font-medium">Loading project…</p>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        <div className="h-12 border-b border-slate-200 bg-white px-4 flex items-center justify-between">
+                            <div className="min-w-0 flex-1">
+                                <div className="text-xs text-slate-400">Subprocess</div>
+                                {/* Subprocess dropdown when multiple exist */}
+                                {subprocesses.length > 1 ? (
+                                    <div className="relative">
+                                        <Dropdown>
+                                            <DropdownTrigger className="flex items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors focus:outline-none">
+                                                <span className="truncate" title={activeSubprocess?.title}>
+                                                    {activeSubprocess?.title || 'Select a subprocess'}
+                                                </span>
+                                                <ChevronDown size={14} className="shrink-0 text-slate-400" />
+                                            </DropdownTrigger>
+                                            <DropdownContent align="start" className="w-56 max-h-64 overflow-y-auto">
+                                                {subprocesses.map((sp) => (
+                                                    <DropdownItem
+                                                        key={sp.id}
+                                                        onSelect={() => handleSubprocessClick(sp.id)}
+                                                        className={sp.id === activeSubprocessId ? 'bg-blue-50 text-blue-700' : ''}
+                                                    >
+                                                        <span className="truncate">{sp.title}</span>
+                                                    </DropdownItem>
+                                                ))}
+                                            </DropdownContent>
+                                        </Dropdown>
+                                    </div>
+                                ) : (
+                                    <div className="text-sm font-semibold text-slate-800 truncate">
                                         {activeSubprocess?.title || 'Select a subprocess'}
-                                    </span>
-                                    <ChevronDown
-                                        size={14}
-                                        className={`shrink-0 transition-transform ${isSubprocessDropdownOpen ? 'rotate-180' : ''}`}
-                                    />
-                                </button>
-                                {isSubprocessDropdownOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-10" onClick={() => setIsSubprocessDropdownOpen(false)} />
-                                        <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
-                                            {subprocesses.map((sp) => (
-                                                <button
-                                                    key={sp.id}
-                                                    onClick={() => {
-                                                        handleSubprocessClick(sp.id);
-                                                        setIsSubprocessDropdownOpen(false);
-                                                    }}
-                                                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-slate-50 ${
-                                                        sp.id === activeSubprocessId ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
-                                                    }`}
-                                                >
-                                                    <span className="truncate block" title={sp.title}>
-                                                        {sp.title}
-                                                    </span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </>
+                                    </div>
                                 )}
                             </div>
-                        ) : (
-                            <div className="text-sm font-semibold text-slate-800 truncate">
-                                {activeSubprocess?.title || 'Select a subprocess'}
-                            </div>
-                        )}
-                    </div>
-                    {/* Add dropdown menu + Composer button */}
-                    {activeSubprocessId && (
-                        <div className="flex items-center gap-2">
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsAddDropdownOpen(!isAddDropdownOpen)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors"
-                                >
-                                    <Plus size={14} />
-                                    <span>Add</span>
-                                    <ChevronDown size={12} className={`transition-transform ${isAddDropdownOpen ? 'rotate-180' : ''}`} />
-                                </button>
-                                {isAddDropdownOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-10" onClick={() => setIsAddDropdownOpen(false)} />
-                                        <div className="absolute top-full right-0 mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1">
-                                            <button
-                                                onClick={() => {
-                                                    openDrawer('create-node', { parentId: activeSubprocessId, nodeType: 'task' });
-                                                    setIsAddDropdownOpen(false);
-                                                }}
-                                                className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                            >
-                                                <span className="w-5 h-5 rounded bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold">T</span>
-                                                Add Task
-                                            </button>
-                                            {/* Add Subtask - only enabled when a task is selected */}
-                                            <button
-                                                onClick={() => {
-                                                    if (selectedNode?.type === 'task') {
-                                                        openDrawer('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
-                                                    } else if (selectedNode?.type === 'subtask' && selectedNode.parent_id) {
-                                                        // If subtask selected, add sibling under same parent task
-                                                        openDrawer('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
-                                                    }
-                                                    setIsAddDropdownOpen(false);
-                                                }}
-                                                disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
-                                                className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${
-                                                    selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
-                                                        ? 'text-slate-700 hover:bg-slate-50'
-                                                        : 'text-slate-400 cursor-not-allowed'
-                                                }`}
-                                            >
-                                                <span
-                                                    className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold ${
-                                                        selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
+                            {/* Add dropdown menu + Composer button */}
+                            {activeSubprocessId && (
+                                <div className="flex items-center gap-2">
+                                    <div className="relative">
+                                        <Dropdown>
+                                            <DropdownTrigger className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors focus:outline-none">
+                                                <Plus size={14} />
+                                                <span>Add</span>
+                                                <ChevronDown size={12} className="text-slate-400" />
+                                            </DropdownTrigger>
+                                            <DropdownContent align="end" className="w-44">
+                                                <DropdownItem
+                                                    onSelect={() => openDrawer('create-node', { parentId: activeSubprocessId, nodeType: 'task' })}
+                                                >
+                                                    <span className="w-5 h-5 rounded bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold mr-2">T</span>
+                                                    Add Task
+                                                </DropdownItem>
+
+                                                <DropdownItem
+                                                    onSelect={() => {
+                                                        if (selectedNode?.type === 'task') {
+                                                            openDrawer('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
+                                                        } else if (selectedNode?.type === 'subtask' && selectedNode.parent_id) {
+                                                            openDrawer('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
+                                                        }
+                                                    }}
+                                                    disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
+                                                >
+                                                    <span
+                                                        className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold mr-2 ${selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
                                                             ? 'bg-teal-100 text-teal-600'
                                                             : 'bg-slate-100 text-slate-400'
-                                                    }`}
-                                                >
-                                                    ST
-                                                </span>
-                                                Add Subtask
-                                            </button>
-                                            {/* Divider */}
-                                            {definitions && definitions.filter((d) => !d.is_system && d.name !== 'Task').length > 0 && (
-                                                <div className="border-t border-slate-100 my-1" />
-                                            )}
-                                            {/* Record types from definitions */}
-                                            {definitions &&
-                                                definitions
-                                                    .filter((d) => !d.is_system && d.name !== 'Task')
-                                                    .map((def) => (
-                                                        <button
-                                                            key={def.id}
-                                                            onClick={() => {
-                                                                openDrawer('create-record', {
-                                                                    definitionId: def.id,
-                                                                    classificationNodeId: activeSubprocessId,
-                                                                });
-                                                                setIsAddDropdownOpen(false);
-                                                            }}
-                                                            className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                                        >
-                                                            <span className="w-5 h-5 rounded bg-slate-100 text-slate-600 flex items-center justify-center text-xs">
-                                                                {def.styling?.icon || def.name.charAt(0)}
-                                                            </span>
-                                                            Add {def.name}
-                                                        </button>
-                                                    ))}
-                                        </div>
-                                    </>
-                                )}
-                            </div>
+                                                            }`}
+                                                    >
+                                                        ST
+                                                    </span>
+                                                    Add Subtask
+                                                </DropdownItem>
 
-                            {/* Composer Button */}
-                            <button
-                                onClick={() => setIsComposerOpen(true)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded shadow-sm transition-all"
-                            >
-                                <Wand2 size={14} />
-                                <span>Composer</span>
-                            </button>
-                        </div>
-                    )}
+                                                {definitions && definitions.filter((d) => !d.is_system && d.name !== 'Task').length > 0 && (
+                                                    <DropdownSeparator />
+                                                )}
 
-                    {/* Composer Dialog */}
-                    {isComposerOpen && activeSubprocessId && (
-                        <>
-                            <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setIsComposerOpen(false)} />
-                            <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[80vh] bg-white rounded-xl shadow-2xl overflow-hidden">
-                                <ComposerSurface
-                                    mode="drawer"
-                                    contextId={activeSubprocessId}
-                                    onSuccess={() => setIsComposerOpen(false)}
-                                    onClose={() => setIsComposerOpen(false)}
-                                />
-                            </div>
-                        </>
-                    )}
-                </div>
+                                                {definitions &&
+                                                    definitions
+                                                        .filter((d) => !d.is_system && d.name !== 'Task')
+                                                        .map((def) => (
+                                                            <DropdownItem
+                                                                key={def.id}
+                                                                onSelect={() =>
+                                                                    openDrawer('create-record', {
+                                                                        definitionId: def.id,
+                                                                        classificationNodeId: activeSubprocessId,
+                                                                    })
+                                                                }
+                                                            >
+                                                                <span className="w-5 h-5 rounded bg-slate-100 text-slate-600 flex items-center justify-center text-xs mr-2">
+                                                                    {def.styling?.icon || def.name.charAt(0)}
+                                                                </span>
+                                                                Add {def.name}
+                                                            </DropdownItem>
+                                                        ))}
+                                            </DropdownContent>
+                                        </Dropdown>
+                                    </div>
 
-                <div className="flex-1 overflow-auto custom-scroll p-4">
-                    <div className="min-w-[900px] space-y-4">
-                        {/* Task Table - Toggle between hierarchy-based and surface-based */}
-                        <div onFocus={() => setFocusedTableId('tasks')} onClick={() => setFocusedTableId('tasks')}>
-                            {/* Toggle switch for development/testing */}
-                            <div className="flex items-center justify-end gap-2 mb-2 text-xs">
-                                <span className="text-slate-400">View Mode:</span>
-                                <button
-                                    onClick={() => setUseWorkflowSurface(false)}
-                                    className={`px-2 py-1 rounded ${
-                                        !useWorkflowSurface ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'
-                                    }`}
-                                >
-                                    Hierarchy
-                                </button>
-                                <button
-                                    onClick={() => setUseWorkflowSurface(true)}
-                                    className={`px-2 py-1 rounded ${
-                                        useWorkflowSurface ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100'
-                                    }`}
-                                >
-                                    Surface
-                                </button>
-                            </div>
+                                    {/* Composer Button */}
+                                    <button
+                                        onClick={() => setIsComposerOpen(true)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded shadow-sm transition-all"
+                                    >
+                                        <Wand2 size={14} />
+                                        <span>Composer</span>
+                                    </button>
+                                </div>
+                            )}
 
-                            {useWorkflowSurface ? (
-                                <WorkflowSurfaceTable
-                                    nodes={surfaceNodes}
-                                    selectedActionId={null} // TODO: Track selected action
-                                    onRowSelect={handleSurfaceRowSelect}
-                                    onFieldChange={handleSurfaceFieldChange}
-                                    onStatusChange={handleSurfaceStatusChange}
-                                    onAddAction={activeSubprocessId ? () => setIsComposerOpen(true) : undefined}
-                                    emptyMessage="No actions yet. Use Composer to declare one."
-                                />
-                            ) : (
-                                <DataTableHierarchy
-                                    nodes={tasks}
-                                    fields={taskFields}
-                                    fallbacks={{
-                                        assignee: activeSubprocessLead,
-                                        owner: activeSubprocessLead,
-                                        dueDate: activeSubprocessDueDate,
-                                    }}
-                                    selectedNodeId={selectedNodeId}
-                                    onRowSelect={(nodeId) => {
-                                        setFocusedTableId('tasks');
-                                        setInspectorMode('record');
-                                        inspectNode(nodeId);
-                                    }}
-                                    onCellChange={handleCellChange}
-                                    onAddNode={
-                                        activeSubprocessId
-                                            ? () => openDrawer('create-node', { parentId: activeSubprocessId, nodeType: 'task' })
-                                            : undefined
-                                    }
-                                    enableNesting
-                                    getChildren={(nodeId) => getChildren(nodeId).filter((n) => n.type === 'subtask')}
-                                    onAddSubtask={(parentId) => openDrawer('create-node', { parentId, nodeType: 'subtask' })}
-                                    deriveStatus={deriveNodeStatus}
-                                    showStatusSummary
-                                    statusConfig={statusConfig}
-                                    emptyMessage="No tasks yet. Click + to add one."
-                                />
+                            {/* Composer Dialog */}
+                            {isComposerOpen && activeSubprocessId && (
+                                <>
+                                    <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setIsComposerOpen(false)} />
+                                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[80vh] bg-white rounded-xl shadow-2xl overflow-hidden">
+                                        <ComposerSurface
+                                            mode="drawer"
+                                            contextId={activeSubprocessId}
+                                            onSuccess={() => setIsComposerOpen(false)}
+                                            onClose={() => setIsComposerOpen(false)}
+                                        />
+                                    </div>
+                                </>
                             )}
                         </div>
 
-                        {/* Floating Record Tables - Independent tables for each record definition */}
-                        {recordsByDefinition.map(({ definition, records }) => (
-                            <div key={definition.id} onFocus={() => setFocusedTableId(definition.id)} onClick={() => setFocusedTableId(definition.id)}>
-                                <DataTableFlat
-                                    definition={definition}
-                                    records={records}
-                                    selectedRecordId={selectedRecordId}
-                                    onRowSelect={(id) => {
-                                        setFocusedTableId(definition.id);
-                                        useUIStore.getState().inspectRecord(id);
-                                        setInspectorMode('record');
-                                    }}
-                                    onCellChange={handleRecordCellChange}
-                                    onAddRecord={
-                                        activeSubprocessId
-                                            ? () =>
-                                                openDrawer('create-record', {
-                                                    definitionId: definition.id,
-                                                    classificationNodeId: activeSubprocessId,
-                                                })
-                                            : undefined
-                                    }
-                                    compact
-                                    emptyMessage={`No ${definition.name} records yet.`}
-                                />
+                        <div className="flex-1 overflow-auto custom-scroll p-4">
+                            <div className="min-w-[900px] space-y-4">
+                                {/* Task Table - Toggle between hierarchy-based and surface-based */}
+                                <div onFocus={() => setFocusedTableId('tasks')} onClick={() => setFocusedTableId('tasks')}>
+                                    {/* Toggle switch for development/testing */}
+                                    <div className="flex items-center justify-end gap-2 mb-2 text-xs">
+                                        <span className="text-slate-400">View Mode:</span>
+                                        <button
+                                            onClick={() => setUseWorkflowSurface(false)}
+                                            className={`px-2 py-1 rounded ${!useWorkflowSurface ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'
+                                                }`}
+                                        >
+                                            Hierarchy
+                                        </button>
+                                        <button
+                                            onClick={() => setUseWorkflowSurface(true)}
+                                            className={`px-2 py-1 rounded ${useWorkflowSurface ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100'
+                                                }`}
+                                        >
+                                            Surface
+                                        </button>
+                                    </div>
+
+                                    {useWorkflowSurface ? (
+                                        <WorkflowSurfaceTable
+                                            nodes={surfaceNodes}
+                                            selectedActionId={null} // TODO: Track selected action
+                                            onRowSelect={handleSurfaceRowSelect}
+                                            onFieldChange={handleSurfaceFieldChange}
+                                            onStatusChange={handleSurfaceStatusChange}
+                                            onAddAction={activeSubprocessId ? () => setIsComposerOpen(true) : undefined}
+                                            emptyMessage="No actions yet. Use Composer to declare one."
+                                        />
+                                    ) : (
+                                        <DataTableHierarchy
+                                            nodes={tasks}
+                                            fields={taskFields}
+                                            fallbacks={{
+                                                assignee: activeSubprocessLead,
+                                                owner: activeSubprocessLead,
+                                                dueDate: activeSubprocessDueDate,
+                                            }}
+                                            selectedNodeId={selectedNodeId}
+                                            onRowSelect={(nodeId) => {
+                                                setFocusedTableId('tasks');
+                                                setInspectorMode('record');
+                                                inspectNode(nodeId);
+                                            }}
+                                            onCellChange={handleCellChange}
+                                            onAddNode={
+                                                activeSubprocessId
+                                                    ? () => openDrawer('create-node', { parentId: activeSubprocessId, nodeType: 'task' })
+                                                    : undefined
+                                            }
+                                            enableNesting
+                                            getChildren={(nodeId) => getChildren(nodeId).filter((n) => n.type === 'subtask')}
+                                            onAddSubtask={(parentId) => openDrawer('create-node', { parentId, nodeType: 'subtask' })}
+                                            deriveStatus={deriveNodeStatus}
+                                            showStatusSummary
+                                            statusConfig={statusConfig}
+                                            emptyMessage="No tasks yet. Click + to add one."
+                                        />
+                                    )}
+                                </div>
+
+                                {/* Floating Record Tables - Independent tables for each record definition */}
+                                {recordsByDefinition.map(({ definition, records }) => (
+                                    <div key={definition.id} onFocus={() => setFocusedTableId(definition.id)} onClick={() => setFocusedTableId(definition.id)}>
+                                        <DataTableFlat
+                                            definition={definition}
+                                            records={records}
+                                            selectedRecordId={selectedRecordId}
+                                            onRowSelect={(id) => {
+                                                setFocusedTableId(definition.id);
+                                                useUIStore.getState().inspectRecord(id);
+                                                setInspectorMode('record');
+                                            }}
+                                            onCellChange={handleRecordCellChange}
+                                            onAddRecord={
+                                                activeSubprocessId
+                                                    ? () =>
+                                                        openDrawer('create-record', {
+                                                            definitionId: definition.id,
+                                                            classificationNodeId: activeSubprocessId,
+                                                        })
+                                                    : undefined
+                                            }
+                                            compact
+                                            emptyMessage={`No ${definition.name} records yet.`}
+                                        />
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                </div>
+                        </div>
+                    </>
+                )}
             </main>
         </div>
     );

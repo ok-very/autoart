@@ -17,7 +17,6 @@ import { useUIStore, isRecordsViewMode } from '../stores/uiStore';
 import { ResizeHandle } from '../ui/common/ResizeHandle';
 import { SelectionInspector } from '../ui/composites';
 import { RecordView } from '../ui/composites/RecordView';
-import { BottomDrawer } from '../ui/drawer/BottomDrawer';
 import { Header } from '../ui/layout/Header';
 import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../ui/registry';
 
@@ -108,7 +107,6 @@ export function RecordsPage() {
           {/* Right Inspector */}
           <SelectionInspector />
         </div>
-        <BottomDrawer />
       </div>
     </div>
   );
