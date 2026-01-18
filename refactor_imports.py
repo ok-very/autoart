@@ -1,7 +1,9 @@
 import os
 import re
 
-ROOT_DIR = r"c:\Users\silen\Documents\automatiq\autoart\frontend\src"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_ROOT_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "frontend", "src"))
+ROOT_DIR = os.environ.get("REFACTOR_IMPORTS_ROOT_DIR", DEFAULT_ROOT_DIR)
 
 # Regex patterns to find and replace
 PATTERNS = [

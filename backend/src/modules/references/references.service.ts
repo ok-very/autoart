@@ -214,7 +214,7 @@ export async function resolveReference(id: string): Promise<ResolvedReference> {
     label,
     sourceRecordId: ref.source_record_id,
     targetFieldKey: ref.target_field_key,
-    drift: drift || undefined,
+    drift: drift,
     liveValue: drift ? liveValue : undefined,
   };
 }
@@ -271,7 +271,7 @@ export async function batchResolveReferences(referenceIds: string[]): Promise<Re
       label,
       sourceRecordId: ref.source_record_id,
       targetFieldKey: ref.target_field_key,
-      drift: drift || undefined,
+      drift: drift,
       liveValue: drift ? liveValue : undefined,
     };
   }
