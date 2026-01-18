@@ -17,6 +17,7 @@ import { ViewDefinitionDrawer } from '../drawer/views/ViewDefinitionDrawer';
 import { ProjectLibraryDrawer } from '../drawer/views/ProjectLibraryDrawer';
 import { MondayBoardsDrawer } from '../drawer/views/MondayBoardsDrawer';
 import { QuickDeclareModal } from '../drawer/views/QuickDeclareModal';
+import { IntegrationsSection } from '../../pages/settings/IntegrationsSection';
 
 // Map types to components
 export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
@@ -36,7 +37,9 @@ export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
     'monday-boards': MondayBoardsDrawer,
     'quick-declare': QuickDeclareModal,
     'template-library': ProjectLibraryDrawer, // Alias for template library
+    'integrations': IntegrationsSection, // Integrations settings modal
 };
+
 
 export function OverlayRegistry() {
     const { activeDrawer, closeDrawer } = useUIStore();

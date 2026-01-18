@@ -90,7 +90,7 @@ function SpawnHandle({ api }: SpawnHandleProps) {
                     <Plus size={14} strokeWidth={2.5} />
                 </DropdownTrigger>
                 <DropdownContent align="end" className="w-56">
-                    <DropdownLabel>Spawn Panel</DropdownLabel>
+                    <DropdownLabel>Add Panel</DropdownLabel>
 
                     <DropdownItem onSelect={() => handleSpawn('selection-inspector', 'below')}>
                         <Split className="mr-2 h-4 w-4 rotate-90" />
@@ -105,22 +105,6 @@ function SpawnHandle({ api }: SpawnHandleProps) {
                     <DropdownSeparator />
 
                     <DropdownLabel>Apps</DropdownLabel>
-                    <DropdownItem onSelect={() => handleSpawn('records-list', 'tab')}>
-                        <span>Records</span>
-                    </DropdownItem>
-                    <DropdownItem onSelect={() => handleSpawn('fields-list', 'tab')}>
-                        <span>Fields</span>
-                    </DropdownItem>
-                    <DropdownItem onSelect={() => handleSpawn('actions-list', 'tab')}>
-                        <span>Actions</span>
-                    </DropdownItem>
-                    <DropdownItem onSelect={() => handleSpawn('events-list', 'tab')}>
-                        <span>Events</span>
-                    </DropdownItem>
-
-                    <DropdownSeparator />
-
-                    <DropdownLabel>Tools</DropdownLabel>
                     <DropdownItem onSelect={() => handleSpawn('import-workbench', 'tab')}>
                         <span>Import</span>
                     </DropdownItem>
@@ -145,6 +129,7 @@ function SpawnHandle({ api }: SpawnHandleProps) {
         </div>
     );
 }
+
 
 // ============================================================================
 // PANEL COMPONENTS

@@ -19,8 +19,7 @@ export function FieldsMillerColumnsView({
 }: FieldsMillerColumnsViewProps) {
     const { data: definitions, isLoading } = useRecordDefinitions();
 
-    // State for navigation (active path)
-    const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+    // State for navigation (active path) - simplified: Definition -> Fields
     const [activeDefinitionId, setActiveDefinitionId] = useState<string | null>(null);
     const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
 
@@ -29,7 +28,7 @@ export function FieldsMillerColumnsView({
 
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Generate Index
+    // Generate Index (now returns definitions directly as categories)
     const fieldIndex = useMemo(() => {
         if (!definitions) return null;
         return generateFieldIndex(definitions);
@@ -43,38 +42,23 @@ export function FieldsMillerColumnsView({
                 behavior: 'smooth',
             });
         }
-    }, [activeCategoryId, activeDefinitionId]);
+    }, [activeDefinitionId]);
 
-    // Derived Columns Data
-    const categoryItems: MillerColumnItem[] = useMemo(() => {
+    // Derived Columns Data - Definitions are now the first column
+    const definitionItems: MillerColumnItem[] = useMemo(() => {
         if (!fieldIndex) return [];
-        return fieldIndex.categories.map(cat => ({
-            id: cat.id,
-            label: cat.label,
-            hasChildren: (cat.subcategories?.length || 0) > 0,
-            badge: { text: String(cat.childCount), color: 'bg-slate-100 text-slate-500' },
-            data: cat
+        return fieldIndex.categories.map(def => ({
+            id: def.id,
+            label: def.label,
+            hasChildren: (def.fields?.length || 0) > 0,
+            badge: { text: String(def.childCount), color: 'bg-slate-100 text-slate-500' },
+            data: def
         }));
     }, [fieldIndex]);
 
-    const definitionItems: MillerColumnItem[] = useMemo(() => {
-        if (!fieldIndex || !activeCategoryId) return [];
-        const category = fieldIndex.categories.find(c => c.id === activeCategoryId);
-        if (!category || !category.subcategories) return [];
-
-        return category.subcategories.map(sub => ({
-            id: sub.id,
-            label: sub.label,
-            hasChildren: (sub.fields?.length || 0) > 0,
-            badge: { text: String(sub.childCount), color: 'bg-slate-100 text-slate-500' },
-            data: sub
-        }));
-    }, [fieldIndex, activeCategoryId]);
-
     const fieldItems: MillerColumnItem[] = useMemo(() => {
-        if (!fieldIndex || !activeCategoryId || !activeDefinitionId) return [];
-        const category = fieldIndex.categories.find(c => c.id === activeCategoryId);
-        const definition = category?.subcategories?.find(d => d.id === activeDefinitionId);
+        if (!fieldIndex || !activeDefinitionId) return [];
+        const definition = fieldIndex.categories.find(d => d.id === activeDefinitionId);
         if (!definition || !definition.fields) return [];
 
         return definition.fields.map(field => ({
@@ -84,15 +68,9 @@ export function FieldsMillerColumnsView({
             hasChildren: false,
             data: field
         }));
-    }, [fieldIndex, activeCategoryId, activeDefinitionId]);
+    }, [fieldIndex, activeDefinitionId]);
 
     // Handlers
-    const handleCategorySelect = (item: MillerColumnItem) => {
-        setActiveCategoryId(item.id);
-        setActiveDefinitionId(null);
-        setActiveFieldId(null);
-    };
-
     const handleDefinitionSelect = (item: MillerColumnItem) => {
         setActiveDefinitionId(item.id);
         setActiveFieldId(null);
@@ -108,8 +86,6 @@ export function FieldsMillerColumnsView({
     const handleCheck = (item: MillerColumnItem, checked: boolean) => {
         const newChecked = new Set(checkedIds);
 
-        // Recursive check logic could go here (if checking a category checks all children)
-        // For now, simple toggle
         if (checked) {
             newChecked.add(item.id);
         } else {
@@ -152,30 +128,18 @@ export function FieldsMillerColumnsView({
                 ref={containerRef}
                 className="flex flex-1 overflow-x-auto custom-scroll"
             >
-                {/* 1. Categories */}
+                {/* 1. Definitions (now the first column) */}
                 <MillerColumn
-                    title="Categories"
-                    items={categoryItems}
-                    selectedId={activeCategoryId}
+                    title="Definitions"
+                    items={definitionItems}
+                    selectedId={activeDefinitionId}
                     checkedIds={checkedIds}
-                    onSelect={handleCategorySelect}
+                    onSelect={handleDefinitionSelect}
                     onCheck={handleCheck}
+                    enableSearch
                 />
 
-                {/* 2. Definitions */}
-                {activeCategoryId && (
-                    <MillerColumn
-                        title="Definitions"
-                        items={definitionItems}
-                        selectedId={activeDefinitionId}
-                        checkedIds={checkedIds}
-                        onSelect={handleDefinitionSelect}
-                        onCheck={handleCheck}
-                        enableSearch
-                    />
-                )}
-
-                {/* 3. Fields */}
+                {/* 2. Fields */}
                 {activeDefinitionId && (
                     <MillerColumn
                         title="Fields"
@@ -191,3 +155,4 @@ export function FieldsMillerColumnsView({
         </div>
     );
 }
+
