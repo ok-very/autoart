@@ -1,7 +1,7 @@
 import { Settings, Plus, ChevronDown, FolderOpen, Check, Copy, Library, Hammer } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { IDockviewPanelProps } from 'dockview';
+// import { IDockviewPanelProps } from 'dockview';
 
 import { TreeNode } from '../hierarchy/TreeNode';
 import { useProjectTree, useProjects } from '../../api/hooks';
@@ -12,7 +12,7 @@ import { Badge } from '@autoart/ui';
 import { Text } from '@autoart/ui';
 import { Menu } from '@autoart/ui';
 
-export function ProjectSidebarPanel(_props: IDockviewPanelProps) {
+export function ProjectSidebarPanel() {
     const { setNodes, getChildren, getNode } = useHierarchyStore();
     const { activeProjectId, selection, setSelection, openDrawer, setActiveProject } = useUIStore();
     const { data: nodes } = useProjectTree(activeProjectId);

@@ -10,18 +10,19 @@
 // import { useCallback } from 'react';
 
 import { Header } from './Header';
-import { useUIPanels } from '../../stores/uiStore';
+// import { useUIPanels } from '../../stores/uiStore';
 // import { ResizeHandle } from '../common/ResizeHandle';
 // import { HierarchySidebar } from '../hierarchy/HierarchySidebar';
 import { DockviewWorkspace } from '../workspace/DockviewWorkspace';
 import { ModalRegistry } from '../registry/ModalRegistry';
 
-return (
-  <div className="flex flex-col h-full">
-    <Header />
-    <div className="flex flex-1 overflow-hidden">
-      {/* Sidebar Slot - Removed, now integrated into ProjectWorkflowView */}
-      {/*
+export function MainLayout() {
+  return (
+    <div className="flex flex-col h-full">
+      <Header />
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar Slot - Removed, now integrated into ProjectWorkflowView */}
+        {/*
         {panels.sidebar === 'projectTree' && (
           <>
             <HierarchySidebar />
@@ -30,12 +31,12 @@ return (
         )}
         */}
 
-      {/* Unified Dockview Workspace */}
-      <DockviewWorkspace />
+        {/* Unified Dockview Workspace */}
+        <DockviewWorkspace />
 
-      {/* Global Modals */}
-      <ModalRegistry />
+        {/* Global Modals */}
+        <ModalRegistry />
+      </div>
     </div>
-  </div>
-);
+  );
 }

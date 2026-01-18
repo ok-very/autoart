@@ -1,6 +1,6 @@
 import { Plus, ChevronDown, Wand2 } from 'lucide-react';
 import { useEffect, useMemo, useCallback, useState } from 'react';
-
+import { ProjectSidebarPanel } from '../panels/ProjectSidebarPanel';
 import type { DerivedStatus } from '@autoart/shared';
 
 import {
@@ -450,78 +450,28 @@ export function ProjectWorkflowView() {
     return (
         <div className="flex-1 flex overflow-hidden bg-white">
             {/* Left navigation (merged from old sidebar) */}
-            <aside className="w-[320px] shrink-0 border-r border-slate-200 bg-slate-50 flex flex-col">
-                <div className="p-3 border-b border-slate-200 bg-white flex items-start justify-between">
-                    <div className="min-w-0 flex-1">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Workflow</div>
-                        {/* Show dropdown when multiple processes, otherwise just project title */}
-                        {processes.length > 1 ? (
-                            <div className="relative">
-                                <Dropdown>
-                                    <DropdownTrigger className="flex items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors focus:outline-none">
-                                        <span className="truncate" title={selectedProcess?.title || project.title}>
-                                            {selectedProcess?.title || project.title}
-                                        </span>
-                                        <ChevronDown size={14} className="shrink-0 text-slate-400" />
-                                    </DropdownTrigger>
-                                    <DropdownContent align="start" className="w-56 max-h-64 overflow-y-auto">
-                                        <DropdownLabel>Processes</DropdownLabel>
-                                        {processes.map((process) => (
-                                            <DropdownItem
-                                                key={process.id}
-                                                onSelect={() => {
-                                                    setSelectedProcessId(process.id);
-                                                    setLocalSubprocessId(null);
-                                                }}
-                                                className={process.id === selectedProcessId ? 'bg-blue-50 text-blue-700' : ''}
-                                            >
-                                                <span className="truncate">{process.title}</span>
-                                            </DropdownItem>
-                                        ))}
-                                    </DropdownContent>
-                                </Dropdown>
-                            </div>
-                        ) : (
-                            <div className="text-sm font-semibold text-slate-800 truncate" title={project.title}>
-                                {project.title}
-                            </div>
-                        )}
-                    </div>
-                    <button
-                        onClick={() => openDrawer('create-node', { parentId: project.id, nodeType: 'process' })}
-                        className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-                        title="Add Process"
-                    >
-                        <Plus size={16} />
-                    </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-2 custom-scroll">
-                    {subprocesses.length === 0 ? (
-                        <div className="p-3 text-xs text-slate-400">No subprocesses yet.</div>
-                    ) : (
-                        <div className="space-y-1">
-                            {subprocesses.map((sp) => {
-                                const isActive = sp.id === activeSubprocessId;
-                                return (
-                                    <button
-                                        key={sp.id}
-                                        onClick={() => handleSubprocessClick(sp.id)}
-                                        className={
-                                            isActive
-                                                ? 'w-full text-left px-3 py-2 rounded bg-blue-50 text-blue-700 border border-blue-100'
-                                                : 'w-full text-left px-3 py-2 rounded hover:bg-white text-slate-700 border border-transparent'
-                                        }
-                                    >
-                                        <div className="text-xs font-semibold truncate" title={sp.title}>
-                                            {sp.title}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
+            {/* Left navigation (merged from old sidebar) - Now reusing shared ProjectSidebarPanel */}
+            <aside className="w-[320px] shrink-0 border-r border-slate-200 bg-slate-50 overflow-hidden">
+                {/* 
+                  Passing empty dockview API props since we are using it outside of dockview here. 
+                  It works because ProjectSidebarPanel only uses the props for title/icon which we don't need to override here,
+                  or it ignores them if we re-wrote it to be resilient.
+                  Actually, ProjectSidebarPanel expects IDockviewPanelProps.
+                  Let's check ProjectSidebarPanel implementation.
+                  It uses: const { api } = props; const def = PANEL_DEFINITIONS[api.id as PanelId];
+                  This WILL crash if api is undefined.
+                  
+                  Wait, the user said "sidebar should be a dockview surface". 
+                  But also "hierarchyproject ... in the surface for project workflows".
+                  
+                  If I reuse ProjectSidebarPanel, I need to mock the props or refactor it to be standalone.
+                  ProjectSidebarPanel (from my previous step) takes `_props: IDockviewPanelProps` but DOES NOT USE THEM.
+                  It uses: 
+                    export function ProjectSidebarPanel(_props: IDockviewPanelProps) { ... }
+                  
+                  So passing `any` is safe.
+                */}
+                <ProjectSidebarPanel />
             </aside>
 
             {/* Task table (merged from old project list view) */}
