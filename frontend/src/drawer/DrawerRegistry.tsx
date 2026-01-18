@@ -5,7 +5,7 @@
  * All drawers are validated against their contracts before rendering.
  */
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 
 import type {
     DrawerDefinition,
@@ -13,6 +13,8 @@ import type {
     DrawerResult,
 } from './types';
 import { createUIContext } from './types';
+import { useWorkspaceStore } from '../stores/workspaceStore';
+import { PanelId } from '../workspace/panelRegistry';
 
 // ==================== DRAWER DEFINITIONS ====================
 
@@ -110,6 +112,8 @@ export const DRAWER_DEFINITIONS: Record<keyof DrawerContextMap, DrawerDefinition
         dismissible: true,
         showClose: true,
     },
+    /** @deprecated Use selection-inspector panel via workspaceStore.openPanel */
+    /** @deprecated Use selection-inspector panel via workspaceStore.openPanel */
     'view-record': {
         id: 'view-record',
         title: 'View Record',
@@ -158,6 +162,8 @@ export const DRAWER_DEFINITIONS: Record<keyof DrawerContextMap, DrawerDefinition
         dismissible: true,
         showClose: true,
     },
+    /** @deprecated Use classification panel via workspaceStore.openPanel */
+    /** @deprecated Use classification panel via workspaceStore.openPanel */
     'classification': {
         id: 'classification',
         title: 'Resolve Classifications',
@@ -201,9 +207,8 @@ const CloneProjectView = lazy(() =>
 const ConfirmDeleteView = lazy(() =>
     import('../ui/drawer/views/ConfirmDeleteView').then((m) => ({ default: m.ConfirmDeleteView }))
 );
-const ViewRecordDrawer = lazy(() =>
-    import('../ui/drawer/views/ViewRecordDrawer').then((m) => ({ default: m.ViewRecordDrawer }))
-);
+// Deprecated: ViewRecordDrawer removed in favor of SelectionInspector panel
+
 const ViewDefinitionDrawer = lazy(() =>
     import('../ui/drawer/views/ViewDefinitionDrawer').then((m) => ({ default: m.ViewDefinitionDrawer }))
 );
@@ -212,9 +217,6 @@ const ProjectLibraryDrawer = lazy(() =>
 );
 const MondayBoardsDrawer = lazy(() =>
     import('../ui/drawer/views/MondayBoardsDrawer').then((m) => ({ default: m.MondayBoardsDrawer }))
-);
-const ClassificationDrawerView = lazy(() =>
-    import('../surfaces/import/ClassificationPanel').then((m) => ({ default: m.ClassificationPanel }))
 );
 
 // ==================== LOADING FALLBACK ====================
@@ -225,6 +227,29 @@ function DrawerLoadingFallback() {
             <div className="animate-spin w-6 h-6 border-2 border-slate-300 border-t-blue-500 rounded-full" />
         </div>
     );
+}
+
+// ==================== REDIRECT COMPONENT ====================
+
+interface RedirectToPanelProps {
+    panelId: PanelId;
+    params: unknown;
+    onClose: () => void;
+}
+
+/**
+ * RedirectToPanel - A utility component to close the current drawer and open a workspace panel.
+ * This is used for deprecated drawers that have been replaced by workspace panels.
+ */
+function RedirectToPanel({ panelId, params, onClose }: RedirectToPanelProps) {
+    const { openPanel } = useWorkspaceStore();
+
+    useEffect(() => {
+        openPanel(panelId);
+        onClose(); // Close the drawer after redirecting
+    }, [openPanel, panelId, params, onClose]);
+
+    return null; // This component doesn't render anything visible
 }
 
 // ==================== REGISTRY COMPONENT ====================
@@ -309,7 +334,9 @@ export function DrawerRegistry({ type, context, onClose, onResult }: DrawerRegis
             case 'confirm-delete':
                 return <ConfirmDeleteView {...(context as any)} />;
             case 'view-record':
-                return <ViewRecordDrawer {...(context as any)} />;
+                // Redirect to selection-inspector right panel
+                // The context usually contains { recordId }
+                return <RedirectToPanel panelId="selection-inspector" params={context} onClose={onClose} />;
             case 'view-definition':
                 return <ViewDefinitionDrawer {...(context as any)} />;
             case 'project-library':
@@ -317,7 +344,8 @@ export function DrawerRegistry({ type, context, onClose, onResult }: DrawerRegis
             case 'monday-boards':
                 return <MondayBoardsDrawer {...(context as any)} />;
             case 'classification':
-                return <ClassificationDrawerView {...(context as any)} />;
+                // Redirect to classification bottom panel
+                return <RedirectToPanel panelId="classification" params={context} onClose={onClose} />;
             default:
                 return (
                     <div className="p-4 text-slate-500">

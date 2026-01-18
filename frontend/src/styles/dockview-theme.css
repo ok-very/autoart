@@ -1,0 +1,94 @@
+/**
+ * Dockview Theme
+ *
+ * Custom styling for Dockview panels to match AutoArt design system.
+ * Uses slate colors and blue accents.
+ */
+
+/* Import base Dockview styles */
+@import 'dockview/dist/styles/dockview.css';
+
+/* Override Dockview theme variables */
+.dockview-theme-light {
+  --dv-background-color: #f8fafc; /* slate-50 */
+  --dv-pane-background-color: #ffffff;
+  --dv-tabs-and-actions-container-background-color: #f8fafc; /* slate-50 */
+  --dv-activegroup-visiblepanel-tab-background-color: #ffffff;
+  --dv-activegroup-hiddenpanel-tab-background-color: #f1f5f9; /* slate-100 */
+  --dv-inactivegroup-visiblepanel-tab-background-color: #f1f5f9;
+  --dv-inactivegroup-hiddenpanel-tab-background-color: #e2e8f0; /* slate-200 */
+  --dv-tab-divider-color: #e2e8f0; /* slate-200 */
+  --dv-separator-border: #e2e8f0;
+  --dv-drag-over-background-color: rgba(59, 130, 246, 0.1); /* blue-500/10 */
+  --dv-drag-over-border-color: #3b82f6; /* blue-500 */
+}
+
+/* Tab styling */
+.dockview-theme-light .dv-tab {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b; /* slate-500 */
+  padding: 6px 12px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.dockview-theme-light .dv-tab:hover {
+  color: #475569; /* slate-600 */
+  background: #f1f5f9; /* slate-100 */
+}
+
+.dockview-theme-light .dv-tab.active {
+  color: #0f172a; /* slate-900 */
+  border-bottom-color: #2563eb; /* blue-600 */
+}
+
+/* Tab close button */
+.dockview-theme-light .dv-default-tab-action {
+  color: #94a3b8; /* slate-400 */
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.dockview-theme-light .dv-tab:hover .dv-default-tab-action {
+  opacity: 1;
+}
+
+.dockview-theme-light .dv-default-tab-action:hover {
+  color: #475569; /* slate-600 */
+  background: #e2e8f0; /* slate-200 */
+}
+
+/* Add tab button */
+.dockview-theme-light .dv-tabs-container .dv-void-container button {
+  color: #94a3b8; /* slate-400 */
+}
+
+.dockview-theme-light .dv-tabs-container .dv-void-container button:hover {
+  color: #475569; /* slate-600 */
+  background: #f1f5f9; /* slate-100 */
+}
+
+/* Panel content area */
+.dockview-theme-light .dv-groupview-panel {
+  background: #ffffff;
+}
+
+/* Scrollbars */
+.dockview-theme-light ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.dockview-theme-light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.dockview-theme-light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.dockview-theme-light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

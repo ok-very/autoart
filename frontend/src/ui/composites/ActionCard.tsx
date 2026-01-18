@@ -56,7 +56,7 @@ function getActionTitle(action: Action): string {
 /**
  * Format a field value for display - quotes strings, @mentions for assignees
  */
-function formatBindingValue(key: string, value: unknown): JSX.Element {
+function formatBindingValue(key: string, value: unknown) {
     if (value === null || value === undefined) {
         return <span className="text-slate-400 italic">—</span>;
     }
