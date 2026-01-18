@@ -1,18 +1,19 @@
+/**
+ * MainLayout
+ *
+ * Root layout component.
+ * - Header (fixed)
+ * - Sidebar (HierarchySidebar with resize handle)
+ * - DockviewWorkspace (unified grid for center, right, bottom panels)
+ */
+
 import { useCallback } from 'react';
 
-import { CalendarView } from './CalendarView';
 import { Header } from './Header';
-import { MillerColumnsView } from './MillerColumnsView';
-import { ProjectWorkflowView } from './ProjectWorkflowView';
-import { Workspace } from './Workspace';
 import { useUIStore, useUIPanels } from '../../stores/uiStore';
 import { ResizeHandle } from '../common/ResizeHandle';
 import { HierarchySidebar } from '../hierarchy/HierarchySidebar';
-import { ProjectLogSurface } from '../projectLog';
-import { RightPanelGroup } from '../workspace/RightPanelGroup';
-import { BottomPanelGroup } from '../workspace/BottomPanelGroup';
-
-
+import { DockviewWorkspace } from '../workspace/DockviewWorkspace';
 
 export function MainLayout() {
   const { sidebarWidth, setSidebarWidth } = useUIStore();
@@ -24,8 +25,6 @@ export function MainLayout() {
     },
     [sidebarWidth, setSidebarWidth]
   );
-
-
 
   return (
     <div className="flex flex-col h-full">
@@ -39,20 +38,8 @@ export function MainLayout() {
           </>
         )}
 
-        {/* Workspace Slot */}
-        <div className="flex-1 flex flex-col overflow-hidden relative">
-          {panels.workspace === 'millerColumns' && <MillerColumnsView />}
-          {panels.workspace === 'projectWorkflow' && <ProjectWorkflowView />}
-          {panels.workspace === 'projectLog' && <ProjectLogSurface />}
-          {panels.workspace === 'calendar' && <CalendarView />}
-          {(panels.workspace === 'grid' || panels.workspace === 'details') && <Workspace />}
-
-          {/* Bottom Panel Group - Dockview managed */}
-          <BottomPanelGroup />
-        </div>
-
-        {/* Right Panel Group - Dockview managed */}
-        <RightPanelGroup />
+        {/* Unified Dockview Workspace */}
+        <DockviewWorkspace />
       </div>
     </div>
   );

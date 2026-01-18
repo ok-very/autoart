@@ -1,14 +1,14 @@
 /**
  * Workspace Store
  *
- * Zustand store for managing Dockview panel state.
- * Handles right sidebar and bottom panel visibility and layout persistence.
+ * Zustand store for managing the unified Dockview workspace.
+ * Single grid architecture - no separate right/bottom groups.
  */
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-import type { PanelId, RightPanelId, BottomPanelId } from '../workspace/panelRegistry';
+import type { PanelId } from '../workspace/panelRegistry';
+import { isPermanentPanel } from '../workspace/panelRegistry';
 
 // Serialized layout state from Dockview
 export interface SerializedDockviewState {
@@ -17,45 +17,33 @@ export interface SerializedDockviewState {
     activeGroup?: string;
 }
 
+// Default panels to open on fresh start
+const DEFAULT_OPEN_PANELS: PanelId[] = ['center-workspace', 'selection-inspector'];
+
 interface WorkspaceState {
-    // Right panel group state
-    rightPanelVisible: boolean;
-    rightPanelIds: RightPanelId[];
-    rightActivePanel: RightPanelId | null;
-    rightPanelLayout: SerializedDockviewState | null;
+    // Single layout for entire workspace
+    layout: SerializedDockviewState | null;
 
-    // Bottom panel group state
-    bottomPanelVisible: boolean;
-    bottomPanelIds: BottomPanelId[];
-    bottomActivePanel: BottomPanelId | null;
-    bottomPanelLayout: SerializedDockviewState | null;
+    // Which panels are currently open (derived from layout, but tracked for persistence)
+    openPanelIds: PanelId[];
 
-    // Bottom panel height (persisted)
-    bottomPanelHeight: number;
+    // User-overridden visibility (manual show/hide takes precedence over context)
+    userOverrides: Map<PanelId, boolean>;
 
     // Actions
     openPanel: (panelId: PanelId) => void;
     closePanel: (panelId: PanelId) => void;
-    setActivePanel: (area: 'right' | 'bottom', panelId: PanelId | null) => void;
-    togglePanelGroup: (area: 'right' | 'bottom') => void;
-    setBottomPanelHeight: (height: number) => void;
-    saveLayout: (area: 'right' | 'bottom', layout: SerializedDockviewState) => void;
+    saveLayout: (layout: SerializedDockviewState) => void;
+    setUserOverride: (panelId: PanelId, visible: boolean) => void;
+    clearUserOverride: (panelId: PanelId) => void;
     resetLayout: () => void;
 }
 
 // Initial state
 const initialState = {
-    rightPanelVisible: false,
-    rightPanelIds: [] as RightPanelId[],
-    rightActivePanel: null as RightPanelId | null,
-    rightPanelLayout: null,
-
-    bottomPanelVisible: false,
-    bottomPanelIds: [] as BottomPanelId[],
-    bottomActivePanel: null as BottomPanelId | null,
-    bottomPanelLayout: null,
-
-    bottomPanelHeight: 300,
+    layout: null as SerializedDockviewState | null,
+    openPanelIds: [...DEFAULT_OPEN_PANELS] as PanelId[],
+    userOverrides: new Map<PanelId, boolean>(),
 };
 
 export const useWorkspaceStore = create<WorkspaceState>()(
@@ -65,112 +53,78 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 
             openPanel: (panelId: PanelId) => {
                 const state = get();
-
-                // Determine which area this panel belongs to
-                const isRightPanel = panelId === 'selection-inspector' || panelId === 'record-properties';
-
-                if (isRightPanel) {
-                    const rightId = panelId as RightPanelId;
-                    const alreadyOpen = state.rightPanelIds.includes(rightId);
-
-                    set({
-                        rightPanelVisible: true,
-                        rightPanelIds: alreadyOpen
-                            ? state.rightPanelIds
-                            : [...state.rightPanelIds, rightId],
-                        rightActivePanel: rightId,
-                    });
-                } else {
-                    const bottomId = panelId as BottomPanelId;
-                    const alreadyOpen = state.bottomPanelIds.includes(bottomId);
-
-                    set({
-                        bottomPanelVisible: true,
-                        bottomPanelIds: alreadyOpen
-                            ? state.bottomPanelIds
-                            : [...state.bottomPanelIds, bottomId],
-                        bottomActivePanel: bottomId,
-                    });
+                if (state.openPanelIds.includes(panelId)) {
+                    return; // Already open
                 }
+                set({
+                    openPanelIds: [...state.openPanelIds, panelId],
+                });
             },
 
             closePanel: (panelId: PanelId) => {
+                // Cannot close permanent panels
+                if (isPermanentPanel(panelId)) {
+                    console.warn(`Cannot close permanent panel: ${panelId}`);
+                    return;
+                }
+
                 const state = get();
-
-                const isRightPanel = panelId === 'selection-inspector' || panelId === 'record-properties';
-
-                if (isRightPanel) {
-                    const rightId = panelId as RightPanelId;
-                    const newIds = state.rightPanelIds.filter((id) => id !== rightId);
-                    const newActive =
-                        state.rightActivePanel === rightId
-                            ? newIds[0] ?? null
-                            : state.rightActivePanel;
-
-                    set({
-                        rightPanelIds: newIds,
-                        rightActivePanel: newActive,
-                        rightPanelVisible: newIds.length > 0,
-                    });
-                } else {
-                    const bottomId = panelId as BottomPanelId;
-                    const newIds = state.bottomPanelIds.filter((id) => id !== bottomId);
-                    const newActive =
-                        state.bottomActivePanel === bottomId
-                            ? newIds[0] ?? null
-                            : state.bottomActivePanel;
-
-                    set({
-                        bottomPanelIds: newIds,
-                        bottomActivePanel: newActive,
-                        bottomPanelVisible: newIds.length > 0,
-                    });
-                }
+                set({
+                    openPanelIds: state.openPanelIds.filter((id) => id !== panelId),
+                });
             },
 
-            setActivePanel: (area, panelId) => {
-                if (area === 'right') {
-                    set({ rightActivePanel: panelId as RightPanelId | null });
-                } else {
-                    set({ bottomActivePanel: panelId as BottomPanelId | null });
-                }
+            saveLayout: (layout: SerializedDockviewState) => {
+                set({ layout });
             },
 
-            togglePanelGroup: (area) => {
-                if (area === 'right') {
-                    set((state) => ({ rightPanelVisible: !state.rightPanelVisible }));
-                } else {
-                    set((state) => ({ bottomPanelVisible: !state.bottomPanelVisible }));
-                }
+            setUserOverride: (panelId: PanelId, visible: boolean) => {
+                const state = get();
+                const newOverrides = new Map(state.userOverrides);
+                newOverrides.set(panelId, visible);
+                set({ userOverrides: newOverrides });
             },
 
-            setBottomPanelHeight: (height) => {
-                set({ bottomPanelHeight: Math.max(100, Math.min(600, height)) });
-            },
-
-            saveLayout: (area, layout) => {
-                if (area === 'right') {
-                    set({ rightPanelLayout: layout });
-                } else {
-                    set({ bottomPanelLayout: layout });
-                }
+            clearUserOverride: (panelId: PanelId) => {
+                const state = get();
+                const newOverrides = new Map(state.userOverrides);
+                newOverrides.delete(panelId);
+                set({ userOverrides: newOverrides });
             },
 
             resetLayout: () => {
-                set(initialState);
+                // Restore default layout:
+                // - Keep only permanent panels + selection-inspector
+                // - Clear layout blob (DockviewWorkspace will rebuild default)
+                // - Clear user overrides
+                set({
+                    layout: null,
+                    openPanelIds: [...DEFAULT_OPEN_PANELS],
+                    userOverrides: new Map(),
+                });
             },
         }),
         {
             name: 'autoart-workspace',
             partialize: (state) => ({
-                rightPanelIds: state.rightPanelIds,
-                rightActivePanel: state.rightActivePanel,
-                rightPanelVisible: state.rightPanelVisible,
-                bottomPanelIds: state.bottomPanelIds,
-                bottomActivePanel: state.bottomActivePanel,
-                bottomPanelVisible: state.bottomPanelVisible,
-                bottomPanelHeight: state.bottomPanelHeight,
+                layout: state.layout,
+                openPanelIds: state.openPanelIds,
+                // Map needs special serialization
+                userOverrides: Array.from(state.userOverrides.entries()),
             }),
+            merge: (persisted: unknown, current: WorkspaceState) => {
+                const p = persisted as { layout?: SerializedDockviewState | null; openPanelIds?: PanelId[]; userOverrides?: [PanelId, boolean][] } | undefined;
+                return {
+                    ...current,
+                    layout: p?.layout ?? current.layout,
+                    openPanelIds: p?.openPanelIds ?? current.openPanelIds,
+                    userOverrides: new Map(p?.userOverrides ?? []),
+                };
+            },
         }
     )
 );
+
+// Selector hooks for performance
+export const useOpenPanelIds = () => useWorkspaceStore((s) => s.openPanelIds);
+export const useLayout = () => useWorkspaceStore((s) => s.layout);
