@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Mail,
   RefreshCw,
@@ -23,7 +23,7 @@ import {
   useMarkActionRequired,
   useMarkInformational,
 } from '../api/hooks/mail';
-import type { ProcessedEmail, Priority, TriageStatus as TriageStatusType } from '../api/types/mail';
+import type { ProcessedEmail, Priority, TriageStatus } from '../api/types/mail';
 
 const ITEMS_PER_PAGE = 25;
 
@@ -42,8 +42,8 @@ function PriorityBadge({ priority }: { priority: Priority }) {
   );
 }
 
-function TriageStatusIndicator({ status, confidence }: { status: TriageStatusType; confidence?: number }) {
-  const config: Record<TriageStatusType, { color: string; label: string }> = {
+function TriageStatusIndicator({ status, confidence }: { status: TriageStatus; confidence?: number }) {
+  const config: Record<TriageStatus, { color: string; label: string }> = {
     pending: { color: 'text-slate-400', label: 'Pending' },
     action_required: { color: 'text-red-500', label: 'Action Required' },
     informational: { color: 'text-blue-500', label: 'Info' },
@@ -144,14 +144,14 @@ function EmailRow({ email, onAction }: { email: ProcessedEmail; onAction?: () =>
       }).format(email.receivedAt)
     : '—';
 
-  const isArchived = email.triage?.status === 'archived';
+  const isArchived = email.triage.status === 'archived';
 
   return (
     <tr className={`border-b border-slate-100 hover:bg-slate-50 cursor-pointer ${isArchived ? 'opacity-50' : ''}`}>
       <td className="px-4 py-3 w-12">
         <TriageStatusIndicator
-          status={email.triage?.status || 'pending'}
-          confidence={email.triage?.confidence}
+          status={email.triage.status}
+          confidence={email.triage.confidence}
         />
       </td>
       <td className="px-4 py-3 w-48">
@@ -226,6 +226,14 @@ export function MailPage() {
   const { data, isLoading, isError, error, refetch, isFetching } = useEnrichment
     ? enrichedQuery
     : basicQuery;
+
+  // Clamp offset when data.total changes to prevent out-of-range pages
+  useEffect(() => {
+    if (data && data.total > 0 && offset >= data.total) {
+      const maxValidOffset = Math.max(0, Math.floor((data.total - 1) / ITEMS_PER_PAGE) * ITEMS_PER_PAGE);
+      setOffset(maxValidOffset);
+    }
+  }, [data?.total, offset]);
 
   const totalPages = data ? Math.ceil(data.total / ITEMS_PER_PAGE) : 0;
   const currentPage = Math.floor(offset / ITEMS_PER_PAGE) + 1;

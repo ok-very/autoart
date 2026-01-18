@@ -22,9 +22,23 @@ import {
   adaptEnrichedEmailList,
 } from '../../lib/dataAdapter';
 
+/**
+ * Serialize filters to a stable string for query key comparison.
+ * This prevents unnecessary refetches when filter objects have the same values but different identity.
+ */
+function serializeFilters(filters?: InboxFilters): string {
+  if (!filters) return '';
+  return JSON.stringify({
+    projectId: filters.projectId ?? null,
+    limit: filters.limit ?? null,
+    offset: filters.offset ?? null,
+  });
+}
+
 export const mailQueryKeys = {
   all: () => ['mail'] as const,
-  emails: (filters?: InboxFilters) => ['mail', 'emails', filters] as const,
+  emails: (filters?: InboxFilters) => ['mail', 'emails', serializeFilters(filters)] as const,
+  enrichedEmails: (filters?: InboxFilters) => ['mail', 'enriched', serializeFilters(filters)] as const,
   email: (id: string) => ['mail', 'email', id] as const,
   status: () => ['mail', 'status'] as const,
 };
@@ -51,6 +65,32 @@ export function useInbox(filters?: InboxFilters) {
         total: response.total,
         limit: response.limit,
         offset: response.offset,
+      };
+    },
+    staleTime: 30000,
+  });
+}
+
+/**
+ * Fetch paginated inbox emails with AI enrichment (triage analysis)
+ */
+export function useEnrichedInbox(filters?: InboxFilters) {
+  return useQuery({
+    queryKey: mailQueryKeys.enrichedEmails(filters),
+    queryFn: async (): Promise<{ emails: ProcessedEmail[]; total: number }> => {
+      const params = new URLSearchParams();
+      if (filters?.projectId) params.set('project_id', filters.projectId);
+      if (filters?.limit) params.set('limit', String(filters.limit));
+      if (filters?.offset) params.set('offset', String(filters.offset));
+
+      const queryString = params.toString();
+      const endpoint = `/mail/emails/enriched${queryString ? `?${queryString}` : ''}`;
+
+      const response = await autohelperApi.get<EnrichedTransientEmail[]>(endpoint);
+
+      return {
+        emails: adaptEnrichedEmailList(response),
+        total: response.length,
       };
     },
     staleTime: 30000,
