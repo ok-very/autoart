@@ -29,7 +29,7 @@ import {
 import { useUIStore } from '../../stores/uiStore';
 import type { NodeType, FieldDef, RecordDefinition, HierarchyNode } from '../../types';
 import { CloneExcludedToggle } from '../common/CloneExcludedToggle';
-import { EmojiPicker } from '../common/EmojiPicker';
+import { EmojiPicker } from '../atoms/EmojiPicker';
 
 const STYLE_COLORS = [
     { name: 'orange', class: 'bg-orange-500' },

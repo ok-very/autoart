@@ -14,6 +14,7 @@ import { z } from 'zod';
 
 import { suggestClassificationsForPlan, type ClassificationSuggestion } from './classification-suggester.js';
 import * as importsService from './imports.service.js';
+import mondayWebhookRoutes from './monday/monday-webhooks.routes.js'; // Added import
 
 // ============================================================================
 // SCHEMAS
@@ -41,6 +42,9 @@ const CreateConnectorSessionBodySchema = z.object({
 // ============================================================================
 
 export async function importsRoutes(app: FastifyInstance) {
+    // Register webhook routes
+    await app.register(mondayWebhookRoutes, { prefix: '/api/webhooks/monday' });
+
     /**
      * Create a new import session
      */

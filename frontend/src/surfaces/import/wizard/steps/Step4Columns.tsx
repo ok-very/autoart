@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronRight, AlertTriangle, Info } from 'lucide-react';
+import { ChevronDown, ChevronRight, AlertTriangle, Info, HelpCircle } from 'lucide-react';
 import { Stack } from '../../../../ui/atoms/Stack';
 import { Text } from '../../../../ui/atoms/Text';
 import { Button } from '../../../../ui/atoms/Button';
@@ -9,7 +9,10 @@ import { Badge } from '../../../../ui/atoms/Badge';
 import { Spinner } from '../../../../ui/atoms/Spinner';
 import { useMondayBoardConfigs, useUpdateMondayColumnConfigs } from '../../../../api/hooks/monday';
 import { useGenerateImportPlan, type ImportSession, type ImportPlan } from '../../../../api/hooks/imports';
-import type { MondayColumnSemanticRole } from '../../../../api/types/monday';
+import { MondayColumnSemanticRole } from '../../../../api/types/monday';
+import { ImportPreviewDrawer } from '../components/ImportPreviewDrawer';
+import { ROLE_METADATA, SEMANTIC_ROLE_OPTIONS } from '../constants/monday-roles';
+import { DebouncedInput } from '../../../../ui/atoms/DebouncedInput';
 
 interface StepProps {
     onNext: () => void;
@@ -20,163 +23,18 @@ interface StepProps {
     onSessionCreated: (session: ImportSession, plan: ImportPlan) => void;
 }
 
-// Role metadata with descriptions and preferred types
-const ROLE_METADATA: Record<MondayColumnSemanticRole, {
-    label: string;
-    description: string;
-    preferredTypes: string[];
-    category: 'core' | 'data' | 'template' | 'link' | 'other';
-}> = {
-    title: {
-        label: 'Title',
-        description: 'Main item name shown on cards and lists',
-        preferredTypes: ['name', 'text'],
-        category: 'core',
-    },
-    description: {
-        label: 'Description',
-        description: 'Long-form details shown in item panel',
-        preferredTypes: ['text', 'long_text'],
-        category: 'core',
-    },
-    status: {
-        label: 'Status',
-        description: 'Powers status pills, filters, and dashboards',
-        preferredTypes: ['status', 'color'],
-        category: 'core',
-    },
-    due_date: {
-        label: 'Due Date',
-        description: 'Enables overdue highlighting and date filters',
-        preferredTypes: ['date', 'timeline'],
-        category: 'core',
-    },
-    assignee: {
-        label: 'Assignee',
-        description: 'Person responsible, used in workload views',
-        preferredTypes: ['people', 'person'],
-        category: 'core',
-    },
-    priority: {
-        label: 'Priority',
-        description: 'Priority level for sorting and filtering',
-        preferredTypes: ['status', 'dropdown'],
-        category: 'core',
-    },
-    tags: {
-        label: 'Tags',
-        description: 'Labels for grouping and filtering',
-        preferredTypes: ['tags', 'dropdown'],
-        category: 'core',
-    },
-    estimate: {
-        label: 'Estimate',
-        description: 'Effort/time estimate for planning',
-        preferredTypes: ['numbers', 'hour'],
-        category: 'core',
-    },
-    identifier: {
-        label: 'Identifier',
-        description: 'External ID or reference number',
-        preferredTypes: ['text', 'numbers'],
-        category: 'core',
-    },
-    fact: {
-        label: 'Fact',
-        description: 'Structured data for analytics (requires fact kind)',
-        preferredTypes: ['text', 'numbers', 'dropdown'],
-        category: 'data',
-    },
-    note: {
-        label: 'Note',
-        description: 'Free-form note attached to item',
-        preferredTypes: ['text', 'long_text'],
-        category: 'data',
-    },
-    metric: {
-        label: 'Metric',
-        description: 'Numeric data for charts and reports',
-        preferredTypes: ['numbers', 'formula'],
-        category: 'data',
-    },
-    template_name: {
-        label: 'Template Name',
-        description: 'Name of a template to create/link',
-        preferredTypes: ['text', 'name'],
-        category: 'template',
-    },
-    template_key: {
-        label: 'Template Key',
-        description: 'Unique key for template matching',
-        preferredTypes: ['text'],
-        category: 'template',
-    },
-    link_to_template: {
-        label: 'Link to Template',
-        description: 'Creates relationship to a template',
-        preferredTypes: ['board_relation', 'mirror', 'connect_boards'],
-        category: 'link',
-    },
-    link_to_project: {
-        label: 'Link to Project',
-        description: 'Creates relationship to a project',
-        preferredTypes: ['board_relation', 'mirror', 'connect_boards'],
-        category: 'link',
-    },
-    link_to_subprocess: {
-        label: 'Link to Subprocess',
-        description: 'Creates relationship to a subprocess',
-        preferredTypes: ['board_relation', 'mirror', 'connect_boards'],
-        category: 'link',
-    },
-    link_to_action: {
-        label: 'Link to Action',
-        description: 'Creates relationship to another action',
-        preferredTypes: ['board_relation', 'mirror', 'connect_boards', 'dependency'],
-        category: 'link',
-    },
-    link_to_record: {
-        label: 'Link to Record',
-        description: 'Creates relationship to a record',
-        preferredTypes: ['board_relation', 'mirror', 'connect_boards'],
-        category: 'link',
-    },
-    dependency: {
-        label: 'Dependency',
-        description: 'Creates dependency link to same entity type',
-        preferredTypes: ['dependency', 'board_relation'],
-        category: 'link',
-    },
-    custom: {
-        label: 'Custom',
-        description: 'Stored as custom field, not used by core UI',
-        preferredTypes: [],
-        category: 'other',
-    },
-    ignore: {
-        label: 'Ignore',
-        description: 'Column will not be imported',
-        preferredTypes: [],
-        category: 'other',
-    },
-};
-
-const SEMANTIC_ROLE_OPTIONS: { value: MondayColumnSemanticRole; label: string }[] = 
-    Object.entries(ROLE_METADATA).map(([value, meta]) => ({
-        value: value as MondayColumnSemanticRole,
-        label: meta.label,
-    }));
+// Role metadata and options imported from constants
 
 // Check if column type is compatible with selected role
 function getTypeWarning(columnType: string, role: MondayColumnSemanticRole): string | null {
     const meta = ROLE_METADATA[role];
     if (!meta || meta.preferredTypes.length === 0) return null;
-    
+
     const normalizedType = columnType.toLowerCase();
-    const isCompatible = meta.preferredTypes.some(t => 
+    const isCompatible = meta.preferredTypes.some(t =>
         normalizedType.includes(t) || t.includes(normalizedType)
     );
-    
+
     if (!isCompatible && role !== 'custom' && role !== 'ignore') {
         return `Best with ${meta.preferredTypes.slice(0, 2).join(' or ')} columns`;
     }
@@ -205,15 +63,15 @@ function RolesGlossary({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => 
                 </Inline>
                 {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
-            
+
             {isOpen && (
                 <div className="px-4 pb-4 space-y-4">
                     {categories.map(cat => {
                         const roles = Object.entries(ROLE_METADATA)
                             .filter(([, m]) => m.category === cat.key);
-                        
+
                         if (roles.length === 0) return null;
-                        
+
                         return (
                             <div key={cat.key}>
                                 <Text size="xs" weight="bold" color="muted" className="uppercase tracking-wide mb-2">
@@ -239,6 +97,10 @@ function RolesGlossary({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => 
 export function Step4Columns({ onNext, onBack, session, onSessionCreated }: StepProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [glossaryOpen, setGlossaryOpen] = useState(false);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+    // Local state for alias inputs to avoid network spam
+    // const [localAliases, setLocalAliases] = useState<Record<string, string>>({});
 
     // Extract board IDs
     const boardIds = useMemo(() => {
@@ -260,7 +122,7 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
     const warnings = useMemo(() => {
         if (!boardConfigs) return [];
         const issues: string[] = [];
-        
+
         for (const board of boardConfigs) {
             const hasTitle = board.columns.some(c => c.semanticRole === 'title');
             if (!hasTitle) {
@@ -322,11 +184,30 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
         );
     }
 
+    // Derived state for the current board's columns
+    const currentBoard = boardConfigs[0]; // Assuming single board for preview for now
+    const columns = currentBoard?.columns || [];
+
+    const sampleItem = columns.reduce((acc, col) => {
+        if (col.sampleValues && col.sampleValues.length > 0) {
+            acc[col.columnId] = col.sampleValues[0];
+        }
+        return acc;
+    }, {} as Record<string, any>);
+
+    const itemTitle = columns.find(c => c.semanticRole === 'title')?.sampleValues?.[0] || 'Sample Item';
+
+
     return (
         <div className="flex flex-col h-full">
             {/* Header with expanded explanation */}
             <Stack gap="sm" className="shrink-0">
-                <Text size="lg" weight="bold">Step 4: Map Columns to Fields</Text>
+                <div className="flex items-center justify-between">
+                    <Text size="lg" weight="bold">Step 4: Map Columns to Fields</Text>
+                    <Button variant="secondary" onClick={() => setIsPreviewOpen(true)}>
+                        Preview Mapping
+                    </Button>
+                </div>
                 <div className="text-sm text-slate-600 space-y-1">
                     <p>Tell AutoArt what each Monday column represents:</p>
                     <ul className="list-disc list-inside text-slate-500 ml-2 space-y-0.5">
@@ -363,9 +244,10 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
                             <table className="w-full text-left text-sm table-fixed">
                                 <thead className="text-slate-500 font-medium border-b border-slate-100">
                                     <tr>
-                                        <th className="px-4 py-2 w-[25%]">Column</th>
-                                        <th className="px-4 py-2 w-[15%]">Type</th>
-                                        <th className="px-4 py-2 w-[35%]">Maps To</th>
+                                        <th className="px-4 py-2 w-[20%]">Column</th>
+                                        <th className="px-4 py-2 w-[10%]">Type</th>
+                                        <th className="px-4 py-2 w-[25%]">Maps To</th>
+                                        <th className="px-4 py-2 w-[20%]">Alias</th>
                                         <th className="px-4 py-2 w-[25%]">Notes</th>
                                     </tr>
                                 </thead>
@@ -373,7 +255,7 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
                                     {board.columns.map((column) => {
                                         const warning = getTypeWarning(column.columnType, column.semanticRole);
                                         const roleMeta = ROLE_METADATA[column.semanticRole];
-                                        
+
                                         return (
                                             <tr key={column.columnId} className="hover:bg-slate-50">
                                                 <td className="px-4 py-2">
@@ -395,6 +277,44 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
                                                             }
                                                         }}
                                                         data={SEMANTIC_ROLE_OPTIONS}
+                                                        size="sm"
+                                                    />
+                                                    <Inline gap="xs" align="center" className="mt-1">
+                                                        <Badge
+                                                            variant={column.inferenceSource === 'manual' ? 'neutral' : 'light'}
+                                                            size="xs"
+                                                        >
+                                                            {column.inferenceSource === 'manual' ? 'Manual' : 'Auto'}
+                                                        </Badge>
+                                                        {column.inferenceReasons && column.inferenceReasons.length > 0 && (
+                                                            <div title={column.inferenceReasons.join('\n')}>
+                                                                <HelpCircle size={12} className="text-slate-400 cursor-help" />
+                                                            </div>
+                                                        )}
+                                                    </Inline>
+
+                                                    {column.sampleValues && column.sampleValues.length > 0 && (
+                                                        <div className="mt-2 pl-1 border-l-2 border-slate-100">
+                                                            <div className="text-[10px] text-slate-400 font-medium mb-0.5">SAMPLES</div>
+                                                            <Stack gap="xs">
+                                                                {column.sampleValues.slice(0, 3).map((val, idx) => (
+                                                                    <div key={idx} className="text-[11px] text-slate-500 font-mono truncate max-w-[200px]" title={val}>
+                                                                        {val}
+                                                                    </div>
+                                                                ))}
+                                                            </Stack>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-2">
+                                                    <DebouncedInput
+                                                        value={column.localFieldKey || ''}
+                                                        onCommit={(val) => {
+                                                            if (board.id && board.workspaceId) {
+                                                                handleColumnUpdate(board.id, board.workspaceId, column.columnId, { localFieldKey: val });
+                                                            }
+                                                        }}
+                                                        placeholder={column.columnTitle.toLowerCase().replace(/\s+/g, '_')}
                                                         size="sm"
                                                     />
                                                 </td>
@@ -436,6 +356,17 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
                     {isRefreshing ? 'Regenerating Plan...' : 'Next: Templates'}
                 </Button>
             </Inline>
+
+            {currentBoard && (
+                <ImportPreviewDrawer
+                    isOpen={isPreviewOpen}
+                    onClose={() => setIsPreviewOpen(false)}
+                    columns={columns}
+                    boardName={currentBoard.boardName}
+                    sampleItem={sampleItem}
+                    itemTitle={itemTitle}
+                />
+            )}
         </div>
     );
 }

@@ -10,7 +10,7 @@ import type {
   ListRecordsQuery,
 } from './records.schemas.js';
 import { db } from '../../db/client.js';
-import type { RecordDefinition, DataRecord, NewRecordDefinition } from '../../db/schema.js';
+import type { RecordDefinition, DataRecord, NewRecordDefinition, RecordAlias } from '../../db/schema.js';
 import { NotFoundError, ConflictError } from '../../utils/errors.js';
 
 // ==================== DEFINITIONS ====================
@@ -349,7 +349,16 @@ export async function listRecords(query: ListRecordsQuery): Promise<DataRecord[]
   }
 
   if (query.search) {
-    q = q.where('unique_name', 'ilike', `%${query.search}%`);
+    q = q.where((eb) =>
+      eb.or([
+        eb('unique_name', 'ilike', `%${query.search}%`),
+        eb('id', 'in', ({ selectFrom }) =>
+          selectFrom('record_aliases')
+            .select('record_id')
+            .where('name', 'ilike', `%${query.search}%`)
+        ),
+      ])
+    );
   }
 
   if (query.limit) {
@@ -400,28 +409,77 @@ export async function createRecord(input: CreateRecordInput, userId?: string): P
     .returningAll()
     .executeTakeFirstOrThrow();
 
+  // Create primary alias
+  await db
+    .insertInto('record_aliases')
+    .values({
+      record_id: record.id,
+      name: record.unique_name,
+      type: 'primary',
+    })
+    .execute();
+
   return record;
 }
 
 export async function updateRecord(id: string, input: UpdateRecordInput): Promise<DataRecord> {
-  const existing = await getRecordById(id);
-  if (!existing) {
-    throw new NotFoundError('Record', id);
-  }
+  return await db.transaction().execute(async (trx) => {
+    const existing = await trx
+      .selectFrom('records')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
 
-  const updates: { [key: string]: unknown } = { updated_at: new Date() };
-  if (input.uniqueName !== undefined) updates.unique_name = input.uniqueName;
-  if (input.classificationNodeId !== undefined) updates.classification_node_id = input.classificationNodeId;
-  if (input.data !== undefined) updates.data = JSON.stringify(input.data);
+    if (!existing) {
+      throw new NotFoundError('Record', id);
+    }
 
-  const record = await db
-    .updateTable('records')
-    .set(updates)
-    .where('id', '=', id)
-    .returningAll()
-    .executeTakeFirstOrThrow();
+    const updates: { [key: string]: unknown } = { updated_at: new Date() };
 
-  return record;
+    if (input.uniqueName !== undefined && input.uniqueName !== existing.unique_name) {
+      updates.unique_name = input.uniqueName;
+
+      // Archive old name
+      await trx
+        .insertInto('record_aliases')
+        .values({
+          record_id: id,
+          name: existing.unique_name,
+          type: 'historical',
+        })
+        .execute();
+
+      // Update duplicate primary alias or insert new one?
+      // For now, we assume implicit primary alias is the current name,
+      // but if we want to track 'primary' explicitly:
+      await trx
+        .deleteFrom('record_aliases')
+        .where('record_id', '=', id)
+        .where('type', '=', 'primary')
+        .execute();
+
+      await trx
+        .insertInto('record_aliases')
+        .values({
+          record_id: id,
+          name: input.uniqueName,
+          type: 'primary',
+        })
+        .execute();
+    }
+
+    if (input.classificationNodeId !== undefined) updates.classification_node_id = input.classificationNodeId;
+    if (input.data !== undefined) updates.data = JSON.stringify(input.data);
+
+    const record = await trx
+      .updateTable('records')
+      .set(updates)
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    return record;
+  });
 }
 
 export async function deleteRecord(id: string): Promise<void> {
@@ -433,6 +491,15 @@ export async function deleteRecord(id: string): Promise<void> {
   await db
     .deleteFrom('records')
     .where('id', '=', id)
+    .execute();
+}
+
+export async function getRecordAliases(id: string): Promise<RecordAlias[]> {
+  return await db
+    .selectFrom('record_aliases')
+    .selectAll()
+    .where('record_id', '=', id)
+    .orderBy('created_at', 'desc')
     .execute();
 }
 
@@ -565,14 +632,19 @@ export async function bulkCreateRecords(
   definitionId: string,
   records: BulkCreateRecordInput[],
   userId?: string
-): Promise<BulkCreateResult> {
+): Promise<BulkCreateResult & { records: DataRecord[] }> {
   // Verify definition exists
   const def = await getDefinitionById(definitionId);
   if (!def) {
     throw new NotFoundError('Record definition', definitionId);
   }
 
-  const result: BulkCreateResult = { created: 0, updated: 0, errors: [] };
+  const result: BulkCreateResult & { records: DataRecord[] } = {
+    created: 0,
+    updated: 0,
+    errors: [],
+    records: []
+  };
 
   if (records.length === 0) return result;
 
@@ -590,7 +662,7 @@ export async function bulkCreateRecords(
 
         if (existing) {
           // Update existing record
-          await trx
+          const updated = await trx
             .updateTable('records')
             .set({
               data: JSON.stringify(record.data),
@@ -598,11 +670,14 @@ export async function bulkCreateRecords(
               updated_at: new Date(),
             })
             .where('id', '=', existing.id)
-            .execute();
+            .returningAll()
+            .executeTakeFirstOrThrow();
+
           result.updated++;
+          result.records.push(updated);
         } else {
           // Create new record
-          await trx
+          const created = await trx
             .insertInto('records')
             .values({
               definition_id: definitionId,
@@ -611,8 +686,11 @@ export async function bulkCreateRecords(
               classification_node_id: record.classificationNodeId ?? null,
               created_by: userId ?? null,
             })
-            .execute();
+            .returningAll()
+            .executeTakeFirstOrThrow();
+
           result.created++;
+          result.records.push(created);
         }
       } catch (error) {
         result.errors.push({

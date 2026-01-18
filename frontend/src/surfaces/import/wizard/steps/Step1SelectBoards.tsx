@@ -1,5 +1,5 @@
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { Search, Loader2, Calendar, CheckCircle2, ChevronDown, AlertCircle } from 'lucide-react';
 
 import { Stack } from '../../../../ui/atoms/Stack';
@@ -19,7 +19,7 @@ interface StepProps {
     onSessionCreated: (session: ImportSession, plan: ImportPlan) => void;
 }
 
-export function Step1SelectBoards({ onNext, session, onSessionCreated }: StepProps) {
+export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
     const { data: connections } = useConnections();
     const { data: boards, isLoading, error } = useMondayBoards();
     const createConnectorSession = useCreateConnectorSession();
@@ -52,18 +52,7 @@ export function Step1SelectBoards({ onNext, session, onSessionCreated }: StepPro
         return grouped;
     }, [filteredBoards]);
 
-    // Toggle selection
-    const toggleBoard = useCallback((boardId: string) => {
-        setSelectedBoardIds((prev) => {
-            const next = new Set(prev);
-            if (next.has(boardId)) {
-                next.delete(boardId);
-            } else {
-                next.add(boardId);
-            }
-            return next;
-        });
-    }, []);
+
 
     const handleCreateSession = async () => {
         if (selectedBoardIds.size === 0) return;
@@ -115,7 +104,7 @@ export function Step1SelectBoards({ onNext, session, onSessionCreated }: StepPro
 
     if (isLoading) {
         return (
-            <Stack align="center" justify="center" className="h-full">
+            <Stack className="h-full items-center justify-center">
                 <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
                 <Text color="muted">Loading boards...</Text>
             </Stack>
@@ -124,10 +113,10 @@ export function Step1SelectBoards({ onNext, session, onSessionCreated }: StepPro
 
     if (error) {
         return (
-            <Stack align="center" justify="center" className="h-full">
+            <Stack className="h-full items-center justify-center">
                 <AlertCircle className="w-8 h-8 text-red-500" />
                 <Text color="error">Failed to load boards</Text>
-                <Text size="sm">{(error as Error).message}</Text>
+                <Text size="sm">{error instanceof Error ? error.message : 'Unknown error'}</Text>
             </Stack>
         );
     }
@@ -135,7 +124,7 @@ export function Step1SelectBoards({ onNext, session, onSessionCreated }: StepPro
     // Not Connected State
     if (!connections?.monday?.connected && !boards) {
         return (
-            <Stack align="center" justify="center" className="h-full" gap="lg">
+            <Stack className="h-full items-center justify-center" gap="lg">
                 <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
                     <Calendar className="w-8 h-8 text-amber-600" />
                 </div>

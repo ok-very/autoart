@@ -19,7 +19,7 @@ import {
   useRecord,
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
-import { PortalMenu } from '../common/PortalMenu';
+import { PortalMenu } from '../atoms/PortalMenu';
 
 type DisplayMode = 'label' | 'value';
 

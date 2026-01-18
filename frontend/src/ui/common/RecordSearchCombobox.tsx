@@ -271,7 +271,14 @@ export function RecordSearchCombobox({
               >
                 {item.type === 'record' ? item.definitionName : item.nodeType}
               </span>
-              <span className="text-sm font-medium text-slate-700 truncate flex-1">{item.name}</span>
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-sm font-medium text-slate-700 truncate">{item.name}</span>
+                {item.matchedAlias && (
+                  <span className="text-[10px] text-slate-400 italic truncate">
+                    (matches "{item.matchedAlias}")
+                  </span>
+                )}
+              </div>
               {item.fields && item.fields.length > 0 && shouldShowFieldSelection && (
                 <span className="text-[10px] text-slate-400 shrink-0">{item.fields.length} fields →</span>
               )}

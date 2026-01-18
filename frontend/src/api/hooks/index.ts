@@ -96,6 +96,7 @@ export {
   useRecordStats,
   useBulkClassifyRecords,
   useBulkDeleteRecords,
+  useRecordHistory,
 } from './records';
 
 // References (Also exported via ./entities)
