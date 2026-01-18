@@ -10,12 +10,12 @@ import { useCreateNode } from '@/api/hooks';
 import { useUIStore, useHierarchyStore } from '@/stores';
 
 import type { DrawerProps, CreateProjectContext } from '../../../drawer/types';
-import { Alert } from '../../atoms/Alert';
-import { Button } from '../../atoms/Button';
-import { Inline } from '../../atoms/Inline';
-import { Stack } from '../../atoms/Stack';
-import { Text } from '../../atoms/Text';
-import { TextInput } from '../../atoms/TextInput';
+import { Alert } from '@autoart/ui';
+import { Button } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
+import { Stack } from '@autoart/ui';
+import { Text } from '@autoart/ui';
+import { TextInput } from '@autoart/ui';
 
 // Legacy props interface (deprecated - use DrawerProps)
 interface LegacyCreateProjectViewProps {

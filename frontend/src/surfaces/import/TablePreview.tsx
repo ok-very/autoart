@@ -11,7 +11,7 @@ import { Table as TableIcon } from 'lucide-react';
 import { useMemo } from 'react';
 
 import type { ImportPlan } from '../../api/hooks/imports';
-import { Badge } from '../../ui/atoms';
+import { Badge } from '@autoart/ui';
 import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
 import { TableFrame, TableHeaderRow, TableRow, TableHeaderCell, TableCell } from '../../ui/table';
 

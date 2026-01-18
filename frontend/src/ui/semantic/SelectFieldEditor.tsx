@@ -15,7 +15,7 @@ import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react';
 
-import { PortalMenu } from '../atoms/PortalMenu';
+import { PortalMenu } from '@autoart/ui';
 
 export interface SelectOption {
     value: string;

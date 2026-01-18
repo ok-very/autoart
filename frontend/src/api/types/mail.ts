@@ -29,6 +29,24 @@ export interface MailServiceStatus {
   ingest_path: string;
 }
 
+// =============================================================================
+// TRIAGE / ENRICHMENT TYPES
+// =============================================================================
+
+export type TriageStatus = 'pending' | 'action_required' | 'informational' | 'archived';
+export type Priority = 'low' | 'medium' | 'high' | 'urgent';
+
+export interface TriageInfo {
+  status: TriageStatus;
+  confidence: number;
+  reasoning: string | null;
+  suggestedAction: string | null;
+}
+
+// =============================================================================
+// PROCESSED EMAIL (Frontend View Model)
+// =============================================================================
+
 export interface ProcessedEmail {
   id: string;
   subject: string;
@@ -79,8 +97,24 @@ export interface EnrichedTransientEmail {
   thread_count: number;
 }
 
+// =============================================================================
+// FILTERS & ACTIONS
+// =============================================================================
+
 export interface InboxFilters {
   projectId?: string;
   limit?: number;
   offset?: number;
+}
+
+export interface UpdateTriageRequest {
+  status: TriageStatus;
+  notes?: string;
+}
+
+export interface TriageActionResponse {
+  status: string;
+  email_id: string;
+  triage_status: TriageStatus;
+  triaged_at: string;
 }

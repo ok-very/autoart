@@ -10,6 +10,7 @@ interface SearchResult {
   nodeType?: string;
   definitionName?: string;
   fields?: { key: string; label: string }[];
+  matchedAlias?: string;
 }
 
 // Get the full hierarchy path for a node using recursive CTE
@@ -129,6 +130,58 @@ export async function resolveSearch(query: string, projectId?: string, limit = 2
       definitionName: record.definition_name,
       fields,
     });
+  }
+
+  // Search record aliases (history)
+  if (!isEmptyQuery) {
+    const aliasMatches = await db
+      .selectFrom('record_aliases')
+      .innerJoin('records', 'records.id', 'record_aliases.record_id')
+      .innerJoin('record_definitions', 'record_definitions.id', 'records.definition_id')
+      .select([
+        'records.id',
+        'records.unique_name',
+        'records.created_at',
+        'record_definitions.name as definition_name',
+        'record_definitions.schema_config',
+        'record_aliases.name as alias_name',
+      ])
+      .where('record_aliases.name', 'ilike', searchPattern)
+      .where('record_aliases.type', '!=', 'primary') // Exclude primary as it's covered by unique_name search
+      .$if(!!projectId, (qb) =>
+        qb.where('records.classification_node_id', 'in', (eb) =>
+          eb
+            .selectFrom('hierarchy_nodes')
+            .select('id')
+            .where('root_project_id', '=', projectId!)
+        )
+      )
+      .orderBy('record_aliases.created_at', 'desc')
+      .limit(limit)
+      .execute();
+
+    for (const match of aliasMatches) {
+      // Avoid duplicates if already found by primary name
+      if (results.some(r => r.id === match.id)) continue;
+
+      const schemaConfig = typeof match.schema_config === 'string'
+        ? JSON.parse(match.schema_config)
+        : match.schema_config;
+
+      const fields = (schemaConfig?.fields || []).map((f: { key: string; label: string }) => ({
+        key: f.key,
+        label: f.label,
+      }));
+
+      results.push({
+        id: match.id,
+        type: 'record',
+        name: match.unique_name,
+        definitionName: match.definition_name,
+        fields,
+        matchedAlias: match.alias_name,
+      });
+    }
   }
 
   // Search hierarchy nodes (all types that can have metadata fields)

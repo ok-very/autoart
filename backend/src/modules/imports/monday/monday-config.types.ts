@@ -127,6 +127,14 @@ export interface MondayColumnConfig {
     multiValued?: boolean;
     /** Additional settings */
     settings?: Record<string, unknown>;
+
+    /** Inference metadata (transient/informational) */
+    inferenceSource?: 'type_match' | 'name_pattern' | 'combined' | 'default';
+    inferenceConfidence?: number;
+    inferenceReasons?: string[];
+
+    /** Sample values for preview/inference */
+    sampleValues?: string[];
 }
 
 /**
@@ -170,6 +178,8 @@ export interface MondayBoardConfig {
         defaultGroupRole?: MondayGroupRole;
         /** Attach items without group to this container */
         attachOrphanItemsTo?: 'project' | 'subprocess' | 'ignore';
+        /** Webhook ID if a webhook is registered for this board */
+        webhookId?: number;
     };
     /** Group configurations within this board */
     groups: MondayGroupConfig[];
@@ -261,9 +271,10 @@ export interface MondayBoardDiscovery {
     /** Inferred role based on heuristics */
     inferredRole: MondayBoardRole;
     /** Confidence of inference (0-1) */
-    inferenceConfidence: number;
-    /** Reasons for inference */
-    inferenceReasons: string[];
+    inferenceConfidence?: number; // 0.0 - 1.0
+    inferenceReasons?: string[];  // Human-readable explanations
+    /** Sample values from the board */
+    sampleValues?: string[];
 }
 
 /**
@@ -301,7 +312,7 @@ export const DEFAULT_INFERENCE_HEURISTICS: MondayInferenceHeuristics = {
         subprocess: [/subprocess/i, /workstream/i],
         backlog: [/backlog/i, /triage/i, /inbox/i, /new/i],
         done: [/done/i, /complete/i, /finished/i],
-        archive: [/archive/i, /archived/i],
+        archive: [/archive/i, /archived/i, /old/i],
         template_group: [/template/i],
         reference_group: [/reference/i, /resource/i, /file/i, /doc/i],
         ignore: [],

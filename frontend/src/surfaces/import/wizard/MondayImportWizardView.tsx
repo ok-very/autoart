@@ -1,11 +1,11 @@
 
 import { useState, useCallback } from 'react';
-import { Stack } from '../../../ui/atoms/Stack';
-import { Card } from '../../../ui/atoms/Card';
-import { Text } from '../../../ui/atoms/Text';
-import { Button } from '../../../ui/atoms/Button';
-import { ProgressBar } from '../../../ui/atoms/ProgressBar';
-import { Inline } from '../../../ui/atoms/Inline';
+import { Stack } from '@autoart/ui';
+import { Card } from '@autoart/ui';
+import { Text } from '@autoart/ui';
+
+import { ProgressBar } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
 
 // Import Steps (Placeholders for now)
 import { Step1SelectBoards } from './steps/Step1SelectBoards';
@@ -40,7 +40,7 @@ export function MondayImportWizardView({
     session,
     plan,
     onSelectItem,
-    onReset,
+    onReset: _onReset,
     onSessionCreated,
 }: MondayImportWizardViewProps) {
     const [currentStep, setCurrentStep] = useState(1);

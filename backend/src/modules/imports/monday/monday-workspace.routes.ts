@@ -12,8 +12,8 @@ import { getMondayToken } from '../connections.service.js';
 import { MondayConnector } from '../connectors/monday-connector.js';
 
 import { inferBoardConfig } from './monday-domain-interpreter.js';
-import { mondaySyncService } from './monday-sync.service.js';
 import * as workspaceService from './monday-workspace.service.js';
+import { mondaySyncService } from './monday-sync.service.js';
 
 // ============================================================================
 // SCHEMAS
@@ -114,6 +114,7 @@ const UpdateColumnConfigsBodySchema = z.object({
         isRequired: z.boolean().optional(),
         multiValued: z.boolean().optional(),
         settings: z.record(z.unknown()).optional(),
+        sampleValues: z.array(z.string()).optional(),
     })),
 });
 
@@ -259,6 +260,13 @@ export async function mondayWorkspaceRoutes(app: FastifyInstance) {
                 column_title: c.columnTitle,
                 column_type: c.columnType,
                 semantic_role: c.semanticRole,
+                settings: {
+                    ...(c.settings || {}),
+                    sampleValues: c.sampleValues,
+                    inferenceSource: c.inferenceSource,
+                    inferenceConfidence: c.inferenceConfidence,
+                    inferenceReasons: c.inferenceReasons,
+                },
             }))
         );
 
@@ -375,7 +383,10 @@ export async function mondayWorkspaceRoutes(app: FastifyInstance) {
                 render_hint: c.renderHint,
                 is_required: c.isRequired ?? false,
                 multi_valued: c.multiValued ?? false,
-                settings: c.settings,
+                settings: {
+                    ...c.settings,
+                    sampleValues: c.sampleValues,
+                },
             }))
         );
 

@@ -96,6 +96,7 @@ export {
   useRecordStats,
   useBulkClassifyRecords,
   useBulkDeleteRecords,
+  useRecordHistory,
 } from './records';
 
 // References (Also exported via ./entities)
@@ -238,6 +239,10 @@ export {
   useEnrichedInbox,
   useEmail,
   useMailStatus,
+  useUpdateTriage,
+  useArchiveEmail,
+  useMarkActionRequired,
+  useMarkInformational,
   mailQueryKeys,
 } from './mail';
 

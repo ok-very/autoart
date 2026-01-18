@@ -10,9 +10,9 @@ import { useCallback } from 'react';
 
 import { DrawerRegistry } from '../../drawer/DrawerRegistry';
 import { useUIStore } from '../../stores/uiStore';
-import { IconButton } from '../atoms/IconButton';
-import { Inline } from '../atoms/Inline';
-import { Text } from '../atoms/Text';
+import { IconButton } from '@autoart/ui';
+import { Inline } from '@autoart/ui';
+import { Text } from '@autoart/ui';
 import { ResizeHandle } from '../common/ResizeHandle';
 
 export function BottomDrawer() {

@@ -12,15 +12,15 @@ import { useUIStore } from '@/stores';
 import { useHierarchyStore } from '@/stores';
 
 import type { DrawerProps, CloneProjectContext } from '../../../drawer/types';
-import { Alert } from '../../atoms/Alert';
-import { Badge } from '../../atoms/Badge';
-import { Button } from '../../atoms/Button';
-import { Checkbox } from '../../atoms/Checkbox';
+import { Alert } from '@autoart/ui';
+import { Badge } from '@autoart/ui';
+import { Button } from '@autoart/ui';
+import { Checkbox } from '@autoart/ui';
 
-import { Inline } from '../../atoms/Inline';
-import { Stack } from '../../atoms/Stack';
-import { Text } from '../../atoms/Text';
-import { TextInput } from '../../atoms/TextInput';
+import { Inline } from '@autoart/ui';
+import { Stack } from '@autoart/ui';
+import { Text } from '@autoart/ui';
+import { TextInput } from '@autoart/ui';
 
 // Legacy props interface (deprecated - use DrawerProps)
 interface LegacyCloneProjectViewProps {

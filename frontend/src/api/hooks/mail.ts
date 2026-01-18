@@ -3,7 +3,7 @@
  * Connects to AutoHelper backend for email operations
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { autohelperApi } from '../autohelperClient';
 import type {
@@ -13,6 +13,8 @@ import type {
   MailServiceStatus,
   InboxFilters,
   ProcessedEmail,
+  TriageStatus,
+  TriageActionResponse,
 } from '../types/mail';
 import {
   adaptTransientEmailList,
@@ -105,5 +107,90 @@ export function useMailStatus() {
     queryFn: () => autohelperApi.get<MailServiceStatus>('/mail/status'),
     refetchInterval: 10000,
     staleTime: 5000,
+  });
+}
+
+// =============================================================================
+// TRIAGE ACTIONS
+// =============================================================================
+
+/**
+ * Update triage status of an email
+ */
+export function useUpdateTriage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      emailId,
+      status,
+      notes,
+    }: {
+      emailId: string;
+      status: TriageStatus;
+      notes?: string;
+    }) => {
+      return autohelperApi.post<TriageActionResponse>(
+        `/mail/emails/${emailId}/triage`,
+        { status, notes }
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: mailQueryKeys.all() });
+    },
+  });
+}
+
+/**
+ * Archive an email
+ */
+export function useArchiveEmail() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (emailId: string) => {
+      return autohelperApi.post<TriageActionResponse>(
+        `/mail/emails/${emailId}/archive`
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: mailQueryKeys.all() });
+    },
+  });
+}
+
+/**
+ * Mark email as action required
+ */
+export function useMarkActionRequired() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (emailId: string) => {
+      return autohelperApi.post<TriageActionResponse>(
+        `/mail/emails/${emailId}/mark-action-required`
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: mailQueryKeys.all() });
+    },
+  });
+}
+
+/**
+ * Mark email as informational
+ */
+export function useMarkInformational() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (emailId: string) => {
+      return autohelperApi.post<TriageActionResponse>(
+        `/mail/emails/${emailId}/mark-informational`
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: mailQueryKeys.all() });
+    },
   });
 }

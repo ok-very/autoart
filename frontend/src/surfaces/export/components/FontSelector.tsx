@@ -123,7 +123,7 @@ export function FontSelector({
                         {availableFonts.map((font, index) => (
                             <button
                                 key={font.family}
-                                ref={(el) => (optionsRef.current[index] = el)}
+                                ref={(el) => { optionsRef.current[index] = el; }}
                                 type="button"
                                 role="option"
                                 aria-selected={font.family === selectedFont}

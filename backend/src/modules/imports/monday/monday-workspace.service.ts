@@ -179,7 +179,23 @@ export async function listBoardConfigsByExternalIds(
         .selectFrom('monday_board_configs')
         .selectAll()
         .where('board_id', 'in', boardIds)
+        .where('board_id', 'in', boardIds)
         .execute();
+}
+
+/**
+ * Get board config by external board ID (Monday ID).
+ */
+export async function getBoardConfigByExternalBoardId(
+    boardId: string
+): Promise<MondayBoardConfig | null> {
+    const result = await db
+        .selectFrom('monday_board_configs')
+        .selectAll()
+        .where('board_id', '=', boardId)
+        .executeTakeFirst();
+
+    return result ?? null;
 }
 
 /**
@@ -416,19 +432,26 @@ export async function getFullWorkspaceConfig(
                     subprocessNameOverride: g.subprocess_name_override ?? undefined,
                     settings: g.settings as MondayGroupConfigType['settings'],
                 })),
-                columns: columns.map((c) => ({
-                    boardId: bc.board_id,
-                    columnId: c.column_id,
-                    columnTitle: c.column_title,
-                    columnType: c.column_type,
-                    semanticRole: c.semantic_role as MondayColumnSemanticRole,
-                    localFieldKey: c.local_field_key ?? undefined,
-                    factKindId: c.fact_kind_id ?? undefined,
-                    renderHint: c.render_hint ?? undefined,
-                    isRequired: c.is_required,
-                    multiValued: c.multi_valued,
-                    settings: c.settings as MondayColumnConfigType['settings'],
-                })),
+                columns: columns.map((c) => {
+                    const settings = (c.settings as Record<string, any>) || {};
+                    return {
+                        boardId: bc.board_id,
+                        columnId: c.column_id,
+                        columnTitle: c.column_title,
+                        columnType: c.column_type,
+                        semanticRole: c.semantic_role as MondayColumnSemanticRole,
+                        localFieldKey: c.local_field_key ?? undefined,
+                        factKindId: c.fact_kind_id ?? undefined,
+                        renderHint: c.render_hint ?? undefined,
+                        isRequired: c.is_required,
+                        multiValued: c.multi_valued,
+                        settings: c.settings as MondayColumnConfigType['settings'],
+                        sampleValues: settings.sampleValues as string[] | undefined,
+                        inferenceSource: settings.inferenceSource,
+                        inferenceConfidence: settings.inferenceConfidence,
+                        inferenceReasons: settings.inferenceReasons,
+                    };
+                }),
             };
         })
     );

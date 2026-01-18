@@ -7,8 +7,8 @@ import { useUIStore } from '../../stores/uiStore';
 import type { HierarchyNode } from '../../types';
 import { parseTaskMetadata, deriveTaskStatus } from '../../utils/nodeMetadata';
 import { calculateStatusDistribution, StatusKey, STATUS_COLORS, STATUS_LABELS } from '../../utils/statusUtils';
-import { Badge } from '../common/Badge';
-import { ProgressBar } from '../common/ProgressBar';
+import { Badge } from '../atoms/Badge';
+import { ProgressBar } from '../atoms/ProgressBar';
 import { RichTextEditor } from '../editor/RichTextEditor';
 
 // Helper to safely parse metadata
@@ -323,7 +323,15 @@ export function Workspace() {
       <div className="flex-shrink-0 bg-white border-t border-slate-200 p-4 flex items-center justify-between sticky bottom-0 z-10">
         <span className="text-sm font-semibold text-slate-700">Total Task Progress ({allTasks.length} tasks)</span>
         <div className="w-48">
-          <ProgressBar distribution={statusDistribution} />
+          <ProgressBar
+            segments={statusDistribution.map(d => ({
+              key: d.status,
+              percentage: d.percentage,
+              color: d.color,
+              count: d.count,
+              label: STATUS_LABELS[d.status] || d.status,
+            }))}
+          />
         </div>
       </div>
     </main>

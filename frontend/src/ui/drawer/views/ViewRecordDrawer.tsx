@@ -1,11 +1,12 @@
-import { ExternalLink, Trash2 } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { ExternalLink, Trash2, History } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 
 import {
   useRecord,
   useRecordDefinition,
   useUpdateRecord,
   useDeleteRecord,
+  useRecordHistory,
 } from '@/api/hooks';
 import { useUIStore } from '@/stores';
 import type { FieldDef } from '@/types';
@@ -16,15 +17,34 @@ interface ViewRecordDrawerProps {
   recordId: string;
 }
 
+/** @deprecated Use RecordPropertiesView / SelectionInspector instead */
 export function ViewRecordDrawer({ recordId }: ViewRecordDrawerProps) {
   const { closeDrawer, inspectRecord } = useUIStore();
   const { data: record, isLoading } = useRecord(recordId);
   const { data: definition } = useRecordDefinition(record?.definition_id || null);
+  const { data: history } = useRecordHistory(recordId);
   const updateRecord = useUpdateRecord();
   const deleteRecord = useDeleteRecord();
 
   const [editedFields, setEditedFields] = useState<Record<string, unknown>>({});
+  const [showHistory, setShowHistory] = useState(false);
+  const historyRef = useRef<HTMLDivElement>(null);
   const fieldTimerRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  // Close history when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (historyRef.current && !historyRef.current.contains(event.target as Node)) {
+        setShowHistory(false);
+      }
+    }
+    if (showHistory) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showHistory]);
 
   if (isLoading) {
     return (
@@ -98,6 +118,49 @@ export function ViewRecordDrawer({ recordId }: ViewRecordDrawerProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <div className="relative" ref={historyRef}>
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title="View naming history"
+            >
+              <History size={18} />
+            </button>
+
+            {showHistory && (
+              <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-slate-200 rounded-lg shadow-xl z-10 overflow-hidden">
+                <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500">
+                  Naming History
+                </div>
+                <div className="max-h-60 overflow-y-auto py-1">
+                  {!history || history.length === 0 ? (
+                    <div className="px-4 py-3 text-xs text-slate-400 italic text-center">
+                      No aliases found
+                    </div>
+                  ) : (
+                    history.map((alias: any) => (
+                      <div key={alias.id} className="px-3 py-2 hover:bg-slate-50 border-b border-slate-50 last:border-0">
+                        <div className="text-sm text-slate-700 font-medium">{alias.name}</div>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${alias.type === 'primary'
+                            ? 'bg-green-100 text-green-700'
+                            : alias.type === 'historical'
+                              ? 'bg-slate-100 text-slate-500'
+                              : 'bg-blue-100 text-blue-700'
+                            }`}>
+                            {alias.type}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            {new Date(alias.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           <button
             onClick={handleOpenInInspector}
             className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

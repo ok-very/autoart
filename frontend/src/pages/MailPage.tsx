@@ -52,7 +52,78 @@ function TriageStatusIndicator({ status, confidence }: { status: TriageStatusTyp
   );
 }
 
-function EmailRow({ email }: { email: ProcessedEmail }) {
+function EmailActions({ email, onAction }: { email: ProcessedEmail; onAction?: () => void }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const archiveMutation = useArchiveEmail();
+  const actionRequiredMutation = useMarkActionRequired();
+  const informationalMutation = useMarkInformational();
+
+  const handleArchive = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    archiveMutation.mutate(email.id, { onSuccess: onAction });
+    setShowMenu(false);
+  };
+
+  const handleMarkActionRequired = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    actionRequiredMutation.mutate(email.id, { onSuccess: onAction });
+    setShowMenu(false);
+  };
+
+  const handleMarkInformational = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    informationalMutation.mutate(email.id, { onSuccess: onAction });
+    setShowMenu(false);
+  };
+
+  const isPending = archiveMutation.isPending || actionRequiredMutation.isPending || informationalMutation.isPending;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowMenu(!showMenu);
+        }}
+        disabled={isPending}
+        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors disabled:opacity-50"
+      >
+        {isPending ? <Loader2 size={14} className="animate-spin" /> : <MoreHorizontal size={14} />}
+      </button>
+      {showMenu && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+          <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[160px]">
+            <button
+              onClick={handleMarkActionRequired}
+              className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+            >
+              <AlertTriangle size={14} className="text-red-500" />
+              Action Required
+            </button>
+            <button
+              onClick={handleMarkInformational}
+              className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+            >
+              <Info size={14} className="text-blue-500" />
+              Informational
+            </button>
+            <hr className="my-1 border-slate-100" />
+            <button
+              onClick={handleArchive}
+              className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+            >
+              <Archive size={14} className="text-slate-400" />
+              Archive
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function EmailRow({ email, onAction }: { email: ProcessedEmail; onAction?: () => void }) {
   const formattedDate = email.receivedAt
     ? new Intl.DateTimeFormat('en-US', {
         month: 'short',
@@ -61,6 +132,8 @@ function EmailRow({ email }: { email: ProcessedEmail }) {
         minute: '2-digit',
       }).format(email.receivedAt)
     : '—';
+
+  const isArchived = email.triage.status === 'archived';
 
   return (
     <tr className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer">
@@ -94,6 +167,9 @@ function EmailRow({ email }: { email: ProcessedEmail }) {
         <PriorityBadge priority={email.priority} />
       </td>
       <td className="px-4 py-3 w-32 text-sm text-slate-500">{formattedDate}</td>
+      <td className="px-4 py-3 w-12">
+        <EmailActions email={email} onAction={onAction} />
+      </td>
     </tr>
   );
 }
@@ -223,7 +299,9 @@ export function MailPage() {
             <table className="w-full">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-8" />
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-12">
+                    Status
+                  </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                     From
                   </th>
@@ -236,11 +314,12 @@ export function MailPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                     Date
                   </th>
+                  <th className="px-4 py-3 w-12" />
                 </tr>
               </thead>
               <tbody>
                 {data?.emails.map((email) => (
-                  <EmailRow key={email.id} email={email} />
+                  <EmailRow key={email.id} email={email} onAction={() => refetch()} />
                 ))}
               </tbody>
             </table>
