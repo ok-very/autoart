@@ -19,6 +19,8 @@ export { SelectableWrapper } from './SelectableWrapper';
 export { CollectionFlashOverlay } from './CollectionFlashOverlay';
 export { CollectionItemCard } from './CollectionItemCard';
 export { TemplatePresetSelector } from './TemplatePresetSelector';
+export { CollectionPanel } from './CollectionPanel';
+export { CollectionPreview } from './CollectionPreview';
 
 // Re-export types
 export * from './types';
