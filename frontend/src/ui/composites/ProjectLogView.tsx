@@ -9,7 +9,7 @@
 import { Play, CheckCircle, HandPalm, Paperclip, Circle, PlusCircle, DotsThree } from '@phosphor-icons/react';
 import { useState, useMemo } from 'react';
 
-import { DataFieldWidget } from '../molecules/DataFieldWidget';
+import { DataFieldWidget } from '../../ui/molecules/DataFieldWidget';
 
 // Event types aligned with Action/Event architecture
 export type EventType =

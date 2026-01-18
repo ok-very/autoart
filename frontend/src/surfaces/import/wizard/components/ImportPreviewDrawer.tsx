@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { X, ArrowRight, LayoutTemplate } from 'lucide-react';
 import { DataFieldWidget, DataFieldKind } from '../../../../ui/molecules/DataFieldWidget';
-import { Button } from '../../../../ui/atoms/Button';
-import { Card } from '../../../../ui/atoms/Card';
-import { Stack } from '../../../../ui/atoms/Stack';
-import { Text } from '../../../../ui/atoms/Text';
+import { Button } from '@autoart/ui';
+import { Card } from '@autoart/ui';
+import { Stack } from '@autoart/ui';
+import { Text } from '@autoart/ui';
 import { MondayColumnConfig, MondayColumnSemanticRole } from '../../../../api/types/monday';
 
 interface ImportPreviewDrawerProps {

@@ -24,7 +24,7 @@ import { useNode, useRecordDefinitions, useUpdateNode } from '../../api/hooks';
 import { TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
 import { UserMentionInput } from '../composites/UserMentionInput';
 import { RichTextEditor } from '../editor/RichTextEditor';
-import { FieldRenderer, type FieldRendererCallbacks } from '../molecules/FieldRenderer';
+import { FieldRenderer, type FieldRendererCallbacks } from '../../ui/molecules/FieldRenderer';
 
 export interface NodeFieldEditorProps {
     /** ID of the node to edit */

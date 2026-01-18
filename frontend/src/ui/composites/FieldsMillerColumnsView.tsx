@@ -4,7 +4,7 @@ import type { FieldDescriptor } from '@autoart/shared';
 
 import { useRecordDefinitions } from '../../api/hooks';
 import { generateFieldIndex } from '../../utils/fieldIndexBuilder';
-import { MillerColumn, type MillerColumnItem } from '../molecules/MillerColumn';
+import { MillerColumn, type MillerColumnItem } from '../../ui/molecules/MillerColumn';
 
 export interface FieldsMillerColumnsViewProps {
     className?: string;
@@ -12,13 +12,13 @@ export interface FieldsMillerColumnsViewProps {
     onCheckChange?: (checkedIds: Set<string>) => void;
 }
 
-export function FieldsMillerColumnsView({ 
+export function FieldsMillerColumnsView({
     className,
     onSelectField,
     onCheckChange
 }: FieldsMillerColumnsViewProps) {
     const { data: definitions, isLoading } = useRecordDefinitions();
-    
+
     // State for navigation (active path)
     const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
     const [activeDefinitionId, setActiveDefinitionId] = useState<string | null>(null);
@@ -107,7 +107,7 @@ export function FieldsMillerColumnsView({
 
     const handleCheck = (item: MillerColumnItem, checked: boolean) => {
         const newChecked = new Set(checkedIds);
-        
+
         // Recursive check logic could go here (if checking a category checks all children)
         // For now, simple toggle
         if (checked) {
@@ -115,7 +115,7 @@ export function FieldsMillerColumnsView({
         } else {
             newChecked.delete(item.id);
         }
-        
+
         setCheckedIds(newChecked);
         if (onCheckChange) {
             onCheckChange(newChecked);
@@ -144,11 +144,11 @@ export function FieldsMillerColumnsView({
     }
 
     return (
-        <div 
+        <div
             className={`flex flex-1 overflow-hidden bg-slate-100 border-r border-slate-200 ${className || ''}`}
             data-aa-component="FieldsMillerColumnsView"
         >
-            <div 
+            <div
                 ref={containerRef}
                 className="flex flex-1 overflow-x-auto custom-scroll"
             >

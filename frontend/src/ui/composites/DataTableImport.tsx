@@ -27,8 +27,8 @@ import { ChevronRight, ChevronDown, Folder, FileText, Box, AlertCircle, CheckCir
 import { useMemo, useCallback } from 'react';
 
 import type { ImportPlan, ImportPlanItem, ItemClassification } from '../../api/hooks/imports';
-import { ColumnPicker } from '../molecules/ColumnPicker';
-import { DataFieldWidget, type DataFieldKind } from '../molecules/DataFieldWidget';
+import { ColumnPicker } from '../../ui/molecules/ColumnPicker';
+import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
 import { UniversalTableCore, makeImportPlanRowModel, getImportPlanMeta, getImportPlanNode, type TableColumn as CoreTableColumn, type TableRow } from '../table-core';
 
 // ============================================================================

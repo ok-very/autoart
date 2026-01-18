@@ -17,7 +17,7 @@ import { ImportSidebar } from '../surfaces/import/ImportSidebar';
 import { ImportWorkbenchView } from '../surfaces/import/ImportWorkbenchView';
 import { MondayImportWizardView } from '../surfaces/import/wizard/MondayImportWizardView';
 // import { MondayPreviewView } from '../surfaces/import/MondayPreviewView'; // Replaced by Wizard
-import { ResizeHandle } from '../ui/atoms/ResizeHandle';
+import { ResizeHandle } from '@autoart/ui';
 import { SelectionInspector } from '../ui/composites/SelectionInspector';
 import { BottomDrawer } from '../ui/drawer/BottomDrawer';
 import { Header } from '../ui/layout/Header';

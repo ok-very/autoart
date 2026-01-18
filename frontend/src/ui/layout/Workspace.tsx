@@ -7,8 +7,8 @@ import { useUIStore } from '../../stores/uiStore';
 import type { HierarchyNode } from '../../types';
 import { parseTaskMetadata, deriveTaskStatus } from '../../utils/nodeMetadata';
 import { calculateStatusDistribution, StatusKey, STATUS_COLORS, STATUS_LABELS } from '../../utils/statusUtils';
-import { Badge } from '../atoms/Badge';
-import { ProgressBar } from '../atoms/ProgressBar';
+import { Badge } from '@autoart/ui';
+import { ProgressBar } from '@autoart/ui';
 import { RichTextEditor } from '../editor/RichTextEditor';
 
 // Helper to safely parse metadata

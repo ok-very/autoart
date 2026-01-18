@@ -375,7 +375,7 @@ function AutoHelperIntegration({ status, onGenerateCode }: AutoHelperIntegration
             icon={<Link2 className="w-5 h-5 text-indigo-600" />}
             iconBg="bg-indigo-100"
             name="AutoHelper"
-            description="Local desktop assistant for Outlook mail processing"
+            description="Local assistant for file indexing, document production, and Outlook mail"
             hint="Generate a code in AutoArt, then enter it in AutoHelper to connect"
             status={status}
         >

@@ -27,7 +27,7 @@ import type { WorkflowSurfaceNode, DerivedStatus } from '@autoart/shared';
 import type { FieldViewModel } from '@autoart/shared/domain';
 
 import { buildChildrenMap } from '../../api/hooks/workflowSurface';
-import { EditableCell } from '../molecules/EditableCell';
+import { EditableCell } from '../../ui/molecules/EditableCell';
 import { StatusFieldEditor } from '../semantic/StatusFieldEditor';
 import { UniversalTableCore, type TableColumn as CoreTableColumn, type TableRow, type RowModel } from '../table-core';
 

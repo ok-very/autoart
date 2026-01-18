@@ -21,7 +21,7 @@ import { useProjectTree, useRecordDefinitions, useRecords } from '../../api/hook
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
 import type { HierarchyNode, DataRecord, RecordDefinition } from '../../types';
-import type { DataFieldKind } from '../molecules/DataFieldWidget';
+import type { DataFieldKind } from '../../ui/molecules/DataFieldWidget';
 
 // ==================== TYPES ====================
 

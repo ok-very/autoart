@@ -18,7 +18,7 @@ import type { FieldDescriptor, DataRecord } from '@autoart/shared';
 
 import { useRecords, useUpdateRecord } from '../../api/hooks';
 import { Checkbox } from '@autoart/ui';
-import { DataFieldWidget, type DataFieldKind } from '../molecules/DataFieldWidget';
+import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
 import { TableFrame, TableHeaderRow, TableRow, TableHeaderCell, TableCell } from '../table';
 
 
