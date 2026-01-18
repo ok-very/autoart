@@ -27,12 +27,16 @@ interface WorkspaceState {
     // Which panels are currently open (derived from layout, but tracked for persistence)
     openPanelIds: PanelId[];
 
+    // Parameters passed to panels (e.g., recordId for inspector)
+    panelParams: Map<PanelId, unknown>;
+
     // User-overridden visibility (manual show/hide takes precedence over context)
     userOverrides: Map<PanelId, boolean>;
 
     // Actions
-    openPanel: (panelId: PanelId) => void;
+    openPanel: (panelId: PanelId, params?: unknown) => void;
     closePanel: (panelId: PanelId) => void;
+    getPanelParams: <T = unknown>(panelId: PanelId) => T | undefined;
     saveLayout: (layout: SerializedDockviewState) => void;
     setUserOverride: (panelId: PanelId, visible: boolean) => void;
     clearUserOverride: (panelId: PanelId) => void;
@@ -43,6 +47,7 @@ interface WorkspaceState {
 const initialState = {
     layout: null as SerializedDockviewState | null,
     openPanelIds: [...DEFAULT_OPEN_PANELS] as PanelId[],
+    panelParams: new Map<PanelId, unknown>(),
     userOverrides: new Map<PanelId, boolean>(),
 };
 
@@ -51,15 +56,29 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         (set, get) => ({
             ...initialState,
 
-            openPanel: (panelId: PanelId) => {
+            openPanel: (panelId: PanelId, params?: unknown) => {
                 const state = get();
+                const newParams = new Map(state.panelParams);
+                if (params !== undefined) {
+                    newParams.set(panelId, params);
+                }
                 if (state.openPanelIds.includes(panelId)) {
-                    return; // Already open
+                    // Already open, but update params if provided
+                    if (params !== undefined) {
+                        set({ panelParams: newParams });
+                    }
+                    return;
                 }
                 set({
                     openPanelIds: [...state.openPanelIds, panelId],
+                    panelParams: newParams,
                 });
             },
+
+            getPanelParams: <T = unknown>(panelId: PanelId): T | undefined => {
+                return get().panelParams.get(panelId) as T | undefined;
+            },
+
 
             closePanel: (panelId: PanelId) => {
                 // Cannot close permanent panels

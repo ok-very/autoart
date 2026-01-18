@@ -14,6 +14,7 @@ import { useUIStore, useUIPanels } from '../../stores/uiStore';
 import { ResizeHandle } from '../common/ResizeHandle';
 import { HierarchySidebar } from '../hierarchy/HierarchySidebar';
 import { DockviewWorkspace } from '../workspace/DockviewWorkspace';
+import { ModalRegistry } from '../registry/ModalRegistry';
 
 export function MainLayout() {
   const { sidebarWidth, setSidebarWidth } = useUIStore();
@@ -40,6 +41,9 @@ export function MainLayout() {
 
         {/* Unified Dockview Workspace */}
         <DockviewWorkspace />
+
+        {/* Global Modals */}
+        <ModalRegistry />
       </div>
     </div>
   );

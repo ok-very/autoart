@@ -1,37 +1,13 @@
 /**
- * Menu - Dropdown menu component using portal positioning
+ * Menu - Dropdown menu component using Radix UI
  *
- * Compound component pattern with context-based state management.
- * Position dropdown below target using absolute positioning.
+ * Refactored to use Radix DropdownMenu for reliable positioning,
+ * accessibility, and keyboard navigation.
  */
 
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { clsx } from 'clsx';
-import {
-    createContext,
-    useContext,
-    useState,
-    useRef,
-    useEffect,
-    useCallback,
-
-    type ReactNode,
-    type ElementType,
-} from 'react';
-import { createPortal } from 'react-dom';
-
-interface MenuContextValue {
-    isOpen: boolean;
-    setIsOpen: (open: boolean) => void;
-    targetRef: React.RefObject<HTMLDivElement>;
-}
-
-const MenuContext = createContext<MenuContextValue | null>(null);
-
-function useMenuContext() {
-    const ctx = useContext(MenuContext);
-    if (!ctx) throw new Error('Menu components must be used within Menu');
-    return ctx;
-}
+import { type ReactNode, type ElementType, type ComponentPropsWithoutRef } from 'react';
 
 export interface MenuProps {
     children: ReactNode;
@@ -40,27 +16,10 @@ export interface MenuProps {
 }
 
 export function Menu({ children, opened, onChange }: MenuProps) {
-    const [internalOpen, setInternalOpen] = useState(false);
-    const targetRef = useRef<HTMLDivElement>(null);
-
-    const isControlled = opened !== undefined;
-    const isOpen = isControlled ? opened : internalOpen;
-
-    const setIsOpen = useCallback(
-        (open: boolean) => {
-            if (isControlled) {
-                onChange?.(open);
-            } else {
-                setInternalOpen(open);
-            }
-        },
-        [isControlled, onChange]
-    );
-
     return (
-        <MenuContext.Provider value={{ isOpen, setIsOpen, targetRef }}>
-            <div className="relative inline-block">{children}</div>
-        </MenuContext.Provider>
+        <DropdownMenu.Root open={opened} onOpenChange={onChange}>
+            {children}
+        </DropdownMenu.Root>
     );
 }
 
@@ -69,90 +28,54 @@ export interface MenuTargetProps {
 }
 
 function MenuTarget({ children }: MenuTargetProps) {
-    const { isOpen, setIsOpen, targetRef } = useMenuContext();
-
     return (
-        <div
-            ref={targetRef}
-            onClick={() => setIsOpen(!isOpen)}
-            className="cursor-pointer"
-        >
-            {children}
-        </div>
+        <DropdownMenu.Trigger asChild>
+            <div className="cursor-pointer">{children}</div>
+        </DropdownMenu.Trigger>
     );
 }
 
 export interface MenuDropdownProps {
     children: ReactNode;
     className?: string;
+    align?: 'start' | 'center' | 'end';
+    side?: 'top' | 'right' | 'bottom' | 'left';
+    sideOffset?: number;
 }
 
-function MenuDropdown({ children, className }: MenuDropdownProps) {
-    const { isOpen, setIsOpen, targetRef } = useMenuContext();
-    const dropdownRef = useRef<HTMLDivElement>(null);
-    const [position, setPosition] = useState({ top: 0, left: 0 });
-
-
-    // Silence unused warning for now as it's used in effect but maybe not rendered
-
-
-    // Trigger animation after mount
-
-
-    useEffect(() => {
-        if (isOpen && targetRef.current) {
-            const rect = targetRef.current.getBoundingClientRect();
-            setPosition({
-                top: rect.bottom + window.scrollY + 4,
-                left: rect.left + window.scrollX,
-            });
-        }
-    }, [isOpen, targetRef]);
-
-    useEffect(() => {
-        if (!isOpen) return;
-
-        const handleClickOutside = (e: MouseEvent) => {
-            if (
-                dropdownRef.current &&
-                !dropdownRef.current.contains(e.target as Node) &&
-                targetRef.current &&
-                !targetRef.current.contains(e.target as Node)
-            ) {
-                setIsOpen(false);
-            }
-        };
-
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setIsOpen(false);
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleEscape);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('keydown', handleEscape);
-        };
-    }, [isOpen, setIsOpen, targetRef]);
-
-    if (!isOpen) return null;
-
-    return createPortal(
-        <div
-            ref={dropdownRef}
-            className={clsx(
-                'absolute z-50 min-w-[160px] py-1 bg-white rounded-lg border border-slate-200 shadow-lg',
-                className
-            )}
-            style={{ top: position.top, left: position.left }}
-        >
-            {children}
-        </div>,
-        document.body
+function MenuDropdown({
+    children,
+    className,
+    align = 'start',
+    side = 'bottom',
+    sideOffset = 4,
+}: MenuDropdownProps) {
+    return (
+        <DropdownMenu.Portal>
+            <DropdownMenu.Content
+                className={clsx(
+                    'z-50 min-w-[160px] py-1 bg-white rounded-lg border border-slate-200 shadow-lg',
+                    'data-[state=open]:animate-in data-[state=closed]:animate-out',
+                    'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+                    'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+                    'data-[side=bottom]:slide-in-from-top-2',
+                    'data-[side=left]:slide-in-from-right-2',
+                    'data-[side=right]:slide-in-from-left-2',
+                    'data-[side=top]:slide-in-from-bottom-2',
+                    className
+                )}
+                align={align}
+                side={side}
+                sideOffset={sideOffset}
+            >
+                {children}
+            </DropdownMenu.Content>
+        </DropdownMenu.Portal>
     );
 }
 
-export interface MenuItemProps<C extends ElementType = 'button'> {
+// Polymorphic MenuItem props
+export type MenuItemProps<C extends ElementType = 'button'> = {
     children: ReactNode;
     component?: C;
     leftSection?: ReactNode;
@@ -160,8 +83,7 @@ export interface MenuItemProps<C extends ElementType = 'button'> {
     disabled?: boolean;
     className?: string;
     onClick?: () => void;
-    [key: string]: unknown;
-}
+} & Omit<ComponentPropsWithoutRef<C>, 'children' | 'className' | 'onClick' | 'disabled'>;
 
 function MenuItem<C extends ElementType = 'button'>({
     children,
@@ -173,32 +95,35 @@ function MenuItem<C extends ElementType = 'button'>({
     onClick,
     ...rest
 }: MenuItemProps<C>) {
-    const { setIsOpen } = useMenuContext();
-    const Component = (component || 'button') as ElementType;
-
-    const handleClick = () => {
-        if (disabled) return;
-        onClick?.();
-        setIsOpen(false);
-    };
+    const Component = component || 'button';
 
     return (
-        <Component
-            {...rest}
-            onClick={handleClick}
+        <DropdownMenu.Item
+            asChild
             disabled={disabled}
-            className={clsx(
-                'w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors',
-                disabled
-                    ? 'text-slate-400 cursor-not-allowed'
-                    : 'text-slate-700 hover:bg-slate-100 cursor-pointer',
-                className
-            )}
+            onSelect={(e) => {
+                // If using a Link component, don't prevent default navigation
+                if (component) {
+                    e.preventDefault();
+                }
+                onClick?.();
+            }}
         >
-            {leftSection && <span className="flex-shrink-0">{leftSection}</span>}
-            <span className="flex-1">{children}</span>
-            {rightSection && <span className="flex-shrink-0 text-slate-400">{rightSection}</span>}
-        </Component>
+            <Component
+                {...rest}
+                className={clsx(
+                    'w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors outline-none',
+                    'focus:bg-slate-100 cursor-pointer',
+                    'data-[disabled]:text-slate-400 data-[disabled]:cursor-not-allowed data-[disabled]:pointer-events-none',
+                    !disabled && 'text-slate-700',
+                    className
+                )}
+            >
+                {leftSection && <span className="flex-shrink-0">{leftSection}</span>}
+                <span className="flex-1">{children}</span>
+                {rightSection && <span className="flex-shrink-0 text-slate-400">{rightSection}</span>}
+            </Component>
+        </DropdownMenu.Item>
     );
 }
 
@@ -209,14 +134,14 @@ export interface MenuLabelProps {
 
 function MenuLabel({ children, className }: MenuLabelProps) {
     return (
-        <div
+        <DropdownMenu.Label
             className={clsx(
                 'px-3 py-1.5 text-xs font-medium text-slate-500 uppercase tracking-wider',
                 className
             )}
         >
             {children}
-        </div>
+        </DropdownMenu.Label>
     );
 }
 
@@ -225,7 +150,7 @@ export interface MenuDividerProps {
 }
 
 function MenuDivider({ className }: MenuDividerProps) {
-    return <div className={clsx('my-1 border-t border-slate-200', className)} />;
+    return <DropdownMenu.Separator className={clsx('my-1 h-px bg-slate-200', className)} />;
 }
 
 Menu.Target = MenuTarget;

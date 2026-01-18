@@ -25,6 +25,7 @@ import { DataTableHierarchy, type HierarchyFieldDef } from '../../ui/composites/
 import { WorkflowSurfaceTable } from '../../ui/composites/WorkflowSurfaceTable';
 import { deriveTaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
 import { ComposerSurface } from '../composer';
+import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownLabel, DropdownSeparator } from '@autoart/ui';
 
 /**
  * Extract metadata from a node, parsing JSON string if needed
@@ -213,7 +214,6 @@ export function ProjectWorkflowView() {
 
     // Track selected process (for multi-process projects)
     const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
-    const [isProcessDropdownOpen, setIsProcessDropdownOpen] = useState(false);
 
     // Auto-select first process when processes change
     useEffect(() => {
@@ -245,8 +245,6 @@ export function ProjectWorkflowView() {
 
     // Track locally selected subprocess (can be changed via sidebar or header dropdown)
     const [localSubprocessId, setLocalSubprocessId] = useState<string | null>(null);
-    const [isSubprocessDropdownOpen, setIsSubprocessDropdownOpen] = useState(false);
-    const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
     const [isComposerOpen, setIsComposerOpen] = useState(false);
 
     // Track last focused table for contextual Add button
@@ -459,43 +457,29 @@ export function ProjectWorkflowView() {
                         {/* Show dropdown when multiple processes, otherwise just project title */}
                         {processes.length > 1 ? (
                             <div className="relative">
-                                <button
-                                    onClick={() => setIsProcessDropdownOpen(!isProcessDropdownOpen)}
-                                    className="flex items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors"
-                                >
-                                    <span className="truncate" title={selectedProcess?.title || project.title}>
-                                        {selectedProcess?.title || project.title}
-                                    </span>
-                                    <ChevronDown
-                                        size={14}
-                                        className={`shrink-0 transition-transform ${isProcessDropdownOpen ? 'rotate-180' : ''}`}
-                                    />
-                                </button>
-                                {isProcessDropdownOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-10" onClick={() => setIsProcessDropdownOpen(false)} />
-                                        <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
-                                            <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase">Processes</div>
-                                            {processes.map((process) => (
-                                                <button
-                                                    key={process.id}
-                                                    onClick={() => {
-                                                        setSelectedProcessId(process.id);
-                                                        setLocalSubprocessId(null); // Reset to show first subprocess of new process
-                                                        setIsProcessDropdownOpen(false);
-                                                    }}
-                                                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-slate-50 ${
-                                                        process.id === selectedProcessId ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
-                                                    }`}
-                                                >
-                                                    <span className="truncate block" title={process.title}>
-                                                        {process.title}
-                                                    </span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
+                                <Dropdown>
+                                    <DropdownTrigger className="flex items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors focus:outline-none">
+                                        <span className="truncate" title={selectedProcess?.title || project.title}>
+                                            {selectedProcess?.title || project.title}
+                                        </span>
+                                        <ChevronDown size={14} className="shrink-0 text-slate-400" />
+                                    </DropdownTrigger>
+                                    <DropdownContent align="start" className="w-56 max-h-64 overflow-y-auto">
+                                        <DropdownLabel>Processes</DropdownLabel>
+                                        {processes.map((process) => (
+                                            <DropdownItem
+                                                key={process.id}
+                                                onSelect={() => {
+                                                    setSelectedProcessId(process.id);
+                                                    setLocalSubprocessId(null);
+                                                }}
+                                                className={process.id === selectedProcessId ? 'bg-blue-50 text-blue-700' : ''}
+                                            >
+                                                <span className="truncate">{process.title}</span>
+                                            </DropdownItem>
+                                        ))}
+                                    </DropdownContent>
+                                </Dropdown>
                             </div>
                         ) : (
                             <div className="text-sm font-semibold text-slate-800 truncate" title={project.title}>
@@ -548,41 +532,25 @@ export function ProjectWorkflowView() {
                         {/* Subprocess dropdown when multiple exist */}
                         {subprocesses.length > 1 ? (
                             <div className="relative">
-                                <button
-                                    onClick={() => setIsSubprocessDropdownOpen(!isSubprocessDropdownOpen)}
-                                    className="flex items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors"
-                                >
-                                    <span className="truncate" title={activeSubprocess?.title}>
-                                        {activeSubprocess?.title || 'Select a subprocess'}
-                                    </span>
-                                    <ChevronDown
-                                        size={14}
-                                        className={`shrink-0 transition-transform ${isSubprocessDropdownOpen ? 'rotate-180' : ''}`}
-                                    />
-                                </button>
-                                {isSubprocessDropdownOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-10" onClick={() => setIsSubprocessDropdownOpen(false)} />
-                                        <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
-                                            {subprocesses.map((sp) => (
-                                                <button
-                                                    key={sp.id}
-                                                    onClick={() => {
-                                                        handleSubprocessClick(sp.id);
-                                                        setIsSubprocessDropdownOpen(false);
-                                                    }}
-                                                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-slate-50 ${
-                                                        sp.id === activeSubprocessId ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
-                                                    }`}
-                                                >
-                                                    <span className="truncate block" title={sp.title}>
-                                                        {sp.title}
-                                                    </span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
+                                <Dropdown>
+                                    <DropdownTrigger className="flex items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors focus:outline-none">
+                                        <span className="truncate" title={activeSubprocess?.title}>
+                                            {activeSubprocess?.title || 'Select a subprocess'}
+                                        </span>
+                                        <ChevronDown size={14} className="shrink-0 text-slate-400" />
+                                    </DropdownTrigger>
+                                    <DropdownContent align="start" className="w-56 max-h-64 overflow-y-auto">
+                                        {subprocesses.map((sp) => (
+                                            <DropdownItem
+                                                key={sp.id}
+                                                onSelect={() => handleSubprocessClick(sp.id)}
+                                                className={sp.id === activeSubprocessId ? 'bg-blue-50 text-blue-700' : ''}
+                                            >
+                                                <span className="truncate">{sp.title}</span>
+                                            </DropdownItem>
+                                        ))}
+                                    </DropdownContent>
+                                </Dropdown>
                             </div>
                         ) : (
                             <div className="text-sm font-semibold text-slate-800 truncate">
@@ -594,86 +562,66 @@ export function ProjectWorkflowView() {
                     {activeSubprocessId && (
                         <div className="flex items-center gap-2">
                             <div className="relative">
-                                <button
-                                    onClick={() => setIsAddDropdownOpen(!isAddDropdownOpen)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors"
-                                >
-                                    <Plus size={14} />
-                                    <span>Add</span>
-                                    <ChevronDown size={12} className={`transition-transform ${isAddDropdownOpen ? 'rotate-180' : ''}`} />
-                                </button>
-                                {isAddDropdownOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-10" onClick={() => setIsAddDropdownOpen(false)} />
-                                        <div className="absolute top-full right-0 mt-1 w-44 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1">
-                                            <button
-                                                onClick={() => {
-                                                    openDrawer('create-node', { parentId: activeSubprocessId, nodeType: 'task' });
-                                                    setIsAddDropdownOpen(false);
-                                                }}
-                                                className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                            >
-                                                <span className="w-5 h-5 rounded bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold">T</span>
-                                                Add Task
-                                            </button>
-                                            {/* Add Subtask - only enabled when a task is selected */}
-                                            <button
-                                                onClick={() => {
-                                                    if (selectedNode?.type === 'task') {
-                                                        openDrawer('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
-                                                    } else if (selectedNode?.type === 'subtask' && selectedNode.parent_id) {
-                                                        // If subtask selected, add sibling under same parent task
-                                                        openDrawer('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
-                                                    }
-                                                    setIsAddDropdownOpen(false);
-                                                }}
-                                                disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
-                                                className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 ${
-                                                    selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
-                                                        ? 'text-slate-700 hover:bg-slate-50'
-                                                        : 'text-slate-400 cursor-not-allowed'
-                                                }`}
-                                            >
-                                                <span
-                                                    className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold ${
-                                                        selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
-                                                            ? 'bg-teal-100 text-teal-600'
-                                                            : 'bg-slate-100 text-slate-400'
+                                <Dropdown>
+                                    <DropdownTrigger className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors focus:outline-none">
+                                        <Plus size={14} />
+                                        <span>Add</span>
+                                        <ChevronDown size={12} className="text-slate-400" />
+                                    </DropdownTrigger>
+                                    <DropdownContent align="end" className="w-44">
+                                        <DropdownItem
+                                            onSelect={() => openDrawer('create-node', { parentId: activeSubprocessId, nodeType: 'task' })}
+                                        >
+                                            <span className="w-5 h-5 rounded bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold mr-2">T</span>
+                                            Add Task
+                                        </DropdownItem>
+
+                                        <DropdownItem
+                                            onSelect={() => {
+                                                if (selectedNode?.type === 'task') {
+                                                    openDrawer('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
+                                                } else if (selectedNode?.type === 'subtask' && selectedNode.parent_id) {
+                                                    openDrawer('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
+                                                }
+                                            }}
+                                            disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
+                                        >
+                                            <span
+                                                className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold mr-2 ${selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
+                                                    ? 'bg-teal-100 text-teal-600'
+                                                    : 'bg-slate-100 text-slate-400'
                                                     }`}
-                                                >
-                                                    ST
-                                                </span>
-                                                Add Subtask
-                                            </button>
-                                            {/* Divider */}
-                                            {definitions && definitions.filter((d) => !d.is_system && d.name !== 'Task').length > 0 && (
-                                                <div className="border-t border-slate-100 my-1" />
-                                            )}
-                                            {/* Record types from definitions */}
-                                            {definitions &&
-                                                definitions
-                                                    .filter((d) => !d.is_system && d.name !== 'Task')
-                                                    .map((def) => (
-                                                        <button
-                                                            key={def.id}
-                                                            onClick={() => {
-                                                                openDrawer('create-record', {
-                                                                    definitionId: def.id,
-                                                                    classificationNodeId: activeSubprocessId,
-                                                                });
-                                                                setIsAddDropdownOpen(false);
-                                                            }}
-                                                            className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                                        >
-                                                            <span className="w-5 h-5 rounded bg-slate-100 text-slate-600 flex items-center justify-center text-xs">
-                                                                {def.styling?.icon || def.name.charAt(0)}
-                                                            </span>
-                                                            Add {def.name}
-                                                        </button>
-                                                    ))}
-                                        </div>
-                                    </>
-                                )}
+                                            >
+                                                ST
+                                            </span>
+                                            Add Subtask
+                                        </DropdownItem>
+
+                                        {definitions && definitions.filter((d) => !d.is_system && d.name !== 'Task').length > 0 && (
+                                            <DropdownSeparator />
+                                        )}
+
+                                        {definitions &&
+                                            definitions
+                                                .filter((d) => !d.is_system && d.name !== 'Task')
+                                                .map((def) => (
+                                                    <DropdownItem
+                                                        key={def.id}
+                                                        onSelect={() =>
+                                                            openDrawer('create-record', {
+                                                                definitionId: def.id,
+                                                                classificationNodeId: activeSubprocessId,
+                                                            })
+                                                        }
+                                                    >
+                                                        <span className="w-5 h-5 rounded bg-slate-100 text-slate-600 flex items-center justify-center text-xs mr-2">
+                                                            {def.styling?.icon || def.name.charAt(0)}
+                                                        </span>
+                                                        Add {def.name}
+                                                    </DropdownItem>
+                                                ))}
+                                    </DropdownContent>
+                                </Dropdown>
                             </div>
 
                             {/* Composer Button */}
@@ -712,17 +660,15 @@ export function ProjectWorkflowView() {
                                 <span className="text-slate-400">View Mode:</span>
                                 <button
                                     onClick={() => setUseWorkflowSurface(false)}
-                                    className={`px-2 py-1 rounded ${
-                                        !useWorkflowSurface ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'
-                                    }`}
+                                    className={`px-2 py-1 rounded ${!useWorkflowSurface ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'
+                                        }`}
                                 >
                                     Hierarchy
                                 </button>
                                 <button
                                     onClick={() => setUseWorkflowSurface(true)}
-                                    className={`px-2 py-1 rounded ${
-                                        useWorkflowSurface ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100'
-                                    }`}
+                                    className={`px-2 py-1 rounded ${useWorkflowSurface ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100'
+                                        }`}
                                 >
                                     Surface
                                 </button>

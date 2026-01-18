@@ -1,9 +1,10 @@
 /**
  * Drawer System
  *
- * Unified drawer system with typed contracts.
- * All drawers must follow the rules defined in types.ts.
+ * @deprecated This drawer system has been replaced by Dockview panels.
+ * See `workspaceStore.ts` and `DockviewWorkspace.tsx` for the new panel system.
+ *
+ * Types are kept for backward compatibility during migration.
  */
 
 export * from './types';
-export { DrawerRegistry, DRAWER_DEFINITIONS } from './DrawerRegistry';

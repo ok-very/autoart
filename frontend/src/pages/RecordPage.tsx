@@ -13,7 +13,6 @@ import { useUIStore } from '../stores/uiStore';
 import { ResizeHandle } from '../ui/common/ResizeHandle';
 import { RecordView } from '../ui/composites/RecordView';
 import { SelectionInspector } from '../ui/composites/SelectionInspector';
-import { BottomDrawer } from '../ui/drawer/BottomDrawer';
 import { Header } from '../ui/layout/Header';
 import { RecordTypeSidebar } from '../ui/records/RecordTypeSidebar';
 
@@ -62,7 +61,6 @@ export function RecordPage() {
                     {/* Right Inspector */}
                     <SelectionInspector />
                 </div>
-                <BottomDrawer />
             </div>
         </div>
     );
