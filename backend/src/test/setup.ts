@@ -160,7 +160,7 @@ export async function createTestProject(
   processId?: string;
   stageId?: string;
   subprocessId?: string;
-  taskId?: string;
+  leafId?: string;
 }> {
   // Create project
   const project = await db
@@ -224,13 +224,15 @@ export async function createTestProject(
     .returning('id')
     .executeTakeFirstOrThrow();
 
-  const task = await db
+  // Note: 'task' is not a database enum value, it's a seeded definition
+  // For testing hierarchy, we create another subprocess as the leaf node
+  const leaf = await db
     .insertInto('hierarchy_nodes')
     .values({
       parent_id: subprocess.id,
       root_project_id: project.id,
-      type: 'task',
-      title: `${prefix}_task`,
+      type: 'subprocess', // Using subprocess as deepest valid node type
+      title: `${prefix}_leaf`,
       metadata: '{}',
       position: 0,
     })
@@ -242,7 +244,7 @@ export async function createTestProject(
     processId: process.id,
     stageId: stage.id,
     subprocessId: subprocess.id,
-    taskId: task.id,
+    leafId: leaf.id,
   };
 }
 

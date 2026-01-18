@@ -113,3 +113,69 @@ export function useMondayBoards() {
         retry: false, // Don't retry on auth errors
     });
 }
+
+// ============================================================================
+// AUTOHELPER PAIRING
+// ============================================================================
+
+export interface AutoHelperStatus extends ConnectionStatus {
+    instanceCount?: number;
+}
+
+export interface AutoHelperInstance {
+    sessionId: string;
+    instanceName: string;
+    connectedAt: string;
+    lastSeen: string;
+}
+
+interface PairingCodeResult {
+    code: string;
+    expiresAt: string;
+    expiresInSeconds: number;
+}
+
+interface AutoHelperListResult {
+    connected: boolean;
+    instances: AutoHelperInstance[];
+}
+
+/**
+ * Generate a pairing code for AutoHelper connection
+ */
+export function useGeneratePairingCode() {
+    return useMutation({
+        mutationFn: async (): Promise<PairingCodeResult> => {
+            return api.post<PairingCodeResult>('/connections/autohelper/pair', {});
+        },
+    });
+}
+
+/**
+ * Get list of connected AutoHelper instances
+ */
+export function useAutoHelperInstances() {
+    return useQuery({
+        queryKey: ['connections', 'autohelper'],
+        queryFn: async (): Promise<AutoHelperListResult> => {
+            return api.get<AutoHelperListResult>('/connections/autohelper');
+        },
+    });
+}
+
+/**
+ * Disconnect an AutoHelper instance
+ */
+export function useDisconnectAutoHelper() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (sessionId: string): Promise<{ disconnected: boolean }> => {
+            return api.delete<{ disconnected: boolean }>(`/connections/autohelper/${sessionId}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['connections'] });
+            queryClient.invalidateQueries({ queryKey: ['connections', 'autohelper'] });
+        },
+    });
+}

@@ -41,9 +41,18 @@ export async function connectionsRoutes(app: FastifyInstance) {
             connectionsService.isProviderConnected(userId ?? null, 'google' as any),
         ]);
 
+        // Check AutoHelper connections for this user
+        const autohelperSessions = userId
+            ? connectionsService.getAutoHelperSessions(userId)
+            : [];
+
         return reply.send({
             monday: { connected: mondayConnected },
             google: { connected: googleConnected },
+            autohelper: {
+                connected: autohelperSessions.length > 0,
+                instanceCount: autohelperSessions.length,
+            },
         });
     });
 
@@ -240,6 +249,143 @@ export async function connectionsRoutes(app: FastifyInstance) {
     // GET /connections/google/connect → Redirect to OAuth
     // GET /connections/google/callback → Handle callback
     // DELETE /connections/google → Revoke tokens
+
+    // ============================================================================
+    // AUTOHELPER PAIRING ENDPOINTS
+    // ============================================================================
+
+    /**
+     * Generate pairing code for AutoHelper connection
+     * Requires authentication - code is tied to current user
+     */
+    app.post('/connections/autohelper/pair', {
+        preHandler: app.authenticate
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
+        if (!userId) {
+            return reply.status(401).send({ error: 'Authentication required' });
+        }
+
+        const { code, expiresAt } = connectionsService.generatePairingCode(userId);
+
+        return reply.send({
+            code,
+            expiresAt: expiresAt.toISOString(),
+            expiresInSeconds: 300, // 5 minutes
+        });
+    });
+
+    /**
+     * AutoHelper handshake - exchange pairing code for session
+     * No auth required - AutoHelper uses pairing code as proof
+     */
+    app.post('/connections/autohelper/handshake', async (request, reply) => {
+        const body = request.body as { code?: string; instanceName?: string };
+
+        if (!body.code) {
+            return reply.status(400).send({ error: 'Pairing code is required' });
+        }
+
+        const result = connectionsService.validatePairingCode(
+            body.code,
+            body.instanceName || 'AutoHelper'
+        );
+
+        if (!result) {
+            return reply.status(401).send({
+                error: 'Invalid or expired pairing code',
+                message: 'Please generate a new code in AutoArt Settings'
+            });
+        }
+
+        return reply.send({
+            sessionId: result.sessionId,
+            message: 'Connected successfully'
+        });
+    });
+
+    /**
+     * Get proxied credentials for trusted AutoHelper session
+     * Returns Monday API token (single source of truth)
+     */
+    app.get('/connections/autohelper/credentials', async (request, reply) => {
+        const sessionId = (request.headers['x-autohelper-session'] as string) || '';
+
+        if (!sessionId) {
+            return reply.status(401).send({ error: 'Session ID required in X-AutoHelper-Session header' });
+        }
+
+        const mondayToken = await connectionsService.getProxiedMondayToken(sessionId);
+
+        if (!mondayToken) {
+            return reply.status(401).send({
+                error: 'Invalid session or no Monday token configured',
+                message: 'Re-pair with AutoArt or ensure Monday is connected'
+            });
+        }
+
+        return reply.send({
+            monday_api_token: mondayToken,
+        });
+    });
+
+    /**
+     * List connected AutoHelper instances
+     * Requires authentication
+     */
+    app.get('/connections/autohelper', {
+        preHandler: app.authenticate
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
+        if (!userId) {
+            return reply.status(401).send({ error: 'Authentication required' });
+        }
+
+        const sessions = connectionsService.getAutoHelperSessions(userId);
+
+        return reply.send({
+            connected: sessions.length > 0,
+            instances: sessions.map(s => ({
+                displayId: s.displayId,
+                instanceName: s.instanceName,
+                connectedAt: s.connectedAt.toISOString(),
+                lastSeen: s.lastSeen.toISOString(),
+            })),
+        });
+    });
+
+    /**
+     * Disconnect AutoHelper instance
+     * Requires authentication and verifies session ownership
+     */
+    app.delete('/connections/autohelper/:displayId', {
+        preHandler: app.authenticate
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
+        if (!userId) {
+            return reply.status(401).send({ error: 'Authentication required' });
+        }
+
+        const { displayId } = request.params as { displayId: string };
+
+        // Look up session by displayId and verify ownership
+        const session = connectionsService.getSessionByDisplayId(userId, displayId);
+
+        if (!session) {
+            return reply.status(404).send({
+                error: 'Session not found',
+                message: 'Session not found or you do not have permission to disconnect it'
+            });
+        }
+
+        // Session is verified to belong to this user, disconnect it
+        const success = connectionsService.disconnectAutoHelper(session.sessionId);
+
+        return reply.send({
+            disconnected: success,
+            message: success ? 'AutoHelper disconnected' : 'Failed to disconnect'
+        });
+    });
 }
 
 export default connectionsRoutes;
