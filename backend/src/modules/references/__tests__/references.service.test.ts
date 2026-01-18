@@ -46,14 +46,14 @@ describe('references.service', () => {
 
       // Act
       const ref = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId,
         targetFieldKey: 'field1',
         mode: 'dynamic',
       });
 
       // Assert
-      expect(ref.task_id).toBe(fixtures.taskId);
+      expect(ref.task_id).toBe(fixtures.leafId);
       expect(ref.source_record_id).toBe(recordId);
       expect(ref.target_field_key).toBe('field1');
       expect(ref.mode).toBe('dynamic');
@@ -70,7 +70,7 @@ describe('references.service', () => {
 
       // Act
       const ref = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId,
         targetFieldKey: 'field1',
         mode: 'static',
@@ -105,7 +105,7 @@ describe('references.service', () => {
 
       await expect(
         referencesService.createReference({
-          taskId: fixtures.taskId!,
+          taskId: fixtures.leafId!,
           sourceRecordId: '00000000-0000-0000-0000-000000000000',
           targetFieldKey: 'field1',
           mode: 'dynamic',
@@ -123,7 +123,7 @@ describe('references.service', () => {
       const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
       const { recordId } = await createTestRecord(db, testPrefix, { field1: 'live value' });
       const ref = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId,
         targetFieldKey: 'field1',
         mode: 'dynamic',
@@ -146,7 +146,7 @@ describe('references.service', () => {
       const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
       const { recordId } = await createTestRecord(db, testPrefix, { field1: 100 });
       const ref = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId,
         targetFieldKey: 'field1',
         mode: 'static',
@@ -177,7 +177,7 @@ describe('references.service', () => {
       const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
       const { recordId } = await createTestRecord(db, testPrefix, { field1: 999 });
       const ref = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId,
         targetFieldKey: 'field1',
         mode: 'static',
@@ -187,7 +187,7 @@ describe('references.service', () => {
       const resolved = await referencesService.resolveReference(ref.id);
 
       // Assert
-      expect(resolved.drift).toBe(false);
+      expect(resolved.drift).toBeFalsy();
       expect(resolved.liveValue).toBeUndefined(); // Not included when no drift
 
       // Cleanup
@@ -207,7 +207,7 @@ describe('references.service', () => {
         .execute();
 
       const ref = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId,
         targetFieldKey: 'myField',
         mode: 'dynamic',
@@ -236,7 +236,7 @@ describe('references.service', () => {
       const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
       const { recordId } = await createTestRecord(db, testPrefix, { field1: 777 });
       const ref = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId,
         targetFieldKey: 'field1',
         mode: 'dynamic',
@@ -259,7 +259,7 @@ describe('references.service', () => {
       const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
       const { recordId } = await createTestRecord(db, testPrefix, { field1: 123 });
       const ref = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId,
         targetFieldKey: 'field1',
         mode: 'static',
@@ -284,7 +284,7 @@ describe('references.service', () => {
       const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
       const { recordId } = await createTestRecord(db, testPrefix, { field1: 50 });
       const ref = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId,
         targetFieldKey: 'field1',
         mode: 'static',
@@ -305,7 +305,7 @@ describe('references.service', () => {
       const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
       const { recordId } = await createTestRecord(db, testPrefix, { field1: { initial: true } });
       const ref = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId,
         targetFieldKey: 'field1',
         mode: 'static',
@@ -332,14 +332,14 @@ describe('references.service', () => {
       const { recordId: recordId2 } = await createTestRecord(db, `${testPrefix}_r2`, { field1: 'value2' });
 
       const ref1 = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId1,
         targetFieldKey: 'field1',
         mode: 'dynamic',
       });
 
       const ref2 = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId2,
         targetFieldKey: 'field1',
         mode: 'dynamic',
@@ -366,14 +366,14 @@ describe('references.service', () => {
       const { recordId: recordId2 } = await createTestRecord(db, `${testPrefix}_r2`, { field1: 20 });
 
       const ref1 = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId1,
         targetFieldKey: 'field1',
         mode: 'static',
       });
 
       const ref2 = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId2,
         targetFieldKey: 'field1',
         mode: 'static',
@@ -392,7 +392,7 @@ describe('references.service', () => {
       // Assert
       expect(results[ref1.id].drift).toBe(true);
       expect(results[ref1.id].liveValue).toBe(100);
-      expect(results[ref2.id].drift).toBe(false);
+      expect(results[ref2.id].drift).toBeFalsy();
       expect(results[ref2.id].liveValue).toBeUndefined();
 
       // Cleanup
@@ -422,7 +422,7 @@ describe('references.service', () => {
       const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
       const { recordId } = await createTestRecord(db, testPrefix, { field1: 1 });
       const ref = await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId,
         targetFieldKey: 'field1',
         mode: 'static',
@@ -460,7 +460,7 @@ describe('references.service', () => {
         .values({
           parent_id: fixtures.subprocessId!,
           root_project_id: fixtures.projectId,
-          type: 'task',
+          type: 'subprocess',
           title: `${testPrefix}_task2`,
           metadata: '{}',
           position: 1,
@@ -470,7 +470,7 @@ describe('references.service', () => {
 
       // Create references from both tasks
       await referencesService.createReference({
-        taskId: fixtures.taskId!,
+        taskId: fixtures.leafId!,
         sourceRecordId: recordId,
         targetFieldKey: 'field1',
         mode: 'dynamic',
@@ -489,7 +489,7 @@ describe('references.service', () => {
       // Assert
       expect(backlinks).toHaveLength(2);
       expect(backlinks.map((b) => b.task_id).sort()).toEqual(
-        [fixtures.taskId!, task2.id].sort()
+        [fixtures.leafId!, task2.id].sort()
       );
 
       // Cleanup

@@ -52,7 +52,7 @@ describe('hierarchy.service', () => {
 
       // Verify all descendants were cloned
       const clonedTree = await hierarchyService.getProjectTree(clonedProject.id);
-      expect(clonedTree.length).toBe(5); // project, process, stage, subprocess, task
+      expect(clonedTree.length).toBe(5); // project, process, stage, subprocess, leaf subprocess
 
       // Verify IDs are all new (no duplicates)
       const originalIds = [
@@ -60,7 +60,7 @@ describe('hierarchy.service', () => {
         fixtures.processId,
         fixtures.stageId,
         fixtures.subprocessId,
-        fixtures.taskId,
+        fixtures.leafId,
       ];
       const clonedIds = clonedTree.map((n) => n.id);
       for (const clonedId of clonedIds) {
@@ -129,7 +129,7 @@ describe('hierarchy.service', () => {
       await db
         .insertInto('task_references')
         .values({
-          task_id: fixtures.taskId!,
+          task_id: fixtures.leafId!,
           source_record_id: recordId,
           target_field_key: 'field1',
           mode: 'dynamic',
@@ -143,14 +143,14 @@ describe('hierarchy.service', () => {
 
       // Get cloned task
       const clonedTree = await hierarchyService.getProjectTree(clonedProject.id);
-      const clonedTask = clonedTree.find((n) => n.type === 'task');
-      expect(clonedTask).toBeDefined();
+      const clonedLeaf = clonedTree.filter((n) => n.type === 'subprocess').pop(); // Get the deepest subprocess
+      expect(clonedLeaf).toBeDefined();
 
       // Assert: Reference was cloned
       const clonedRefs = await db
         .selectFrom('task_references')
         .selectAll()
-        .where('task_id', '=', clonedTask!.id)
+        .where('task_id', '=', clonedLeaf!.id)
         .execute();
 
       expect(clonedRefs.length).toBe(1);
@@ -181,7 +181,7 @@ describe('hierarchy.service', () => {
       expect(types).toContain('process');
       expect(types).toContain('stage');
       expect(types).not.toContain('subprocess');
-      expect(types).not.toContain('task');
+      expect(types).not.toContain('template');
 
       // Cleanup
       await db.deleteFrom('hierarchy_nodes').where('id', '=', clonedProject.id).execute();
@@ -281,7 +281,7 @@ describe('hierarchy.service', () => {
       // Act & Assert: Try to move process under its descendant task
       await expect(
         hierarchyService.moveNode(fixtures.processId!, {
-          newParentId: fixtures.taskId!,
+          newParentId: fixtures.leafId!,
         })
       ).rejects.toThrow(); // Should throw ValidationError about invalid parent type or circular ref
 
@@ -364,13 +364,13 @@ describe('hierarchy.service', () => {
       const tree = await hierarchyService.getProjectTree(fixtures.projectId);
 
       // Assert
-      expect(tree.length).toBe(5);
+      expect(tree.length).toBe(5); // project, process, stage, subprocess, leaf subprocess
       expect(tree.map((n) => n.type).sort()).toEqual([
         'process',
         'project',
         'stage',
         'subprocess',
-        'task',
+        'subprocess',
       ]);
 
       // Cleanup

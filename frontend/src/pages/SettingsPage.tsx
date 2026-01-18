@@ -4,7 +4,7 @@
  * User settings with sidebar navigation.
  * Sections:
  * - Account: User info and logout
- * - Integrations: External service connections (Monday, Google)
+ * - Integrations: External service connections (Monday, Google, AutoHelper)
  */
 
 import { Settings, User, Plug, Loader2 } from 'lucide-react';
@@ -12,7 +12,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { AccountSection, IntegrationsSection } from './settings';
-import { useConnections, useConnectMonday, useDisconnectMonday } from '../api/connections';
+import { useConnections, useConnectMonday, useDisconnectMonday, useGeneratePairingCode } from '../api/connections';
 import { useCurrentUser } from '../api/hooks';
 
 // ============================================================================
@@ -45,6 +45,7 @@ export function SettingsPage() {
     const { data: connections } = useConnections();
     const connectMondayMutation = useConnectMonday();
     const disconnectMondayMutation = useDisconnectMonday();
+    const generatePairingCodeMutation = useGeneratePairingCode();
 
     // Monday connection handlers
     const handleMondayConnect = useCallback(async (apiKey: string) => {
@@ -69,6 +70,12 @@ export function SettingsPage() {
         await new Promise(resolve => setTimeout(resolve, 500));
         setGoogleConnected(false);
     }, []);
+
+    // AutoHelper pairing handler
+    const handleAutoHelperGenerateCode = useCallback(async () => {
+        const result = await generatePairingCodeMutation.mutateAsync();
+        return { code: result.code, expiresAt: result.expiresAt };
+    }, [generatePairingCodeMutation]);
 
     if (isLoading) {
         return (
@@ -135,10 +142,12 @@ export function SettingsPage() {
                             <IntegrationsSection
                                 mondayStatus={{ connected: connections?.monday?.connected ?? false }}
                                 googleStatus={{ connected: googleConnected }}
+                                autohelperStatus={{ connected: (connections as any)?.autohelper?.connected ?? false }}
                                 onMondayConnect={handleMondayConnect}
                                 onMondayDisconnect={handleMondayDisconnect}
                                 onGoogleConnect={handleGoogleConnect}
                                 onGoogleDisconnect={handleGoogleDisconnect}
+                                onAutoHelperGenerateCode={handleAutoHelperGenerateCode}
                             />
                         )}
                     </div>
@@ -149,3 +158,4 @@ export function SettingsPage() {
 }
 
 export default SettingsPage;
+
