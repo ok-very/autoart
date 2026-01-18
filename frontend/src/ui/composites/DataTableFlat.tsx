@@ -29,9 +29,9 @@ import { useState, useMemo, useCallback } from 'react';
 import { buildFieldViewModel, type FieldViewModel, type FieldDefinition, type ProjectState, type EntityContext } from '@autoart/shared/domain';
 
 import type { DataRecord, RecordDefinition, FieldDef } from '../../types';
-import { DataFieldWidget, type DataFieldKind } from '../molecules/DataFieldWidget';
-import { EditableCell } from '../molecules/EditableCell';
-import { StatusColumnSummary } from '../molecules/StatusColumnSummary';
+import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
+import { EditableCell } from '../../ui/molecules/EditableCell';
+import { StatusColumnSummary } from '../../ui/molecules/StatusColumnSummary';
 import { UniversalTableCore, makeFlatRowModel, type TableColumn as CoreTableColumn, type TableRow, type TableFeature } from '../table-core';
 
 // ==================== TYPES ====================

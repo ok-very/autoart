@@ -31,9 +31,9 @@ import { useState, useMemo, useCallback } from 'react';
 import type { FieldViewModel } from '@autoart/shared/domain';
 
 import type { HierarchyNode, FieldDef } from '../../types';
-import { type DataFieldKind } from '../molecules/DataFieldWidget';
-import { EditableCell } from '../molecules/EditableCell';
-import { StatusColumnSummary } from '../molecules/StatusColumnSummary';
+import { type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
+import { EditableCell } from '../../ui/molecules/EditableCell';
+import { StatusColumnSummary } from '../../ui/molecules/StatusColumnSummary';
 import { StatusFieldEditor } from '../semantic/StatusFieldEditor';
 import { UniversalTableCore, makeHierarchyRowModel, type TableColumn as CoreTableColumn, type TableRow } from '../table-core';
 

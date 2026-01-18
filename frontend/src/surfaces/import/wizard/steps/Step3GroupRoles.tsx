@@ -3,7 +3,7 @@ import { Stack } from '@autoart/ui';
 import { Text } from '@autoart/ui';
 import { Button } from '@autoart/ui';
 import { Inline } from '@autoart/ui';
-import { Select } from '@autoart/ui';
+// Select replaced by PortalSelect below
 import { Badge } from '@autoart/ui';
 import { Spinner } from '@autoart/ui';
 import { PortalSelect } from '@autoart/ui';

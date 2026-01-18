@@ -15,7 +15,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
 import type { NodeType } from '../../types';
-import { MillerColumn } from '../molecules/MillerColumn';
+import { MillerColumn } from '../../ui/molecules/MillerColumn';
 
 // ==================== TYPES ====================
 

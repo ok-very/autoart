@@ -15,7 +15,7 @@ import {
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
 import type { DataRecord, RecordDefinition, FieldDef } from '../../types';
-import { DataFieldWidget, type DataFieldKind } from '../molecules/DataFieldWidget';
+import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
 import { DataTable, type TableColumn } from '../tables/DataTable';
 
 // ==================== TYPES ====================

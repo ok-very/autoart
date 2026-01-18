@@ -9,7 +9,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 
 import type { FieldDef } from '../../types';
 import { TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
-import { DataFieldWidget, type DataFieldKind } from '../molecules/DataFieldWidget';
+import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
 
 export interface EditableCellProps {
     /** Field definition from schema */

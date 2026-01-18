@@ -3,7 +3,7 @@ import { Columns, Layers, Table as TableIcon, Play } from 'lucide-react';
 import { Stack } from '@autoart/ui';
 import { Text } from '@autoart/ui';
 import { Button } from '@autoart/ui';
-import { Inline } from '@autoart/ui';
+// Inline removed - unused
 import { ImportPreview } from '../../ImportPreview';
 import { ClassificationPanel } from '../../ClassificationPanel';
 import { SelectionInspector } from '../../../../ui/composites/SelectionInspector';
