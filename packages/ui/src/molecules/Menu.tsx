@@ -94,7 +94,7 @@ function MenuDropdown({ children, className }: MenuDropdownProps) {
 
 
     // Silence unused warning for now as it's used in effect but maybe not rendered
-    void isAnimating;
+
 
     // Trigger animation after mount
 
