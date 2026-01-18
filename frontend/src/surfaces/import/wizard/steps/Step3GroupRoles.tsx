@@ -6,6 +6,7 @@ import { Inline } from '@autoart/ui';
 import { Select } from '@autoart/ui';
 import { Badge } from '@autoart/ui';
 import { Spinner } from '@autoart/ui';
+import { PortalSelect } from '@autoart/ui';
 import { useMondayBoardConfigs, useUpdateMondayGroupConfigs } from '../../../../api/hooks/monday';
 import { useGenerateImportPlan, type ImportSession, type ImportPlan } from '../../../../api/hooks/imports';
 import type { MondayGroupRole } from '../../../../api/types/monday';
@@ -32,8 +33,10 @@ const GROUP_ROLE_OPTIONS: { value: MondayGroupRole; label: string }[] = [
 
 const STAGE_KIND_OPTIONS = [
     { value: 'todo', label: 'To Do' },
-    { value: 'doing', label: 'Doing' },
+    { value: 'in_progress', label: 'In Progress' },
+    { value: 'blocked', label: 'Blocked' },
     { value: 'done', label: 'Done' },
+    { value: 'archive', label: 'Archive' },
 ];
 
 export function Step3GroupRoles({ onNext, onBack, session, onSessionCreated }: StepProps) {
@@ -143,11 +146,16 @@ export function Step3GroupRoles({ onNext, onBack, session, onSessionCreated }: S
                                                 {group.groupTitle}
                                             </td>
                                             <td className="px-4 py-2">
-                                                <Select
+                                                <PortalSelect
                                                     value={group.role}
                                                     onChange={(val) => {
                                                         if (val && board.id && board.workspaceId) {
-                                                            handleGroupUpdate(board.id, board.workspaceId, group.groupId, { role: val });
+                                                            const update: any = { role: val };
+                                                            // Set default stageKind if switching to stage
+                                                            if (val === 'stage' && !group.stageKind) {
+                                                                update.stageKind = 'todo';
+                                                            }
+                                                            handleGroupUpdate(board.id, board.workspaceId, group.groupId, update);
                                                         }
                                                     }}
                                                     data={GROUP_ROLE_OPTIONS}
@@ -156,7 +164,7 @@ export function Step3GroupRoles({ onNext, onBack, session, onSessionCreated }: S
                                             </td>
                                             <td className="px-4 py-2">
                                                 {group.role === 'stage' && (
-                                                    <Select
+                                                    <PortalSelect
                                                         value={group.stageKind || 'todo'}
                                                         onChange={(val) => {
                                                             if (val && board.id && board.workspaceId) {
@@ -168,7 +176,7 @@ export function Step3GroupRoles({ onNext, onBack, session, onSessionCreated }: S
                                                     />
                                                 )}
                                                 {group.role === 'reference_group' && (
-                                                    <Select
+                                                    <PortalSelect
                                                         value={group.settings?.referenceStrategy || 'create'}
                                                         onChange={(val) => {
                                                             if (val && board.id && board.workspaceId) {

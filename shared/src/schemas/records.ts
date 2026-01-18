@@ -111,6 +111,19 @@ export const DataRecordSchema = z.object({
 export type DataRecord = z.infer<typeof DataRecordSchema>;
 
 /**
+ * Record Alias Schema (Naming History)
+ */
+export const RecordAliasSchema = z.object({
+  id: z.string().uuid(),
+  record_id: z.string().uuid(),
+  name: z.string().min(1),
+  type: z.enum(['primary', 'historical', 'alias']),
+  created_at: z.string().datetime(),
+});
+
+export type RecordAlias = z.infer<typeof RecordAliasSchema>;
+
+/**
  * Create Definition Input Schema
  */
 export const CreateDefinitionInputSchema = z.object({
@@ -226,6 +239,10 @@ export const RecordsResponseSchema = z.object({
 
 export const RecordStatsResponseSchema = z.object({
   stats: z.array(RecordStatSchema),
+});
+
+export const RecordAliasesResponseSchema = z.object({
+  aliases: z.array(RecordAliasSchema),
 });
 
 export const BulkOperationResponseSchema = z.object({

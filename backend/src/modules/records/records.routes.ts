@@ -460,4 +460,19 @@ export async function recordsRoutes(app: FastifyInstance) {
       }
     }
   );
+
+  // Get record history (aliases)
+  fastify.get(
+    '/:id/history',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        params: z.object({ id: z.string().uuid() }),
+      },
+    },
+    async (request, reply) => {
+      const aliases = await recordsService.getRecordAliases(request.params.id);
+      return reply.send({ aliases });
+    }
+  );
 }

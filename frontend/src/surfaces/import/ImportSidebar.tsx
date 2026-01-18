@@ -18,7 +18,6 @@ import {
     Loader2,
     Check,
     RefreshCw,
-
 } from 'lucide-react';
 import { useRef, useCallback, useState } from 'react';
 
@@ -353,8 +352,6 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
 // ============================================================================
 // MONDAY BOARD LIST (inline in sidebar)
 // ============================================================================
-
-
 
 
 

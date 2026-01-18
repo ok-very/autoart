@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
 import App from './App';
-import { ErrorBoundary } from './ui/common/ErrorBoundary';
+import { ErrorBoundary } from './ui/atoms/ErrorBoundary';
 import { ToastContainer } from './ui/Toast';
 import { toast } from './stores/toastStore';
 import { getUserFriendlyMessage, isAuthError } from './utils/errors';

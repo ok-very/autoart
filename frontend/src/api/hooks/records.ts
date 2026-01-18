@@ -109,3 +109,19 @@ export function useBulkDeleteRecords() {
     },
   });
 }
+
+export interface RecordAlias {
+  id: string;
+  record_id: string;
+  name: string;
+  type: 'primary' | 'historical' | 'alias';
+  created_at: string;
+}
+
+export function useRecordHistory(id: string | null) {
+  return useQuery({
+    queryKey: ['record-history', id],
+    queryFn: () => api.get<{ aliases: RecordAlias[] }>(`/records/${id}/history`).then(r => r.aliases),
+    enabled: !!id,
+  });
+}

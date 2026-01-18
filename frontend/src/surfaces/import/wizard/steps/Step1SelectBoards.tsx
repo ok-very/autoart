@@ -19,7 +19,7 @@ interface StepProps {
     onSessionCreated: (session: ImportSession, plan: ImportPlan) => void;
 }
 
-export function Step1SelectBoards({ onNext, session: _session, onSessionCreated }: StepProps) {
+export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
     const { data: connections } = useConnections();
     const { data: boards, isLoading, error } = useMondayBoards();
     const createConnectorSession = useCreateConnectorSession();
@@ -116,7 +116,7 @@ export function Step1SelectBoards({ onNext, session: _session, onSessionCreated 
             <Stack className="items-center justify-center h-full">
                 <AlertCircle className="w-8 h-8 text-red-500" />
                 <Text color="error">Failed to load boards</Text>
-                <Text size="sm">{(error as Error).message}</Text>
+                <Text size="sm">{error instanceof Error ? error.message : 'Unknown error'}</Text>
             </Stack>
         );
     }
