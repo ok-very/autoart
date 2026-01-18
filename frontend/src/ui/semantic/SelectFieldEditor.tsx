@@ -12,10 +12,10 @@
  */
 
 import { clsx } from 'clsx';
-import { ChevronDown } from 'lucide-react';
-import { useState, useRef, useCallback } from 'react';
+import { ChevronDown, Check } from 'lucide-react';
+import { useCallback } from 'react';
 
-import { PortalMenu } from '@autoart/ui';
+import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownSeparator } from '@autoart/ui';
 
 export interface SelectOption {
     value: string;
@@ -55,107 +55,103 @@ export function SelectFieldEditor({
     compact = false,
     className,
 }: SelectFieldEditorProps) {
-    const [isOpen, setIsOpen] = useState(false);
-    const buttonRef = useRef<HTMLButtonElement>(null);
-
     // Find current option
     const currentOption = options.find((opt) => opt.value === value);
 
-    const handleToggle = useCallback(() => {
-        if (!readOnly) {
-            setIsOpen((prev) => !prev);
-        }
-    }, [readOnly]);
-
     const handleSelect = useCallback((optionValue: string | null) => {
         onChange(optionValue);
-        setIsOpen(false);
     }, [onChange]);
 
-    const handleClose = useCallback(() => {
-        setIsOpen(false);
-    }, []);
+    if (readOnly) {
+        return (
+            <div className={clsx('relative', className)}>
+                <div
+                    className={clsx(
+                        'flex items-center gap-2 rounded border',
+                        compact ? 'h-7 px-2 text-xs' : 'h-9 px-3 text-sm',
+                        currentOption?.color
+                            ? `${currentOption.color.replace('bg-', 'bg-opacity-10 text-').replace('-500', '-700')} border-transparent`
+                            : 'border-slate-200 bg-white',
+                        'cursor-default'
+                    )}
+                >
+                    {currentOption?.color && (
+                        <span className={clsx('w-2.5 h-2.5 rounded-full flex-shrink-0', currentOption.color)} />
+                    )}
+                    <span className={clsx('flex-1 text-left', !currentOption && 'text-slate-400')}>
+                        {currentOption?.label || placeholder}
+                    </span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={clsx('relative', className)}>
-            {/* Current selection button */}
-            <button
-                ref={buttonRef}
-                type="button"
-                onClick={handleToggle}
-                disabled={readOnly}
-                className={clsx(
-                    'flex items-center gap-2 rounded border transition-all',
-                    compact ? 'h-7 px-2 text-xs' : 'h-9 px-3 text-sm',
-                    currentOption?.color
-                        ? `${currentOption.color.replace('bg-', 'bg-opacity-10 text-').replace('-500', '-700')} border-transparent`
-                        : 'border-slate-200 bg-white',
-                    readOnly
-                        ? 'cursor-default'
-                        : 'cursor-pointer hover:border-slate-300'
-                )}
-            >
-                {currentOption?.color && (
-                    <span className={clsx('w-2.5 h-2.5 rounded-full flex-shrink-0', currentOption.color)} />
-                )}
-                <span className={clsx('flex-1 text-left', !currentOption && 'text-slate-400')}>
-                    {currentOption?.label || placeholder}
-                </span>
-                {!readOnly && (
-                    <ChevronDown
-                        className={clsx(
-                            'text-slate-400 transition-transform flex-shrink-0',
-                            compact ? 'w-3 h-3' : 'w-4 h-4',
-                            isOpen && 'rotate-180'
-                        )}
-                    />
-                )}
-            </button>
-
-            {/* Dropdown menu */}
-            <PortalMenu
-                isOpen={isOpen}
-                anchorRef={buttonRef}
-                onClose={handleClose}
-                placement="bottom-start"
-                className="py-1 min-w-[160px]"
-            >
-                {/* Clear option */}
-                {clearable && value && (
+            <Dropdown>
+                <DropdownTrigger asChild>
                     <button
                         type="button"
-                        onClick={() => handleSelect(null)}
-                        className="w-full px-3 py-1.5 text-left text-sm text-slate-400 hover:bg-slate-50 transition-colors"
+                        className={clsx(
+                            'flex items-center gap-2 rounded border transition-all',
+                            compact ? 'h-7 px-2 text-xs' : 'h-9 px-3 text-sm',
+                            currentOption?.color
+                                ? `${currentOption.color.replace('bg-', 'bg-opacity-10 text-').replace('-500', '-700')} border-transparent`
+                                : 'border-slate-200 bg-white',
+                            'cursor-pointer hover:border-slate-300'
+                        )}
                     >
-                        Clear
-                    </button>
-                )}
-
-                {/* Options */}
-                {options.map((option) => {
-                    const isSelected = option.value === value;
-
-                    return (
-                        <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => handleSelect(option.value)}
+                        {currentOption?.color && (
+                            <span className={clsx('w-2.5 h-2.5 rounded-full flex-shrink-0', currentOption.color)} />
+                        )}
+                        <span className={clsx('flex-1 text-left', !currentOption && 'text-slate-400')}>
+                            {currentOption?.label || placeholder}
+                        </span>
+                        <ChevronDown
                             className={clsx(
-                                'w-full px-3 py-1.5 text-left text-sm flex items-center gap-2 transition-colors',
-                                isSelected ? 'bg-slate-100' : 'hover:bg-slate-50'
+                                'text-slate-400 flex-shrink-0',
+                                compact ? 'w-3 h-3' : 'w-4 h-4'
                             )}
-                        >
-                            {option.color && (
-                                <span className={clsx('w-3 h-3 rounded-sm flex-shrink-0', option.color)} />
-                            )}
-                            <span className="flex-1">{option.label}</span>
-                            {isSelected && (
-                                <span className="text-blue-500 text-xs">✓</span>
-                            )}
-                        </button>
-                    );
-                })}
-            </PortalMenu>
+                        />
+                    </button>
+                </DropdownTrigger>
+
+                <DropdownContent align="start" className="min-w-[160px]">
+                    {/* Clear option */}
+                    {clearable && value && (
+                        <>
+                            <DropdownItem
+                                onSelect={() => handleSelect(null)}
+                                className="text-slate-400"
+                            >
+                                Clear
+                            </DropdownItem>
+                            <DropdownSeparator />
+                        </>
+                    )}
+
+                    {/* Options */}
+                    {options.map((option) => {
+                        const isSelected = option.value === value;
+
+                        return (
+                            <DropdownItem
+                                key={option.value}
+                                onSelect={() => handleSelect(option.value)}
+                                className={isSelected ? 'bg-slate-100' : ''}
+                            >
+                                {option.color && (
+                                    <span className={clsx('w-3 h-3 rounded-sm flex-shrink-0', option.color)} />
+                                )}
+                                <span className="flex-1">{option.label}</span>
+                                {isSelected && (
+                                    <Check size={14} className="text-blue-500" />
+                                )}
+                            </DropdownItem>
+                        );
+                    })}
+                </DropdownContent>
+            </Dropdown>
         </div>
     );
 }

@@ -1,8 +1,8 @@
 import { clsx } from 'clsx';
 import { User, Link2, Type, ExternalLink, AtSign } from 'lucide-react';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
-import { PortalMenu } from './PortalMenu';
+import { PopoverRoot, PopoverTrigger, PopoverContent } from './Popover';
 
 interface UserValue {
     id?: string;
@@ -59,7 +59,6 @@ export function UserChip({
     compact = false,
 }: UserChipProps) {
     const [showMenu, setShowMenu] = useState(false);
-    const chipRef = useRef<HTMLDivElement>(null);
 
     const user = parseUserValue(value);
     const displayName = user?.name || user?.email || '';
@@ -77,12 +76,6 @@ export function UserChip({
         e.preventDefault();
         e.stopPropagation();
         setShowMenu(true);
-    }, []);
-
-    // Handle click - toggle menu
-    const handleClick = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        setShowMenu((prev) => !prev);
     }, []);
 
     // Unlink action - convert to plain text
@@ -109,60 +102,52 @@ export function UserChip({
     if (compact) {
         return (
             <div className={clsx('flex items-center justify-center', className)}>
-                <div
-                    ref={chipRef}
-                    className={clsx(
-                        'w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold',
-                        'flex items-center justify-center border border-white shadow-sm',
-                        'cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all'
-                    )}
-                    title={displayName}
-                    onClick={handleClick}
-                    onContextMenu={handleContextMenu}
-                >
-                    {initials || displayName.slice(0, 2).toUpperCase()}
-                </div>
-
-                <PortalMenu
-                    isOpen={showMenu}
-                    anchorRef={chipRef}
-                    onClose={() => setShowMenu(false)}
-                    className="min-w-[180px] py-1"
-                >
-                    <UserContextMenuContent
-                        user={user}
-                        displayName={displayName}
-                        onUnlink={onUnlink ? handleUnlink : undefined}
-                        onInspect={onInspect && user?.id ? handleInspect : undefined}
-                        onClose={() => setShowMenu(false)}
-                    />
-                </PortalMenu>
+                <PopoverRoot open={showMenu} onOpenChange={setShowMenu}>
+                    <PopoverTrigger asChild>
+                        <div
+                            className={clsx(
+                                'w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold',
+                                'flex items-center justify-center border border-white shadow-sm',
+                                'cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all'
+                            )}
+                            title={displayName}
+                            onContextMenu={handleContextMenu}
+                        >
+                            {initials || displayName.slice(0, 2).toUpperCase()}
+                        </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="min-w-[180px] p-0" align="start" sideOffset={8}>
+                        <UserContextMenuContent
+                            user={user}
+                            displayName={displayName}
+                            onUnlink={onUnlink ? handleUnlink : undefined}
+                            onInspect={onInspect && user?.id ? handleInspect : undefined}
+                            onClose={() => setShowMenu(false)}
+                        />
+                    </PopoverContent>
+                </PopoverRoot>
             </div>
         );
     }
 
     // Full chip mode - pill with name
     return (
-        <div
-            ref={chipRef}
-            className={clsx(
-                'inline-flex items-center gap-1.5 px-2 py-1 rounded-full',
-                'bg-blue-50 text-blue-700 text-sm cursor-pointer',
-                'hover:bg-blue-100 transition-colors',
-                className
-            )}
-            onClick={handleClick}
-            onContextMenu={handleContextMenu}
-        >
-            <AtSign size={14} className="opacity-70" />
-            <span className="font-medium">{displayName}</span>
-
-            <PortalMenu
-                isOpen={showMenu}
-                anchorRef={chipRef}
-                onClose={() => setShowMenu(false)}
-                className="min-w-[180px] py-1"
-            >
+        <PopoverRoot open={showMenu} onOpenChange={setShowMenu}>
+            <PopoverTrigger asChild>
+                <div
+                    className={clsx(
+                        'inline-flex items-center gap-1.5 px-2 py-1 rounded-full',
+                        'bg-blue-50 text-blue-700 text-sm cursor-pointer',
+                        'hover:bg-blue-100 transition-colors',
+                        className
+                    )}
+                    onContextMenu={handleContextMenu}
+                >
+                    <AtSign size={14} className="opacity-70" />
+                    <span className="font-medium">{displayName}</span>
+                </div>
+            </PopoverTrigger>
+            <PopoverContent className="min-w-[180px] p-0" align="start" sideOffset={8}>
                 <UserContextMenuContent
                     user={user}
                     displayName={displayName}
@@ -170,8 +155,8 @@ export function UserChip({
                     onInspect={onInspect && user?.id ? handleInspect : undefined}
                     onClose={() => setShowMenu(false)}
                 />
-            </PortalMenu>
-        </div>
+            </PopoverContent>
+        </PopoverRoot>
     );
 }
 

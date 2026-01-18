@@ -14,7 +14,7 @@ export { AssignRecordsView, ClassifyRecordsView } from './AssignRecordsView';
 export { CloneDefinitionView } from './CloneDefinitionView';
 export { CloneProjectView } from './CloneProjectView';
 export { ConfirmDeleteView } from './ConfirmDeleteView';
-export { ViewRecordDrawer } from './ViewRecordDrawer';
+
 export { ViewDefinitionDrawer } from './ViewDefinitionDrawer';
 export { ProjectLibraryDrawer } from './ProjectLibraryDrawer';
 export { MondayBoardsDrawer } from './MondayBoardsDrawer';

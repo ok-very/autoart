@@ -17,6 +17,7 @@ import {
 
     emitEmailReplied,
 } from '../lib/events';
+import { API_BASE } from '../lib/api';
 
 
 interface DetailViewProps {
@@ -86,7 +87,7 @@ export function DetailView({ email }: DetailViewProps) {
         setIsGenerating(true);
 
         try {
-            const response = await fetch('http://localhost:8000/api/draft/generate', {
+            const response = await fetch(`${API_BASE}/mail/api/draft/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -128,7 +129,7 @@ export function DetailView({ email }: DetailViewProps) {
         if (!email || !generatedDraft) return;
 
         try {
-            const response = await fetch('http://localhost:8000/api/draft/send-to-outlook', {
+            const response = await fetch(`${API_BASE}/mail/api/draft/send-to-outlook`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -175,7 +176,7 @@ export function DetailView({ email }: DetailViewProps) {
         setOneDriveStatus({ type: null, message: '' });
 
         try {
-            const response = await fetch('http://localhost:8000/api/onedrive/push', {
+            const response = await fetch(`${API_BASE}/mail/api/onedrive/push`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

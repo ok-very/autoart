@@ -19,7 +19,7 @@ import {
   useRecord,
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
-import { PortalMenu } from '@autoart/ui';
+import { PopoverRoot, PopoverTrigger, PopoverContent } from '@autoart/ui';
 
 type DisplayMode = 'label' | 'value';
 
@@ -33,7 +33,6 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
   const [editValue, setEditValue] = useState('');
 
   // Refs
-  const chipRef = useRef<HTMLSpanElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Hooks
@@ -301,9 +300,8 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
   return (
     <NodeViewWrapper
       as="span"
-      ref={chipRef}
       className={clsx(
-        'token inline-flex items-center gap-1 cursor-pointer select-none',
+        'token inline-flex items-center gap-1 cursor-pointer select-none relative',
         triggerClass,
         modeClass,
         hasDrift && 'token-drift',
@@ -335,105 +333,105 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
       )}
 
       {/* Portal-based Context Menu */}
-      <PortalMenu
-        isOpen={showMenu}
-        anchorRef={chipRef}
-        onClose={() => setShowMenu(false)}
-        className="min-w-[200px] py-1"
-      >
-        <div className="px-3 py-1.5 text-[10px] text-slate-400 uppercase font-bold border-b border-slate-100">
-          Reference Actions
-        </div>
+      <PopoverRoot open={showMenu} onOpenChange={setShowMenu}>
+        <PopoverTrigger asChild>
+          <span className="absolute inset-0" />
+        </PopoverTrigger>
+        <PopoverContent className="min-w-[200px] p-0" align="start" sideOffset={8}>
+          <div className="px-3 py-1.5 text-[10px] text-slate-400 uppercase font-bold border-b border-slate-100">
+            Reference Actions
+          </div>
 
-        {/* Inspect Record */}
-        <button
-          onClick={handleInspectRecord}
-          className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
-        >
-          <ExternalLink size={14} className="text-blue-500" />
-          <span>Inspect Record</span>
-        </button>
-
-        {/* Toggle Display */}
-        <button
-          onClick={() => {
-            setDisplayMode(prev => prev === 'label' ? 'value' : 'label');
-            setShowMenu(false);
-          }}
-          className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
-        >
-          {displayMode === 'label' ? (
-            <FileCode size={14} className="text-slate-500" />
-          ) : (
-            <Type size={14} className="text-slate-500" />
-          )}
-          <span>Show {displayMode === 'label' ? 'Value' : 'Label'}</span>
-        </button>
-
-        {/* View Definition */}
-        <button
-          onClick={handleViewDefinition}
-          className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
-        >
-          <FileCode size={14} className="text-purple-500" />
-          <span>View Definition</span>
-        </button>
-
-        <div className="border-t border-slate-100 my-1" />
-
-        {/* Unlink Value */}
-        <button
-          onClick={handleUnlink}
-          disabled={!isDirect && deleteReference.isPending}
-          className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 disabled:opacity-50"
-        >
-          <Type size={14} className="text-orange-500" />
-          <span>Unlink Value</span>
-          <span className="text-[10px] text-slate-400 ml-auto">→ text</span>
-        </button>
-
-        <div className="border-t border-slate-100 my-1" />
-
-        {/* Mode Toggle */}
-        <button
-          onClick={handleToggleMode}
-          disabled={!isDirect && updateMode.isPending}
-          className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 disabled:opacity-50"
-        >
-          {currentMode === 'static' ? (
-            <>
-              <Link2 size={14} className="text-blue-500" />
-              <span>Make Dynamic</span>
-            </>
-          ) : (
-            <>
-              <Unlink size={14} className="text-orange-500" />
-              <span>Make Static</span>
-            </>
-          )}
-        </button>
-
-        {/* Sync to Live (if drift) */}
-        {hasDrift && (
+          {/* Inspect Record */}
           <button
-            onClick={handleSyncToLive}
-            disabled={!isDirect && updateMode.isPending}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 disabled:opacity-50 text-amber-600"
+            onClick={handleInspectRecord}
+            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
           >
-            <RefreshCw size={14} />
-            <span>Sync to Live Value</span>
+            <ExternalLink size={14} className="text-blue-500" />
+            <span>Inspect Record</span>
           </button>
-        )}
 
-        {/* Mode info footer */}
-        <div className="px-3 py-1.5 text-[10px] text-slate-400 border-t border-slate-100 mt-1">
-          {currentMode === 'static' ? (
-            <span>Snapshot: won't update when source changes</span>
-          ) : (
-            <span>Live: updates when source changes</span>
+          {/* Toggle Display */}
+          <button
+            onClick={() => {
+              setDisplayMode(prev => prev === 'label' ? 'value' : 'label');
+              setShowMenu(false);
+            }}
+            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
+          >
+            {displayMode === 'label' ? (
+              <FileCode size={14} className="text-slate-500" />
+            ) : (
+              <Type size={14} className="text-slate-500" />
+            )}
+            <span>Show {displayMode === 'label' ? 'Value' : 'Label'}</span>
+          </button>
+
+          {/* View Definition */}
+          <button
+            onClick={handleViewDefinition}
+            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
+          >
+            <FileCode size={14} className="text-purple-500" />
+            <span>View Definition</span>
+          </button>
+
+          <div className="border-t border-slate-100 my-1" />
+
+          {/* Unlink Value */}
+          <button
+            onClick={handleUnlink}
+            disabled={!isDirect && deleteReference.isPending}
+            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 disabled:opacity-50"
+          >
+            <Type size={14} className="text-orange-500" />
+            <span>Unlink Value</span>
+            <span className="text-[10px] text-slate-400 ml-auto">→ text</span>
+          </button>
+
+          <div className="border-t border-slate-100 my-1" />
+
+          {/* Mode Toggle */}
+          <button
+            onClick={handleToggleMode}
+            disabled={!isDirect && updateMode.isPending}
+            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 disabled:opacity-50"
+          >
+            {currentMode === 'static' ? (
+              <>
+                <Link2 size={14} className="text-blue-500" />
+                <span>Make Dynamic</span>
+              </>
+            ) : (
+              <>
+                <Unlink size={14} className="text-orange-500" />
+                <span>Make Static</span>
+              </>
+            )}
+          </button>
+
+          {/* Sync to Live (if drift) */}
+          {hasDrift && (
+            <button
+              onClick={handleSyncToLive}
+              disabled={!isDirect && updateMode.isPending}
+              className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 disabled:opacity-50 text-amber-600"
+            >
+              <RefreshCw size={14} />
+              <span>Sync to Live Value</span>
+            </button>
           )}
-        </div>
-      </PortalMenu>
+
+          {/* Mode info footer */}
+          <div className="px-3 py-1.5 text-[10px] text-slate-400 border-t border-slate-100 mt-1">
+            {currentMode === 'static' ? (
+              <span>Snapshot: won't update when source changes</span>
+            ) : (
+              <span>Live: updates when source changes</span>
+            )}
+          </div>
+        </PopoverContent>
+      </PopoverRoot>
     </NodeViewWrapper>
   );
 }

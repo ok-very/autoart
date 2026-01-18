@@ -10,7 +10,6 @@
 import { Activity, Filter } from 'lucide-react';
 import { useState } from 'react';
 
-import { BottomDrawer } from '../ui/drawer/BottomDrawer';
 import { Header } from '../ui/layout/Header';
 
 /**
@@ -84,8 +83,6 @@ export function EventsPage() {
                         </p>
                     </div>
                 </div>
-
-                <BottomDrawer />
             </div>
         </div>
     );

@@ -101,6 +101,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   // Soft-intrinsic definitions (action types, workflow statuses)
   await fastify.register(definitionsRoutes, { prefix: '/api/definitions' });
 
+  // Mail module now handled by AutoHelper service on port 8000
+
   fastify.setErrorHandler(errorHandler);
   fastify.setNotFoundHandler(notFoundHandler);
 
