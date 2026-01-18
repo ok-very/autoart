@@ -57,7 +57,11 @@ interface SpawnHandleProps {
 }
 
 function SpawnHandle({ api }: SpawnHandleProps) {
+    const { dockviewApi } = useWorkspaceStore();
+
     const handleSpawn = (component: string, direction: 'below' | 'right' | 'tab') => {
+        if (!dockviewApi) return;
+
         const timestamp = Date.now();
         const newId = `${component}-${timestamp}`;
         // Map friendly component names to registry keys if needed
@@ -65,12 +69,12 @@ function SpawnHandle({ api }: SpawnHandleProps) {
 
         let position: any = {};
         if (direction === 'tab') {
-            position = { referencePanel: api.panel, direction: 'within' };
+            position = { referencePanel: api.id, direction: 'within' };
         } else {
-            position = { referencePanel: api.panel, direction };
+            position = { referencePanel: api.id, direction };
         }
 
-        api.group.api.addPanel({
+        dockviewApi.addPanel({
             id: newId,
             component: componentKey,
             title: PANEL_DEFINITIONS[componentKey]?.title || 'New Panel',
