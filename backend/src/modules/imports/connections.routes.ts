@@ -38,7 +38,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
 
         const [mondayConnected, googleConnected] = await Promise.all([
             connectionsService.isProviderConnected(userId ?? null, 'monday'),
-            connectionsService.isProviderConnected(userId ?? null, 'google' as any),
+            connectionsService.isProviderConnected(userId ?? null, 'google'),
         ]);
 
         // Check AutoHelper connections for this user
@@ -261,7 +261,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
             return reply.status(401).send({ error: 'Authentication required' });
         }
 
-        await connectionsService.deleteCredential(userId, 'google' as any);
+        await connectionsService.deleteCredential(userId, 'google');
 
         return reply.send({ disconnected: true });
     });

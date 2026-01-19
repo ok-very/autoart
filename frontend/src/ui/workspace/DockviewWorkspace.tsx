@@ -17,6 +17,7 @@ import {
     type DockviewApi,
     type IDockviewPanelProps,
     type IDockviewPanelHeaderProps,
+    type DockviewPanelApi,
 } from 'dockview';
 
 import { Plus, MoreHorizontal, Split } from 'lucide-react';
@@ -53,7 +54,7 @@ import { MailPanel } from '../panels/MailPanel';
 // ============================================================================
 
 interface SpawnHandleProps {
-    api: any; // DockviewPanelApi
+    api: DockviewPanelApi;
     panelId?: string; // Optional for context awareness
 }
 

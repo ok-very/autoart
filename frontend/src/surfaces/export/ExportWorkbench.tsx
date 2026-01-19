@@ -28,6 +28,23 @@ export interface ExportWorkbenchProps {
 }
 
 // ============================================================================
+// TYPE GUARDS
+// ============================================================================
+
+/**
+ * Runtime validation for ArtistData to prevent casting invalid payloads
+ */
+function isArtistData(value: unknown): value is ArtistData {
+    if (!value || typeof value !== 'object') return false;
+    const v = value as Record<string, unknown>;
+    return (
+        typeof v.name === 'string' &&
+        typeof v.bio === 'string' &&
+        Array.isArray(v.works)
+    );
+}
+
+// ============================================================================
 // COMPONENT
 // ============================================================================
 
@@ -39,18 +56,25 @@ export function ExportWorkbench({ onExportComplete, onClose }: ExportWorkbenchPr
 
         console.log('Exporting collection:', activeCollection);
 
-        // Check if this is artist data from Collector
-        const artistSelection = activeCollection.selections.find(
+        // Find artist selections and validate
+        const artistSelections = activeCollection.selections.filter(
             sel => sel.type === 'artist'
         );
+
+        if (artistSelections.length > 1) {
+            console.warn('Multiple artist selections found; using first valid one');
+        }
+
+        // Find first valid artist data
+        const validArtistSelection = artistSelections.find(sel => isArtistData(sel.value));
+        const artistData = validArtistSelection?.value as ArtistData | undefined;
 
         let content: string;
         let filename: string;
         let mimeType: string;
 
-        if (artistSelection?.value && typeof artistSelection.value === 'object') {
-            // Use GeneratorService for artist data
-            const artistData = artistSelection.value as ArtistData;
+        if (artistData) {
+            // Use GeneratorService for validated artist data
             content = generateArtistPage(artistData, { format: 'html', includeImages: true });
             filename = `${artistData.name.toLowerCase().replace(/\s+/g, '-')}-export.html`;
             mimeType = 'text/html';
