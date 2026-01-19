@@ -13,7 +13,7 @@ import { generateId } from '@autoart/shared';
 // Types
 // ---------------------------------------------------------------------------
 
-export type SelectionType = 'record' | 'field' | 'node' | 'action' | 'event';
+export type SelectionType = 'record' | 'field' | 'node' | 'action' | 'event' | 'artist';
 
 export interface SelectionReference {
     id: string;

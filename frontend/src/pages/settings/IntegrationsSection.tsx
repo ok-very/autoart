@@ -33,8 +33,11 @@ interface IntegrationStatus {
 }
 
 interface IntegrationsSectionProps {
+    microsoftStatus?: IntegrationStatus;
     mondayStatus?: IntegrationStatus;
     googleStatus?: IntegrationStatus;
+    onMicrosoftConnect?: () => void;
+    onMicrosoftDisconnect?: () => Promise<void>;
     onMondayConnect?: (apiKey: string) => Promise<void>;
     onMondayDisconnect?: () => Promise<void>;
     onGoogleConnect?: () => void;
@@ -311,6 +314,75 @@ function GoogleIntegration({ status, onConnect, onDisconnect }: GoogleIntegratio
 }
 
 // ============================================================================
+// MICROSOFT INTEGRATION
+// ============================================================================
+
+interface MicrosoftIntegrationProps {
+    status: IntegrationStatus;
+    onConnect: () => void;
+    onDisconnect: () => Promise<void>;
+}
+
+function MicrosoftIntegration({ status, onConnect, onDisconnect }: MicrosoftIntegrationProps) {
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleDisconnect = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            await onDisconnect();
+        } finally {
+            setIsLoading(false);
+        }
+    }, [onDisconnect]);
+
+    return (
+        <IntegrationCard
+            icon={
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                    <rect x="1" y="1" width="10" height="10" fill="#F25022" />
+                    <rect x="13" y="1" width="10" height="10" fill="#7FBA00" />
+                    <rect x="1" y="13" width="10" height="10" fill="#00A4EF" />
+                    <rect x="13" y="13" width="10" height="10" fill="#FFB900" />
+                </svg>
+            }
+            iconBg="bg-slate-100"
+            name="Microsoft 365"
+            description="Sync Outlook Calendar, OneDrive files, and Teams"
+            hint="Enables calendar sync and OneDrive file attachments"
+            status={status}
+        >
+            {status.connected ? (
+                <button
+                    onClick={handleDisconnect}
+                    disabled={isLoading}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                >
+                    {isLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                        <XCircle className="w-4 h-4" />
+                    )}
+                    Disconnect
+                </button>
+            ) : (
+                <button
+                    onClick={onConnect}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors shadow-sm"
+                >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                        <rect x="1" y="1" width="10" height="10" fill="#F25022" />
+                        <rect x="13" y="1" width="10" height="10" fill="#7FBA00" />
+                        <rect x="1" y="13" width="10" height="10" fill="#00A4EF" />
+                        <rect x="13" y="13" width="10" height="10" fill="#FFB900" />
+                    </svg>
+                    Connect with Microsoft
+                </button>
+            )}
+        </IntegrationCard>
+    );
+}
+
+// ============================================================================
 // AUTOHELPER INTEGRATION
 // ============================================================================
 
@@ -434,9 +506,12 @@ interface ExtendedIntegrationsSectionProps extends IntegrationsSectionProps {
 }
 
 export function IntegrationsSection({
+    microsoftStatus = { connected: false },
     mondayStatus = { connected: false },
     googleStatus = { connected: false },
     autohelperStatus = { connected: false },
+    onMicrosoftConnect = () => { },
+    onMicrosoftDisconnect = async () => { },
     onMondayConnect = async () => { },
     onMondayDisconnect = async () => { },
     onGoogleConnect = () => { },
@@ -453,15 +528,20 @@ export function IntegrationsSection({
             </div>
 
             <div className="space-y-4">
-                <MondayIntegration
-                    status={mondayStatus}
-                    onConnect={onMondayConnect}
-                    onDisconnect={onMondayDisconnect}
+                <MicrosoftIntegration
+                    status={microsoftStatus}
+                    onConnect={onMicrosoftConnect}
+                    onDisconnect={onMicrosoftDisconnect}
                 />
                 <GoogleIntegration
                     status={googleStatus}
                     onConnect={onGoogleConnect}
                     onDisconnect={onGoogleDisconnect}
+                />
+                <MondayIntegration
+                    status={mondayStatus}
+                    onConnect={onMondayConnect}
+                    onDisconnect={onMondayDisconnect}
                 />
                 <AutoHelperIntegration
                     status={autohelperStatus}

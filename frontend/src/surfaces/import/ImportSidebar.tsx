@@ -18,6 +18,7 @@ import {
     Loader2,
     Check,
     RefreshCw,
+    Globe,
 } from 'lucide-react';
 import { useRef, useCallback, useState } from 'react';
 
@@ -29,12 +30,13 @@ import {
     type ImportPlan,
 } from '../../api/hooks/imports';
 import { useUIStore } from '../../stores/uiStore';
+import { CollectorPanel } from './CollectorPanel';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-type SourceType = 'file' | 'monday' | 'api';
+type SourceType = 'file' | 'monday' | 'collector' | 'api';
 
 interface ImportSidebarProps {
     width: number;
@@ -215,6 +217,15 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                     onClick={() => onSourceChange('monday')}
                 />
                 <SourceIcon
+                    id="collector"
+                    icon={<Globe size={18} />}
+                    label="Collector"
+                    isActive={sourceType === 'collector'}
+                    isConnected={false}
+                    isDisabled={false}
+                    onClick={() => onSourceChange('collector')}
+                />
+                <SourceIcon
                     id="api"
                     icon={<Plug size={18} />}
                     label="API"
@@ -329,6 +340,13 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                         <p className="text-xs text-slate-400 max-w-48">
                             Select a board in the main window to begin import.
                         </p>
+                    </div>
+                )}
+
+                {/* Collector Source */}
+                {sourceType === 'collector' && (
+                    <div className="p-4">
+                        <CollectorPanel />
                     </div>
                 )}
 

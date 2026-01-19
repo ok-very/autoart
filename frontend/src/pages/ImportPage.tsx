@@ -22,7 +22,7 @@ import { SelectionInspector } from '../ui/composites/SelectionInspector';
 import { Header } from '../ui/layout/Header';
 
 // Source type lifted to page level for view swapping
-export type ImportSourceType = 'file' | 'monday' | 'api';
+export type ImportSourceType = 'file' | 'monday' | 'collector' | 'api';
 
 export function ImportPage() {
     const {

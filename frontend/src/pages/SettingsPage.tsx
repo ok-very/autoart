@@ -12,7 +12,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { AccountSection, IntegrationsSection } from './settings';
-import { useConnections, useConnectMonday, useDisconnectMonday, useGeneratePairingCode } from '../api/connections';
+import { useConnections, useConnectMonday, useDisconnectMonday, useGeneratePairingCode, useConnectGoogle, useDisconnectGoogle, useConnectMicrosoft, useDisconnectMicrosoft } from '../api/connections';
 import { useCurrentUser } from '../api/hooks';
 
 // ============================================================================
@@ -47,6 +47,14 @@ export function SettingsPage() {
     const disconnectMondayMutation = useDisconnectMonday();
     const generatePairingCodeMutation = useGeneratePairingCode();
 
+    // Google OAuth hooks
+    const connectGoogleMutation = useConnectGoogle();
+    const disconnectGoogleMutation = useDisconnectGoogle();
+
+    // Microsoft OAuth hooks
+    const connectMicrosoftMutation = useConnectMicrosoft();
+    const disconnectMicrosoftMutation = useDisconnectMicrosoft();
+
     // Monday connection handlers
     const handleMondayConnect = useCallback(async (apiKey: string) => {
         await connectMondayMutation.mutateAsync(apiKey);
@@ -56,20 +64,23 @@ export function SettingsPage() {
         await disconnectMondayMutation.mutateAsync();
     }, [disconnectMondayMutation]);
 
-    // Google connection handlers (placeholder - will connect to OAuth)
-    const [googleConnected, setGoogleConnected] = useState(false);
-    const handleGoogleConnect = useCallback(() => {
-        // TODO: Redirect to Google OAuth flow
-        console.log('Starting Google OAuth flow...');
-        // For now, simulate connection
-        setGoogleConnected(true);
-    }, []);
+    // Google connection handlers - now using real OAuth
+    const handleGoogleConnect = useCallback(async () => {
+        await connectGoogleMutation.mutateAsync();
+    }, [connectGoogleMutation]);
 
     const handleGoogleDisconnect = useCallback(async () => {
-        // TODO: Call backend to revoke and remove tokens
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setGoogleConnected(false);
-    }, []);
+        await disconnectGoogleMutation.mutateAsync();
+    }, [disconnectGoogleMutation]);
+
+    // Microsoft connection handlers - using real OAuth
+    const handleMicrosoftConnect = useCallback(async () => {
+        await connectMicrosoftMutation.mutateAsync();
+    }, [connectMicrosoftMutation]);
+
+    const handleMicrosoftDisconnect = useCallback(async () => {
+        await disconnectMicrosoftMutation.mutateAsync();
+    }, [disconnectMicrosoftMutation]);
 
     // AutoHelper pairing handler
     const handleAutoHelperGenerateCode = useCallback(async () => {
@@ -140,9 +151,12 @@ export function SettingsPage() {
                         {activeTab === 'account' && <AccountSection />}
                         {activeTab === 'integrations' && (
                             <IntegrationsSection
+                                microsoftStatus={{ connected: (connections as any)?.microsoft?.connected ?? false }}
                                 mondayStatus={{ connected: connections?.monday?.connected ?? false }}
-                                googleStatus={{ connected: googleConnected }}
+                                googleStatus={{ connected: connections?.google?.connected ?? false }}
                                 autohelperStatus={{ connected: (connections as any)?.autohelper?.connected ?? false }}
+                                onMicrosoftConnect={handleMicrosoftConnect}
+                                onMicrosoftDisconnect={handleMicrosoftDisconnect}
                                 onMondayConnect={handleMondayConnect}
                                 onMondayDisconnect={handleMondayDisconnect}
                                 onGoogleConnect={handleGoogleConnect}

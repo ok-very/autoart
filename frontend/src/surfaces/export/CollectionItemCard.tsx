@@ -18,6 +18,7 @@ const TYPE_ICONS: Record<SelectionType, React.ComponentType<{ size?: number; cla
     node: Folder,
     action: Lightning,
     event: Bell,
+    artist: Package,
 };
 
 const TYPE_LABELS: Record<SelectionType, string> = {
@@ -26,6 +27,7 @@ const TYPE_LABELS: Record<SelectionType, string> = {
     node: 'Node',
     action: 'Action',
     event: 'Event',
+    artist: 'Artist',
 };
 
 // ---------------------------------------------------------------------------
