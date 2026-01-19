@@ -9,7 +9,7 @@ import { clsx } from 'clsx';
 
 export interface SegmentedControlItem {
     value: string;
-    label: string;
+    label: React.ReactNode;
     disabled?: boolean;
 }
 

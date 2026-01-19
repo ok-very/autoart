@@ -16,7 +16,7 @@
  */
 
 import { clsx } from 'clsx';
-import { FileText, Link2, ExternalLink, Wrench, Lightbulb, Info, History, Tag, List } from 'lucide-react';
+import { FileText, Link2, ExternalLink, Wrench, Lightbulb, Info, History, Tag, List, Plus } from 'lucide-react';
 
 import { RecordPropertiesView } from './RecordPropertiesView';
 import { ImportItemDetailsView } from './ImportItemDetailsView';
@@ -26,6 +26,7 @@ import { useNode, useRecord, useInterpretationAvailable } from '../../api/hooks'
 import { useUIStore, type InspectorTabId } from '../../stores/uiStore';
 import { ActionDetailsPanel } from '../inspector/ActionDetailsPanel';
 import { ActionEventsPanel } from '../inspector/ActionEventsPanel';
+import { useCollectionModeOptional } from '../../surfaces/export/CollectionModeProvider';
 
 // Re-export from canonical location for backward compatibility
 export type { InspectorTabId } from '../../types/ui';
@@ -51,6 +52,7 @@ const IMPORT_TABS: Tab[] = [
 
 export function SelectionInspector() {
     const { selection, inspectorTabMode, setInspectorMode, inspectorWidth } = useUIStore();
+    const collectionMode = useCollectionModeOptional();
 
     // Derive IDs from selection
     const inspectedNodeId = selection?.type === 'node' ? selection.id : null;
@@ -216,6 +218,32 @@ export function SelectionInspector() {
                         </button>
                     );
                 })}
+
+                {/* Add to Collection button */}
+                {collectionMode?.isCollecting && inspectedItem && (
+                    <button
+                        onClick={() => {
+                            const type = isRecord ? 'record' : 'node';
+                            const label = isRecord ? record?.unique_name : node?.title;
+                            collectionMode.addToCollection({
+                                type,
+                                sourceId: inspectedItem.id,
+                                displayLabel: label || 'Unknown',
+                            });
+                        }}
+                        disabled={collectionMode.isInCollection(inspectedItem.id)}
+                        className={clsx(
+                            'ml-auto px-2 py-1 rounded text-xs font-medium flex items-center gap-1 transition-colors',
+                            collectionMode.isInCollection(inspectedItem.id)
+                                ? 'bg-emerald-100 text-emerald-700 cursor-default'
+                                : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                        )}
+                        title={collectionMode.isInCollection(inspectedItem.id) ? 'Already in collection' : 'Add to collection'}
+                    >
+                        <Plus size={12} />
+                        {collectionMode.isInCollection(inspectedItem.id) ? 'Added' : 'Add'}
+                    </button>
+                )}
             </div>
 
             {/* View Content (scrollable) */}
