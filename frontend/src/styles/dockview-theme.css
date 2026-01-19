@@ -67,13 +67,26 @@
   background: #f1f5f9;
   /* Ensure inactive tabs have background */
   background: linear-gradient(to bottom, #ffffff, #f1f5f9);
+  background-color: #f1f5f9 !important;
+  /* Anti-aliasing for smooth rounded corners */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Prevent black flash on any interaction state */
+.dockview-theme-light .dv-tab,
+.dockview-theme-light .dv-tab * {
+  background-color: inherit;
 }
 
 .dockview-theme-light .dv-tab:hover {
   color: #1e293b;
   /* slate-800 */
   background: #e2e8f0 !important;
-  /* slate-200 */
+  /* slate-200 - explicit to prevent black */
+  background-color: #e2e8f0 !important;
 }
 
 /* Fix for black background on click/focus */
@@ -98,8 +111,8 @@
   /* Borders handle definition now */
 }
 
-/* Hide close button for permanent Workspace tab */
-.dockview-theme-light .dv-tab[title="Workspace"] .dv-default-tab-action {
+/* Hide close button for permanent Projects tab */
+.dockview-theme-light .dv-tab[title="Projects"] .dv-default-tab-action {
   display: none !important;
 }
 

@@ -72,17 +72,17 @@ function SourceIcon({ id: _id, icon, label, isActive, isConnected, isDisabled, o
             title={label}
             className={clsx(
                 'relative w-10 h-10 flex items-center justify-center rounded-lg transition-all',
-                isActive && 'bg-blue-100 text-blue-600 shadow-sm',
+                isActive && 'bg-emerald-100 text-emerald-600 shadow-sm',
                 !isActive && !isDisabled && 'text-slate-500 hover:bg-slate-100 hover:text-slate-700',
                 isDisabled && 'text-slate-300 cursor-not-allowed'
             )}
         >
             {icon}
             {isConnected && !isActive && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full" />
             )}
             {isConnected && isActive && (
-                <Check size={10} className="absolute top-1 right-1 text-green-600" />
+                <Check size={10} className="absolute top-1 right-1 text-emerald-600" />
             )}
         </button>
     );
@@ -257,7 +257,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                             <select
                                 value={parserName}
                                 onChange={(e) => setParserName(e.target.value)}
-                                className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             >
                                 <option value="monday">Monday.com CSV</option>
                                 <option value="airtable">Airtable CSV</option>
@@ -279,7 +279,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                             />
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-slate-200 rounded-lg text-sm text-slate-600 hover:border-blue-300 hover:text-blue-600 transition-colors"
+                                className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-slate-200 rounded-lg text-sm text-slate-600 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
                             >
                                 <Upload className="w-4 h-4" />
                                 Choose File
@@ -298,7 +298,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                                 value={rawData}
                                 onChange={(e) => setRawData(e.target.value)}
                                 placeholder="Paste CSV or JSON..."
-                                className="flex-1 w-full p-3 text-xs font-mono border border-slate-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="flex-1 w-full p-3 text-xs font-mono border border-slate-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             />
                         </div>
 
@@ -315,7 +315,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                             <button
                                 onClick={handleParse}
                                 disabled={isLoading || !rawData.trim()}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 rounded-lg transition-colors"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 rounded-lg transition-colors"
                             >
                                 {isLoading ? (
                                     <>

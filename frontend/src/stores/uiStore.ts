@@ -117,7 +117,7 @@ export const useUIStore = create<UIState>()(
     (set, get) => ({
       selection: null,
       activeProjectId: null,
-      viewMode: 'log',
+      viewMode: 'workflow',
       inspectorTabMode: 'record',
       includeSystemEventsInLog: false,
 
@@ -203,7 +203,7 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: 'ui-storage',
-      version: 1, // Increment when schema changes
+      version: 2, // Increment when schema changes - bumped to reset cached viewMode
       partialize: (state) => ({
         sidebarWidth: state.sidebarWidth,
         inspectorWidth: state.inspectorWidth,
@@ -223,7 +223,7 @@ export const useUIStore = create<UIState>()(
       }),
       // Migrate stale persisted values to valid InspectorTabId
       migrate: (persistedState, version) => {
-         
+
         const state = persistedState as any;
         if (version < 1) {
           // Normalize any stale inspectorTabMode values

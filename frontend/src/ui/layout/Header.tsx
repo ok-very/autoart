@@ -111,15 +111,14 @@ export function Header() {
 
           {/* Navigation Links */}
           <Inline gap="xs" className="ml-2">
-            <Link to="/">
-              <Button
-                variant={!isRegistryActive && !isComposerActive && !isWorkbenchActive ? 'light' : 'subtle'}
-                color="gray"
-                size="sm"
-              >
-                Projects
-              </Button>
-            </Link>
+            <Button
+              variant={!isRegistryActive && !isComposerActive && !isWorkbenchActive ? 'light' : 'subtle'}
+              color="gray"
+              size="sm"
+              onClick={() => navigate('/')}
+            >
+              Projects
+            </Button>
 
             {/* Registry Dropdown */}
             <Menu>

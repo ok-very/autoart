@@ -46,7 +46,8 @@ interface CollectionState {
     isCollecting: boolean;
 
     // Derived getters
-    readonly activeCollection: Collection | null;
+    // Derived getters (removed from state to prevent stale access)
+    // Use deriveActiveCollection(state) or explicit lookups instead
 
     // Collection management
     createCollection: (name?: string) => string;
@@ -77,11 +78,6 @@ export const useCollectionStore = create<CollectionState>()(
             collections: new Map(),
             activeCollectionId: null,
             isCollecting: false,
-
-            get activeCollection() {
-                const { collections, activeCollectionId } = get();
-                return activeCollectionId ? collections.get(activeCollectionId) ?? null : null;
-            },
 
             createCollection: (name) => {
                 const id = generateId();
@@ -235,7 +231,8 @@ export const useCollectionStore = create<CollectionState>()(
                 }),
 
             isInCollection: (sourceId, fieldKey) => {
-                const collection = get().activeCollection;
+                const { activeCollectionId, collections } = get();
+                const collection = activeCollectionId ? collections.get(activeCollectionId) : null;
                 if (!collection) return false;
                 return collection.selections.some(
                     (s) => s.sourceId === sourceId && (fieldKey === undefined || s.fieldKey === fieldKey)
@@ -243,7 +240,8 @@ export const useCollectionStore = create<CollectionState>()(
             },
 
             getSelectionCount: () => {
-                const collection = get().activeCollection;
+                const { activeCollectionId, collections } = get();
+                const collection = activeCollectionId ? collections.get(activeCollectionId) : null;
                 return collection?.selections.length ?? 0;
             },
         }),

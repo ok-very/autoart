@@ -32,7 +32,10 @@ export interface ExportWorkbenchProps {
 // ============================================================================
 
 export function ExportWorkbench({ onExportComplete, onClose }: ExportWorkbenchProps) {
-    const { activeCollection, isCollecting } = useCollectionStore();
+    const activeCollection = useCollectionStore(s =>
+        s.activeCollectionId ? s.collections.get(s.activeCollectionId) ?? null : null
+    );
+    const { isCollecting } = useCollectionStore();
 
     const handleExport = async () => {
         if (!activeCollection || activeCollection.selections.length === 0) return;
@@ -84,7 +87,7 @@ export function ExportWorkbench({ onExportComplete, onClose }: ExportWorkbenchPr
         <CollectionModeProvider>
             <div className="flex flex-col h-full bg-slate-50">
                 {/* Header */}
-                <Card className="border-b border-slate-200 rounded-none shadow-none">
+                <Card className="border-b border-slate-200 rounded-none shadow-sm z-10 relative">
                     <Inline justify="between" className="h-14 px-4">
                         <Inline gap="sm">
                             <Download size={20} className="text-emerald-600" />
@@ -107,23 +110,23 @@ export function ExportWorkbench({ onExportComplete, onClose }: ExportWorkbenchPr
 
                 {/* Main Content - Collection Panel */}
                 <div className="flex-1 overflow-hidden flex">
-                    <div className="w-80 border-r border-slate-200">
+                    <div className="w-80 border-r border-slate-200 shadow-[inset_0_-8px_12px_-8px_rgba(0,0,0,0.08)]">
                         <CollectionPanel />
                     </div>
 
                     {/* Preview Area */}
-                    <div className="flex-1 overflow-hidden bg-white">
+                    <div className="flex-1 overflow-hidden bg-white shadow-[inset_0_-8px_12px_-8px_rgba(0,0,0,0.08)]">
                         <CollectionPreview />
                     </div>
 
-                    {/* Right Sidebar - Generation */}
-                    <div className="w-80 border-l border-slate-200 bg-slate-50">
+                    {/* Right Sidebar - Output */}
+                    <div className="w-80 border-l border-slate-200 bg-slate-50 shadow-[inset_0_-8px_12px_-8px_rgba(0,0,0,0.08)]">
                         <GenerationPanel />
                     </div>
                 </div>
 
                 {/* Footer: Export Controls */}
-                <Card className="border-t border-slate-200 rounded-none shadow-none">
+                <Card className="border-t border-slate-300 rounded-none shadow-none">
                     <Inline justify="between" className="px-4 py-3">
                         <Text size="sm" color="dimmed">
                             {activeCollection
