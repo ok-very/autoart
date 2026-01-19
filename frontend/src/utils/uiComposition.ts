@@ -28,7 +28,7 @@ export function deriveUIPanels(state: CompositionState): UIPanels {
     // Future: if (viewMode === 'zen') sidebar = null;
 
     // 2. Workspace Logic - driven only by projectViewMode
-    let workspace: UIPanels['workspace'] = 'grid'; // Fallback
+    let workspace: UIPanels['workspace'] = 'projectWorkflow'; // Fallback
     switch (projectViewMode) {
         case 'log':
             workspace = 'projectLog';
@@ -42,19 +42,23 @@ export function deriveUIPanels(state: CompositionState): UIPanels {
             workspace = 'projectWorkflow';
             sidebar = null;
             break;
-        case 'calendar':
-            workspace = 'calendar';
+        case 'list':
+            workspace = 'list';
+            sidebar = null;
             break;
-        case 'grid':
+        case 'cards':
+            workspace = 'cards';
+            sidebar = null;
+            break;
         default:
-            workspace = 'grid';
+            workspace = 'projectWorkflow';
             break;
     }
 
     // 3. Inspector Logic
-    // Don't show inspector for Miller Columns or Calendar - they use their own navigation
+    // Don't show inspector for Miller Columns - they use their own navigation
     let inspector: InspectorMode = null;
-    const hideInspector = projectViewMode === 'columns' || projectViewMode === 'calendar';
+    const hideInspector = projectViewMode === 'columns';
 
     if (!inspectorCollapsed && selection && !hideInspector) {
         // If we have a selection, we show the inspector unless explicitly collapsed

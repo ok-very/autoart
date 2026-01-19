@@ -12,8 +12,8 @@ import { SegmentedControl } from '@autoart/ui';
 import { useUIStore, useUIPanels, PROJECT_VIEW_MODE_LABELS } from '../../stores/uiStore';
 import type { ProjectViewMode } from '@autoart/shared';
 
-import { CalendarView } from '../layout/CalendarView';
-import { DataGridView } from '../layout/DataGridView';
+import { ActionListView } from '../layout/ActionListView';
+import { ActionCardsView } from '../layout/ActionCardsView';
 import { MillerColumnsView } from '../layout/MillerColumnsView';
 import { ProjectWorkflowView } from '../layout/ProjectWorkflowView';
 import { ProjectLogSurface } from '../projectLog';
@@ -37,11 +37,10 @@ export function CentralAreaAdapter() {
                 return <ProjectWorkflowView />;
             case 'projectLog':
                 return <ProjectLogSurface />;
-            case 'calendar':
-                return <CalendarView />;
-            case 'grid':
-            case 'details':
-                return <DataGridView />;
+            case 'list':
+                return <ActionListView />;
+            case 'cards':
+                return <ActionCardsView />;
             default:
                 // Fallback to Project Workflow (main view)
                 return <ProjectWorkflowView />;
@@ -67,3 +66,4 @@ export function CentralAreaAdapter() {
         </div>
     );
 }
+

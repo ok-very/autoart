@@ -41,15 +41,15 @@ interface UIState {
   // Core State
   selection: Selection;
   activeProjectId: string | null;
-  
+
   // Namespaced view modes (each panel has its own)
   projectViewMode: ProjectViewMode;
   fieldsViewMode: FieldsViewMode;
   recordsViewMode: RecordsViewMode;
-  
+
   // Legacy alias for backward compatibility
   viewMode: ViewMode;
-  
+
   inspectorTabMode: InspectorTabId;
 
   // Layout Geometry
@@ -97,7 +97,7 @@ interface UIState {
   setProjectViewMode: (mode: ProjectViewMode) => void;
   setFieldsViewMode: (mode: FieldsViewMode) => void;
   setRecordsViewMode: (mode: RecordsViewMode) => void;
-  
+
   // Legacy setter (deprecated - use namespaced setters)
   setViewMode: (mode: ViewMode) => void;
   setTheme: (theme: Theme) => void;
@@ -131,15 +131,15 @@ export const useUIStore = create<UIState>()(
     (set, get) => ({
       selection: null,
       activeProjectId: null,
-      
+
       // Namespaced view modes
       projectViewMode: 'workflow' as ProjectViewMode,
       fieldsViewMode: 'browse' as FieldsViewMode,
       recordsViewMode: 'list' as RecordsViewMode,
-      
+
       // Legacy alias - derives from projectViewMode for backward compat
       get viewMode(): ViewMode { return get().projectViewMode; },
-      
+
       inspectorTabMode: 'record',
       includeSystemEventsInLog: false,
 
@@ -178,9 +178,7 @@ export const useUIStore = create<UIState>()(
 
       // Namespaced view mode setters
       setProjectViewMode: (mode) => set((state) => {
-        const shouldClearSelection =
-          mode === 'calendar' ||
-          (mode === 'columns' && state.projectViewMode !== 'columns');
+        const shouldClearSelection = mode === 'columns' && state.projectViewMode !== 'columns';
         return {
           projectViewMode: mode,
           ...(shouldClearSelection ? { selection: null } : {}),
@@ -261,19 +259,22 @@ export const useUIStore = create<UIState>()(
       // Migrate persisted state across versions
       migrate: (persistedState, version) => {
         const state = persistedState as any;
-        
+
         if (version < 1) {
           // Normalize any stale inspectorTabMode values
           state.inspectorTabMode = normalizeInspectorTabId(state.inspectorTabMode);
         }
-        
+
         if (version < 3) {
           // v3: Migrate from single viewMode to namespaced modes
           const oldViewMode = state.viewMode;
           if (oldViewMode) {
             // Map old viewMode to appropriate namespaced mode
-            if (['log', 'workflow', 'columns', 'grid', 'calendar'].includes(oldViewMode)) {
+            if (['log', 'workflow', 'columns'].includes(oldViewMode)) {
               state.projectViewMode = oldViewMode;
+            } else if (oldViewMode === 'grid' || oldViewMode === 'calendar') {
+              // Migrate removed modes to 'cards'
+              state.projectViewMode = 'cards';
             }
           }
           // Set defaults for new fields
@@ -282,7 +283,7 @@ export const useUIStore = create<UIState>()(
           state.recordsViewMode = state.recordsViewMode || 'list';
           delete state.viewMode;
         }
-        
+
         return state;
       },
     }
