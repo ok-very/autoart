@@ -88,6 +88,19 @@ export interface DataTableFlatProps {
     pageSize?: number;
     /** Compact display mode */
     compact?: boolean;
+    /**
+     * Row height configuration.
+     * - number: Fixed height in pixels
+     * - 'auto': Height adjusts to content (enables text wrapping)
+     * Default: undefined (uses compact sizing)
+     */
+    rowHeight?: number | 'auto';
+    /**
+     * Whether text should wrap in cells.
+     * When true, long text wraps instead of truncating.
+     * Default: false
+     */
+    wrapText?: boolean;
     /** Empty state message */
     emptyMessage?: string;
     /** Custom header content (replaces default) */
@@ -183,6 +196,8 @@ export function DataTableFlat({
     multiSelect = true,
     pageSize = 50,
     compact = false,
+    rowHeight,
+    wrapText = false,
     emptyMessage = 'No records found',
     renderHeader,
     renderFooter,
@@ -443,13 +458,14 @@ export function DataTableFlat({
                                 viewModel={viewModel}
                                 onSave={(fieldId, value) => handleCellSave(record.id, fieldId, value)}
                                 width={col.width}
+                                wrapText={wrapText}
                             />
                         );
                     }
                     // Read-only display
                     else {
                         const renderAs = (col.field?.type || 'text') as DataFieldKind;
-                        cellContent = <DataFieldWidget kind={renderAs} value={viewModel.value} />;
+                        cellContent = <DataFieldWidget kind={renderAs} value={viewModel.value} wrapText={wrapText} />;
                     }
 
                     // Wrap with SelectableWrapper when in collection mode
@@ -473,7 +489,7 @@ export function DataTableFlat({
         }
 
         return cols;
-    }, [displayColumns, multiSelect, selectedIds, buildCellViewModel, editable, isCollecting, handleCellSave, handleSelectOne, handleSelectAll, paginatedRecords]);
+    }, [displayColumns, multiSelect, selectedIds, buildCellViewModel, editable, isCollecting, wrapText, handleCellSave, handleSelectOne, handleSelectAll, paginatedRecords]);
 
     // Row model from paginated records
     const rowModel = useMemo(() => {
@@ -672,6 +688,8 @@ export function DataTableFlat({
                 stickyHeader
                 stickyFooter
                 compact={compact}
+                rowHeight={rowHeight}
+                wrapText={wrapText}
                 renderFooter={combinedFooter}
             />
 

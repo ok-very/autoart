@@ -29,6 +29,19 @@ export type TableRow = {
 };
 
 // ============================================================================
+// CELL RENDER CONTEXT
+// ============================================================================
+
+/**
+ * Context passed to cell render functions.
+ * Allows the core to communicate display settings to cell renderers.
+ */
+export interface CellRenderContext {
+    /** Whether text should wrap instead of truncate */
+    wrapText?: boolean;
+}
+
+// ============================================================================
 // COLUMN TYPES
 // ============================================================================
 
@@ -55,8 +68,10 @@ export type TableColumn = {
     /**
      * Cell renderer - returns ReactNode.
      * The wrapper provides this function, typically returning <EditableCell viewModel={...} />
+     * @param row - The row data
+     * @param context - Optional render context (e.g., wrapText flag)
      */
-    cell: (row: TableRow) => ReactNode;
+    cell: (row: TableRow, context?: CellRenderContext) => ReactNode;
     /**
      * Sort key extractor. If provided, column is sortable.
      * Returns the value to sort by, or null for unsortable rows.

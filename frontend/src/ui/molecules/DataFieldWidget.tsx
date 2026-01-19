@@ -1,11 +1,27 @@
 import { clsx } from 'clsx';
+import { ExternalLink, Mail, Check, X } from 'lucide-react';
 
 import { UserChip } from '@autoart/ui';
 
 /**
  * Field display kinds supported by the widget
+ * Matches FieldType schema plus special UI types
  */
-export type DataFieldKind = 'text' | 'status' | 'user' | 'date' | 'percent' | 'tags' | 'description';
+export type DataFieldKind =
+    | 'text'
+    | 'number'
+    | 'email'
+    | 'url'
+    | 'textarea'
+    | 'select'
+    | 'date'
+    | 'checkbox'
+    | 'link'
+    | 'status'
+    | 'percent'
+    | 'user'
+    | 'tags'
+    | 'description';
 
 /**
  * Status display config - passed in, not computed here
@@ -24,14 +40,20 @@ export interface DataFieldWidgetProps {
     className?: string;
     /** Status config for status kind (required if kind='status') */
     statusConfig?: StatusDisplayConfig | null;
+    /**
+     * Enable text wrapping instead of truncation.
+     * When true, text wraps and expands cell height.
+     * Default: false (truncate with ellipsis)
+     */
+    wrapText?: boolean;
 }
 
 function formatText(value: unknown): string {
     if (value === undefined || value === null || value === '') return '';
     if (typeof value === 'string') return value;
-    if (typeof value === 'number') return String(value);
+    if (typeof value === 'number') return new Intl.NumberFormat('en-US').format(value);
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-    return '';
+    return String(value);
 }
 
 function StatusPill({ label, colorClass }: { label: string; colorClass: string }) {
@@ -73,9 +95,20 @@ function PercentBar({ percent }: { percent: number }) {
  * Receives all display data via props. Does not access domain or APIs.
  * For status fields, statusConfig must be provided by the parent.
  */
-export function DataFieldWidget({ kind, value, className, statusConfig }: DataFieldWidgetProps) {
+export function DataFieldWidget({ kind, value, className, statusConfig, wrapText = false }: DataFieldWidgetProps) {
+    // Null/Empty handling (except for certain types that handle empty)
+    if (value === undefined || value === null) {
+        if (kind === 'checkbox') {
+            // Treat null boolean as false or just render dash? Default to false behavior for checkbox usually better visually
+            // but let's stick to explicit false so we don't infer too much.
+            // Actually, a dash for null is safer for data integrity view.
+            return <div className={clsx('text-xs text-slate-400 text-center', className)}>-</div>;
+        }
+        return <div className={clsx('text-xs text-slate-400', className)} />;
+    }
+
     if (kind === 'status') {
-        const v = value as string | undefined;
+        const v = value as string;
         if (!v) return <div className={clsx('w-full h-7 rounded bg-slate-100', className)} />;
 
         if (statusConfig) {
@@ -86,7 +119,6 @@ export function DataFieldWidget({ kind, value, className, statusConfig }: DataFi
             );
         }
 
-        // Fallback when no config provided
         return (
             <div className={className}>
                 <FallbackStatusPill status={v} />
@@ -95,9 +127,9 @@ export function DataFieldWidget({ kind, value, className, statusConfig }: DataFi
     }
 
     if (kind === 'percent') {
-        const n = typeof value === 'number' ? value : null;
-        if (n == null || Number.isNaN(n)) {
-            return <div className={clsx('text-xs text-slate-400', className)} />;
+        const n = typeof value === 'number' ? value : Number(value);
+        if (Number.isNaN(n)) {
+            return <div className={clsx('text-xs text-slate-400', className)}>-</div>;
         }
         return (
             <div className={className}>
@@ -115,19 +147,87 @@ export function DataFieldWidget({ kind, value, className, statusConfig }: DataFi
     }
 
     if (kind === 'date') {
-        const t = formatText(value);
-        return <div className={clsx('text-xs text-slate-600 text-center', className)}>{t}</div>;
+        let dateStr = '';
+        if (typeof value === 'string') dateStr = new Date(value).toLocaleDateString();
+        else if (value instanceof Date) dateStr = value.toLocaleDateString();
+
+        if (!dateStr || dateStr === 'Invalid Date') return <div className={clsx('text-xs text-slate-400', className)}>-</div>;
+
+        return <div className={clsx('text-xs text-slate-600 text-center', className)}>{dateStr}</div>;
+    }
+
+    if (kind === 'url') {
+        const url = String(value);
+        if (!url) return null;
+        return (
+            <div className={clsx('flex items-center gap-1.5', className)}>
+                <ExternalLink size={12} className="text-blue-500 shrink-0" />
+                <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className={clsx(
+                        'text-xs text-blue-600 hover:underline',
+                        wrapText ? 'break-all' : 'truncate'
+                    )}
+                >
+                    {url}
+                </a>
+            </div>
+        );
+    }
+
+    if (kind === 'email') {
+        const email = String(value);
+        if (!email) return null;
+        return (
+            <div className={clsx('flex items-center gap-1.5', className)}>
+                <Mail size={12} className="text-slate-400 shrink-0" />
+                <a
+                    href={`mailto:${email}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className={clsx(
+                        'text-xs text-slate-700 hover:text-blue-600 hover:underline',
+                        wrapText ? 'break-all' : 'truncate'
+                    )}
+                >
+                    {email}
+                </a>
+            </div>
+        );
+    }
+
+    if (kind === 'checkbox') {
+        const isChecked = Boolean(value);
+        return (
+            <div className={clsx('flex justify-center', className)}>
+                {isChecked ? (
+                    <div className="w-5 h-5 bg-blue-100 rounded-md flex items-center justify-center text-blue-600">
+                        <Check size={14} strokeWidth={3} />
+                    </div>
+                ) : (
+                    <div className="w-5 h-5 bg-slate-100 rounded-md flex items-center justify-center text-slate-300">
+                        <X size={14} strokeWidth={3} />
+                    </div>
+                )}
+            </div>
+        );
     }
 
     if (kind === 'tags') {
         const tags = Array.isArray(value) ? value : [];
         if (tags.length === 0) return <div className={clsx('text-xs text-slate-400', className)} />;
         return (
-            <div className={clsx('flex flex-wrap gap-1', className)}>
+            <div className={clsx(
+                'flex gap-1',
+                wrapText ? 'flex-wrap' : 'flex-nowrap overflow-hidden',
+                className
+            )}>
                 {tags.map((tag, i) => (
                     <span
                         key={i}
-                        className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-medium"
+                        className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-medium border border-slate-200 shrink-0"
                     >
                         {String(tag)}
                     </span>
@@ -136,28 +236,52 @@ export function DataFieldWidget({ kind, value, className, statusConfig }: DataFi
         );
     }
 
-    if (kind === 'description') {
-        // Simplified description rendering - extract text from TipTap JSON or show string
+    if (kind === 'textarea' || kind === 'description') {
+        // Handle potentially rich text or long text
         let text = '';
         if (typeof value === 'string') {
             text = value;
         } else if (value && typeof value === 'object') {
-            // TipTap JSON document - extract text from content
-            const doc = value as { content?: Array<{ content?: Array<{ text?: string }> }> };
-            text = doc.content
-                ?.flatMap((node) => node.content?.map((c) => c.text || '') || [])
-                .join(' ')
-                .trim() || '';
+            // TipTap JSON extraction attempt
+            try {
+                const doc = value as { content?: Array<{ content?: Array<{ text?: string }> }> };
+                text = doc.content
+                    ?.flatMap((node) => node.content?.map((c) => c.text || '') || [])
+                    .join(' ')
+                    .trim() || '';
+            } catch {
+                text = JSON.stringify(value);
+            }
         }
-        if (!text) return <div className={clsx('text-xs text-slate-400 italic', className)} />;
+
+        if (!text) return <div className={clsx('text-xs text-slate-400', className)} />;
+
         return (
-            <div className={clsx('text-xs text-slate-600 line-clamp-2', className)}>
+            <div
+                className={clsx(
+                    'text-xs text-slate-600 leading-relaxed',
+                    wrapText ? 'whitespace-pre-wrap' : 'line-clamp-2',
+                    className
+                )}
+                title={!wrapText ? text : undefined}
+            >
                 {text}
             </div>
         );
     }
 
-    // text (default)
+    // text, number, select, link (fallback)
     const t = formatText(value);
-    return <div className={clsx('text-xs text-slate-700', className)}>{t}</div>;
+    return (
+        <div
+            className={clsx(
+                'text-xs text-slate-700',
+                wrapText ? 'whitespace-normal break-words' : 'truncate',
+                className
+            )}
+            title={!wrapText ? t : undefined}
+        >
+            {t}
+        </div>
+    );
 }

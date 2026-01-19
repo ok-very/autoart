@@ -124,6 +124,19 @@ export interface UniversalTableCoreProps {
     stickyFooter?: boolean;
     /** Compact row height */
     compact?: boolean;
+    /**
+     * Row height configuration.
+     * - number: Fixed height in pixels
+     * - 'auto': Height adjusts to content (enables text wrapping)
+     * Default: undefined (uses compact ? 32 : 44)
+     */
+    rowHeight?: number | 'auto';
+    /**
+     * Whether text should wrap in cells.
+     * When true, removes truncation and allows multi-line content.
+     * Default: false
+     */
+    wrapText?: boolean;
     /** Custom footer renderer */
     renderFooter?: () => React.ReactNode;
     /** Additional className */
@@ -153,6 +166,8 @@ export function UniversalTableCore({
     stickyHeader = true,
     stickyFooter = false,
     compact = false,
+    rowHeight: rowHeightProp,
+    wrapText = false,
     renderFooter,
     className,
     onColumnResize,
@@ -292,7 +307,14 @@ export function UniversalTableCore({
 
     // =========== MAIN RENDER ===========
 
-    const rowHeight = compact ? 'h-8' : 'h-11';
+    // Compute row height class and style based on rowHeightProp
+    const rowHeightClass = useMemo(() => {
+        if (rowHeightProp === 'auto') return 'min-h-[32px]';
+        if (typeof rowHeightProp === 'number') return undefined; // Use inline style instead
+        return compact ? 'h-8' : 'h-11';
+    }, [rowHeightProp, compact]);
+
+    const rowHeightStyle = typeof rowHeightProp === 'number' ? { height: `${rowHeightProp}px` } : undefined;
 
     return (
         <div className={clsx('flex flex-col h-full overflow-hidden', className)}>
@@ -374,11 +396,14 @@ export function UniversalTableCore({
                             <div
                                 key={decoratedRow.id}
                                 className={clsx(
-                                    'flex items-center border-b border-slate-100 cursor-pointer transition-colors',
+                                    'flex border-b border-slate-100 cursor-pointer transition-colors',
                                     'hover:bg-slate-50',
-                                    rowHeight,
+                                    // Vertical alignment: start for auto-height (wrapping), center for fixed
+                                    rowHeightProp === 'auto' ? 'items-start py-2' : 'items-center',
+                                    rowHeightClass,
                                     customClassName
                                 )}
+                                style={rowHeightStyle}
                                 onClick={() => onRowClick?.(decoratedRow.id)}
                                 onDoubleClick={() => onRowDoubleClick?.(decoratedRow.id)}
                             >
@@ -390,13 +415,15 @@ export function UniversalTableCore({
                                         <div
                                             key={column.id}
                                             className={clsx(
-                                                'px-3 overflow-hidden',
+                                                'px-3',
+                                                // Only apply overflow-hidden when NOT wrapping
+                                                !wrapText && 'overflow-hidden',
                                                 column.align === 'center' && 'text-center',
                                                 column.align === 'right' && 'text-right'
                                             )}
                                             style={{ width: widthStyle, flex: width === 'flex' ? 1 : undefined }}
                                         >
-                                            {column.cell(decoratedRow)}
+                                            {column.cell(decoratedRow, { wrapText })}
                                         </div>
                                     );
                                 })}

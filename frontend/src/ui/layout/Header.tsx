@@ -12,13 +12,12 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
 
-import type { RecordsViewMode, FieldsViewMode } from '@autoart/shared';
+import type { FieldsViewMode } from '@autoart/shared';
 
 import { useProjects } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import {
   useUIStore,
-  RECORDS_VIEW_MODE_LABELS,
   FIELDS_VIEW_MODE_LABELS,
 } from '../../stores/uiStore';
 import { useCollectionStore } from '../../stores';
@@ -32,7 +31,7 @@ export function Header() {
   const navigate = useNavigate();
   const { data: _projects } = useProjects();
   const { getNode: _getNode } = useHierarchyStore();
-  const { recordsViewMode, setRecordsViewMode, fieldsViewMode, setFieldsViewMode, openDrawer } = useUIStore();
+  const { fieldsViewMode, setFieldsViewMode, openDrawer } = useUIStore();
   const collectionMode = useCollectionModeOptional();
 
   const { openPanel } = useWorkspaceStore();
@@ -78,9 +77,6 @@ export function Header() {
     navigate('/');
     openPanel(panelId);
   }, [navigate, openPanel]);
-
-  // Records view mode data for toggle
-  const recordsViewModeData = Object.entries(RECORDS_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }));
 
   // Fields view mode data for toggle (Browse/Aggregate for collection mode)
   const fieldsViewModeData = Object.entries(FIELDS_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }));
@@ -225,16 +221,6 @@ export function Header() {
             onChange={handleFieldsViewModeChange}
             data={fieldsViewModeData}
           />
-
-          {/* Records View Toggle (List/Ingest) - only show when Records panel is active */}
-          {isRecordsActive && (
-            <SegmentedControl
-              size="xs"
-              value={recordsViewMode}
-              onChange={(value) => setRecordsViewMode(value as RecordsViewMode)}
-              data={recordsViewModeData}
-            />
-          )}
 
           {/* Settings */}
           <Link to="/settings">

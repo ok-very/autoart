@@ -27,6 +27,12 @@ export interface EditableCellProps {
     width?: number | string;
     /** Optional className */
     className?: string;
+    /**
+     * Enable text wrapping in display mode.
+     * When true, text wraps and cell height adjusts.
+     * Default: false
+     */
+    wrapText?: boolean;
 }
 
 /**
@@ -39,6 +45,7 @@ export function EditableCell({
     onSave,
     width,
     className,
+    wrapText = false,
 }: EditableCellProps) {
     const { fieldId, value, type, editable, options } = viewModel;
 
@@ -101,7 +108,9 @@ export function EditableCell({
         return (
             <div
                 className={clsx(
-                    'px-2 py-1 min-h-[32px] flex items-center cursor-pointer hover:bg-slate-50 transition-colors rounded',
+                    'px-2 py-1 min-h-[32px] flex cursor-pointer hover:bg-slate-50 transition-colors rounded',
+                    // Vertical alignment: start for wrapping content, center for truncated
+                    wrapText ? 'items-start' : 'items-center',
                     editable && 'hover:ring-1 hover:ring-slate-200',
                     className
                 )}
@@ -109,7 +118,7 @@ export function EditableCell({
                 onDoubleClick={handleDoubleClick}
                 title={editable ? 'Double-click to edit' : undefined}
             >
-                <DataFieldWidget kind={renderAs} value={value} />
+                <DataFieldWidget kind={renderAs} value={value} wrapText={wrapText} />
             </div>
         );
     }
