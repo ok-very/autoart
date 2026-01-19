@@ -12,20 +12,19 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
 
-import type { ProjectViewMode, RecordsViewMode, FieldsViewMode } from '@autoart/shared';
+import type { RecordsViewMode, FieldsViewMode } from '@autoart/shared';
 
 import { useProjects } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import {
   useUIStore,
-  PROJECT_VIEW_MODE_LABELS,
   RECORDS_VIEW_MODE_LABELS,
   FIELDS_VIEW_MODE_LABELS,
 } from '../../stores/uiStore';
+import { useCollectionStore } from '../../stores';
+import { useCollectionModeOptional } from '../../surfaces/export/CollectionModeProvider';
 import { useWorkspaceStore, useOpenPanelIds } from '../../stores/workspaceStore';
-import { Button } from '@autoart/ui';
-import { IconButton } from '@autoart/ui';
-import { Inline } from '@autoart/ui';
+import { Button, IconButton, Inline } from '@autoart/ui';
 import { Menu, SegmentedControl } from '@autoart/ui';
 
 
@@ -33,10 +32,8 @@ export function Header() {
   const navigate = useNavigate();
   const { data: _projects } = useProjects();
   const { getNode: _getNode } = useHierarchyStore();
-  const {
-    viewMode,
-    setViewMode,
-  } = useUIStore();
+  const { recordsViewMode, setRecordsViewMode, fieldsViewMode, setFieldsViewMode, openDrawer } = useUIStore();
+  const collectionMode = useCollectionModeOptional();
 
   const { openPanel } = useWorkspaceStore();
   const openPanelIds = useOpenPanelIds();
@@ -82,19 +79,31 @@ export function Header() {
     openPanel(panelId);
   }, [navigate, openPanel]);
 
-  const getViewModeData = () => {
-    if (isRecordsActive) {
-      return Object.entries(RECORDS_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }));
-    }
-    if (isFieldsActive) {
-      return Object.entries(FIELDS_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }));
-    }
-    return Object.entries(PROJECT_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }));
-  };
+  // Records view mode data for toggle
+  const recordsViewModeData = Object.entries(RECORDS_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }));
 
-  // Determine if view toggle should be shown (only for registry panels that use it)
-  // Browse/Aggregate controls for Projects view should be in the workspace surface, not global header
-  const showViewToggle = isRecordsActive || isFieldsActive;
+  // Fields view mode data for toggle (Browse/Aggregate for collection mode)
+  const fieldsViewModeData = Object.entries(FIELDS_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }));
+
+  // Handle fields view mode change with collection mode integration
+  const handleFieldsViewModeChange = useCallback((value: string) => {
+    const newMode = value as FieldsViewMode;
+    setFieldsViewMode(newMode);
+
+    // Toggle collection mode based on view mode
+    if (collectionMode) {
+      if (newMode === 'aggregate') {
+        const hasActiveCollection = useCollectionStore.getState().activeCollectionId;
+        if (hasActiveCollection) {
+          collectionMode.startCollecting();
+        } else {
+          openDrawer('start-collection', {});
+        }
+      } else if (newMode === 'browse') {
+        collectionMode.stopCollecting();
+      }
+    }
+  }, [setFieldsViewMode, collectionMode, openDrawer]);
 
   return (
     <header className="h-14 bg-white flex items-center justify-between px-4 shrink-0 shadow-sm z-50 relative border-b border-slate-200">
@@ -107,15 +116,14 @@ export function Header() {
 
           {/* Navigation Links */}
           <Inline gap="xs" className="ml-2">
-            <Link to="/">
-              <Button
-                variant={!isRegistryActive && !isComposerActive && !isWorkbenchActive ? 'light' : 'subtle'}
-                color="gray"
-                size="sm"
-              >
-                Projects
-              </Button>
-            </Link>
+            <Button
+              variant={!isRegistryActive && !isComposerActive && !isWorkbenchActive ? 'light' : 'subtle'}
+              color="gray"
+              size="sm"
+              onClick={() => navigate('/')}
+            >
+              Projects
+            </Button>
 
             {/* Registry Dropdown */}
             <Menu>
@@ -210,13 +218,21 @@ export function Header() {
 
         {/* Right side controls */}
         <Inline gap="sm" align="center">
-          {/* View Toggle */}
-          {showViewToggle && (
+          {/* Collection Mode Toggle (Browse/Aggregate) - always visible, triggers collection mode */}
+          <SegmentedControl
+            size="xs"
+            value={fieldsViewMode}
+            onChange={handleFieldsViewModeChange}
+            data={fieldsViewModeData}
+          />
+
+          {/* Records View Toggle (List/Ingest) - only show when Records panel is active */}
+          {isRecordsActive && (
             <SegmentedControl
               size="xs"
-              value={viewMode as string}
-              onChange={(value) => setViewMode(value as ProjectViewMode | RecordsViewMode | FieldsViewMode)}
-              data={getViewModeData()}
+              value={recordsViewMode}
+              onChange={(value) => setRecordsViewMode(value as RecordsViewMode)}
+              data={recordsViewModeData}
             />
           )}
 

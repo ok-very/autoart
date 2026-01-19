@@ -22,6 +22,7 @@ import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
 import type { HierarchyNode, DataRecord, RecordDefinition } from '../../types';
 import type { DataFieldKind } from '../../ui/molecules/DataFieldWidget';
+import { SegmentedControl } from '@autoart/ui';
 
 // ==================== TYPES ====================
 
@@ -254,27 +255,17 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                     <div className="text-sm font-semibold text-slate-800 truncate" title={project.title}>
                         {project.title}
                     </div>
-                    {/* Tab Switcher */}
-                    <div className="flex gap-1 mt-2">
-                        <button
-                            onClick={() => setActiveTab('workflow')}
-                            className={`px-3 py-1 text-xs font-medium rounded transition-colors ${activeTab === 'workflow'
-                                ? 'bg-slate-900 text-white'
-                                : 'text-slate-600 hover:bg-slate-100'
-                                }`}
-                        >
-                            Workflow
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('log')}
-                            className={`px-3 py-1 text-xs font-medium rounded transition-colors ${activeTab === 'log'
-                                ? 'bg-slate-900 text-white'
-                                : 'text-slate-600 hover:bg-slate-100'
-                                }`}
-                        >
-                            Log
-                        </button>
-                    </div>
+                    {/* View Switcher */}
+                    <SegmentedControl
+                        size="xs"
+                        value={activeTab}
+                        onChange={(value) => setActiveTab(value as 'workflow' | 'log')}
+                        data={[
+                            { value: 'workflow', label: 'Workflow' },
+                            { value: 'log', label: 'Log' },
+                        ]}
+                        className="mt-2"
+                    />
                 </div>
 
                 {activeTab === 'workflow' && (

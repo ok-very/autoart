@@ -113,7 +113,7 @@ export const PANEL_DEFINITIONS: Record<PanelId, PanelDefinition> = {
     // Core - always open
     'center-workspace': {
         id: 'center-workspace',
-        title: 'Workspace',
+        title: 'Projects',
         icon: Layout,
         permanent: true,
         defaultPlacement: { area: 'center', size: 70 },

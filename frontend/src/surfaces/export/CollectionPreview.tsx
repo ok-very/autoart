@@ -1,15 +1,15 @@
 /**
  * CollectionPreview
  * 
- * Preview panel showing collected selections in hierarchical, card, or raw views.
- * Displays selections grouped by source with relative paths.
+ * Center panel showing start/stop collecting controls and item display.
  */
 
-import { List, LayoutGrid, Code, X, ChevronRight, ChevronDown, FileText, Database, Hash, Calendar, User } from 'lucide-react';
+import { List, LayoutGrid, Code, ChevronRight, ChevronDown, Database, Play, Square } from 'lucide-react';
 import { useState, useMemo, useCallback } from 'react';
 import { SegmentedControl } from '@autoart/ui';
 
-import { useCollectionStore, type SelectionReference, type SelectionType } from '../../stores';
+import { useCollectionStore, type SelectionReference } from '../../stores';
+import { CollectionItemCard } from './CollectionItemCard';
 
 // ============================================================================
 // Types
@@ -24,33 +24,19 @@ interface GroupedSelection {
 }
 
 // ============================================================================
-// Icons by selection type
-// ============================================================================
-
-const TYPE_ICONS: Record<SelectionType, React.ElementType> = {
-    record: Database,
-    field: Hash,
-    node: FileText,
-    action: Calendar,
-    event: User,
-    artist: User,
-};
-
-const TYPE_COLORS: Record<SelectionType, string> = {
-    record: 'text-blue-500 bg-blue-50',
-    field: 'text-violet-500 bg-violet-50',
-    node: 'text-emerald-500 bg-emerald-50',
-    action: 'text-amber-500 bg-amber-50',
-    event: 'text-pink-500 bg-pink-50',
-    artist: 'text-indigo-500 bg-indigo-50',
-};
-
-// ============================================================================
 // Component
 // ============================================================================
 
 export function CollectionPreview() {
-    const { activeCollection, removeFromCollection } = useCollectionStore();
+    const activeCollection = useCollectionStore(s =>
+        s.activeCollectionId ? s.collections.get(s.activeCollectionId) ?? null : null
+    );
+    const {
+        removeFromCollection,
+        isCollecting,
+        startCollecting,
+        stopCollecting,
+    } = useCollectionStore();
     const [viewMode, setViewMode] = useState<ViewMode>('list');
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
@@ -102,57 +88,100 @@ export function CollectionPreview() {
         );
     }
 
-    if (activeCollection.selections.length === 0) {
-        return (
-            <div className="h-full flex items-center justify-center text-slate-400 text-sm">
-                No items in collection
-            </div>
-        );
-    }
-
+    // Render controls + content for active collection
     return (
         <div className="flex flex-col h-full">
-            {/* Header with view toggles on right */}
-            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white">
-                <span className="text-xs font-medium text-slate-500">
+            {/* Controls Header - Start/Stop Collecting */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 bg-white shadow-[0_2px_4px_-1px_rgba(0,0,0,0.06)]">
+                {/* Start/Stop Collecting Button */}
+                <button
+                    onClick={isCollecting ? stopCollecting : startCollecting}
+                    className={`
+                        flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                        ${isCollecting
+                            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                            : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                        }
+                    `}
+                >
+                    {isCollecting ? (
+                        <>
+                            <Square size={14} />
+                            Stop Collecting
+                        </>
+                    ) : (
+                        <>
+                            <Play size={14} />
+                            Start Collecting
+                        </>
+                    )}
+                </button>
+
+                {isCollecting && (
+                    <span className="text-[10px] text-amber-600">
+                        Click items in panels to add them
+                    </span>
+                )}
+
+                {/* Item count on right */}
+                <span className="ml-auto text-xs text-slate-400">
                     {activeCollection.selections.length} item{activeCollection.selections.length !== 1 ? 's' : ''}
                 </span>
-
-                <SegmentedControl
-                    size="xs"
-                    value={viewMode}
-                    onChange={(v) => setViewMode(v as ViewMode)}
-                    data={[
-                        { value: 'list', label: <List size={14} /> },
-                        { value: 'cards', label: <LayoutGrid size={14} /> },
-                        { value: 'raw', label: <Code size={14} /> },
-                    ]}
-                />
             </div>
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto">
-                {viewMode === 'list' && (
-                    <ListView
-                        groups={groupedSelections}
-                        expandedGroups={expandedGroups}
-                        onToggleGroup={toggleGroup}
-                        onRemove={handleRemove}
-                    />
-                )}
-                {viewMode === 'cards' && (
-                    <CardsView
-                        selections={activeCollection.selections}
-                        onRemove={handleRemove}
-                    />
-                )}
-                {viewMode === 'raw' && (
-                    <RawView selections={activeCollection.selections} />
-                )}
-            </div>
+            {/* Content Area */}
+            {activeCollection.selections.length === 0 ? (
+                <div className="flex-1 flex items-center justify-center text-slate-400 text-sm">
+                    No items in collection
+                </div>
+            ) : (
+                <>
+                    {/* View Mode Toggle Header */}
+                    <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100 bg-slate-50">
+                        <span className="text-xs font-medium text-slate-500">
+                            {activeCollection.selections.length} item{activeCollection.selections.length !== 1 ? 's' : ''}
+                        </span>
+
+                        <SegmentedControl
+                            size="xs"
+                            value={viewMode}
+                            onChange={(v) => setViewMode(v as ViewMode)}
+                            data={[
+                                { value: 'list', label: <List size={14} /> },
+                                { value: 'cards', label: <LayoutGrid size={14} /> },
+                                { value: 'raw', label: <Code size={14} /> },
+                            ]}
+                        />
+                    </div>
+
+                    {/* Items Content */}
+                    <div className="flex-1 overflow-y-auto">
+                        {viewMode === 'list' && (
+                            <ListView
+                                groups={groupedSelections}
+                                expandedGroups={expandedGroups}
+                                onToggleGroup={toggleGroup}
+                                onRemove={handleRemove}
+                            />
+                        )}
+                        {viewMode === 'cards' && (
+                            <CardsView
+                                selections={activeCollection.selections}
+                                onRemove={handleRemove}
+                            />
+                        )}
+                        {viewMode === 'raw' && (
+                            <RawView selections={activeCollection.selections} />
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     );
 }
+
+
+
 
 // ============================================================================
 // List View (Hierarchical)
@@ -197,13 +226,12 @@ function ListView({ groups, expandedGroups, onToggleGroup, onRemove }: ListViewP
 
                         {/* Items */}
                         {(isExpanded || !hasMultiple) && (
-                            <div className={hasMultiple ? 'ml-6 border-l border-slate-200 pl-2' : ''}>
+                            <div className={hasMultiple ? 'ml-6 border-l border-slate-200 pl-2 space-y-2' : 'space-y-2'}>
                                 {group.items.map(item => (
-                                    <SelectionItem
+                                    <CollectionItemCard
                                         key={item.id}
                                         item={item}
                                         onRemove={onRemove}
-                                        showSource={!hasMultiple}
                                     />
                                 ))}
                             </div>
@@ -215,70 +243,7 @@ function ListView({ groups, expandedGroups, onToggleGroup, onRemove }: ListViewP
     );
 }
 
-// ============================================================================
-// Selection Item (used in list view)
-// ============================================================================
 
-interface SelectionItemProps {
-    item: SelectionReference;
-    onRemove: (id: string) => void;
-    showSource?: boolean;
-}
-
-function SelectionItem({ item, onRemove, showSource = false }: SelectionItemProps) {
-    const Icon = TYPE_ICONS[item.type];
-    const colorClass = TYPE_COLORS[item.type];
-
-    // Parse display label for path
-    const parts = item.displayLabel.split(' → ');
-    const fieldLabel = parts[parts.length - 1] || item.displayLabel;
-
-    // Format value preview
-    const valuePreview = useMemo(() => {
-        if (item.value === undefined || item.value === null) return null;
-        if (typeof item.value === 'string') return item.value.slice(0, 50);
-        if (typeof item.value === 'number') return String(item.value);
-        if (typeof item.value === 'boolean') return item.value ? 'Yes' : 'No';
-        return JSON.stringify(item.value).slice(0, 50);
-    }, [item.value]);
-
-    return (
-        <div className="group flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-50">
-            <div className={`w-5 h-5 rounded flex items-center justify-center ${colorClass}`}>
-                <Icon size={12} />
-            </div>
-
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1">
-                    {showSource && parts.length > 1 && (
-                        <>
-                            <span className="text-[10px] text-slate-400 truncate">
-                                {parts.slice(0, -1).join(' → ')}
-                            </span>
-                            <ChevronRight size={10} className="text-slate-300 flex-shrink-0" />
-                        </>
-                    )}
-                    <span className="text-sm text-slate-700 font-medium truncate">
-                        {fieldLabel}
-                    </span>
-                </div>
-                {valuePreview && (
-                    <div className="text-[11px] text-slate-400 truncate">
-                        {valuePreview}
-                    </div>
-                )}
-            </div>
-
-            <button
-                onClick={() => onRemove(item.id)}
-                className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all"
-                title="Remove"
-            >
-                <X size={12} />
-            </button>
-        </div>
-    );
-}
 
 // ============================================================================
 // Cards View
@@ -291,44 +256,14 @@ interface CardsViewProps {
 
 function CardsView({ selections, onRemove }: CardsViewProps) {
     return (
-        <div className="p-3 grid grid-cols-2 gap-2">
-            {selections.map(item => {
-                const Icon = TYPE_ICONS[item.type];
-                const colorClass = TYPE_COLORS[item.type];
-
-                return (
-                    <div
-                        key={item.id}
-                        className="group relative p-3 bg-white border border-slate-200 rounded-lg hover:border-slate-300 hover:shadow-sm transition-all"
-                    >
-                        <button
-                            onClick={() => onRemove(item.id)}
-                            className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all"
-                        >
-                            <X size={12} />
-                        </button>
-
-                        <div className="flex items-start gap-2">
-                            <div className={`w-6 h-6 rounded flex items-center justify-center flex-shrink-0 ${colorClass}`}>
-                                <Icon size={14} />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <div className="text-xs font-medium text-slate-700 truncate">
-                                    {item.displayLabel}
-                                </div>
-                                {item.value !== undefined && (
-                                    <div className="text-[10px] text-slate-400 mt-0.5 truncate">
-                                        {typeof item.value === 'string'
-                                            ? item.value.slice(0, 30)
-                                            : JSON.stringify(item.value).slice(0, 30)
-                                        }
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                );
-            })}
+        <div className="p-3 grid grid-cols-2 gap-3">
+            {selections.map(item => (
+                <CollectionItemCard
+                    key={item.id}
+                    item={item}
+                    onRemove={onRemove}
+                />
+            ))}
         </div>
     );
 }

@@ -1,4 +1,4 @@
-import { Plus, ChevronDown, Wand2, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Plus, ChevronDown, Wand2, PanelLeftClose, PanelLeftOpen, Layers } from 'lucide-react';
 import { useEffect, useMemo, useCallback, useState } from 'react';
 import { ProjectSidebarPanel } from '../panels/ProjectSidebarPanel';
 import { ResizeHandle } from '../common/ResizeHandle';
@@ -23,7 +23,7 @@ import { useUIStore } from '../../stores/uiStore';
 import type { HierarchyNode, DataRecord, RecordDefinition } from '../../types';
 import { DataTableFlat } from '../../ui/composites/DataTableFlat';
 import { DataTableHierarchy, type HierarchyFieldDef } from '../../ui/composites/DataTableHierarchy';
-import { WorkflowSurfaceTable } from '../../ui/composites/WorkflowSurfaceTable';
+import { ActionRegistryTable } from '../../ui/composites/ActionRegistryTable';
 import { deriveTaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
 import { ComposerSurface } from '../composer';
 import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownSeparator } from '@autoart/ui';
@@ -639,38 +639,52 @@ export function ProjectWorkflowView() {
                             )}
                         </div>
 
-                        <div className="flex-1 overflow-auto custom-scroll p-4">
-                            <div className="min-w-[900px] space-y-4">
-                                {/* Task Table - Toggle between hierarchy-based and surface-based */}
-                                <div onFocus={() => setFocusedTableId('tasks')} onClick={() => setFocusedTableId('tasks')}>
-                                    {/* Toggle switch for development/testing */}
-                                    <div className="flex items-center justify-end gap-2 mb-2 text-xs">
-                                        <span className="text-slate-400">View Mode:</span>
+                        <div className="flex-1 overflow-hidden flex flex-col">
+                            {/* View Mode Toggle Bar */}
+                            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-slate-50/50 shrink-0">
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
                                         <button
                                             onClick={() => setUseWorkflowSurface(false)}
-                                            className={`px-2 py-1 rounded ${!useWorkflowSurface ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'
+                                            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${!useWorkflowSurface
+                                                ? 'bg-white shadow-sm text-slate-700'
+                                                : 'text-slate-500 hover:text-slate-700'
                                                 }`}
                                         >
+                                            <Layers size={14} />
                                             Hierarchy
                                         </button>
                                         <button
                                             onClick={() => setUseWorkflowSurface(true)}
-                                            className={`px-2 py-1 rounded ${useWorkflowSurface ? 'bg-violet-100 text-violet-700' : 'text-slate-500 hover:bg-slate-100'
+                                            className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${useWorkflowSurface
+                                                ? 'bg-white shadow-sm text-slate-700'
+                                                : 'text-slate-500 hover:text-slate-700'
                                                 }`}
                                         >
-                                            Surface
+                                            <Layers size={14} />
+                                            Registry
                                         </button>
                                     </div>
+                                </div>
+                            </div>
 
+                            {/* Main Table Area */}
+                            <div className="flex-1 overflow-auto p-4" onFocus={() => setFocusedTableId('tasks')} onClick={() => setFocusedTableId('tasks')}>
+                                <div className="h-full min-h-[400px]">
                                     {useWorkflowSurface ? (
-                                        <WorkflowSurfaceTable
+                                        <ActionRegistryTable
                                             nodes={surfaceNodes}
-                                            selectedActionId={null} // TODO: Track selected action
+                                            selectedActionId={selectedNodeId}
                                             onRowSelect={handleSurfaceRowSelect}
                                             onFieldChange={handleSurfaceFieldChange}
                                             onStatusChange={handleSurfaceStatusChange}
                                             onAddAction={activeSubprocessId ? () => setIsComposerOpen(true) : undefined}
+                                            onRowAction={(actionId, action) => {
+                                                if (action === 'view') handleSurfaceRowSelect(actionId);
+                                            }}
+                                            contextLabel={activeSubprocess?.title}
                                             emptyMessage="No actions yet. Use Composer to declare one."
+                                            className="h-full"
                                         />
                                     ) : (
                                         <DataTableHierarchy
@@ -705,32 +719,36 @@ export function ProjectWorkflowView() {
                                 </div>
 
                                 {/* Floating Record Tables - Independent tables for each record definition */}
-                                {recordsByDefinition.map(({ definition, records }) => (
-                                    <div key={definition.id} onFocus={() => setFocusedTableId(definition.id)} onClick={() => setFocusedTableId(definition.id)}>
-                                        <DataTableFlat
-                                            definition={definition}
-                                            records={records}
-                                            selectedRecordId={selectedRecordId}
-                                            onRowSelect={(id) => {
-                                                setFocusedTableId(definition.id);
-                                                useUIStore.getState().inspectRecord(id);
-                                                setInspectorMode('record');
-                                            }}
-                                            onCellChange={handleRecordCellChange}
-                                            onAddRecord={
-                                                activeSubprocessId
-                                                    ? () =>
-                                                        openDrawer('create-record', {
-                                                            definitionId: definition.id,
-                                                            classificationNodeId: activeSubprocessId,
-                                                        })
-                                                    : undefined
-                                            }
-                                            compact
-                                            emptyMessage={`No ${definition.name} records yet.`}
-                                        />
+                                {recordsByDefinition.length > 0 && (
+                                    <div className="mt-6 space-y-4">
+                                        {recordsByDefinition.map(({ definition, records }) => (
+                                            <div key={definition.id} onFocus={() => setFocusedTableId(definition.id)} onClick={() => setFocusedTableId(definition.id)}>
+                                                <DataTableFlat
+                                                    definition={definition}
+                                                    records={records}
+                                                    selectedRecordId={selectedRecordId}
+                                                    onRowSelect={(id) => {
+                                                        setFocusedTableId(definition.id);
+                                                        useUIStore.getState().inspectRecord(id);
+                                                        setInspectorMode('record');
+                                                    }}
+                                                    onCellChange={handleRecordCellChange}
+                                                    onAddRecord={
+                                                        activeSubprocessId
+                                                            ? () =>
+                                                                openDrawer('create-record', {
+                                                                    definitionId: definition.id,
+                                                                    classificationNodeId: activeSubprocessId,
+                                                                })
+                                                            : undefined
+                                                    }
+                                                    compact
+                                                    emptyMessage={`No ${definition.name} records yet.`}
+                                                />
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </div>
                     </>

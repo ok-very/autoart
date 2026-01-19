@@ -1,8 +1,9 @@
+import type { ProjectViewMode } from '@autoart/shared';
 import { Selection, InspectorMode, UIPanels, DrawerConfig } from '../types/ui';
 
 type CompositionState = {
     selection: Selection;
-    viewMode: string;
+    projectViewMode: ProjectViewMode;
     activeDrawer: DrawerConfig | null;
     inspectorCollapsed: boolean;
     sidebarCollapsed: boolean;
@@ -12,7 +13,7 @@ type CompositionState = {
 export function deriveUIPanels(state: CompositionState): UIPanels {
     const {
         selection,
-        viewMode,
+        projectViewMode,
         activeDrawer,
         inspectorCollapsed,
         sidebarCollapsed,
@@ -26,21 +27,18 @@ export function deriveUIPanels(state: CompositionState): UIPanels {
     }
     // Future: if (viewMode === 'zen') sidebar = null;
 
-    // 2. Workspace Logic
+    // 2. Workspace Logic - driven only by projectViewMode
     let workspace: UIPanels['workspace'] = 'grid'; // Fallback
-    switch (viewMode) {
+    switch (projectViewMode) {
         case 'log':
-            // Project Log: chronological event view (default)
             workspace = 'projectLog';
             sidebar = null;
             break;
         case 'columns':
             workspace = 'millerColumns';
-            sidebar = null; // Miller Columns has its own navigation
+            sidebar = null;
             break;
         case 'workflow':
-            // Portmanteau view: merges left navigation + main workflow task table.
-            // Keep inspector behavior unchanged.
             workspace = 'projectWorkflow';
             sidebar = null;
             break;
@@ -56,7 +54,7 @@ export function deriveUIPanels(state: CompositionState): UIPanels {
     // 3. Inspector Logic
     // Don't show inspector for Miller Columns or Calendar - they use their own navigation
     let inspector: InspectorMode = null;
-    const hideInspector = viewMode === 'columns' || viewMode === 'calendar';
+    const hideInspector = projectViewMode === 'columns' || projectViewMode === 'calendar';
 
     if (!inspectorCollapsed && selection && !hideInspector) {
         // If we have a selection, we show the inspector unless explicitly collapsed

@@ -12,7 +12,7 @@ import type { PanelId } from '../workspace/panelRegistry';
 import { isPermanentPanel } from '../workspace/panelRegistry';
 
 // Layout version - increment when layout schema changes to force reset
-export const LAYOUT_VERSION = 2;
+export const LAYOUT_VERSION = 3;
 
 // Serialized layout state from Dockview
 export interface SerializedDockviewState {

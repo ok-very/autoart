@@ -67,23 +67,33 @@ export function CollectionItemCard({ item, onRemove, isDragging = false }: Colle
             </div>
 
             {/* Content */}
+            {/* Content */}
             <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+                {/* Header: Label & ID */}
+                <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                         {typeLabel}
                     </span>
-                    {item.fieldKey && (
-                        <span className="text-xs text-slate-400">• {item.fieldKey}</span>
+                    {/* Show display label as subtext if value exists, otherwise it's the main text */}
+                    {!!item.value && (
+                        <>
+                            <span className="text-[10px] text-slate-300">•</span>
+                            <span className="text-[10px] text-slate-500 font-medium truncate max-w-[120px]">
+                                {item.displayLabel}
+                            </span>
+                        </>
                     )}
                 </div>
-                <div className="text-sm font-medium text-slate-900 truncate">
-                    {item.displayLabel}
+
+                {/* Primary Content: Value or Label */}
+                <div className="text-sm font-semibold text-slate-800 truncate" title={String(item.value || item.displayLabel)}>
+                    {item.value ? String(item.value) : item.displayLabel}
                 </div>
-                {item.value !== undefined && (
-                    <div className="text-xs text-slate-500 truncate">
-                        {typeof item.value === 'string' ? item.value : JSON.stringify(item.value)}
-                    </div>
-                )}
+
+                {/* Footer: ID/Key if needed */}
+                <div className="text-[10px] text-slate-400 truncate mt-0.5 font-mono">
+                    {item.fieldKey || item.sourceId}
+                </div>
             </div>
 
             {/* Remove button */}
@@ -95,6 +105,6 @@ export function CollectionItemCard({ item, onRemove, isDragging = false }: Colle
             >
                 <X size={14} weight="bold" />
             </button>
-        </div>
+        </div >
     );
 }
