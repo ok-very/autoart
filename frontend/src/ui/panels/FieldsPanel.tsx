@@ -10,8 +10,8 @@ import { useState, useEffect } from 'react';
 
 import type { FieldDescriptor } from '@autoart/shared';
 
-import { useUIStore, isFieldsViewMode } from '../../stores/uiStore';
-import { ResizeHandle } from '@autoart/ui';
+import { useUIStore, isFieldsViewMode, FIELDS_VIEW_MODE_LABELS, type FieldsViewMode } from '../../stores/uiStore';
+import { ResizeHandle, SegmentedControl } from '@autoart/ui';
 import { FieldsMillerColumnsView } from '../composites/FieldsMillerColumnsView';
 import { RegistryPageHeader, type RegistryTab } from '../registry';
 import { FieldDefinitionEditor } from '../semantic/FieldDefinitionEditor';
@@ -38,16 +38,25 @@ export function FieldsPanel() {
     return (
         <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
             {/* Page Header with tabs */}
-            <RegistryPageHeader
-                title="Fields"
-                icon={TableProperties}
-                showCreateButton={activeTab === 'definitions'}
-                onCreateClick={handleCreateField}
-                createLabel="Create Field"
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-                showTabSwitch={true}
-            />
+            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white">
+                <RegistryPageHeader
+                    title="Fields"
+                    icon={TableProperties}
+                    showCreateButton={activeTab === 'definitions'}
+                    onCreateClick={handleCreateField}
+                    createLabel="Create Field"
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    showTabSwitch={true}
+                />
+                {/* View Mode Switcher */}
+                <SegmentedControl
+                    size="xs"
+                    value={isFieldsViewMode(viewMode) ? viewMode : 'browse'}
+                    onChange={(value) => setViewMode(value as FieldsViewMode)}
+                    data={Object.entries(FIELDS_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }))}
+                />
+            </div>
 
             <div className="flex flex-1 overflow-hidden">
                 {activeTab === 'instances' ? (

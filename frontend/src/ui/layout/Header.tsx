@@ -23,6 +23,8 @@ import {
   FIELDS_VIEW_MODE_LABELS,
 } from '../../stores/uiStore';
 import { useWorkspaceStore, useOpenPanelIds } from '../../stores/workspaceStore';
+import { useCollectionStore } from '../../stores';
+import { useCollectionModeOptional } from '../../surfaces/export/CollectionModeProvider';
 import { Button } from '@autoart/ui';
 import { IconButton } from '@autoart/ui';
 import { Inline } from '@autoart/ui';
@@ -36,10 +38,12 @@ export function Header() {
   const {
     viewMode,
     setViewMode,
+    openDrawer,
   } = useUIStore();
 
   const { openPanel } = useWorkspaceStore();
   const openPanelIds = useOpenPanelIds();
+  const collectionMode = useCollectionModeOptional();
 
   // Active state derived from open panels - memoized to prevent re-computation
   const panelStates = useMemo(() => {
@@ -92,8 +96,8 @@ export function Header() {
     return Object.entries(PROJECT_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }));
   };
 
-  // Determine if view toggle should be shown (only for registry panels that use it)
-  // Browse/Aggregate controls for Projects view should be in the workspace surface, not global header
+  // Determine if view toggle should be shown (for registry panels)
+  // When Fields is active, Browse/Aggregate controls collection mode
   const showViewToggle = isRecordsActive || isFieldsActive;
 
   return (
@@ -215,7 +219,24 @@ export function Header() {
             <SegmentedControl
               size="xs"
               value={viewMode as string}
-              onChange={(value) => setViewMode(value as ProjectViewMode | RecordsViewMode | FieldsViewMode)}
+              onChange={(value) => {
+                setViewMode(value as ProjectViewMode | RecordsViewMode | FieldsViewMode);
+                // Toggle collection mode when switching between browse/aggregate in Fields panel
+                if (isFieldsActive && collectionMode) {
+                  if (value === 'aggregate') {
+                    // Check if there's an active collection
+                    const hasActiveCollection = useCollectionStore.getState().activeCollectionId;
+                    if (hasActiveCollection) {
+                      collectionMode.startCollecting();
+                    } else {
+                      // Show modal to start new collection
+                      openDrawer('start-collection', {});
+                    }
+                  } else if (value === 'browse') {
+                    collectionMode.stopCollecting();
+                  }
+                }
+              }}
               data={getViewModeData()}
             />
           )}
