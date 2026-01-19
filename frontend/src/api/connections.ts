@@ -173,6 +173,89 @@ export function useDisconnectGoogle() {
 }
 
 // ============================================================================
+// MICROSOFT OAUTH
+// ============================================================================
+
+interface MicrosoftAuthUrlResult {
+    url: string;
+    state: string;
+}
+
+/**
+ * Get Microsoft OAuth authorization URL
+ */
+export function useGetMicrosoftAuthUrl() {
+    return useMutation({
+        mutationFn: async (): Promise<MicrosoftAuthUrlResult> => {
+            return api.get<MicrosoftAuthUrlResult>('/auth/microsoft');
+        },
+    });
+}
+
+/**
+ * Initiate Microsoft OAuth flow (opens popup)
+ */
+export function useConnectMicrosoft() {
+    const queryClient = useQueryClient();
+    const getAuthUrl = useGetMicrosoftAuthUrl();
+
+    return useMutation({
+        mutationFn: async (): Promise<void> => {
+            // Get OAuth URL from backend
+            const { url } = await getAuthUrl.mutateAsync();
+
+            // Open popup for OAuth flow
+            const width = 500;
+            const height = 600;
+            const left = window.screenX + (window.innerWidth - width) / 2;
+            const top = window.screenY + (window.innerHeight - height) / 2;
+
+            const popup = window.open(
+                url,
+                'microsoft-oauth',
+                `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`
+            );
+
+            // Listen for the popup to close
+            return new Promise((resolve, reject) => {
+                const checkPopup = setInterval(() => {
+                    if (!popup || popup.closed) {
+                        clearInterval(checkPopup);
+                        queryClient.invalidateQueries({ queryKey: ['connections'] });
+                        resolve();
+                    }
+                }, 500);
+
+                // Timeout after 5 minutes
+                setTimeout(() => {
+                    clearInterval(checkPopup);
+                    if (popup && !popup.closed) {
+                        popup.close();
+                    }
+                    reject(new Error('OAuth timeout'));
+                }, 5 * 60 * 1000);
+            });
+        },
+    });
+}
+
+/**
+ * Disconnect Microsoft (revoke tokens)
+ */
+export function useDisconnectMicrosoft() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (): Promise<{ disconnected: boolean }> => {
+            return api.delete<{ disconnected: boolean }>('/connections/microsoft');
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['connections'] });
+        },
+    });
+}
+
+// ============================================================================
 // MONDAY BOARDS
 // ============================================================================
 
