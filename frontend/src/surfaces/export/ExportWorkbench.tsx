@@ -16,6 +16,7 @@ import { GenerationPanel } from './GenerationPanel';
 import { CollectionModeProvider } from './CollectionModeProvider';
 import { Card, Inline, Text, Button } from '@autoart/ui';
 import { useCollectionStore } from '../../stores';
+import { generateArtistPage, type ArtistData } from './generators/GeneratorService';
 
 // ============================================================================
 // TYPES
@@ -36,22 +37,39 @@ export function ExportWorkbench({ onExportComplete, onClose }: ExportWorkbenchPr
     const handleExport = async () => {
         if (!activeCollection || activeCollection.selections.length === 0) return;
 
-        // TODO: Implement actual export based on template preset
-        // For now, just log the collection
         console.log('Exporting collection:', activeCollection);
 
-        // Create export content based on selections
-        const lines = activeCollection.selections.map(sel =>
-            `${sel.type.toUpperCase()}: ${sel.displayLabel}${sel.value ? ` = ${JSON.stringify(sel.value)}` : ''}`
+        // Check if this is artist data from Collector
+        const artistSelection = activeCollection.selections.find(
+            sel => sel.type === 'artist'
         );
-        const content = lines.join('\n');
 
-        // Download as text file
-        const blob = new Blob([content], { type: 'text/plain' });
+        let content: string;
+        let filename: string;
+        let mimeType: string;
+
+        if (artistSelection?.value && typeof artistSelection.value === 'object') {
+            // Use GeneratorService for artist data
+            const artistData = artistSelection.value as ArtistData;
+            content = generateArtistPage(artistData, { format: 'html', includeImages: true });
+            filename = `${artistData.name.toLowerCase().replace(/\s+/g, '-')}-export.html`;
+            mimeType = 'text/html';
+        } else {
+            // Fallback to simple text export
+            const lines = activeCollection.selections.map(sel =>
+                `${sel.type.toUpperCase()}: ${sel.displayLabel}${sel.value ? ` = ${JSON.stringify(sel.value)}` : ''}`
+            );
+            content = lines.join('\n');
+            filename = `${activeCollection.name.toLowerCase().replace(/\s+/g, '-')}-export.txt`;
+            mimeType = 'text/plain';
+        }
+
+        // Download file
+        const blob = new Blob([content], { type: mimeType });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${activeCollection.name.toLowerCase().replace(/\s+/g, '-')}-export.txt`;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

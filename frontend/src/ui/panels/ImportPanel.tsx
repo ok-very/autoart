@@ -16,7 +16,7 @@ import { MondayImportWizardView } from '../../surfaces/import/wizard/MondayImpor
 import { ResizeHandle } from '@autoart/ui';
 
 // Source type lifted to panel level
-export type ImportSourceType = 'file' | 'monday' | 'api';
+export type ImportSourceType = 'file' | 'monday' | 'collector' | 'api';
 
 export function ImportPanel() {
     const {

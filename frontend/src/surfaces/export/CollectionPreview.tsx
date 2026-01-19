@@ -33,6 +33,7 @@ const TYPE_ICONS: Record<SelectionType, React.ElementType> = {
     node: FileText,
     action: Calendar,
     event: User,
+    artist: User,
 };
 
 const TYPE_COLORS: Record<SelectionType, string> = {
@@ -41,6 +42,7 @@ const TYPE_COLORS: Record<SelectionType, string> = {
     node: 'text-emerald-500 bg-emerald-50',
     action: 'text-amber-500 bg-amber-50',
     event: 'text-pink-500 bg-pink-50',
+    artist: 'text-indigo-500 bg-indigo-50',
 };
 
 // ============================================================================
