@@ -12,7 +12,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { AccountSection, IntegrationsSection } from './settings';
-import { useConnections, useConnectMonday, useDisconnectMonday, useGeneratePairingCode } from '../api/connections';
+import { useConnections, useConnectMonday, useDisconnectMonday, useGeneratePairingCode, useConnectGoogle, useDisconnectGoogle } from '../api/connections';
 import { useCurrentUser } from '../api/hooks';
 
 // ============================================================================
@@ -47,6 +47,10 @@ export function SettingsPage() {
     const disconnectMondayMutation = useDisconnectMonday();
     const generatePairingCodeMutation = useGeneratePairingCode();
 
+    // Google OAuth hooks
+    const connectGoogleMutation = useConnectGoogle();
+    const disconnectGoogleMutation = useDisconnectGoogle();
+
     // Monday connection handlers
     const handleMondayConnect = useCallback(async (apiKey: string) => {
         await connectMondayMutation.mutateAsync(apiKey);
@@ -56,20 +60,14 @@ export function SettingsPage() {
         await disconnectMondayMutation.mutateAsync();
     }, [disconnectMondayMutation]);
 
-    // Google connection handlers (placeholder - will connect to OAuth)
-    const [googleConnected, setGoogleConnected] = useState(false);
-    const handleGoogleConnect = useCallback(() => {
-        // TODO: Redirect to Google OAuth flow
-        console.log('Starting Google OAuth flow...');
-        // For now, simulate connection
-        setGoogleConnected(true);
-    }, []);
+    // Google connection handlers - now using real OAuth
+    const handleGoogleConnect = useCallback(async () => {
+        await connectGoogleMutation.mutateAsync();
+    }, [connectGoogleMutation]);
 
     const handleGoogleDisconnect = useCallback(async () => {
-        // TODO: Call backend to revoke and remove tokens
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setGoogleConnected(false);
-    }, []);
+        await disconnectGoogleMutation.mutateAsync();
+    }, [disconnectGoogleMutation]);
 
     // AutoHelper pairing handler
     const handleAutoHelperGenerateCode = useCallback(async () => {
@@ -141,7 +139,7 @@ export function SettingsPage() {
                         {activeTab === 'integrations' && (
                             <IntegrationsSection
                                 mondayStatus={{ connected: connections?.monday?.connected ?? false }}
-                                googleStatus={{ connected: googleConnected }}
+                                googleStatus={{ connected: connections?.google?.connected ?? false }}
                                 autohelperStatus={{ connected: (connections as any)?.autohelper?.connected ?? false }}
                                 onMondayConnect={handleMondayConnect}
                                 onMondayDisconnect={handleMondayDisconnect}

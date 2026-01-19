@@ -245,10 +245,26 @@ export async function connectionsRoutes(app: FastifyInstance) {
         }
     });
 
-    // TODO: Google OAuth routes (Phase 5a continuation)
-    // GET /connections/google/connect → Redirect to OAuth
-    // GET /connections/google/callback → Handle callback
-    // DELETE /connections/google → Revoke tokens
+    // ============================================================================
+    // GOOGLE OAUTH
+    // ============================================================================
+
+    /**
+     * Disconnect Google (revoke tokens)
+     * Requires authentication
+     */
+    app.delete('/connections/google', {
+        preHandler: app.authenticate
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
+        if (!userId) {
+            return reply.status(401).send({ error: 'Authentication required' });
+        }
+
+        await connectionsService.deleteCredential(userId, 'google' as any);
+
+        return reply.send({ disconnected: true });
+    });
 
     // ============================================================================
     // AUTOHELPER PAIRING ENDPOINTS

@@ -89,6 +89,90 @@ export function useValidateMondayKey() {
 }
 
 // ============================================================================
+// GOOGLE OAUTH
+// ============================================================================
+
+interface GoogleAuthUrlResult {
+    url: string;
+    state: string;
+}
+
+/**
+ * Get Google OAuth authorization URL
+ */
+export function useGetGoogleAuthUrl() {
+    return useMutation({
+        mutationFn: async (): Promise<GoogleAuthUrlResult> => {
+            return api.get<GoogleAuthUrlResult>('/auth/google');
+        },
+    });
+}
+
+/**
+ * Initiate Google OAuth flow (opens popup or redirects)
+ */
+export function useConnectGoogle() {
+    const queryClient = useQueryClient();
+    const getAuthUrl = useGetGoogleAuthUrl();
+
+    return useMutation({
+        mutationFn: async (): Promise<void> => {
+            // Get OAuth URL from backend
+            const { url } = await getAuthUrl.mutateAsync();
+
+            // Open popup for OAuth flow
+            const width = 500;
+            const height = 600;
+            const left = window.screenX + (window.innerWidth - width) / 2;
+            const top = window.screenY + (window.innerHeight - height) / 2;
+
+            const popup = window.open(
+                url,
+                'google-oauth',
+                `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`
+            );
+
+            // Listen for the popup to close or send message
+            return new Promise((resolve, reject) => {
+                const checkPopup = setInterval(() => {
+                    if (!popup || popup.closed) {
+                        clearInterval(checkPopup);
+                        // Refetch connections status
+                        queryClient.invalidateQueries({ queryKey: ['connections'] });
+                        resolve();
+                    }
+                }, 500);
+
+                // Timeout after 5 minutes
+                setTimeout(() => {
+                    clearInterval(checkPopup);
+                    if (popup && !popup.closed) {
+                        popup.close();
+                    }
+                    reject(new Error('OAuth timeout'));
+                }, 5 * 60 * 1000);
+            });
+        },
+    });
+}
+
+/**
+ * Disconnect Google (revoke tokens)
+ */
+export function useDisconnectGoogle() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (): Promise<{ disconnected: boolean }> => {
+            return api.delete<{ disconnected: boolean }>('/connections/google');
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['connections'] });
+        },
+    });
+}
+
+// ============================================================================
 // MONDAY BOARDS
 // ============================================================================
 
