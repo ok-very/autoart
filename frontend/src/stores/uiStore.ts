@@ -41,7 +41,15 @@ interface UIState {
   // Core State
   selection: Selection;
   activeProjectId: string | null;
+  
+  // Namespaced view modes (each panel has its own)
+  projectViewMode: ProjectViewMode;
+  fieldsViewMode: FieldsViewMode;
+  recordsViewMode: RecordsViewMode;
+  
+  // Legacy alias for backward compatibility
   viewMode: ViewMode;
+  
   inspectorTabMode: InspectorTabId;
 
   // Layout Geometry
@@ -85,6 +93,12 @@ interface UIState {
   setSidebarWidth: (width: number) => void;
   setInspectorWidth: (width: number) => void;
 
+  // Namespaced view mode setters
+  setProjectViewMode: (mode: ProjectViewMode) => void;
+  setFieldsViewMode: (mode: FieldsViewMode) => void;
+  setRecordsViewMode: (mode: RecordsViewMode) => void;
+  
+  // Legacy setter (deprecated - use namespaced setters)
   setViewMode: (mode: ViewMode) => void;
   setTheme: (theme: Theme) => void;
 
@@ -117,7 +131,15 @@ export const useUIStore = create<UIState>()(
     (set, get) => ({
       selection: null,
       activeProjectId: null,
-      viewMode: 'workflow',
+      
+      // Namespaced view modes
+      projectViewMode: 'workflow' as ProjectViewMode,
+      fieldsViewMode: 'browse' as FieldsViewMode,
+      recordsViewMode: 'list' as RecordsViewMode,
+      
+      // Legacy alias - derives from projectViewMode for backward compat
+      get viewMode(): ViewMode { return get().projectViewMode; },
+      
       inspectorTabMode: 'record',
       includeSystemEventsInLog: false,
 
@@ -154,17 +176,29 @@ export const useUIStore = create<UIState>()(
       setSidebarWidth: (width) => set({ sidebarWidth: Math.max(200, Math.min(400, width)) }),
       setInspectorWidth: (width) => set({ inspectorWidth: Math.max(300, Math.min(500, width)) }),
 
-      setViewMode: (mode) => set((state) => {
-        // Clear selection when switching to views that may not support current selection
+      // Namespaced view mode setters
+      setProjectViewMode: (mode) => set((state) => {
         const shouldClearSelection =
-          mode === 'calendar' || // Calendar shows tasks with due dates only
-          (mode === 'columns' && state.viewMode !== 'columns'); // Miller columns has its own navigation
-
+          mode === 'calendar' ||
+          (mode === 'columns' && state.projectViewMode !== 'columns');
         return {
-          viewMode: mode,
+          projectViewMode: mode,
           ...(shouldClearSelection ? { selection: null } : {}),
         };
       }),
+      setFieldsViewMode: (mode) => set({ fieldsViewMode: mode }),
+      setRecordsViewMode: (mode) => set({ recordsViewMode: mode }),
+
+      // Legacy setter - routes to appropriate namespaced setter
+      setViewMode: (mode) => {
+        if (isProjectViewMode(mode)) {
+          get().setProjectViewMode(mode);
+        } else if (isFieldsViewMode(mode)) {
+          get().setFieldsViewMode(mode);
+        } else if (isRecordsViewMode(mode)) {
+          get().setRecordsViewMode(mode);
+        }
+      },
       setTheme: (theme) => set({ theme }),
 
       openDrawer: (type, props = {}) => set({ activeDrawer: { type, props } }),
@@ -203,14 +237,17 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: 'ui-storage',
-      version: 2, // Increment when schema changes - bumped to reset cached viewMode
+      version: 3, // v3: Split viewMode into namespaced projectViewMode/fieldsViewMode/recordsViewMode
       partialize: (state) => ({
         sidebarWidth: state.sidebarWidth,
         inspectorWidth: state.inspectorWidth,
         sidebarCollapsed: state.sidebarCollapsed,
         inspectorCollapsed: state.inspectorCollapsed,
         drawerCollapsed: state.drawerCollapsed,
-        viewMode: state.viewMode,
+        // Namespaced view modes
+        projectViewMode: state.projectViewMode,
+        fieldsViewMode: state.fieldsViewMode,
+        recordsViewMode: state.recordsViewMode,
         theme: state.theme,
         drawerHeight: state.drawerHeight,
         inspectorTabMode: state.inspectorTabMode,
@@ -221,14 +258,31 @@ export const useUIStore = create<UIState>()(
         registryScope: state.registryScope,
         inspectorComposerExpanded: state.inspectorComposerExpanded,
       }),
-      // Migrate stale persisted values to valid InspectorTabId
+      // Migrate persisted state across versions
       migrate: (persistedState, version) => {
-
         const state = persistedState as any;
+        
         if (version < 1) {
           // Normalize any stale inspectorTabMode values
           state.inspectorTabMode = normalizeInspectorTabId(state.inspectorTabMode);
         }
+        
+        if (version < 3) {
+          // v3: Migrate from single viewMode to namespaced modes
+          const oldViewMode = state.viewMode;
+          if (oldViewMode) {
+            // Map old viewMode to appropriate namespaced mode
+            if (['log', 'workflow', 'columns', 'grid', 'calendar'].includes(oldViewMode)) {
+              state.projectViewMode = oldViewMode;
+            }
+          }
+          // Set defaults for new fields
+          state.projectViewMode = state.projectViewMode || 'workflow';
+          state.fieldsViewMode = state.fieldsViewMode || 'browse';
+          state.recordsViewMode = state.recordsViewMode || 'list';
+          delete state.viewMode;
+        }
+        
         return state;
       },
     }
@@ -240,7 +294,7 @@ export const useUIPanels = (): UIPanels => {
   const state = useUIStore();
   return deriveUIPanels({
     selection: state.selection,
-    viewMode: state.viewMode,
+    projectViewMode: state.projectViewMode,
     activeDrawer: state.activeDrawer,
     inspectorCollapsed: state.inspectorCollapsed,
     sidebarCollapsed: state.sidebarCollapsed,

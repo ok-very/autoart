@@ -13,9 +13,9 @@ import { useUIStore, useUIPanels, PROJECT_VIEW_MODE_LABELS } from '../../stores/
 import type { ProjectViewMode } from '@autoart/shared';
 
 import { CalendarView } from '../layout/CalendarView';
+import { DataGridView } from '../layout/DataGridView';
 import { MillerColumnsView } from '../layout/MillerColumnsView';
 import { ProjectWorkflowView } from '../layout/ProjectWorkflowView';
-import { Workspace } from '../layout/Workspace';
 import { ProjectLogSurface } from '../projectLog';
 
 // View mode options for the toggle
@@ -26,7 +26,7 @@ const VIEW_MODE_DATA = Object.entries(PROJECT_VIEW_MODE_LABELS).map(([value, lab
 
 export function CentralAreaAdapter() {
     const panels = useUIPanels();
-    const { viewMode, setViewMode } = useUIStore();
+    const { projectViewMode, setProjectViewMode } = useUIStore();
 
     // Render the active subview based on workspace mode
     const renderContent = () => {
@@ -41,7 +41,7 @@ export function CentralAreaAdapter() {
                 return <CalendarView />;
             case 'grid':
             case 'details':
-                return <Workspace />;
+                return <DataGridView />;
             default:
                 // Fallback to Project Workflow (main view)
                 return <ProjectWorkflowView />;
@@ -54,8 +54,8 @@ export function CentralAreaAdapter() {
             <div className="flex items-center justify-end px-4 py-2 border-b border-slate-200 bg-white">
                 <SegmentedControl
                     size="xs"
-                    value={viewMode}
-                    onChange={(v) => setViewMode(v as ProjectViewMode)}
+                    value={projectViewMode}
+                    onChange={(v) => setProjectViewMode(v as ProjectViewMode)}
                     data={VIEW_MODE_DATA}
                 />
             </div>
