@@ -238,7 +238,7 @@ export function MailPanel(_props: IDockviewPanelProps) {
         if (data && offset > 0 && offset >= data.total) {
             setOffset(Math.max(0, Math.floor((data.total - 1) / ITEMS_PER_PAGE) * ITEMS_PER_PAGE));
         }
-    }, [data, offset]);
+    }, [data?.total, offset]);
 
     const handleNextPage = () => {
         if (data && offset + ITEMS_PER_PAGE < data.total) {
