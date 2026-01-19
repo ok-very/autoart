@@ -9,14 +9,13 @@ import { Zap } from 'lucide-react';
 import { useCallback, useState } from 'react';
 // import { useNavigate } from 'react-router-dom'; // No navigation
 
-import { useUIStore } from '../../stores/uiStore';
 import { ResizeHandle } from '../common/ResizeHandle';
 import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../registry';
 import { ActionInstancesView } from '../tables/ActionInstancesView';
 
 export function ActionsPanel() {
     // const navigate = useNavigate();
-    const { openDrawer } = useUIStore(); // We might use drawer or just open Composer panel
+    // const { openDrawer } = useUIStore(); // We might use drawer or just open Composer panel
 
     // Note: ActionsPage handled inspector resizing globally via uiStore.
     // In Dockview, inspector resizing is handled by Dockview itself.

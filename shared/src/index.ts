@@ -72,3 +72,8 @@ export {
 } from './domain/index.js';
 
 export type { BuildFieldViewModelOptions } from './domain/index.js';
+
+// ==================== UTILITIES ====================
+// Shared utility functions
+export { generateId } from './utils.js';
+

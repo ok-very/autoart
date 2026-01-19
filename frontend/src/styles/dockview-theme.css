@@ -28,7 +28,8 @@
   /* slate-200 */
   --dv-tab-divider-color: #e2e8f0;
   /* slate-200 */
-  --dv-separator-border: #e2e8f0;
+  --dv-separator-border: #334155;
+  /* slate-700 - darker divider */
   --dv-drag-over-background-color: rgba(59, 130, 246, 0.1);
   /* blue-500/10 */
   --dv-drag-over-border-color: #3b82f6;

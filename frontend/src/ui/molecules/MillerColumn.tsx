@@ -17,6 +17,8 @@ import { Plus, ChevronRight, Search } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
 import type { HierarchyNode, NodeType } from '../../types';
+import { useCollectionModeOptional } from '../../surfaces/export/CollectionModeProvider';
+import { SelectableWrapper } from '../../surfaces/export/SelectableWrapper';
 
 // ==================== TYPES ====================
 
@@ -78,6 +80,8 @@ export interface MillerColumnGenericProps {
     enableSearch?: boolean;
     /** Custom container styles */
     className?: string;
+    /** Function to generate label for collection selection */
+    getCollectionLabel?: (item: MillerColumnItem) => string;
 
     // Hierarchy mode props should not be used
     type?: never;
@@ -201,7 +205,10 @@ function GenericColumn({
     className = '',
     searchQuery,
     setSearchQuery,
+    getCollectionLabel,
 }: GenericColumnInternalProps) {
+    const collectionMode = useCollectionModeOptional();
+    const isCollecting = collectionMode?.isCollecting ?? false;
     const filteredItems = useMemo(() => {
         if (!searchQuery.trim()) return items;
         const lowerQuery = searchQuery.toLowerCase();
@@ -252,16 +259,35 @@ function GenericColumn({
                         {searchQuery ? 'No matches found' : 'No items'}
                     </div>
                 ) : (
-                    filteredItems.map(item => (
-                        <GenericColumnItem
-                            key={item.id}
-                            item={item}
-                            isSelected={item.id === selectedId}
-                            isChecked={checkedIds?.has(item.id)}
-                            onSelect={() => onSelect(item)}
-                            onCheck={onCheck ? (checked) => onCheck(item, checked) : undefined}
-                        />
-                    ))
+                    filteredItems.map(item => {
+                        const itemContent = (
+                            <GenericColumnItem
+                                key={item.id}
+                                item={item}
+                                isSelected={item.id === selectedId}
+                                isChecked={checkedIds?.has(item.id)}
+                                onSelect={() => onSelect(item)}
+                                onCheck={onCheck ? (checked) => onCheck(item, checked) : undefined}
+                            />
+                        );
+
+                        // Wrap with SelectableWrapper when in collection mode
+                        if (isCollecting) {
+                            return (
+                                <SelectableWrapper
+                                    key={item.id}
+                                    type="field"
+                                    sourceId={item.id}
+                                    displayLabel={getCollectionLabel?.(item) ?? item.label}
+                                    value={item.data}
+                                >
+                                    {itemContent}
+                                </SelectableWrapper>
+                            );
+                        }
+
+                        return itemContent;
+                    })
                 )}
             </div>
         </div>

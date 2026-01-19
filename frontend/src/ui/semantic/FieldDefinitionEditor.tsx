@@ -29,7 +29,7 @@ export function FieldDefinitionEditor({ field }: FieldDefinitionEditorProps) {
     const [required, setRequired] = useState(false);
     const [options, setOptions] = useState<string[]>([]);
     const [statusConfig, setStatusConfig] = useState<StatusConfig>({});
-    
+
     // UI State
     const [optionInput, setOptionInput] = useState('');
 
@@ -64,7 +64,7 @@ export function FieldDefinitionEditor({ field }: FieldDefinitionEditorProps) {
                 if (f.type === 'status') {
                     updatedField.statusConfig = statusConfig;
                 }
-                
+
                 return updatedField;
             }
             return f;
@@ -84,7 +84,7 @@ export function FieldDefinitionEditor({ field }: FieldDefinitionEditorProps) {
         if (!options.includes(val)) {
             const newOptions = [...options, val];
             setOptions(newOptions);
-            
+
             // For status, also add default config
             if (field.type === 'status') {
                 setStatusConfig(prev => ({
@@ -108,9 +108,9 @@ export function FieldDefinitionEditor({ field }: FieldDefinitionEditorProps) {
     const updateStatusColor = (opt: string, color: string) => {
         setStatusConfig(prev => ({
             ...prev,
-            [opt]: { 
-                ...prev[opt], 
-                colorClass: `bg-${color}-100 text-${color}-800` 
+            [opt]: {
+                ...prev[opt],
+                colorClass: `bg-${color}-100 text-${color}-800`
             }
         }));
     };
@@ -140,10 +140,10 @@ export function FieldDefinitionEditor({ field }: FieldDefinitionEditorProps) {
                 <button
                     onClick={handleSave}
                     disabled={isSaving || isSystem}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                    className="flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
-                    <Save size={16} />
-                    {isSaving ? 'Saving...' : 'Save Changes'}
+                    <Save size={14} />
+                    {isSaving ? 'Saving...' : 'Save'}
                 </button>
             </div>
 
@@ -157,13 +157,13 @@ export function FieldDefinitionEditor({ field }: FieldDefinitionEditorProps) {
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6">
                 <div className="max-w-2xl space-y-8">
-                    
+
                     {/* Basic Properties */}
                     <div className="space-y-4">
                         <h3 className="text-sm font-semibold text-slate-900 pb-2 border-b border-slate-100">
                             General Properties
                         </h3>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">
                                 Display Label
@@ -221,7 +221,7 @@ export function FieldDefinitionEditor({ field }: FieldDefinitionEditorProps) {
                                 {options.map(opt => (
                                     <div key={opt} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
                                         <div className="flex-1 font-medium text-slate-700">{opt}</div>
-                                        
+
                                         {field.type === 'status' && (
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xs text-slate-400">Color:</span>

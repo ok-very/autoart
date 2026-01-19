@@ -67,7 +67,7 @@ export function ProjectSidebarPanel() {
     const createConfig = getCreateNodeConfig();
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
+        <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative" style={{ position: 'relative' }}>
             {/* Project Selector */}
             <div className="p-3 border-b border-slate-200 bg-white">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">

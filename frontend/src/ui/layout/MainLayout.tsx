@@ -14,7 +14,7 @@ import { Header } from './Header';
 // import { ResizeHandle } from '../common/ResizeHandle';
 // import { HierarchySidebar } from '../hierarchy/HierarchySidebar';
 import { DockviewWorkspace } from '../workspace/DockviewWorkspace';
-import { ModalRegistry } from '../registry/ModalRegistry';
+import { OverlayRegistry } from '../registry/OverlayRegistry';
 
 export function MainLayout() {
   return (
@@ -34,8 +34,8 @@ export function MainLayout() {
         {/* Unified Dockview Workspace */}
         <DockviewWorkspace />
 
-        {/* Global Modals */}
-        <ModalRegistry />
+        {/* Global Overlays */}
+        <OverlayRegistry />
       </div>
     </div>
   );

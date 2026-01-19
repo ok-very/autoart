@@ -10,6 +10,7 @@ import {
   TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useMemo, useCallback } from 'react';
 
 import type { ProjectViewMode, RecordsViewMode, FieldsViewMode } from '@autoart/shared';
 
@@ -40,23 +41,46 @@ export function Header() {
   const { openPanel } = useWorkspaceStore();
   const openPanelIds = useOpenPanelIds();
 
-  // Active state derived from open panels
-  const isRecordsActive = openPanelIds.includes('records-list');
-  const isFieldsActive = openPanelIds.includes('fields-list');
-  const isActionsActive = openPanelIds.includes('actions-list');
-  const isEventsActive = openPanelIds.includes('events-list');
-  const isImportActive = openPanelIds.includes('import-workbench');
-  const isExportActive = openPanelIds.includes('export-workbench');
-  const isComposerActive = openPanelIds.includes('composer-workbench');
+  // Active state derived from open panels - memoized to prevent re-computation
+  const panelStates = useMemo(() => {
+    const isRecordsActive = openPanelIds.includes('records-list');
+    const isFieldsActive = openPanelIds.includes('fields-list');
+    const isActionsActive = openPanelIds.includes('actions-list');
+    const isEventsActive = openPanelIds.includes('events-list');
+    const isImportActive = openPanelIds.includes('import-workbench');
+    const isExportActive = openPanelIds.includes('export-workbench');
+    const isComposerActive = openPanelIds.includes('composer-workbench');
 
-  const isRegistryActive = isRecordsActive || isFieldsActive || isActionsActive || isEventsActive;
-  const isWorkbenchActive = isImportActive || isExportActive;
+    return {
+      isRecordsActive,
+      isFieldsActive,
+      isActionsActive,
+      isEventsActive,
+      isImportActive,
+      isExportActive,
+      isComposerActive,
+      isRegistryActive: isRecordsActive || isFieldsActive || isActionsActive || isEventsActive,
+      isWorkbenchActive: isImportActive || isExportActive,
+    };
+  }, [openPanelIds]);
 
-  // Helper to open panel and ensure we stay on main layout
-  const handleOpenPanel = (panelId: any) => {
+  const {
+    isRecordsActive,
+    isFieldsActive,
+    isActionsActive,
+    isEventsActive,
+    isImportActive,
+    isExportActive,
+    isComposerActive,
+    isRegistryActive,
+    isWorkbenchActive,
+  } = panelStates;
+
+  // Helper to open panel and ensure we stay on main layout - stabilized with useCallback
+  const handleOpenPanel = useCallback((panelId: any) => {
     navigate('/');
     openPanel(panelId);
-  };
+  }, [navigate, openPanel]);
 
   const getViewModeData = () => {
     if (isRecordsActive) {
@@ -68,8 +92,9 @@ export function Header() {
     return Object.entries(PROJECT_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }));
   };
 
-  // Determine if view toggle should be shown
-  const showViewToggle = (!isRegistryActive && !isComposerActive && !isWorkbenchActive) || isRecordsActive || isFieldsActive;
+  // Determine if view toggle should be shown (only for registry panels that use it)
+  // Browse/Aggregate controls for Projects view should be in the workspace surface, not global header
+  const showViewToggle = isRecordsActive || isFieldsActive;
 
   return (
     <header className="h-14 bg-white flex items-center justify-between px-4 shrink-0 shadow-sm z-50 relative border-b border-slate-200">

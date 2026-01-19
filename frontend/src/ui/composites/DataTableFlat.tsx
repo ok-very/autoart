@@ -33,6 +33,8 @@ import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFiel
 import { EditableCell } from '../../ui/molecules/EditableCell';
 import { StatusColumnSummary } from '../../ui/molecules/StatusColumnSummary';
 import { UniversalTableCore, makeFlatRowModel, type TableColumn as CoreTableColumn, type TableRow, type TableFeature } from '../table-core';
+import { useCollectionModeOptional } from '../../surfaces/export/CollectionModeProvider';
+import { SelectableWrapper } from '../../surfaces/export/SelectableWrapper';
 
 // ==================== TYPES ====================
 
@@ -186,6 +188,10 @@ export function DataTableFlat({
     renderFooter,
     className,
 }: DataTableFlatProps) {
+    // Collection mode
+    const collectionMode = useCollectionModeOptional();
+    const isCollecting = collectionMode?.isCollecting ?? false;
+
     // Internal state
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [internalVisibleKeys, setInternalVisibleKeys] = useState<Set<string>>(new Set());
@@ -415,24 +421,24 @@ export function DataTableFlat({
                     const record = row.data as DataRecord;
                     const viewModel = buildCellViewModel(record, col);
 
+                    let cellContent: React.ReactNode;
+
                     // Custom renderer
                     if (col.renderCell) {
-                        return col.renderCell(record, viewModel);
+                        cellContent = col.renderCell(record, viewModel);
                     }
-
                     // Updated at special handling
-                    if (col.key === 'updated_at') {
+                    else if (col.key === 'updated_at') {
                         const date = record.updated_at ? new Date(record.updated_at) : null;
-                        return (
+                        cellContent = (
                             <div className="text-xs text-slate-500">
                                 {date ? date.toLocaleDateString() : '-'}
                             </div>
                         );
                     }
-
-                    // Editable cell
-                    if (col.editable && editable) {
-                        return (
+                    // Editable cell (but not during collection mode)
+                    else if (col.editable && editable && !isCollecting) {
+                        cellContent = (
                             <EditableCell
                                 viewModel={viewModel}
                                 onSave={(fieldId, value) => handleCellSave(record.id, fieldId, value)}
@@ -440,16 +446,34 @@ export function DataTableFlat({
                             />
                         );
                     }
-
                     // Read-only display
-                    const renderAs = (col.field?.type || 'text') as DataFieldKind;
-                    return <DataFieldWidget kind={renderAs} value={viewModel.value} />;
+                    else {
+                        const renderAs = (col.field?.type || 'text') as DataFieldKind;
+                        cellContent = <DataFieldWidget kind={renderAs} value={viewModel.value} />;
+                    }
+
+                    // Wrap with SelectableWrapper when in collection mode
+                    if (isCollecting) {
+                        return (
+                            <SelectableWrapper
+                                type="field"
+                                sourceId={record.id}
+                                fieldKey={col.key}
+                                displayLabel={`${record.unique_name} → ${col.label}`}
+                                value={viewModel.value}
+                            >
+                                {cellContent}
+                            </SelectableWrapper>
+                        );
+                    }
+
+                    return cellContent;
                 },
             });
         }
 
         return cols;
-    }, [displayColumns, multiSelect, selectedIds, buildCellViewModel, editable, handleCellSave, handleSelectOne, handleSelectAll, paginatedRecords]);
+    }, [displayColumns, multiSelect, selectedIds, buildCellViewModel, editable, isCollecting, handleCellSave, handleSelectOne, handleSelectAll, paginatedRecords]);
 
     // Row model from paginated records
     const rowModel = useMemo(() => {
