@@ -1,8 +1,5 @@
 import { Octokit } from '@octokit/rest';
-import * as dotenv from 'dotenv';
-
-// Load .env file
-dotenv.config();
+import { RequestError } from '@octokit/request-error';
 
 export interface IssueOptions {
     description?: string;
@@ -18,12 +15,21 @@ export interface HandoffData {
     blockers?: string[];
 }
 
+export interface AgentMemoryOptions {
+    owner?: string;
+    repo?: string;
+    debug?: boolean;
+    logger?: Pick<Console, 'log' | 'error'>;
+}
+
 export class AgentMemory {
     private octokit: Octokit;
     private owner: string;
     private repo: string;
+    private debug: boolean;
+    private logger: Pick<Console, 'log' | 'error'>;
 
-    constructor(owner?: string, repo?: string) {
+    constructor(options: AgentMemoryOptions = {}) {
         if (!process.env.GITHUB_TOKEN) {
             throw new Error('GITHUB_TOKEN not found in environment');
         }
@@ -32,9 +38,23 @@ export class AgentMemory {
             auth: process.env.GITHUB_TOKEN,
         });
 
-        // Use env vars with fallbacks
-        this.owner = owner || process.env.GITHUB_OWNER || 'ok-very';
-        this.repo = repo || process.env.GITHUB_MEMORY_REPO || 'agent-memory';
+        // Use options with env fallbacks
+        this.owner = options.owner || process.env.GITHUB_OWNER || 'ok-very';
+        this.repo = options.repo || process.env.GITHUB_MEMORY_REPO || 'agent-memory';
+        this.debug = options.debug ?? false;
+        this.logger = options.logger ?? console;
+    }
+
+    private log(message: string) {
+        if (this.debug) {
+            this.logger.log(message);
+        }
+    }
+
+    private logError(message: string, error?: unknown) {
+        if (this.debug) {
+            this.logger.error(message, error);
+        }
     }
 
     /**
@@ -74,7 +94,7 @@ export class AgentMemory {
             { name: 'workflow', color: '0EA5E9', description: 'Workflow patterns' },
         ];
 
-        console.log('Ensuring labels exist...');
+        this.log('Ensuring labels exist...');
 
         for (const label of requiredLabels) {
             try {
@@ -85,18 +105,18 @@ export class AgentMemory {
                     color: label.color,
                     description: label.description,
                 });
-                console.log(`  ✓ Created label: ${label.name}`);
+                this.log(`  ✓ Created label: ${label.name}`);
             } catch (error: unknown) {
-                // Label already exists - that's fine
-                if ((error as { status?: number }).status === 422) {
-                    console.log(`  · Label exists: ${label.name}`);
+                // Label already exists (422) - that's fine
+                if (error instanceof RequestError && error.status === 422) {
+                    this.log(`  · Label exists: ${label.name}`);
                 } else {
                     throw error;
                 }
             }
         }
 
-        console.log('Labels ready!');
+        this.log('Labels ready!');
     }
 
     // ==================== CONTEXT NOTES ====================
@@ -136,7 +156,7 @@ export class AgentMemory {
             const match = issue.body?.match(/## Value\n([\s\S]*?)(?=\n\n## Key|$)/);
             return match ? match[1].trim() : issue.body;
         } catch (error) {
-            console.error(`Failed to get context for key '${key}':`, error);
+            this.logError(`Failed to get context for key '${key}':`, error);
             throw error;
         }
     }
@@ -153,7 +173,7 @@ export class AgentMemory {
 
             return data.items;
         } catch (error) {
-            console.error('Failed to search context:', error);
+            this.logError('Failed to search context:', error);
             throw error;
         }
     }
@@ -163,18 +183,18 @@ export class AgentMemory {
     /**
      * Create a session handoff summary
      */
-    async createHandoff(data: HandoffData) {
+    async createHandoff(handoffData: HandoffData) {
         const timestamp = new Date().toISOString();
         const title = `Handoff: ${timestamp.split('T')[0]}`;
 
-        let body = `## Summary\n${data.summary}\n`;
+        let body = `## Summary\n${handoffData.summary}\n`;
 
-        if (data.incomplete && data.incomplete.length > 0) {
-            body += `\n## Incomplete\n${data.incomplete.map(i => `- [ ] ${i}`).join('\n')}\n`;
+        if (handoffData.incomplete && handoffData.incomplete.length > 0) {
+            body += `\n## Incomplete\n${handoffData.incomplete.map(i => `- [ ] ${i}`).join('\n')}\n`;
         }
 
-        if (data.blockers && data.blockers.length > 0) {
-            body += `\n## Blockers\n${data.blockers.map(b => `- ⚠️ ${b}`).join('\n')}\n`;
+        if (handoffData.blockers && handoffData.blockers.length > 0) {
+            body += `\n## Blockers\n${handoffData.blockers.map(b => `- ⚠️ ${b}`).join('\n')}\n`;
         }
 
         body += `\n---\n*Created: ${timestamp}*`;
@@ -203,7 +223,7 @@ export class AgentMemory {
 
             return data[0] || null;
         } catch (error) {
-            console.error('Failed to get latest handoff:', error);
+            this.logError('Failed to get latest handoff:', error);
             throw error;
         }
     }
@@ -244,7 +264,7 @@ export class AgentMemory {
 
             return data;
         } catch (error) {
-            console.error('Failed to get learnings:', error);
+            this.logError('Failed to get learnings:', error);
             throw error;
         }
     }
@@ -273,7 +293,7 @@ export class AgentMemory {
 
             return data;
         } catch (error) {
-            console.error('Failed to fetch ready work:', error);
+            this.logError('Failed to fetch ready work:', error);
             throw error;
         }
     }
@@ -290,8 +310,8 @@ export class AgentMemory {
             body += options.blockedBy.map(num => `- [ ] #${num}`).join('\n');
         }
 
-        // Build labels array
-        const labels: string[] = options.labels || [];
+        // Build labels array (clone to avoid mutating caller's array)
+        const labels: string[] = [...(options.labels ?? [])];
 
         // Add priority label
         if (options.priority !== undefined) {
@@ -305,7 +325,7 @@ export class AgentMemory {
         }
 
         // Add ready/blocked label only for work items (not special types)
-        if (!['context', 'handoff', 'learning'].includes(options.type || '')) {
+        if (!specialTypes.includes(options.type || '')) {
             if (!options.blockedBy || options.blockedBy.length === 0) {
                 labels.push('ready');
             } else {
@@ -322,10 +342,10 @@ export class AgentMemory {
                 labels,
             });
 
-            console.log(`✓ Created issue #${data.number}: ${title}`);
+            this.log(`✓ Created issue #${data.number}: ${title}`);
             return data;
         } catch (error) {
-            console.error('Failed to create issue:', error);
+            this.logError('Failed to create issue:', error);
             throw error;
         }
     }
@@ -350,10 +370,10 @@ export class AgentMemory {
                 labels: updates.labels,
             });
 
-            console.log(`✓ Updated issue #${issueNumber}`);
+            this.log(`✓ Updated issue #${issueNumber}`);
             return data;
         } catch (error) {
-            console.error(`Failed to update issue #${issueNumber}:`, error);
+            this.logError(`Failed to update issue #${issueNumber}:`, error);
             throw error;
         }
     }
@@ -374,9 +394,9 @@ export class AgentMemory {
             // Close the issue
             await this.updateIssue(issueNumber, { state: 'closed' });
 
-            console.log(`✓ Closed issue #${issueNumber}: ${reason}`);
+            this.log(`✓ Closed issue #${issueNumber}: ${reason}`);
         } catch (error) {
-            console.error(`Failed to close issue #${issueNumber}:`, error);
+            this.logError(`Failed to close issue #${issueNumber}:`, error);
             throw error;
         }
     }
@@ -395,7 +415,7 @@ export class AgentMemory {
 
             return data;
         } catch (error) {
-            console.error('Failed to list issues:', error);
+            this.logError('Failed to list issues:', error);
             throw error;
         }
     }

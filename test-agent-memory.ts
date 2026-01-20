@@ -1,8 +1,12 @@
 import { AgentMemory } from './lib/agent-memory';
+import * as dotenv from 'dotenv';
+
+// Load .env at entrypoint
+dotenv.config();
 
 async function test() {
     // Uses GITHUB_OWNER and GITHUB_MEMORY_REPO from .env
-    const memory = new AgentMemory();
+    const memory = new AgentMemory({ debug: true });
 
     console.log('Testing agent memory system...\n');
 
