@@ -56,7 +56,10 @@ export {
   useLogin,
   useRegister,
   useLogout,
+  useLogoutEverywhere,
   useCurrentUser,
+  useUpdateProfile,
+  useSessions,
 } from './auth';
 
 // Hierarchy (Also exported via ./entities)

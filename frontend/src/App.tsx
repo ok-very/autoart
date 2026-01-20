@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useCurrentUser } from './api/hooks';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { useAuthStore } from './stores/authStore';
 import { useUIStore } from './stores/uiStore';
 import { MainLayout } from './ui/layout/MainLayout';
@@ -75,6 +76,9 @@ function App() {
         {/* Redirect auth routes to home when logged in */}
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/register" element={<Navigate to="/" replace />} />
+
+        {/* Settings page (separate from MainLayout) */}
+        <Route path="/settings" element={<SettingsPage />} />
 
         {/* All authenticated routes use MainLayout with DockviewWorkspace */}
         {/* Navigation is handled by panels within DockviewWorkspace, not separate page routes */}

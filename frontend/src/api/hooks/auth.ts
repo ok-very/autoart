@@ -69,3 +69,45 @@ export function useSearchUsers(query: string, enabled: boolean = true) {
   });
 }
 
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { name?: string }) =>
+      api.patch<{ user: User }>('/auth/me', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
+}
+
+interface Session {
+  id: string;
+  created_at: string;
+  expires_at: string;
+}
+
+export function useSessions() {
+  return useQuery({
+    queryKey: ['user', 'sessions'],
+    queryFn: () => api.get<{ sessions: Session[] }>('/auth/me/sessions').then(r => r.sessions),
+    staleTime: 60 * 1000, // 1 minute
+  });
+}
+
+export function useLogoutEverywhere() {
+  const queryClient = useQueryClient();
+  const logout = useAuthStore((s) => s.logout);
+
+  return useMutation({
+    mutationFn: () => api.delete('/auth/me/sessions'),
+    onSuccess: () => {
+      // Clear API tokens
+      api.setToken(null);
+      api.setRefreshToken(null);
+      // Clear auth store state (triggers redirect via isAuthenticated)
+      logout();
+      // Clear all cached queries
+      queryClient.clear();
+    },
+  });
+}

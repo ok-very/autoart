@@ -1,4 +1,5 @@
 ---
+trigger: always_on
 description: Frontend component naming and placement conventions
 ---
 
@@ -10,7 +11,7 @@ description: Frontend component naming and placement conventions
 frontend/src/
 ├── components/       # Reusable, feature-specific components
 │   ├── inspector/    # Inspector panel subviews (ActionDetailsPanel, etc.)
-│   ├── drawer/       # Bottom drawer views and registry
+│   ├── drawer/       # Bottom drawer views and registry (deprecated, now uses transient modals - "OverlayRegistry"
 │   ├── layout/       # Page structure (Header, Footer, etc.)
 │   ├── common/       # Truly generic widgets (ResizeHandle, etc.)
 │   └── [feature]/    # Feature-specific (registry/, records/, etc.)
@@ -93,4 +94,3 @@ When replacing a component:
 ### Naming
 - All sidebars end with `Sidebar` suffix
 - Name after domain/purpose, not appearance
-

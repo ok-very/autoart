@@ -46,6 +46,17 @@ $frontendJob = Start-Job -Name "AutoArt-Frontend" -ScriptBlock {
     npm run dev 2>&1
 } -ArgumentList $ProjectDir
 
+Start-Sleep -Seconds 2
+
+Write-Host "[*] Starting AutoHelper service..." -ForegroundColor Green
+$autohelperJob = Start-Job -Name "AutoArt-AutoHelper" -ScriptBlock {
+    param($dir)
+    Set-Location "$dir\apps\autohelper"
+    # Ensure we are using the python environment if needed, or just run the uvicorn command directly
+    # Ideally this uses the npm script which proxies to uvicorn
+    npm run dev 2>&1
+} -ArgumentList $ProjectDir
+
 Start-Sleep -Seconds 3
 
 Write-Host ""
@@ -75,6 +86,10 @@ try {
         if ($frontendOutput) {
             $frontendOutput | ForEach-Object { Write-Host "[WEB] $_" -ForegroundColor Magenta }
         }
+        $autohelperOutput = Receive-Job $autohelperJob -ErrorAction SilentlyContinue
+        if ($autohelperOutput) {
+            $autohelperOutput | ForEach-Object { Write-Host "[HELPER] $_" -ForegroundColor Cyan }
+        }
 
         if ($backendJob.State -eq "Failed") {
             Write-Host "[X] Backend crashed!" -ForegroundColor Red
@@ -86,6 +101,11 @@ try {
             Receive-Job $frontendJob
             break
         }
+        if ($autohelperJob.State -eq "Failed") {
+            Write-Host "[X] AutoHelper crashed!" -ForegroundColor Red
+            Receive-Job $autohelperJob
+            break
+        }
 
         Start-Sleep -Milliseconds 500
     }
@@ -93,7 +113,7 @@ try {
 finally {
     Write-Host ""
     Write-Host "[*] Stopping services..." -ForegroundColor Yellow
-    Stop-Job $backendJob, $frontendJob -ErrorAction SilentlyContinue
-    Remove-Job $backendJob, $frontendJob -Force -ErrorAction SilentlyContinue
+    Stop-Job $backendJob, $frontendJob, $autohelperJob -ErrorAction SilentlyContinue
+    Remove-Job $backendJob, $frontendJob, $autohelperJob -Force -ErrorAction SilentlyContinue
     Write-Host "[OK] Stopped." -ForegroundColor Green
 }
