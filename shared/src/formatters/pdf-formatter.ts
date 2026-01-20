@@ -2,7 +2,7 @@
  * PDF Formatter
  *
  * Generates HTML for PDF export using AutoHelper's /render/pdf endpoint.
- * Uses Carlito font and matches page size contract from @autoart/shared.
+ * Uses Carlito font and matches page size contract.
  */
 
 import {
@@ -11,7 +11,7 @@ import {
     type PdfPagePreset,
     type BfaProjectExportModel,
     type ExportOptions,
-} from '@autoart/shared';
+} from '../schemas/exports.js';
 
 // HTML escape helper
 function escapeHtml(text: string): string {
@@ -31,19 +31,21 @@ function isCurrentMonth(dateStr: string | undefined): boolean {
     return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
 }
 
-// AutoHelper base URL (configurable)
-const AUTOHELPER_URL = process.env.AUTOHELPER_URL || 'http://localhost:8100';
-
 /**
  * Generate HTML for PDF export.
  */
 export function generatePdfHtml(
     projects: BfaProjectExportModel[],
     options: ExportOptions,
-    preset: PdfPagePreset = 'letter'
+    config: {
+        pagePreset?: PdfPagePreset;
+        autoHelperBaseUrl: string;
+    }
 ): string {
+    const preset = config.pagePreset || 'letter';
     const pageConfig = PDF_PAGE_PRESETS[preset];
     const margins = PDF_DEFAULT_MARGINS;
+    const { autoHelperBaseUrl } = config;
 
     const htmlParts: string[] = [];
 
@@ -56,19 +58,19 @@ export function generatePdfHtml(
     <style>
         @font-face {
             font-family: 'Carlito';
-            src: url('${AUTOHELPER_URL}/fonts/Carlito/regular.ttf') format('truetype');
+            src: url('${autoHelperBaseUrl}/fonts/Carlito/regular.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
         }
         @font-face {
             font-family: 'Carlito';
-            src: url('${AUTOHELPER_URL}/fonts/Carlito/bold.ttf') format('truetype');
+            src: url('${autoHelperBaseUrl}/fonts/Carlito/bold.ttf') format('truetype');
             font-weight: bold;
             font-style: normal;
         }
         @font-face {
             font-family: 'Carlito';
-            src: url('${AUTOHELPER_URL}/fonts/Carlito/italic.ttf') format('truetype');
+            src: url('${autoHelperBaseUrl}/fonts/Carlito/italic.ttf') format('truetype');
             font-weight: normal;
             font-style: italic;
         }

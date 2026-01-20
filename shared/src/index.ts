@@ -73,7 +73,9 @@ export {
 
 export type { BuildFieldViewModelOptions } from './domain/index.js';
 
+// ==================== FORMATTERS ====================
+export * from './formatters/index.js';
+
 // ==================== UTILITIES ====================
 // Shared utility functions
 export { generateId } from './utils.js';
-
