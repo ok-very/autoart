@@ -52,13 +52,16 @@
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@types/node": "^25.0.9",
     "eslint": "^9.17.0",
     "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-import": "^2.31.0",
     "typescript-eslint": "^8.18.1"
   },
   "dependencies": {
+    "@octokit/rest": "^22.0.1",
     "dotenv": "^17.2.3",
-    "octokit": "^5.0.5"
+    "octokit": "^5.0.5",
+    "tsx": "^4.21.0"
   }
 }
