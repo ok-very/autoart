@@ -12,7 +12,7 @@ import { z } from 'zod';
 // EXPORT FORMATS
 // ============================================================================
 
-/** Must match database CHECK constraint in migration 033/034 */
+/** Must match database CHECK constraint in migration 033/034/035 */
 export const ExportFormatSchema = z.enum([
     'rtf',
     'plaintext',
@@ -21,8 +21,35 @@ export const ExportFormatSchema = z.enum([
     'google-doc',
     'google-sheets',
     'google-slides',
+    'pdf',
 ]);
 export type ExportFormat = z.infer<typeof ExportFormatSchema>;
+
+// ============================================================================
+// PDF PAGE SIZE CONTRACT
+// ============================================================================
+
+/**
+ * PDF page presets - shared contract between AutoArt and AutoHelper.
+ * Dimensions in pixels at 96 DPI (CSS standard).
+ * Both sides must use these exact dimensions to ensure visual consistency.
+ */
+export const PDF_PAGE_PRESETS = {
+    letter: { width: 816, height: 1056, format: 'Letter' },      // 8.5" × 11" @ 96dpi
+    legal: { width: 816, height: 1344, format: 'Legal' },        // 8.5" × 14" @ 96dpi
+    tabloid: { width: 1056, height: 1632, format: 'Tabloid' },   // 11" × 17" @ 96dpi
+    tearsheet: { width: 1344, height: 816, format: 'Tabloid', landscape: true }, // 14" × 8.5" landscape
+    a4: { width: 794, height: 1123, format: 'A4' },              // 210mm × 297mm @ 96dpi
+} as const;
+
+export type PdfPagePreset = keyof typeof PDF_PAGE_PRESETS;
+
+export const PDF_DEFAULT_MARGINS = {
+    top: '0.5in',
+    bottom: '0.5in',
+    left: '0.5in',
+    right: '0.5in',
+} as const;
 
 export const ExportSessionStatusSchema = z.enum([
     'configuring',  // Session created, configuring options

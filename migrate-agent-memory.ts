@@ -1,10 +1,14 @@
 import { AgentMemory } from './lib/agent-memory';
+import * as dotenv from 'dotenv';
+
+// Load .env at entrypoint
+dotenv.config();
 
 /**
  * Migrate AGENT.md content into the agent memory system
  */
 async function migrate() {
-    const memory = new AgentMemory();
+    const memory = new AgentMemory({ debug: true });
 
     console.log('=== Agent Memory Migration ===\n');
 
