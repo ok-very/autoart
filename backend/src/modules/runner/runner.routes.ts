@@ -27,11 +27,23 @@ const AUTOHELPER_TIMEOUT_MS = 30_000; // 30 seconds for status/invoke
 const AUTOHELPER_STREAM_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes for SSE stream
 
 // =============================================================================
+// ERRORS
+// =============================================================================
+
+class GatewayTimeoutError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'GatewayTimeoutError';
+    }
+}
+
+// =============================================================================
 // HELPERS
 // =============================================================================
 
 /**
- * Create a fetch with timeout using AbortController
+ * Create a fetch with timeout using AbortController.
+ * Throws GatewayTimeoutError on timeout to distinguish from other errors.
  */
 async function fetchWithTimeout(
     url: string,
@@ -49,7 +61,7 @@ async function fetchWithTimeout(
         return response;
     } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') {
-            throw new Error(`Request timed out after ${timeoutMs}ms`);
+            throw new GatewayTimeoutError(`Request timed out after ${timeoutMs}ms`);
         }
         throw err;
     } finally {
@@ -86,6 +98,14 @@ export async function runnerRoutes(app: FastifyInstance) {
 
             return reply.send(await response.json());
         } catch (err) {
+            // Distinguish timeout from other errors
+            if (err instanceof GatewayTimeoutError) {
+                return reply.status(504).send({
+                    error: 'Gateway Timeout',
+                    code: 'GATEWAY_TIMEOUT',
+                    details: err.message
+                });
+            }
             return reply.status(502).send({
                 error: 'Failed to connect to AutoHelper',
                 details: err instanceof Error ? err.message : 'Unknown error'
@@ -127,6 +147,14 @@ export async function runnerRoutes(app: FastifyInstance) {
             return reply.send(result);
 
         } catch (err) {
+            // Distinguish timeout from other errors
+            if (err instanceof GatewayTimeoutError) {
+                return reply.status(504).send({
+                    error: 'Gateway Timeout',
+                    code: 'GATEWAY_TIMEOUT',
+                    details: err.message
+                });
+            }
             return reply.status(502).send({
                 error: 'Failed to invoke runner',
                 details: err instanceof Error ? err.message : 'Unknown error'
@@ -183,6 +211,14 @@ export async function runnerRoutes(app: FastifyInstance) {
             reply.raw.end();
 
         } catch (err) {
+            // Distinguish timeout from other errors
+            if (err instanceof GatewayTimeoutError) {
+                return reply.status(504).send({
+                    error: 'Gateway Timeout',
+                    code: 'GATEWAY_TIMEOUT',
+                    details: err.message
+                });
+            }
             return reply.status(502).send({
                 error: 'Failed to stream runner',
                 details: err instanceof Error ? err.message : 'Unknown error'
@@ -192,4 +228,3 @@ export async function runnerRoutes(app: FastifyInstance) {
 }
 
 export default runnerRoutes;
-

@@ -42,7 +42,7 @@ export type DrawerConfig = {
 
 export type UIPanels = {
   sidebar: 'projectTree' | 'recordsNav' | null;
-  workspace: 'grid' | 'millerColumns' | 'details' | 'projectWorkflow' | 'projectLog' | 'calendar' | null;
+  workspace: 'list' | 'cards' | 'millerColumns' | 'details' | 'projectWorkflow' | 'projectLog' | null;
   inspector: InspectorMode;
   drawer: DrawerConfig | null;
 };

@@ -3,10 +3,12 @@
  * 
  * Shared utility for OAuth popup flows with proper timeout cleanup.
  * Used by Google and Microsoft OAuth connection flows.
+ * 
+ * DESIGN: This hook is generic and does NOT invalidate any queries.
+ * Callers should handle cache invalidation in their onSuccess handlers.
  */
 
 import { useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 
 // =============================================================================
 // TYPES
@@ -22,6 +24,13 @@ interface PopupOAuthOptions {
     height?: number;
 }
 
+export class PopupBlockedError extends Error {
+    constructor() {
+        super('Popup was blocked by the browser. Please allow popups for this site.');
+        this.name = 'PopupBlockedError';
+    }
+}
+
 // =============================================================================
 // HOOK
 // =============================================================================
@@ -29,10 +38,10 @@ interface PopupOAuthOptions {
 /**
  * Opens an OAuth popup and returns a promise that resolves when the popup closes.
  * Properly cleans up both interval and timeout to prevent memory leaks.
+ * 
+ * @param onPopupClose - Optional callback invoked when the popup closes (for cache invalidation)
  */
-export function usePopupOAuth() {
-    const queryClient = useQueryClient();
-
+export function usePopupOAuth(onPopupClose?: () => void) {
     return useCallback((url: string, options: PopupOAuthOptions): Promise<void> => {
         const {
             name,
@@ -51,16 +60,21 @@ export function usePopupOAuth() {
             `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`
         );
 
+        // Handle popup blocked by browser
+        if (!popup) {
+            return Promise.reject(new PopupBlockedError());
+        }
+
         return new Promise((resolve, reject) => {
             let timeoutId: ReturnType<typeof setTimeout>;
 
             // Poll for popup close
             const checkInterval = setInterval(() => {
-                if (!popup || popup.closed) {
+                if (popup.closed) {
                     clearInterval(checkInterval);
                     clearTimeout(timeoutId);
-                    // Refetch connections status after popup closes
-                    queryClient.invalidateQueries({ queryKey: ['connections'] });
+                    // Let caller handle any cache invalidation
+                    onPopupClose?.();
                     resolve();
                 }
             }, 500);
@@ -68,13 +82,13 @@ export function usePopupOAuth() {
             // Timeout after specified duration
             timeoutId = setTimeout(() => {
                 clearInterval(checkInterval);
-                if (popup && !popup.closed) {
+                if (!popup.closed) {
                     popup.close();
                 }
                 reject(new Error('OAuth timeout'));
             }, timeoutMs);
         });
-    }, [queryClient]);
+    }, [onPopupClose]);
 }
 
 export default usePopupOAuth;

@@ -2,20 +2,12 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import { useCurrentUser } from './api/hooks';
-import { ActionsPage } from './pages/ActionsPage';
-import { ComposerPage } from './pages/ComposerPage';
-import { EventsPage } from './pages/EventsPage';
-import { ExportPage } from './pages/ExportPage';
-import { FieldsPage } from './pages/FieldsPage';
-import { ImportPage } from './pages/ImportPage';
 import { LoginPage } from './pages/LoginPage';
-import { MailPage } from './pages/MailPage';
-import { RecordsPage } from './pages/RecordsPage';
 import { RegisterPage } from './pages/RegisterPage';
-import { SettingsPage } from './pages/SettingsPage';
 import { useAuthStore } from './stores/authStore';
 import { useUIStore } from './stores/uiStore';
 import { MainLayout } from './ui/layout/MainLayout';
+import { CollectionModeProvider } from './surfaces/export/CollectionModeProvider';
 
 
 function App() {
@@ -78,25 +70,17 @@ function App() {
 
   // Authenticated routes
   return (
-    <Routes>
-      {/* Redirect auth routes to home when logged in */}
-      <Route path="/login" element={<Navigate to="/" replace />} />
-      <Route path="/register" element={<Navigate to="/" replace />} />
+    <CollectionModeProvider>
+      <Routes>
+        {/* Redirect auth routes to home when logged in */}
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/register" element={<Navigate to="/" replace />} />
 
-      {/* App routes */}
-      <Route path="/fields" element={<FieldsPage />} />
-      <Route path="/records" element={<RecordsPage />} />
-      <Route path="/actions" element={<ActionsPage />} />
-      <Route path="/events" element={<EventsPage />} />
-      <Route path="/composer" element={<ComposerPage />} />
-      <Route path="/import" element={<ImportPage />} />
-      <Route path="/export" element={<ExportPage />} />
-      <Route path="/mail" element={<MailPage />} />
-      <Route path="/settings" element={<SettingsPage />} />
-      <Route path="/" element={<MainLayout />} />
-      <Route path="/project/:projectId" element={<MainLayout />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* All authenticated routes use MainLayout with DockviewWorkspace */}
+        {/* Navigation is handled by panels within DockviewWorkspace, not separate page routes */}
+        <Route path="/*" element={<MainLayout />} />
+      </Routes>
+    </CollectionModeProvider>
   );
 }
 

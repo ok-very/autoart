@@ -3,10 +3,10 @@
  *
  * This is a REUSABLE COMPOSITE that uses DataTableFlat.
  * It handles:
- * - Definition selector
- * - Search
+ * - Definition selector with badge counts
+ * - Search with keyboard shortcuts
  * - Bulk actions (delete, classify)
- * - Create button
+ * - Create button with definition context
  * - Drawer interactions
  *
  * The actual table rendering is delegated to DataTableFlat.
@@ -15,8 +15,10 @@
  */
 
 import { clsx } from 'clsx';
-import { Search, Plus, Trash2, FolderOpen, Upload } from 'lucide-react';
+import { Search, Plus, Trash2, FolderOpen, Upload, ChevronDown, Database, Sparkles } from 'lucide-react';
 import { useState, useMemo, useCallback } from 'react';
+
+import { Badge, Card } from '@autoart/ui';
 
 import { DataTableFlat } from './DataTableFlat';
 import {
@@ -25,6 +27,7 @@ import {
     useRecordDefinition,
     useUpdateRecord,
     useBulkDeleteRecords,
+    useRecordStats,
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
 import type { RecordDefinition } from '../../types';
@@ -35,9 +38,10 @@ interface DefinitionSelectorProps {
     definitions: RecordDefinition[];
     selectedId: string | null;
     onSelect: (id: string | null) => void;
+    stats?: Map<string, number>;
 }
 
-function DefinitionSelector({ definitions, selectedId, onSelect }: DefinitionSelectorProps) {
+function DefinitionSelector({ definitions, selectedId, onSelect, stats }: DefinitionSelectorProps) {
     const [isOpen, setIsOpen] = useState(false);
     const selected = definitions.find((d) => d.id === selectedId);
 
@@ -45,49 +49,87 @@ function DefinitionSelector({ definitions, selectedId, onSelect }: DefinitionSel
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-slate-300 text-sm font-medium text-slate-700"
+                className={clsx(
+                    'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all',
+                    'bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm',
+                    isOpen && 'border-blue-400 ring-2 ring-blue-100'
+                )}
             >
-                {selected?.styling?.icon && <span>{selected.styling.icon}</span>}
-                <span>{selected?.name || 'All Records'}</span>
-                <svg className={clsx('w-4 h-4 text-slate-400 transition-transform', isOpen && 'rotate-180')} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                {selected?.styling?.icon ? (
+                    <span className="text-base">{selected.styling.icon}</span>
+                ) : (
+                    <Database size={16} className="text-slate-400" />
+                )}
+                <span className="text-slate-700">{selected?.name || 'All Records'}</span>
+                {stats && selectedId && stats.get(selectedId) !== undefined && (
+                    <Badge size="sm" variant="neutral">{stats.get(selectedId)}</Badge>
+                )}
+                <ChevronDown
+                    size={16}
+                    className={clsx('text-slate-400 transition-transform', isOpen && 'rotate-180')}
+                />
             </button>
 
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-                    <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
+                    <Card className="absolute top-full left-0 mt-2 w-64 z-20 py-1 max-h-80 overflow-y-auto shadow-xl border border-slate-200">
+                        {/* All Records option */}
                         <button
                             onClick={() => {
                                 onSelect(null);
                                 setIsOpen(false);
                             }}
                             className={clsx(
-                                'w-full text-left px-3 py-2 text-sm hover:bg-slate-50',
+                                'w-full text-left px-3 py-2.5 text-sm flex items-center gap-3 hover:bg-slate-50 transition-colors',
                                 !selectedId && 'bg-blue-50 text-blue-700'
                             )}
                         >
-                            All Records
+                            <Database size={16} className={clsx(!selectedId ? 'text-blue-600' : 'text-slate-400')} />
+                            <span className="flex-1">All Records</span>
+                            {stats && (
+                                <Badge size="sm" variant="neutral">
+                                    {Array.from(stats.values()).reduce((a, b) => a + b, 0)}
+                                </Badge>
+                            )}
                         </button>
+
                         <div className="border-t border-slate-100 my-1" />
-                        {definitions.map((def) => (
-                            <button
-                                key={def.id}
-                                onClick={() => {
-                                    onSelect(def.id);
-                                    setIsOpen(false);
-                                }}
-                                className={clsx(
-                                    'w-full text-left px-3 py-2 text-sm hover:bg-slate-50 flex items-center gap-2',
-                                    selectedId === def.id && 'bg-blue-50 text-blue-700'
-                                )}
-                            >
-                                {def.styling?.icon && <span>{def.styling.icon}</span>}
-                                <span>{def.name}</span>
-                            </button>
-                        ))}
-                    </div>
+
+                        {/* Definition list */}
+                        {definitions.length === 0 ? (
+                            <div className="px-3 py-4 text-center text-slate-400 text-sm">
+                                <Sparkles size={24} className="mx-auto mb-2 opacity-50" />
+                                <p>No record types defined</p>
+                            </div>
+                        ) : (
+                            definitions.map((def) => (
+                                <button
+                                    key={def.id}
+                                    onClick={() => {
+                                        onSelect(def.id);
+                                        setIsOpen(false);
+                                    }}
+                                    className={clsx(
+                                        'w-full text-left px-3 py-2.5 text-sm flex items-center gap-3 hover:bg-slate-50 transition-colors',
+                                        selectedId === def.id && 'bg-blue-50 text-blue-700'
+                                    )}
+                                >
+                                    {def.styling?.icon ? (
+                                        <span className="text-base">{def.styling.icon}</span>
+                                    ) : (
+                                        <Database size={16} className="text-slate-400" />
+                                    )}
+                                    <span className="flex-1 truncate">{def.name}</span>
+                                    {stats && stats.get(def.id) !== undefined && (
+                                        <Badge size="sm" variant={selectedId === def.id ? 'info' : 'neutral'}>
+                                            {stats.get(def.id)}
+                                        </Badge>
+                                    )}
+                                </button>
+                            ))
+                        )}
+                    </Card>
                 </>
             )}
         </div>
@@ -133,8 +175,16 @@ export function RecordView({
         classificationNodeId: classificationNodeId || undefined,
         search: searchQuery || undefined,
     });
+    const { data: recordStats = [] } = useRecordStats();
     const updateRecord = useUpdateRecord();
     const bulkDelete = useBulkDeleteRecords();
+
+    // Stats map
+    const statsMap = useMemo(() => {
+        const map = new Map<string, number>();
+        recordStats.forEach((s) => map.set(s.definitionId, s.count));
+        return map;
+    }, [recordStats]);
 
     // Filter definitions
     const filteredDefinitions = useMemo(() => {
@@ -266,90 +316,97 @@ export function RecordView({
     );
 
     return (
-        <main className={clsx('flex-1 flex flex-col overflow-hidden bg-white', className)}>
-            {/* Toolbar */}
-            <div className="h-14 border-b border-slate-200 flex items-center justify-between px-4 bg-slate-50">
+        <main className={clsx('flex-1 flex flex-col overflow-hidden bg-slate-50 relative', className)}>
+            {/* Toolbar - Sticky at top */}
+            <div className="h-14 shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-20 shadow-sm">
                 <div className="flex items-center gap-3">
                     {/* Definition Selector */}
                     <DefinitionSelector
                         definitions={filteredDefinitions}
                         selectedId={definitionId}
                         onSelect={handleDefinitionChange}
+                        stats={statsMap}
                     />
 
+                    {/* Divider */}
+                    <div className="h-6 w-px bg-slate-200" />
+
                     {/* Search */}
-                    <div className="relative">
+                    <div className="relative group">
                         <Search
                             size={14}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"
                         />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search records..."
-                            className="w-64 pl-9 pr-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-64 pl-9 pr-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                             data-aa-component="RecordList"
                             data-aa-id="search-records"
                         />
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    {/* Record count */}
-                    <span className="text-sm text-slate-400">
-                        {records.length} record{records.length !== 1 ? 's' : ''}
-                    </span>
+                <div className="flex items-center gap-3">
+                    {/* Record count badge */}
+                    <div className="px-2 py-1 bg-slate-100 rounded text-xs font-medium text-slate-500">
+                        {records.length} {records.length === 1 ? 'record' : 'records'}
+                    </div>
 
-                    {/* Import button */}
-                    <button
-                        onClick={handleOpenIngestion}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                        data-aa-component="RecordList"
-                        data-aa-id="open-ingestion"
-                        data-aa-action="open-drawer"
-                    >
-                        <Upload size={16} />
-                        Import
-                    </button>
-
-                    {/* Create button */}
-                    {definitionId && (
+                    {/* Actions Group */}
+                    <div className="flex items-center gap-2">
                         <button
-                            onClick={handleCreateRecord}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                            data-aa-component="RecordList"
-                            data-aa-id="create-record"
-                            data-aa-action="create"
+                            onClick={handleOpenIngestion}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm"
+                            title="Import records"
                         >
-                            <Plus size={16} />
-                            New {definition?.name || 'Record'}
+                            <Upload size={15} />
+                            <span>Import</span>
                         </button>
-                    )}
+
+                        {definitionId && (
+                            <button
+                                onClick={handleCreateRecord}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm hover:shadow transition-all active:translate-y-px"
+                            >
+                                <Plus size={16} />
+                                <span>New {definition?.name || 'Record'}</span>
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* Table - Delegated to DataTableFlat */}
-            <div className="flex-1 overflow-hidden">
+            {/* Table Area */}
+            <div className="flex-1 overflow-hidden relative">
                 {definitionId ? (
-                    <DataTableFlat
-                        records={records}
-                        definition={definition ?? null}
-                        isLoading={isLoading}
-                        selectedRecordId={currentSelection}
-                        onRowSelect={handleRowSelect}
-                        onCellChange={handleCellChange}
-                        onSelectionChange={handleSelectionChange}
-                        editable={true}
-                        multiSelect={true}
-                        renderFooter={renderFooter}
-                        emptyMessage={searchQuery ? 'No records match your search' : 'No records yet. Create your first record!'}
-                    />
+                    <div className="absolute inset-0 bg-white">
+                        <DataTableFlat
+                            records={records}
+                            definition={definition ?? null}
+                            isLoading={isLoading}
+                            selectedRecordId={currentSelection}
+                            onRowSelect={handleRowSelect}
+                            onCellChange={handleCellChange}
+                            onSelectionChange={handleSelectionChange}
+                            editable={true}
+                            multiSelect={true}
+                            renderFooter={renderFooter}
+                            emptyMessage={searchQuery ? 'No records match your search' : 'No records yet. Create your first record!'}
+                        />
+                    </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                        <FolderOpen size={48} className="mb-3 opacity-50" />
-                        <p className="text-lg font-medium">Select a record type</p>
-                        <p className="text-sm mt-1">Choose a definition from the dropdown to view records</p>
+                    /* Elegant Empty State */
+                    <div className="flex flex-col items-center justify-center h-full text-slate-400 bg-slate-50/50">
+                        <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center mb-4">
+                            <FolderOpen size={32} className="text-blue-500/50" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-700 mb-1">Select a Record Type</h3>
+                        <p className="text-sm text-slate-500 max-w-xs text-center">
+                            Choose a definition from the dropdown above to view and manage its records.
+                        </p>
                     </div>
                 )}
             </div>

@@ -54,10 +54,10 @@ export type FieldType = z.infer<typeof FieldTypeSchema>;
  * - log: Event log / execution ledger view (default)
  * - workflow: Kanban-style workflow view
  * - columns: Miller columns hierarchical navigation
- * - grid: Spreadsheet-style data grid
- * - calendar: Calendar view for dated items
+ * - list: Radix-styled action list/table view
+ * - cards: Responsive card grid view
  */
-export const ProjectViewModeSchema = z.enum(['log', 'workflow', 'columns', 'grid', 'calendar']);
+export const ProjectViewModeSchema = z.enum(['log', 'workflow', 'columns', 'list', 'cards']);
 export type ProjectViewMode = z.infer<typeof ProjectViewModeSchema>;
 
 /**
@@ -89,8 +89,8 @@ export const PROJECT_VIEW_MODE_LABELS: Record<ProjectViewMode, string> = {
   log: 'Log',
   workflow: 'Workflow',
   columns: 'Columns',
-  grid: 'Data Grid',
-  calendar: 'Calendar',
+  list: 'List',
+  cards: 'Cards',
 };
 
 export const RECORDS_VIEW_MODE_LABELS: Record<RecordsViewMode, string> = {
