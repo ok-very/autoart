@@ -30,6 +30,9 @@ const envSchema = z.object({
   // External Services
   AUTOHELPER_URL: z.string().default('http://localhost:8100'),
 
+  // Azure Entra ID (for production database auth)
+  AZURE_AD_USER: z.string().optional(), // e.g. user@yourfirm.com
+
   // Logging
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).optional(),
 });
