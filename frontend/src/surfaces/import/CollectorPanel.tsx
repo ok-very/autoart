@@ -10,6 +10,7 @@ import { useState, useCallback } from 'react';
 import { Play, Loader2, CheckCircle2, AlertCircle, Globe, FolderInput, FolderOpen } from 'lucide-react';
 
 import { Card, Stack, Text, Inline, Button } from '@autoart/ui';
+import { api } from '../../api/client';
 import { useCollectionStore } from '../../stores';
 import { generateIntakeManifest } from '../../api/generate';
 
@@ -74,20 +75,13 @@ export function CollectorPanel({ onComplete }: CollectorPanelProps) {
         setError(null);
 
         try {
-            // Forward to runner proxy
-            const response = await fetch('/api/runner/invoke', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    runner_id: 'autocollector',
-                    config: { url: url.trim() },
-                    output_folder: '_collected',
-                }),
+            // Use api client for consistent auth headers and error handling
+            const data = await api.post<CollectorResult>('/runner/invoke', {
+                runner_id: 'autocollector',
+                config: { url: url.trim() },
+                output_folder: '_collected',  // Relative to allowed roots
             });
 
-            if (!response.ok) throw new Error(`Failed: ${response.statusText}`);
-
-            const data: CollectorResult = await response.json();
             setResult(data);
 
             if (data.success) {

@@ -7,6 +7,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from './client';
+import { usePopupOAuth } from './usePopupOAuth';
 
 // ============================================================================
 // TYPES
@@ -114,44 +115,17 @@ export function useGetGoogleAuthUrl() {
 export function useConnectGoogle() {
     const queryClient = useQueryClient();
     const getAuthUrl = useGetGoogleAuthUrl();
+    const openPopup = usePopupOAuth();
 
     return useMutation({
         mutationFn: async (): Promise<void> => {
             // Get OAuth URL from backend
             const { url } = await getAuthUrl.mutateAsync();
-
-            // Open popup for OAuth flow
-            const width = 500;
-            const height = 600;
-            const left = window.screenX + (window.innerWidth - width) / 2;
-            const top = window.screenY + (window.innerHeight - height) / 2;
-
-            const popup = window.open(
-                url,
-                'google-oauth',
-                `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`
-            );
-
-            // Listen for the popup to close or send message
-            return new Promise((resolve, reject) => {
-                const checkPopup = setInterval(() => {
-                    if (!popup || popup.closed) {
-                        clearInterval(checkPopup);
-                        // Refetch connections status
-                        queryClient.invalidateQueries({ queryKey: ['connections'] });
-                        resolve();
-                    }
-                }, 500);
-
-                // Timeout after 5 minutes
-                setTimeout(() => {
-                    clearInterval(checkPopup);
-                    if (popup && !popup.closed) {
-                        popup.close();
-                    }
-                    reject(new Error('OAuth timeout'));
-                }, 5 * 60 * 1000);
-            });
+            // Use shared popup handler with proper timeout cleanup
+            await openPopup(url, { name: 'google-oauth' });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['connections'] });
         },
     });
 }
@@ -198,43 +172,17 @@ export function useGetMicrosoftAuthUrl() {
 export function useConnectMicrosoft() {
     const queryClient = useQueryClient();
     const getAuthUrl = useGetMicrosoftAuthUrl();
+    const openPopup = usePopupOAuth();
 
     return useMutation({
         mutationFn: async (): Promise<void> => {
             // Get OAuth URL from backend
             const { url } = await getAuthUrl.mutateAsync();
-
-            // Open popup for OAuth flow
-            const width = 500;
-            const height = 600;
-            const left = window.screenX + (window.innerWidth - width) / 2;
-            const top = window.screenY + (window.innerHeight - height) / 2;
-
-            const popup = window.open(
-                url,
-                'microsoft-oauth',
-                `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no`
-            );
-
-            // Listen for the popup to close
-            return new Promise((resolve, reject) => {
-                const checkPopup = setInterval(() => {
-                    if (!popup || popup.closed) {
-                        clearInterval(checkPopup);
-                        queryClient.invalidateQueries({ queryKey: ['connections'] });
-                        resolve();
-                    }
-                }, 500);
-
-                // Timeout after 5 minutes
-                setTimeout(() => {
-                    clearInterval(checkPopup);
-                    if (popup && !popup.closed) {
-                        popup.close();
-                    }
-                    reject(new Error('OAuth timeout'));
-                }, 5 * 60 * 1000);
-            });
+            // Use shared popup handler with proper timeout cleanup
+            await openPopup(url, { name: 'microsoft-oauth' });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['connections'] });
         },
     });
 }
