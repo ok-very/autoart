@@ -8,10 +8,12 @@ import type { BfaProjectExportModel, ExportFormat, ExportOptions } from '../type
 import { formatAsMarkdown } from './markdown-formatter.js';
 import { formatAsPlainText } from './plaintext-formatter.js';
 import { formatAsRtf } from './rtf-formatter.js';
+import { generatePdfHtml } from './pdf-formatter.js';
 
 export { formatAsRtf } from './rtf-formatter.js';
 export { formatAsMarkdown } from './markdown-formatter.js';
 export { formatAsPlainText } from './plaintext-formatter.js';
+export { generatePdfHtml } from './pdf-formatter.js';
 
 /**
  * Formatter function signature.
@@ -36,7 +38,12 @@ export function getFormatter(format: ExportFormat): FormatterFunction | null {
             // CSV formatter not yet implemented
             return null;
         case 'google-doc':
-            // Google Docs uses direct API, not string formatter
+        case 'google-sheets':
+        case 'google-slides':
+            // Google services use direct API, not string formatter
+            return null;
+        case 'pdf':
+            // PDF uses generatePdfHtml + AutoHelper render endpoint
             return null;
         default:
             return null;
@@ -56,8 +63,12 @@ export function getFileExtension(format: ExportFormat): string {
             return '.txt';
         case 'csv':
             return '.csv';
+        case 'pdf':
+            return '.pdf';
         case 'google-doc':
-            return ''; // No file extension for Google Docs
+        case 'google-sheets':
+        case 'google-slides':
+            return ''; // No file extension for Google services
         default:
             return '.txt';
     }
@@ -76,8 +87,14 @@ export function getMimeType(format: ExportFormat): string {
             return 'text/plain';
         case 'csv':
             return 'text/csv';
+        case 'pdf':
+            return 'application/pdf';
         case 'google-doc':
             return 'application/vnd.google-apps.document';
+        case 'google-sheets':
+            return 'application/vnd.google-apps.spreadsheet';
+        case 'google-slides':
+            return 'application/vnd.google-apps.presentation';
         default:
             return 'text/plain';
     }

@@ -8,6 +8,7 @@
 import { BfaRtfTarget } from './bfa-rtf-target.js';
 import type { ExportTarget, ExportTargetRegistry } from './export-target.interface.js';
 import { GoogleDocsTarget } from './google-docs-target.js';
+import { PdfTarget } from './pdf-target.js';
 
 // ============================================================================
 // REGISTRY IMPLEMENTATION
@@ -20,6 +21,7 @@ class ExportTargetRegistryImpl implements ExportTargetRegistry {
         // Register built-in targets
         this.registerTarget(new BfaRtfTarget());
         this.registerTarget(new GoogleDocsTarget());
+        this.registerTarget(new PdfTarget());
     }
 
     getTarget(targetId: string): ExportTarget {
