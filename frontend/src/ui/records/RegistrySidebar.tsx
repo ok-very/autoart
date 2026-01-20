@@ -1,11 +1,13 @@
 import { clsx } from 'clsx';
-import { Plus, FolderOpen, Zap, Search, Settings, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, FolderOpen, Zap, Search, Settings, ChevronDown, ChevronRight, Activity } from 'lucide-react';
 import { useState } from 'react';
 
 import { useRecordDefinitions, useRecordStats } from '../../api/hooks';
+import { useActionTypeDefinitions, useActionTypeStats } from '../../api/hooks/actionTypes';
+import { useFactKindStats } from '../../api/hooks/factKinds';
 import { useUIStore } from '../../stores/uiStore';
 
-type RegistrySection = 'records' | 'actions';
+type RegistrySection = 'records' | 'actions' | 'events';
 
 interface RegistrySidebarProps {
     width: number;
@@ -15,13 +17,14 @@ interface RegistrySidebarProps {
 }
 
 /**
- * Registry Sidebar - shows both Record Definitions and Action Definitions
+ * Registry Sidebar - shows Record Definitions, Action Types, and Event Types
  * 
  * Architecture:
- * - Record Definitions (definition_kind='record') - Data definitions like Contact, Location, Artwork
- * - Action Definitions (definition_kind='action_recipe') - Action recipes like Task, Subtask, Meeting
+ * - Record Definitions (from record_definitions table) - Data schemas like Contact, Location
+ * - Action Types (from action_type_definitions table) - TASK, BUG, STORY, custom types
+ * - Event Types - Link to Event Type Catalog for documentation
  * 
- * This replaces RecordTypeSidebar with a unified registry view.
+ * Updated to use the new action_type_definitions API instead of record_definitions.
  */
 export function RegistrySidebar({
     width,
@@ -29,132 +32,69 @@ export function RegistrySidebar({
     onSelectDefinition,
     activeSection,
 }: RegistrySidebarProps) {
-    const { data: definitions, isLoading } = useRecordDefinitions();
+    // Record definitions from legacy table
+    const { data: definitions, isLoading: recordsLoading } = useRecordDefinitions();
     const { data: stats } = useRecordStats();
+
+    // Action types from new action_type_definitions table
+    const { data: actionTypes = [], isLoading: actionsLoading } = useActionTypeDefinitions();
+    const { data: actionTypeStats = [] } = useActionTypeStats();
+
+    // Fact kinds stats
+    const { data: factKindStats } = useFactKindStats();
+
     const { openDrawer } = useUIStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [recordsExpanded, setRecordsExpanded] = useState(true);
     const [actionsExpanded, setActionsExpanded] = useState(true);
+    const [eventsExpanded, setEventsExpanded] = useState(true);
 
-    // Legacy hierarchy types to always exclude
+    const isLoading = recordsLoading || actionsLoading;
+
+    // Legacy hierarchy types to exclude
     const legacyHierarchyTypes = ['project', 'process', 'stage', 'subprocess'];
 
-    // Split definitions by definition_kind
+    // Filter record definitions (exclude action_recipes from old system)
     const recordDefinitions = (definitions || []).filter((def) => {
         const defKind = (def as { definition_kind?: string }).definition_kind;
         if (defKind) return defKind === 'record';
-        // Fallback: exclude hierarchy types and known action definitions
         const name = def.name.toLowerCase();
         return !legacyHierarchyTypes.includes(name) && name !== 'task' && name !== 'subtask';
     });
 
-    const actionDefinitions = (definitions || []).filter((def) => {
-        const defKind = (def as { definition_kind?: string }).definition_kind;
-        if (defKind) return defKind === 'action_recipe';
-        // Fallback: check known action definitions
-        const name = def.name.toLowerCase();
-        return name === 'task' || name === 'subtask';
-    });
-
     // Apply search filter
-    const filterBySearch = (defs: typeof definitions) =>
-        searchQuery.trim()
-            ? (defs || []).filter((def) =>
-                def.name.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-            : defs || [];
+    const filterRecordsBySearch = searchQuery.trim()
+        ? recordDefinitions.filter((def) =>
+            def.name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        : recordDefinitions;
 
-    const filteredRecords = filterBySearch(recordDefinitions);
-    const filteredActions = filterBySearch(actionDefinitions);
+    const filterActionsBySearch = searchQuery.trim()
+        ? actionTypes.filter((def) =>
+            def.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            def.type.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        : actionTypes;
 
+    // Stats helpers
     const getRecordCount = (definitionId: string): number => {
         if (!stats) return 0;
         const stat = stats.find((s) => s.definitionId === definitionId);
         return stat?.count ?? 0;
     };
 
-    const handleCreateDefinition = (definitionKind: 'record' | 'action_recipe') => {
-        openDrawer('create-definition', { definitionKind });
+    const getActionCount = (type: string): number => {
+        const stat = actionTypeStats.find((s) => s.type === type);
+        return stat?.count ?? 0;
+    };
+
+    const handleCreateDefinition = () => {
+        openDrawer('create-definition', { definitionKind: 'record' });
     };
 
     const handleEditDefinition = (e: React.MouseEvent, definitionId: string) => {
         e.stopPropagation();
         openDrawer('view-definition', { definitionId });
-    };
-
-    const renderDefinitionList = (
-        defs: typeof definitions,
-        section: RegistrySection,
-        emptyMessage: string
-    ) => {
-        if (!defs || defs.length === 0) {
-            return (
-                <div className="text-center py-4 px-2">
-                    <p className="text-xs text-slate-400">{emptyMessage}</p>
-                </div>
-            );
-        }
-
-        return (
-            <div className="space-y-0.5 px-1">
-                {defs.map((def) => {
-                    const count = getRecordCount(def.id);
-                    const isSelected = selectedDefinitionId === def.id && activeSection === section;
-                    const icon = def.styling?.icon;
-
-                    return (
-                        <div
-                            key={def.id}
-                            onClick={() => onSelectDefinition(def.id, section)}
-                            className={clsx(
-                                'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors group cursor-pointer',
-                                isSelected
-                                    ? 'bg-blue-100 text-blue-800'
-                                    : 'hover:bg-slate-100 text-slate-600'
-                            )}
-                        >
-                            {/* Icon */}
-                            <span className="text-base shrink-0">
-                                {icon || def.name.charAt(0).toUpperCase()}
-                            </span>
-
-                            {/* Name and Count */}
-                            <div className="flex-1 min-w-0">
-                                <div className="text-sm font-medium truncate">{def.name}</div>
-                                <div className="text-[10px] text-slate-400">
-                                    {count} {section === 'records' ? 'record' : 'instance'}{count !== 1 ? 's' : ''}
-                                </div>
-                            </div>
-
-                            {/* Edit Schema button on hover */}
-                            <button
-                                onClick={(e) => handleEditDefinition(e, def.id)}
-                                className="p-1 text-slate-300 hover:text-slate-600 hover:bg-slate-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                                title={`Edit ${def.name} schema`}
-                            >
-                                <Settings size={12} />
-                            </button>
-
-                            {/* Quick create on hover */}
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (section === 'records') {
-                                        openDrawer('create-record', { definitionId: def.id });
-                                    } else {
-                                        openDrawer('composer', { recipeId: def.id });
-                                    }
-                                }}
-                                className="p-1 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                                title={section === 'records' ? `Create ${def.name}` : `Use ${def.name} recipe`}
-                            >
-                                <Plus size={12} />
-                            </button>
-                        </div>
-                    );
-                })}
-            </div>
-        );
     };
 
     return (
@@ -195,7 +135,7 @@ export function RegistrySidebar({
                     </div>
                 ) : (
                     <>
-                        {/* RECORD TYPES SECTION */}
+                        {/* RECORD DEFINITIONS SECTION */}
                         <div className="border-b border-slate-100">
                             <button
                                 onClick={() => setRecordsExpanded(!recordsExpanded)}
@@ -204,7 +144,7 @@ export function RegistrySidebar({
                                 <div className="flex items-center gap-2">
                                     <FolderOpen size={14} className="text-blue-500" />
                                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                        Record Definitions
+                                        Data Definitions
                                     </span>
                                     <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
                                         {recordDefinitions.length}
@@ -214,10 +154,10 @@ export function RegistrySidebar({
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            handleCreateDefinition('record');
+                                            handleCreateDefinition();
                                         }}
                                         className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                                        title="Create record definition"
+                                        title="Create data definition"
                                     >
                                         <Plus size={14} />
                                     </button>
@@ -251,37 +191,81 @@ export function RegistrySidebar({
                                             </div>
                                         </button>
                                     </div>
-                                    {renderDefinitionList(filteredRecords, 'records', 'No record definitions')}
+
+                                    {/* Record definitions list */}
+                                    {filterRecordsBySearch.length === 0 ? (
+                                        <div className="text-center py-4 px-2">
+                                            <p className="text-xs text-slate-400">No data definitions</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-0.5 px-1">
+                                            {filterRecordsBySearch.map((def) => {
+                                                const count = getRecordCount(def.id);
+                                                const isSelected = selectedDefinitionId === def.id && activeSection === 'records';
+                                                const icon = def.styling?.icon;
+
+                                                return (
+                                                    <div
+                                                        key={def.id}
+                                                        onClick={() => onSelectDefinition(def.id, 'records')}
+                                                        className={clsx(
+                                                            'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors group cursor-pointer',
+                                                            isSelected
+                                                                ? 'bg-blue-100 text-blue-800'
+                                                                : 'hover:bg-slate-100 text-slate-600'
+                                                        )}
+                                                    >
+                                                        <span className="text-base shrink-0">
+                                                            {icon || def.name.charAt(0).toUpperCase()}
+                                                        </span>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-sm font-medium truncate">{def.name}</div>
+                                                            <div className="text-[10px] text-slate-400">
+                                                                {count} record{count !== 1 ? 's' : ''}
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={(e) => handleEditDefinition(e, def.id)}
+                                                            className="p-1 text-slate-300 hover:text-slate-600 hover:bg-slate-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            title={`Edit ${def.name} schema`}
+                                                        >
+                                                            <Settings size={12} />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                openDrawer('create-record', { definitionId: def.id });
+                                                            }}
+                                                            className="p-1 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            title={`Create ${def.name}`}
+                                                        >
+                                                            <Plus size={12} />
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
 
-                        {/* ACTION TYPES SECTION */}
+                        {/* ACTION TYPES SECTION - Now using action_type_definitions */}
                         <div className="border-b border-slate-100">
                             <button
                                 onClick={() => setActionsExpanded(!actionsExpanded)}
                                 className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-100 transition-colors"
                             >
                                 <div className="flex items-center gap-2">
-                                    <Zap size={14} className="text-purple-500" />
+                                    <Zap size={14} className="text-amber-500" />
                                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                        Action Definitions
+                                        Action Types
                                     </span>
                                     <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                                        {actionDefinitions.length}
+                                        {actionTypes.length}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleCreateDefinition('action_recipe');
-                                        }}
-                                        className="p-1 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors"
-                                        title="Create action definition"
-                                    >
-                                        <Plus size={14} />
-                                    </button>
                                     {actionsExpanded ? (
                                         <ChevronDown size={14} className="text-slate-400" />
                                     ) : (
@@ -292,7 +276,137 @@ export function RegistrySidebar({
 
                             {actionsExpanded && (
                                 <div className="pb-2">
-                                    {renderDefinitionList(filteredActions, 'actions', 'No action types defined')}
+                                    {/* All Actions option */}
+                                    <div className="px-1 pb-1">
+                                        <button
+                                            onClick={() => onSelectDefinition(null, 'actions')}
+                                            className={clsx(
+                                                'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors',
+                                                selectedDefinitionId === null && activeSection === 'actions'
+                                                    ? 'bg-amber-100 text-amber-800'
+                                                    : 'hover:bg-slate-100 text-slate-600'
+                                            )}
+                                        >
+                                            <span className="text-base">⚡</span>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-sm font-medium">All Actions</div>
+                                                <div className="text-[10px] text-slate-400">
+                                                    {actionTypeStats.reduce((sum, s) => sum + s.count, 0)} total
+                                                </div>
+                                            </div>
+                                        </button>
+                                    </div>
+
+                                    {/* Action types list */}
+                                    {filterActionsBySearch.length === 0 ? (
+                                        <div className="text-center py-4 px-2">
+                                            <p className="text-xs text-slate-400">No action types</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-0.5 px-1">
+                                            {filterActionsBySearch.map((actionType) => {
+                                                const count = getActionCount(actionType.type);
+                                                const isSelected = selectedDefinitionId === actionType.type && activeSection === 'actions';
+
+                                                return (
+                                                    <div
+                                                        key={actionType.id}
+                                                        onClick={() => onSelectDefinition(actionType.type, 'actions')}
+                                                        className={clsx(
+                                                            'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors group cursor-pointer',
+                                                            isSelected
+                                                                ? 'bg-amber-100 text-amber-800'
+                                                                : 'hover:bg-slate-100 text-slate-600'
+                                                        )}
+                                                    >
+                                                        <div
+                                                            className={clsx(
+                                                                'w-6 h-6 rounded flex items-center justify-center text-xs font-semibold shrink-0',
+                                                                actionType.is_system
+                                                                    ? 'bg-amber-100 text-amber-600'
+                                                                    : 'bg-purple-100 text-purple-600'
+                                                            )}
+                                                        >
+                                                            {actionType.label.charAt(0)}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="text-sm font-medium truncate">{actionType.label}</span>
+                                                                {actionType.is_system && (
+                                                                    <span className="px-1 py-0.5 text-[9px] bg-slate-200 text-slate-500 rounded">SYS</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-[10px] text-slate-400">
+                                                                {count} instance{count !== 1 ? 's' : ''}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* EVENT TYPES SECTION */}
+                        <div className="border-b border-slate-100">
+                            <button
+                                onClick={() => setEventsExpanded(!eventsExpanded)}
+                                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-100 transition-colors"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Activity size={14} className="text-blue-500" />
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                        Events & Facts
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    {eventsExpanded ? (
+                                        <ChevronDown size={14} className="text-slate-400" />
+                                    ) : (
+                                        <ChevronRight size={14} className="text-slate-400" />
+                                    )}
+                                </div>
+                            </button>
+
+                            {eventsExpanded && (
+                                <div className="pb-2 px-1 space-y-0.5">
+                                    {/* Event Types */}
+                                    <button
+                                        onClick={() => onSelectDefinition('event-catalog', 'events')}
+                                        className={clsx(
+                                            'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors',
+                                            selectedDefinitionId === 'event-catalog' && activeSection === 'events'
+                                                ? 'bg-blue-100 text-blue-800'
+                                                : 'hover:bg-slate-100 text-slate-600'
+                                        )}
+                                    >
+                                        <Activity size={16} className="text-blue-500 shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-medium">Event Types</div>
+                                            <div className="text-[10px] text-slate-400">15 event types</div>
+                                        </div>
+                                    </button>
+
+                                    {/* Fact Kinds */}
+                                    <button
+                                        onClick={() => onSelectDefinition('fact-kinds', 'events')}
+                                        className={clsx(
+                                            'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors',
+                                            selectedDefinitionId === 'fact-kinds' && activeSection === 'events'
+                                                ? 'bg-blue-100 text-blue-800'
+                                                : 'hover:bg-slate-100 text-slate-600'
+                                        )}
+                                    >
+                                        <span className="text-base shrink-0">📊</span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-medium">Fact Kinds</div>
+                                            <div className="text-[10px] text-slate-400">
+                                                {factKindStats?.total ?? 12} kinds · {factKindStats?.needsReview ?? 0} need review
+                                            </div>
+                                        </div>
+                                    </button>
                                 </div>
                             )}
                         </div>
@@ -303,7 +417,7 @@ export function RegistrySidebar({
             {/* Footer Stats */}
             <div className="border-t border-slate-200 px-4 py-3 bg-white">
                 <div className="text-xs text-slate-400">
-                    {recordDefinitions.length + actionDefinitions.length} types in registry
+                    {recordDefinitions.length} data · {actionTypes.length} action types
                 </div>
             </div>
         </aside>
