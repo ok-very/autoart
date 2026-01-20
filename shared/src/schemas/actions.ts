@@ -199,10 +199,11 @@ export const TaskLikeViewPayloadSchema = z.object({
   title: z.string(),
   description: z.unknown().optional(), // TipTap JSON
   status: DerivedStatusSchema,
-  assignee: z.object({
+  assignees: z.array(z.object({
     id: z.string().uuid(),
     name: z.string(),
-  }).optional(),
+    email: z.string().optional(),
+  })).default([]),
   dueDate: z.string().optional(),
   percentComplete: z.number().min(0).max(100).optional(),
 });

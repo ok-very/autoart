@@ -144,30 +144,8 @@ function StatusBadge({ status, config }: StatusBadgeProps) {
   );
 }
 
-interface AssigneeAvatarProps {
-  name?: string;
-}
-
-function AssigneeAvatar({ name }: AssigneeAvatarProps) {
-  if (!name) {
-    return <span className="text-xs text-slate-400 italic">Unassigned</span>;
-  }
-  const initials = name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
-  return (
-    <div className="flex items-center gap-2">
-      <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
-        {initials}
-      </div>
-      <span className="text-xs text-slate-700">{name}</span>
-    </div>
-  );
-}
+// AssigneeChipGroup is imported from atoms - supports multiple assignees
+import { AssigneeChipGroup } from '../atoms/AssigneeChipGroup';
 
 // ==================== MAIN COMPONENT ====================
 
@@ -399,7 +377,7 @@ export function ActionRegistryTable({
 
                   {/* Assignee */}
                   <td className="border-b border-slate-100 px-4 h-11">
-                    <AssigneeAvatar name={node.payload.assignee?.name} />
+                    <AssigneeChipGroup assignees={node.payload.assignees} showNames size="sm" />
                   </td>
 
                   {/* Context */}
