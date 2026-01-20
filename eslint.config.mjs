@@ -127,4 +127,28 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
+
+  // Lib config (agent utilities)
+  {
+    files: ['lib/**/*.ts'],
+    plugins: {
+      import: importPlugin,
+    },
+    languageOptions: {
+      parser: tseslint.parser,
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      parserOptions: {
+        project: './tsconfig.json',
+        tsconfigRootDir: __dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
 ];
