@@ -1,0 +1,14 @@
+{
+    "name": "autohelper",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "uvicorn autohelper.main:app --reload --host 0.0.0.0 --port 8000",
+        "start": "uvicorn autohelper.main:app --host 0.0.0.0 --port 8000",
+        "install:deps": "pip install -e .[dev]",
+        "lint": "ruff check .",
+        "format": "ruff check . --fix"
+    },
+    "dependencies": {},
+    "devDependencies": {}
+}
