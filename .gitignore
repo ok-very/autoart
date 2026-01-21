@@ -62,3 +62,9 @@ postgres_data/
 frontend/src/surfaces/import/ImportInspector.tsx
 frontend/src/surfaces/import/ImportRecordInspector.tsx
 frontend/src/ui/atoms/FormulaInput.tsx
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
