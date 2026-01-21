@@ -7,7 +7,7 @@
 
 import {
   ChevronDown, FolderOpen, Database,
-  TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings
+  TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings, ClipboardList
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
@@ -46,6 +46,7 @@ export function Header() {
     const isImportActive = openPanelIds.includes('import-workbench');
     const isExportActive = openPanelIds.includes('export-workbench');
     const isComposerActive = openPanelIds.includes('composer-workbench');
+    const isIntakeActive = openPanelIds.includes('intake-workbench');
 
     return {
       isRecordsActive,
@@ -55,8 +56,9 @@ export function Header() {
       isImportActive,
       isExportActive,
       isComposerActive,
+      isIntakeActive,
       isRegistryActive: isRecordsActive || isFieldsActive || isActionsActive || isEventsActive,
-      isWorkbenchActive: isImportActive || isExportActive,
+      isWorkbenchActive: isImportActive || isExportActive || isIntakeActive,
     };
   }, [openPanelIds]);
 
@@ -68,6 +70,7 @@ export function Header() {
     isImportActive,
     isExportActive,
     isComposerActive,
+    isIntakeActive,
     isRegistryActive,
     isWorkbenchActive,
   } = panelStates;
@@ -206,6 +209,13 @@ export function Header() {
                   className={isExportActive ? 'bg-amber-50' : ''}
                 >
                   Export
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => handleOpenPanel('intake-workbench')}
+                  leftSection={<ClipboardList size={16} />}
+                  className={isIntakeActive ? 'bg-amber-50' : ''}
+                >
+                  Intake
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>

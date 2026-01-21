@@ -52,6 +52,7 @@ import { ImportPanel } from '../panels/ImportPanel';
 import { ExportPanel } from '../panels/ExportPanel';
 import { ComposerPanel } from '../panels/ComposerPanel';
 import { MailPanel } from '../panels/MailPanel';
+import { IntakePanel } from '../panels/IntakePanel';
 
 // ============================================================================
 // PANEL SPAWN HANDLE
@@ -193,6 +194,7 @@ const COMPONENTS: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   'export-workbench': ExportPanel,
   'composer-workbench': ComposerPanel,
   'mail-panel': MailPanel,
+  'intake-workbench': IntakePanel,
 };
 
 // ============================================================================

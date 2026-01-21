@@ -558,6 +558,49 @@ export type MondaySyncState = Selectable<MondaySyncStatesTable>;
 export type NewMondaySyncState = Insertable<MondaySyncStatesTable>;
 export type MondaySyncStateUpdate = Updateable<MondaySyncStatesTable>;
 
+// ============================================
+// INTAKE FORMS TABLES (Migration 041)
+// Public form generator and submissions
+// ============================================
+
+export type IntakeFormStatus = 'active' | 'disabled';
+
+export interface IntakeFormsTable {
+  id: Generated<string>;
+  unique_id: string;
+  title: string;
+  status: Generated<IntakeFormStatus>;
+  sharepoint_request_url: string | null;
+  created_at: Generated<Date>;
+}
+
+export type IntakeForm = Selectable<IntakeFormsTable>;
+export type NewIntakeForm = Insertable<IntakeFormsTable>;
+export type IntakeFormUpdate = Updateable<IntakeFormsTable>;
+
+export interface IntakeFormPagesTable {
+  id: Generated<string>;
+  form_id: string;
+  page_index: number;
+  blocks_config: unknown; // JSONB - IntakePageConfig { blocks: FormBlock[], settings? }
+}
+
+export type IntakeFormPage = Selectable<IntakeFormPagesTable>;
+export type NewIntakeFormPage = Insertable<IntakeFormPagesTable>;
+export type IntakeFormPageUpdate = Updateable<IntakeFormPagesTable>;
+
+export interface IntakeSubmissionsTable {
+  id: Generated<string>;
+  form_id: string;
+  upload_code: string;
+  metadata: unknown; // JSONB
+  created_at: Generated<Date>;
+}
+
+export type IntakeSubmission = Selectable<IntakeSubmissionsTable>;
+export type NewIntakeSubmission = Insertable<IntakeSubmissionsTable>;
+export type IntakeSubmissionUpdate = Updateable<IntakeSubmissionsTable>;
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -588,6 +631,9 @@ export interface Database {
   monday_group_configs: MondayGroupConfigsTable;
   monday_column_configs: MondayColumnConfigsTable;
   monday_sync_states: MondaySyncStatesTable;
+  intake_forms: IntakeFormsTable;
+  intake_form_pages: IntakeFormPagesTable;
+  intake_submissions: IntakeSubmissionsTable;
 }
 
 

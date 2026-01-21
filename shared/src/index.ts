@@ -79,3 +79,7 @@ export * from './formatters/index.js';
 // ==================== UTILITIES ====================
 // Shared utility functions
 export { generateId } from './utils.js';
+
+// ==================== INTAKE ====================
+// Form generator utilities and schemas
+export * from './intake/index.js';

@@ -3,6 +3,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { registerSchema, loginSchema, RegisterInput, LoginInput, RefreshInput } from './auth.schemas.js';
 import * as authService from './auth.service.js';
 import * as oauthService from './oauth.service.js';
+import * as settingsService from './settings.service.js';
 import { AppError } from '../../utils/errors.js';
 
 export async function authRoutes(fastify: FastifyInstance) {
@@ -225,5 +226,55 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
 
     return reply.send({ message: 'User deleted successfully', user: result });
+  });
+
+  // ============================================================================
+  // USER SETTINGS ENDPOINTS
+  // ============================================================================
+
+  // Get all user settings
+  fastify.get('/me/settings', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const settings = await settingsService.getSettings(request.user.userId);
+    return reply.send({ settings });
+  });
+
+  // Get specific setting
+  interface GetSettingParams {
+    Params: { key: string };
+  }
+  fastify.get<GetSettingParams>('/me/settings/:key', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { key } = request.params;
+    const value = await settingsService.getSetting(
+      request.user.userId,
+      key as settingsService.SettingKey
+    );
+    return reply.send({ key, value });
+  });
+
+  // Set a setting
+  interface SetSettingParams {
+    Params: { key: string };
+    Body: { value: unknown };
+  }
+  fastify.put<SetSettingParams>('/me/settings/:key', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { key } = request.params;
+    const { value } = request.body;
+
+    const setting = await settingsService.setSetting(
+      request.user.userId,
+      key as settingsService.SettingKey,
+      value
+    );
+    return reply.send({ key: setting.setting_key, value: setting.setting_value });
+  });
+
+  // Delete a setting
+  fastify.delete<GetSettingParams>('/me/settings/:key', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { key } = request.params;
+    await settingsService.deleteSetting(
+      request.user.userId,
+      key as settingsService.SettingKey
+    );
+    return reply.code(204).send();
   });
 }

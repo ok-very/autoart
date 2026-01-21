@@ -307,6 +307,44 @@ export {
     type ClassificationResult,
 } from './classification.js';
 
+// ==================== INTAKE ====================
+export {
+    IntakeFormStatusSchema,
+    RadixElementSchema,
+    RadixPageTreeSchema,
+    IntakeFormSchema,
+    IntakeFormPageSchema,
+    IntakeFormWithPagesSchema,
+    SubmissionMetadataSchema,
+    IntakeSubmissionSchema,
+    CreateIntakeFormInputSchema,
+    UpdateIntakeFormInputSchema,
+    UpsertIntakeFormPageInputSchema,
+    CreateIntakeSubmissionInputSchema,
+    IntakeFormResponseSchema,
+    IntakeFormsResponseSchema,
+    IntakeFormWithPagesResponseSchema,
+    IntakeSubmissionResponseSchema,
+    IntakeSubmissionsResponseSchema,
+    type IntakeFormStatus,
+    type RadixElement,
+    type RadixPageTree,
+    type IntakeForm,
+    type IntakeFormPage,
+    type IntakeFormWithPages,
+    type SubmissionMetadata,
+    type IntakeSubmission,
+    type CreateIntakeFormInput,
+    type UpdateIntakeFormInput,
+    type UpsertIntakeFormPageInput,
+    type CreateIntakeSubmissionInput,
+    type IntakeFormResponse,
+    type IntakeFormsResponse,
+    type IntakeFormWithPagesResponse,
+    type IntakeSubmissionResponse,
+    type IntakeSubmissionsResponse,
+} from './intake/index.js';
+
 // ==================== EXPORTS ====================
 export {
     ExportFormatSchema,
