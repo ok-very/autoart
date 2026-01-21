@@ -145,7 +145,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
 
     const handleUpdateBlock = useCallback((id: string, updates: Partial<FormBlock>) => {
         setBlocks((prev) =>
-            prev.map((b) => (b.id === id ? { ...b, ...updates } : b))
+            prev.map((b) => (b.id === id ? { ...b, ...updates } as FormBlock : b))
         );
     }, []);
 

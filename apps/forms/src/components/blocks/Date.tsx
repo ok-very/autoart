@@ -1,32 +1,42 @@
+/**
+ * Date - Date input block using React Hook Form
+ */
+
+import { useFormContext, Controller } from 'react-hook-form';
 import type { ModuleBlock } from '@autoart/shared';
 
-interface DateInputProps {
+interface DateProps {
   block: ModuleBlock;
-  value: string;
-  onChange: (value: string) => void;
-  error?: string;
 }
 
-export function DateInput({ block, value, onChange, error }: DateInputProps) {
+export function DateInput({ block }: DateProps) {
+  const { control } = useFormContext();
+
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-slate-700">
-        {block.label}
-        {block.required && <span className="text-red-500 ml-1">*</span>}
-      </label>
-      {block.description && (
-        <p className="text-sm text-slate-500">{block.description}</p>
+    <Controller
+      name={block.id}
+      control={control}
+      defaultValue=""
+      render={({ field, fieldState }) => (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-slate-700">
+            {block.label}
+            {block.required && <span className="text-red-500 ml-1">*</span>}
+          </label>
+          {block.description && (
+            <p className="text-sm text-slate-500">{block.description}</p>
+          )}
+          <input
+            {...field}
+            type="date"
+            className={`w-full px-3 py-2 border rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 ${fieldState.error ? 'border-red-500' : 'border-slate-300'
+              }`}
+          />
+          {fieldState.error && (
+            <p className="text-sm text-red-500">{fieldState.error.message}</p>
+          )}
+        </div>
       )}
-      <input
-        type="date"
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
-        required={block.required}
-        className={`w-full px-3 py-2 border rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-          error ? 'border-red-500' : 'border-slate-300'
-        }`}
-      />
-      {error && <p className="text-sm text-red-500">{error}</p>}
-    </div>
+    />
   );
 }

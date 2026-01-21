@@ -1,15 +1,20 @@
-import { useState, FormEvent } from 'react';
+/**
+ * FormPage - Public form renderer using React Hook Form + Zod
+ */
+
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import { FormProvider } from 'react-hook-form';
 import { fetchForm, submitForm } from '../api';
-import { BlockRenderer, isInputBlock } from './BlockRenderer';
+import { BlockRenderer } from './BlockRenderer';
+import { useIntakeForm } from '../hooks/useIntakeForm';
+import type { IntakeFormConfig } from '@autoart/shared';
 
 export function FormPage() {
   const { uniqueId } = useParams<{ uniqueId: string }>();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(0);
-  const [formData, setFormData] = useState<Record<string, unknown>>({});
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const {
     data: form,
@@ -21,64 +26,67 @@ export function FormPage() {
     enabled: !!uniqueId,
   });
 
-  const submit = useMutation({
-    mutationFn: () => {
-      const uploadCode = (formData.upload_code as string) || `UC-${Date.now()}`;
-      return submitForm(uniqueId!, uploadCode, formData);
+  // Build config from form data
+  const [config, setConfig] = useState<IntakeFormConfig | null>(null);
+
+  useEffect(() => {
+    if (form) {
+      // Gather all blocks from all pages
+      const allBlocks = form.pages
+        .sort((a, b) => a.page_index - b.page_index)
+        .flatMap((page) => page.blocks_config?.blocks || []);
+
+      setConfig({
+        blocks: allBlocks,
+        settings: form.pages[0]?.blocks_config?.settings,
+      });
+    }
+  }, [form]);
+
+  // Initialize hook only when config is available
+  const formEngine = useIntakeForm({
+    config: config ?? { blocks: [] },
+    submitFn: async (data) => {
+      const uploadCode = (data.upload_code as string) || `UC-${Date.now()}`;
+      await submitForm(uniqueId!, uploadCode, data);
     },
-    onSuccess: () => {
+    onSubmitSuccess: () => {
       navigate(`/${uniqueId}/success`);
     },
   });
 
-  const handleFieldChange = (blockId: string, value: unknown) => {
-    setFormData((prev) => ({ ...prev, [blockId]: value }));
-    // Clear error when field is modified
-    if (errors[blockId]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[blockId];
-        return next;
-      });
-    }
-  };
+  const { rhf, onSubmit, isSubmitting, submitError, isSubmitted } = formEngine;
 
-  const validateCurrentPage = (): boolean => {
-    if (!form) return false;
+  // Validation for page navigation
+  const validateCurrentPage = async (): Promise<boolean> => {
+    if (!form || !config) return false;
 
     const pages = form.pages.sort((a, b) => a.page_index - b.page_index);
     const currentPageData = pages[currentPage];
     if (!currentPageData?.blocks_config?.blocks) return true;
 
-    const newErrors: Record<string, string> = {};
-
-    for (const block of currentPageData.blocks_config.blocks) {
-      if (block.kind === 'module' && block.required && isInputBlock(block)) {
-        const value = formData[block.id];
-        if (value === undefined || value === null || value === '' ||
-            (Array.isArray(value) && value.length === 0)) {
-          newErrors[block.id] = `${block.label} is required`;
-        }
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    // Validate only the fields on the current page
+    const pageBlockIds = currentPageData.blocks_config.blocks.map((b) => b.id);
+    const result = await rhf.trigger(pageBlockIds);
+    return result;
   };
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (validateCurrentPage()) {
-      submit.mutate();
-    }
-  };
+  const handleSubmit = rhf.handleSubmit(async (data) => {
+    await onSubmit(data);
+  });
 
-  const handleNext = () => {
-    if (validateCurrentPage()) {
+  const handleNext = async () => {
+    const isValid = await validateCurrentPage();
+    if (isValid) {
       setCurrentPage((p) => p + 1);
     }
   };
 
+  const handlePrev = () => {
+    setCurrentPage((p) => p - 1);
+  };
+
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -87,6 +95,7 @@ export function FormPage() {
     );
   }
 
+  // Error state
   if (error || !form) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -95,6 +104,40 @@ export function FormPage() {
           <p className="text-slate-600">
             This form may have been disabled or doesn't exist.
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Success state (after submission)
+  if (isSubmitted) {
+    const confirmationMessage = config?.settings?.confirmationMessage
+      ?? 'Thank you! Your response has been recorded.';
+    const redirectUrl = config?.settings?.redirectUrl;
+
+    // Auto-redirect if configured
+    useEffect(() => {
+      if (redirectUrl) {
+        const timer = setTimeout(() => {
+          window.location.href = redirectUrl;
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
+    }, [redirectUrl]);
+
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Submitted!</h1>
+          <p className="text-slate-600">{confirmationMessage}</p>
+          {redirectUrl && (
+            <p className="text-sm text-slate-400 mt-4">Redirecting...</p>
+          )}
         </div>
       </div>
     );
@@ -147,61 +190,55 @@ export function FormPage() {
         </h2>
       )}
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {blocks.map((block) => (
-          <BlockRenderer
-            key={block.id}
-            block={block}
-            value={formData[block.id]}
-            onChange={handleFieldChange}
-            error={errors[block.id]}
-          />
-        ))}
+      {/* Form with React Hook Form Provider */}
+      <FormProvider {...rhf}>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {blocks.map((block) => (
+            <BlockRenderer key={block.id} block={block} />
+          ))}
 
-        {/* Empty state */}
-        {blocks.length === 0 && (
-          <div className="text-center py-12 text-slate-500">
-            This page has no questions yet.
-          </div>
-        )}
+          {/* Empty state */}
+          {blocks.length === 0 && (
+            <div className="text-center py-12 text-slate-500">
+              This page has no questions yet.
+            </div>
+          )}
 
-        {/* Navigation */}
-        <div className="flex justify-between pt-4">
-          <button
-            type="button"
-            onClick={() => setCurrentPage((p) => p - 1)}
-            disabled={isFirstPage}
-            className={`px-4 py-2 rounded ${isFirstPage ? 'text-slate-400 cursor-not-allowed' : 'text-slate-700 hover:bg-slate-100'}`}
-          >
-            Previous
-          </button>
-
-          {isLastPage ? (
-            <button
-              type="submit"
-              disabled={submit.isPending}
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {submit.isPending ? 'Submitting...' : 'Submit'}
-            </button>
-          ) : (
+          {/* Navigation */}
+          <div className="flex justify-between pt-4">
             <button
               type="button"
-              onClick={handleNext}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              onClick={handlePrev}
+              disabled={isFirstPage}
+              className={`px-4 py-2 rounded ${isFirstPage ? 'text-slate-400 cursor-not-allowed' : 'text-slate-700 hover:bg-slate-100'}`}
             >
-              Next
+              Previous
             </button>
-          )}
-        </div>
 
-        {submit.error && (
-          <p className="text-red-600 text-sm text-center">
-            Failed to submit. Please try again.
-          </p>
-        )}
-      </form>
+            {isLastPage ? (
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleNext}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Next
+              </button>
+            )}
+          </div>
+
+          {submitError && (
+            <p className="text-red-600 text-sm text-center">{submitError}</p>
+          )}
+        </form>
+      </FormProvider>
     </div>
   );
 }

@@ -310,8 +310,6 @@ export {
 // ==================== INTAKE ====================
 export {
     IntakeFormStatusSchema,
-    RadixElementSchema,
-    RadixPageTreeSchema,
     IntakeFormSchema,
     IntakeFormPageSchema,
     IntakeFormWithPagesSchema,
@@ -327,8 +325,6 @@ export {
     IntakeSubmissionResponseSchema,
     IntakeSubmissionsResponseSchema,
     type IntakeFormStatus,
-    type RadixElement,
-    type RadixPageTree,
     type IntakeForm,
     type IntakeFormPage,
     type IntakeFormWithPages,

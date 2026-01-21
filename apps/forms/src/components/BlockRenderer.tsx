@@ -1,5 +1,7 @@
 /**
  * BlockRenderer - Factory component that renders FormBlocks by type
+ * 
+ * Uses React Hook Form context - blocks access form state via useFormContext
  */
 
 import type { FormBlock, ModuleBlock, RecordBlock as RecordBlockType } from '@autoart/shared';
@@ -24,19 +26,19 @@ import {
 // Module block type to component mapping
 const MODULE_COMPONENTS: Record<
   string,
-  React.FC<{ block: ModuleBlock; value: unknown; onChange: (value: unknown) => void; error?: string }>
+  React.FC<{ block: ModuleBlock }>
 > = {
-  short_answer: ShortAnswer as never,
-  paragraph: Paragraph as never,
-  email: Email as never,
-  phone: Phone as never,
-  number: NumberInput as never,
-  date: DateInput as never,
-  time: TimeInput as never,
-  file_upload: FileUpload as never,
-  multiple_choice: MultipleChoice as never,
-  checkbox: Checkbox as never,
-  dropdown: Dropdown as never,
+  short_answer: ShortAnswer,
+  paragraph: Paragraph,
+  email: Email,
+  phone: Phone,
+  number: NumberInput,
+  date: DateInput,
+  time: TimeInput,
+  file_upload: FileUpload,
+  multiple_choice: MultipleChoice,
+  checkbox: Checkbox,
+  dropdown: Dropdown,
 };
 
 // Static blocks that don't collect input
@@ -44,12 +46,9 @@ const STATIC_BLOCKS = ['section_header', 'description', 'image'];
 
 interface BlockRendererProps {
   block: FormBlock;
-  value: unknown;
-  onChange: (blockId: string, value: unknown) => void;
-  error?: string;
 }
 
-export function BlockRenderer({ block, value, onChange, error }: BlockRendererProps) {
+export function BlockRenderer({ block }: BlockRendererProps) {
   // Handle record blocks
   if (block.kind === 'record') {
     return <RecordBlock block={block as RecordBlockType} />;
@@ -78,14 +77,7 @@ export function BlockRenderer({ block, value, onChange, error }: BlockRendererPr
     );
   }
 
-  return (
-    <Component
-      block={moduleBlock}
-      value={value}
-      onChange={(newValue) => onChange(block.id, newValue)}
-      error={error}
-    />
-  );
+  return <Component block={moduleBlock} />;
 }
 
 /**
