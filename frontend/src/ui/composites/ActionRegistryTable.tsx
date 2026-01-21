@@ -183,7 +183,7 @@ export function ActionRegistryTable({
       filtered = filtered.filter(
         (n) =>
           n.node.payload.title?.toLowerCase().includes(search) ||
-          n.node.payload.assignee?.name?.toLowerCase().includes(search)
+          n.node.payload.assignees?.some((a) => a.name?.toLowerCase().includes(search))
       );
     }
 

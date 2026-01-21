@@ -23,7 +23,7 @@ export function IntakeCanvas({
     activeBlockId,
     onSelectBlock,
     onDeleteBlock,
-    onDeleteBlock,
+
     onUpdateBlock,
     onDuplicateBlock,
 }: IntakeCanvasProps) {

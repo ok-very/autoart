@@ -83,7 +83,7 @@ function ActionCard({ node, onClick }: { node: WorkflowSurfaceNode; onClick: () 
                     <span className="text-[10px] text-slate-400 font-mono">{actionId.slice(0, 12)}...</span>
                     <div className="inline-flex items-center gap-1 bg-slate-50 border border-slate-200 text-slate-600 text-[11px] px-1.5 py-0.5 rounded">
                         <FolderOpen size={10} className="text-slate-400" />
-                        {payload.assignee?.name || 'Unassigned'}
+                        {payload.assignees?.[0]?.name || 'Unassigned'}
                     </div>
                 </div>
             </div>
@@ -94,9 +94,9 @@ function ActionCard({ node, onClick }: { node: WorkflowSurfaceNode; onClick: () 
             {/* Footer */}
             <div className="flex justify-between items-center mt-auto">
                 <div className="flex items-center gap-2">
-                    {payload.assignee && (
+                    {payload.assignees?.[0] && (
                         <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-600">
-                            {payload.assignee.name?.slice(0, 2).toUpperCase()}
+                            {payload.assignees[0].name?.slice(0, 2).toUpperCase()}
                         </div>
                     )}
                     <span className="text-[10px] text-slate-400">
@@ -143,8 +143,8 @@ export function ActionCardsView() {
             if (searchQuery) {
                 const query = searchQuery.toLowerCase();
                 const title = node.payload.title?.toLowerCase() || '';
-                const assignee = node.payload.assignee?.name?.toLowerCase() || '';
-                if (!title.includes(query) && !assignee.includes(query)) return false;
+                const assigneeName = node.payload.assignees?.[0]?.name?.toLowerCase() || '';
+                if (!title.includes(query) && !assigneeName.includes(query)) return false;
             }
             // Status filter
             if (filter !== 'all' && node.payload.status !== filter) return false;

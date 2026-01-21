@@ -159,7 +159,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                 ...blockToDuplicate,
                 id: crypto.randomUUID(),
                 label: blockToDuplicate.kind === 'module' ? `${blockToDuplicate.label} (Copy)` : blockToDuplicate.label
-            };
+            } as FormBlock;
 
             const index = prev.findIndex((b) => b.id === id);
             const newBlocks = [...prev];

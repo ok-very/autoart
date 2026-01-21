@@ -7,6 +7,19 @@
 import { z } from 'zod';
 import { FormBlockSchema } from '../../intake/schemas.js';
 
+export {
+  ModuleBlockTypeSchema,
+  ModuleBlockSchema,
+  RecordBlockSchema,
+  FormBlockSchema,
+  IntakeFormConfigSchema,
+  type ModuleBlockType,
+  type ModuleBlock,
+  type RecordBlock,
+  type FormBlock,
+  type IntakeFormConfig
+} from '../../intake/schemas.js';
+
 // ==================== ENUMS ====================
 
 export const IntakeFormStatusSchema = z.enum(['active', 'disabled']);

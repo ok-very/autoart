@@ -296,11 +296,11 @@ export function WorkflowSurfaceTable({
       align: 'center',
       sortKey: (row: TableRow) => {
         const node = row.data as WorkflowSurfaceNode;
-        return node.payload.assignee?.name || '';
+        return node.payload.assignees?.[0]?.name || '';
       },
       cell: (row: TableRow) => {
         const node = row.data as WorkflowSurfaceNode;
-        const assignee = node.payload.assignee;
+        const assignee = node.payload.assignees?.[0];
 
         if (!assignee) {
           return (
