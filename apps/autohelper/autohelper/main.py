@@ -14,6 +14,9 @@ import os
 from autohelper.app import build_app
 from autohelper.config import get_settings
 
+# Expose app for uvicorn factory/import
+app = build_app()
+
 def main() -> None:
     """Run the AutoHelper server."""
     settings = get_settings()
@@ -37,24 +40,22 @@ def main() -> None:
         sys.exit(0)
 
     if "--tray" in sys.argv:
-        print("Starting in System Tray mode...")
+        print("Starting in System Tray mode (Qt)...")
         try:
-            from autohelper.gui.icon import AutoHelperIcon
+            from autohelper.gui.popup import launch_config_popup
             
             # Run server in background thread
             server_thread = threading.Thread(target=server.run, daemon=True)
             server_thread.start()
             
-            # Run icon in main thread (blocking)
-            def on_quit():
-                print("Stopping server...")
-                server.should_exit = True
-                server_thread.join(timeout=5)
-                print("Server stopped. Exiting.")
-                sys.exit(0)
-                
-            icon = AutoHelperIcon(stop_callback=on_quit)
-            icon.run()
+            # Run Qt App (Blocking Main Thread)
+            launch_config_popup()
+            
+            # Cleanup after Qt app exits
+            print("Stopping server...")
+            server.should_exit = True
+            server_thread.join(timeout=2)
+            sys.exit(0)
             
         except Exception as e:
             print(f"Failed to start GUI mode: {e}")

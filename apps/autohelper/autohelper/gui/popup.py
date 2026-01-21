@@ -261,6 +261,11 @@ def get_window_class():
             self.setup_mail_tab()
             self.tabs.addTab(self.tab_mail, "Mail")
             
+            # Tab 4: Link
+            self.tab_link = QWidget()
+            self.setup_link_tab()
+            self.tabs.addTab(self.tab_link, "Link")
+            
             # Tab 4: Advanced
             self.tab_advanced = QWidget()
             self.setup_advanced_tab()
@@ -365,7 +370,35 @@ def get_window_class():
             
             layout.addWidget(status_grp)
             
-            # 2. AutoArt Connection Section
+            layout.addWidget(status_grp)
+            
+            # 3. Ingestion Section
+            ingest_grp = QFrame()
+            ingest_grp.setStyleSheet("background: white; border: 1px solid #eceff1; border-radius: 4px;")
+            i_layout = QVBoxLayout(ingest_grp)
+            i_layout.addWidget(QLabel("Manual Ingestion"))
+            
+            btn_ingest = QPushButton("Ingest PST/OST...")
+            btn_ingest.clicked.connect(self.ingest_pst_dialog)
+            i_layout.addWidget(btn_ingest)
+            
+            self.lbl_ingest_status = QLabel("Ready")
+            self.lbl_ingest_status.setStyleSheet("color: #90a4ae; font-style: italic;")
+            i_layout.addWidget(self.lbl_ingest_status)
+            
+            layout.addWidget(ingest_grp)
+            layout.addStretch()
+            
+            # Connect change signals to enable save
+            self.chk_mail_enabled.stateChanged.connect(lambda: self.btn_save.setEnabled(True))
+            self.spin_mail_interval.valueChanged.connect(lambda: self.btn_save.setEnabled(True))
+        
+        def setup_link_tab(self):
+            layout = QVBoxLayout(self.tab_link)
+            layout.setContentsMargins(15, 15, 15, 15)
+            layout.setSpacing(10)
+            
+            # AutoArt Connection Section
             context_grp = QFrame()
             context_grp.setStyleSheet("background: white; border: 1px solid #eceff1; border-radius: 4px;")
             c_layout = QVBoxLayout(context_grp)
@@ -397,28 +430,8 @@ def get_window_class():
             c_layout.addWidget(btn_pair)
             
             layout.addWidget(context_grp)
-            
-            # 3. Ingestion Section
-            ingest_grp = QFrame()
-            ingest_grp.setStyleSheet("background: white; border: 1px solid #eceff1; border-radius: 4px;")
-            i_layout = QVBoxLayout(ingest_grp)
-            i_layout.addWidget(QLabel("Manual Ingestion"))
-            
-            btn_ingest = QPushButton("Ingest PST/OST...")
-            btn_ingest.clicked.connect(self.ingest_pst_dialog)
-            i_layout.addWidget(btn_ingest)
-            
-            self.lbl_ingest_status = QLabel("Ready")
-            self.lbl_ingest_status.setStyleSheet("color: #90a4ae; font-style: italic;")
-            i_layout.addWidget(self.lbl_ingest_status)
-            
-            layout.addWidget(ingest_grp)
             layout.addStretch()
-            
-            # Connect change signals to enable save
-            self.chk_mail_enabled.stateChanged.connect(lambda: self.btn_save.setEnabled(True))
-            self.spin_mail_interval.valueChanged.connect(lambda: self.btn_save.setEnabled(True))
-        
+
         def pair_with_autoart(self):
             """Pair with AutoArt using the 6-digit code."""
             code = self.txt_pairing_code.text().strip()

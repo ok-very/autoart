@@ -35,6 +35,7 @@ Write-Host "[*] Stopping listeners on dev ports..." -ForegroundColor Yellow
 
 Stop-ProcessOnPort -Port $script:AutoArt.BackendPort
 Stop-ProcessOnPort -Port $script:AutoArt.FrontendPort
+Stop-ProcessOnPort -Port $script:AutoArt.AutoHelperPort
 
 # Also check for additional common Vite fallback ports (5174, 5175, etc.)
 $additionalPorts = @(5174, 5175, 5176)

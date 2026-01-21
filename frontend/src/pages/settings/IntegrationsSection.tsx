@@ -39,7 +39,9 @@ interface IntegrationsSectionProps {
     onMicrosoftConnect?: () => void;
     onMicrosoftDisconnect?: () => Promise<void>;
     onMondayConnect?: (apiKey: string) => Promise<void>;
+    onMondayOAuthConnect?: () => Promise<void>;
     onMondayDisconnect?: () => Promise<void>;
+    mondayOAuthAvailable?: boolean;
     onGoogleConnect?: () => void;
     onGoogleDisconnect?: () => Promise<void>;
 }
@@ -139,10 +141,12 @@ function IntegrationCard({
 interface MondayIntegrationProps {
     status: IntegrationStatus;
     onConnect: (apiKey: string) => Promise<void>;
+    onOAuthConnect?: () => Promise<void>;
+    oauthAvailable?: boolean;
     onDisconnect: () => Promise<void>;
 }
 
-function MondayIntegration({ status, onConnect, onDisconnect }: MondayIntegrationProps) {
+function MondayIntegration({ status, onConnect, onOAuthConnect, oauthAvailable, onDisconnect }: MondayIntegrationProps) {
     const [apiKey, setApiKey] = useState('');
     const [showKey, setShowKey] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -166,6 +170,21 @@ function MondayIntegration({ status, onConnect, onDisconnect }: MondayIntegratio
             setIsLoading(false);
         }
     }, [apiKey, onConnect]);
+
+    const handleOAuthConnect = useCallback(async () => {
+        if (!onOAuthConnect) return;
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            await onOAuthConnect();
+        } catch (err) {
+            setError((err as Error).message || 'Failed to connect');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [onOAuthConnect]);
 
     const handleDisconnect = useCallback(async () => {
         setIsLoading(true);
@@ -200,38 +219,83 @@ function MondayIntegration({ status, onConnect, onDisconnect }: MondayIntegratio
                     Disconnect
                 </button>
             ) : (
-                <div className="space-y-3">
-                    <div className="flex gap-2">
-                        <div className="relative flex-1">
-                            <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                            <input
-                                type={showKey ? 'text' : 'password'}
-                                value={apiKey}
-                                onChange={(e) => setApiKey(e.target.value)}
-                                placeholder="Enter your API key"
-                                className="w-full pl-10 pr-10 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                            />
+                <div className="space-y-4">
+                    {/* OAuth Button (Primary if available) */}
+                    {oauthAvailable && (
+                        <div className="flex flex-col gap-2">
                             <button
-                                type="button"
-                                onClick={() => setShowKey(!showKey)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                onClick={handleOAuthConnect}
+                                disabled={isLoading}
+                                className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-amber-500 hover:bg-amber-600 rounded-lg transition-colors disabled:bg-slate-300 w-full md:w-auto"
                             >
-                                {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                {isLoading ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Link2 className="w-4 h-4" />
+                                )}
+                                Connect with Monday
                             </button>
-                        </div>
-                        <button
-                            onClick={handleConnect}
-                            disabled={isLoading || !apiKey.trim()}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-amber-500 hover:bg-amber-600 rounded-lg transition-colors disabled:bg-slate-300"
-                        >
-                            {isLoading ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                                <Link2 className="w-4 h-4" />
+
+                            {!showManualInput && (
+                                <button
+                                    onClick={() => setShowManualInput(true)}
+                                    className="text-xs text-slate-500 hover:text-slate-700 hover:underline self-start"
+                                >
+                                    Or enter API key manually
+                                </button>
                             )}
-                            Connect
-                        </button>
-                    </div>
+                        </div>
+                    )}
+
+                    {/* Manual API Key Input */}
+                    {showManualInput && (
+                        <div className="space-y-3 pt-2 border-t border-slate-100">
+                            {oauthAvailable && (
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Manual Connection</span>
+                                    <button
+                                        onClick={() => setShowManualInput(false)}
+                                        className="text-xs text-slate-400 hover:text-slate-600"
+                                    >
+                                        Hide
+                                    </button>
+                                </div>
+                            )}
+
+                            <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input
+                                        type={showKey ? 'text' : 'password'}
+                                        value={apiKey}
+                                        onChange={(e) => setApiKey(e.target.value)}
+                                        placeholder="Enter your API key"
+                                        className="w-full pl-10 pr-10 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowKey(!showKey)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    >
+                                        {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                                <button
+                                    onClick={handleConnect}
+                                    disabled={isLoading || !apiKey.trim()}
+                                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                    {isLoading ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Key className="w-4 h-4" />
+                                    )}
+                                    Save Key
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {error && (
                         <div className="flex items-center gap-2 text-sm text-red-600">
                             <AlertCircle className="w-4 h-4" />
@@ -513,6 +577,8 @@ export function IntegrationsSection({
     onMicrosoftConnect = () => { },
     onMicrosoftDisconnect = async () => { },
     onMondayConnect = async () => { },
+    onMondayOAuthConnect = async () => { },
+    mondayOAuthAvailable = false,
     onMondayDisconnect = async () => { },
     onGoogleConnect = () => { },
     onGoogleDisconnect = async () => { },
@@ -541,6 +607,8 @@ export function IntegrationsSection({
                 <MondayIntegration
                     status={mondayStatus}
                     onConnect={onMondayConnect}
+                    onOAuthConnect={onMondayOAuthConnect}
+                    oauthAvailable={mondayOAuthAvailable}
                     onDisconnect={onMondayDisconnect}
                 />
                 <AutoHelperIntegration
