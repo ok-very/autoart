@@ -15,50 +15,86 @@
  */
 
 import crypto from 'crypto';
-import { db } from '../../db/client.js';
-import { AppError } from '../../utils/errors.js';
+
 import { MondayClient } from './connectors/monday-client.js';
 
-// Environment validation
-const MONDAY_CLIENT_ID = process.env.MONDAY_CLIENT_ID;
-const MONDAY_CLIENT_SECRET = process.env.MONDAY_CLIENT_SECRET;
-const MONDAY_REDIRECT_URI = process.env.MONDAY_REDIRECT_URI || 'http://localhost:3001/api/connections/monday/callback';
-
-// In-memory state store (replace with Redis in production)
-const stateStore = new Map<string, { timestamp: number; userId: string }>();
-
-// Clean up expired states (older than 10 minutes)
-setInterval(() => {
-    const now = Date.now();
-    for (const [state, data] of stateStore.entries()) {
-        if (now - data.timestamp > 10 * 60 * 1000) {
-            stateStore.delete(state);
-        }
-    }
-}, 60 * 1000);
+import { env } from '../../config/env.js';
+import { db } from '../../db/client.js';
+import { AppError } from '../../utils/errors.js';
 
 /**
  * Check if Monday OAuth is configured
  */
 export function isMondayOAuthConfigured(): boolean {
-    return Boolean(MONDAY_CLIENT_ID && MONDAY_CLIENT_SECRET);
+    return Boolean(env.MONDAY_CLIENT_ID && env.MONDAY_CLIENT_SECRET);
+}
+
+/**
+ * Generate a signed state parameter for CSRF protection
+ * Payload: userId:timestamp:entropy
+ * Signature: HMAC(payload, secret)
+ */
+function generateState(userId: string): string {
+    const timestamp = Date.now();
+    const entropy = crypto.randomBytes(8).toString('hex');
+    const payload = `${userId}:${timestamp}:${entropy}`;
+
+    // Sign the payload
+    const signature = crypto
+        .createHmac('sha256', env.JWT_SECRET)
+        .update(payload)
+        .digest('base64url');
+
+    return `${Buffer.from(payload).toString('base64url')}.${signature}`;
+}
+
+/**
+ * Validate the state parameter and return the userId
+ */
+function validateState(state: string): string {
+    const [payloadBase64, providedSignature] = state.split('.');
+
+    if (!payloadBase64 || !providedSignature) {
+        throw new AppError(400, 'Invalid state format', 'INVALID_STATE');
+    }
+
+    // Verify signature
+    const payload = Buffer.from(payloadBase64, 'base64url').toString('utf8');
+    const expectedSignature = crypto
+        .createHmac('sha256', env.JWT_SECRET)
+        .update(payload)
+        .digest('base64url');
+
+    if (providedSignature !== expectedSignature) {
+        throw new AppError(400, 'Invalid state signature', 'INVALID_STATE');
+    }
+
+    const [userId, timestampStr] = payload.split(':');
+    const timestamp = parseInt(timestampStr, 10);
+
+    // Check expiration (10 minutes)
+    if (Date.now() - timestamp > 10 * 60 * 1000) {
+        throw new AppError(400, 'State expired', 'STATE_EXPIRED');
+    }
+
+    return userId;
 }
 
 /**
  * Generate OAuth authorization URL
  */
 export function getMondayAuthUrl(userId: string): { url: string; state: string } {
-    if (!MONDAY_CLIENT_ID) {
+    if (!env.MONDAY_CLIENT_ID) {
         throw new AppError(500, 'Monday OAuth is not configured', 'MONDAY_OAUTH_NOT_CONFIGURED');
     }
 
-    // Generate CSRF state token
-    const state = crypto.randomBytes(32).toString('hex');
-    stateStore.set(state, { timestamp: Date.now(), userId });
+    // Generate stateless CSRF token
+    const state = generateState(userId);
+    const redirectUri = env.MONDAY_REDIRECT_URI || 'http://localhost:3001/api/connections/monday/callback';
 
     const params = new URLSearchParams({
-        client_id: MONDAY_CLIENT_ID,
-        redirect_uri: MONDAY_REDIRECT_URI,
+        client_id: env.MONDAY_CLIENT_ID,
+        redirect_uri: redirectUri,
         state,
     });
 
@@ -68,30 +104,16 @@ export function getMondayAuthUrl(userId: string): { url: string; state: string }
 }
 
 /**
- * Validate state parameter (CSRF protection)
- */
-function validateState(state: string): string | null {
-    const data = stateStore.get(state);
-    if (!data) {
-        return null;
-    }
-    stateStore.delete(state);
-    return data.userId;
-}
-
-/**
  * Exchange authorization code for access token
  */
 export async function handleMondayCallback(code: string, state: string) {
-    if (!MONDAY_CLIENT_ID || !MONDAY_CLIENT_SECRET) {
+    if (!env.MONDAY_CLIENT_ID || !env.MONDAY_CLIENT_SECRET) {
         throw new AppError(500, 'Monday OAuth is not configured', 'MONDAY_OAUTH_NOT_CONFIGURED');
     }
 
     // Validate state (CSRF protection)
     const userId = validateState(state);
-    if (!userId) {
-        throw new AppError(400, 'Invalid or expired state parameter', 'INVALID_STATE');
-    }
+    const redirectUri = env.MONDAY_REDIRECT_URI || 'http://localhost:3001/api/connections/monday/callback';
 
     // Exchange code for tokens
     const tokenResponse = await fetch('https://auth.monday.com/oauth2/token', {
@@ -100,10 +122,10 @@ export async function handleMondayCallback(code: string, state: string) {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-            client_id: MONDAY_CLIENT_ID,
-            client_secret: MONDAY_CLIENT_SECRET,
+            client_id: env.MONDAY_CLIENT_ID,
+            client_secret: env.MONDAY_CLIENT_SECRET,
             code,
-            redirect_uri: MONDAY_REDIRECT_URI,
+            redirect_uri: redirectUri,
         }),
     });
 

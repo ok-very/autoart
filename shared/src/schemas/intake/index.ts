@@ -29,11 +29,28 @@ export type IntakeFormStatus = z.infer<typeof IntakeFormStatusSchema>;
 
 /**
  * Page settings - optional configuration for a form page.
+ * Includes both page-level settings and form-level settings.
  */
 export const IntakePageSettingsSchema = z.object({
+  /** Page title shown at top of page */
   pageTitle: z.string().optional(),
+  /** Show progress bar */
+  showProgress: z.boolean().optional(),
+  /** Confirmation message after submit */
+  confirmationMessage: z.string().optional(),
+  /** Redirect URL after submit */
+  redirectUrl: z.string().url().optional(),
 });
 export type IntakePageSettings = z.infer<typeof IntakePageSettingsSchema>;
+
+/**
+ * Form settings - subset of page settings used in settings panel.
+ */
+export interface FormSettings {
+  showProgress: boolean;
+  confirmationMessage?: string;
+  redirectUrl?: string;
+}
 
 /**
  * Page config - the content structure for a form page.
