@@ -15,6 +15,7 @@ interface IntakeCanvasProps {
     onDeleteBlock: (id: string) => void;
     onUpdateBlock: (id: string, updates: Partial<FormBlock>) => void;
     onReorderBlocks: (blocks: FormBlock[]) => void;
+    onDuplicateBlock: (id: string) => void;
 }
 
 export function IntakeCanvas({
@@ -22,7 +23,9 @@ export function IntakeCanvas({
     activeBlockId,
     onSelectBlock,
     onDeleteBlock,
+    onDeleteBlock,
     onUpdateBlock,
+    onDuplicateBlock,
 }: IntakeCanvasProps) {
     const handleBlockClick = useCallback(
         (id: string) => {
@@ -67,9 +70,11 @@ export function IntakeCanvas({
                                         <input
                                             type="text"
                                             value={block.kind === 'module' ? block.label : ''}
-                                            onChange={(e) =>
-                                                onUpdateBlock(block.id, { label: e.target.value })
-                                            }
+                                            onChange={(e) => {
+                                                if (block.kind === 'module') {
+                                                    onUpdateBlock(block.id, { label: e.target.value });
+                                                }
+                                            }}
                                             placeholder="Question title"
                                             className="w-full bg-slate-50 p-3 text-base font-medium border-b-2 border-indigo-600 focus:outline-none rounded-t"
                                         />
@@ -91,7 +96,13 @@ export function IntakeCanvas({
 
                                 {/* Footer Actions */}
                                 <div className="flex items-center justify-end gap-4 pt-4 border-t border-slate-100">
-                                    <button className="text-slate-400 hover:text-indigo-600">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDuplicateBlock(block.id);
+                                        }}
+                                        className="text-slate-400 hover:text-indigo-600"
+                                    >
                                         <Copy className="w-4 h-4" />
                                     </button>
                                     <button

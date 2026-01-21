@@ -130,22 +130,6 @@ export async function upsertPage(
   pageIndex: number,
   blocksConfig: unknown
 ): Promise<IntakeFormPage> {
-  const existing = await db
-    .selectFrom('intake_form_pages')
-    .selectAll()
-    .where('form_id', '=', formId)
-    .where('page_index', '=', pageIndex)
-    .executeTakeFirst();
-
-  if (existing) {
-    return db
-      .updateTable('intake_form_pages')
-      .set({ blocks_config: blocksConfig })
-      .where('id', '=', existing.id)
-      .returningAll()
-      .executeTakeFirstOrThrow();
-  }
-
   return db
     .insertInto('intake_form_pages')
     .values({
@@ -153,6 +137,11 @@ export async function upsertPage(
       page_index: pageIndex,
       blocks_config: blocksConfig,
     } satisfies NewIntakeFormPage)
+    .onConflict((oc) =>
+      oc
+        .columns(['form_id', 'page_index'])
+        .doUpdateSet({ blocks_config: blocksConfig })
+    )
     .returningAll()
     .executeTakeFirstOrThrow();
 }

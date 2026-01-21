@@ -27,26 +27,62 @@ export function FileUpload({ block }: FileUploadProps) {
       const formData = new FormData();
       formData.append('file', file);
 
-      // Using fetch with progress simulation (XHR for real progress)
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        body: formData,
+      // Use XMLHttpRequest to track upload progress
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', endpoint);
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const progress = Math.round((e.loaded / e.total) * 100);
+            setUploadProgress(progress);
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const result = JSON.parse(xhr.responseText);
+              const url = result.url || result.path || `uploaded:${file.name}`;
+              setUploadedUrl(url);
+              setValue(block.id, url, { shouldValidate: true });
+              resolve();
+            } catch (err) {
+              reject(new Error('Invalid response'));
+            }
+          } else {
+            reject(new Error('Upload failed'));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.onabort = () => reject(new Error('Upload aborted'));
+
+        xhr.send(formData);
       });
 
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const result = await response.json();
-      const url = result.url || result.path || `uploaded:${file.name}`;
-
-      setUploadedUrl(url);
       setUploadProgress(100);
-      setValue(block.id, url, { shouldValidate: true });
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : 'Upload failed');
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isUploading) return;
+
+    const file = e.dataTransfer.files?.[0];
+    // Optional: check file type against block.acceptedFileTypes
+    if (file) {
+      uploadFile(file);
     }
   };
 
@@ -68,8 +104,8 @@ export function FileUpload({ block }: FileUploadProps) {
           {/* Upload Area */}
           <div
             className={`border-2 border-dashed rounded-lg p-6 text-center ${uploadedUrl
-                ? 'border-green-300 bg-green-50'
-                : 'border-slate-300 hover:border-blue-400'
+              ? 'border-green-300 bg-green-50'
+              : 'border-slate-300 hover:border-blue-400'
               }`}
           >
             {uploadedUrl ? (
@@ -104,7 +140,12 @@ export function FileUpload({ block }: FileUploadProps) {
                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                   />
                 </svg>
-                <label className="cursor-pointer">
+                <label
+                  className="cursor-pointer block w-full h-full"
+                  onDragOver={handleDragOver}
+                  onDragEnter={handleDragOver}
+                  onDrop={handleDrop}
+                >
                   <span className="text-blue-600 hover:text-blue-700">
                     Choose a file
                   </span>

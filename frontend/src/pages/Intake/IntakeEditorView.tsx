@@ -53,8 +53,9 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     // Track if we've initialized from the API
     const initialized = useRef(false);
 
-    // Debounce timer ref
-    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    // Debounce timer refs
+    const saveBlocksTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const saveTitleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Initialize state from loaded form
     useEffect(() => {
@@ -91,17 +92,17 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     useEffect(() => {
         if (!initialized.current) return;
 
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
+        if (saveBlocksTimeoutRef.current) {
+            clearTimeout(saveBlocksTimeoutRef.current);
         }
 
-        saveTimeoutRef.current = setTimeout(() => {
+        saveBlocksTimeoutRef.current = setTimeout(() => {
             saveBlocks(blocks);
         }, 1000);
 
         return () => {
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current);
+            if (saveBlocksTimeoutRef.current) {
+                clearTimeout(saveBlocksTimeoutRef.current);
             }
         };
     }, [blocks, saveBlocks]);
@@ -110,10 +111,10 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     const handleTitleChange = (newTitle: string) => {
         setFormTitle(newTitle);
         // Debounce title update
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
+        if (saveTitleTimeoutRef.current) {
+            clearTimeout(saveTitleTimeoutRef.current);
         }
-        saveTimeoutRef.current = setTimeout(() => {
+        saveTitleTimeoutRef.current = setTimeout(() => {
             updateForm.mutate({ id: formId, title: newTitle });
         }, 1000);
     };
@@ -147,6 +148,24 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
         setBlocks((prev) =>
             prev.map((b) => (b.id === id ? { ...b, ...updates } as FormBlock : b))
         );
+    }, []);
+
+    const handleDuplicateBlock = useCallback((id: string) => {
+        setBlocks((prev) => {
+            const blockToDuplicate = prev.find((b) => b.id === id);
+            if (!blockToDuplicate) return prev;
+
+            const newBlock = {
+                ...blockToDuplicate,
+                id: crypto.randomUUID(),
+                label: blockToDuplicate.kind === 'module' ? `${blockToDuplicate.label} (Copy)` : blockToDuplicate.label
+            };
+
+            const index = prev.findIndex((b) => b.id === id);
+            const newBlocks = [...prev];
+            newBlocks.splice(index + 1, 0, newBlock);
+            return newBlocks;
+        });
     }, []);
 
     const handlePublish = async () => {
@@ -307,6 +326,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                         onDeleteBlock={handleDeleteBlock}
                         onUpdateBlock={handleUpdateBlock}
                         onReorderBlocks={setBlocks}
+                        onDuplicateBlock={handleDuplicateBlock}
                     />
                 </div>
             </main>

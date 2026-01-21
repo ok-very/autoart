@@ -43,6 +43,19 @@ export function FormPage() {
     }
   }, [form]);
 
+  // Handle redirect on successful submission
+  useEffect(() => {
+    if (isSubmitted) {
+      const redirectUrl = config?.settings?.redirectUrl;
+      if (redirectUrl) {
+        const timer = setTimeout(() => {
+          window.location.href = redirectUrl;
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isSubmitted, config]);
+
   // Initialize hook only when config is available
   const formEngine = useIntakeForm({
     config: config ?? { blocks: [] },
@@ -116,14 +129,7 @@ export function FormPage() {
     const redirectUrl = config?.settings?.redirectUrl;
 
     // Auto-redirect if configured
-    useEffect(() => {
-      if (redirectUrl) {
-        const timer = setTimeout(() => {
-          window.location.href = redirectUrl;
-        }, 2000);
-        return () => clearTimeout(timer);
-      }
-    }, [redirectUrl]);
+
 
     return (
       <div className="flex items-center justify-center min-h-screen">

@@ -39,22 +39,6 @@ export async function setSetting(
   key: SettingKey,
   value: unknown
 ): Promise<UserSetting> {
-  const existing = await db
-    .selectFrom('user_settings')
-    .selectAll()
-    .where('user_id', '=', userId)
-    .where('setting_key', '=', key)
-    .executeTakeFirst();
-
-  if (existing) {
-    return db
-      .updateTable('user_settings')
-      .set({ setting_value: value, updated_at: new Date() })
-      .where('id', '=', existing.id)
-      .returningAll()
-      .executeTakeFirstOrThrow();
-  }
-
   return db
     .insertInto('user_settings')
     .values({
@@ -62,6 +46,11 @@ export async function setSetting(
       setting_key: key,
       setting_value: value,
     } satisfies NewUserSetting)
+    .onConflict((oc) =>
+      oc
+        .columns(['user_id', 'setting_key'])
+        .doUpdateSet({ setting_value: value, updated_at: new Date() })
+    )
     .returningAll()
     .executeTakeFirstOrThrow();
 }

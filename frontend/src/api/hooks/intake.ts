@@ -94,8 +94,8 @@ export function useIntakeSubmissions(formId: string | null, filters?: Submission
     queryKey: ['intake-submissions', formId, filters],
     queryFn: () => {
       const params = new URLSearchParams();
-      if (filters?.limit) params.set('limit', String(filters.limit));
-      if (filters?.offset) params.set('offset', String(filters.offset));
+      if (filters?.limit !== undefined) params.set('limit', String(filters.limit));
+      if (filters?.offset !== undefined) params.set('offset', String(filters.offset));
       return api
         .get<{ submissions: IntakeSubmission[] }>(
           `/intake/forms/${formId}/submissions?${params}`

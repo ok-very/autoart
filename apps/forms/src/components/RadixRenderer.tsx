@@ -47,19 +47,33 @@ export function RadixRenderer({
     case 'Box':
       return <div className={props.className as string}>{renderedChildren}</div>;
 
+
     case 'Flex':
+      const gapMap: Record<string, string> = {
+        '1': 'gap-1', '2': 'gap-2', '3': 'gap-3', '4': 'gap-4', '6': 'gap-6', '8': 'gap-8'
+      };
+      const gapClass = props.gap ? (gapMap[props.gap as string] || '') : '';
       return (
         <div
-          className={`flex ${props.direction === 'column' ? 'flex-col' : 'flex-row'} ${props.gap ? `gap-${props.gap}` : ''} ${props.className || ''}`}
+          className={`flex ${props.direction === 'column' ? 'flex-col' : 'flex-row'} ${gapClass} ${props.className || ''}`}
         >
           {renderedChildren}
         </div>
       );
 
+
     case 'Grid':
+      const gridColsMap: Record<string, string> = {
+        '1': 'grid-cols-1', '2': 'grid-cols-2', '3': 'grid-cols-3', '4': 'grid-cols-4', '6': 'grid-cols-6', '12': 'grid-cols-12'
+      };
+      const gridGapMap: Record<string, string> = {
+        '1': 'gap-1', '2': 'gap-2', '3': 'gap-3', '4': 'gap-4', '6': 'gap-6', '8': 'gap-8'
+      };
+      const colsClass = props.columns ? (gridColsMap[props.columns as string] || '') : '';
+      const gridGapClass = props.gap ? (gridGapMap[props.gap as string] || '') : '';
       return (
         <div
-          className={`grid ${props.columns ? `grid-cols-${props.columns}` : ''} ${props.gap ? `gap-${props.gap}` : ''} ${props.className || ''}`}
+          className={`grid ${colsClass} ${gridGapClass} ${props.className || ''}`}
         >
           {renderedChildren}
         </div>
@@ -175,10 +189,17 @@ export function RadixRenderer({
       return <hr className={`my-4 border-slate-200 ${props.className || ''}`} />;
 
     case 'Link':
+      const href = props.href as string || '#';
+      // Sanitize href to prevent javascript: XSS
+      let safeHref = href;
+      if (/^\s*javascript:/i.test(href)) {
+        safeHref = '#';
+      }
       return (
         <a
-          href={props.href as string}
+          href={safeHref}
           target={props.target as string}
+          rel={props.target === '_blank' ? 'noopener noreferrer' : undefined}
           className={`text-blue-600 hover:underline ${props.className || ''}`}
         >
           {props.content as string}
