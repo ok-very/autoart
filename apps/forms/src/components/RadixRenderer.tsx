@@ -190,11 +190,9 @@ export function RadixRenderer({
 
     case 'Link':
       const href = props.href as string || '#';
-      // Sanitize href to prevent javascript: XSS
-      let safeHref = href;
-      if (/^\s*javascript:/i.test(href)) {
-        safeHref = '#';
-      }
+      // Sanitize href to prevent XSS via dangerous protocols
+      const SAFE_URL_PATTERN = /^(https?:|mailto:|tel:|\/|#)/i;
+      const safeHref = SAFE_URL_PATTERN.test(href.trim()) ? href : '#';
       return (
         <a
           href={safeHref}

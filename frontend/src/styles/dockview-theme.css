@@ -189,14 +189,12 @@
   box-shadow: none;
 }
 
-/* Pill highlight for text in active tab */
+/* Active tab label - transparent to show gradient */
 .dockview-theme-light .dv-tab.active .dv-tab-label {
-  background-color: #f1f5f9;
-  /* slate-100 */
+  background-color: transparent;
   color: #0f172a;
   /* slate-900 */
   padding: 2px 10px;
-  border-radius: 12px;
   transition: all 0.2s ease;
 }
 

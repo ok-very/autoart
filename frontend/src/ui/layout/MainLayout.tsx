@@ -310,59 +310,15 @@ export function MainLayout() {
   const visiblePanels = useVisiblePanels();
   const { openPanel, saveLayout, setDockviewApi } = useWorkspaceStore();
 
-  // Build default layout
+  // Build default layout - single center workspace panel
   const buildDefaultLayout = useCallback((api: DockviewApi) => {
-    const centerPanel = api.addPanel({
+    api.addPanel({
       id: 'center-workspace',
       component: 'center-workspace',
       title: PANEL_DEFINITIONS['center-workspace'].title,
       tabComponent: 'icon-tab',
     });
-
-    if (openPanelIds.includes('selection-inspector')) {
-      api.addPanel({
-        id: 'selection-inspector',
-        component: 'selection-inspector',
-        title: PANEL_DEFINITIONS['selection-inspector'].title,
-        tabComponent: 'icon-tab',
-        position: {
-          referencePanel: centerPanel,
-          direction: 'right',
-        },
-      });
-    }
-
-    const bottomPanels = openPanelIds.filter(
-      (id) => PANEL_DEFINITIONS[id]?.defaultPlacement.area === 'bottom'
-    );
-
-    if (bottomPanels.length > 0) {
-      const firstBottom = bottomPanels[0];
-      const firstBottomPanel = api.addPanel({
-        id: firstBottom,
-        component: firstBottom,
-        title: PANEL_DEFINITIONS[firstBottom].title,
-        tabComponent: 'icon-tab',
-        position: {
-          referencePanel: centerPanel,
-          direction: 'below',
-        },
-      });
-
-      bottomPanels.slice(1).forEach((id) => {
-        api.addPanel({
-          id,
-          component: id,
-          title: PANEL_DEFINITIONS[id].title,
-          tabComponent: 'icon-tab',
-          position: {
-            referencePanel: firstBottomPanel,
-            direction: 'within',
-          },
-        });
-      });
-    }
-  }, [openPanelIds]);
+  }, []);
 
   // Handle Dockview ready
   const onReady = useCallback((event: DockviewReadyEvent) => {
@@ -393,7 +349,7 @@ export function MainLayout() {
     });
   }, [savedLayout, buildDefaultLayout, saveLayout, setDockviewApi]);
 
-  // Sync panels when openPanelIds changes
+  // Sync panels when openPanelIds changes - add as tabs by default
   useEffect(() => {
     const api = apiRef.current;
     if (!api) return;
@@ -406,6 +362,7 @@ export function MainLayout() {
         const centerPanel = api.getPanel('center-workspace');
         if (!centerPanel) return;
 
+        // Add new panels as tabs (within) - user can drag to split
         api.addPanel({
           id,
           component: id,
@@ -413,7 +370,7 @@ export function MainLayout() {
           tabComponent: 'icon-tab',
           position: {
             referencePanel: centerPanel,
-            direction: def.defaultPlacement.area === 'right' ? 'right' : 'below',
+            direction: 'within',
           },
         });
       }
