@@ -149,6 +149,7 @@ interface MondayIntegrationProps {
 function MondayIntegration({ status, onConnect, onOAuthConnect, oauthAvailable, onDisconnect }: MondayIntegrationProps) {
     const [apiKey, setApiKey] = useState('');
     const [showKey, setShowKey] = useState(false);
+    const [showManualInput, setShowManualInput] = useState(!oauthAvailable);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
