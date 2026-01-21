@@ -97,6 +97,36 @@ export async function authRoutes(fastify: FastifyInstance) {
     return reply.send({ user });
   });
 
+  // Update current user profile
+  interface UpdateMeBody {
+    Body: { name?: string };
+  }
+  fastify.patch<UpdateMeBody>('/me', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { name } = request.body || {};
+
+    if (name !== undefined && (typeof name !== 'string' || name.trim().length < 1)) {
+      return reply.code(400).send({ error: 'VALIDATION_ERROR', message: 'Name must be a non-empty string' });
+    }
+
+    const user = await authService.updateUser(request.user.userId, { name: name?.trim() });
+    if (!user) {
+      return reply.code(404).send({ error: 'NOT_FOUND', message: 'User not found' });
+    }
+    return reply.send({ user });
+  });
+
+  // Get current user's active sessions
+  fastify.get('/me/sessions', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest, reply: FastifyReply) => {
+    const sessions = await authService.getUserSessions(request.user.userId);
+    return reply.send({ sessions });
+  });
+
+  // Sign out everywhere (delete all sessions for current user)
+  fastify.delete('/me/sessions', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest, reply: FastifyReply) => {
+    await authService.deleteAllUserSessions(request.user.userId);
+    return reply.send({ message: 'All sessions revoked' });
+  });
+
   // Search users (for @mentions)
   interface SearchUsersQuery {
     Querystring: { q?: string; limit?: string };

@@ -32,7 +32,7 @@ export interface TaskLikeViewPayload {
   title: string;
   description?: unknown;
   status: DerivedStatus;
-  assignee?: { id: string; name: string };
+  assignees: Array<{ id: string; name: string; email?: string }>;
   dueDate?: string;
   percentComplete?: number;
 }
@@ -132,34 +132,36 @@ export function extractDescription(action: Action): unknown | undefined {
 }
 
 /**
- * Extract assignee from events (most recent ASSIGNMENT_OCCURRED).
+ * Extract assignees from events.
+ * Returns all currently assigned users (ASSIGNMENT_OCCURRED without subsequent ASSIGNMENT_REMOVED).
  */
-export function extractAssignee(
+export function extractAssignees(
   events: Event[]
-): { id: string; name: string } | undefined {
+): Array<{ id: string; name: string; email?: string }> {
+  // Track active assignments by userId
+  const activeAssignments = new Map<string, { id: string; name: string; email?: string }>();
+
+  // Sort events chronologically (oldest first) for last-write-wins
   const assignmentEvents = events
     .filter((e) => e.type === 'ASSIGNMENT_OCCURRED' || e.type === 'ASSIGNMENT_REMOVED')
-    .sort((a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime());
+    .sort((a, b) => new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime());
 
-  if (assignmentEvents.length === 0) {
-    return undefined;
+  for (const event of assignmentEvents) {
+    const payload = event.payload as { userId?: string; userName?: string; userEmail?: string } | null;
+    if (!payload?.userId) continue;
+
+    if (event.type === 'ASSIGNMENT_OCCURRED') {
+      activeAssignments.set(payload.userId, {
+        id: payload.userId,
+        name: payload.userName || 'Unknown User',
+        email: payload.userEmail,
+      });
+    } else if (event.type === 'ASSIGNMENT_REMOVED') {
+      activeAssignments.delete(payload.userId);
+    }
   }
 
-  const mostRecent = assignmentEvents[0];
-
-  if (mostRecent.type === 'ASSIGNMENT_REMOVED') {
-    return undefined;
-  }
-
-  const payload = mostRecent.payload as { userId?: string; userName?: string } | null;
-  if (payload?.userId) {
-    return {
-      id: payload.userId,
-      name: payload.userName || 'Unknown User',
-    };
-  }
-
-  return undefined;
+  return Array.from(activeAssignments.values());
 }
 
 /**
@@ -174,7 +176,7 @@ export function interpretActionView(
   const status = deriveStatus(events);
   const title = extractTitle(action);
   const description = extractDescription(action);
-  const assignee = extractAssignee(events);
+  const assignees = extractAssignees(events);
 
   return {
     actionId: action.id,
@@ -184,7 +186,7 @@ export function interpretActionView(
       title,
       description,
       status,
-      assignee,
+      assignees,
     },
   };
 }

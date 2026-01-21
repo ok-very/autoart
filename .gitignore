@@ -9,6 +9,21 @@ build/
 .next/
 out/
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+*.egg
+.venv/
+venv/
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
 # Environment files
 .env
 .env.local

@@ -119,6 +119,75 @@ export async function connectionsRoutes(app: FastifyInstance) {
         return reply.send({ connected: false });
     });
 
+    // ============================================================================
+    // MONDAY OAUTH
+    // ============================================================================
+
+    /**
+     * Check if Monday OAuth is available
+     */
+    app.get('/connections/monday/oauth/status', async (_request, reply) => {
+        const { isMondayOAuthConfigured } = await import('./monday-oauth.service.js');
+        return reply.send({ available: isMondayOAuthConfigured() });
+    });
+
+    /**
+     * Start Monday OAuth flow
+     * Returns authorization URL for popup window
+     */
+    app.get('/connections/monday/oauth/authorize', {
+        preHandler: app.authenticate
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
+        if (!userId) {
+            return reply.status(401).send({ error: 'Authentication required' });
+        }
+
+        const { getMondayAuthUrl, isMondayOAuthConfigured } = await import('./monday-oauth.service.js');
+
+        if (!isMondayOAuthConfigured()) {
+            return reply.status(501).send({
+                error: 'Monday OAuth not configured',
+                message: 'Set MONDAY_CLIENT_ID and MONDAY_CLIENT_SECRET environment variables'
+            });
+        }
+
+        const { url, state } = getMondayAuthUrl(userId);
+        return reply.send({ authUrl: url, state });
+    });
+
+    /**
+     * Monday OAuth callback
+     * Handles redirect from Monday after user authorization
+     */
+    app.get('/connections/monday/callback', async (request, reply) => {
+        const { code, state, error } = request.query as {
+            code?: string;
+            state?: string;
+            error?: string
+        };
+
+        if (error) {
+            // User denied or error occurred
+            return reply.redirect('/?monday_auth=error&message=' + encodeURIComponent(error));
+        }
+
+        if (!code || !state) {
+            return reply.redirect('/?monday_auth=error&message=missing_parameters');
+        }
+
+        try {
+            const { handleMondayCallback } = await import('./monday-oauth.service.js');
+            await handleMondayCallback(code, state);
+
+            // Redirect to settings page with success message
+            return reply.redirect('/settings?monday_auth=success');
+        } catch (err) {
+            console.error('Monday OAuth callback error:', err);
+            return reply.redirect('/?monday_auth=error&message=' + encodeURIComponent((err as Error).message));
+        }
+    });
+
     /**
      * Validate Monday API key without saving
      */

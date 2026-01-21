@@ -90,6 +90,65 @@ export function useValidateMondayKey() {
 }
 
 // ============================================================================
+// MONDAY OAUTH
+// ============================================================================
+
+interface MondayOAuthStatusResult {
+    available: boolean;
+}
+
+interface MondayAuthUrlResult {
+    authUrl: string;
+    state: string;
+}
+
+/**
+ * Check if Monday OAuth is configured on the server
+ */
+export function useMondayOAuthStatus() {
+    return useQuery({
+        queryKey: ['monday', 'oauth', 'status'],
+        queryFn: async (): Promise<MondayOAuthStatusResult> => {
+            return api.get<MondayOAuthStatusResult>('/connections/monday/oauth/status');
+        },
+        staleTime: 60 * 60 * 1000, // 1 hour - configuration doesn't change often
+    });
+}
+
+/**
+ * Get Monday OAuth authorization URL
+ */
+export function useGetMondayAuthUrl() {
+    return useMutation({
+        mutationFn: async (): Promise<MondayAuthUrlResult> => {
+            return api.get<MondayAuthUrlResult>('/connections/monday/oauth/authorize');
+        },
+    });
+}
+
+/**
+ * Initiate Monday OAuth flow (opens popup)
+ */
+export function useConnectMondayOAuth() {
+    const queryClient = useQueryClient();
+    const getAuthUrl = useGetMondayAuthUrl();
+    const openPopup = usePopupOAuth();
+
+    return useMutation({
+        mutationFn: async (): Promise<void> => {
+            // Get OAuth URL from backend
+            const { authUrl } = await getAuthUrl.mutateAsync();
+            // Use shared popup handler with proper timeout cleanup
+            await openPopup(authUrl, { name: 'monday-oauth' });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['connections'] });
+            queryClient.invalidateQueries({ queryKey: ['monday', 'boards'] });
+        },
+    });
+}
+
+// ============================================================================
 // GOOGLE OAUTH
 // ============================================================================
 

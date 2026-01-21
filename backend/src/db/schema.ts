@@ -51,6 +51,7 @@ export interface UsersTable {
   email: string;
   password_hash: string;
   name: string;
+  role: Generated<string>; // 'user' | 'admin' | 'viewer'
   created_at: Generated<Date>;
   deleted_at: Date | null;
   deleted_by: string | null;

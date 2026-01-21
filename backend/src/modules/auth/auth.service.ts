@@ -130,9 +130,43 @@ export async function deleteAllUserSessions(userId: string): Promise<void> {
 export async function getUserById(userId: string) {
   return db
     .selectFrom('users')
-    .select(['id', 'email', 'name', 'created_at'])
+    .select(['id', 'email', 'name', 'role', 'created_at'])
     .where('id', '=', userId)
+    .where('deleted_at', 'is', null)
     .executeTakeFirst();
+}
+
+export interface UpdateUserInput {
+  name?: string;
+}
+
+export async function updateUser(userId: string, input: UpdateUserInput) {
+  const updates: Record<string, unknown> = {};
+  if (input.name !== undefined) {
+    updates.name = input.name;
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return getUserById(userId);
+  }
+
+  return db
+    .updateTable('users')
+    .set(updates)
+    .where('id', '=', userId)
+    .where('deleted_at', 'is', null)
+    .returning(['id', 'email', 'name', 'role', 'created_at'])
+    .executeTakeFirst();
+}
+
+export async function getUserSessions(userId: string) {
+  return db
+    .selectFrom('sessions')
+    .select(['id', 'created_at', 'expires_at'])
+    .where('user_id', '=', userId)
+    .where('expires_at', '>', new Date())
+    .orderBy('created_at', 'desc')
+    .execute();
 }
 
 export async function searchUsers(query: string, limit: number = 10) {

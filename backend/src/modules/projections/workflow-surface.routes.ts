@@ -28,13 +28,16 @@ const surfaceNodeSchema = {
         title: { type: 'string' },
         description: {},
         status: { type: 'string', enum: ['pending', 'active', 'blocked', 'finished'] },
-        assignee: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-            name: { type: 'string' },
+        assignees: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              name: { type: 'string' },
+              email: { type: 'string' },
+            },
           },
-          nullable: true,
         },
         dueDate: { type: 'string', nullable: true },
         percentComplete: { type: 'number', nullable: true },

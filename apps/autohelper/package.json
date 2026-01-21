@@ -1,0 +1,14 @@
+{
+    "name": "autohelper",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": ".venv\\Scripts\\python -m autohelper.main --tray",
+        "start": ".venv\\Scripts\\python -m autohelper.main --tray",
+        "install:deps": "pip install -e .[dev]",
+        "lint": "ruff check .",
+        "format": "ruff check . --fix"
+    },
+    "dependencies": {},
+    "devDependencies": {}
+}

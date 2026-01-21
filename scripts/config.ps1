@@ -20,6 +20,7 @@ $script:AutoArt.EnvFile = Join-Path $script:AutoArt.ProjectDir ".env"
 # Default dev ports (override via env vars if you want)
 $script:AutoArt.BackendPort = if ($env:AUTOART_BACKEND_PORT) { [int]$env:AUTOART_BACKEND_PORT } else { 3001 }
 $script:AutoArt.FrontendPort = if ($env:AUTOART_FRONTEND_PORT) { [int]$env:AUTOART_FRONTEND_PORT } else { 5173 }
+$script:AutoArt.AutoHelperPort = if ($env:AUTOART_AUTOHELPER_PORT) { [int]$env:AUTOART_AUTOHELPER_PORT } else { 8000 }
 
 function Import-AutoArtEnv {
     param(

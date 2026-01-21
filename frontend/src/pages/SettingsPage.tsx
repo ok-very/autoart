@@ -12,7 +12,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { AccountSection, IntegrationsSection } from './settings';
-import { useConnections, useConnectMonday, useDisconnectMonday, useGeneratePairingCode, useConnectGoogle, useDisconnectGoogle, useConnectMicrosoft, useDisconnectMicrosoft } from '../api/connections';
+import { useConnections, useConnectMonday, useDisconnectMonday, useGeneratePairingCode, useConnectGoogle, useDisconnectGoogle, useConnectMicrosoft, useDisconnectMicrosoft, useMondayOAuthStatus, useConnectMondayOAuth } from '../api/connections';
 import { useCurrentUser } from '../api/hooks';
 
 // ============================================================================
@@ -47,6 +47,10 @@ export function SettingsPage() {
     const disconnectMondayMutation = useDisconnectMonday();
     const generatePairingCodeMutation = useGeneratePairingCode();
 
+    // Monday OAuth hooks
+    const { data: mondayOAuthStatus } = useMondayOAuthStatus();
+    const connectMondayOAuthMutation = useConnectMondayOAuth();
+
     // Google OAuth hooks
     const connectGoogleMutation = useConnectGoogle();
     const disconnectGoogleMutation = useDisconnectGoogle();
@@ -59,6 +63,10 @@ export function SettingsPage() {
     const handleMondayConnect = useCallback(async (apiKey: string) => {
         await connectMondayMutation.mutateAsync(apiKey);
     }, [connectMondayMutation]);
+
+    const handleMondayOAuthConnect = useCallback(async () => {
+        await connectMondayOAuthMutation.mutateAsync();
+    }, [connectMondayOAuthMutation]);
 
     const handleMondayDisconnect = useCallback(async () => {
         await disconnectMondayMutation.mutateAsync();
@@ -158,6 +166,8 @@ export function SettingsPage() {
                                 onMicrosoftConnect={handleMicrosoftConnect}
                                 onMicrosoftDisconnect={handleMicrosoftDisconnect}
                                 onMondayConnect={handleMondayConnect}
+                                onMondayOAuthConnect={handleMondayOAuthConnect}
+                                mondayOAuthAvailable={mondayOAuthStatus?.available ?? false}
                                 onMondayDisconnect={handleMondayDisconnect}
                                 onGoogleConnect={handleGoogleConnect}
                                 onGoogleDisconnect={handleGoogleDisconnect}
