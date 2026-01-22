@@ -5,10 +5,12 @@
  * Layout: ImportSidebar | Center View (swappable)
  */
 
-import { useCallback, useState, useMemo, useEffect } from 'react';
+import { useCallback, useState, useEffect, useMemo } from 'react';
 
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
 import { useUIStore } from '../../stores/uiStore';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { PANEL_DEFINITIONS } from '../../workspace/panelRegistry';
 import { ImportSidebar } from '../../surfaces/import/ImportSidebar';
 import { ImportWorkbenchView } from '../../surfaces/import/ImportWorkbenchView';
 import { MondayImportWizardView } from '../../surfaces/import/wizard/MondayImportWizardView';
@@ -20,8 +22,6 @@ export type ImportSourceType = 'file' | 'monday' | 'collector' | 'api';
 
 export function ImportPanel() {
     const {
-        openDrawer,
-        activeDrawer,
         importSession,
         importPlan,
         setImportSession,
@@ -29,7 +29,9 @@ export function ImportPanel() {
         selectImportItem,
         clearSelection,
     } = useUIStore();
+    const { dockviewApi } = useWorkspaceStore();
     const [sidebarWidth, setSidebarWidth] = useState(280);
+    const [classificationPanelOpened, setClassificationPanelOpened] = useState(false);
 
     // Source type controls which center view is shown
     const [sourceType, setSourceType] = useState<ImportSourceType>('file');
@@ -54,14 +56,14 @@ export function ImportPanel() {
     );
 
     const handleSessionCreated = useCallback((newSession: ImportSession, newPlan: ImportPlan) => {
+        const isNewSession = newSession.id !== importSession?.id;
         setImportSession(newSession);
         setImportPlan(newPlan);
-        clearSelection();
-    }, [setImportSession, setImportPlan, clearSelection]);
-
-    const handlePlanUpdated = useCallback((updatedPlan: ImportPlan) => {
-        setImportPlan(updatedPlan);
-    }, [setImportPlan]);
+        // Only clear selection when starting a new session, not on plan updates
+        if (isNewSession) {
+            clearSelection();
+        }
+    }, [importSession?.id, setImportSession, setImportPlan, clearSelection]);
 
     const handleReset = useCallback(() => {
         setImportSession(null);
@@ -69,17 +71,39 @@ export function ImportPanel() {
         clearSelection();
     }, [setImportSession, setImportPlan, clearSelection]);
 
-    // Open classification drawer when unresolved items exist
-    // TODO: Verify if drawer works over Dockview. Yes it should (Drawers are z-index overlays).
+    // Auto-open classification panel at bottom when there are unresolved items
     useEffect(() => {
-        if (hasUnresolvedClassifications && session && plan && activeDrawer?.type !== 'classification') {
-            openDrawer('classification', {
-                sessionId: session.id,
-                plan,
-                onResolutionsSaved: handlePlanUpdated,
-            });
+        if (!dockviewApi || !session || !hasUnresolvedClassifications || classificationPanelOpened) return;
+
+        // Check if classification panel already exists
+        const existingPanel = dockviewApi.getPanel('classification');
+        if (existingPanel) return;
+
+        // Find the import-workbench panel to position relative to
+        const importPanel = dockviewApi.getPanel('import-workbench');
+        if (!importPanel) return;
+
+        // Add classification panel at the bottom (1/3 height)
+        dockviewApi.addPanel({
+            id: 'classification',
+            component: 'classification',
+            title: PANEL_DEFINITIONS['classification']?.title || 'Classifications',
+            position: {
+                referencePanel: importPanel,
+                direction: 'below',
+            },
+            initialHeight: Math.floor(window.innerHeight / 3),
+        });
+
+        setClassificationPanelOpened(true);
+    }, [dockviewApi, session, hasUnresolvedClassifications, classificationPanelOpened]);
+
+    // Reset flag when session changes
+    useEffect(() => {
+        if (!session) {
+            setClassificationPanelOpened(false);
         }
-    }, [hasUnresolvedClassifications, session, plan, openDrawer, activeDrawer, handlePlanUpdated]);
+    }, [session]);
 
     // Auto-switch source type based on session connector type
     useEffect(() => {

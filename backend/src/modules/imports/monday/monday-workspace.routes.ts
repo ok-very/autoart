@@ -55,7 +55,9 @@ const GroupRoleSchema = z.enum([
     'subprocess',
     'backlog',
     'done',
+    'archive',
     'template_group',
+    'reference_group',
     'ignore',
 ]);
 
@@ -496,7 +498,7 @@ export async function mondayWorkspaceRoutes(app: FastifyInstance) {
                     groupTitle: g.group_title,
                     role: g.role,
                     stageOrder: g.stage_order ?? undefined,
-                    stageKind: g.stage_kind,
+                    stageKind: g.stage_kind ?? undefined,
                     subprocessNameOverride: g.subprocess_name_override ?? undefined,
                     settings: g.settings,
                 })),

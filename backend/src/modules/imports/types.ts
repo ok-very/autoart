@@ -95,6 +95,16 @@ export interface ImportPlanContainer {
     parentTempId: string | null;
     /** Optional hint for classification (e.g., 'process', 'stage', 'subprocess') */
     definitionName?: string;
+    /** Metadata for provenance tracking */
+    metadata?: {
+        /** Original name from source system (e.g., Monday board name before override) */
+        originalTitle?: string;
+        /** External source identifier */
+        externalId?: string;
+        /** Source system type */
+        sourceType?: 'monday' | 'csv' | 'manual';
+        [key: string]: unknown;
+    };
 }
 
 export interface ImportPlanItem {

@@ -45,6 +45,13 @@ export type MondayColumnSemanticRole =
     | 'custom'
     | 'ignore';
 
+export interface MondayBoardConfigSettings {
+    projectTitleOverride?: string; // Custom title for the created project (if different from boardName)
+    treatSubitemsAs?: 'child_actions' | 'subtasks' | 'ignore';
+    defaultGroupRole?: MondayGroupRole;
+    [key: string]: unknown;
+}
+
 export interface MondayBoardConfig {
     id?: string; // DB ID
     workspaceId?: string;
@@ -55,10 +62,12 @@ export interface MondayBoardConfig {
     templateScope?: 'global' | 'project';
     syncDirection: 'import' | 'export' | 'sync' | 'pull';
     syncEnabled: boolean;
-    settings?: Record<string, any>;
+    settings?: MondayBoardConfigSettings;
     groups: MondayGroupConfig[];
     columns: MondayColumnConfig[];
 }
+
+export type MondayStageKind = 'todo' | 'in_progress' | 'blocked' | 'done' | 'archive';
 
 export interface MondayGroupConfig {
     boardId: string;
@@ -66,7 +75,7 @@ export interface MondayGroupConfig {
     groupTitle: string;
     role: MondayGroupRole;
     stageOrder?: number;
-    stageKind?: 'todo' | 'doing' | 'done';
+    stageKind?: MondayStageKind;
     subprocessNameOverride?: string;
     settings?: Record<string, any>;
 }

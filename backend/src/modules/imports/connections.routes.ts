@@ -167,13 +167,17 @@ export async function connectionsRoutes(app: FastifyInstance) {
             error?: string
         };
 
+        // Get frontend URL for redirects
+        const { env } = await import('../../config/env.js');
+        const frontendUrl = env.CORS_ORIGIN.split(',')[0].trim();
+
         if (error) {
             // User denied or error occurred
-            return reply.redirect('/?monday_auth=error&message=' + encodeURIComponent(error));
+            return reply.redirect(`${frontendUrl}/?monday_auth=error&message=${encodeURIComponent(error)}`);
         }
 
         if (!code || !state) {
-            return reply.redirect('/?monday_auth=error&message=missing_parameters');
+            return reply.redirect(`${frontendUrl}/?monday_auth=error&message=missing_parameters`);
         }
 
         try {
@@ -181,10 +185,10 @@ export async function connectionsRoutes(app: FastifyInstance) {
             await handleMondayCallback(code, state);
 
             // Redirect to settings page with success message
-            return reply.redirect('/settings?monday_auth=success');
+            return reply.redirect(`${frontendUrl}/settings?monday_auth=success`);
         } catch (err) {
             console.error('Monday OAuth callback error:', err);
-            return reply.redirect('/?monday_auth=error&message=' + encodeURIComponent((err as Error).message));
+            return reply.redirect(`${frontendUrl}/?monday_auth=error&message=${encodeURIComponent((err as Error).message)}`);
         }
     });
 

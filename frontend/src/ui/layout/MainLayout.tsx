@@ -34,6 +34,7 @@ import { Header } from './Header';
 import { OverlayRegistry } from '../registry/OverlayRegistry';
 import { useWorkspaceStore, useOpenPanelIds, useLayout } from '../../stores/workspaceStore';
 import { useVisiblePanels } from '../../stores/contextStore';
+import { useUIStore } from '../../stores/uiStore';
 import {
   PANEL_DEFINITIONS,
   isPermanentPanel,
@@ -44,6 +45,7 @@ import {
 import { CentralAreaAdapter } from '../workspace/CentralAreaAdapter';
 import { SelectionInspector } from '../composites/SelectionInspector';
 import { ClassificationPanel } from '../../surfaces/import/ClassificationPanel';
+import { useImportContextOptional } from '../../surfaces/import/ImportContextProvider';
 import { RecordsPanel } from '../panels/RecordsPanel';
 import { FieldsPanel } from '../panels/FieldsPanel';
 import { ActionsPanel } from '../panels/ActionsPanel';
@@ -149,21 +151,44 @@ function CenterWorkspacePanel(props: IDockviewPanelProps) {
 }
 
 function SelectionInspectorPanel(props: IDockviewPanelProps) {
+  const importContext = useImportContextOptional();
+
   return (
     <div className="h-full overflow-auto bg-white relative group">
-      <SelectionInspector />
+      <SelectionInspector
+        importContext={importContext ? {
+          plan: importContext.plan,
+          selectedItemId: importContext.selectedItemId,
+          onSelectItem: importContext.selectItem,
+        } : undefined}
+      />
       <SpawnHandle api={props.api} panelId="selection-inspector" />
     </div>
   );
 }
 
 function ClassificationPanelWrapper(_props: IDockviewPanelProps) {
+  const importContext = useImportContextOptional();
+  const { importSession: globalSession, importPlan: globalPlan, setImportPlan } = useUIStore();
+
+  // Use import context if available, otherwise fall back to global store
+  const session = importContext?.session ?? globalSession;
+  const plan = importContext?.plan ?? globalPlan;
+
+  const handleResolutionsSaved = useCallback((updatedPlan: any) => {
+    if (importContext?.updatePlan) {
+      importContext.updatePlan(updatedPlan);
+    } else {
+      setImportPlan(updatedPlan);
+    }
+  }, [importContext, setImportPlan]);
+
   return (
     <div className="h-full overflow-auto bg-white relative">
       <ClassificationPanel
-        sessionId={null}
-        plan={null}
-        onResolutionsSaved={() => { }}
+        sessionId={session?.id ?? null}
+        plan={plan}
+        onResolutionsSaved={handleResolutionsSaved}
       />
     </div>
   );

@@ -126,6 +126,9 @@ export async function generatePlanFromConnector(
         throw new Error(`Session ${sessionId} not found`);
     }
 
+    // Use provided userId or fall back to session creator
+    const effectiveUserId = userId ?? session.created_by ?? undefined;
+
     // Parse connector config
     const config = session.parser_config as {
         boardId?: string;
@@ -139,7 +142,7 @@ export async function generatePlanFromConnector(
     }
 
     // Get token for the user
-    const token = await getMondayToken(userId);
+    const token = await getMondayToken(effectiveUserId);
     const connector = new MondayConnector(token);
 
     // Collect all nodes from all boards
@@ -155,7 +158,7 @@ export async function generatePlanFromConnector(
     // 1. Identify/Ensure Workspace
     // For V1, we try to use an existing workspace created by this user or create a default one.
     // In future, UI should allow selecting workspace.
-    const existingWorkspaces = await mondayWorkspaceService.listWorkspaces(userId);
+    const existingWorkspaces = await mondayWorkspaceService.listWorkspaces(effectiveUserId);
     let workspaceConfig: MondayWorkspaceConfig | null = null;
     let workspaceId = existingWorkspaces[0]?.id;
 
@@ -169,7 +172,7 @@ export async function generatePlanFromConnector(
         const newWorkspace = await mondayWorkspaceService.createWorkspace({
             id: workspaceId,
             name: 'Monday.com Workspace',
-            created_by: userId,
+            created_by: effectiveUserId,
             settings: {},
         });
 
@@ -235,7 +238,7 @@ export async function generatePlanFromConnector(
         };
 
         // Save to DB
-        await mondayWorkspaceService.saveFullWorkspaceConfig(updatedConfig, userId);
+        await mondayWorkspaceService.saveFullWorkspaceConfig(updatedConfig, effectiveUserId);
 
         // Refresh local config variable
         const refetched = await mondayWorkspaceService.getFullWorkspaceConfig(workspaceId!);
@@ -713,13 +716,16 @@ async function executePlanViaComposer(
             ? createdIds[container.parentTempId]
             : targetProjectId;
 
+        // Build metadata including provenance info from container
+        const nodeMetadata = container.metadata ?? {};
+
         const created = await db
             .insertInto('hierarchy_nodes')
             .values({
                 parent_id: parentId ?? null,
                 type: container.type,
                 title: container.title,
-                metadata: JSON.stringify({}),
+                metadata: JSON.stringify(nodeMetadata),
             })
             .returning('id')
             .executeTakeFirstOrThrow();

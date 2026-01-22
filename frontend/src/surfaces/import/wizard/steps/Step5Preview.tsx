@@ -1,50 +1,23 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Columns, Layers, Table as TableIcon, Play } from 'lucide-react';
-import { Stack } from '@autoart/ui';
-import { Text } from '@autoart/ui';
-import { Button } from '@autoart/ui';
-// Inline removed - unused
+import { Stack, Text, Button } from '@autoart/ui';
 import { ImportPreview } from '../../ImportPreview';
-import { ClassificationPanel } from '../../ClassificationPanel';
-import { SelectionInspector } from '../../../../ui/composites/SelectionInspector';
-import { useUIStore } from '../../../../stores/uiStore';
-import type { ImportSession, ImportPlan } from '../../../../api/hooks/imports';
+import { useImportContext } from '../../ImportContextProvider';
 
 interface StepProps {
     onNext: () => void;
     onBack: () => void;
-    session: ImportSession | null;
-    plan: ImportPlan | null;
-    onSelectItem: (item: any) => void;
-    onSessionCreated: (session: ImportSession, plan: ImportPlan) => void;
 }
 
 type ProjectionType = 'hierarchy-projection' | 'stage-projection' | 'table-projection';
 
-export function Step6Preview({ onNext, onBack, session, plan, onSelectItem, onSessionCreated }: StepProps) {
+export function Step5Preview({ onNext, onBack }: StepProps) {
     const [projection, setProjection] = useState<ProjectionType>('hierarchy-projection');
-    const { setSelection, setInspectorWidth } = useUIStore();
-    // Reactively track selection
-    const selectedRecordId = useUIStore(state => state.selection?.id) || null;
-
-    // Reset layout on mount
-    useEffect(() => {
-        setInspectorWidth(400);
-    }, [setInspectorWidth]);
+    const { session, plan, selectedItemId, selectItem } = useImportContext();
 
     const handleSelect = useCallback((id: string) => {
-        // Update global selection for Inspector
-        setSelection({ type: 'import_item', id });
-        // Call generic handler (might be redundant if setSelection is enough, but keeping for compatibility)
-        onSelectItem({ id, type: 'import_item' });
-    }, [setSelection, onSelectItem]);
-
-    // Handle plan updates from ClassificationPanel
-    const handlePlanUpdate = useCallback((updatedPlan: ImportPlan) => {
-        if (session) {
-            onSessionCreated(session, updatedPlan);
-        }
-    }, [session, onSessionCreated]);
+        selectItem(id);
+    }, [selectItem]);
 
     if (!session || !plan) {
         return (
@@ -56,7 +29,7 @@ export function Step6Preview({ onNext, onBack, session, plan, onSelectItem, onSe
     }
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 relative overflow-hidden">
+        <div className="flex flex-col h-full bg-slate-50">
             {/* Header / Toolbar */}
             <div className="shrink-0 px-6 py-3 bg-white border-b border-slate-200 flex items-center justify-between">
                 <Stack gap="xs">
@@ -102,31 +75,14 @@ export function Step6Preview({ onNext, onBack, session, plan, onSelectItem, onSe
                 </div>
             </div>
 
-            {/* Main Workbench Area */}
-            <div className="flex-1 flex overflow-hidden">
-                {/* Center: Preview Projection */}
-                <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white">
-                    <div className="flex-1 overflow-auto relative">
-                        <ImportPreview
-                            plan={plan}
-                            projectionId={projection}
-                            selectedRecordId={selectedRecordId}
-                            onRecordSelect={handleSelect}
-                        />
-                    </div>
-
-                    {/* Bottom: Classification Panel */}
-                    <div className="shrink-0 z-20 relative">
-                        <ClassificationPanel
-                            sessionId={session.id}
-                            plan={plan}
-                            onResolutionsSaved={handlePlanUpdate}
-                        />
-                    </div>
-                </div>
-
-                {/* Right: Inspector */}
-                <SelectionInspector />
+            {/* Main Preview Area */}
+            <div className="flex-1 overflow-auto bg-white">
+                <ImportPreview
+                    plan={plan}
+                    projectionId={projection}
+                    selectedRecordId={selectedItemId}
+                    onRecordSelect={handleSelect}
+                />
             </div>
         </div>
     );

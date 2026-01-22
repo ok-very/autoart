@@ -12,7 +12,10 @@
  * - Tab header (dynamic based on selection type)
  * - Scrollable content area
  *
- * Note: Quick Declare has been moved to a transient modal (Cmd/Ctrl+D)
+ * Dockview Integration:
+ * - No fixed width - dockview controls panel sizing
+ * - Accepts optional importContext prop for panel-local state
+ * - Falls back to global uiStore when not in import context
  */
 
 import { clsx } from 'clsx';
@@ -27,6 +30,7 @@ import { useUIStore, type InspectorTabId } from '../../stores/uiStore';
 import { ActionDetailsPanel } from '../inspector/ActionDetailsPanel';
 import { ActionEventsPanel } from '../inspector/ActionEventsPanel';
 import { useCollectionModeOptional } from '../../surfaces/export/CollectionModeProvider';
+import type { ImportPlan } from '../../api/hooks/imports';
 
 // Re-export from canonical location for backward compatibility
 export type { InspectorTabId } from '../../types/ui';
@@ -50,9 +54,28 @@ const IMPORT_TABS: Tab[] = [
     { id: 'import_fields', label: 'Fields', icon: List },
 ];
 
-export function SelectionInspector() {
-    const { selection, inspectorTabMode, setInspectorMode, inspectorWidth } = useUIStore();
+/**
+ * Props for panel-local import context.
+ * When provided, the inspector uses this instead of global uiStore.
+ */
+export interface SelectionInspectorProps {
+    importContext?: {
+        plan: ImportPlan | null;
+        selectedItemId: string | null;
+        onSelectItem?: (id: string | null) => void;
+    };
+}
+
+export function SelectionInspector({ importContext }: SelectionInspectorProps = {}) {
+    const { selection: globalSelection, inspectorTabMode, setInspectorMode, importPlan: globalPlan } = useUIStore();
     const collectionMode = useCollectionModeOptional();
+
+    // Use import context if provided, otherwise fall back to global store
+    const selection = importContext?.selectedItemId
+        ? { type: 'import_item' as const, id: importContext.selectedItemId }
+        : globalSelection;
+
+    const plan = importContext?.plan ?? globalPlan;
 
     // Derive IDs from selection
     const inspectedNodeId = selection?.type === 'node' ? selection.id : null;
@@ -81,10 +104,7 @@ export function SelectionInspector() {
     // Empty state
     if (!inspectedItem && !isAction && !isImportItem) {
         return (
-            <aside
-                className="bg-white border-l border-slate-200 flex flex-col shrink-0"
-                style={{ width: inspectorWidth }}
-            >
+            <div className="bg-white flex flex-col h-full overflow-hidden">
                 <div className="h-14 border-b border-slate-100 flex items-center justify-center px-5 bg-slate-50/50">
                     <span className="text-xs text-slate-400">Select an item to inspect</span>
                 </div>
@@ -96,7 +116,7 @@ export function SelectionInspector() {
                         </p>
                     </div>
                 </div>
-            </aside>
+            </div>
         );
     }
 
@@ -123,7 +143,7 @@ export function SelectionInspector() {
     const renderView = () => {
         // Import item selection routing
         if (selectionType === 'import_item' && inspectedImportItemId) {
-            return <ImportItemDetailsView itemId={inspectedImportItemId} tab={effectiveTab} />;
+            return <ImportItemDetailsView itemId={inspectedImportItemId} tab={effectiveTab} plan={plan} />;
         }
 
         // Action selection routing
@@ -186,9 +206,8 @@ export function SelectionInspector() {
     };
 
     return (
-        <aside
-            className="bg-white border-l border-slate-200 flex flex-col shrink-0 shadow-xl z-30"
-            style={{ width: inspectorWidth }}
+        <div
+            className="bg-white flex flex-col h-full overflow-hidden"
             data-aa-component="SelectionInspector"
             data-aa-view={effectiveTab}
             data-aa-selection-type={selectionType}
@@ -248,7 +267,7 @@ export function SelectionInspector() {
 
             {/* View Content (scrollable) */}
             <div className="flex-1 overflow-y-auto custom-scroll p-5">{renderView()}</div>
-        </aside>
+        </div>
     );
 }
 

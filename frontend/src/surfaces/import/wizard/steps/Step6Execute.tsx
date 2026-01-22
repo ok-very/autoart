@@ -17,7 +17,7 @@ interface StepProps {
     onSessionCreated: (session: ImportSession, plan: ImportPlan) => void;
 }
 
-export function Step7Execute({ onBack, session, plan }: StepProps) {
+export function Step6Execute({ onBack, session, plan }: StepProps) {
     const [isComplete, setIsComplete] = useState(false);
 
     const executeImport = useExecuteImport();

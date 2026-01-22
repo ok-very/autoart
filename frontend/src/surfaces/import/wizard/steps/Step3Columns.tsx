@@ -1,19 +1,23 @@
 import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronRight, AlertTriangle, Info, HelpCircle } from 'lucide-react';
-import { Stack } from '@autoart/ui';
-import { Text } from '@autoart/ui';
-import { Button } from '@autoart/ui';
-import { Inline } from '@autoart/ui';
-import { Select } from '@autoart/ui';
-import { Badge } from '@autoart/ui';
-import { Spinner } from '@autoart/ui';
-import { DebouncedInput } from '@autoart/ui';
+import { ChevronDown, AlertTriangle, X } from 'lucide-react';
+import { clsx } from 'clsx';
+import {
+    Stack,
+    Text,
+    Button,
+    Inline,
+    Select,
+    Badge,
+    Spinner,
+    CollapsibleRoot,
+    CollapsibleTrigger,
+    CollapsibleContent,
+} from '@autoart/ui';
 import { useMondayBoardConfigs, useUpdateMondayColumnConfigs } from '../../../../api/hooks/monday';
 import { useGenerateImportPlan, type ImportSession, type ImportPlan } from '../../../../api/hooks/imports';
-import { MondayColumnSemanticRole } from '../../../../api/types/monday';
+import { MondayColumnConfig, MondayColumnSemanticRole } from '../../../../api/types/monday';
 import { ImportPreviewDrawer } from '../components/ImportPreviewDrawer';
 import { ROLE_METADATA, SEMANTIC_ROLE_OPTIONS } from '../constants/monday-roles';
-
 
 interface StepProps {
     onNext: () => void;
@@ -24,84 +28,243 @@ interface StepProps {
     onSessionCreated: (session: ImportSession, plan: ImportPlan) => void;
 }
 
-// Role metadata and options imported from constants
+// ============================================================================
+// CONSTANTS
+// ============================================================================
 
-// Check if column type is compatible with selected role
-function getTypeWarning(columnType: string, role: MondayColumnSemanticRole): string | null {
-    const meta = ROLE_METADATA[role];
-    if (!meta || meta.preferredTypes.length === 0) return null;
+type RoleCategory = 'core' | 'data' | 'link' | 'template' | 'other';
 
-    const normalizedType = columnType.toLowerCase();
-    const isCompatible = meta.preferredTypes.some(t =>
-        normalizedType.includes(t) || t.includes(normalizedType)
-    );
+const ROLE_CATEGORIES: { id: RoleCategory; label: string; description: string }[] = [
+    { id: 'core', label: 'Core Fields', description: 'Essential item properties' },
+    { id: 'data', label: 'Data Fields', description: 'Notes, facts, and metrics' },
+    { id: 'link', label: 'Link Fields', description: 'Relationships to other entities' },
+    { id: 'template', label: 'Template Fields', description: 'Template configuration' },
+    { id: 'other', label: 'Other/Ignored', description: 'Custom fields or skipped' },
+];
 
-    if (!isCompatible && role !== 'custom' && role !== 'ignore') {
-        return `Best with ${meta.preferredTypes.slice(0, 2).join(' or ')} columns`;
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+function groupColumnsByCategory(columns: MondayColumnConfig[]): Record<RoleCategory, MondayColumnConfig[]> {
+    const result: Record<RoleCategory, MondayColumnConfig[]> = {
+        core: [],
+        data: [],
+        link: [],
+        template: [],
+        other: [],
+    };
+
+    for (const col of columns) {
+        const category = ROLE_METADATA[col.semanticRole]?.category || 'other';
+        result[category].push(col);
     }
-    return null;
+
+    return result;
 }
 
-// Roles glossary component
-function RolesGlossary({ isOpen, onToggle }: { isOpen: boolean; onToggle: () => void }) {
-    const categories = [
-        { key: 'core', label: 'Core Fields', description: 'Essential item properties' },
-        { key: 'data', label: 'Data Fields', description: 'Structured data and notes' },
-        { key: 'link', label: 'Link Fields', description: 'Relationships to other entities' },
-        { key: 'template', label: 'Template Fields', description: 'Template configuration' },
-        { key: 'other', label: 'Other', description: 'Custom and ignore options' },
-    ];
+function getConfidenceVariant(confidence: number | undefined): 'success' | 'warning' | 'neutral' {
+    if (!confidence) return 'neutral';
+    if (confidence >= 0.8) return 'success';
+    if (confidence >= 0.5) return 'warning';
+    return 'neutral';
+}
+
+// ============================================================================
+// COLUMN CARD COMPONENT - Shows sample values prominently
+// ============================================================================
+
+interface ColumnCardProps {
+    column: MondayColumnConfig;
+    boardConfigId: string;
+    workspaceId: string;
+    onUpdate: (boardConfigId: string, workspaceId: string, columnId: string, update: Record<string, unknown>) => void;
+}
+
+function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCardProps) {
+    const roleMeta = ROLE_METADATA[column.semanticRole];
+    const hasSamples = column.sampleValues && column.sampleValues.length > 0;
 
     return (
-        <div className="border border-slate-200 rounded-lg bg-slate-50 mt-4">
-            <button
-                onClick={onToggle}
-                className="w-full px-4 py-2 flex items-center justify-between text-left hover:bg-slate-100 rounded-lg transition-colors"
-            >
-                <Inline gap="sm" align="center">
-                    <Info size={14} className="text-slate-400" />
-                    <Text size="sm" weight="medium">Field Roles Reference</Text>
-                </Inline>
-                {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            </button>
+        <div className="border border-slate-200 rounded-lg bg-white overflow-hidden shadow-sm">
+            {/* Sample values - PROMINENT */}
+            <div className="px-4 py-3 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
+                {hasSamples ? (
+                    <div className="flex flex-wrap gap-2">
+                        {column.sampleValues!.slice(0, 5).map((val, i) => (
+                            <span
+                                key={i}
+                                className="text-sm text-slate-700 bg-white px-2.5 py-1 rounded border border-slate-200 shadow-sm truncate max-w-[200px]"
+                                title={val}
+                            >
+                                "{val}"
+                            </span>
+                        ))}
+                        {column.sampleValues!.length > 5 && (
+                            <span className="text-xs text-slate-400 self-center">
+                                +{column.sampleValues!.length - 5} more
+                            </span>
+                        )}
+                    </div>
+                ) : (
+                    <span className="text-sm text-slate-400 italic">No sample values available</span>
+                )}
+            </div>
 
-            {isOpen && (
-                <div className="px-4 pb-4 space-y-4">
-                    {categories.map(cat => {
-                        const roles = Object.entries(ROLE_METADATA)
-                            .filter(([, m]) => m.category === cat.key);
-
-                        if (roles.length === 0) return null;
-
-                        return (
-                            <div key={cat.key}>
-                                <Text size="xs" weight="bold" color="muted" className="uppercase tracking-wide mb-2">
-                                    {cat.label}
-                                </Text>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {roles.map(([key, meta]) => (
-                                        <div key={key} className="text-xs">
-                                            <span className="font-medium text-slate-700">{meta.label}</span>
-                                            <span className="text-slate-500"> — {meta.description}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        );
-                    })}
+            {/* Column info + role selector */}
+            <div className="px-4 py-3 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                    <Text weight="medium" className="truncate" title={column.columnTitle}>
+                        {column.columnTitle}
+                    </Text>
+                    <Badge variant="light" size="xs">
+                        {column.columnType}
+                    </Badge>
                 </div>
-            )}
+
+                <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-slate-300">→</span>
+                    <Select
+                        value={column.semanticRole}
+                        onChange={(val) => {
+                            if (val) {
+                                onUpdate(boardConfigId, workspaceId, column.columnId, { semanticRole: val });
+                            }
+                        }}
+                        data={SEMANTIC_ROLE_OPTIONS}
+                        size="sm"
+                    />
+                </div>
+            </div>
+
+            {/* Footer: description + confidence */}
+            <div className="px-4 py-2 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-4">
+                <span className="text-xs text-slate-500 truncate" title={roleMeta?.description}>
+                    {roleMeta?.description || 'No description'}
+                </span>
+                {column.inferenceSource !== 'manual' && column.inferenceConfidence !== undefined && (
+                    <Badge variant={getConfidenceVariant(column.inferenceConfidence)} size="xs">
+                        {Math.round(column.inferenceConfidence * 100)}% match
+                    </Badge>
+                )}
+            </div>
         </div>
     );
 }
 
-export function Step4Columns({ onNext, onBack, session, onSessionCreated }: StepProps) {
-    const [isRefreshing, setIsRefreshing] = useState(false);
-    const [glossaryOpen, setGlossaryOpen] = useState(false);
-    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+// ============================================================================
+// IGNORED COLUMN CHIP - Compact display for ignored columns
+// ============================================================================
 
-    // Local state for alias inputs to avoid network spam
-    // const [localAliases, setLocalAliases] = useState<Record<string, string>>({});
+interface IgnoredColumnChipProps {
+    column: MondayColumnConfig;
+    boardConfigId: string;
+    workspaceId: string;
+    onUpdate: (boardConfigId: string, workspaceId: string, columnId: string, update: Record<string, unknown>) => void;
+}
+
+function IgnoredColumnChip({ column, boardConfigId, workspaceId, onUpdate }: IgnoredColumnChipProps) {
+    return (
+        <button
+            onClick={() => {
+                // Un-ignore: set to 'custom' so user can reassign
+                onUpdate(boardConfigId, workspaceId, column.columnId, { semanticRole: 'custom' });
+            }}
+            className="group inline-flex items-center gap-1 text-xs px-2.5 py-1.5 bg-white border border-slate-200 rounded-md hover:border-slate-300 hover:bg-slate-50 transition-colors"
+            title={`Click to un-ignore "${column.columnTitle}"`}
+        >
+            <span className="text-slate-600 truncate max-w-[150px]">{column.columnTitle}</span>
+            <X size={12} className="text-slate-400 group-hover:text-slate-600" />
+        </button>
+    );
+}
+
+// ============================================================================
+// CATEGORY SECTION COMPONENT - Collapsible section per category
+// ============================================================================
+
+interface CategorySectionProps {
+    category: { id: RoleCategory; label: string; description: string };
+    columns: MondayColumnConfig[];
+    boardConfigId: string;
+    workspaceId: string;
+    onColumnUpdate: (boardConfigId: string, workspaceId: string, columnId: string, update: Record<string, unknown>) => void;
+}
+
+function CategorySection({ category, columns, boardConfigId, workspaceId, onColumnUpdate }: CategorySectionProps) {
+    const [expanded, setExpanded] = useState(true);
+
+    // Check if this is a section of only ignored columns
+    const allIgnored = columns.every(c => c.semanticRole === 'ignore');
+
+    // For "other" category with only ignored columns, show compact chip layout
+    if (category.id === 'other' && allIgnored && columns.length > 0) {
+        return (
+            <div className="border border-slate-200 rounded-lg p-4 bg-slate-50/50">
+                <div className="flex items-center gap-2 mb-3">
+                    <Text weight="semibold" size="sm" color="muted">{category.label}</Text>
+                    <Badge variant="neutral" size="xs">{columns.length} columns</Badge>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {columns.map(col => (
+                        <IgnoredColumnChip
+                            key={col.columnId}
+                            column={col}
+                            boardConfigId={boardConfigId}
+                            workspaceId={workspaceId}
+                            onUpdate={onColumnUpdate}
+                        />
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <CollapsibleRoot open={expanded} onOpenChange={setExpanded}>
+            <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                <CollapsibleTrigger asChild>
+                    <button className="w-full px-4 py-3 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors">
+                        <div className="flex items-center gap-2">
+                            <ChevronDown
+                                size={16}
+                                className={clsx(
+                                    'text-slate-400 transition-transform',
+                                    !expanded && '-rotate-90'
+                                )}
+                            />
+                            <Text weight="semibold" size="sm">{category.label}</Text>
+                            <Text size="xs" color="muted">{category.description}</Text>
+                        </div>
+                        <Badge variant="light" size="xs">{columns.length}</Badge>
+                    </button>
+                </CollapsibleTrigger>
+
+                <CollapsibleContent>
+                    <Stack gap="sm" className="p-3">
+                        {columns.map(col => (
+                            <ColumnCard
+                                key={col.columnId}
+                                column={col}
+                                boardConfigId={boardConfigId}
+                                workspaceId={workspaceId}
+                                onUpdate={onColumnUpdate}
+                            />
+                        ))}
+                    </Stack>
+                </CollapsibleContent>
+            </div>
+        </CollapsibleRoot>
+    );
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+export function Step3Columns({ onNext, onBack, session, onSessionCreated }: StepProps) {
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
     // Extract board IDs
     const boardIds = useMemo(() => {
@@ -178,7 +341,7 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
     if (!boardConfigs || boardConfigs.length === 0) {
         return (
             <Stack className="h-full">
-                <Text size="lg" weight="bold">Step 4: Map Columns</Text>
+                <Text size="lg" weight="bold">Step 3: Map Columns</Text>
                 <Text color="error">No board configurations found.</Text>
                 <Button onClick={onBack}>Back</Button>
             </Stack>
@@ -186,7 +349,7 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
     }
 
     // Derived state for the current board's columns
-    const currentBoard = boardConfigs[0]; // Assuming single board for preview for now
+    const currentBoard = boardConfigs[0];
     const columns = currentBoard?.columns || [];
 
     const sampleItem = columns.reduce((acc, col) => {
@@ -198,26 +361,19 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
 
     const itemTitle = columns.find(c => c.semanticRole === 'title')?.sampleValues?.[0] || 'Sample Item';
 
-
     return (
         <div className="flex flex-col h-full">
-            {/* Header with expanded explanation */}
+            {/* Header */}
             <Stack gap="sm" className="shrink-0">
                 <div className="flex items-center justify-between">
-                    <Text size="lg" weight="bold">Step 4: Map Columns to Fields</Text>
+                    <Text size="lg" weight="bold">Step 3: Map Columns to Fields</Text>
                     <Button variant="secondary" onClick={() => setIsPreviewOpen(true)}>
                         Preview Mapping
                     </Button>
                 </div>
-                <div className="text-sm text-slate-600 space-y-1">
-                    <p>Tell AutoArt what each Monday column represents:</p>
-                    <ul className="list-disc list-inside text-slate-500 ml-2 space-y-0.5">
-                        <li><strong>Title</strong> becomes the main item name on cards</li>
-                        <li><strong>Status</strong> and <strong>Due Date</strong> power status chips and overdue highlighting</li>
-                        <li><strong>Link</strong> fields create relationships between entities</li>
-                        <li><strong>Ignore</strong> columns that aren't needed in AutoArt</li>
-                    </ul>
-                </div>
+                <Text size="sm" color="muted">
+                    Tell AutoArt what each Monday column represents. Sample values help you identify the right mapping.
+                </Text>
             </Stack>
 
             {/* Warnings for missing critical mappings */}
@@ -230,119 +386,43 @@ export function Step4Columns({ onNext, onBack, session, onSessionCreated }: Step
                 </div>
             )}
 
-            {/* Column mapping tables */}
-            <div className="flex-1 overflow-auto space-y-6 mt-4 min-h-0">
-                {boardConfigs.map((board) => (
-                    <div key={board.boardId} className="border border-slate-200 rounded-lg bg-white">
-                        <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
-                            <Text weight="medium">{board.boardName}</Text>
-                            <Badge variant="light">
-                                {board.columns.length} Columns
-                            </Badge>
+            {/* Column categories */}
+            <div className="flex-1 overflow-auto mt-4 min-h-0">
+                {boardConfigs.map((board) => {
+                    const groupedColumns = groupColumnsByCategory(board.columns);
+
+                    return (
+                        <div key={board.boardId} className="space-y-4">
+                            {/* Board header */}
+                            <div className="flex items-center gap-3 pb-2 border-b border-slate-200">
+                                <Text weight="medium">{board.boardName}</Text>
+                                <Badge variant="light" size="xs">
+                                    {board.columns.length} columns
+                                </Badge>
+                            </div>
+
+                            {/* Category sections */}
+                            <Stack gap="md">
+                                {ROLE_CATEGORIES.map(category => {
+                                    const categoryColumns = groupedColumns[category.id];
+                                    if (categoryColumns.length === 0) return null;
+
+                                    return (
+                                        <CategorySection
+                                            key={category.id}
+                                            category={category}
+                                            columns={categoryColumns}
+                                            boardConfigId={board.id || ''}
+                                            workspaceId={board.workspaceId || ''}
+                                            onColumnUpdate={handleColumnUpdate}
+                                        />
+                                    );
+                                })}
+                            </Stack>
                         </div>
-
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm table-fixed">
-                                <thead className="text-slate-500 font-medium border-b border-slate-100">
-                                    <tr>
-                                        <th className="px-4 py-2 w-[20%]">Column</th>
-                                        <th className="px-4 py-2 w-[10%]">Type</th>
-                                        <th className="px-4 py-2 w-[25%]">Maps To</th>
-                                        <th className="px-4 py-2 w-[20%]">Alias</th>
-                                        <th className="px-4 py-2 w-[25%]">Notes</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {board.columns.map((column) => {
-                                        const warning = getTypeWarning(column.columnType, column.semanticRole);
-                                        const roleMeta = ROLE_METADATA[column.semanticRole];
-
-                                        return (
-                                            <tr key={column.columnId} className="hover:bg-slate-50">
-                                                <td className="px-4 py-2">
-                                                    <div className="font-medium text-slate-700 truncate" title={column.columnTitle}>
-                                                        {column.columnTitle}
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-2">
-                                                    <Badge variant="light" size="xs">
-                                                        {column.columnType}
-                                                    </Badge>
-                                                </td>
-                                                <td className="px-4 py-2">
-                                                    <Select
-                                                        value={column.semanticRole}
-                                                        onChange={(val) => {
-                                                            if (val && board.id && board.workspaceId) {
-                                                                handleColumnUpdate(board.id, board.workspaceId, column.columnId, { semanticRole: val });
-                                                            }
-                                                        }}
-                                                        data={SEMANTIC_ROLE_OPTIONS}
-                                                        size="sm"
-                                                    />
-                                                    <Inline gap="xs" align="center" className="mt-1">
-                                                        <Badge
-                                                            variant={column.inferenceSource === 'manual' ? 'neutral' : 'light'}
-                                                            size="xs"
-                                                        >
-                                                            {column.inferenceSource === 'manual' ? 'Manual' : 'Auto'}
-                                                        </Badge>
-                                                        {column.inferenceReasons && column.inferenceReasons.length > 0 && (
-                                                            <div title={column.inferenceReasons.join('\n')}>
-                                                                <HelpCircle size={12} className="text-slate-400 cursor-help" />
-                                                            </div>
-                                                        )}
-                                                    </Inline>
-
-                                                    {column.sampleValues && column.sampleValues.length > 0 && (
-                                                        <div className="mt-2 pl-1 border-l-2 border-slate-100">
-                                                            <div className="text-[10px] text-slate-400 font-medium mb-0.5">SAMPLES</div>
-                                                            <Stack gap="xs">
-                                                                {column.sampleValues.slice(0, 3).map((val, idx) => (
-                                                                    <div key={idx} className="text-[11px] text-slate-500 font-mono truncate max-w-[200px]" title={val}>
-                                                                        {val}
-                                                                    </div>
-                                                                ))}
-                                                            </Stack>
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-2">
-                                                    <DebouncedInput
-                                                        value={column.localFieldKey || ''}
-                                                        onCommit={(val) => {
-                                                            if (board.id && board.workspaceId) {
-                                                                handleColumnUpdate(board.id, board.workspaceId, column.columnId, { localFieldKey: val });
-                                                            }
-                                                        }}
-                                                        placeholder={column.columnTitle.toLowerCase().replace(/\s+/g, '_')}
-                                                        size="sm"
-                                                    />
-                                                </td>
-                                                <td className="px-4 py-2">
-                                                    {warning ? (
-                                                        <span className="text-xs text-amber-600 flex items-center gap-1">
-                                                            <AlertTriangle size={12} />
-                                                            {warning}
-                                                        </span>
-                                                    ) : roleMeta ? (
-                                                        <span className="text-xs text-slate-400">
-                                                            {roleMeta.description}
-                                                        </span>
-                                                    ) : null}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
-
-            {/* Collapsible glossary */}
-            <RolesGlossary isOpen={glossaryOpen} onToggle={() => setGlossaryOpen(!glossaryOpen)} />
 
             {/* Footer */}
             <Inline justify="between" className="pt-4 mt-4 border-t border-slate-200 shrink-0">

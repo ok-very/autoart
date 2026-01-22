@@ -237,12 +237,22 @@ function createContainerFromBoard(
     const type = roleToType[config.role];
     if (!type) return null;
 
+    // Use projectTitleOverride from settings if provided, otherwise fall back to board name
+    const title = config.settings?.projectTitleOverride || node.name;
+    const hasOverride = !!config.settings?.projectTitleOverride && config.settings.projectTitleOverride !== node.name;
+
     return {
         tempId,
         type,
-        title: node.name,
+        title,
         parentTempId: null,
         definitionName: config.role === 'template_board' ? 'Template' : undefined,
+        metadata: {
+            sourceType: 'monday',
+            externalId: node.id,
+            // Store original board name if title was overridden (for alias/provenance tracking)
+            ...(hasOverride ? { originalTitle: node.name } : {}),
+        },
     };
 }
 

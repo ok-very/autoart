@@ -1,20 +1,17 @@
 
-import { useState, useCallback } from 'react';
-import { Stack } from '@autoart/ui';
-import { Card } from '@autoart/ui';
-import { Text } from '@autoart/ui';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { Stack, Card, Text, ProgressBar, Inline } from '@autoart/ui';
 
-import { ProgressBar } from '@autoart/ui';
-import { Inline } from '@autoart/ui';
+import { useContextStore } from '../../../stores/contextStore';
+import { ImportContextProvider, type ImportContextValue } from '../ImportContextProvider';
 
-// Import Steps (Placeholders for now)
+// Import Steps
 import { Step1SelectBoards } from './steps/Step1SelectBoards';
-import { Step2BoardRoles } from './steps/Step2BoardRoles';
-import { Step3GroupRoles } from './steps/Step3GroupRoles';
-import { Step4Columns } from './steps/Step4Columns';
-import { Step5Templates } from './steps/Step5Templates';
-import { Step6Preview } from './steps/Step6Preview';
-import { Step7Execute } from './steps/Step7Execute';
+import { Step2ConfigureMapping } from './steps/Step2ConfigureMapping';
+import { Step3Columns } from './steps/Step3Columns';
+import { Step4Templates } from './steps/Step4Templates';
+import { Step5Preview } from './steps/Step5Preview';
+import { Step6Execute } from './steps/Step6Execute';
 
 import type { ImportSession, ImportPlan } from '../../../api/hooks/imports';
 
@@ -28,12 +25,11 @@ interface MondayImportWizardViewProps {
 
 const STEPS = [
     { number: 1, title: 'Select Boards', component: Step1SelectBoards },
-    { number: 2, title: 'Board Roles', component: Step2BoardRoles },
-    { number: 3, title: 'Group Roles', component: Step3GroupRoles },
-    { number: 4, title: 'Columns', component: Step4Columns },
-    { number: 5, title: 'Links & Templates', component: Step5Templates },
-    { number: 6, title: 'Preview', component: Step6Preview },
-    { number: 7, title: 'Execute', component: Step7Execute },
+    { number: 2, title: 'Configure Mapping', component: Step2ConfigureMapping },
+    { number: 3, title: 'Columns', component: Step3Columns },
+    { number: 4, title: 'Links & Templates', component: Step4Templates },
+    { number: 5, title: 'Preview', component: Step5Preview },
+    { number: 6, title: 'Execute', component: Step6Execute },
 ];
 
 export function MondayImportWizardView({
@@ -44,6 +40,61 @@ export function MondayImportWizardView({
     onSessionCreated,
 }: MondayImportWizardViewProps) {
     const [currentStep, setCurrentStep] = useState(1);
+    const [localPlan, setLocalPlan] = useState<ImportPlan | null>(plan);
+    const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+    const [inspectorTab, setInspectorTab] = useState('import_details');
+
+    // Track if update is internal to prevent circular updates
+    const isInternalUpdate = useRef(false);
+
+    const { setImportSession: setContextImportSession } = useContextStore();
+
+    // Sync external plan changes to local state (only if not triggered by our own update)
+    useEffect(() => {
+        if (!isInternalUpdate.current) {
+            setLocalPlan(plan);
+        }
+        isInternalUpdate.current = false;
+    }, [plan]);
+
+    // Sync session to context store for panel visibility predicates
+    useEffect(() => {
+        setContextImportSession({
+            sessionId: session?.id ?? null,
+            planExists: !!localPlan,
+        });
+
+        return () => {
+            setContextImportSession({ sessionId: null, planExists: false });
+        };
+    }, [session?.id, !!localPlan, setContextImportSession]);
+
+    // Handle plan updates from child components
+    const handlePlanUpdate = useCallback((updatedPlan: ImportPlan) => {
+        isInternalUpdate.current = true;
+        setLocalPlan(updatedPlan);
+        if (session) {
+            onSessionCreated(session, updatedPlan);
+        }
+    }, [session, onSessionCreated]);
+
+    // Handle item selection - sync to both local state and global store
+    const handleSelectItem = useCallback((itemId: string | null) => {
+        setSelectedItemId(itemId);
+        // onSelectItem is selectImportItem from uiStore, expects string | null
+        onSelectItem(itemId);
+    }, [onSelectItem]);
+
+    // Create context value
+    const contextValue = useMemo<ImportContextValue>(() => ({
+        session,
+        plan: localPlan,
+        selectedItemId,
+        selectItem: handleSelectItem,
+        updatePlan: handlePlanUpdate,
+        inspectorTab,
+        setInspectorTab,
+    }), [session, localPlan, selectedItemId, handleSelectItem, handlePlanUpdate, inspectorTab]);
 
     // Derived state
     const progress = (currentStep / STEPS.length) * 100;
@@ -62,36 +113,33 @@ export function MondayImportWizardView({
     }, [currentStep]);
 
     return (
-        <Stack className="h-full bg-slate-50 relative overflow-hidden" gap="none">
-            {/* Wizard Header */}
-            <div className="bg-white border-b border-slate-200 px-6 py-4">
-                <Stack gap="sm">
-                    <Inline align="center" justify="between">
-                        <Text size="lg" weight="bold">Monday.com Import Wizard</Text>
-                        <Text size="sm" color="muted">Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1].title}</Text>
-                    </Inline>
-                    <ProgressBar value={progress} size="sm" />
-                </Stack>
-            </div>
+        <ImportContextProvider value={contextValue}>
+            <Stack className="h-full bg-slate-50 relative overflow-hidden" gap="none">
+                {/* Wizard Header */}
+                <div className="bg-white border-b border-slate-200 px-6 py-4">
+                    <Stack gap="sm">
+                        <Inline align="center" justify="between">
+                            <Text size="lg" weight="bold">Monday.com Import Wizard</Text>
+                            <Text size="sm" color="muted">Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1].title}</Text>
+                        </Inline>
+                        <ProgressBar value={progress} size="sm" />
+                    </Stack>
+                </div>
 
-            {/* Main Content */}
-            <div className="flex-1 overflow-auto p-6">
-                <Card className="min-h-[400px] h-full shadow-sm border border-slate-200" padding="lg">
-                    <CurrentStepComponent
-                        onNext={handleNext}
-                        onBack={handleBack}
-                        session={session}
-                        plan={plan}
-                        onSelectItem={onSelectItem}
-                        onSessionCreated={onSessionCreated}
-                    />
-                </Card>
-            </div>
-
-            {/* Footer / Controls (Moved into steps or kept global?)
-                Ideally steps manage their own validation state, but global nav logic is here.
-                We pass onNext/onBack to step components so they can trigger nav after validation.
-            */}
-        </Stack>
+                {/* Main Content */}
+                <div className="flex-1 overflow-auto p-6">
+                    <Card className="min-h-[400px] h-full shadow-sm border border-slate-200" padding="lg">
+                        <CurrentStepComponent
+                            onNext={handleNext}
+                            onBack={handleBack}
+                            session={session}
+                            plan={localPlan}
+                            onSelectItem={onSelectItem}
+                            onSessionCreated={onSessionCreated}
+                        />
+                    </Card>
+                </div>
+            </Stack>
+        </ImportContextProvider>
     );
 }

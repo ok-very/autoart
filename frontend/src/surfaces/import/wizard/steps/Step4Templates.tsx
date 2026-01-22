@@ -24,7 +24,7 @@ const SCOPE_OPTIONS = [
     { value: 'project', label: 'Project-Specific' },
 ];
 
-export function Step5Templates({ onNext, onBack, session, onSessionCreated }: StepProps) {
+export function Step4Templates({ onNext, onBack, session, onSessionCreated }: StepProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     // Extract board IDs
@@ -78,7 +78,7 @@ export function Step5Templates({ onNext, onBack, session, onSessionCreated }: St
     if (!boardConfigs || boardConfigs.length === 0) {
         return (
             <Stack className="h-full">
-                <Text size="lg" weight="bold">Step 5: Templates & Links</Text>
+                <Text size="lg" weight="bold">Step 4: Templates & Links</Text>
                 <Text color="error">No board configurations found.</Text>
                 <Button onClick={onBack}>Back</Button>
             </Stack>
@@ -93,7 +93,7 @@ export function Step5Templates({ onNext, onBack, session, onSessionCreated }: St
     return (
         <div className="flex flex-col h-full">
             <Stack gap="sm" className="shrink-0">
-                <Text size="lg" weight="bold">Step 5: Templates & Links</Text>
+                <Text size="lg" weight="bold">Step 4: Templates & Links</Text>
                 <Text color="muted">
                     Configure advanced settings for templates and project linking.
                 </Text>

@@ -48,9 +48,9 @@ export async function importsRoutes(app: FastifyInstance) {
     /**
      * Create a new import session
      */
-    app.post('/sessions', async (request, reply) => {
+    app.post('/sessions', { preHandler: [app.authenticate] }, async (request, reply) => {
         const body = CreateSessionBodySchema.parse(request.body);
-        const userId = (request.user as { id?: string })?.id;
+        const userId = (request.user as { userId?: string })?.userId;
 
         const session = await importsService.createSession({
             parserName: body.parserName,
@@ -67,9 +67,9 @@ export async function importsRoutes(app: FastifyInstance) {
      * Create a new import session from an external connector (Monday, etc.)
      * Always includes subitems - no toggle option.
      */
-    app.post('/sessions/connector', async (request, reply) => {
+    app.post('/sessions/connector', { preHandler: [app.authenticate] }, async (request, reply) => {
         const body = CreateConnectorSessionBodySchema.parse(request.body);
-        const userId = (request.user as { id?: string })?.id;
+        const userId = (request.user as { userId?: string })?.userId;
 
         const session = await importsService.createConnectorSession({
             connectorType: body.connectorType,
@@ -78,7 +78,7 @@ export async function importsRoutes(app: FastifyInstance) {
             userId,
         });
 
-        const plan = await importsService.generatePlanFromConnector(session.id);
+        const plan = await importsService.generatePlanFromConnector(session.id, userId);
 
         return reply.status(201).send({ session, plan });
     });
@@ -134,9 +134,9 @@ export async function importsRoutes(app: FastifyInstance) {
     /**
      * Execute import plan
      */
-    app.post('/sessions/:id/execute', async (request, reply) => {
+    app.post('/sessions/:id/execute', { preHandler: [app.authenticate] }, async (request, reply) => {
         const { id } = SessionIdParamSchema.parse(request.params);
-        const userId = (request.user as { id?: string })?.id;
+        const userId = (request.user as { userId?: string })?.userId;
 
         try {
             const execution = await importsService.executeImport(id, userId);
