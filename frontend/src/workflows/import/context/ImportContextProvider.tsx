@@ -12,7 +12,7 @@
  */
 
 import { createContext, useContext, type ReactNode } from 'react';
-import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
+import type { ImportSession, ImportPlan } from '../../../api/hooks/imports';
 
 export interface ImportContextValue {
     // Session & Plan

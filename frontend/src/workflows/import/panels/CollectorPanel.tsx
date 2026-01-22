@@ -10,9 +10,9 @@ import { useState, useCallback } from 'react';
 import { Play, Loader2, CheckCircle2, AlertCircle, Globe, FolderInput, FolderOpen } from 'lucide-react';
 
 import { Card, Stack, Text, Inline, Button } from '@autoart/ui';
-import { api } from '../../api/client';
-import { useCollectionStore } from '../../stores';
-import { generateIntakeManifest } from '../../api/generate';
+import { api } from '../../../api/client';
+import { useCollectionStore } from '../../../stores';
+import { generateIntakeManifest } from '../../../api/generate';
 
 // =============================================================================
 // TYPES

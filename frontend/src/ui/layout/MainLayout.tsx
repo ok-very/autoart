@@ -44,8 +44,8 @@ import {
 // Import all panel components
 import { CentralAreaAdapter } from '../workspace/CentralAreaAdapter';
 import { SelectionInspector } from '../composites/SelectionInspector';
-import { ClassificationPanel } from '../../surfaces/import/ClassificationPanel';
-import { useImportContextOptional } from '../../surfaces/import/ImportContextProvider';
+import { ClassificationPanel } from '../../workflows/import/panels/ClassificationPanel';
+import { useImportContextOptional } from '../../workflows/import/context/ImportContextProvider';
 import { RecordsPanel } from '../panels/RecordsPanel';
 import { FieldsPanel } from '../panels/FieldsPanel';
 import { ActionsPanel } from '../panels/ActionsPanel';

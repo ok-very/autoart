@@ -8,8 +8,8 @@
 import { ArrowRight, FileText, Edit3, Loader2 } from 'lucide-react';
 import { useMemo } from 'react';
 
-import type { ExportFormat, ExportOptions, BfaProjectExportModel } from './types';
-import { useExportProjection } from '../../api/hooks/exports';
+import type { ExportFormat, ExportOptions, BfaProjectExportModel } from '../types';
+import { useExportProjection } from '../../../api/hooks/exports';
 import { Card, Inline, Text, Stack, Badge } from '@autoart/ui';
 
 export interface ExportPreviewProps {

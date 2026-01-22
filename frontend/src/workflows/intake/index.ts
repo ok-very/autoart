@@ -1,2 +1,2 @@
-export { IntakeListPanel } from './IntakeListPanel';
-export { IntakeDetailPanel } from './IntakeDetailPanel';
+export { IntakeListPanel } from './panels/IntakeListPanel';
+export { IntakeDetailPanel } from './panels/IntakeDetailPanel';

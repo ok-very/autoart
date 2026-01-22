@@ -10,10 +10,10 @@
 import { Table as TableIcon } from 'lucide-react';
 import { useMemo } from 'react';
 
-import type { ImportPlan } from '../../api/hooks/imports';
+import type { ImportPlan } from '../../../api/hooks/imports';
 import { Badge } from '@autoart/ui';
-import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
-import { TableFrame, TableHeaderRow, TableRow, TableHeaderCell, TableCell } from '../../ui/table';
+import { DataFieldWidget, type DataFieldKind } from '../../../ui/molecules/DataFieldWidget';
+import { TableFrame, TableHeaderRow, TableRow, TableHeaderCell, TableCell } from '../../../ui/table';
 
 interface TablePreviewProps {
     plan: ImportPlan;

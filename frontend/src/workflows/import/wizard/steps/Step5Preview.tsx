@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { Columns, Layers, Table as TableIcon, Play } from 'lucide-react';
 import { Stack, Text, Button } from '@autoart/ui';
-import { ImportPreview } from '../../ImportPreview';
-import { useImportContext } from '../../ImportContextProvider';
+import { ImportPreview } from '../../components/ImportPreview';
+import { useImportContext } from '../../context/ImportContextProvider';
 
 interface StepProps {
     onNext: () => void;

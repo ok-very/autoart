@@ -8,14 +8,14 @@
 import { Download, Settings, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
-import type { ExportFormat, ExportOptions } from './types';
-import { FontSelector } from './components/FontSelector';
-import { getDefaultFont } from './utils/fonts';
+import type { ExportFormat, ExportOptions } from '../types';
+import { FontSelector } from '../components/FontSelector';
+import { getDefaultFont } from '../utils/fonts';
 import {
     useCreateExportSession,
     useGenerateExportProjection,
     useExecuteExport,
-} from '../../api/hooks/exports';
+} from '../../../api/hooks/exports';
 import { Text, Stack, Inline, Checkbox, Button, Card } from '@autoart/ui';
 
 // ============================================================================

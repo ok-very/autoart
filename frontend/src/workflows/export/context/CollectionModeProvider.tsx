@@ -7,7 +7,7 @@
  */
 
 import { createContext, useContext, useCallback, useEffect, type ReactNode } from 'react';
-import { useCollectionStore, type SelectionReference } from '../../stores';
+import { useCollectionStore, type SelectionReference } from '../../../stores';
 
 // ---------------------------------------------------------------------------
 // Types

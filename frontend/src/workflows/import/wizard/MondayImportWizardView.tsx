@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Stack, Card, Text, ProgressBar, Inline } from '@autoart/ui';
 
 import { useContextStore } from '../../../stores/contextStore';
-import { ImportContextProvider, type ImportContextValue } from '../ImportContextProvider';
+import { ImportContextProvider, type ImportContextValue } from '../context/ImportContextProvider';
 import { ImportWorkflowLayout } from '../../../workspace/layouts';
 
 // Import Steps

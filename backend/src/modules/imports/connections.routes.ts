@@ -222,14 +222,6 @@ export async function connectionsRoutes(app: FastifyInstance) {
             return sendPopupResponse(false, (err as Error).message);
         }
     });
-            const { handleMondayCallback } = await import('./monday-oauth.service.js');
-            await handleMondayCallback(code, state);
-            return sendPopupResponse(true);
-        } catch (err) {
-            console.error('Monday OAuth callback error:', err);
-            return sendPopupResponse(false, (err as Error).message);
-        }
-    });
 
     /**
      * Validate Monday API key without saving

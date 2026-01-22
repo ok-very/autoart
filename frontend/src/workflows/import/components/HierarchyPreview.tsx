@@ -9,12 +9,12 @@
 import { useState, useMemo, useCallback } from 'react';
 import { LayoutGrid, Layers } from 'lucide-react';
 
-import type { ImportPlan, ItemClassification } from '../../api/hooks/imports';
+import type { ImportPlan, ItemClassification } from '../../../api/hooks/imports';
 import {
     DataTableImport,
     NestedDataTable,
     discoverImportFields,
-} from '../../ui/composites/DataTableImport';
+} from '../../../ui/composites/DataTableImport';
 
 // ============================================================================
 // PROPS

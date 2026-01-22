@@ -6,7 +6,7 @@
  * Follows the same pattern as ProjectPage and RecordsPage.
  */
 import { Header } from '../ui/layout/Header';
-import { ExportWorkbench } from '../surfaces/export/ExportWorkbench';
+import { ExportWorkbench } from '../workflows/export/views/ExportWorkbench';
 export function ExportPage() {
     return (
         <div className="flex flex-col h-full">

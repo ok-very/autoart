@@ -11,8 +11,8 @@ import { clsx } from 'clsx';
 import { Eye, Filter, FolderOpen, Check } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { useProjects } from '../../api/hooks';
-import { useExportWorkbenchStore } from '../../stores/exportWorkbenchStore';
+import { useProjects } from '../../../api/hooks';
+import { useExportWorkbenchStore } from '../../../stores/exportWorkbenchStore';
 
 // ============================================================================
 // COMPONENT

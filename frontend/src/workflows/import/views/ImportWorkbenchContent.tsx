@@ -12,11 +12,11 @@ import { clsx } from 'clsx';
 import { FileSpreadsheet, Columns, Layers, Tag, AlertTriangle } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
-import { ExecutionControls } from './ExecutionControls';
-import { HierarchyPreview } from './HierarchyPreview';
-import { StagePreview } from './StagePreview';
-import { useImportWorkbenchStore } from '../../stores/importWorkbenchStore';
-import { useUIStore } from '../../stores/uiStore';
+import { ExecutionControls } from '../panels/ExecutionControls';
+import { HierarchyPreview } from '../components/HierarchyPreview';
+import { StagePreview } from '../components/StagePreview';
+import { useImportWorkbenchStore } from '../../../stores/importWorkbenchStore';
+import { useUIStore } from '../../../stores/uiStore';
 
 // ============================================================================
 // TYPES

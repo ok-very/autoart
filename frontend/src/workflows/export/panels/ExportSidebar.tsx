@@ -10,7 +10,7 @@
 import { Eye, Filter, FolderOpen } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { useProjects } from '../../api/hooks';
+import { useProjects } from '../../../api/hooks';
 import { Text, Inline, Checkbox, Badge } from '@autoart/ui';
 
 // ============================================================================

@@ -8,8 +8,8 @@
 
 import { useMemo } from 'react';
 
-import { useImportContext } from '../../../surfaces/import/ImportContextProvider';
-import { ClassificationPanel } from '../../../surfaces/import/ClassificationPanel';
+import { useImportContext } from '../../../workflows/import/context/ImportContextProvider';
+import { ClassificationPanel } from '../../../workflows/import/panels/ClassificationPanel';
 import { WorkflowLayoutContainer } from '../WorkflowLayoutContainer';
 import type { WorkflowContext, PanelComponentMap } from '../types';
 
@@ -71,8 +71,3 @@ export function ImportWorkflowLayout({ children }: ImportWorkflowLayoutProps) {
     />
   );
 }
-
-    />
-  );
-}
-

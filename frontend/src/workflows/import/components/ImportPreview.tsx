@@ -11,7 +11,7 @@ import { HierarchyPreview } from './HierarchyPreview';
 import { LogPreview } from './LogPreview';
 import { StagePreview } from './StagePreview';
 import { TablePreview } from './TablePreview';
-import type { ImportPlan } from '../../api/hooks/imports';
+import type { ImportPlan } from '../../../api/hooks/imports';
 
 // ============================================================================
 // TYPES

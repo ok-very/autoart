@@ -6,7 +6,7 @@
  */
 
 import { Package, Folder, ListBullets, Lightning, Bell, X, DotsSixVertical } from '@phosphor-icons/react';
-import type { SelectionReference, SelectionType } from '../../stores';
+import type { SelectionReference, SelectionType } from '../../../stores';
 
 // ---------------------------------------------------------------------------
 // Type Icons

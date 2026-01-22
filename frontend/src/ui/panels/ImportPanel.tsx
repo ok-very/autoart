@@ -9,9 +9,9 @@ import { useCallback, useState, useEffect } from 'react';
 
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
 import { useUIStore } from '../../stores/uiStore';
-import { ImportSidebar } from '../../surfaces/import/ImportSidebar';
-import { ImportWorkbenchView } from '../../surfaces/import/ImportWorkbenchView';
-import { MondayImportWizardView } from '../../surfaces/import/wizard/MondayImportWizardView';
+import { ImportSidebar } from '../../workflows/import/panels/ImportSidebar';
+import { ImportWorkbenchView } from '../../workflows/import/views/ImportWorkbenchView';
+import { MondayImportWizardView } from '../../workflows/import/wizard/MondayImportWizardView';
 import { ResizeHandle } from '@autoart/ui';
 
 // Source type lifted to panel level

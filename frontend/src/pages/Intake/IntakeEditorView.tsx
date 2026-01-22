@@ -14,9 +14,9 @@ import { ArrowLeft, Eye, Send, Undo2, Redo2, Check, Loader2, ExternalLink, Copy 
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@autoart/ui';
-import { IntakeCanvas } from '../../surfaces/intake/components/IntakeCanvas';
-import { FloatingToolbar } from '../../surfaces/intake/components/FloatingToolbar';
-import { FormSettingsPanel } from '../../surfaces/intake/components/FormSettingsPanel';
+import { IntakeCanvas } from '../../workflows/intake/components/IntakeCanvas';
+import { FloatingToolbar } from '../../workflows/intake/components/FloatingToolbar';
+import { FormSettingsPanel } from '../../workflows/intake/components/FormSettingsPanel';
 import {
     useIntakeForm,
     useUpdateIntakeForm,

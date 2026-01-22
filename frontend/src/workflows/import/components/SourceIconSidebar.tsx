@@ -7,8 +7,8 @@
 
 import { File, Calendar, Plug, Plus, Check } from 'lucide-react';
 
-import { useConnections } from '../../api/connections';
-import { useUIStore } from '../../stores/uiStore';
+import { useConnections } from '../../../api/connections';
+import { useUIStore } from '../../../stores/uiStore';
 
 // ============================================================================
 // TYPES

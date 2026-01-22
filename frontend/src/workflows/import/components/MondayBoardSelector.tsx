@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useState, useMemo, useCallback } from 'react';
 
-import { useMondayBoards, useConnections, type MondayBoard } from '../../api/connections';
+import { useMondayBoards, useConnections, type MondayBoard } from '../../../api/connections';
 
 // ============================================================================
 // TYPES

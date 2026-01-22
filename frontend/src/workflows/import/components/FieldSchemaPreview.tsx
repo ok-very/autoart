@@ -12,8 +12,8 @@
 import { TableProperties, AlertCircle, CheckCircle } from 'lucide-react';
 import { useMemo } from 'react';
 
-import type { ImportPlanItem } from '../../api/hooks/imports';
-import { DataTable, type TableColumn } from '../../ui/tables/DataTable';
+import type { ImportPlanItem } from '../../../api/hooks/imports';
+import { DataTable, type TableColumn } from '../../../ui/tables/DataTable';
 
 // ============================================================================
 // TYPES

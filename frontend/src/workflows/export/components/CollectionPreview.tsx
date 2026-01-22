@@ -8,7 +8,7 @@ import { List, LayoutGrid, Code, ChevronRight, ChevronDown, Database, Play, Squa
 import { useState, useMemo, useCallback } from 'react';
 import { SegmentedControl } from '@autoart/ui';
 
-import { useCollectionStore, type SelectionReference } from '../../stores';
+import { useCollectionStore, type SelectionReference } from '../../../stores';
 import { CollectionItemCard } from './CollectionItemCard';
 
 // ============================================================================

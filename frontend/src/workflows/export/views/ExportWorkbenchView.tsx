@@ -9,8 +9,8 @@
 
 import { Eye, FileText } from 'lucide-react';
 
-import { ExportPreview } from './ExportPreview';
-import { EXPORT_FORMATS, type ExportFormat, type ExportOptions, type BfaProjectExportModel } from './types';
+import { ExportPreview } from '../components/ExportPreview';
+import { EXPORT_FORMATS, type ExportFormat, type ExportOptions, type BfaProjectExportModel } from '../types';
 import { Text, Stack } from '@autoart/ui';
 
 // ============================================================================

@@ -22,14 +22,14 @@ import {
 } from 'lucide-react';
 import { useRef, useCallback, useState } from 'react';
 
-import { useConnections } from '../../api/connections';
+import { useConnections } from '../../../api/connections';
 import {
     useGenerateImportPlan,
     useCreateImportSession,
     type ImportSession,
     type ImportPlan,
-} from '../../api/hooks/imports';
-import { useUIStore } from '../../stores/uiStore';
+} from '../../../api/hooks/imports';
+import { useUIStore } from '../../../stores/uiStore';
 import { CollectorPanel } from './CollectorPanel';
 
 // ============================================================================

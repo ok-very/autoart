@@ -8,7 +8,7 @@
 import { Plus, Trash2 } from 'lucide-react';
 import { useCallback } from 'react';
 
-import { useCollectionStore, type Collection } from '../../stores';
+import { useCollectionStore, type Collection } from '../../../stores';
 
 // ---------------------------------------------------------------------------
 // Component

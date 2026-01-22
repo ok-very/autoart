@@ -6,9 +6,9 @@
  */
 
 import { useCallback, useState, type ReactNode, type CSSProperties } from 'react';
-import { useCollectionModeOptional } from './CollectionModeProvider';
+import { useCollectionModeOptional } from '../context/CollectionModeProvider';
 import { CollectionFlashOverlay } from './CollectionFlashOverlay';
-import type { SelectionType } from '../../stores';
+import type { SelectionType } from '../../../stores';
 
 // ---------------------------------------------------------------------------
 // Styles

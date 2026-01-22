@@ -8,11 +8,11 @@
 
 import { Save, Loader2, Sparkles, Clock, ArrowUpDown, MoreVertical, Trash2, Layers, CheckSquare, Square, Lightbulb } from 'lucide-react';
 import { useState, useMemo, useCallback } from 'react';
-import { useSaveResolutions, useClassificationSuggestions } from '../../api/hooks/imports';
-import type { ImportPlan, Resolution, ItemClassification } from '../../api/hooks/imports';
-import { toFactKindKey } from '../../utils/formatFactKind';
-import { PendingResolution } from './types';
-import { ClassificationRow } from './components/ClassificationRow';
+import { useSaveResolutions, useClassificationSuggestions } from '../../../api/hooks/imports';
+import type { ImportPlan, Resolution, ItemClassification } from '../../../api/hooks/imports';
+import { toFactKindKey } from '../../../utils/formatFactKind';
+import { PendingResolution } from '../types';
+import { ClassificationRow } from '../components/ClassificationRow';
 
 // ============================================================================
 // TYPES

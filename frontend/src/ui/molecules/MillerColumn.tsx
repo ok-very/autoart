@@ -17,8 +17,8 @@ import { Plus, ChevronRight, Search } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
 import type { HierarchyNode, NodeType } from '../../types';
-import { useCollectionModeOptional } from '../../surfaces/export/CollectionModeProvider';
-import { SelectableWrapper } from '../../surfaces/export/SelectableWrapper';
+import { useCollectionModeOptional } from '../../workflows/export/context/CollectionModeProvider';
+import { SelectableWrapper } from '../../workflows/export/components/SelectableWrapper';
 
 // ==================== TYPES ====================
 

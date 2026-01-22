@@ -29,7 +29,7 @@ import { useNode, useRecord, useInterpretationAvailable } from '../../api/hooks'
 import { useUIStore, type InspectorTabId } from '../../stores/uiStore';
 import { ActionDetailsPanel } from '../inspector/ActionDetailsPanel';
 import { ActionEventsPanel } from '../inspector/ActionEventsPanel';
-import { useCollectionModeOptional } from '../../surfaces/export/CollectionModeProvider';
+import { useCollectionModeOptional } from '../../workflows/export/context/CollectionModeProvider';
 import type { ImportPlan } from '../../api/hooks/imports';
 
 // Re-export from canonical location for backward compatibility

@@ -7,7 +7,7 @@
 
 import { CaretDown, FileText, Table, GoogleLogo, Gear } from '@phosphor-icons/react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import type { TemplatePreset } from '../../stores';
+import type { TemplatePreset } from '../../../stores';
 
 // ---------------------------------------------------------------------------
 // Preset Configuration

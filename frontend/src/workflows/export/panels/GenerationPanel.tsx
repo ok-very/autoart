@@ -9,8 +9,8 @@
 import { useState } from 'react';
 import { FileText, Table, Loader2, AlertCircle, Check, ChevronDown, ChevronRight, Settings } from 'lucide-react';
 import { GoogleLogo } from '@phosphor-icons/react';
-import { generateReport, type ArtifactResponse } from '../../api/generate';
-import { useCollectionStore, type TemplatePreset } from '../../stores';
+import { generateReport, type ArtifactResponse } from '../../../api/generate';
+import { useCollectionStore, type TemplatePreset } from '../../../stores';
 import { Text } from '@autoart/ui';
 
 // ============================================================================

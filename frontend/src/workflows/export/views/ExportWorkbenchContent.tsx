@@ -10,14 +10,14 @@
 import { clsx } from 'clsx';
 import { Eye, FileText, Download, Loader2 } from 'lucide-react';
 
-import { ExportPreview } from './ExportPreview';
-import { EXPORT_FORMATS } from './types';
+import { ExportPreview } from '../components/ExportPreview';
+import { EXPORT_FORMATS } from '../types';
 import {
     useCreateExportSession,
     useGenerateExportProjection,
     useExecuteExport,
-} from '../../api/hooks/exports';
-import { useExportWorkbenchStore } from '../../stores/exportWorkbenchStore';
+} from '../../../api/hooks/exports';
+import { useExportWorkbenchStore } from '../../../stores/exportWorkbenchStore';
 
 // ============================================================================
 // COMPONENT

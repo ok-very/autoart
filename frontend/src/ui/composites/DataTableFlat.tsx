@@ -33,8 +33,8 @@ import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFiel
 import { EditableCell } from '../../ui/molecules/EditableCell';
 import { StatusColumnSummary } from '../../ui/molecules/StatusColumnSummary';
 import { UniversalTableCore, makeFlatRowModel, type TableColumn as CoreTableColumn, type TableRow, type TableFeature } from '../table-core';
-import { useCollectionModeOptional } from '../../surfaces/export/CollectionModeProvider';
-import { SelectableWrapper } from '../../surfaces/export/SelectableWrapper';
+import { useCollectionModeOptional } from '../../workflows/export/context/CollectionModeProvider';
+import { SelectableWrapper } from '../../workflows/export/components/SelectableWrapper';
 
 // ==================== TYPES ====================
 

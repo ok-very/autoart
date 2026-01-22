@@ -10,13 +10,13 @@
 
 import { Download, X } from 'lucide-react';
 
-import { CollectionPanel } from './CollectionPanel';
-import { CollectionPreview } from './CollectionPreview';
-import { GenerationPanel } from './GenerationPanel';
-import { CollectionModeProvider } from './CollectionModeProvider';
+import { CollectionPanel } from '../panels/CollectionPanel';
+import { CollectionPreview } from '../components/CollectionPreview';
+import { GenerationPanel } from '../panels/GenerationPanel';
+import { CollectionModeProvider } from '../context/CollectionModeProvider';
 import { Card, Inline, Text, Button } from '@autoart/ui';
-import { useCollectionStore } from '../../stores';
-import { generateArtistPage, type ArtistData } from './generators/GeneratorService';
+import { useCollectionStore } from '../../../stores';
+import { generateArtistPage, type ArtistData } from '../generators/GeneratorService';
 
 // ============================================================================
 // TYPES
