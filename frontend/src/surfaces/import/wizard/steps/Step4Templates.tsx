@@ -7,7 +7,6 @@ import { Select } from '@autoart/ui';
 import { Badge } from '@autoart/ui';
 import { Spinner } from '@autoart/ui';
 import { useMondayBoardConfigs, useUpdateMondayBoardConfig } from '../../../../api/hooks/monday';
-import { useProjects } from '../../../../api/hooks/hierarchy';
 import { useGenerateImportPlan, type ImportSession, type ImportPlan } from '../../../../api/hooks/imports';
 
 interface StepProps {
@@ -38,7 +37,6 @@ export function Step4Templates({ onNext, onBack, session, onSessionCreated }: St
 
     // Fetch data
     const { data: boardConfigs, isLoading: configsLoading } = useMondayBoardConfigs(boardIds);
-    const { data: projects, isLoading: projectsLoading } = useProjects();
 
     // Mutations
     const updateConfig = useUpdateMondayBoardConfig();
@@ -67,7 +65,7 @@ export function Step4Templates({ onNext, onBack, session, onSessionCreated }: St
         }
     };
 
-    if (configsLoading || projectsLoading) {
+    if (configsLoading) {
         return (
             <div className="h-full flex items-center justify-center">
                 <Spinner size="lg" />
@@ -85,17 +83,12 @@ export function Step4Templates({ onNext, onBack, session, onSessionCreated }: St
         );
     }
 
-    const projectOptions = [
-        { value: '', label: 'Create New Project (Default)' },
-        ...(projects || []).map(p => ({ value: p.id, label: p.title }))
-    ];
-
     return (
         <div className="flex flex-col h-full">
             <Stack gap="sm" className="shrink-0">
                 <Text size="lg" weight="bold">Step 4: Templates & Links</Text>
                 <Text color="muted">
-                    Configure advanced settings for templates and project linking.
+                    Review board roles and template settings.
                 </Text>
             </Stack>
 
@@ -110,9 +103,7 @@ export function Step4Templates({ onNext, onBack, session, onSessionCreated }: St
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {boardConfigs.map((config) => {
-                            const isProject = config.role === 'project_board';
                             const isTemplate = config.role === 'template_board';
-                            const showSettings = isProject || isTemplate;
 
                             return (
                                 <tr key={config.boardId} className="hover:bg-slate-50">
@@ -133,21 +124,6 @@ export function Step4Templates({ onNext, onBack, session, onSessionCreated }: St
                                         </Badge>
                                     </td>
                                     <td className="px-4 py-3">
-                                        {isProject && (
-                                            <Select
-                                                label="Link to Existing Project"
-                                                value={config.linkedProjectId || ''}
-                                                onChange={(val) => {
-                                                    const workspaceId = (config as any).workspaceId;
-                                                    const dbId = (config as any).id;
-                                                    if (workspaceId && dbId) {
-                                                        handleUpdate(dbId, workspaceId, { linkedProjectId: val || null });
-                                                    }
-                                                }}
-                                                data={projectOptions}
-                                                size="sm"
-                                            />
-                                        )}
                                         {isTemplate && (
                                             <Select
                                                 label="Template Scope"
@@ -163,8 +139,8 @@ export function Step4Templates({ onNext, onBack, session, onSessionCreated }: St
                                                 size="sm"
                                             />
                                         )}
-                                        {!showSettings && (
-                                            <Text color="muted" size="xs">No settings available for this role</Text>
+                                        {!isTemplate && (
+                                            <Text color="muted" size="xs">—</Text>
                                         )}
                                     </td>
                                 </tr>

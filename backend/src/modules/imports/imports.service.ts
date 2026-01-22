@@ -256,6 +256,11 @@ export async function generatePlanFromConnector(
         sessionId
     );
 
+    // 4. Generate classifications for Monday items (same as CSV imports)
+    // This enables proper gating and schema matching for records
+    const definitions = await listDefinitions({ definitionKind: 'record' });
+    plan.classifications = generateClassificationsForConnectorItems(plan.items, definitions);
+
     // Save plan to database
     await db
         .insertInto('import_plans')
@@ -492,6 +497,84 @@ function generateClassifications(items: ImportPlanItem[], definitions: RecordDef
 }
 
 /**
+ * Generate classifications for connector (Monday) imports.
+ *
+ * Unlike CSV imports which use text interpretation rules,
+ * connector imports classify based on entityType:
+ * - 'record' → DERIVED_STATE (needs schema matching)
+ * - 'template' → DERIVED_STATE (auto-commit, no schema match needed)
+ * - 'action'/'task'/'subtask' → INTERNAL_WORK (create as action)
+ * - others → UNCLASSIFIED
+ */
+function generateClassificationsForConnectorItems(
+    items: ImportPlanItem[],
+    definitions: RecordDefinition[]
+): ItemClassification[] {
+    return items.map((item) => {
+        let baseClassification: ItemClassification;
+
+        switch (item.entityType) {
+            case 'record':
+                // Records need schema matching to determine target definition
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'DERIVED_STATE' as ClassificationOutcome,
+                    confidence: 'high' as const,
+                    rationale: 'Record from connector - requires schema match',
+                };
+                break;
+
+            case 'template':
+                // Templates are auto-committed, no schema match needed
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'DERIVED_STATE' as ClassificationOutcome,
+                    confidence: 'high' as const,
+                    rationale: 'Template from connector - auto-commit',
+                };
+                break;
+
+            case 'action':
+            case 'task':
+            case 'subtask':
+                // Actions are created as work items
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'INTERNAL_WORK' as ClassificationOutcome,
+                    confidence: 'high' as const,
+                    rationale: `${item.entityType} from connector - create as action`,
+                };
+                break;
+
+            case 'project':
+            case 'process':
+            case 'stage':
+            case 'subprocess':
+                // These are containers, not items - but if they appear, treat as internal work
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'INTERNAL_WORK' as ClassificationOutcome,
+                    confidence: 'high' as const,
+                    rationale: `Container type ${item.entityType} - structural item`,
+                };
+                break;
+
+            default:
+                // Unknown entity type - may need review
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'UNCLASSIFIED' as ClassificationOutcome,
+                    confidence: 'low' as const,
+                    rationale: `Unknown entity type: ${item.entityType ?? 'undefined'}`,
+                };
+        }
+
+        // Add schema matching for record types
+        return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
+    });
+}
+
+/**
  * Add schema matching result to a classification
  */
 function addSchemaMatch(
@@ -704,11 +787,25 @@ async function executePlanViaComposer(
     let factEventsEmitted = 0;
     let workEventsEmitted = 0;
     let fieldValuesApplied = 0;
+    let actionsCreated = 0;
+    let recordsCreated = 0;
+    let skippedNoContext = 0;
+    let skippedNoClassification = 0;
 
     // Build lookup map: itemTempId -> classification
     const classificationMap = new Map<string, ItemClassification>(
         plan.classifications.map((c: ItemClassification) => [c.itemTempId, c])
     );
+
+    // Diagnostic: Log item distribution by entityType
+    const entityTypeCounts = plan.items.reduce((acc, item) => {
+        const type = item.entityType ?? 'undefined';
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+    console.log('[imports.service] Item distribution by entityType:', entityTypeCounts);
+    console.log('[imports.service] Classifications count:', plan.classifications.length);
+    console.log('[imports.service] Target project ID:', targetProjectId);
 
     // Step 1: Create containers (process, subprocess) as hierarchy nodes
     for (const container of plan.containers) {
@@ -756,8 +853,14 @@ async function executePlanViaComposer(
         }
     }
 
+    // Diagnostic: Log record filter results
+    const recordCandidates = plan.items.filter(i => i.entityType === 'record').length;
+    console.log(`[imports.service] Record candidates (entityType=record): ${recordCandidates}`);
+    console.log(`[imports.service] Records passing filter (with schemaMatch): ${Array.from(recordsByDef.values()).flat().length}`);
+
     // Execute bulk creation per definition
     for (const [defId, items] of recordsByDef) {
+        console.log(`[imports.service] Creating ${items.length} records for definition ${defId}`);
         const bulkInput = items.map(item => {
             const recordData = (item.fieldRecordings || []).reduce((acc, fr) => {
                 acc[fr.fieldName] = fr.value;
@@ -786,6 +889,8 @@ async function executePlanViaComposer(
 
         // Map created records back to items to populate createdIds and mappings
         const recordsByName = new Map(result.records.map(r => [r.unique_name, r]));
+        recordsCreated += result.created;
+        console.log(`[imports.service] Bulk create result: ${result.created} created, ${result.updated} updated, ${result.errors.length} errors`);
 
         for (const item of items) {
             const record = recordsByName.get(item.title);
@@ -886,7 +991,8 @@ async function executePlanViaComposer(
         // Templates without context can still be created (they're hierarchy-agnostic)
         // For non-templates, context is required
         if (!contextId && item.entityType !== 'template') {
-            console.warn(`Context not found for item: ${item.tempId} (${item.title})`);
+            console.warn(`[imports.service] Skipping item without context: ${item.tempId} (${item.title}) - entityType: ${item.entityType}, parentTempId: ${item.parentTempId}`);
+            skippedNoContext++;
             continue;
         }
 
@@ -919,6 +1025,7 @@ async function executePlanViaComposer(
             .executeTakeFirstOrThrow();
 
         createdIds[item.tempId] = action.id;
+        actionsCreated++;
 
         // Record ACTION_DECLARED event - projection system updates views
         await emitEvent({
@@ -1093,13 +1200,27 @@ async function executePlanViaComposer(
         }
     }
 
+    // Final diagnostic summary
+    console.log('[imports.service] Execution summary:', {
+        containers: plan.containers.length,
+        items: plan.items.length,
+        actionsCreated,
+        recordsCreated,
+        skippedNoContext,
+        factEventsEmitted,
+        workEventsEmitted,
+    });
+
     return {
         createdIds,
         itemCount: plan.items.length,
         containerCount: plan.containers.length,
+        actionsCreated,
+        recordsCreated,
         factEventsEmitted,
         workEventsEmitted,
         fieldValuesApplied,
+        skippedNoContext,
     };
 }
 

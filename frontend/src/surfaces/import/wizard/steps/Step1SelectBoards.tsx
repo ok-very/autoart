@@ -1,14 +1,16 @@
 
 import { useState, useMemo } from 'react';
-import { Search, Loader2, Calendar, CheckCircle2, ChevronDown, AlertCircle } from 'lucide-react';
+import { Search, Loader2, Calendar, CheckCircle2, ChevronDown, AlertCircle, FolderPlus } from 'lucide-react';
 
 import { Stack } from '@autoart/ui';
 import { Text } from '@autoart/ui';
 import { Button } from '@autoart/ui';
 import { Inline } from '@autoart/ui';
+import { Select } from '@autoart/ui';
 
 import { useMondayBoards, useConnections, type MondayBoard } from '../../../../api/connections';
 import { useCreateConnectorSession, type ImportSession, type ImportPlan } from '../../../../api/hooks/imports';
+import { useProjects } from '../../../../api/hooks/hierarchy';
 
 interface StepProps {
     onNext: () => void;
@@ -22,12 +24,25 @@ interface StepProps {
 export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
     const { data: connections } = useConnections();
     const { data: boards, isLoading, error } = useMondayBoards();
+    const { data: projects, isLoading: projectsLoading } = useProjects();
     const createConnectorSession = useCreateConnectorSession();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedBoardIds, setSelectedBoardIds] = useState<Set<string>>(new Set());
+    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [isCreatingSession, setIsCreatingSession] = useState(false);
     const [creationError, setCreationError] = useState<string | null>(null);
+
+    // Build project options for select
+    const projectOptions = useMemo(() => {
+        const options = [{ value: '__new__', label: '+ Create New Project' }];
+        if (projects) {
+            for (const project of projects) {
+                options.push({ value: project.id, label: project.title });
+            }
+        }
+        return options;
+    }, [projects]);
 
     // Filter boards
     const filteredBoards = useMemo(() => {
@@ -61,27 +76,17 @@ export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
         setCreationError(null);
 
         try {
-            // Pick first board for now, or handle multi-board sessions if backend supports it.
-            // Currently backend likely supports single board per session or array?
-            // createConnectorSession takes { connectorConfig: { boardId: string } }
-            // It seems it takes a single boardId?
-            // Checked imports.routes.ts: body.boardId (singular).
-            // So we loop or pick first?
-            // "Multi-select with checkboxes" implies we can select multiple.
-            // But if backend only supports one, we should restrict to single select or loop.
-            // For V1, let's assume single board import for simplicity OR check backend support.
-            // monday-workspace.routes.ts (sync) expects boardConfigId.
-            // imports.service.ts createConnectorSession expects boardId (singular).
-            // So we limit to 1 board for now or change UI to radio buttons?
-            // Or we iterate and create multiple sessions? That would be complex for Wizard.
-            // Let's restrict to single selection or warn.
-            // Changing to single selection logic:
-
             const boardId = Array.from(selectedBoardIds)[0];
+
+            // Pass targetProjectId if a real project is selected (not __new__)
+            const targetProjectId = selectedProjectId && selectedProjectId !== '__new__'
+                ? selectedProjectId
+                : undefined;
 
             const result = await createConnectorSession.mutateAsync({
                 connectorType: 'monday',
                 boardId,
+                targetProjectId,
             });
 
             onSessionCreated(result.session, result.plan);
@@ -203,6 +208,28 @@ export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
                     </div>
                 )}
             </div>
+
+            {/* Target Project Selection */}
+            {selectedBoardIds.size > 0 && (
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <Stack gap="sm">
+                        <Inline gap="sm" align="center">
+                            <FolderPlus className="w-4 h-4 text-slate-500" />
+                            <Text weight="medium">Import Destination</Text>
+                        </Inline>
+                        <Text size="sm" color="muted">
+                            Select an existing project to import into, or create a new one.
+                        </Text>
+                        <Select
+                            value={selectedProjectId ?? '__new__'}
+                            onChange={(val) => setSelectedProjectId(val === '__new__' ? null : val)}
+                            data={projectOptions}
+                            placeholder={projectsLoading ? 'Loading projects...' : 'Select project...'}
+                            disabled={projectsLoading}
+                        />
+                    </Stack>
+                </div>
+            )}
 
             {/* Footer */}
             {creationError && (

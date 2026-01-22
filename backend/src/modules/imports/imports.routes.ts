@@ -80,7 +80,10 @@ export async function importsRoutes(app: FastifyInstance) {
 
         const plan = await importsService.generatePlanFromConnector(session.id, userId);
 
-        return reply.status(201).send({ session, plan });
+        // Re-fetch session to get updated status (generatePlanFromConnector updates it)
+        const updatedSession = await importsService.getSession(session.id);
+
+        return reply.status(201).send({ session: updatedSession ?? session, plan });
     });
 
     /**

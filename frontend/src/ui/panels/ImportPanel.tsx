@@ -5,7 +5,7 @@
  * Layout: ImportSidebar | Center View (swappable)
  */
 
-import { useCallback, useState, useEffect, useMemo } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
 import { useUIStore } from '../../stores/uiStore';
@@ -40,13 +40,8 @@ export function ImportPanel() {
     const session = importSession;
     const plan = importPlan;
 
-    // Check if there are unresolved classifications
-    const hasUnresolvedClassifications = useMemo(() => {
-        if (!plan?.classifications) return false;
-        return plan.classifications.some(
-            (c) => !c.resolution && (c.outcome === 'AMBIGUOUS' || c.outcome === 'UNCLASSIFIED')
-        );
-    }, [plan]);
+    // Check if session is in review state (needs_review status)
+    const needsReview = session?.status === 'needs_review';
 
     const handleSidebarResize = useCallback(
         (delta: number) => {
@@ -71,9 +66,9 @@ export function ImportPanel() {
         clearSelection();
     }, [setImportSession, setImportPlan, clearSelection]);
 
-    // Auto-open classification panel at bottom when there are unresolved items
+    // Auto-open classification panel at bottom when session needs review
     useEffect(() => {
-        if (!dockviewApi || !session || !hasUnresolvedClassifications || classificationPanelOpened) return;
+        if (!dockviewApi || !session || !needsReview || classificationPanelOpened) return;
 
         // Check if classification panel already exists
         const existingPanel = dockviewApi.getPanel('classification');
@@ -96,7 +91,7 @@ export function ImportPanel() {
         });
 
         setClassificationPanelOpened(true);
-    }, [dockviewApi, session, hasUnresolvedClassifications, classificationPanelOpened]);
+    }, [dockviewApi, session, needsReview, classificationPanelOpened]);
 
     // Reset flag when session changes
     useEffect(() => {

@@ -107,10 +107,25 @@ export interface ImportPlan {
 }
 
 export interface ImportExecutionResult {
-    id: string;
-    status: 'completed' | 'failed';
-    createdIds: Record<string, string>;
+    id?: string;
+    status?: 'completed' | 'failed';
+    createdIds?: Record<string, string>;
     errors?: string[];
+    // Blocked response fields (when classifications need resolution)
+    blocked?: boolean;
+    unresolvedCount?: number;
+    ambiguous?: number;
+    unclassified?: number;
+    message?: string;
+    // Execution stats
+    itemCount?: number;
+    containerCount?: number;
+    actionsCreated?: number;
+    recordsCreated?: number;
+    factEventsEmitted?: number;
+    workEventsEmitted?: number;
+    fieldValuesApplied?: number;
+    skippedNoContext?: number;
 }
 
 // ============================================================================
