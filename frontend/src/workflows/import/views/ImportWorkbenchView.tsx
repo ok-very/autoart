@@ -54,6 +54,7 @@ export function ImportWorkbenchView({
     onReset,
 }: ImportWorkbenchViewProps) {
     const [previewMode, setPreviewMode] = useState<PreviewMode>('hierarchy');
+    const [isExecuting, setIsExecuting] = useState(false);
 
     // Get selected item ID from uiStore
     const { selection } = useUIStore();
@@ -165,9 +166,10 @@ export function ImportWorkbenchView({
                 <ExecutionControls
                     session={session}
                     plan={plan}
-                    isExecuting={false}
-                    onExecuteStart={() => { }}
+                    isExecuting={isExecuting}
+                    onExecuteStart={() => setIsExecuting(true)}
                     onExecuteComplete={(success) => {
+                        setIsExecuting(false);
                         if (success) {
                             // Could trigger navigation or callback
                         }

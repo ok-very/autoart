@@ -159,9 +159,11 @@ export function ExportWorkbench({ onExportComplete, onClose }: ExportWorkbenchPr
                             }
                         </Text>
                         <Inline gap="sm">
-                            <Button variant="secondary" onClick={onClose}>
-                                Cancel
-                            </Button>
+                            {onClose && (
+                                <Button variant="secondary" onClick={onClose}>
+                                    Cancel
+                                </Button>
+                            )}
                             <Button
                                 variant="primary"
                                 disabled={!canExport}

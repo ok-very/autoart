@@ -827,10 +827,20 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
             const parentGroupId = overData.parentGroupId as string;
             // Can't nest a group under itself
             if (parentGroupId === groupId) return;
-            // Can't nest a group under one of its own children (prevent circular refs)
-            const wouldBeCircular = config.groups.some(
-                g => g.settings?.parentGroupId === groupId && g.groupId === parentGroupId
-            );
+
+            // Check for circular references by walking up the parent chain
+            const wouldBeCircular = (() => {
+                const visited = new Set<string>();
+                let current: string | undefined = parentGroupId;
+                while (current) {
+                    if (visited.has(current)) return true; // Already visited = cycle
+                    if (current === groupId) return true; // Found the group we're trying to nest
+                    visited.add(current);
+                    const parentGroup = config.groups.find(g => g.groupId === current);
+                    current = parentGroup?.settings?.parentGroupId;
+                }
+                return false;
+            })();
             if (wouldBeCircular) return;
 
             // Set the parentGroupId and ensure it's in the workflow section

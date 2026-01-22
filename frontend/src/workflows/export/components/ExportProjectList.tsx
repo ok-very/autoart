@@ -72,6 +72,7 @@ export function ExportProjectList({
                             </Inline>
 
                             <button
+                                type="button"
                                 onClick={() => onPreview(isPreviewing ? null : project.id)}
                                 className={`p-1.5 rounded-md transition-colors ${isPreviewing
                                     ? 'bg-blue-100 text-blue-600'

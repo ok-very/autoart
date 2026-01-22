@@ -43,11 +43,15 @@ export function Step4Templates({ onNext, onBack, session, onSessionCreated }: St
     const generatePlan = useGenerateImportPlan();
 
     const handleUpdate = async (boardConfigId: string, workspaceId: string, update: any) => {
-        await updateConfig.mutateAsync({
-            workspaceId,
-            boardConfigId,
-            update
-        });
+        try {
+            await updateConfig.mutateAsync({
+                workspaceId,
+                boardConfigId,
+                update
+            });
+        } catch (err) {
+            console.error('Failed to update board config:', err);
+        }
     };
 
     const handleNext = async () => {

@@ -162,7 +162,7 @@ export function ExportPreview({ projectId, format, options, sessionId }: ExportP
                 <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                         <Text size="xs" color="dimmed">Staff</Text>
-                        <Text>{exportModel.header.staffInitials.join(', ')}</Text>
+                        <Text>{exportModel.header?.staffInitials?.join(', ') ?? '—'}</Text>
                     </div>
                     <div>
                         <Text size="xs" color="dimmed">Location</Text>
@@ -187,7 +187,7 @@ export function ExportPreview({ projectId, format, options, sessionId }: ExportP
                 </div>
 
                 {/* Milestones */}
-                {exportModel.timelineBlock.milestones.length > 0 && (
+                {(exportModel.timelineBlock?.milestones?.length ?? 0) > 0 && (
                     <div className="mt-4 pt-4 border-t border-slate-100">
                         <Text size="xs" color="dimmed" className="mb-2">Milestones</Text>
                         <div className="flex flex-row flex-wrap gap-2">
@@ -204,10 +204,10 @@ export function ExportPreview({ projectId, format, options, sessionId }: ExportP
                 )}
 
                 {/* Next Steps */}
-                {exportModel.nextStepsBullets.length > 0 && (
+                {(exportModel.nextStepsBullets?.length ?? 0) > 0 && (
                     <div className="mt-4 pt-4 border-t border-slate-100">
                         <Text size="xs" color="dimmed" className="mb-2">
-                            Next Steps ({exportModel.nextStepsBullets.filter(b => !b.completed).length} open)
+                            Next Steps ({exportModel.nextStepsBullets?.filter(b => !b.completed).length ?? 0} open)
                         </Text>
                         <ul className="space-y-1">
                             {exportModel.nextStepsBullets.map((bullet, i) => (

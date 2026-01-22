@@ -41,8 +41,9 @@ interface CollectionItemCardProps {
 }
 
 export function CollectionItemCard({ item, onRemove, isDragging = false }: CollectionItemCardProps) {
-    const Icon = TYPE_ICONS[item.type];
-    const typeLabel = TYPE_LABELS[item.type];
+    // Fallback for unknown types to prevent runtime crash
+    const Icon = TYPE_ICONS[item.type] ?? Package;
+    const typeLabel = TYPE_LABELS[item.type] ?? 'Unknown';
 
     return (
         <div

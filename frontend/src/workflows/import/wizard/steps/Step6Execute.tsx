@@ -88,9 +88,11 @@ export function Step6Execute({ onBack, session, plan }: StepProps) {
     };
 
     const handleFinish = () => {
-        // Reload page or reset to start? 
-        // For now, reload window to clear state is safest until we have robust reset.
-        window.location.reload();
+        // Navigate to projects or reload to clear state
+        // Using safe check for browser environment
+        if (typeof window !== 'undefined' && window.location) {
+            window.location.href = '/projects';
+        }
     };
 
     if (!session || !plan) {

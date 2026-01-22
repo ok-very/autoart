@@ -128,7 +128,7 @@ function SortableBlock({
                             />
                         </div>
                         <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm text-slate-600">
-                            {block.kind === 'module' ? block.type.replace('_', ' ') : 'Record'}
+                            {block.kind === 'module' && typeof block.type === 'string' ? block.type.replace('_', ' ') : 'Record'}
                         </div>
                     </div>
 
@@ -185,6 +185,7 @@ function SortableBlock({
                         <button
                             {...attributes}
                             {...listeners}
+                            onClick={(e) => e.stopPropagation()}
                             className="text-slate-400 hover:text-slate-600 cursor-grab active:cursor-grabbing"
                         >
                             <GripVertical className="w-4 h-4" />

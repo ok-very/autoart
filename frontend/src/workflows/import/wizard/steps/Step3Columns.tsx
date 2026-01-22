@@ -83,7 +83,7 @@ interface ColumnCardProps {
 
 function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCardProps) {
     const roleMeta = ROLE_METADATA[column.semanticRole];
-    const hasSamples = column.sampleValues && column.sampleValues.length > 0;
+    const hasSamples = Array.isArray(column.sampleValues) && column.sampleValues.length > 0;
 
     return (
         <div className="border border-slate-200 rounded-lg bg-white overflow-hidden shadow-sm">
