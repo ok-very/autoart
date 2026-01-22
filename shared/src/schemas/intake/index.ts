@@ -101,7 +101,7 @@ export type IntakeFormWithPages = z.infer<typeof IntakeFormWithPagesSchema>;
 /**
  * Submission metadata - flexible JSONB structure for form data.
  */
-export const SubmissionMetadataSchema = z.record(z.unknown());
+export const SubmissionMetadataSchema = z.record(z.string(), z.unknown());
 export type SubmissionMetadata = z.infer<typeof SubmissionMetadataSchema>;
 
 /**

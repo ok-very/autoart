@@ -145,7 +145,7 @@ export const EventSchema = z.object({
   contextType: ContextTypeSchema,
   actionId: z.string().uuid().nullable(),
   type: z.string().max(100),
-  payload: z.record(z.unknown()).default({}),
+  payload: z.record(z.string(), z.unknown()).default({}),
   actorId: z.string().uuid().nullable(),
   occurredAt: z.coerce.date(),
 });
@@ -159,7 +159,7 @@ export const CreateEventInputSchema = z.object({
   contextType: ContextTypeSchema,
   actionId: z.string().uuid().optional(),
   type: z.string().max(100),
-  payload: z.record(z.unknown()).optional().default({}),
+  payload: z.record(z.string(), z.unknown()).optional().default({}),
 });
 export type CreateEventInput = z.infer<typeof CreateEventInputSchema>;
 

@@ -1,0 +1,7 @@
+# SPA fallback:
+# Ensures /SOME_FORM_ID and /SOME_FORM_ID/success load index.html directly.
+# Netlify: place in publish root.
+# If using another host (Cloudflare Pages/Vercel/etc.), configure an equivalent rewrite:
+#   all paths -> /index.html (200)
+#
+/* /index.html 200

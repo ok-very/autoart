@@ -76,4 +76,10 @@ export const EXPORT_FORMATS: ExportFormatOption[] = [
         description: 'Export to presentation format',
         extension: '',
     },
+    {
+        id: 'pdf',
+        label: 'PDF Document',
+        description: 'Export to portable document format',
+        extension: '.pdf',
+    },
 ];

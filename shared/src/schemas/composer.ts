@@ -70,7 +70,7 @@ export const ComposerInputSchema = z.object({
     emitExtraEvents: z.array(
         z.object({
             type: z.string().max(100),
-            payload: z.record(z.unknown()).optional().default({}),
+            payload: z.record(z.string(), z.unknown()).optional().default({}),
         })
     ).optional(),
 });
@@ -115,9 +115,9 @@ export const ActionTypeConfigSchema = z.object({
     /** Human-readable label */
     label: z.string(),
     /** Field bindings schema */
-    fieldBindings: z.record(z.enum(['string', 'text', 'date', 'number', 'boolean', 'enum', 'uuid'])),
+    fieldBindings: z.record(z.string(), z.enum(['string', 'text', 'date', 'number', 'boolean', 'enum', 'uuid'])),
     /** Default values for fields */
-    defaults: z.record(z.unknown()).optional(),
+    defaults: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type ActionTypeConfig = z.infer<typeof ActionTypeConfigSchema>;
