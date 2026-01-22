@@ -238,8 +238,9 @@ function createContainerFromBoard(
     if (!type) return null;
 
     // Use projectTitleOverride from settings if provided, otherwise fall back to board name
-    const title = config.settings?.projectTitleOverride || node.name;
-    const hasOverride = !!config.settings?.projectTitleOverride && config.settings.projectTitleOverride !== node.name;
+    const boardSettings = config.settings as { projectTitleOverride?: string } | null;
+    const title = boardSettings?.projectTitleOverride || node.name;
+    const hasOverride = !!boardSettings?.projectTitleOverride && boardSettings.projectTitleOverride !== node.name;
 
     return {
         tempId,

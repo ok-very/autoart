@@ -115,6 +115,14 @@ export async function handleMondayCallback(code: string, state: string) {
     const userId = validateState(state);
     const redirectUri = env.MONDAY_REDIRECT_URI || 'http://localhost:3001/api/connections/monday/callback';
 
+    // Debug: log what credentials are being used (masked)
+    console.log('[Monday OAuth] Exchanging code with:', {
+        client_id: env.MONDAY_CLIENT_ID,
+        client_secret_length: env.MONDAY_CLIENT_SECRET?.length,
+        client_secret_prefix: env.MONDAY_CLIENT_SECRET?.slice(0, 4) + '...',
+        redirect_uri: redirectUri,
+    });
+
     // Exchange code for tokens
     const tokenResponse = await fetch('https://auth.monday.com/oauth2/token', {
         method: 'POST',

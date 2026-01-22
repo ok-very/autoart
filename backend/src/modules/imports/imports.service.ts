@@ -522,7 +522,8 @@ function generateClassificationsForConnectorItems(
                     confidence: 'high' as const,
                     rationale: 'Record from connector - requires schema match',
                 };
-                break;
+                // Add schema matching only for record types
+                return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
 
             case 'template':
                 // Templates are auto-committed, no schema match needed
@@ -532,7 +533,7 @@ function generateClassificationsForConnectorItems(
                     confidence: 'high' as const,
                     rationale: 'Template from connector - auto-commit',
                 };
-                break;
+                return baseClassification;
 
             case 'action':
             case 'task':
@@ -544,12 +545,10 @@ function generateClassificationsForConnectorItems(
                     confidence: 'high' as const,
                     rationale: `${item.entityType} from connector - create as action`,
                 };
-                break;
+                return baseClassification;
 
             case 'project':
-            case 'process':
             case 'stage':
-            case 'subprocess':
                 // These are containers, not items - but if they appear, treat as internal work
                 baseClassification = {
                     itemTempId: item.tempId,
@@ -557,7 +556,7 @@ function generateClassificationsForConnectorItems(
                     confidence: 'high' as const,
                     rationale: `Container type ${item.entityType} - structural item`,
                 };
-                break;
+                return baseClassification;
 
             default:
                 // Unknown entity type - may need review
@@ -567,12 +566,11 @@ function generateClassificationsForConnectorItems(
                     confidence: 'low' as const,
                     rationale: `Unknown entity type: ${item.entityType ?? 'undefined'}`,
                 };
+                return baseClassification;
         }
-
-        // Add schema matching for record types
-        return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
     });
 }
+
 
 /**
  * Add schema matching result to a classification

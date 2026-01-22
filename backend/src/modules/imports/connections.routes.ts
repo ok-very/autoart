@@ -159,6 +159,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
     /**
      * Monday OAuth callback
      * Handles redirect from Monday after user authorization
+     * Returns HTML that posts message to parent window and closes popup
      */
     app.get('/connections/monday/callback', async (request, reply) => {
         const { code, state, error } = request.query as {
@@ -167,28 +168,54 @@ export async function connectionsRoutes(app: FastifyInstance) {
             error?: string
         };
 
-        // Get frontend URL for redirects
-        const { env } = await import('../../config/env.js');
-        const frontendUrl = env.CORS_ORIGIN.split(',')[0].trim();
+        const escapeHtml = (value: string): string => {
+            return value
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        };
+
+        // Helper to send HTML that closes the popup
+        const sendPopupResponse = (success: boolean, message?: string) => {
+            const safeMessage = message ? escapeHtml(message) : 'Unknown error';
+            const html = `
+<!DOCTYPE html>
+<html>
+<head><title>Monday OAuth</title></head>
+<body>
+<script>
+    if (window.opener) {
+        window.opener.postMessage({
+            type: 'monday-oauth-callback',
+            success: ${success},
+            message: ${message ? JSON.stringify(message) : 'null'}
+        }, '*');
+    }
+    window.close();
+</script>
+<p>${success ? 'Connected! This window will close.' : `Error: ${safeMessage}`}</p>
+</body>
+</html>`;
+            return reply.type('text/html').send(html);
+        };
 
         if (error) {
-            // User denied or error occurred
-            return reply.redirect(`${frontendUrl}/?monday_auth=error&message=${encodeURIComponent(error)}`);
+            return sendPopupResponse(false, error);
         }
 
         if (!code || !state) {
-            return reply.redirect(`${frontendUrl}/?monday_auth=error&message=missing_parameters`);
+            return sendPopupResponse(false, 'Missing parameters');
         }
 
         try {
             const { handleMondayCallback } = await import('./monday-oauth.service.js');
             await handleMondayCallback(code, state);
-
-            // Redirect to settings page with success message
-            return reply.redirect(`${frontendUrl}/settings?monday_auth=success`);
+            return sendPopupResponse(true);
         } catch (err) {
             console.error('Monday OAuth callback error:', err);
-            return reply.redirect(`${frontendUrl}/?monday_auth=error&message=${encodeURIComponent((err as Error).message)}`);
+            return sendPopupResponse(false, (err as Error).message);
         }
     });
 
