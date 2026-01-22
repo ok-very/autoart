@@ -17,7 +17,60 @@ export function FileUpload({ block }: FileUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  /**
+   * Validates if a file matches the accepted file types.
+   * Supports MIME types (image/*, application/pdf) and extensions (.pdf, .jpg)
+   */
+  const validateFileType = (file: File): { valid: boolean; error?: string } => {
+    const acceptedTypes = block.acceptedFileTypes;
+    if (!acceptedTypes || acceptedTypes.length === 0) {
+      return { valid: true };
+    }
+
+    const fileName = file.name.toLowerCase();
+    const fileType = file.type.toLowerCase();
+    const fileExtension = '.' + fileName.split('.').pop();
+
+    for (const accepted of acceptedTypes) {
+      const normalizedAccepted = accepted.toLowerCase().trim();
+
+      // Check extension match (e.g., .pdf, .jpg)
+      if (normalizedAccepted.startsWith('.')) {
+        if (fileExtension === normalizedAccepted) {
+          return { valid: true };
+        }
+        continue;
+      }
+
+      // Check MIME type match
+      if (normalizedAccepted.includes('/')) {
+        // Wildcard MIME type (e.g., image/*)
+        if (normalizedAccepted.endsWith('/*')) {
+          const mimeCategory = normalizedAccepted.slice(0, -2);
+          if (fileType.startsWith(mimeCategory + '/')) {
+            return { valid: true };
+          }
+        } else if (fileType === normalizedAccepted) {
+          // Exact MIME type match
+          return { valid: true };
+        }
+      }
+    }
+
+    return {
+      valid: false,
+      error: `File type not allowed. Accepted: ${acceptedTypes.join(', ')}`,
+    };
+  };
+
   const uploadFile = async (file: File) => {
+    // Validate file type before uploading
+    const validation = validateFileType(file);
+    if (!validation.valid) {
+      setUploadError(validation.error ?? 'Invalid file type');
+      return;
+    }
+
     setIsUploading(true);
     setUploadError(null);
     setUploadProgress(0);
@@ -80,7 +133,6 @@ export function FileUpload({ block }: FileUploadProps) {
     if (isUploading) return;
 
     const file = e.dataTransfer.files?.[0];
-    // Optional: check file type against block.acceptedFileTypes
     if (file) {
       uploadFile(file);
     }

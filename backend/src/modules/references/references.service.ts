@@ -1,8 +1,15 @@
+/**
+ * @deprecated TODO: DEPRECATED - TaskReferences system is being phased out.
+ * This entire module operates on the deprecated task_references table.
+ * Do not add new code that depends on this module.
+ * See migration plan for replacement strategy.
+ */
+
 import type { ResolvedReference, ReferenceStatus } from '@autoart/shared';
 
 import type { CreateReferenceInput, UpdateReferenceModeInput } from './references.schemas.js';
 import { db } from '../../db/client.js';
-import type { TaskReference } from '../../db/schema.js';
+import type { TaskReference } from '../../db/schema.js'; // TODO: DEPRECATED
 import { NotFoundError } from '../../utils/errors.js';
 
 

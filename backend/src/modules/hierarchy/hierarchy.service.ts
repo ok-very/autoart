@@ -6,6 +6,9 @@ import type { HierarchyNode, NodeType } from '../../db/schema.js';
 import { NotFoundError, ValidationError } from '../../utils/errors.js';
 import * as recordsService from '../records/records.service.js';
 
+// TODO: DEPRECATED - deepCloneNode uses task_references table which is being phased out.
+// The clone operation at lines 446-467 should be updated when task_references is removed.
+
 // Validate hierarchy rules
 // Templates are hierarchy-agnostic (null parent) - they float outside normal structure
 const VALID_PARENTS: Record<NodeType, NodeType | null> = {
