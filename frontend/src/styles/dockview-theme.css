@@ -64,10 +64,7 @@
   border-radius: 6px 6px 0 0;
   /* Rounded top corners */
   margin-right: 2px;
-  background: #f1f5f9;
-  /* Ensure inactive tabs have background */
-  background: linear-gradient(to bottom, #ffffff, #f1f5f9);
-  background-color: #f1f5f9 !important;
+  background: linear-gradient(to bottom, #ffffff, #f1f5f9) !important;
   /* Anti-aliasing for smooth rounded corners */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -75,25 +72,22 @@
   backface-visibility: hidden;
 }
 
-/* Prevent black flash on any interaction state */
-.dockview-theme-light .dv-tab,
+/* Ensure child elements are transparent to show tab gradient */
 .dockview-theme-light .dv-tab * {
-  background-color: inherit;
+  background-color: transparent !important;
 }
 
 .dockview-theme-light .dv-tab:hover {
   color: #1e293b;
   /* slate-800 */
-  background: #e2e8f0 !important;
-  /* slate-200 - explicit to prevent black */
-  background-color: #e2e8f0 !important;
+  background: linear-gradient(to bottom, #f8fafc, #e2e8f0) !important;
 }
 
 /* Fix for black background on click/focus */
 .dockview-theme-light .dv-tab:focus,
 .dockview-theme-light .dv-tab:active,
 .dockview-theme-light .dv-tab.focused {
-  background: #e2e8f0 !important;
+  background: linear-gradient(to bottom, #f8fafc, #e2e8f0) !important;
   color: #0f172a;
 }
 
@@ -170,8 +164,7 @@
 .dockview-theme-light .dv-tab.active {
   color: #0f172a;
   /* slate-900 */
-  background: #ffffff !important;
-  /* Force white solid background for active tab */
+  background: linear-gradient(to bottom, #ffffff, #f8fafc) !important;
 
   /* Thicken border when selected as requested */
   border: 2px solid #0f172a;
@@ -189,14 +182,12 @@
   box-shadow: none;
 }
 
-/* Pill highlight for text in active tab */
+/* Active tab label - transparent to show gradient */
 .dockview-theme-light .dv-tab.active .dv-tab-label {
-  background-color: #f1f5f9;
-  /* slate-100 */
+  background-color: transparent;
   color: #0f172a;
   /* slate-900 */
   padding: 2px 10px;
-  border-radius: 12px;
   transition: all 0.2s ease;
 }
 

@@ -37,7 +37,7 @@ import {
 export type CorePanelId = 'center-workspace';
 export type ToolPanelId = 'selection-inspector' | 'classification' | 'search-results' | 'mail-panel';
 export type RegistryPanelId = 'records-list' | 'fields-list' | 'actions-list' | 'events-list';
-export type WorkbenchPanelId = 'import-workbench' | 'export-workbench' | 'composer-workbench';
+export type WorkbenchPanelId = 'import-workbench' | 'export-workbench' | 'composer-workbench' | 'intake-workbench';
 export type PanelId = CorePanelId | ToolPanelId | RegistryPanelId | WorkbenchPanelId;
 
 // Permanent panels cannot be closed by user
@@ -225,6 +225,15 @@ export const PANEL_DEFINITIONS: Record<PanelId, PanelDefinition> = {
         id: 'composer-workbench',
         title: 'Composer',
         icon: Wand2,
+        permanent: false,
+        defaultPlacement: { area: 'center' },
+        shouldShow: () => false,
+        canActOn: () => true,
+    },
+    'intake-workbench': {
+        id: 'intake-workbench',
+        title: 'Intake',
+        icon: FolderOpen, // Will use ClipboardList if imported
         permanent: false,
         defaultPlacement: { area: 'center' },
         shouldShow: () => false,

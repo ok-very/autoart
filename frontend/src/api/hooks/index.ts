@@ -60,6 +60,9 @@ export {
   useCurrentUser,
   useUpdateProfile,
   useSessions,
+  useUserSettings,
+  useUserSetting,
+  useSetUserSetting,
 } from './auth';
 
 // Hierarchy (Also exported via ./entities)
@@ -251,6 +254,17 @@ export {
   type AdminUser,
 } from './admin';
 
+// Intake Forms
+export {
+  useIntakeForms,
+  useIntakeForm,
+  useCreateIntakeForm,
+  useUpdateIntakeForm,
+  useUpsertIntakeFormPage,
+  useDeleteIntakeFormPage,
+  useIntakeSubmissions,
+} from './intake';
+
 // Mail (AutoHelper integration)
 export {
   useInbox,
@@ -263,6 +277,16 @@ export {
   useMarkInformational,
   mailQueryKeys,
 } from './mail';
+
+// AutoHelper Filetree & Export
+export {
+  useFiletree,
+  useExportIntakeCSV,
+  type FiletreeNode,
+  type FiletreeResponse,
+  type IntakeCSVExportRequest,
+  type IntakeCSVExportResponse,
+} from './autohelper';
 
 // Interpretation (Also exported via ./operations)
 export {

@@ -16,7 +16,7 @@ import { api } from '../client';
 // TYPES (Backend-aligned)
 // ============================================================================
 
-export type ExportFormat = 'rtf' | 'plaintext' | 'markdown' | 'csv' | 'google-doc' | 'google-sheets' | 'google-slides';
+export type ExportFormat = 'rtf' | 'plaintext' | 'markdown' | 'csv' | 'google-doc' | 'google-sheets' | 'google-slides' | 'pdf';
 
 export type ExportSessionStatus =
     | 'configuring'

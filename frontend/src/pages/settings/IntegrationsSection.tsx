@@ -19,8 +19,10 @@ import {
     Eye,
     EyeOff,
     AlertCircle,
+    FileText,
 } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useUserSettings, useSetUserSetting } from '../../api/hooks';
 
 // ============================================================================
 // TYPES
@@ -448,6 +450,120 @@ function MicrosoftIntegration({ status, onConnect, onDisconnect }: MicrosoftInte
 }
 
 // ============================================================================
+// SHAREPOINT REQUEST URL SETTING
+// ============================================================================
+
+function SharePointRequestUrlSetting() {
+    const { data: settings } = useUserSettings();
+    const setSetting = useSetUserSetting();
+    const [url, setUrl] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+
+    const savedUrl = (settings?.sharepoint_request_url as string) || '';
+
+    useEffect(() => {
+        if (!isEditing) {
+            setUrl(savedUrl);
+        }
+    }, [savedUrl, isEditing]);
+
+    const handleSave = useCallback(async () => {
+        setIsSaving(true);
+        try {
+            await setSetting.mutateAsync({
+                key: 'sharepoint_request_url',
+                value: url.trim() || null,
+            });
+            setIsEditing(false);
+        } finally {
+            setIsSaving(false);
+        }
+    }, [url, setSetting]);
+
+    return (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="p-4 border-b border-slate-100">
+                <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-slate-900">SharePoint Request Files URL</h3>
+                        <p className="text-sm text-slate-500 mt-0.5">
+                            Default URL shown on public intake forms for file requests
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="p-4">
+                {isEditing ? (
+                    <div className="space-y-3">
+                        <input
+                            type="url"
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
+                            placeholder="https://yourcompany.sharepoint.com/..."
+                            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors disabled:bg-slate-300"
+                            >
+                                {isSaving ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <CheckCircle2 className="w-4 h-4" />
+                                )}
+                                Save
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setUrl(savedUrl);
+                                    setIsEditing(false);
+                                }}
+                                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                            {savedUrl ? (
+                                <code className="text-sm text-slate-700 bg-slate-50 px-2 py-1 rounded truncate block">
+                                    {savedUrl}
+                                </code>
+                            ) : (
+                                <span className="text-sm text-slate-400 italic">Not configured</span>
+                            )}
+                        </div>
+                        <button
+                            onClick={() => setIsEditing(true)}
+                            className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                        >
+                            {savedUrl ? 'Edit' : 'Configure'}
+                        </button>
+                    </div>
+                )}
+
+                <div className="mt-3 flex items-start gap-2 text-xs text-slate-400">
+                    <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                    <span>
+                        This URL will be used as the default SharePoint request link for new intake forms.
+                        You can override it per-form.
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ============================================================================
 // AUTOHELPER INTEGRATION
 // ============================================================================
 
@@ -600,6 +716,7 @@ export function IntegrationsSection({
                     onConnect={onMicrosoftConnect}
                     onDisconnect={onMicrosoftDisconnect}
                 />
+                <SharePointRequestUrlSetting />
                 <GoogleIntegration
                     status={googleStatus}
                     onConnect={onGoogleConnect}

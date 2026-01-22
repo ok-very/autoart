@@ -14,7 +14,7 @@ export const HierarchyNodeSchema = z.object({
   description: z.unknown().nullable(), // TipTap JSON document
   position: z.number().int().nonnegative(),
   default_record_def_id: z.string().uuid().nullable(),
-  metadata: z.record(z.unknown()).default({}),
+  metadata: z.record(z.string(), z.unknown()).default({}),
   created_by: z.string().uuid().nullable(),
   created_at: z.string().datetime(),
   updated_at: z.string().datetime(),
@@ -30,7 +30,7 @@ export const CreateNodeInputSchema = z.object({
   type: NodeTypeSchema,
   title: z.string().min(1),
   description: z.unknown().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   position: z.number().int().nonnegative().optional(),
 });
 
@@ -42,7 +42,7 @@ export type CreateNodeInput = z.infer<typeof CreateNodeInputSchema>;
 export const UpdateNodeInputSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.unknown().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   position: z.number().int().nonnegative().optional(),
   default_record_def_id: z.string().uuid().nullable().optional(),
 });
@@ -67,7 +67,7 @@ export const CloneNodeInputSchema = z.object({
   targetParentId: z.string().uuid().nullable().optional(),
   overrides: z.object({
     title: z.string().optional(),
-    metadata: z.record(z.unknown()).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
   depth: z.enum(['all', 'process', 'stage', 'subprocess']).optional(),
   includeTemplates: z.boolean().optional(),

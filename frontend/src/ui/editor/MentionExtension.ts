@@ -1,4 +1,4 @@
-import { Node, mergeAttributes } from '@tiptap/core';
+import { Node, mergeAttributes, type Editor } from '@tiptap/core';
 import { PluginKey } from '@tiptap/pm/state';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -46,7 +46,7 @@ export const MentionExtension = Node.create<MentionOptions>({
         allowSpaces: false,
         allowedPrefixes: null, // Allow trigger at start of line
         startOfLine: false,
-        command: ({ editor, range, props }) => {
+        command: ({ editor, range, props }: { editor: Editor; range: { from: number; to: number }; props: MentionAttributes }) => {
           // Delete the trigger character and query
           editor
             .chain()
@@ -66,49 +66,49 @@ export const MentionExtension = Node.create<MentionOptions>({
     return {
       referenceId: {
         default: null,
-        parseHTML: (element) => element.getAttribute('data-reference-id'),
-        renderHTML: (attributes) => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-reference-id'),
+        renderHTML: (attributes: MentionAttributes) => ({
           'data-reference-id': attributes.referenceId,
         }),
       },
       label: {
         default: '',
-        parseHTML: (element) => element.getAttribute('data-label') || element.textContent,
-        renderHTML: (attributes) => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-label') || element.textContent,
+        renderHTML: (attributes: MentionAttributes) => ({
           'data-label': attributes.label,
         }),
       },
       mode: {
         default: 'dynamic',
-        parseHTML: (element) => element.getAttribute('data-mode') || 'dynamic',
-        renderHTML: (attributes) => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-mode') || 'dynamic',
+        renderHTML: (attributes: MentionAttributes) => ({
           'data-mode': attributes.mode,
         }),
       },
       recordId: {
         default: null,
-        parseHTML: (element) => element.getAttribute('data-record-id'),
-        renderHTML: (attributes) => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-record-id'),
+        renderHTML: (attributes: MentionAttributes) => ({
           'data-record-id': attributes.recordId,
         }),
       },
       fieldKey: {
         default: null,
-        parseHTML: (element) => element.getAttribute('data-field-key'),
-        renderHTML: (attributes) => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-field-key'),
+        renderHTML: (attributes: MentionAttributes) => ({
           'data-field-key': attributes.fieldKey,
         }),
       },
       triggerChar: {
         default: '#',
-        parseHTML: (element) => element.getAttribute('data-trigger') || '#',
-        renderHTML: (attributes) => ({
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-trigger') || '#',
+        renderHTML: (attributes: MentionAttributes) => ({
           'data-trigger': attributes.triggerChar,
         }),
       },
       snapshot: {
         default: null,
-        parseHTML: (element) => {
+        parseHTML: (element: HTMLElement) => {
           const val = element.getAttribute('data-snapshot');
           try {
             return val ? JSON.parse(val) : null;
@@ -116,7 +116,7 @@ export const MentionExtension = Node.create<MentionOptions>({
             return val;
           }
         },
-        renderHTML: (attributes) => ({
+        renderHTML: (attributes: MentionAttributes) => ({
           'data-snapshot': attributes.snapshot ? JSON.stringify(attributes.snapshot) : null,
         }),
       },
@@ -132,9 +132,10 @@ export const MentionExtension = Node.create<MentionOptions>({
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    const triggerChar = node.attrs.triggerChar || '#';
+    const attrs = node.attrs as MentionAttributes;
+    const triggerChar = attrs.triggerChar || '#';
     const chipClass = triggerChar === '@' ? 'mention-at' : 'mention-hash';
-    const modeClass = node.attrs.mode === 'static' ? 'token-static' : 'token-dynamic';
+    const modeClass = attrs.mode === 'static' ? 'token-static' : 'token-dynamic';
 
     return [
       'span',
@@ -142,7 +143,7 @@ export const MentionExtension = Node.create<MentionOptions>({
         'data-type': 'mention',
         class: `mention ${chipClass} ${modeClass}`,
       }),
-      node.attrs.label,
+      attrs.label,
     ];
   },
 
@@ -153,8 +154,8 @@ export const MentionExtension = Node.create<MentionOptions>({
   addCommands() {
     return {
       insertMention:
-        (attrs) =>
-          ({ chain }) => {
+        (attrs: MentionAttributes) =>
+          ({ chain }: { chain: () => { insertContent: (content: { type: string; attrs: MentionAttributes }) => { run: () => boolean } } }) => {
             return chain()
               .insertContent({
                 type: this.name,

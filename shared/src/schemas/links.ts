@@ -9,7 +9,7 @@ export const RecordLinkSchema = z.object({
   source_record_id: z.string().uuid(),
   target_record_id: z.string().uuid(),
   link_type: z.string(),
-  metadata: z.record(z.unknown()).default({}),
+  metadata: z.record(z.string(), z.unknown()).default({}),
   created_by: z.string().uuid().nullable(),
   created_at: z.string().datetime(),
 });
@@ -23,7 +23,7 @@ export const CreateLinkInputSchema = z.object({
   sourceRecordId: z.string().uuid(),
   targetRecordId: z.string().uuid(),
   linkType: z.string().min(1),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type CreateLinkInput = z.infer<typeof CreateLinkInputSchema>;

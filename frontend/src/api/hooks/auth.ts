@@ -111,3 +111,33 @@ export function useLogoutEverywhere() {
     },
   });
 }
+
+// ==================== USER SETTINGS ====================
+
+export function useUserSettings() {
+  return useQuery({
+    queryKey: ['user-settings'],
+    queryFn: () =>
+      api.get<{ settings: Record<string, unknown> }>('/auth/me/settings').then((r) => r.settings),
+  });
+}
+
+export function useUserSetting(key: string) {
+  return useQuery({
+    queryKey: ['user-settings', key],
+    queryFn: () =>
+      api.get<{ key: string; value: unknown }>(`/auth/me/settings/${key}`).then((r) => r.value),
+    enabled: !!key,
+  });
+}
+
+export function useSetUserSetting() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ key, value }: { key: string; value: unknown }) =>
+      api.put<{ key: string; value: unknown }>(`/auth/me/settings/${key}`, { value }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-settings'] });
+    },
+  });
+}

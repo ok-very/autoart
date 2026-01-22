@@ -1,0 +1,94 @@
+# render.yaml
+# Render.com Blueprint for AutoArt multi-service deployment
+# Documentation: https://docs.render.com/infrastructure-as-code
+#
+# Services:
+#   1. autoart-backend: Node.js backend API
+#   2. autoart-frontend: Dashboard/Admin UI (autoart.work)
+#   3. autoart-intake: Public intake forms (intake.autoart.work)
+
+services:
+  # ====================================================================
+  # BACKEND API
+  # ====================================================================
+  - type: web
+    name: autoart-backend
+    runtime: node
+    plan: starter # Adjust as needed
+    region: oregon # or your preferred region
+    buildCommand: |
+      npm install -g pnpm
+      pnpm install
+      pnpm build:shared
+      pnpm build:backend
+    startCommand: node backend/dist/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Set manually in Render dashboard
+      - key: JWT_SECRET
+        sync: false
+      - key: COOKIE_DOMAIN
+        value: .autoart.work
+    healthCheckPath: /health
+
+  # ====================================================================
+  # FRONTEND (Dashboard) - autoart.work
+  # ====================================================================
+  - type: web
+    name: autoart-frontend
+    runtime: static
+    plan: starter
+    region: oregon
+    buildCommand: |
+      npm install -g pnpm
+      pnpm install
+      pnpm build:shared
+      pnpm build:frontend
+    staticPublishPath: frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600
+    envVars:
+      - key: VITE_API_URL
+        value: https://autoart-backend.onrender.com
+
+  # ====================================================================
+  # INTAKE (Public Forms) - intake.autoart.work
+  # ====================================================================
+  - type: web
+    name: autoart-intake
+    runtime: static
+    plan: starter
+    region: oregon
+    buildCommand: |
+      npm install -g pnpm
+      pnpm install
+      pnpm build:shared
+      pnpm build:intake
+    staticPublishPath: dist-intake
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=3600
+    envVars:
+      # OPTIONAL: If intake needs to call the backend API directly
+      # - key: VITE_INTAKE_API_URL
+      #   value: https://autoart-backend.onrender.com/public
+
+# ====================================================================
+# CUSTOM DOMAINS (configure in Render dashboard after first deploy)
+# ====================================================================
+# autoart-frontend -> autoart.work, www.autoart.work
+# autoart-intake   -> intake.autoart.work
+# autoart-backend  -> api.autoart.work (optional, or use internal URL)
