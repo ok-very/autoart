@@ -379,3 +379,80 @@ body {
   color: #64748b;
   border-color: #e2e8f0;
 }
+
+/* ============================================================================
+   WORKFLOW LAYOUT - Fixed Panel Region Animations
+   ============================================================================ */
+
+.fixed-panel-region {
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+/* Bottom region animations */
+.fixed-panel-region.region-bottom.is-visible {
+  max-height: var(--panel-size, 33%);
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fixed-panel-region.region-bottom.is-hidden {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(100%);
+}
+
+/* Right region animations */
+.fixed-panel-region.region-right.is-visible {
+  max-width: var(--panel-size, 33%);
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.fixed-panel-region.region-right.is-hidden {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+/* Left region animations */
+.fixed-panel-region.region-left.is-visible {
+  max-width: var(--panel-size, 33%);
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.fixed-panel-region.region-left.is-hidden {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-100%);
+}
+
+/* Top region animations */
+.fixed-panel-region.region-top.is-visible {
+  max-height: var(--panel-size, 33%);
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fixed-panel-region.region-top.is-hidden {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-100%);
+}
+
+/* Workflow layout container */
+.workflow-layout-container {
+  position: relative;
+}
+
+.workflow-main-region {
+  position: relative;
+}
+
+.workflow-bottom-region {
+  border-top: 1px solid #e2e8f0;
+}

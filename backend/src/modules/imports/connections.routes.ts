@@ -180,20 +180,25 @@ export async function connectionsRoutes(app: FastifyInstance) {
         // Helper to send HTML that closes the popup
         const sendPopupResponse = (success: boolean, message?: string) => {
             const safeMessage = message ? escapeHtml(message) : 'Unknown error';
+            const serializedMessage = message != null ? JSON.stringify(String(message)) : 'null';
+            const targetOrigin = process.env.CLIENT_ORIGIN || 'https://example.com';
             const html = `
 <!DOCTYPE html>
 <html>
 <head><title>Monday OAuth</title></head>
 <body>
 <script>
-    if (window.opener) {
-        window.opener.postMessage({
-            type: 'monday-oauth-callback',
-            success: ${success},
-            message: ${message ? JSON.stringify(message) : 'null'}
-        }, '*');
-    }
-    window.close();
+    (function() {
+        var targetOrigin = ${JSON.stringify(targetOrigin)};
+        if (window.opener && targetOrigin) {
+            window.opener.postMessage({
+                type: 'monday-oauth-callback',
+                success: ${success ? 'true' : 'false'},
+                message: ${serializedMessage}
+            }, targetOrigin);
+        }
+        window.close();
+    })();
 </script>
 <p>${success ? 'Connected! This window will close.' : `Error: ${safeMessage}`}</p>
 </body>

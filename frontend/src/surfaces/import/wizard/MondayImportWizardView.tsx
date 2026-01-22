@@ -4,6 +4,7 @@ import { Stack, Card, Text, ProgressBar, Inline } from '@autoart/ui';
 
 import { useContextStore } from '../../../stores/contextStore';
 import { ImportContextProvider, type ImportContextValue } from '../ImportContextProvider';
+import { ImportWorkflowLayout } from '../../../workspace/layouts';
 
 // Import Steps
 import { Step1SelectBoards } from './steps/Step1SelectBoards';
@@ -114,32 +115,34 @@ export function MondayImportWizardView({
 
     return (
         <ImportContextProvider value={contextValue}>
-            <Stack className="h-full bg-slate-50 relative overflow-hidden" gap="none">
-                {/* Wizard Header */}
-                <div className="bg-white border-b border-slate-200 px-6 py-4">
-                    <Stack gap="sm">
-                        <Inline align="center" justify="between">
-                            <Text size="lg" weight="bold">Monday.com Import Wizard</Text>
-                            <Text size="sm" color="muted">Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1].title}</Text>
-                        </Inline>
-                        <ProgressBar value={progress} size="sm" />
-                    </Stack>
-                </div>
+            <ImportWorkflowLayout>
+                <Stack className="h-full bg-slate-50 relative overflow-hidden" gap="none">
+                    {/* Wizard Header */}
+                    <div className="bg-white border-b border-slate-200 px-6 py-4">
+                        <Stack gap="sm">
+                            <Inline align="center" justify="between">
+                                <Text size="lg" weight="bold">Monday.com Import Wizard</Text>
+                                <Text size="sm" color="muted">Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1].title}</Text>
+                            </Inline>
+                            <ProgressBar value={progress} size="sm" />
+                        </Stack>
+                    </div>
 
-                {/* Main Content */}
-                <div className="flex-1 overflow-auto p-6">
-                    <Card className="min-h-[400px] h-full shadow-sm border border-slate-200" padding="lg">
-                        <CurrentStepComponent
-                            onNext={handleNext}
-                            onBack={handleBack}
-                            session={session}
-                            plan={localPlan}
-                            onSelectItem={onSelectItem}
-                            onSessionCreated={onSessionCreated}
-                        />
-                    </Card>
-                </div>
-            </Stack>
+                    {/* Main Content */}
+                    <div className="flex-1 overflow-auto p-6">
+                        <Card className="min-h-[400px] h-full shadow-sm border border-slate-200" padding="lg">
+                            <CurrentStepComponent
+                                onNext={handleNext}
+                                onBack={handleBack}
+                                session={session}
+                                plan={localPlan}
+                                onSelectItem={onSelectItem}
+                                onSessionCreated={onSessionCreated}
+                            />
+                        </Card>
+                    </div>
+                </Stack>
+            </ImportWorkflowLayout>
         </ImportContextProvider>
     );
 }

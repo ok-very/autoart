@@ -167,7 +167,14 @@ function SelectionInspectorPanel(props: IDockviewPanelProps) {
   );
 }
 
-function ClassificationPanelWrapper(_props: IDockviewPanelProps) {
+/**
+ * ClassificationPanelAdapter
+ *
+ * Dockview adapter for ClassificationPanel - used for legacy Dockview integration.
+ * Note: The primary ClassificationPanel now appears via ImportWorkflowLayout
+ * as a fixed bottom region. This adapter exists for standalone Dockview usage.
+ */
+function ClassificationPanelAdapter(_props: IDockviewPanelProps) {
   const importContext = useImportContextOptional();
   const { importSession: globalSession, importPlan: globalPlan, setImportPlan } = useUIStore();
 
@@ -209,7 +216,7 @@ function SearchResultsPanel(props: IDockviewPanelProps) {
 const COMPONENTS: Record<string, React.FunctionComponent<IDockviewPanelProps>> = {
   'center-workspace': CenterWorkspacePanel,
   'selection-inspector': SelectionInspectorPanel,
-  'classification': ClassificationPanelWrapper,
+  'classification': ClassificationPanelAdapter,
   'search-results': SearchResultsPanel,
   'records-list': RecordsPanel,
   'fields-list': FieldsPanel,

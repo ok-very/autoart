@@ -9,12 +9,9 @@ import { useCallback, useState, useEffect } from 'react';
 
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
 import { useUIStore } from '../../stores/uiStore';
-import { useWorkspaceStore } from '../../stores/workspaceStore';
-import { PANEL_DEFINITIONS } from '../../workspace/panelRegistry';
 import { ImportSidebar } from '../../surfaces/import/ImportSidebar';
 import { ImportWorkbenchView } from '../../surfaces/import/ImportWorkbenchView';
 import { MondayImportWizardView } from '../../surfaces/import/wizard/MondayImportWizardView';
-// import { MondayPreviewView } from '../surfaces/import/MondayPreviewView'; // Replaced by Wizard
 import { ResizeHandle } from '@autoart/ui';
 
 // Source type lifted to panel level
@@ -29,9 +26,7 @@ export function ImportPanel() {
         selectImportItem,
         clearSelection,
     } = useUIStore();
-    const { dockviewApi } = useWorkspaceStore();
     const [sidebarWidth, setSidebarWidth] = useState(280);
-    const [classificationPanelOpened, setClassificationPanelOpened] = useState(false);
 
     // Source type controls which center view is shown
     const [sourceType, setSourceType] = useState<ImportSourceType>('file');
@@ -39,9 +34,6 @@ export function ImportPanel() {
     // Use uiStore for session/plan (aliased for compatibility with child components)
     const session = importSession;
     const plan = importPlan;
-
-    // Check if session is in review state (needs_review status)
-    const needsReview = session?.status === 'needs_review';
 
     const handleSidebarResize = useCallback(
         (delta: number) => {
@@ -65,40 +57,6 @@ export function ImportPanel() {
         setImportPlan(null);
         clearSelection();
     }, [setImportSession, setImportPlan, clearSelection]);
-
-    // Auto-open classification panel at bottom when session needs review
-    useEffect(() => {
-        if (!dockviewApi || !session || !needsReview || classificationPanelOpened) return;
-
-        // Check if classification panel already exists
-        const existingPanel = dockviewApi.getPanel('classification');
-        if (existingPanel) return;
-
-        // Find the import-workbench panel to position relative to
-        const importPanel = dockviewApi.getPanel('import-workbench');
-        if (!importPanel) return;
-
-        // Add classification panel at the bottom (1/3 height)
-        dockviewApi.addPanel({
-            id: 'classification',
-            component: 'classification',
-            title: PANEL_DEFINITIONS['classification']?.title || 'Classifications',
-            position: {
-                referencePanel: importPanel,
-                direction: 'below',
-            },
-            initialHeight: Math.floor(window.innerHeight / 3),
-        });
-
-        setClassificationPanelOpened(true);
-    }, [dockviewApi, session, needsReview, classificationPanelOpened]);
-
-    // Reset flag when session changes
-    useEffect(() => {
-        if (!session) {
-            setClassificationPanelOpened(false);
-        }
-    }, [session]);
 
     // Auto-switch source type based on session connector type
     useEffect(() => {

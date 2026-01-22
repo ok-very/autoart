@@ -518,7 +518,7 @@ function generateClassificationsForConnectorItems(
                 // Records need schema matching to determine target definition
                 baseClassification = {
                     itemTempId: item.tempId,
-                    outcome: 'DERIVED_STATE' as ClassificationOutcome,
+                    outcome: 'FACT_EMITTED' as ClassificationOutcome,
                     confidence: 'high' as const,
                     rationale: 'Record from connector - requires schema match',
                 };
@@ -545,7 +545,7 @@ function generateClassificationsForConnectorItems(
                     confidence: 'high' as const,
                     rationale: `${item.entityType} from connector - create as action`,
                 };
-                return baseClassification;
+                return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
 
             case 'project':
             case 'stage':
@@ -556,7 +556,7 @@ function generateClassificationsForConnectorItems(
                     confidence: 'high' as const,
                     rationale: `Container type ${item.entityType} - structural item`,
                 };
-                return baseClassification;
+                return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
 
             default:
                 // Unknown entity type - may need review
@@ -566,10 +566,11 @@ function generateClassificationsForConnectorItems(
                     confidence: 'low' as const,
                     rationale: `Unknown entity type: ${item.entityType ?? 'undefined'}`,
                 };
-                return baseClassification;
+                return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
         }
     });
 }
+
 
 
 /**
