@@ -200,7 +200,7 @@ export async function intakePublicRoutes(app: FastifyInstance) {
         params: z.object({ uniqueId: z.string().min(1) }),
         body: z.object({
           upload_code: z.string().min(1),
-          metadata: z.record(z.unknown()),
+          metadata: z.record(z.string(), z.unknown()),
         }),
       },
     },

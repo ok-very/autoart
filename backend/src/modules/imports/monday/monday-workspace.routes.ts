@@ -32,13 +32,13 @@ const CreateWorkspaceBodySchema = z.object({
     name: z.string().min(1).max(255),
     providerAccountId: z.string().optional(),
     defaultProjectId: z.string().uuid().optional(),
-    settings: z.record(z.unknown()).optional(),
+    settings: z.record(z.string(), z.unknown()).optional(),
 });
 
 const UpdateWorkspaceBodySchema = z.object({
     name: z.string().min(1).max(255).optional(),
     defaultProjectId: z.string().uuid().nullable().optional(),
-    settings: z.record(z.unknown()).optional(),
+    settings: z.record(z.string(), z.unknown()).optional(),
 });
 
 const BoardRoleSchema = z.enum([
@@ -79,7 +79,7 @@ const AddBoardBodySchema = z.object({
     ]).optional(),
     syncDirection: z.enum(['pull', 'push', 'both', 'none']).optional(),
     syncEnabled: z.boolean().optional(),
-    settings: z.record(z.unknown()).optional(),
+    settings: z.record(z.string(), z.unknown()).optional(),
 });
 
 const UpdateBoardConfigBodySchema = z.object({
@@ -87,7 +87,7 @@ const UpdateBoardConfigBodySchema = z.object({
     linkedProjectId: z.string().uuid().nullable().optional(),
     syncDirection: z.enum(['pull', 'push', 'both', 'none']).optional(),
     syncEnabled: z.boolean().optional(),
-    settings: z.record(z.unknown()).optional(),
+    settings: z.record(z.string(), z.unknown()).optional(),
 });
 
 const UpdateGroupConfigsBodySchema = z.object({
@@ -98,7 +98,7 @@ const UpdateGroupConfigsBodySchema = z.object({
         stageOrder: z.number().int().optional(),
         stageKind: z.enum(['todo', 'in_progress', 'blocked', 'done', 'archive']).optional(),
         subprocessNameOverride: z.string().optional(),
-        settings: z.record(z.unknown()).optional(),
+        settings: z.record(z.string(), z.unknown()).optional(),
     })),
 });
 
@@ -113,7 +113,7 @@ const UpdateColumnConfigsBodySchema = z.object({
         renderHint: z.string().optional(),
         isRequired: z.boolean().optional(),
         multiValued: z.boolean().optional(),
-        settings: z.record(z.unknown()).optional(),
+        settings: z.record(z.string(), z.unknown()).optional(),
         sampleValues: z.array(z.string()).optional(),
     })),
 });

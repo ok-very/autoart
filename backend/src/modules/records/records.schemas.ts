@@ -43,13 +43,13 @@ export const createRecordSchema = z.object({
   definitionId: z.string().uuid(),
   classificationNodeId: z.string().uuid().nullable().optional(),
   uniqueName: z.string().min(1, 'Unique name is required'),
-  data: z.record(z.unknown()),
+  data: z.record(z.string(), z.unknown()),
 });
 
 export const updateRecordSchema = z.object({
   uniqueName: z.string().min(1).optional(),
   classificationNodeId: z.string().uuid().nullable().optional(),
-  data: z.record(z.unknown()).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const listRecordsQuerySchema = z.object({

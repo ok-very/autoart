@@ -25,14 +25,14 @@ export const createNodeSchema = z.object({
   type: nodeTypeSchema, // No longer accepts 'stage' for new creations
   title: z.string().min(1, 'Title is required'),
   description: z.unknown().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   position: z.number().int().min(0).optional(),
 });
 
 export const updateNodeSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.unknown().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   position: z.number().int().min(0).optional(),
 });
 
@@ -46,7 +46,7 @@ export const cloneNodeSchema = z.object({
   targetParentId: z.string().uuid().nullable().optional(),
   overrides: z.object({
     title: z.string().optional(),
-    metadata: z.record(z.unknown()).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
   // Clone options for projects
   depth: z.enum(['all', 'process', 'stage', 'subprocess']).optional(), // Controls how deep to clone

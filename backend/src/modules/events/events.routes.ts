@@ -29,7 +29,7 @@ const CreateEventBodySchema = z.object({
   contextType: ContextTypeSchema,
   actionId: z.string().uuid().optional(),
   type: z.string().max(100),
-  payload: z.record(z.unknown()).optional(),
+  payload: z.record(z.string(), z.unknown()).optional(),
 });
 
 const IdParamSchema = z.object({

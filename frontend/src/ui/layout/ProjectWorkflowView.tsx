@@ -1,4 +1,4 @@
-import { Plus, ChevronDown, Wand2, PanelLeftClose, PanelLeftOpen, Layers } from 'lucide-react';
+import { Plus, ChevronDown, Wand2, PanelLeftClose, PanelLeftOpen, Layers, FolderOpen, Check, Copy, FileText, FileMinus, Database } from 'lucide-react';
 import { useEffect, useMemo, useCallback, useState } from 'react';
 import { ProjectSidebarPanel } from '../panels/ProjectSidebarPanel';
 import { ResizeHandle } from '../common/ResizeHandle';
@@ -6,6 +6,7 @@ import type { DerivedStatus } from '@autoart/shared';
 
 import {
     useProjectTree,
+    useProjects,
     useRecordDefinitions,
     useRecords,
     useUpdateNode,
@@ -26,7 +27,7 @@ import { DataTableHierarchy, type HierarchyFieldDef } from '../../ui/composites/
 import { ActionRegistryTable } from '../../ui/composites/ActionRegistryTable';
 import { deriveTaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
 import { ComposerSurface } from '../composer';
-import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownSeparator } from '@autoart/ui';
+import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownSeparator, DropdownLabel, Menu, Badge, Text } from '@autoart/ui';
 
 /**
  * Extract metadata from a node, parsing JSON string if needed
@@ -90,7 +91,10 @@ export function ProjectWorkflowView() {
     const setNodes = useHierarchyStore((state) => state.setNodes);
     const getNode = useHierarchyStore((state) => state.getNode);
     const getChildren = useHierarchyStore((state) => state.getChildren);
-    const { activeProjectId, selection, inspectNode, setInspectorMode, openDrawer } = useUIStore();
+    const { activeProjectId, selection, inspectNode, setInspectorMode, openDrawer, setActiveProject } = useUIStore();
+
+    // Fetch all projects for the project selector
+    const { data: allProjects } = useProjects();
 
     // Sidebar state
     const [sidebarWidth, setSidebarWidth] = useState(320);
@@ -515,36 +519,87 @@ export function ProjectWorkflowView() {
                 ) : (
                     <>
                         <div className="h-12 border-b border-slate-200 bg-white px-4 flex items-center justify-between">
-                            <div className="min-w-0 flex-1">
-                                <div className="text-xs text-slate-400">Subprocess</div>
-                                {/* Subprocess dropdown when multiple exist */}
-                                {subprocesses.length > 1 ? (
-                                    <div className="relative">
-                                        <Dropdown>
-                                            <DropdownTrigger className="flex items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors focus:outline-none">
-                                                <span className="truncate" title={activeSubprocess?.title}>
-                                                    {activeSubprocess?.title || 'Select a subprocess'}
-                                                </span>
+                            <div className="min-w-0 flex-1 flex items-center gap-4">
+                                {/* Project Selector */}
+                                <div className="min-w-0">
+                                    <div className="text-xs text-slate-400">Project</div>
+                                    <Menu>
+                                        <Menu.Target>
+                                            <button className="flex items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors focus:outline-none">
+                                                {project ? (
+                                                    <span className="truncate" title={project.title}>
+                                                        {project.title}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-slate-400">Select a project...</span>
+                                                )}
                                                 <ChevronDown size={14} className="shrink-0 text-slate-400" />
-                                            </DropdownTrigger>
-                                            <DropdownContent align="start" className="w-56 max-h-64 overflow-y-auto">
-                                                {subprocesses.map((sp) => (
-                                                    <DropdownItem
-                                                        key={sp.id}
-                                                        onSelect={() => handleSubprocessClick(sp.id)}
-                                                        className={sp.id === activeSubprocessId ? 'bg-blue-50 text-blue-700' : ''}
+                                            </button>
+                                        </Menu.Target>
+                                        <Menu.Dropdown className="min-w-[240px]">
+                                            <Menu.Item leftSection={<Plus size={16} />} onClick={() => openDrawer('create-project', {})}>
+                                                New Project
+                                            </Menu.Item>
+                                            {project && (
+                                                <Menu.Item leftSection={<Copy size={16} />} onClick={() => openDrawer('clone-project', { sourceProjectId: project.id, sourceProjectTitle: project.title })}>
+                                                    Clone Current
+                                                </Menu.Item>
+                                            )}
+                                            <Menu.Divider />
+                                            <Menu.Label>Your Projects</Menu.Label>
+                                            {allProjects && allProjects.length > 0 ? (
+                                                allProjects.map((p) => (
+                                                    <Menu.Item
+                                                        key={p.id}
+                                                        leftSection={<FolderOpen size={16} />}
+                                                        rightSection={p.id === activeProjectId ? <Check size={16} className="text-blue-600" /> : null}
+                                                        onClick={() => setActiveProject(p.id)}
+                                                        className={p.id === activeProjectId ? 'bg-blue-50' : ''}
                                                     >
-                                                        <span className="truncate">{sp.title}</span>
-                                                    </DropdownItem>
-                                                ))}
-                                            </DropdownContent>
-                                        </Dropdown>
-                                    </div>
-                                ) : (
-                                    <div className="text-sm font-semibold text-slate-800 truncate">
-                                        {activeSubprocess?.title || 'Select a subprocess'}
-                                    </div>
-                                )}
+                                                        <Text size="sm" truncate className="max-w-[180px]">{p.title}</Text>
+                                                    </Menu.Item>
+                                                ))
+                                            ) : (
+                                                <Text size="sm" color="muted" className="text-center py-3">
+                                                    No projects yet
+                                                </Text>
+                                            )}
+                                        </Menu.Dropdown>
+                                    </Menu>
+                                </div>
+
+                                {/* Subprocess Selector */}
+                                <div className="min-w-0">
+                                    <div className="text-xs text-slate-400">Subprocess</div>
+                                    {/* Subprocess dropdown when multiple exist */}
+                                    {subprocesses.length > 1 ? (
+                                        <div className="relative">
+                                            <Dropdown>
+                                                <DropdownTrigger className="flex items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors focus:outline-none">
+                                                    <span className="truncate" title={activeSubprocess?.title}>
+                                                        {activeSubprocess?.title || 'Select a subprocess'}
+                                                    </span>
+                                                    <ChevronDown size={14} className="shrink-0 text-slate-400" />
+                                                </DropdownTrigger>
+                                                <DropdownContent align="start" className="w-56 max-h-64 overflow-y-auto">
+                                                    {subprocesses.map((sp) => (
+                                                        <DropdownItem
+                                                            key={sp.id}
+                                                            onSelect={() => handleSubprocessClick(sp.id)}
+                                                            className={sp.id === activeSubprocessId ? 'bg-blue-50 text-blue-700' : ''}
+                                                        >
+                                                            <span className="truncate">{sp.title}</span>
+                                                        </DropdownItem>
+                                                    ))}
+                                                </DropdownContent>
+                                            </Dropdown>
+                                        </div>
+                                    ) : (
+                                        <div className="text-sm font-semibold text-slate-800 truncate">
+                                            {activeSubprocess?.title || 'Select a subprocess'}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             {/* Add dropdown menu + Composer button */}
                             {activeSubprocessId && (
@@ -713,7 +768,70 @@ export function ProjectWorkflowView() {
                                             deriveStatus={deriveNodeStatus}
                                             showStatusSummary
                                             statusConfig={statusConfig}
-                                            emptyMessage="No tasks yet. Click + to add one."
+                                            emptyState={
+                                                activeSubprocessId ? (
+                                                    <div className="flex flex-col items-center justify-center py-12">
+                                                        <Dropdown>
+                                                            <DropdownTrigger className="w-12 h-12 bg-white border-2 border-dashed border-slate-300 text-slate-400 hover:border-indigo-400 hover:text-indigo-600 rounded-full flex items-center justify-center transition-all mb-3">
+                                                                <Plus size={24} />
+                                                            </DropdownTrigger>
+                                                            <DropdownContent className="w-56">
+                                                                <DropdownLabel>Tasks</DropdownLabel>
+                                                                <DropdownItem
+                                                                    onSelect={() =>
+                                                                        openDrawer('create-node', {
+                                                                            parentId: activeSubprocessId,
+                                                                            nodeType: 'task',
+                                                                        })
+                                                                    }
+                                                                >
+                                                                    <FileText size={14} className="mr-2" />
+                                                                    Add Task
+                                                                </DropdownItem>
+                                                                <DropdownItem
+                                                                    onSelect={() => {
+                                                                        if (selectedNode?.type === 'task') {
+                                                                            openDrawer('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
+                                                                        } else if (selectedNode?.type === 'subtask' && selectedNode.parent_id) {
+                                                                            openDrawer('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
+                                                                        }
+                                                                    }}
+                                                                    disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
+                                                                >
+                                                                    <FileMinus size={14} className="mr-2" />
+                                                                    Add Subtask
+                                                                </DropdownItem>
+
+                                                                {definitions && definitions.filter((d) => !d.is_system && d.name !== 'Task').length > 0 && (
+                                                                    <>
+                                                                        <DropdownSeparator />
+                                                                        <DropdownLabel>Records</DropdownLabel>
+                                                                        {definitions
+                                                                            .filter((d) => !d.is_system && d.name !== 'Task')
+                                                                            .map((def) => (
+                                                                                <DropdownItem
+                                                                                    key={def.id}
+                                                                                    onSelect={() =>
+                                                                                        openDrawer('create-record', {
+                                                                                            definitionId: def.id,
+                                                                                            classificationNodeId: activeSubprocessId,
+                                                                                        })
+                                                                                    }
+                                                                                >
+                                                                                    <Database size={14} className="mr-2" />
+                                                                                    Add {def.name}
+                                                                                </DropdownItem>
+                                                                            ))}
+                                                                    </>
+                                                                )}
+                                                            </DropdownContent>
+                                                        </Dropdown>
+                                                        <p className="text-sm text-slate-500">Add your first task</p>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-sm text-slate-500">Select a subprocess to view tasks</span>
+                                                )
+                                            }
                                         />
                                     )}
                                 </div>
@@ -747,6 +865,67 @@ export function ProjectWorkflowView() {
                                                 />
                                             </div>
                                         ))}
+                                    </div>
+                                )}
+
+                                {/* Circular Add Button */}
+                                {activeSubprocessId && (
+                                    <div className="flex justify-center pt-6 pb-4">
+                                        <Dropdown>
+                                            <DropdownTrigger className="w-10 h-10 bg-white border-2 border-dashed border-slate-300 text-slate-400 hover:border-indigo-400 hover:text-indigo-600 rounded-full flex items-center justify-center transition-all">
+                                                <Plus size={20} />
+                                            </DropdownTrigger>
+                                            <DropdownContent className="w-56">
+                                                <DropdownLabel>Tasks</DropdownLabel>
+                                                <DropdownItem
+                                                    onSelect={() =>
+                                                        openDrawer('create-node', {
+                                                            parentId: activeSubprocessId,
+                                                            nodeType: 'task',
+                                                        })
+                                                    }
+                                                >
+                                                    <FileText size={14} className="mr-2" />
+                                                    Add Task
+                                                </DropdownItem>
+                                                <DropdownItem
+                                                    onSelect={() => {
+                                                        if (selectedNode?.type === 'task') {
+                                                            openDrawer('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
+                                                        } else if (selectedNode?.type === 'subtask' && selectedNode.parent_id) {
+                                                            openDrawer('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
+                                                        }
+                                                    }}
+                                                    disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
+                                                >
+                                                    <FileMinus size={14} className="mr-2" />
+                                                    Add Subtask
+                                                </DropdownItem>
+
+                                                {definitions && definitions.filter((d) => !d.is_system && d.name !== 'Task').length > 0 && (
+                                                    <>
+                                                        <DropdownSeparator />
+                                                        <DropdownLabel>Records</DropdownLabel>
+                                                        {definitions
+                                                            .filter((d) => !d.is_system && d.name !== 'Task')
+                                                            .map((def) => (
+                                                                <DropdownItem
+                                                                    key={def.id}
+                                                                    onSelect={() =>
+                                                                        openDrawer('create-record', {
+                                                                            definitionId: def.id,
+                                                                            classificationNodeId: activeSubprocessId,
+                                                                        })
+                                                                    }
+                                                                >
+                                                                    <Database size={14} className="mr-2" />
+                                                                    Add {def.name}
+                                                                </DropdownItem>
+                                                            ))}
+                                                    </>
+                                                )}
+                                            </DropdownContent>
+                                        </Dropdown>
                                     </div>
                                 )}
                             </div>

@@ -14,7 +14,7 @@ import { z } from 'zod';
 
 const RunnerInvokeBodySchema = z.object({
     runner_id: z.enum(['autocollector']),
-    config: z.record(z.unknown()),
+    config: z.record(z.string(), z.unknown()),
     output_folder: z.string().min(1),
     context_id: z.string().optional(),
 });

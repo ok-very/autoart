@@ -44,7 +44,7 @@ export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
 
 
 export function OverlayRegistry() {
-    const { activeDrawer, closeDrawer } = useUIStore();
+    const { activeDrawer, closeDrawer, setActiveProject } = useUIStore();
 
     if (!activeDrawer) return null;
 
@@ -64,7 +64,11 @@ export function OverlayRegistry() {
         // new contract support
         context: props,
         onClose: closeDrawer,
-        onSubmit: () => {
+        onSubmit: (result?: any) => {
+            // Handle create-project success: set new project as active
+            if (type === 'create-project' && result?.success && result?.data?.projectId) {
+                setActiveProject(result.data.projectId);
+            }
             closeDrawer();
         },
         uiContext: createUIContext(type),

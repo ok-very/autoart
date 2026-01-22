@@ -14,9 +14,9 @@ import { ArrowLeft, Eye, Send, Undo2, Redo2, Check, Loader2, ExternalLink, Copy 
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@autoart/ui';
-import { IntakeCanvas } from '../../components/intake/IntakeCanvas';
-import { FloatingToolbar } from '../../components/intake/FloatingToolbar';
-import { FormSettingsPanel } from '../../components/intake/FormSettingsPanel';
+import { IntakeCanvas } from '../../surfaces/intake/components/IntakeCanvas';
+import { FloatingToolbar } from '../../surfaces/intake/components/FloatingToolbar';
+import { FormSettingsPanel } from '../../surfaces/intake/components/FormSettingsPanel';
 import {
     useIntakeForm,
     useUpdateIntakeForm,
@@ -58,6 +58,9 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     const saveBlocksTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const saveTitleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+    // Track last saved blocks to avoid redundant saves
+    const lastSavedBlocksRef = useRef<string>('');
+
     // Initialize state from loaded form
     useEffect(() => {
         if (form && !initialized.current) {
@@ -66,39 +69,40 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
             const firstPage = form.pages?.[0];
             if (firstPage?.blocks_config?.blocks) {
                 setBlocks(firstPage.blocks_config.blocks);
+                // Mark initial blocks as "saved" to avoid immediate re-save
+                lastSavedBlocksRef.current = JSON.stringify(firstPage.blocks_config.blocks);
             }
             initialized.current = true;
         }
     }, [form]);
 
-    // Debounced save function
-    const saveBlocks = useCallback(async (blocksToSave: FormBlock[]) => {
-        setSaveStatus('saving');
-        try {
-            await upsertPage.mutateAsync({
-                formId,
-                page_index: 0,
-                blocks_config: { blocks: blocksToSave },
-            });
-            setSaveStatus('saved');
-            // Reset to idle after showing "saved"
-            setTimeout(() => setSaveStatus('idle'), 2000);
-        } catch (err) {
-            console.error('Failed to save blocks:', err);
-            setSaveStatus('error');
-        }
-    }, [formId, upsertPage]);
-
     // Auto-save blocks with debounce
     useEffect(() => {
         if (!initialized.current) return;
+
+        const blocksJson = JSON.stringify(blocks);
+        // Skip if blocks haven't changed from last save
+        if (blocksJson === lastSavedBlocksRef.current) return;
 
         if (saveBlocksTimeoutRef.current) {
             clearTimeout(saveBlocksTimeoutRef.current);
         }
 
-        saveBlocksTimeoutRef.current = setTimeout(() => {
-            saveBlocks(blocks);
+        saveBlocksTimeoutRef.current = setTimeout(async () => {
+            setSaveStatus('saving');
+            try {
+                await upsertPage.mutateAsync({
+                    formId,
+                    page_index: 0,
+                    blocks_config: { blocks },
+                });
+                lastSavedBlocksRef.current = blocksJson;
+                setSaveStatus('saved');
+                setTimeout(() => setSaveStatus('idle'), 2000);
+            } catch (err) {
+                console.error('Failed to save blocks:', err);
+                setSaveStatus('error');
+            }
         }, 1000);
 
         return () => {
@@ -106,7 +110,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                 clearTimeout(saveBlocksTimeoutRef.current);
             }
         };
-    }, [blocks, saveBlocks]);
+    }, [blocks, formId, upsertPage]);
 
     // Save title changes
     const handleTitleChange = (newTitle: string) => {
@@ -192,25 +196,25 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
         switch (saveStatus) {
             case 'saving':
                 return (
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400">
-                        <Loader2 className="w-3 h-3 animate-spin" />
+                    <span className="flex items-center gap-1 text-[10px] text-slate-400 whitespace-nowrap">
+                        <Loader2 className="w-3 h-3 animate-spin shrink-0" />
                         Saving...
                     </span>
                 );
             case 'saved':
                 return (
-                    <span className="flex items-center gap-1 text-[10px] text-green-600">
-                        <Check className="w-3 h-3" />
+                    <span className="flex items-center gap-1 text-[10px] text-green-600 whitespace-nowrap">
+                        <Check className="w-3 h-3 shrink-0" />
                         Saved
                     </span>
                 );
             case 'error':
                 return (
-                    <span className="text-[10px] text-red-500">Save failed</span>
+                    <span className="text-[10px] text-red-500 whitespace-nowrap">Save failed</span>
                 );
             default:
                 return (
-                    <span className="text-[10px] text-slate-400">All changes saved</span>
+                    <span className="text-[10px] text-slate-400 whitespace-nowrap">All changes saved</span>
                 );
         }
     };
@@ -235,7 +239,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                     >
                         <ArrowLeft className="w-4 h-4" />
                     </button>
-                    <div className="flex flex-col">
+                    <div className="flex flex-col min-w-0 overflow-hidden">
                         <input
                             type="text"
                             value={formTitle}

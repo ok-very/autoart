@@ -33,7 +33,7 @@ const CreateActionTypeSchema = z.object({
         defaultValue: z.unknown().optional(),
         options: z.array(z.string()).optional(),
     })).optional(),
-    defaults: z.record(z.unknown()).optional(),
+    defaults: z.record(z.string(), z.unknown()).optional(),
 });
 
 const UpdateActionTypeSchema = z.object({
@@ -47,7 +47,7 @@ const UpdateActionTypeSchema = z.object({
         defaultValue: z.unknown().optional(),
         options: z.array(z.string()).optional(),
     })).optional(),
-    defaults: z.record(z.unknown()).optional(),
+    defaults: z.record(z.string(), z.unknown()).optional(),
 });
 
 // ============================================================================
