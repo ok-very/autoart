@@ -65,10 +65,10 @@ export function WorkflowLayoutContainer({
     .join(' ');
 
   const renderSlot = (slot: PanelSlot) => {
-    const isVisible = slotVisibility[slot.panelId] ?? true;
     const component = panelComponents[slot.panelId];
+    if (!component) return null;
 
-    if (!component && !isVisible) return null;
+    const isVisible = slotVisibility[slot.panelId] ?? true;
 
     return (
       <FixedPanelRegion

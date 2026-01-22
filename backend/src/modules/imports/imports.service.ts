@@ -582,9 +582,17 @@ function addSchemaMatch(
     fieldRecordings: ImportPlanItem['fieldRecordings'],
     definitions: RecordDefinition[]
 ): ItemClassification {
-    // Skip schema matching if no field recordings
+    // If no field recordings, return with empty schemaMatch for consistent shape
     if (!fieldRecordings || fieldRecordings.length === 0) {
-        return classification;
+        return {
+            ...classification,
+            schemaMatch: {
+                definitionId: null,
+                definitionName: null,
+                matchScore: 0,
+                proposedDefinition: undefined,
+            },
+        };
     }
 
     const schemaResult = matchSchema(fieldRecordings, definitions);

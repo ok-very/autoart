@@ -75,7 +75,7 @@ export function ImportPanel() {
             // Reset to default when there is no active session
             setSourceType('file');
         }
-    }, [session]);
+    }, [session?.parser_name]);
 
     // Render center view based on source type
     const renderCenterView = () => {
