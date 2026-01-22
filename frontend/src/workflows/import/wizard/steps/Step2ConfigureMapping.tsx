@@ -474,6 +474,64 @@ function DroppableSection({ section, groups, children, renderGroupedByStage }: D
 }
 
 // ============================================================================
+// NESTED CHILD DROP ZONE COMPONENT
+// ============================================================================
+
+interface NestedChildDropZoneProps {
+    parentGroupId: string;
+    childGroups: MondayGroupConfig[];
+    onRemoveChild: (childGroupId: string) => void;
+}
+
+function NestedChildDropZone({ parentGroupId, childGroups, onRemoveChild }: NestedChildDropZoneProps) {
+    const { setNodeRef, isOver } = useDroppable({
+        id: `nested-${parentGroupId}`,
+        data: { type: 'nested', parentGroupId }
+    });
+
+    return (
+        <div
+            ref={setNodeRef}
+            className={clsx(
+                'mt-2 border-2 border-dashed rounded-md p-2 transition-all',
+                isOver
+                    ? 'border-indigo-400 bg-indigo-50'
+                    : 'border-slate-300 bg-white/50',
+                childGroups.length === 0 && 'min-h-[40px]'
+            )}
+        >
+            <div className="text-[10px] text-slate-400 uppercase font-semibold mb-1.5 flex items-center gap-1">
+                <span>↳</span> Child Groups
+            </div>
+            {childGroups.length === 0 ? (
+                <div className="text-xs text-slate-400 italic py-1">
+                    Drop groups here to nest them under this subprocess
+                </div>
+            ) : (
+                <Stack gap="xs">
+                    {childGroups.map((child) => (
+                        <div
+                            key={child.groupId}
+                            className="flex items-center gap-2 bg-white rounded border border-slate-200 px-2 py-1.5 text-xs"
+                        >
+                            <GripVertical className="w-3 h-3 text-slate-300" />
+                            <span className="flex-1 truncate font-medium">{child.groupTitle}</span>
+                            <button
+                                onClick={() => onRemoveChild(child.groupId)}
+                                className="text-slate-400 hover:text-red-500 text-[10px] px-1"
+                                title="Remove from parent"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    ))}
+                </Stack>
+            )}
+        </div>
+    );
+}
+
+// ============================================================================
 // COLLAPSIBLE GROUP CARD COMPONENT
 // ============================================================================
 
@@ -496,6 +554,17 @@ function CollapsibleGroupCard({ group, sectionId, onUpdate, onRoleChange, allGro
         opacity: isDragging ? 0.5 : 1,
     };
 
+    // Find child groups (groups that have this group as their parent)
+    const childGroups = useMemo(() => {
+        return allGroups.filter(g => g.settings?.parentGroupId === group.groupId);
+    }, [allGroups, group.groupId]);
+
+    // Check if this group has a parent
+    const parentGroup = useMemo(() => {
+        if (!group.settings?.parentGroupId) return null;
+        return allGroups.find(g => g.groupId === group.settings?.parentGroupId);
+    }, [allGroups, group.settings?.parentGroupId]);
+
     // Calculate projection info for workflow groups
     const projectionInfo = useMemo(() => {
         if (sectionId !== 'workflow') return null;
@@ -503,9 +572,11 @@ function CollapsibleGroupCard({ group, sectionId, onUpdate, onRoleChange, allGro
         const stageKind = group.stageKind || 'todo';
         const label = getStageKindLabel(stageKind);
 
-        // Count how many other groups share this stageKind
+        // Count how many other groups share this stageKind (excluding children)
         const sameStageGroups = allGroups.filter(
-            g => getSectionForRole(g.role) === 'workflow' && (g.stageKind || 'todo') === stageKind
+            g => getSectionForRole(g.role) === 'workflow' &&
+                 (g.stageKind || 'todo') === stageKind &&
+                 !g.settings?.parentGroupId // Only count top-level groups
         );
 
         return {
@@ -523,13 +594,19 @@ function CollapsibleGroupCard({ group, sectionId, onUpdate, onRoleChange, allGro
         return option?.label || 'Always Create New';
     }, [sectionId, group.settings]);
 
+    // Handler to remove a child from this parent
+    const handleRemoveChild = useCallback((childGroupId: string) => {
+        onUpdate(childGroupId, { settings: { ...allGroups.find(g => g.groupId === childGroupId)?.settings, parentGroupId: undefined } });
+    }, [onUpdate, allGroups]);
+
     return (
         <div
             ref={setNodeRef}
             style={style}
             className={clsx(
                 'bg-white rounded-lg border shadow-sm',
-                isDragging && 'shadow-lg z-10 border-blue-400'
+                isDragging && 'shadow-lg z-10 border-blue-400',
+                parentGroup && 'ml-4 border-l-2 border-l-indigo-300' // Indent if this is a child
             )}
         >
             <CollapsiblePrimitive.Root>
@@ -548,6 +625,11 @@ function CollapsibleGroupCard({ group, sectionId, onUpdate, onRoleChange, allGro
                         <button className="flex items-center gap-1 flex-1 min-w-0 text-left group">
                             <ChevronDown className="w-3 h-3 text-slate-300 group-hover:text-slate-500 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
                             <span className="font-medium text-sm truncate">{group.groupTitle}</span>
+                            {childGroups.length > 0 && (
+                                <span className="text-[10px] text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full">
+                                    {childGroups.length} child{childGroups.length > 1 ? 'ren' : ''}
+                                </span>
+                            )}
                         </button>
                     </CollapsiblePrimitive.Trigger>
 
@@ -572,7 +654,7 @@ function CollapsibleGroupCard({ group, sectionId, onUpdate, onRoleChange, allGro
                         <RadixSelect
                             value={(group.settings?.referenceStrategy as string) || 'create'}
                             onChange={(val) => val && onUpdate(group.groupId, {
-                                settings: { ...group.settings, referenceStrategy: val }
+                                settings: { ...group.settings, referenceStrategy: val as 'create' | 'link_or_create' | 'link_strict' }
                             })}
                             data={REFERENCE_STRATEGY_OPTIONS}
                             size="sm"
@@ -585,19 +667,37 @@ function CollapsibleGroupCard({ group, sectionId, onUpdate, onRoleChange, allGro
                     <div className="px-3 pb-2 pt-0.5 border-t border-slate-100 bg-slate-50/50 text-xs text-slate-600">
                         {sectionId === 'workflow' && projectionInfo && (
                             <div className="space-y-1.5">
-                                <div className="text-slate-500">
-                                    This group becomes a <span className="font-semibold text-blue-600">subprocess</span> assigned to:
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className={clsx('px-2 py-0.5 rounded text-xs font-semibold', getStageKindColor(projectionInfo.stageKind))}>
-                                        {projectionInfo.label}
-                                    </span>
-                                    <span className="text-slate-400">stage</span>
-                                </div>
-                                {projectionInfo.siblingCount > 1 && (
-                                    <div className="text-slate-400 text-[11px]">
-                                        + {projectionInfo.siblingCount - 1} other subprocess{projectionInfo.siblingCount > 2 ? 'es' : ''} in this stage
+                                {parentGroup ? (
+                                    <div className="text-slate-500">
+                                        This group becomes a <span className="font-semibold text-indigo-600">child subprocess</span> of{' '}
+                                        <span className="font-semibold">{parentGroup.groupTitle}</span>
                                     </div>
+                                ) : (
+                                    <>
+                                        <div className="text-slate-500">
+                                            This group becomes a <span className="font-semibold text-blue-600">subprocess</span> assigned to:
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className={clsx('px-2 py-0.5 rounded text-xs font-semibold', getStageKindColor(projectionInfo.stageKind))}>
+                                                {projectionInfo.label}
+                                            </span>
+                                            <span className="text-slate-400">stage</span>
+                                        </div>
+                                        {projectionInfo.siblingCount > 1 && (
+                                            <div className="text-slate-400 text-[11px]">
+                                                + {projectionInfo.siblingCount - 1} other subprocess{projectionInfo.siblingCount > 2 ? 'es' : ''} in this stage
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* Nested child drop zone - only show for top-level workflow groups */}
+                                {!parentGroup && onRoleChange && (
+                                    <NestedChildDropZone
+                                        parentGroupId={group.groupId}
+                                        childGroups={childGroups}
+                                        onRemoveChild={handleRemoveChild}
+                                    />
                                 )}
                             </div>
                         )}
@@ -722,11 +822,34 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
         const group = config.groups.find(g => g.groupId === groupId);
         if (!group) return;
 
+        // Check if dropped on a nested child zone (to set parentGroupId)
+        if (overData?.type === 'nested') {
+            const parentGroupId = overData.parentGroupId as string;
+            // Can't nest a group under itself
+            if (parentGroupId === groupId) return;
+            // Can't nest a group under one of its own children (prevent circular refs)
+            const wouldBeCircular = config.groups.some(
+                g => g.settings?.parentGroupId === groupId && g.groupId === parentGroupId
+            );
+            if (wouldBeCircular) return;
+
+            // Set the parentGroupId and ensure it's in the workflow section
+            onGroupUpdate(groupId, {
+                role: 'subprocess',
+                settings: { ...group.settings, parentGroupId }
+            });
+            return;
+        }
+
         // Check if dropped on a stage zone (stage-todo, stage-in_progress, etc.)
         if (overData?.type === 'stage') {
             const targetStageKind = overData.stageKind as MondayStageKind;
-            // Update role to subprocess AND set stageKind
-            onGroupUpdate(groupId, { role: 'subprocess', stageKind: targetStageKind });
+            // Update role to subprocess, set stageKind, and clear any parentGroupId
+            onGroupUpdate(groupId, {
+                role: 'subprocess',
+                stageKind: targetStageKind,
+                settings: { ...group.settings, parentGroupId: undefined }
+            });
             return;
         }
 
@@ -751,9 +874,15 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
         const currentSection = getSectionForRole(getEffectiveRole(group));
         if (currentSection === targetSectionId) return;
 
-        // Update the group's role
-        onGroupRoleChange(groupId, targetSection.defaultRole);
-    }, [config.groups, onGroupRoleChange, onGroupUpdate]);
+        // Update the group's role and clear parentGroupId when moving to a different section
+        const newRole = targetSection.defaultRole;
+        const isWorkflowRole = ['subprocess', 'backlog', 'done', 'archive'].includes(newRole);
+        onGroupUpdate(groupId, {
+            role: newRole,
+            stageKind: isWorkflowRole ? (group.stageKind || 'todo') : undefined,
+            settings: { ...group.settings, parentGroupId: undefined }
+        });
+    }, [config.groups, onGroupUpdate]);
 
     const activeGroup = activeId ? config.groups.find(g => g.groupId === activeId) : null;
 

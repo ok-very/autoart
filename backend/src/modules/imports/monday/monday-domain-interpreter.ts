@@ -94,6 +94,15 @@ export function interpretMondayData(
         }
     }
 
+    // Pre-register all group tempIds so parent lookups work regardless of processing order
+    for (const groupNode of groupNodes) {
+        const boardId = groupNode.metadata.boardId;
+        if (!boardId) continue;
+        const tempId = `group:${boardId}:${groupNode.id}`;
+        ctx.containerTempIds.set(`${boardId}:${groupNode.id}`, tempId);
+    }
+
+    // Now create group containers with proper parent references
     for (const groupNode of groupNodes) {
         const boardId = groupNode.metadata.boardId;
         if (!boardId) continue;
@@ -263,9 +272,10 @@ function createContainerFromGroup(
     groupConfig: MondayGroupConfig | undefined,
     ctx: InterpreterContext
 ): ImportPlanContainer | null {
-    const boardTempId = ctx.containerTempIds.get(node.metadata.boardId!);
-    const tempId = `group:${node.metadata.boardId}:${node.id}`;
-    ctx.containerTempIds.set(`${node.metadata.boardId}:${node.id}`, tempId);
+    const boardId = node.metadata.boardId!;
+    const boardTempId = ctx.containerTempIds.get(boardId);
+    const tempId = `group:${boardId}:${node.id}`;
+    ctx.containerTempIds.set(`${boardId}:${node.id}`, tempId);
 
     const role = groupConfig?.role ?? boardConfig.settings?.defaultGroupRole ?? 'subprocess';
 
@@ -283,11 +293,22 @@ function createContainerFromGroup(
     const type = roleToType[role];
     if (!type) return null;
 
+    // Determine parent: check for explicit parentGroupId in settings, otherwise use board
+    let parentTempId = boardTempId ?? null;
+    const parentGroupId = (groupConfig?.settings as { parentGroupId?: string } | undefined)?.parentGroupId;
+    if (parentGroupId) {
+        // Look up the parent group's tempId
+        const parentGroupTempId = ctx.containerTempIds.get(`${boardId}:${parentGroupId}`);
+        if (parentGroupTempId) {
+            parentTempId = parentGroupTempId;
+        }
+    }
+
     return {
         tempId,
         type,
         title: groupConfig?.subprocessNameOverride ?? node.name,
-        parentTempId: boardTempId ?? null,
+        parentTempId,
         definitionName: role === 'stage' ? `Stage (${groupConfig?.stageKind ?? 'todo'})` : undefined,
     };
 }

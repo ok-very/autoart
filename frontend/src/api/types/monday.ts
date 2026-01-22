@@ -69,6 +69,18 @@ export interface MondayBoardConfig {
 
 export type MondayStageKind = 'todo' | 'in_progress' | 'blocked' | 'done' | 'archive';
 
+/**
+ * Settings for MondayGroupConfig.
+ * Stored in the `settings` JSONB field.
+ */
+export interface MondayGroupConfigSettings {
+    /** Parent group ID for nested hierarchy. When set, this group becomes a child of the specified group. */
+    parentGroupId?: string;
+    /** Reference strategy for reference_group role */
+    referenceStrategy?: 'create' | 'link_or_create' | 'link_strict';
+    [key: string]: unknown;
+}
+
 export interface MondayGroupConfig {
     boardId: string;
     groupId: string;
@@ -77,7 +89,7 @@ export interface MondayGroupConfig {
     stageOrder?: number;
     stageKind?: MondayStageKind;
     subprocessNameOverride?: string;
-    settings?: Record<string, any>;
+    settings?: MondayGroupConfigSettings;
 }
 
 export interface MondayColumnConfig {
