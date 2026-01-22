@@ -7,6 +7,19 @@
 import { z } from 'zod';
 import { FormBlockSchema } from '../../intake/schemas.js';
 
+export {
+  ModuleBlockTypeSchema,
+  ModuleBlockSchema,
+  RecordBlockSchema,
+  FormBlockSchema,
+  IntakeFormConfigSchema,
+  type ModuleBlockType,
+  type ModuleBlock,
+  type RecordBlock,
+  type FormBlock,
+  type IntakeFormConfig
+} from '../../intake/schemas.js';
+
 // ==================== ENUMS ====================
 
 export const IntakeFormStatusSchema = z.enum(['active', 'disabled']);
@@ -16,11 +29,28 @@ export type IntakeFormStatus = z.infer<typeof IntakeFormStatusSchema>;
 
 /**
  * Page settings - optional configuration for a form page.
+ * Includes both page-level settings and form-level settings.
  */
 export const IntakePageSettingsSchema = z.object({
+  /** Page title shown at top of page */
   pageTitle: z.string().optional(),
+  /** Show progress bar */
+  showProgress: z.boolean().optional(),
+  /** Confirmation message after submit */
+  confirmationMessage: z.string().optional(),
+  /** Redirect URL after submit */
+  redirectUrl: z.string().url().optional(),
 });
 export type IntakePageSettings = z.infer<typeof IntakePageSettingsSchema>;
+
+/**
+ * Form settings - subset of page settings used in settings panel.
+ */
+export interface FormSettings {
+  showProgress: boolean;
+  confirmationMessage?: string;
+  redirectUrl?: string;
+}
 
 /**
  * Page config - the content structure for a form page.
@@ -71,7 +101,7 @@ export type IntakeFormWithPages = z.infer<typeof IntakeFormWithPagesSchema>;
 /**
  * Submission metadata - flexible JSONB structure for form data.
  */
-export const SubmissionMetadataSchema = z.record(z.unknown());
+export const SubmissionMetadataSchema = z.record(z.string(), z.unknown());
 export type SubmissionMetadata = z.infer<typeof SubmissionMetadataSchema>;
 
 /**

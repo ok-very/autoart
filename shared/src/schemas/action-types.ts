@@ -40,7 +40,7 @@ export const ActionTypeDefinitionSchema = z.object({
     label: z.string().max(255),          // Display name
     description: z.string().nullable(),
     fieldBindings: z.array(ActionTypeFieldBindingSchema).default([]),
-    defaults: z.record(z.unknown()).default({}),
+    defaults: z.record(z.string(), z.unknown()).default({}),
     isSystem: z.boolean().default(false), // Built-in vs custom
     createdAt: z.coerce.date(),
     updatedAt: z.coerce.date(),
@@ -59,7 +59,7 @@ export const CreateActionTypeInputSchema = z.object({
     label: z.string().max(255),
     description: z.string().optional(),
     fieldBindings: z.array(ActionTypeFieldBindingSchema).optional().default([]),
-    defaults: z.record(z.unknown()).optional().default({}),
+    defaults: z.record(z.string(), z.unknown()).optional().default({}),
 });
 export type CreateActionTypeInput = z.infer<typeof CreateActionTypeInputSchema>;
 
@@ -70,7 +70,7 @@ export const UpdateActionTypeInputSchema = z.object({
     label: z.string().max(255).optional(),
     description: z.string().nullable().optional(),
     fieldBindings: z.array(ActionTypeFieldBindingSchema).optional(),
-    defaults: z.record(z.unknown()).optional(),
+    defaults: z.record(z.string(), z.unknown()).optional(),
 });
 export type UpdateActionTypeInput = z.infer<typeof UpdateActionTypeInputSchema>;
 

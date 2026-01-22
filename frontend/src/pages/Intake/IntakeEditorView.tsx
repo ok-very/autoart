@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@autoart/ui';
 import { IntakeCanvas } from '../../components/intake/IntakeCanvas';
 import { FloatingToolbar } from '../../components/intake/FloatingToolbar';
+import { FormSettingsPanel } from '../../components/intake/FormSettingsPanel';
 import {
     useIntakeForm,
     useUpdateIntakeForm,
@@ -53,8 +54,9 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     // Track if we've initialized from the API
     const initialized = useRef(false);
 
-    // Debounce timer ref
-    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    // Debounce timer refs
+    const saveBlocksTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const saveTitleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Initialize state from loaded form
     useEffect(() => {
@@ -91,17 +93,17 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     useEffect(() => {
         if (!initialized.current) return;
 
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
+        if (saveBlocksTimeoutRef.current) {
+            clearTimeout(saveBlocksTimeoutRef.current);
         }
 
-        saveTimeoutRef.current = setTimeout(() => {
+        saveBlocksTimeoutRef.current = setTimeout(() => {
             saveBlocks(blocks);
         }, 1000);
 
         return () => {
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current);
+            if (saveBlocksTimeoutRef.current) {
+                clearTimeout(saveBlocksTimeoutRef.current);
             }
         };
     }, [blocks, saveBlocks]);
@@ -110,10 +112,10 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     const handleTitleChange = (newTitle: string) => {
         setFormTitle(newTitle);
         // Debounce title update
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
+        if (saveTitleTimeoutRef.current) {
+            clearTimeout(saveTitleTimeoutRef.current);
         }
-        saveTimeoutRef.current = setTimeout(() => {
+        saveTitleTimeoutRef.current = setTimeout(() => {
             updateForm.mutate({ id: formId, title: newTitle });
         }, 1000);
     };
@@ -145,8 +147,26 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
 
     const handleUpdateBlock = useCallback((id: string, updates: Partial<FormBlock>) => {
         setBlocks((prev) =>
-            prev.map((b) => (b.id === id ? { ...b, ...updates } : b))
+            prev.map((b) => (b.id === id ? { ...b, ...updates } as FormBlock : b))
         );
+    }, []);
+
+    const handleDuplicateBlock = useCallback((id: string) => {
+        setBlocks((prev) => {
+            const blockToDuplicate = prev.find((b) => b.id === id);
+            if (!blockToDuplicate) return prev;
+
+            const newBlock = {
+                ...blockToDuplicate,
+                id: crypto.randomUUID(),
+                label: blockToDuplicate.kind === 'module' ? `${blockToDuplicate.label} (Copy)` : blockToDuplicate.label
+            } as FormBlock;
+
+            const index = prev.findIndex((b) => b.id === id);
+            const newBlocks = [...prev];
+            newBlocks.splice(index + 1, 0, newBlock);
+            return newBlocks;
+        });
     }, []);
 
     const handlePublish = async () => {
@@ -272,43 +292,82 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
 
             {/* Canvas Area */}
             <main className="flex-1 overflow-y-auto py-8 relative">
-                <div className="max-w-3xl mx-auto w-full relative min-h-[600px]">
-                    {/* Floating Toolbar */}
-                    <FloatingToolbar
-                        activeBlockId={activeBlockId}
-                        onAddBlock={handleAddBlock}
-                    />
+                {activeTab === 'build' && (
+                    <div className="max-w-3xl mx-auto w-full relative min-h-[600px]">
+                        {/* Floating Toolbar */}
+                        <FloatingToolbar
+                            activeBlockId={activeBlockId}
+                            onAddBlock={handleAddBlock}
+                        />
 
-                    {/* Form Header Block */}
-                    <div className="bg-white rounded-xl border border-slate-200 mb-4 overflow-hidden border-t-4 border-t-indigo-600">
-                        <div className="p-6">
-                            <input
-                                type="text"
-                                value={formTitle}
-                                onChange={(e) => handleTitleChange(e.target.value)}
-                                placeholder="Form Title"
-                                className="w-full text-3xl font-bold text-slate-800 bg-transparent border-none p-0 focus:outline-none focus:ring-0"
-                            />
-                            <textarea
-                                value={formDescription}
-                                onChange={(e) => setFormDescription(e.target.value)}
-                                placeholder="Form description..."
-                                rows={2}
-                                className="w-full mt-2 text-slate-500 bg-transparent border-none p-0 resize-none focus:outline-none"
-                            />
+                        {/* Form Header Block */}
+                        <div className="bg-white rounded-xl border border-slate-200 mb-4 overflow-hidden border-t-4 border-t-indigo-600">
+                            <div className="p-6">
+                                <input
+                                    type="text"
+                                    value={formTitle}
+                                    onChange={(e) => handleTitleChange(e.target.value)}
+                                    placeholder="Form Title"
+                                    className="w-full text-3xl font-bold text-slate-800 bg-transparent border-none p-0 focus:outline-none focus:ring-0"
+                                />
+                                <textarea
+                                    value={formDescription}
+                                    onChange={(e) => setFormDescription(e.target.value)}
+                                    placeholder="Form description..."
+                                    rows={2}
+                                    className="w-full mt-2 text-slate-500 bg-transparent border-none p-0 resize-none focus:outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Form Blocks Canvas */}
+                        <IntakeCanvas
+                            blocks={blocks}
+                            activeBlockId={activeBlockId}
+                            onSelectBlock={setActiveBlockId}
+                            onDeleteBlock={handleDeleteBlock}
+                            onUpdateBlock={handleUpdateBlock}
+                            onReorderBlocks={setBlocks}
+                            onDuplicateBlock={handleDuplicateBlock}
+                            onAddBlock={handleAddBlock}
+                        />
+                    </div>
+                )}
+
+                {activeTab === 'logic' && (
+                    <div className="max-w-2xl mx-auto py-8 px-4">
+                        <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
+                            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                                <span className="text-2xl">🔀</span>
+                            </div>
+                            <h3 className="text-lg font-semibold text-slate-700">Conditional Logic</h3>
+                            <p className="text-sm text-slate-500 mt-2">
+                                Coming soon: Add conditional display rules to show or hide questions based on previous answers.
+                            </p>
                         </div>
                     </div>
+                )}
 
-                    {/* Form Blocks Canvas */}
-                    <IntakeCanvas
-                        blocks={blocks}
-                        activeBlockId={activeBlockId}
-                        onSelectBlock={setActiveBlockId}
-                        onDeleteBlock={handleDeleteBlock}
-                        onUpdateBlock={handleUpdateBlock}
-                        onReorderBlocks={setBlocks}
+                {activeTab === 'settings' && (
+                    <FormSettingsPanel
+                        settings={{
+                            showProgress: form?.pages?.[0]?.blocks_config?.settings?.showProgress ?? false,
+                            confirmationMessage: form?.pages?.[0]?.blocks_config?.settings?.confirmationMessage,
+                            redirectUrl: form?.pages?.[0]?.blocks_config?.settings?.redirectUrl,
+                        }}
+                        onSave={async (newSettings) => {
+                            await upsertPage.mutateAsync({
+                                formId,
+                                page_index: 0,
+                                blocks_config: {
+                                    blocks,
+                                    settings: newSettings,
+                                },
+                            });
+                        }}
+                        isSaving={upsertPage.isPending}
                     />
-                </div>
+                )}
             </main>
 
             {/* Publish Dialog */}

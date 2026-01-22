@@ -2,6 +2,7 @@
 Export module API router.
 """
 
+import asyncio
 from fastapi import APIRouter
 
 from .schemas import IntakeCSVExportRequest, IntakeCSVExportResponse
@@ -20,7 +21,8 @@ async def export_intake_csv(request: IntakeCSVExportRequest) -> IntakeCSVExportR
     """
     service = ExportService()
     
-    file_path, row_count, columns = service.export_intake_csv(
+    file_path, row_count, columns = await asyncio.to_thread(
+        service.export_intake_csv,
         form_id=request.form_id,
         form_title=request.form_title,
         submissions=request.submissions,

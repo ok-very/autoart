@@ -2,16 +2,11 @@
  * IntakeDashboard - List of existing intake forms with create button
  */
 
-import { Plus, FileText } from 'lucide-react';
+import { Plus, FileText, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@autoart/ui';
-
-// Placeholder data - will be replaced with API call
-const mockForms = [
-    { id: '1', title: 'Artist Registration', description: 'Collect new artist info', updatedAt: '2026-01-15' },
-    { id: '2', title: 'Artwork Submission', description: 'Submit new artworks for review', updatedAt: '2026-01-10' },
-];
+import { useIntakeForms, useCreateIntakeForm } from '../../api/hooks/intake';
 
 interface IntakeDashboardProps {
     onOpenForm?: (id: string) => void;
@@ -19,13 +14,20 @@ interface IntakeDashboardProps {
 
 export function IntakeDashboard({ onOpenForm }: IntakeDashboardProps) {
     const navigate = useNavigate();
+    const { data: forms, isLoading } = useIntakeForms();
+    const createForm = useCreateIntakeForm();
 
-    const handleCreateForm = () => {
-        // TODO: Create form via API, then navigate to editor
-        if (onOpenForm) {
-            onOpenForm('new');
-        } else {
-            navigate('/intake/new');
+    const handleCreateForm = async () => {
+        try {
+            const result = await createForm.mutateAsync({ title: 'Untitled Form' });
+            const newFormId = result.form.id;
+            if (onOpenForm) {
+                onOpenForm(newFormId);
+            } else {
+                navigate(`/intake/${newFormId}`);
+            }
+        } catch (err) {
+            console.error('Failed to create form:', err);
         }
     };
 
@@ -37,6 +39,14 @@ export function IntakeDashboard({ onOpenForm }: IntakeDashboardProps) {
         }
     };
 
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+            </div>
+        );
+    }
+
     return (
         <div className="p-8">
             {/* Header */}
@@ -47,15 +57,23 @@ export function IntakeDashboard({ onOpenForm }: IntakeDashboardProps) {
                         Create and manage intake forms for collecting submissions
                     </p>
                 </div>
-                <Button onClick={handleCreateForm} className="flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
+                <Button
+                    onClick={handleCreateForm}
+                    disabled={createForm.isPending}
+                    className="flex items-center gap-2"
+                >
+                    {createForm.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                        <Plus className="w-4 h-4" />
+                    )}
                     Create Form
                 </Button>
             </div>
 
             {/* Form Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {mockForms.map((form) => (
+                {forms?.map((form) => (
                     <button
                         key={form.id}
                         onClick={() => handleOpenForm(form.id)}
@@ -67,8 +85,12 @@ export function IntakeDashboard({ onOpenForm }: IntakeDashboardProps) {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <h3 className="font-semibold text-slate-800 truncate">{form.title}</h3>
-                                <p className="text-sm text-slate-500 mt-1 line-clamp-2">{form.description}</p>
-                                <p className="text-xs text-slate-400 mt-3">Updated {form.updatedAt}</p>
+                                <p className="text-sm text-slate-500 mt-1 line-clamp-2">
+                                    {form.status === 'active' ? 'Published' : 'Draft'}
+                                </p>
+                                <p className="text-xs text-slate-400 mt-3">
+                                    Created {new Date(form.created_at).toLocaleDateString()}
+                                </p>
                             </div>
                         </div>
                     </button>
@@ -77,6 +99,7 @@ export function IntakeDashboard({ onOpenForm }: IntakeDashboardProps) {
                 {/* Empty state create card */}
                 <button
                     onClick={handleCreateForm}
+                    disabled={createForm.isPending}
                     className="bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 p-6 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all flex flex-col items-center justify-center min-h-[140px]"
                 >
                     <Plus className="w-8 h-8 text-slate-400 mb-2" />

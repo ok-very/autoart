@@ -42,8 +42,8 @@ export function IntakeDetailPanel({ formId, onBack }: IntakeDetailPanelProps) {
     updateForm.mutate({ id: formId, status });
   };
 
-  const handleSaveSharepointUrl = () => {
-    updateForm.mutate({
+  const handleSaveSharepointUrl = async () => {
+    await updateForm.mutateAsync({
       id: formId,
       sharepoint_request_url: sharepointUrl || null,
     });

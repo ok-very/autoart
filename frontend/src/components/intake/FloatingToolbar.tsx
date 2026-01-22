@@ -3,11 +3,20 @@
  */
 
 import {
-    PlusCircle,
-    FileDown,
-    Type,
+    AlignLeft,
+    AtSign,
+    Calendar,
+    CheckSquare,
+    ChevronDown,
+    Clock,
+    FileText,
+    Hash,
+    Heading,
     Image,
-    Rows3,
+    List,
+    Phone,
+    Type,
+    Upload,
 } from 'lucide-react';
 
 interface FloatingToolbarProps {
@@ -15,34 +24,59 @@ interface FloatingToolbarProps {
     onAddBlock: (type: string) => void;
 }
 
-const tools = [
-    { id: 'short_answer', icon: PlusCircle, label: 'Add Question' },
-    { id: 'import', icon: FileDown, label: 'Import Question' },
-    { id: 'section_header', icon: Type, label: 'Add Title/Desc' },
-    { id: 'image', icon: Image, label: 'Add Image' },
-    { id: 'section', icon: Rows3, label: 'Add Section' },
+const inputTools = [
+    { id: 'short_answer', icon: Type, label: 'Short Answer' },
+    { id: 'paragraph', icon: AlignLeft, label: 'Paragraph' },
+    { id: 'email', icon: AtSign, label: 'Email' },
+    { id: 'phone', icon: Phone, label: 'Phone' },
+    { id: 'number', icon: Hash, label: 'Number' },
+    { id: 'date', icon: Calendar, label: 'Date' },
+    { id: 'time', icon: Clock, label: 'Time' },
+    { id: 'file_upload', icon: Upload, label: 'File Upload' },
+];
+
+const choiceTools = [
+    { id: 'multiple_choice', icon: List, label: 'Multiple Choice' },
+    { id: 'checkbox', icon: CheckSquare, label: 'Checkbox' },
+    { id: 'dropdown', icon: ChevronDown, label: 'Dropdown' },
+];
+
+const staticTools = [
+    { id: 'section_header', icon: Heading, label: 'Section Header' },
+    { id: 'description', icon: FileText, label: 'Description' },
+    { id: 'image', icon: Image, label: 'Image' },
 ];
 
 export function FloatingToolbar({ activeBlockId, onAddBlock }: FloatingToolbarProps) {
     // Only show when a block is active
     if (!activeBlockId) return null;
 
+    const renderSection = (title: string, tools: typeof inputTools) => (
+        <div className="mb-2">
+            <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-1 px-1">{title}</p>
+            <div className="flex flex-col gap-1">
+                {tools.map((tool) => (
+                    <button
+                        key={tool.id}
+                        onClick={() => onAddBlock(tool.id)}
+                        title={tool.label}
+                        className="w-full px-2 py-1.5 rounded-md flex items-center gap-2 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-xs"
+                    >
+                        <tool.icon className="w-4 h-4" />
+                        <span>{tool.label}</span>
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+
     return (
-        <div className="absolute right-[-60px] top-0 flex flex-col gap-2 bg-white p-2 rounded-lg shadow-lg border border-slate-200">
-            {tools.map((tool) => (
-                <button
-                    key={tool.id}
-                    onClick={() => onAddBlock(tool.id)}
-                    title={tool.label}
-                    className="w-9 h-9 rounded-md flex items-center justify-center text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-colors relative group"
-                >
-                    <tool.icon className="w-5 h-5" />
-                    {/* Tooltip */}
-                    <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        {tool.label}
-                    </span>
-                </button>
-            ))}
+        <div className="absolute right-[-180px] top-0 w-[160px] bg-white p-2 rounded-lg shadow-lg border border-slate-200 max-h-[70vh] overflow-y-auto">
+            {renderSection('Input', inputTools)}
+            <hr className="my-2 border-slate-100" />
+            {renderSection('Choice', choiceTools)}
+            <hr className="my-2 border-slate-100" />
+            {renderSection('Static', staticTools)}
         </div>
     );
 }

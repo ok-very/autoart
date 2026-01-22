@@ -115,13 +115,13 @@ class TestFiletreeService:
         db = get_db()
         row = db.execute("SELECT root_id FROM roots LIMIT 1").fetchone()
         
-        if row:
-            root_id = row["root_id"]
-            service = FiletreeService()
-            result = service.get_tree(root_id=root_id)
-            
-            assert len(result) == 1
-            assert result[0].is_dir is True
+        assert row is not None, "No roots in DB"
+        root_id = row["root_id"]
+        service = FiletreeService()
+        result = service.get_tree(root_id=root_id)
+        
+        assert len(result) == 1
+        assert result[0].is_dir is True
 
     def _collect_paths(self, node) -> list[str]:
         """Recursively collect all paths from a tree node."""
@@ -188,8 +188,8 @@ class TestFiletreeEndpoint:
         db = get_db()
         row = db.execute("SELECT root_id FROM roots LIMIT 1").fetchone()
         
-        if row:
-            response = client.get(f"/filetree?root_id={row['root_id']}")
-            assert response.status_code == 200
-            data = response.json()
-            assert len(data["roots"]) <= 1
+        assert row is not None, "No roots in DB"
+        response = client.get(f"/filetree?root_id={row['root_id']}")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["roots"]) <= 1

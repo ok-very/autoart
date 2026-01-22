@@ -244,6 +244,12 @@ export async function authRoutes(fastify: FastifyInstance) {
   }
   fastify.get<GetSettingParams>('/me/settings/:key', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { key } = request.params;
+
+    const allowedKeys = Object.values(settingsService.SETTING_KEYS) as string[];
+    if (!allowedKeys.includes(key)) {
+      return reply.code(400).send({ error: 'Invalid setting key' });
+    }
+
     const value = await settingsService.getSetting(
       request.user.userId,
       key as settingsService.SettingKey
@@ -260,6 +266,11 @@ export async function authRoutes(fastify: FastifyInstance) {
     const { key } = request.params;
     const { value } = request.body;
 
+    const allowedKeys = Object.values(settingsService.SETTING_KEYS) as string[];
+    if (!allowedKeys.includes(key)) {
+      return reply.code(400).send({ error: 'Invalid setting key' });
+    }
+
     const setting = await settingsService.setSetting(
       request.user.userId,
       key as settingsService.SettingKey,
@@ -271,6 +282,12 @@ export async function authRoutes(fastify: FastifyInstance) {
   // Delete a setting
   fastify.delete<GetSettingParams>('/me/settings/:key', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     const { key } = request.params;
+
+    const allowedKeys = Object.values(settingsService.SETTING_KEYS) as string[];
+    if (!allowedKeys.includes(key)) {
+      return reply.code(400).send({ error: 'Invalid setting key' });
+    }
+
     await settingsService.deleteSetting(
       request.user.userId,
       key as settingsService.SettingKey

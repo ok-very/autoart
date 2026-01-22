@@ -103,7 +103,7 @@ export const DataRecordSchema = z.object({
   definition_id: z.string().uuid(),
   classification_node_id: z.string().uuid().nullable(),
   unique_name: z.string().min(1),
-  data: z.record(z.unknown()),
+  data: z.record(z.string(), z.unknown()),
   created_by: z.string().uuid().nullable(),
   updated_at: z.string().datetime(),
 });
@@ -153,7 +153,7 @@ export type UpdateDefinitionInput = z.infer<typeof UpdateDefinitionInputSchema>;
 export const CreateRecordInputSchema = z.object({
   definitionId: z.string().uuid(),
   uniqueName: z.string().min(1),
-  data: z.record(z.unknown()).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
   classificationNodeId: z.string().uuid().nullable().optional(),
 });
 
@@ -164,7 +164,7 @@ export type CreateRecordInput = z.infer<typeof CreateRecordInputSchema>;
  */
 export const UpdateRecordInputSchema = z.object({
   uniqueName: z.string().min(1).optional(),
-  data: z.record(z.unknown()).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
   classificationNodeId: z.string().uuid().nullable().optional(),
 });
 

@@ -36,12 +36,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     )
     .execute();
 
-  // Index on unique_id for public URL lookups
-  await db.schema
-    .createIndex('idx_intake_forms_unique_id')
-    .on('intake_forms')
-    .column('unique_id')
-    .execute();
+
 
   // intake_form_pages table
   await db.schema
@@ -61,6 +56,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createIndex('idx_intake_form_pages_form')
     .on('intake_form_pages')
     .columns(['form_id', 'page_index'])
+    .unique()
     .execute();
 
   // intake_submissions table

@@ -22,7 +22,7 @@ export {
 
 import { z } from 'zod';
 
-const UnknownRecordSchema = z.record(z.unknown());
+const UnknownRecordSchema = z.record(z.string(), z.unknown());
 
 /**
  * Parse any unknown value into a record

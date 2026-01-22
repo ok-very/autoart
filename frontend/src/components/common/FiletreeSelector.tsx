@@ -61,15 +61,8 @@ function TreeNode({
     const hasChildren = node.children && node.children.length > 0;
     const isSelectable = node.is_dir ? allowDirSelection : true;
 
-    // Filter children by search query
-    const visibleChildren = useMemo(() => {
-        if (!node.children) return [];
-        if (!searchQuery) return node.children;
-
-        return node.children.filter((child) =>
-            child.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [node.children, searchQuery]);
+    // Children are already filtered by parent
+    const visibleChildren = node.children || [];
 
     const handleClick = () => {
         if (node.is_dir && hasChildren) {
@@ -191,15 +184,40 @@ export function FiletreeSelector({
         });
     }, []);
 
+    // Recursive filter function
+    const filterTree = useCallback((nodes: FiletreeNode[], query: string): FiletreeNode[] => {
+        const lowerQuery = query.toLowerCase();
+
+        return nodes.map(node => {
+            // If node name matches, we keep it and all children (or should we still filter children? usually yes)
+            // But standard behavior: if folder matches, show it. If child matches, show it and parent.
+
+            // Recursive step first
+            const filteredChildren = node.children ? filterTree(node.children, query) : [];
+
+            // Match condition: Name matches OR has matching children
+            const matchesName = node.name.toLowerCase().includes(lowerQuery);
+            const hasMatchingChildren = filteredChildren.length > 0;
+
+            if (matchesName || hasMatchingChildren) {
+                // Return new node with filtered children
+                return {
+                    ...node,
+                    children: filteredChildren.length > 0 ? filteredChildren : (matchesName ? node.children : [])
+                };
+            }
+
+            return null;
+        }).filter((n): n is FiletreeNode => n !== null);
+    }, []);
+
     // Filter roots by search
     const filteredRoots = useMemo(() => {
         if (!data?.roots) return [];
         if (!searchQuery) return data.roots;
 
-        // For search, we'd need to flatten and filter, but for simplicity
-        // we just filter top-level roots by name
-        return data.roots;
-    }, [data?.roots, searchQuery]);
+        return filterTree(data.roots, searchQuery);
+    }, [data?.roots, searchQuery, filterTree]);
 
     const hasContent = filteredRoots.length > 0;
 
@@ -261,6 +279,9 @@ export function FiletreeSelector({
                                 onSelect={onSelect}
                                 allowDirSelection={allowDirSelection}
                                 searchQuery={searchQuery}
+                            // Ensure we expand all nodes if searching? 
+                            // Ideally yes, but for now we rely on user expanding
+                            // or we could force expand in the effect
                             />
                         ))}
                     </div>
