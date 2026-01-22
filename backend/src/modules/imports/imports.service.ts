@@ -784,13 +784,14 @@ async function executePlanViaComposer(
     userId?: string
 ) {
     const createdIds: Record<string, string> = {};
+    const executionErrors: string[] = [];
     let factEventsEmitted = 0;
     let workEventsEmitted = 0;
     let fieldValuesApplied = 0;
     let actionsCreated = 0;
     let recordsCreated = 0;
     let skippedNoContext = 0;
-    let skippedNoClassification = 0;
+    const skippedNoClassification = 0;
 
     // Build lookup map: itemTempId -> classification
     const classificationMap = new Map<string, ItemClassification>(
@@ -872,10 +873,15 @@ async function executePlanViaComposer(
                 recordData.title = item.title;
             }
 
+            // Use parent container as classification node if available
+            const parentContainerId = item.parentTempId
+                ? createdIds[item.parentTempId]
+                : null;
+
             return {
                 uniqueName: item.title,
                 data: recordData,
-                classificationNodeId: null // Records are currently flat/global
+                classificationNodeId: parentContainerId
             };
         });
 
@@ -885,6 +891,10 @@ async function executePlanViaComposer(
 
         if (result.errors.length > 0) {
             console.warn(`[imports.service] Bulk record creation had ${result.errors.length} errors`, result.errors);
+            // Propagate errors to response
+            executionErrors.push(
+                ...result.errors.map(e => `Record "${e.uniqueName}": ${e.error}`)
+            );
         }
 
         // Map created records back to items to populate createdIds and mappings
@@ -896,6 +906,22 @@ async function executePlanViaComposer(
             const record = recordsByName.get(item.title);
             if (record) {
                 createdIds[item.tempId] = record.id;
+
+                // Emit RECORD_CREATED event for audit trail
+                if (targetProjectId) {
+                    await emitEvent({
+                        contextId: targetProjectId,
+                        contextType: 'project',
+                        type: 'RECORD_CREATED',
+                        payload: {
+                            recordId: record.id,
+                            definitionId: defId,
+                            uniqueName: record.unique_name,
+                            source: 'import',
+                        },
+                        actorId: userId,
+                    });
+                }
 
                 // Create external source mapping
                 const mondayMeta = (item.metadata as { monday?: { id: string; type: string } })?.monday;
@@ -1221,6 +1247,7 @@ async function executePlanViaComposer(
         workEventsEmitted,
         fieldValuesApplied,
         skippedNoContext,
+        errors: executionErrors.length > 0 ? executionErrors : undefined,
     };
 }
 

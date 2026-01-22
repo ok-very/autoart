@@ -1,18 +1,23 @@
 entry 01
 
+complete{
+
+
 connect to monday oauth returns:
 {"error":"invalid_request","error_description":"Invalid redirect_uri"}
 
 are we going to need webhooks for monday?
+}
 
+incomplete{
 review project workflow data terminus and backtrace the a useful seed data set to replace the current migration.
 fieldsview
 *contact group populates automatically and I cannot figure out if its layout is proposed or implemented because I cannot backtrace how the categories came to be.
 they aren't canonical so I have to be able to understand how they were created
 inspector doesn't attach to vield view
 remigrate the db and refresh the application
+}
 
-generate 
 
 ProjectWorkFlowView
 -add action button to projects centerara workflow view similer to the one implemented in @intakeform editor.flow new entries and add button down

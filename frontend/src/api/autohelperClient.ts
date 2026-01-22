@@ -68,7 +68,7 @@ class AutoHelperClient {
       if (contentType?.includes('application/json')) {
         try {
           const errorData = await response.json();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           errorMessage = (errorData as any).detail || (errorData as any).message || errorMessage;
         } catch {
           // JSON parsing failed, use default message

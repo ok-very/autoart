@@ -6,7 +6,7 @@ import { Button } from '@autoart/ui';
 import { Inline } from '@autoart/ui';
 import { ProgressBar } from '@autoart/ui';
 import { Card } from '@autoart/ui';
-import { useExecuteImport, type ImportSession, type ImportPlan, type ImportExecutionResult } from '../../../../api/hooks/imports';
+import { useExecuteImport, type ImportSession, type ImportPlan } from '../../../../api/hooks/imports';
 
 interface StepProps {
     onNext: () => void; // Not used (end of flow)

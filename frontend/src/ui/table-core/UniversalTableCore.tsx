@@ -272,6 +272,18 @@ export function UniversalTableCore({
         [decoratedColumns, onColumnResize]
     );
 
+    // =========== ROW HEIGHT ===========
+
+    // Compute row height class and style based on rowHeightProp
+    // (Must be before early returns to satisfy React hooks rules)
+    const rowHeightClass = useMemo(() => {
+        if (rowHeightProp === 'auto') return 'min-h-[32px]';
+        if (typeof rowHeightProp === 'number') return undefined; // Use inline style instead
+        return compact ? 'h-8' : 'h-11';
+    }, [rowHeightProp, compact]);
+
+    const rowHeightStyle = typeof rowHeightProp === 'number' ? { height: `${rowHeightProp}px` } : undefined;
+
     // =========== RENDER STATES ===========
 
     if (isLoading) {
@@ -306,15 +318,6 @@ export function UniversalTableCore({
     }
 
     // =========== MAIN RENDER ===========
-
-    // Compute row height class and style based on rowHeightProp
-    const rowHeightClass = useMemo(() => {
-        if (rowHeightProp === 'auto') return 'min-h-[32px]';
-        if (typeof rowHeightProp === 'number') return undefined; // Use inline style instead
-        return compact ? 'h-8' : 'h-11';
-    }, [rowHeightProp, compact]);
-
-    const rowHeightStyle = typeof rowHeightProp === 'number' ? { height: `${rowHeightProp}px` } : undefined;
 
     return (
         <div className={clsx('flex flex-col h-full overflow-hidden', className)}>

@@ -15,7 +15,7 @@ import {
 } from '@autoart/ui';
 import { useMondayBoardConfigs, useUpdateMondayColumnConfigs } from '../../../../api/hooks/monday';
 import { useGenerateImportPlan, type ImportSession, type ImportPlan } from '../../../../api/hooks/imports';
-import { MondayColumnConfig, MondayColumnSemanticRole } from '../../../../api/types/monday';
+import { MondayColumnConfig } from '../../../../api/types/monday';
 import { ImportPreviewDrawer } from '../components/ImportPreviewDrawer';
 import { ROLE_METADATA, SEMANTIC_ROLE_OPTIONS } from '../constants/monday-roles';
 

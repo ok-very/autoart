@@ -27,7 +27,7 @@ import { DataTableHierarchy, type HierarchyFieldDef } from '../../ui/composites/
 import { ActionRegistryTable } from '../../ui/composites/ActionRegistryTable';
 import { deriveTaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
 import { ComposerSurface } from '../composer';
-import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownSeparator, DropdownLabel, Menu, Badge, Text } from '@autoart/ui';
+import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownSeparator, DropdownLabel, Menu, Text } from '@autoart/ui';
 
 /**
  * Extract metadata from a node, parsing JSON string if needed
