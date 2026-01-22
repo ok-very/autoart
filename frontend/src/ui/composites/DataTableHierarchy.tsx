@@ -75,6 +75,8 @@ export interface DataTableHierarchyProps {
     statusConfig?: Record<string, { label: string; colorClass: string }>;
     /** Empty state message */
     emptyMessage?: string;
+    /** Custom empty state element (overrides emptyMessage) */
+    emptyState?: React.ReactNode;
     /** Additional className */
     className?: string;
 
@@ -166,6 +168,7 @@ export function DataTableHierarchy({
     showStatusSummary = false,
     statusConfig = {},
     emptyMessage = 'No items found',
+    emptyState,
     className,
     // Subtask nesting props
     enableNesting = false,
@@ -429,7 +432,7 @@ export function DataTableHierarchy({
                 getRowClassName={getRowClassName}
                 stickyHeader
                 stickyFooter={showStatusSummary}
-                emptyState={<span className="text-sm">{emptyMessage}</span>}
+                emptyState={emptyState || <span className="text-sm">{emptyMessage}</span>}
                 renderFooter={showStatusSummary ? renderFooter : undefined}
             />
 
