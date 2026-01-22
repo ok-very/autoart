@@ -2,7 +2,8 @@
  * FiletreeSelector - File/folder picker from AutoHelper indexed filetree
  *
  * An inline tree component for selecting file paths from the indexed filesystem.
- * Supports folder expansion, search filtering, and keyboard navigation.
+ * Supports folder expansion, search filtering, keyboard navigation, and
+ * project-context filtering based on nomenclature pattern [Developer] - [ProjectName].
  */
 
 import { clsx } from 'clsx';
@@ -21,6 +22,22 @@ import { useState, useMemo, useCallback } from 'react';
 import { useFiletree, type FiletreeNode } from '../../api/hooks';
 import { Spinner } from '@autoart/ui';
 
+export interface FiletreeProjectContext {
+    developer: string;
+    projectName: string;
+}
+
+const PROJECT_FOLDER_PATTERN = /^.+ - .+$/;
+
+function isProjectFolder(name: string): boolean {
+    return PROJECT_FOLDER_PATTERN.test(name);
+}
+
+function matchesProjectContext(folderName: string, ctx: FiletreeProjectContext): boolean {
+    const expected = `${ctx.developer} - ${ctx.projectName}`;
+    return folderName.toLowerCase() === expected.toLowerCase();
+}
+
 interface FiletreeSelectorProps {
     /** Callback when file/folder is selected */
     onSelect: (path: string, isDir: boolean) => void;
@@ -36,6 +53,12 @@ interface FiletreeSelectorProps {
     height?: number | string;
     /** Optional: placeholder when empty */
     placeholder?: string;
+    /**
+     * Project context for filtering.
+     * - If provided: only show files within matching project folder
+     * - If null/undefined: show everything except project folders
+     */
+    projectContext?: FiletreeProjectContext | null;
 }
 
 interface TreeNodeProps {
@@ -162,6 +185,7 @@ export function FiletreeSelector({
     allowDirSelection = false,
     height = 300,
     placeholder = 'No files indexed. Run AutoHelper indexer first.',
+    projectContext,
 }: FiletreeSelectorProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
@@ -184,23 +208,59 @@ export function FiletreeSelector({
         });
     }, []);
 
-    // Recursive filter function
-    const filterTree = useCallback((nodes: FiletreeNode[], query: string): FiletreeNode[] => {
+    /**
+     * Filter tree by project context.
+     * - If projectContext is provided: only show the matching project folder and its contents
+     * - If projectContext is null/undefined: show everything except project folders (files at root level ok)
+     */
+    const filterByProjectContext = useCallback((nodes: FiletreeNode[]): FiletreeNode[] => {
+        return nodes.map(node => {
+            if (!node.is_dir) {
+                // Files at any level are always shown (project context only restricts folders)
+                return node;
+            }
+
+            const folderIsProject = isProjectFolder(node.name);
+
+            if (projectContext) {
+                // Project selected: only show matching project folder
+                if (folderIsProject) {
+                    if (matchesProjectContext(node.name, projectContext)) {
+                        // This is the matching project folder - show it and all children
+                        return node;
+                    }
+                    // Different project folder - exclude
+                    return null;
+                }
+                // Non-project folder: check if any children match
+                const filteredChildren = node.children ? filterByProjectContext(node.children) : [];
+                if (filteredChildren.length > 0) {
+                    return { ...node, children: filteredChildren };
+                }
+                // Keep non-project directories even if empty (like "Archive", "Templates", etc.)
+                return node;
+            } else {
+                // No project selected: exclude all project folders, keep everything else
+                if (folderIsProject) {
+                    return null;
+                }
+                // Keep non-project folders and their children
+                const filteredChildren = node.children ? filterByProjectContext(node.children) : [];
+                return { ...node, children: filteredChildren };
+            }
+        }).filter((n): n is FiletreeNode => n !== null);
+    }, [projectContext]);
+
+    // Recursive filter function for search query
+    const filterBySearch = useCallback((nodes: FiletreeNode[], query: string): FiletreeNode[] => {
         const lowerQuery = query.toLowerCase();
 
         return nodes.map(node => {
-            // If node name matches, we keep it and all children (or should we still filter children? usually yes)
-            // But standard behavior: if folder matches, show it. If child matches, show it and parent.
-
-            // Recursive step first
-            const filteredChildren = node.children ? filterTree(node.children, query) : [];
-
-            // Match condition: Name matches OR has matching children
+            const filteredChildren = node.children ? filterBySearch(node.children, query) : [];
             const matchesName = node.name.toLowerCase().includes(lowerQuery);
             const hasMatchingChildren = filteredChildren.length > 0;
 
             if (matchesName || hasMatchingChildren) {
-                // Return new node with filtered children
                 return {
                     ...node,
                     children: filteredChildren.length > 0 ? filteredChildren : (matchesName ? node.children : [])
@@ -211,13 +271,20 @@ export function FiletreeSelector({
         }).filter((n): n is FiletreeNode => n !== null);
     }, []);
 
-    // Filter roots by search
+    // Apply both filters: project context first, then search
     const filteredRoots = useMemo(() => {
         if (!data?.roots) return [];
-        if (!searchQuery) return data.roots;
 
-        return filterTree(data.roots, searchQuery);
-    }, [data?.roots, searchQuery, filterTree]);
+        // First apply project context filter
+        let filtered = filterByProjectContext(data.roots);
+
+        // Then apply search filter if query exists
+        if (searchQuery) {
+            filtered = filterBySearch(filtered, searchQuery);
+        }
+
+        return filtered;
+    }, [data?.roots, searchQuery, filterByProjectContext, filterBySearch]);
 
     const hasContent = filteredRoots.length > 0;
 

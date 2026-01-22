@@ -41,7 +41,7 @@ const CreateSessionBodySchema = z.object({
     format: ExportFormatSchema,
     projectIds: z.array(z.string().uuid()),
     options: ExportOptionsSchema.optional(),
-    targetConfig: z.record(z.unknown()).optional(),
+    targetConfig: z.record(z.string(), z.unknown()).optional(),
 });
 
 const SessionIdParamSchema = z.object({
@@ -160,7 +160,7 @@ export async function exportsRoutes(app: FastifyInstance) {
         const body = z.object({
             options: ExportOptionsSchema.optional(),
             projectIds: z.array(z.string().uuid()).optional(),
-            targetConfig: z.record(z.unknown()).optional(),
+            targetConfig: z.record(z.string(), z.unknown()).optional(),
         }).parse(request.body);
 
         try {

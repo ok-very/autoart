@@ -5,3 +5,40 @@ packages:
   - 'frontend'
   - 'apps/*'
   - 'packages/*'
+
+# Catalog: centralized dependency versions
+# Usage in package.json: "typescript": "catalog:"
+# See: https://pnpm.io/catalogs
+catalog:
+  # Core
+  typescript: "~5.9.3"
+  zod: "^4.3.5"
+  fastify-type-provider-zod: "^6.0.0"
+  
+  # React
+  react: "^19.0.0"
+  react-dom: "^19.0.0"
+  "@types/react": "^19.2.5"
+  "@types/react-dom": "^19.2.3"
+  
+  # Tailwind v4
+  tailwindcss: "^4.1.18"
+  "@tailwindcss/vite": "^4.1.18"
+  tailwind-merge: "^2.4.0"
+  
+  # Tooling
+  "@types/node": "^24.10.1"
+  tsx: "^4.21.0"
+  vite: "^7.3.0"
+  "@vitejs/plugin-react": "^5.1.1"
+  vitest: "^4.0.16"
+  
+  # Linting
+  eslint: "^9.39.1"
+  "@eslint/js": "^9.39.1"
+  typescript-eslint: "^8.46.4"
+  eslint-plugin-react-hooks: "^7.0.1"
+  
+  # UI
+  lucide-react: "^0.562.0"
+  clsx: "^2.1.1"

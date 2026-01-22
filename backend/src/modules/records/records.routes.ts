@@ -314,7 +314,7 @@ export async function recordsRoutes(app: FastifyInstance) {
           definitionId: z.string().uuid(),
           records: z.array(z.object({
             uniqueName: z.string().min(1),
-            data: z.record(z.unknown()),
+            data: z.record(z.string(), z.unknown()),
             classificationNodeId: z.string().uuid().nullable().optional(),
           })),
         }),

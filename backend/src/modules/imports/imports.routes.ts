@@ -23,7 +23,7 @@ import mondayWebhookRoutes from './monday/monday-webhooks.routes.js'; // Added i
 const CreateSessionBodySchema = z.object({
     parserName: z.string().min(1),
     rawData: z.string().min(1),
-    config: z.record(z.unknown()).optional(),
+    config: z.record(z.string(), z.unknown()).optional(),
     targetProjectId: z.string().uuid().optional(),
 });
 
@@ -216,7 +216,7 @@ const ResolutionBodySchema = z.object({
         itemTempId: z.string(),
         resolvedOutcome: z.enum(['FACT_EMITTED', 'DERIVED_STATE', 'INTERNAL_WORK', 'EXTERNAL_WORK', 'AMBIGUOUS', 'UNCLASSIFIED', 'DEFERRED']),
         resolvedFactKind: z.string().optional(),
-        resolvedPayload: z.record(z.unknown()).optional(),
+        resolvedPayload: z.record(z.string(), z.unknown()).optional(),
     })),
 });
 

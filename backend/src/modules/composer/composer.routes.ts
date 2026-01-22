@@ -36,7 +36,7 @@ export async function composerRoutes(fastify: FastifyInstance) {
                 return reply.status(400).send({
                     error: 'Validation Error',
                     message: 'Invalid composer input',
-                    details: parseResult.error.errors,
+                    details: parseResult.error.issues,
                 });
             }
 
