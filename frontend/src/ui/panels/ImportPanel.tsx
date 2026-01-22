@@ -67,7 +67,13 @@ export function ImportPanel() {
             } else if (session.parser_name && !session.parser_name.startsWith('connector:')) {
                 // File-based session
                 setSourceType('file');
+            } else if (session.parser_name?.startsWith('connector:')) {
+                // Fallback for other connector types
+                setSourceType('collector');
             }
+        } else {
+            // Reset to default when there is no active session
+            setSourceType('file');
         }
     }, [session]);
 

@@ -49,8 +49,9 @@ export function FixedPanelRegion({
 
   // Calculate size style based on region
   const sizeStyle: React.CSSProperties = {};
-  const sizeValue = size < 1 ? `${size * 100}%` : `${size}px`;
-  const minSizeValue = minSize ? `${minSize}px` : undefined;
+  const resolvedSize = size ?? 0;
+  const sizeValue = resolvedSize < 1 ? `${resolvedSize * 100}%` : `${resolvedSize}px`;
+  const minSizeValue = minSize != null ? `${minSize}px` : undefined;
 
   if (region === 'bottom' || region === 'top') {
     sizeStyle.height = sizeValue;
@@ -73,3 +74,4 @@ export function FixedPanelRegion({
     </div>
   );
 }
+

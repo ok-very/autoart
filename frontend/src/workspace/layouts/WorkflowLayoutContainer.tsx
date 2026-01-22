@@ -65,7 +65,7 @@ export function WorkflowLayoutContainer({
     .join(' ');
 
   const renderSlot = (slot: PanelSlot) => {
-    const isVisible = slotVisibility[slot.panelId];
+    const isVisible = slotVisibility[slot.panelId] ?? true;
     const component = panelComponents[slot.panelId];
 
     if (!component && !isVisible) return null;
@@ -76,7 +76,7 @@ export function WorkflowLayoutContainer({
         region={slot.region}
         isVisible={isVisible}
         animateFrom={slot.animateFrom}
-        size={slot.size}
+        size={slot.size ?? 1}
         minSize={slot.minSize}
       >
         {component}

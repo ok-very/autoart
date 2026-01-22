@@ -180,7 +180,6 @@ export async function connectionsRoutes(app: FastifyInstance) {
         // Helper to send HTML that closes the popup
         const sendPopupResponse = (success: boolean, message?: string) => {
             const safeMessage = message ? escapeHtml(message) : 'Unknown error';
-            const serializedMessage = message != null ? JSON.stringify(String(message)) : 'null';
             const targetOrigin = process.env.CLIENT_ORIGIN || 'https://example.com';
             const html = `
 <!DOCTYPE html>
@@ -194,7 +193,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
             window.opener.postMessage({
                 type: 'monday-oauth-callback',
                 success: ${success ? 'true' : 'false'},
-                message: ${serializedMessage}
+                message: ${JSON.stringify(safeMessage)}
             }, targetOrigin);
         }
         window.close();
@@ -215,6 +214,14 @@ export async function connectionsRoutes(app: FastifyInstance) {
         }
 
         try {
+            const { handleMondayCallback } = await import('./monday-oauth.service.js');
+            await handleMondayCallback(code, state);
+            return sendPopupResponse(true);
+        } catch (err) {
+            console.error('Monday OAuth callback error:', err);
+            return sendPopupResponse(false, (err as Error).message);
+        }
+    });
             const { handleMondayCallback } = await import('./monday-oauth.service.js');
             await handleMondayCallback(code, state);
             return sendPopupResponse(true);

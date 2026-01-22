@@ -182,24 +182,30 @@ function ClassificationPanelAdapter(_props: IDockviewPanelProps) {
   const session = importContext?.session ?? globalSession;
   const plan = importContext?.plan ?? globalPlan;
 
-  const handleResolutionsSaved = useCallback((updatedPlan: any) => {
-    if (importContext?.updatePlan) {
-      importContext.updatePlan(updatedPlan);
-    } else {
-      setImportPlan(updatedPlan);
-    }
-  }, [importContext, setImportPlan]);
+  const handleResolutionsSaved = useCallback(
+    (updatedPlan: any) => {
+      if (importContext?.updatePlan) {
+        importContext.updatePlan(updatedPlan);
+      } else {
+        setImportPlan(updatedPlan);
+      }
+    },
+    [importContext?.updatePlan, setImportPlan]
+  );
+
+  const sessionId = session?.id ?? null;
 
   return (
     <div className="h-full overflow-auto bg-white relative">
       <ClassificationPanel
-        sessionId={session?.id ?? null}
+        sessionId={sessionId}
         plan={plan}
         onResolutionsSaved={handleResolutionsSaved}
       />
     </div>
   );
 }
+
 
 function SearchResultsPanel(props: IDockviewPanelProps) {
   return (

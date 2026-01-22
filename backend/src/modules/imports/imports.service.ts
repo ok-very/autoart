@@ -538,38 +538,39 @@ function generateClassificationsForConnectorItems(
             case 'action':
             case 'task':
             case 'subtask':
-                // Actions are created as work items
+                // Actions are created as work items; no record schema match
                 baseClassification = {
                     itemTempId: item.tempId,
                     outcome: 'INTERNAL_WORK' as ClassificationOutcome,
                     confidence: 'high' as const,
                     rationale: `${item.entityType} from connector - create as action`,
                 };
-                return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
+                return baseClassification;
 
             case 'project':
             case 'stage':
-                // These are containers, not items - but if they appear, treat as internal work
+                // These are containers, not items - treat as internal work without schema match
                 baseClassification = {
                     itemTempId: item.tempId,
                     outcome: 'INTERNAL_WORK' as ClassificationOutcome,
                     confidence: 'high' as const,
                     rationale: `Container type ${item.entityType} - structural item`,
                 };
-                return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
+                return baseClassification;
 
             default:
-                // Unknown entity type - may need review
+                // Unknown entity type - mark unclassified without schema match
                 baseClassification = {
                     itemTempId: item.tempId,
                     outcome: 'UNCLASSIFIED' as ClassificationOutcome,
                     confidence: 'low' as const,
                     rationale: `Unknown entity type: ${item.entityType ?? 'undefined'}`,
                 };
-                return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
+                return baseClassification;
         }
     });
 }
+
 
 
 

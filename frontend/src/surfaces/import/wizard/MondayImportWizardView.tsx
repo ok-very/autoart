@@ -136,7 +136,7 @@ export function MondayImportWizardView({
                                 onBack={handleBack}
                                 session={session}
                                 plan={localPlan}
-                                onSelectItem={onSelectItem}
+                                onSelectItem={handleSelectItem}
                                 onSessionCreated={onSessionCreated}
                             />
                         </Card>

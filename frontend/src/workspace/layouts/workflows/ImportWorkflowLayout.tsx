@@ -52,15 +52,15 @@ export function ImportWorkflowLayout({ children }: ImportWorkflowLayoutProps) {
   const panelComponents = useMemo<PanelComponentMap>(
     () => ({
       'import-wizard-content': children,
-      classification: (
+      classification: needsClassification ? (
         <ClassificationPanel
           sessionId={importContext.session?.id ?? null}
           plan={importContext.plan}
           onResolutionsSaved={importContext.updatePlan}
         />
-      ),
+      ) : null,
     }),
-    [children, importContext.session?.id, importContext.plan, importContext.updatePlan]
+    [children, importContext.session?.id, importContext.plan, importContext.updatePlan, needsClassification]
   );
 
   return (
@@ -71,3 +71,8 @@ export function ImportWorkflowLayout({ children }: ImportWorkflowLayoutProps) {
     />
   );
 }
+
+    />
+  );
+}
+
