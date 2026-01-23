@@ -520,14 +520,12 @@ function generateClassificationsForConnectorItems(
                 // Records with no field data should be marked as needing review
                 const hasFieldData = item.fieldRecordings && item.fieldRecordings.length > 0;
                 if (!hasFieldData) {
-                    // Route through addSchemaMatch for consistent schemaMatch shape
-                    const ambiguousClassification: ItemClassification = {
+                    return {
                         itemTempId: item.tempId,
-                        outcome: 'AMBIGUOUS' as ClassificationOutcome,
+                        outcome: 'UNCLASSIFIED' as ClassificationOutcome,
                         confidence: 'low' as const,
-                        rationale: 'Record has no field data - cannot match to schema',
+                        rationale: 'Record has no field data',
                     };
-                    return addSchemaMatch(ambiguousClassification, item.fieldRecordings, definitions);
                 }
                 // Records need schema matching to determine target definition
                 baseClassification = {

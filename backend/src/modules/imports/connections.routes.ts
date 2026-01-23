@@ -225,6 +225,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
             }
 
             // Validate CLIENT_ORIGIN is a valid URL with appropriate protocol
+            let safeTargetOrigin: string;
             try {
                 const originUrl = new URL(targetOrigin);
                 const isLocalhost = originUrl.hostname === 'localhost' || originUrl.hostname === '127.0.0.1';
@@ -235,10 +236,11 @@ export async function connectionsRoutes(app: FastifyInstance) {
                 if (originUrl.protocol !== 'https:' && originUrl.protocol !== 'http:') {
                     throw new Error('Invalid protocol');
                 }
-                // Ensure no path/query/fragment that could be used for injection
+                // Strip path/query/fragment - use only the origin for postMessage security
                 if (originUrl.pathname !== '/' || originUrl.search || originUrl.hash) {
-                    console.warn('Monday OAuth callback: CLIENT_ORIGIN should be just origin (no path/query/hash)');
+                    console.warn('Monday OAuth callback: CLIENT_ORIGIN had path/query/hash which was stripped');
                 }
+                safeTargetOrigin = originUrl.origin;
             } catch (err) {
                 console.error('Monday OAuth callback: CLIENT_ORIGIN is not a valid URL:', targetOrigin);
                 const errorHtml = `
@@ -260,7 +262,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
 <body>
 <script>
     (function() {
-        var targetOrigin = ${JSON.stringify(targetOrigin)};
+        var targetOrigin = ${JSON.stringify(safeTargetOrigin)};
         if (window.opener && targetOrigin) {
             window.opener.postMessage({
                 type: 'monday-oauth-callback',
