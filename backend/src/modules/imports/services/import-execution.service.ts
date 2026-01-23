@@ -136,7 +136,11 @@ function getContextTypeFromNodeType(nodeType: string | undefined): ContextType {
         case 'process': return 'process';
         case 'stage': return 'stage';
         case 'subprocess': return 'subprocess';
-        default: return 'subprocess';
+        default:
+            if (nodeType !== undefined) {
+                logger.warn({ nodeType }, '[imports.service] Unknown nodeType mapped to subprocess - this may indicate an upstream bug');
+            }
+            return 'subprocess';
     }
 }
 
@@ -213,6 +217,14 @@ async function executePlanViaComposer(
             const list = recordsByDef.get(definitionId) || [];
             list.push(item);
             recordsByDef.set(definitionId, list);
+        } else if (item.entityType === 'record') {
+            // Log warning for record items that cannot be created
+            const classification = classificationMap.get(item.tempId);
+            if (!classification) {
+                logger.warn({ tempId: item.tempId, title: item.title }, '[imports.service] Record item skipped: missing classification');
+            } else if (!classification.schemaMatch?.definitionId) {
+                logger.warn({ tempId: item.tempId, title: item.title, schemaMatch: classification.schemaMatch }, '[imports.service] Record item skipped: no matching definition');
+            }
         }
     }
 
@@ -239,8 +251,10 @@ async function executePlanViaComposer(
                 ? createdIds[item.parentTempId]
                 : null;
 
+            // Use tempId as uniqueName to prevent collisions when multiple items share the same title
+            // The tempId is guaranteed unique within the import session
             return {
-                uniqueName: item.title,
+                uniqueName: item.tempId,
                 data: recordData,
                 classificationNodeId: parentContainerId
             };
@@ -259,12 +273,13 @@ async function executePlanViaComposer(
         }
 
         // Map created records back to items to populate createdIds and mappings
-        const recordsByName = new Map(result.records.map(r => [r.unique_name, r]));
+        // Records are keyed by tempId (used as uniqueName) for collision-free lookups
+        const recordsByTempId = new Map(result.records.map(r => [r.unique_name, r]));
         recordsCreated += result.created;
         logger.debug({ created: result.created, updated: result.updated, errors: result.errors.length }, '[imports.service] Bulk create result');
 
         for (const item of items) {
-            const record = recordsByName.get(item.title);
+            const record = recordsByTempId.get(item.tempId);
             if (record) {
                 createdIds[item.tempId] = record.id;
 
@@ -309,8 +324,8 @@ async function executePlanViaComposer(
     // This ensures parents exist in createdIds before children are processed
     const sortedItems = [...plan.items].sort((a, b) => {
         // Items whose parent is a container come first
-        const aParentIsItem = a.parentTempId && itemsByTempId.has(a.parentTempId);
-        const bParentIsItem = b.parentTempId && itemsByTempId.has(b.parentTempId);
+        const aParentIsItem = Boolean(a.parentTempId && itemsByTempId.has(a.parentTempId));
+        const bParentIsItem = Boolean(b.parentTempId && itemsByTempId.has(b.parentTempId));
         if (aParentIsItem && !bParentIsItem) return 1;
         if (!aParentIsItem && bParentIsItem) return -1;
         return 0;

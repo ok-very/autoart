@@ -6,9 +6,13 @@
  */
 
 import { db } from '../../../db/client.js';
+import { logger } from '../../../utils/logger.js';
 import { MondayCSVParser } from '../parsers/monday-csv-parser.js';
 import { GenericCSVParser } from '../parsers/generic-csv-parser.js';
 import type { ImportPlanContainer, ImportPlanItem } from '../types.js';
+
+// Maximum allowed size for connector config JSON (100KB)
+const MAX_CONNECTOR_CONFIG_SIZE = 100 * 1024;
 
 // ============================================================================
 // PARSER REGISTRY
@@ -38,6 +42,11 @@ export async function createSession(params: {
     targetProjectId?: string;
     userId?: string;
 }) {
+    // Validate parserName against supported parsers
+    if (!PARSERS[params.parserName]) {
+        throw new Error(`Unsupported parser: ${params.parserName}. Supported parsers: ${Object.keys(PARSERS).join(', ')}`);
+    }
+
     const session = await db
         .insertInto('import_sessions')
         .values({
@@ -67,6 +76,12 @@ export async function createConnectorSession(params: {
     targetProjectId?: string;
     userId?: string;
 }) {
+    // Validate connector config size to prevent database bloat
+    const configJson = JSON.stringify(params.connectorConfig);
+    if (configJson.length > MAX_CONNECTOR_CONFIG_SIZE) {
+        throw new Error(`Connector config exceeds maximum allowed size (${MAX_CONNECTOR_CONFIG_SIZE} bytes)`);
+    }
+
     // Store connector config as parser_config, use connectorType as parser_name
     const session = await db
         .insertInto('import_sessions')
@@ -95,7 +110,7 @@ export async function getSession(id: string) {
 export async function listSessions(params: {
     status?: 'pending' | 'planned' | 'needs_review' | 'executing' | 'completed' | 'failed';
     limit?: number;
-}) {
+} = {}) {
     let query = db
         .selectFrom('import_sessions')
         .selectAll()
@@ -119,9 +134,14 @@ export async function getLatestPlan(sessionId: string): Promise<import('../types
 
     if (!planRow) return null;
 
-    const planData = typeof planRow.plan_data === 'string'
-        ? JSON.parse(planRow.plan_data)
-        : planRow.plan_data;
+    try {
+        const planData = typeof planRow.plan_data === 'string'
+            ? JSON.parse(planRow.plan_data)
+            : planRow.plan_data;
 
-    return planData as import('../types.js').ImportPlan;
+        return planData as import('../types.js').ImportPlan;
+    } catch (err) {
+        logger.error({ sessionId, error: err }, '[import-sessions] Failed to parse plan_data JSON');
+        throw new Error(`Malformed plan data for session ${sessionId}`);
+    }
 }

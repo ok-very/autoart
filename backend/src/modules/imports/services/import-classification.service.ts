@@ -10,6 +10,7 @@
 import { isInternalWork, type ClassificationOutcome } from '@autoart/shared';
 
 import { db } from '../../../db/client.js';
+import { logger } from '../../../utils/logger.js';
 import type { RecordDefinition } from '../../../db/schema.js';
 import { interpretCsvRowPlan, type InterpretationOutput } from '../../interpreter/interpreter.service.js';
 import { matchSchema } from '../schema-matcher.js';
@@ -273,6 +274,7 @@ export interface Resolution {
 /**
  * Save user resolutions for classifications.
  * Updates the plan and recalculates session status.
+ * Uses a transaction with row-level locking to prevent concurrent overwrites.
  */
 export async function saveResolutions(
     sessionId: string,
@@ -281,37 +283,57 @@ export async function saveResolutions(
     const session = await getSession(sessionId);
     if (!session) throw new Error('Session not found');
 
-    const plan = await getLatestPlan(sessionId);
-    if (!plan) throw new Error('No plan found');
+    return await db.transaction().execute(async (trx) => {
+        // Lock the plan row to prevent concurrent modifications (FOR UPDATE)
+        const planRow = await trx
+            .selectFrom('import_plans')
+            .selectAll()
+            .where('session_id', '=', sessionId)
+            .orderBy('created_at', 'desc')
+            .forUpdate()
+            .executeTakeFirst();
 
-    // Apply resolutions to classifications
-    for (const res of resolutions) {
-        const classification = plan.classifications.find((c: ItemClassification) => c.itemTempId === res.itemTempId);
-        if (classification) {
-            classification.resolution = {
-                resolvedOutcome: res.resolvedOutcome as any,
-                resolvedFactKind: res.resolvedFactKind,
-                resolvedPayload: res.resolvedPayload,
-            };
+        if (!planRow) throw new Error('No plan found');
+
+        let plan: ImportPlan;
+        try {
+            plan = typeof planRow.plan_data === 'string'
+                ? JSON.parse(planRow.plan_data)
+                : planRow.plan_data as ImportPlan;
+        } catch (err) {
+            logger.error({ sessionId, error: err }, '[import-classification] Failed to parse plan_data JSON');
+            throw new Error(`Malformed plan data for session ${sessionId}`);
         }
-    }
 
-    // Update the plan in database
-    await db
-        .updateTable('import_plans' as any)
-        .set({ plan_data: JSON.stringify(plan) })
-        .where('session_id', '=', sessionId)
-        .execute();
+        // Apply resolutions to classifications
+        for (const res of resolutions) {
+            const classification = plan.classifications.find((c: ItemClassification) => c.itemTempId === res.itemTempId);
+            if (classification) {
+                classification.resolution = {
+                    resolvedOutcome: res.resolvedOutcome as any,
+                    resolvedFactKind: res.resolvedFactKind,
+                    resolvedPayload: res.resolvedPayload,
+                };
+            }
+        }
 
-    // Recalculate session status
-    const hasUnresolved = hasUnresolvedClassifications(plan);
-    const newStatus = hasUnresolved ? 'needs_review' : 'planned';
+        // Update the plan in database (within transaction)
+        await trx
+            .updateTable('import_plans' as any)
+            .set({ plan_data: JSON.stringify(plan) })
+            .where('session_id', '=', sessionId)
+            .execute();
 
-    await db
-        .updateTable('import_sessions')
-        .set({ status: newStatus, updated_at: new Date() })
-        .where('id', '=', sessionId)
-        .execute();
+        // Recalculate session status
+        const hasUnresolved = hasUnresolvedClassifications(plan);
+        const newStatus = hasUnresolved ? 'needs_review' : 'planned';
 
-    return plan;
+        await trx
+            .updateTable('import_sessions')
+            .set({ status: newStatus, updated_at: new Date() })
+            .where('id', '=', sessionId)
+            .execute();
+
+        return plan;
+    });
 }

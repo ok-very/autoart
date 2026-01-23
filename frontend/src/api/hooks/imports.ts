@@ -239,14 +239,17 @@ export function useExecuteImport() {
                 {}
             );
         },
-        onSuccess: () => {
+        onSuccess: async () => {
             // Invalidate related queries - ensure all views refresh after import
-            queryClient.invalidateQueries({ queryKey: ['hierarchy'] });
-            queryClient.invalidateQueries({ queryKey: ['projects'] });
-            queryClient.invalidateQueries({ queryKey: ['actions'] });
-            queryClient.invalidateQueries({ queryKey: ['workflowSurface'] });
-            queryClient.invalidateQueries({ queryKey: ['events'] });
-            queryClient.invalidateQueries({ queryKey: ['records'] });
+            // Await all invalidations to ensure caches are refreshed before callback completes
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['hierarchy'] }),
+                queryClient.invalidateQueries({ queryKey: ['projects'] }),
+                queryClient.invalidateQueries({ queryKey: ['actions'] }),
+                queryClient.invalidateQueries({ queryKey: ['workflowSurface'] }),
+                queryClient.invalidateQueries({ queryKey: ['events'] }),
+                queryClient.invalidateQueries({ queryKey: ['records'] }),
+            ]);
         },
     });
 }

@@ -9,6 +9,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { db } from '../../../db/client.js';
+import { logger } from '../../../utils/logger.js';
 import { getMondayToken } from '../connections.service.js';
 import { MondayConnector } from '../connectors/monday-connector.js';
 import { interpretMondayData, inferBoardConfig } from '../monday/monday-domain-interpreter.js';
@@ -42,10 +43,16 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
     const parser = PARSERS[session.parser_name];
     if (!parser) throw new Error(`Parser ${session.parser_name} not found`);
 
-    // Parse config from JSONB
-    const config = typeof session.parser_config === 'string'
-        ? JSON.parse(session.parser_config)
-        : session.parser_config ?? {};
+    // Parse config from JSONB with error handling
+    let config: Record<string, unknown>;
+    try {
+        config = typeof session.parser_config === 'string'
+            ? JSON.parse(session.parser_config)
+            : session.parser_config ?? {};
+    } catch (err) {
+        logger.error({ sessionId, error: err }, '[import-plan] Failed to parse parser_config JSON');
+        throw new Error(`Malformed parser config for session ${sessionId}`);
+    }
 
     // Parse raw data into plan
     const { containers, items, validationIssues } = parser.parse(session.raw_data, config);
