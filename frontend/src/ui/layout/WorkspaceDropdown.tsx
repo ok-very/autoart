@@ -6,7 +6,7 @@
  * user-created custom workspaces. Includes "+ Add Workspace" option.
  */
 
-import { ChevronDown, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, Folder, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@autoart/ui';
@@ -47,7 +47,7 @@ interface WorkspaceMenuItemProps {
 }
 
 function WorkspaceMenuItem({ workspace, isActive, onSelect, onDelete }: WorkspaceMenuItemProps) {
-    const Icon = workspace.icon;
+    const Icon = workspace.icon ?? Folder;
     const colorClasses = getIconColorClass(workspace.color);
 
     return (
