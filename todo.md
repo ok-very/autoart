@@ -16,6 +16,8 @@ fieldsview
 they aren't canonical so I have to be able to understand how they were created
 inspector doesn't attach to vield view
 remigrate the db and refresh the application
+
+Monday Interpreter Alignment: ✓ VERIFIED - Both systems treat stages as independent metadata, not constraints. No parent-child stage validation in either system. One improvement: consider storing stageKind explicitly in item metadata (currently derived from groupId lookup). Related to nested group parentage feature.
 }
 
 

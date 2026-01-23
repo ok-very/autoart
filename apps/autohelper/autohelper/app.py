@@ -23,6 +23,7 @@ from autohelper.modules.reference.router import router as ref_router
 from autohelper.modules.mail.router import router as mail_router
 from autohelper.modules.filetree.router import router as filetree_router
 from autohelper.modules.export.router import router as export_router
+from autohelper.modules.runner.router import router as runner_router
 from autohelper.shared.errors import AutoHelperError
 from autohelper.shared.ids import generate_request_id
 from autohelper.shared.logging import (
@@ -145,6 +146,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(mail_router)
     app.include_router(filetree_router)
     app.include_router(export_router)
+    app.include_router(runner_router)
     
     # Root endpoint
     @app.get("/")

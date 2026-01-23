@@ -7,7 +7,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { clsx } from 'clsx';
-import { GripVertical, ChevronDown, GitBranch, FileText, LayoutTemplate, EyeOff } from 'lucide-react';
+import { GripVertical, ChevronDown, GitBranch, FileText, LayoutTemplate, EyeOff, Layers } from 'lucide-react';
 import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import {
     Stack,
@@ -40,7 +40,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useMondayBoardConfigs, useUpdateMondayBoardConfig, useUpdateMondayGroupConfigs } from '../../../../api/hooks/monday';
 import { useGenerateImportPlan, type ImportSession, type ImportPlan } from '../../../../api/hooks/imports';
-import type { MondayGroupRole, MondayBoardRole, MondayGroupConfig, MondayBoardConfig, MondayStageKind } from '../../../../api/types/monday';
+import type { MondayGroupRole, MondayBoardRole, MondayGroupConfig, MondayBoardConfig } from '../../../../api/types/monday';
+import { type StageKind, STAGE_KIND_LABELS } from '@autoart/shared';
 
 // ============================================================================
 // TYPES
@@ -122,13 +123,10 @@ const BOARD_ROLE_OPTIONS: { value: MondayBoardRole; label: string }[] = [
     { value: 'ignore', label: 'Ignore' },
 ];
 
-const STAGE_KIND_OPTIONS: { value: MondayStageKind; label: string }[] = [
-    { value: 'todo', label: 'To Do' },
-    { value: 'in_progress', label: 'In Progress' },
-    { value: 'blocked', label: 'Blocked' },
-    { value: 'done', label: 'Done' },
-    { value: 'archive', label: 'Archive' },
-];
+/** Stage kind options derived from shared STAGE_KIND_LABELS */
+const STAGE_KIND_OPTIONS: { value: StageKind; label: string }[] = (
+    Object.entries(STAGE_KIND_LABELS) as [StageKind, string][]
+).map(([value, label]) => ({ value, label }));
 
 const REFERENCE_STRATEGY_OPTIONS = [
     { value: 'create', label: 'Always Create New' },
@@ -200,12 +198,11 @@ function groupBySection(groups: MondayGroupConfig[]): Record<SectionId, MondayGr
     return result;
 }
 
-function getStageKindLabel(stageKind: MondayStageKind | undefined): string {
-    const option = STAGE_KIND_OPTIONS.find(o => o.value === stageKind);
-    return option?.label || 'To Do';
+function getStageKindLabel(stageKind: StageKind | undefined): string {
+    return stageKind ? STAGE_KIND_LABELS[stageKind] : STAGE_KIND_LABELS.todo;
 }
 
-function getStageKindColor(stageKind: MondayStageKind | undefined): string {
+function getStageKindColor(stageKind: StageKind | undefined): string {
     switch (stageKind) {
         case 'todo': return 'text-slate-600 bg-slate-100';
         case 'in_progress': return 'text-blue-600 bg-blue-100';
@@ -216,7 +213,7 @@ function getStageKindColor(stageKind: MondayStageKind | undefined): string {
     }
 }
 
-function getStageKindBorderColor(stageKind: MondayStageKind): string {
+function getStageKindBorderColor(stageKind: StageKind): string {
     switch (stageKind) {
         case 'todo': return 'border-slate-300';
         case 'in_progress': return 'border-blue-300';
@@ -227,8 +224,8 @@ function getStageKindBorderColor(stageKind: MondayStageKind): string {
     }
 }
 
-function groupByStageKind(groups: MondayGroupConfig[]): Record<MondayStageKind, MondayGroupConfig[]> {
-    const result: Record<MondayStageKind, MondayGroupConfig[]> = {
+function groupByStageKind(groups: MondayGroupConfig[]): Record<StageKind, MondayGroupConfig[]> {
+    const result: Record<StageKind, MondayGroupConfig[]> = {
         todo: [],
         in_progress: [],
         blocked: [],
@@ -318,7 +315,7 @@ function TypeBadge({ group, onRoleChange }: TypeBadgeProps) {
 // ============================================================================
 
 interface StageDropZoneProps {
-    stageKind: MondayStageKind;
+    stageKind: StageKind;
     groups: MondayGroupConfig[];
     onGroupUpdate: (groupId: string, updates: Partial<MondayGroupConfig>) => void;
     onRoleChange: (groupId: string, newRole: MondayGroupRole) => void;
@@ -386,7 +383,7 @@ interface DroppableSectionProps {
     section: SectionConfig;
     groups: MondayGroupConfig[];
     children: React.ReactNode;
-    renderGroupedByStage?: (groupedByStageKind: Record<MondayStageKind, MondayGroupConfig[]>) => React.ReactNode;
+    renderGroupedByStage?: (groupedByStageKind: Record<StageKind, MondayGroupConfig[]>) => React.ReactNode;
 }
 
 function DroppableSection({ section, groups, children, renderGroupedByStage }: DroppableSectionProps) {
@@ -502,6 +499,12 @@ function NestedChildDropZone({ parentGroupId, childGroups, onRemoveChild }: Nest
         >
             <div className="text-[10px] text-slate-400 uppercase font-semibold mb-1.5 flex items-center gap-1">
                 <span>↳</span> Child Groups
+                <span
+                    className="normal-case font-normal text-slate-300 ml-1"
+                    title="Children retain parent stage context while having their own workflow position"
+                >
+                    (inherit context)
+                </span>
             </div>
             {childGroups.length === 0 ? (
                 <div className="text-xs text-slate-400 italic py-1">
@@ -630,6 +633,25 @@ function CollapsibleGroupCard({ group, sectionId, onUpdate, onRoleChange, allGro
                                     {childGroups.length} child{childGroups.length > 1 ? 'ren' : ''}
                                 </span>
                             )}
+                            {/* Parent context indicator - shows inherited stage */}
+                            {parentGroup && (
+                                <span
+                                    className={clsx(
+                                        'text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1',
+                                        'bg-slate-100 text-slate-500 border border-slate-200'
+                                    )}
+                                    title={`Nested under "${parentGroup.groupTitle}" (${getStageKindLabel(parentGroup.stageKind)})`}
+                                >
+                                    <Layers size={10} className="opacity-60" />
+                                    <span className="opacity-75">in</span>
+                                    <span className={clsx(
+                                        'font-medium',
+                                        getStageKindColor(parentGroup.stageKind || 'todo').split(' ')[0]
+                                    )}>
+                                        {getStageKindLabel(parentGroup.stageKind)}
+                                    </span>
+                                </span>
+                            )}
                         </button>
                     </CollapsiblePrimitive.Trigger>
 
@@ -645,7 +667,7 @@ function CollapsibleGroupCard({ group, sectionId, onUpdate, onRoleChange, allGro
                     {sectionId === 'workflow' && (
                         <RadixSelect
                             value={group.stageKind || 'todo'}
-                            onChange={(val) => val && onUpdate(group.groupId, { stageKind: val as MondayStageKind })}
+                            onChange={(val) => val && onUpdate(group.groupId, { stageKind: val as StageKind })}
                             data={STAGE_KIND_OPTIONS}
                             size="sm"
                         />
@@ -668,9 +690,24 @@ function CollapsibleGroupCard({ group, sectionId, onUpdate, onRoleChange, allGro
                         {sectionId === 'workflow' && projectionInfo && (
                             <div className="space-y-1.5">
                                 {parentGroup ? (
-                                    <div className="text-slate-500">
-                                        This group becomes a <span className="font-semibold text-indigo-600">child subprocess</span> of{' '}
-                                        <span className="font-semibold">{parentGroup.groupTitle}</span>
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center gap-2 text-slate-600">
+                                            <Layers size={12} className="text-indigo-400" />
+                                            <span>
+                                                Nested subprocess of{' '}
+                                                <span className="font-semibold text-slate-800">{parentGroup.groupTitle}</span>
+                                            </span>
+                                        </div>
+                                        <div className="ml-5 text-slate-500 text-[11px]">
+                                            Items in this group retain context from parent's{' '}
+                                            <span className={clsx(
+                                                'font-medium px-1 py-0.5 rounded',
+                                                getStageKindColor(parentGroup.stageKind || 'todo')
+                                            )}>
+                                                {getStageKindLabel(parentGroup.stageKind)}
+                                            </span>{' '}
+                                            stage while progressing through their own workflow.
+                                        </div>
                                     </div>
                                 ) : (
                                     <>
@@ -853,7 +890,7 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
 
         // Check if dropped on a stage zone (stage-todo, stage-in_progress, etc.)
         if (overData?.type === 'stage') {
-            const targetStageKind = overData.stageKind as MondayStageKind;
+            const targetStageKind = overData.stageKind as StageKind;
             // Update role to subprocess, set stageKind, and clear any parentGroupId
             onGroupUpdate(groupId, {
                 role: 'subprocess',
@@ -1108,7 +1145,7 @@ export function Step2ConfigureMapping({ onNext, onBack, session, onSessionCreate
                 return {
                     ...g,
                     role: newRole,
-                    stageKind: isWorkflowRole ? (g.stageKind || 'todo' as MondayStageKind) : undefined,
+                    stageKind: isWorkflowRole ? (g.stageKind || 'todo' as StageKind) : undefined,
                 };
             }
             return g;

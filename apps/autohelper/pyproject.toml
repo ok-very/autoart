@@ -17,6 +17,10 @@ dependencies = [
     "Pillow>=10.0.0",
     "PySide6>=6.6.0",
     "qt-material>=2.14",
+    # Web scraping (for autocollector runner)
+    "httpx>=0.26.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.0.0",
     # Windows-specific:
     "pywin32>=306; sys_platform == 'win32'",
 ]

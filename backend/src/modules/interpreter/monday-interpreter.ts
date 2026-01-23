@@ -16,6 +16,7 @@ import {
 import type { MondayDataNode, MondayColumnValue } from '../imports/connectors/monday-connector.js';
 import type { ImportPlanItem } from '../imports/types.js';
 import { listDefinitions } from '../records/records.service.js';
+import { type RenderHint } from '@autoart/shared';
 
 // ============================================================================
 // TYPES
@@ -35,49 +36,89 @@ export interface FieldRecording {
 // ============================================================================
 
 /**
- * Map Monday column types to AutoArt RenderHints.
+ * Map Monday column types to canonical AutoArt RenderHints.
+ *
+ * Translation rules for Monday-specific types:
+ * - timeline: Produces two date fields (start/end) - handled in extraction
+ * - doc: Monday Docs → 'richtext' (rich text editor content)
+ * - mirror: Derive from mirrored column's source type, default to 'text'
+ * - subtasks: Structural relationship → 'relation'
+ *
  * Source: Monday.com GraphQL API column type discovery.
  */
-const MONDAY_TYPE_TO_RENDER_HINT: Record<string, string> = {
-    // Core types
+const MONDAY_TYPE_TO_RENDER_HINT: Record<string, RenderHint> = {
+    // Core text types
     name: 'text',
     text: 'text',
-    long_text: 'longtext',
-    status: 'status',
-    date: 'date',
-    people: 'person',
-    numbers: 'number',
+    long_text: 'richtext',
 
     // Selection types
+    status: 'status',
     dropdown: 'select',
     color_picker: 'select',
+    checkbox: 'checkbox',
+    tags: 'tags',
 
-    // Rich types
-    timeline: 'timeline',
-    doc: 'doc',
-    file: 'file',
+    // People
+    people: 'person',
+
+    // Dates
+    date: 'date',
+    week: 'date',
+
+    // Numbers
+    numbers: 'number',
+    rating: 'number',
+    auto_number: 'number',
+
+    // Communication
     link: 'url',
     email: 'email',
     phone: 'phone',
-    checkbox: 'checkbox',
 
-    // Relation types
+    // Attachments
+    file: 'file',
+
+    // Relations (structural)
     board_relation: 'relation',
-    mirror: 'mirror',
-    subtasks: 'subtasks',
+    dependency: 'relation',
 
-    // Misc
+    // Text fallbacks (misc Monday types)
     country: 'text',
     location: 'text',
-    rating: 'number',
-    auto_number: 'number',
     formula: 'text',
-    tags: 'tags',
-    week: 'date',
     hour: 'text',
     world_clock: 'text',
-    dependency: 'relation',
 };
+
+/**
+ * Monday-specific column types that require special translation.
+ * These don't map directly to a canonical RenderHint.
+ */
+const MONDAY_TRANSLATION_TYPES = {
+    /** Timeline produces two date fields (start_date, end_date) */
+    timeline: 'date',
+    /** Doc is Monday's rich text document editor */
+    doc: 'richtext',
+    /** Mirror derives type from source column, defaults to text */
+    mirror: 'text',
+    /** Subtasks are child relationships */
+    subtasks: 'relation',
+} as const satisfies Record<string, RenderHint>;
+
+/**
+ * Get canonical RenderHint for a Monday column type.
+ * Falls back to 'text' for unknown types.
+ */
+export function getMondayRenderHint(mondayType: string): RenderHint {
+    if (mondayType in MONDAY_TYPE_TO_RENDER_HINT) {
+        return MONDAY_TYPE_TO_RENDER_HINT[mondayType];
+    }
+    if (mondayType in MONDAY_TRANSLATION_TYPES) {
+        return MONDAY_TRANSLATION_TYPES[mondayType as keyof typeof MONDAY_TRANSLATION_TYPES];
+    }
+    return 'text';
+}
 
 /**
  * Special column name patterns for semantic field mapping

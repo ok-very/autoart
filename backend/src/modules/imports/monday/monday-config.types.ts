@@ -8,6 +8,8 @@
  * is configuration-driven rather than heuristic-based.
  */
 
+import { type StageKind } from '@autoart/shared';
+
 // ============================================================================
 // BOARD ROLES
 // ============================================================================
@@ -44,13 +46,9 @@ export type MondayGroupRole =
 
 /**
  * Stage kind for pipeline stages.
+ * Re-exported from @autoart/shared for backward compatibility.
  */
-export type MondayStageKind =
-    | 'todo'
-    | 'in_progress'
-    | 'blocked'
-    | 'done'
-    | 'archive';
+export type MondayStageKind = StageKind;
 
 // ============================================================================
 // COLUMN SEMANTIC ROLES
