@@ -25,6 +25,7 @@ import { useCollectionModeOptional } from '../../surfaces/export/CollectionModeP
 import { useWorkspaceStore, useOpenPanelIds } from '../../stores/workspaceStore';
 import { Button, IconButton, Inline } from '@autoart/ui';
 import { Menu, SegmentedControl } from '@autoart/ui';
+import { WorkspaceDropdown } from './WorkspaceDropdown';
 
 
 export function Header() {
@@ -112,6 +113,9 @@ export function Header() {
           <Link to="/" className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold hover:bg-slate-800 transition-colors">
             A
           </Link>
+
+          {/* Workspace Dropdown - primary navigation for workflow stages */}
+          <WorkspaceDropdown />
 
           {/* Navigation Links */}
           <Inline gap="xs" className="ml-2">
