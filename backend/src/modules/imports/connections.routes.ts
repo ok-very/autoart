@@ -180,7 +180,23 @@ export async function connectionsRoutes(app: FastifyInstance) {
         // Helper to send HTML that closes the popup
         const sendPopupResponse = (success: boolean, message?: string) => {
             const safeMessage = message ? escapeHtml(message) : 'Unknown error';
-            const targetOrigin = process.env.CLIENT_ORIGIN || 'https://example.com';
+            const targetOrigin = process.env.CLIENT_ORIGIN;
+
+            // Fail fast if CLIENT_ORIGIN is not configured
+            if (!targetOrigin) {
+                console.error('Monday OAuth callback: CLIENT_ORIGIN environment variable is not set');
+                const errorHtml = `
+<!DOCTYPE html>
+<html>
+<head><title>Monday OAuth Error</title></head>
+<body>
+<h1>Configuration Error</h1>
+<p>OAuth callback cannot complete: CLIENT_ORIGIN is not configured on the server.</p>
+<p>Please contact your administrator.</p>
+</body>
+</html>`;
+                return reply.type('text/html').status(500).send(errorHtml);
+            }
             const html = `
 <!DOCTYPE html>
 <html>

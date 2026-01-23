@@ -45,7 +45,7 @@ PRIVATE_IP_RANGES = [
 ]
 
 
-def _is_safe_url(url: str) -> tuple[bool, str]:
+async def _is_safe_url(url: str) -> tuple[bool, str]:
     """
     Validate URL to prevent SSRF attacks.
 
@@ -69,9 +69,10 @@ def _is_safe_url(url: str) -> tuple[bool, str]:
             return False, f"Blocked hostname: {hostname}"
 
         # Try to resolve hostname and check if IP is private
+        # Use asyncio.to_thread to avoid blocking the event loop
         try:
-            # Resolve to IP address
-            ip_str = socket.gethostbyname(hostname)
+            # Resolve to IP address in a thread pool to avoid blocking
+            ip_str = await asyncio.to_thread(socket.gethostbyname, hostname)
             ip = ipaddress.ip_address(ip_str)
 
             # Check against private ranges
@@ -214,7 +215,7 @@ class AutoCollectorRunner(BaseRunner):
     ) -> RunnerResult:
         """Collect content from a web URL."""
         # Validate URL for SSRF protection
-        is_safe, error_msg = _is_safe_url(url)
+        is_safe, error_msg = await _is_safe_url(url)
         if not is_safe:
             return RunnerResult(
                 success=False,
@@ -279,7 +280,7 @@ class AutoCollectorRunner(BaseRunner):
     ) -> AsyncIterator[RunnerProgress]:
         """Collect from web with streaming progress."""
         # Validate URL for SSRF protection
-        is_safe, error_msg = _is_safe_url(url)
+        is_safe, error_msg = await _is_safe_url(url)
         if not is_safe:
             yield RunnerProgress(stage="error", message=f"URL validation failed: {error_msg}")
             return

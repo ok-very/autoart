@@ -1202,6 +1202,15 @@ export function Step2ConfigureMapping({ onNext, onBack, session, onSessionCreate
         );
     }
 
+    // NOTE: Currently only single-board import is supported.
+    // If multi-board sessions are added, this component will need updates.
+    if (boardConfigs.length > 1) {
+        console.warn(
+            `[Step2ConfigureMapping] Multiple boards detected (${boardConfigs.length}), but only first board will be configured. ` +
+            'Multi-board support not yet implemented.'
+        );
+    }
+
     const currentConfig = boardConfigs[0];
 
     return (

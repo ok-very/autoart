@@ -16,6 +16,8 @@
 import { randomUUID } from 'node:crypto';
 import { isInternalWork, type ClassificationOutcome } from '@autoart/shared';
 
+import { logger } from '../../utils/logger.js';
+
 import { getMondayToken } from './connections.service.js';
 import { MondayConnector } from './connectors/monday-connector.js';
 import { GenericCSVParser } from './parsers/generic-csv-parser.js';
@@ -799,7 +801,6 @@ async function executePlanViaComposer(
     let actionsCreated = 0;
     let recordsCreated = 0;
     let skippedNoContext = 0;
-    const skippedNoClassification = 0;
 
     // Build lookup map: itemTempId -> classification
     const classificationMap = new Map<string, ItemClassification>(
@@ -812,9 +813,7 @@ async function executePlanViaComposer(
         acc[type] = (acc[type] || 0) + 1;
         return acc;
     }, {} as Record<string, number>);
-    console.log('[imports.service] Item distribution by entityType:', entityTypeCounts);
-    console.log('[imports.service] Classifications count:', plan.classifications.length);
-    console.log('[imports.service] Target project ID:', targetProjectId);
+    logger.debug({ entityTypeCounts, classificationsCount: plan.classifications.length, targetProjectId }, '[imports.service] Plan execution starting');
 
     // Step 1: Create containers (process, subprocess) as hierarchy nodes
     for (const container of plan.containers) {
@@ -864,12 +863,11 @@ async function executePlanViaComposer(
 
     // Diagnostic: Log record filter results
     const recordCandidates = plan.items.filter(i => i.entityType === 'record').length;
-    console.log(`[imports.service] Record candidates (entityType=record): ${recordCandidates}`);
-    console.log(`[imports.service] Records passing filter (with schemaMatch): ${Array.from(recordsByDef.values()).flat().length}`);
+    logger.debug({ recordCandidates, recordsWithSchema: Array.from(recordsByDef.values()).flat().length }, '[imports.service] Record filter results');
 
     // Execute bulk creation per definition
     for (const [defId, items] of recordsByDef) {
-        console.log(`[imports.service] Creating ${items.length} records for definition ${defId}`);
+        logger.debug({ definitionId: defId, count: items.length }, '[imports.service] Creating records for definition');
         const bulkInput = items.map(item => {
             const recordData = (item.fieldRecordings || []).reduce((acc, fr) => {
                 acc[fr.fieldName] = fr.value;
@@ -908,7 +906,7 @@ async function executePlanViaComposer(
         // Map created records back to items to populate createdIds and mappings
         const recordsByName = new Map(result.records.map(r => [r.unique_name, r]));
         recordsCreated += result.created;
-        console.log(`[imports.service] Bulk create result: ${result.created} created, ${result.updated} updated, ${result.errors.length} errors`);
+        logger.debug({ created: result.created, updated: result.updated, errors: result.errors.length }, '[imports.service] Bulk create result');
 
         for (const item of items) {
             const record = recordsByName.get(item.title);
@@ -986,7 +984,7 @@ async function executePlanViaComposer(
 
                 if (existingMapping) {
                     // Link to existing template instead of creating new
-                    console.log(`[imports.service] Template "${item.title}" already exists (mapped from ${mondayId}), reusing entity ${existingMapping.local_entity_id}`);
+                    logger.debug({ title: item.title, mondayId, entityId: existingMapping.local_entity_id }, '[imports.service] Template already exists, reusing');
                     createdIds[item.tempId] = existingMapping.local_entity_id;
                     continue;
                 }
@@ -1235,7 +1233,7 @@ async function executePlanViaComposer(
     }
 
     // Final diagnostic summary
-    console.log('[imports.service] Execution summary:', {
+    logger.debug({
         containers: plan.containers.length,
         items: plan.items.length,
         actionsCreated,
@@ -1243,7 +1241,7 @@ async function executePlanViaComposer(
         skippedNoContext,
         factEventsEmitted,
         workEventsEmitted,
-    });
+    }, '[imports.service] Execution summary');
 
     return {
         createdIds,

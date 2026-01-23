@@ -348,6 +348,15 @@ export function Step3Columns({ onNext, onBack, session, onSessionCreated }: Step
         );
     }
 
+    // NOTE: Currently only single-board import is supported.
+    // If multi-board sessions are added, this component will need updates.
+    if (boardConfigs.length > 1) {
+        console.warn(
+            `[Step3Columns] Multiple boards detected (${boardConfigs.length}), but only first board will be configured. ` +
+            'Multi-board support not yet implemented.'
+        );
+    }
+
     // Derived state for the current board's columns
     const currentBoard = boardConfigs[0];
     const columns = currentBoard?.columns || [];
