@@ -35,3 +35,6 @@ exportcontextprovider for panels when aggregate is active or within an aggregate
 step 4 needs new column names
 
 create a wrapper for our @richtext element @frontend/src/ui/molecules/EditableCell.tsx  wrapper (which is probably something different,  so that forces wrap to cell beyond 50 characters and allows styled preview on click in a transient (editable) . maybe you need a text edit module that should be generally mapped to the implementation
+
+-autohelper: incremental rescan and full injestion (should be called Index Filetree or Map Files) doesn't work, unclear if functions are merely cosmetic
+-connection to helper from frontend Ingjestion/Import interface fails.
