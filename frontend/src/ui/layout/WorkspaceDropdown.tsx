@@ -6,7 +6,7 @@
  * user-created custom workspaces. Includes "+ Add Workspace" option.
  */
 
-import { ChevronDown, Folder, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, Dna, Folder, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@autoart/ui';
@@ -127,23 +127,18 @@ export function WorkspaceDropdown() {
         useWorkspaceStore.getState().deleteCustomWorkspace(id);
     };
 
-    // Determine button styling based on active workspace
-    const hasActiveWorkspace = !!activeWorkspace;
-    const buttonColor = getButtonColor(activeWorkspace?.color ?? 'gray');
-    const ActiveIcon = activeWorkspace?.icon;
-
     return (
         <>
             <Menu>
                 <Menu.Target>
                     <Button
-                        variant={hasActiveWorkspace ? 'light' : 'subtle'}
-                        color={buttonColor}
+                        variant="subtle"
+                        color="gray"
                         size="sm"
                         rightSection={<ChevronDown size={14} />}
-                        leftSection={ActiveIcon ? <ActiveIcon size={14} /> : undefined}
+                        leftSection={<Dna size={14} />}
                     >
-                        {activeWorkspace?.label ?? 'Workspace'}
+                        Workspaces
                     </Button>
                 </Menu.Target>
 

@@ -147,9 +147,11 @@ function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCard
                         {column.columnType}
                     </Badge>
                     {!isValidRole && (
-                        <Badge variant="warning" size="xs" title="Unknown role from backend">
-                            ⚠
-                        </Badge>
+                        <span title="Unknown role from backend">
+                            <Badge variant="warning" size="xs">
+                                ⚠
+                            </Badge>
+                        </span>
                     )}
                 </div>
 

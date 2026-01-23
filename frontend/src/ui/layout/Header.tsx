@@ -7,7 +7,7 @@
 
 import {
   ChevronDown, FolderOpen, Database,
-  TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings, ClipboardList
+  TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings, ClipboardList, LayoutGrid
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
@@ -119,13 +119,54 @@ export function Header() {
 
           {/* Navigation Links */}
           <Inline gap="xs" className="ml-2">
+            {/* Workbench Dropdown */}
+            <Menu>
+              <Menu.Target>
+                <Button
+                  variant={isWorkbenchActive ? 'light' : 'subtle'}
+                  color={isWorkbenchActive ? 'yellow' : 'gray'}
+                  size="sm"
+                  rightSection={<ChevronDown size={14} />}
+                  leftSection={<Hammer size={14} />}
+                >
+                  Workbench
+                </Button>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Item
+                  onClick={() => handleOpenPanel('import-workbench')}
+                  leftSection={<FolderOpen size={16} />}
+                  className={isImportActive ? 'bg-amber-50' : ''}
+                >
+                  Import
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => handleOpenPanel('export-workbench')}
+                  leftSection={<Database size={16} />}
+                  className={isExportActive ? 'bg-amber-50' : ''}
+                >
+                  Export
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => handleOpenPanel('intake-workbench')}
+                  leftSection={<ClipboardList size={16} />}
+                  className={isIntakeActive ? 'bg-amber-50' : ''}
+                >
+                  Intake
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+
+            {/* Composer */}
             <Button
-              variant={!isRegistryActive && !isComposerActive && !isWorkbenchActive ? 'light' : 'subtle'}
-              color="gray"
+              variant={isComposerActive ? 'light' : 'subtle'}
+              color={isComposerActive ? 'violet' : 'gray'}
               size="sm"
-              onClick={() => navigate('/')}
+              leftSection={<Wand2 size={14} />}
+              onClick={() => handleOpenPanel('composer-workbench')}
             >
-              Projects
+              Composer
             </Button>
 
             {/* Registry Dropdown */}
@@ -174,55 +215,16 @@ export function Header() {
               </Menu.Dropdown>
             </Menu>
 
-            {/* Composer Actions */}
+            {/* Projects */}
             <Button
-              variant={isComposerActive ? 'light' : 'subtle'}
-              color={isComposerActive ? 'violet' : 'gray'}
+              variant={!isRegistryActive && !isComposerActive && !isWorkbenchActive ? 'light' : 'subtle'}
+              color="gray"
               size="sm"
-              leftSection={<Wand2 size={14} />}
-              onClick={() => handleOpenPanel('composer-workbench')}
+              leftSection={<LayoutGrid size={14} />}
+              onClick={() => navigate('/')}
             >
-              Composer
+              Projects
             </Button>
-
-            {/* Workbench Dropdown */}
-            <Menu>
-              <Menu.Target>
-                <Button
-                  variant={isWorkbenchActive ? 'light' : 'subtle'}
-                  color={isWorkbenchActive ? 'yellow' : 'gray'}
-                  size="sm"
-                  rightSection={<ChevronDown size={14} />}
-                  leftSection={<Hammer size={14} />}
-                >
-                  Workbench
-                </Button>
-              </Menu.Target>
-
-              <Menu.Dropdown>
-                <Menu.Item
-                  onClick={() => handleOpenPanel('import-workbench')}
-                  leftSection={<FolderOpen size={16} />}
-                  className={isImportActive ? 'bg-amber-50' : ''}
-                >
-                  Import
-                </Menu.Item>
-                <Menu.Item
-                  onClick={() => handleOpenPanel('export-workbench')}
-                  leftSection={<Database size={16} />}
-                  className={isExportActive ? 'bg-amber-50' : ''}
-                >
-                  Export
-                </Menu.Item>
-                <Menu.Item
-                  onClick={() => handleOpenPanel('intake-workbench')}
-                  leftSection={<ClipboardList size={16} />}
-                  className={isIntakeActive ? 'bg-amber-50' : ''}
-                >
-                  Intake
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
           </Inline>
         </div>
 
