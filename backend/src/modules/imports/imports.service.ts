@@ -518,21 +518,16 @@ function generateClassificationsForConnectorItems(
         switch (item.entityType) {
             case 'record': {
                 // Records with no field data should be marked as needing review
-                // Include empty schemaMatch for consistent object shape across all code paths
                 const hasFieldData = item.fieldRecordings && item.fieldRecordings.length > 0;
                 if (!hasFieldData) {
-                    return {
+                    // Route through addSchemaMatch for consistent schemaMatch shape
+                    const ambiguousClassification: ItemClassification = {
                         itemTempId: item.tempId,
                         outcome: 'AMBIGUOUS' as ClassificationOutcome,
                         confidence: 'low' as const,
                         rationale: 'Record has no field data - cannot match to schema',
-                        schemaMatch: {
-                            definitionId: null,
-                            definitionName: null,
-                            matchScore: 0,
-                            proposedDefinition: undefined,
-                        },
                     };
+                    return addSchemaMatch(ambiguousClassification, item.fieldRecordings, definitions);
                 }
                 // Records need schema matching to determine target definition
                 baseClassification = {

@@ -7,7 +7,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { clsx } from 'clsx';
-import { GripVertical, ChevronDown, GitBranch, FileText, LayoutTemplate, EyeOff, Layers } from 'lucide-react';
+import { GripVertical, ChevronDown, GitBranch, FileText, LayoutTemplate, EyeOff, Layers, X } from 'lucide-react';
 import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
 import {
     Stack,
@@ -833,17 +833,22 @@ function DraggableTagPill({ group, variant, sortableContext, onRemove }: Draggab
         onRemove?.();
     }, [onRemove]);
 
+    const handleRemoveClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        onRemove?.();
+    }, [onRemove]);
+
     return (
         <div
             ref={setNodeRef}
             style={style}
             onContextMenu={handleContextMenu}
             className={clsx(
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border cursor-grab transition-colors',
+                'group inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border cursor-grab transition-colors',
                 tagColors[variant],
                 isDragging && 'shadow-lg ring-2 ring-offset-1 ring-blue-400'
             )}
-            title="Drag to move, right-click to remove"
+            title="Drag to move, click X to remove"
         >
             <button
                 type="button"
@@ -854,7 +859,17 @@ function DraggableTagPill({ group, variant, sortableContext, onRemove }: Draggab
             >
                 <GripVertical className="w-2.5 h-2.5 opacity-50" />
             </button>
-            <span className="truncate max-w-[150px]">{group.groupTitle || 'Untitled Group'}</span>
+            <span className="truncate max-w-[120px]">{group.groupTitle || 'Untitled Group'}</span>
+            {onRemove && (
+                <button
+                    type="button"
+                    onClick={handleRemoveClick}
+                    className="ml-0.5 p-0.5 rounded-full opacity-50 hover:opacity-100 hover:bg-black/10 transition-opacity"
+                    aria-label={`Remove ${group.groupTitle || 'group'}`}
+                >
+                    <X className="w-2.5 h-2.5" />
+                </button>
+            )}
         </div>
     );
 }

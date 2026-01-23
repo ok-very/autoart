@@ -127,8 +127,15 @@ async def _is_safe_url(url: str) -> tuple[bool, str]:
     # Try to resolve hostname and check if IP is private
     # Use asyncio.to_thread to avoid blocking the event loop
     # Resolve all IPs (both IPv4 and IPv6)
+    # Add timeout to prevent unbounded blocking on slow/stuck DNS resolution
+    DNS_TIMEOUT_SECONDS = 10.0
     try:
-        ips = await asyncio.to_thread(_resolve_all_ips, hostname)
+        ips = await asyncio.wait_for(
+            asyncio.to_thread(_resolve_all_ips, hostname),
+            timeout=DNS_TIMEOUT_SECONDS
+        )
+    except asyncio.TimeoutError:
+        return False, f"DNS resolution timed out after {DNS_TIMEOUT_SECONDS}s for hostname: {hostname}"
     except DNSResolutionError as e:
         # Treat unresolvable hostnames as unsafe to prevent SSRF bypass
         return False, f"DNS resolution failed: {e}"
@@ -224,6 +231,16 @@ def _get_bs4():
                 "Install with: pip install beautifulsoup4 lxml"
             )
     return _bs4
+
+
+def _get_html_parser() -> str:
+    """Determine the best available HTML parser, with fallback."""
+    try:
+        import lxml  # noqa: F401
+        return "lxml"
+    except ImportError:
+        logger.info("lxml not available, falling back to html.parser")
+        return "html.parser"
 
 
 class AutoCollectorRunner(BaseRunner):
@@ -339,8 +356,8 @@ class AutoCollectorRunner(BaseRunner):
             response.raise_for_status()
             html = response.text
             
-            # Parse HTML
-            soup = BeautifulSoup(html, "lxml")
+            # Parse HTML with fallback parser
+            soup = BeautifulSoup(html, _get_html_parser())
             
             # Extract text content (bio)
             bio_text = self._extract_bio_text(soup)
@@ -402,8 +419,8 @@ class AutoCollectorRunner(BaseRunner):
             
             yield RunnerProgress(stage="parsing", message="Parsing page content...", percent=20)
             
-            soup = BeautifulSoup(html, "lxml")
-            
+            soup = BeautifulSoup(html, _get_html_parser())
+
             # Extract bio
             bio_text = self._extract_bio_text(soup)
             if bio_text:
@@ -532,12 +549,13 @@ class AutoCollectorRunner(BaseRunner):
             logger.warning(f"Skipping unsafe image URL {url}: {error_msg}")
             return None
 
+        httpx = _get_httpx()
         try:
             # Use SSRF-protected client for image downloads
             protected_client = SSRFProtectedClient(timeout=self.REQUEST_TIMEOUT)
             response = await protected_client.get(url)
             response.raise_for_status()
-            
+
             # Determine extension from content-type or URL
             content_type = response.headers.get("content-type", "")
             content_type_base = content_type.split(";")[0].strip().lower()
@@ -563,9 +581,22 @@ class AutoCollectorRunner(BaseRunner):
                 artifact_type="image",
                 mime_type=content_type_base or "image/jpeg",
             )
-            
-        except Exception as e:
-            logger.warning(f"Failed to download image {url}: {e}")
+
+        except ValueError as e:
+            # SSRF protection blocked the URL or redirect
+            logger.warning(f"Image URL blocked by SSRF protection {url}: {e}")
+            return None
+        except httpx.HTTPStatusError as e:
+            # HTTP 4xx/5xx errors
+            logger.warning(f"HTTP error downloading image {url}: {e.response.status_code}")
+            return None
+        except httpx.RequestError as e:
+            # Network errors (connection, timeout, etc.)
+            logger.error(f"Network error downloading image {url}: {e}")
+            return None
+        except OSError as e:
+            # Filesystem errors when writing the file
+            logger.error(f"Failed to write image file for {url}: {e}")
             return None
     
     # =========================================================================
@@ -606,6 +637,7 @@ class AutoCollectorRunner(BaseRunner):
 
             def scan_files() -> list[Path]:
                 safe_files = []
+                seen_paths: set[Path] = set()  # Track seen resolved paths to avoid duplicates from symlinks
                 # Iterate using resolved path to ensure consistency with validation
                 for item in resolved_source.rglob("*"):
                     try:
@@ -620,6 +652,10 @@ class AutoCollectorRunner(BaseRunner):
                         resolved_item = item.resolve()
                         # Check if resolved path is within the source directory
                         resolved_item.relative_to(resolved_source)
+                        # Skip if already seen (multiple symlinks to same target)
+                        if resolved_item in seen_paths:
+                            continue
+                        seen_paths.add(resolved_item)
                         safe_files.append(resolved_item)
                     except (ValueError, OSError) as e:
                         # ValueError: Path is outside source_path (symlink escape attempt)
@@ -708,6 +744,7 @@ class AutoCollectorRunner(BaseRunner):
 
         def scan_files() -> list[Path]:
             safe_files = []
+            seen_paths: set[Path] = set()  # Track seen resolved paths to avoid duplicates from symlinks
             # Iterate using resolved path to ensure consistency with validation
             for f in resolved_source.rglob("*"):
                 try:
@@ -722,6 +759,10 @@ class AutoCollectorRunner(BaseRunner):
                     resolved_f = f.resolve()
                     # Check if resolved path is within the source directory
                     resolved_f.relative_to(resolved_source)
+                    # Skip if already seen (multiple symlinks to same target)
+                    if resolved_f in seen_paths:
+                        continue
+                    seen_paths.add(resolved_f)
                     safe_files.append(resolved_f)
                 except (ValueError, OSError) as e:
                     # ValueError: Path is outside source_path (symlink escape attempt)
