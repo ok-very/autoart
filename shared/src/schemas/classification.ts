@@ -14,8 +14,8 @@ import { z } from 'zod';
 // ============================================================================
 
 export const ClassificationOutcomeSchema = z.enum([
-    'FACT_EMITTED',    // Domain event produced
-    'DERIVED_STATE',   // Work lifecycle event only (from status column)
+    'FACT_EMITTED',    // Will emit FACT_RECORDED event during execution (via interpretationPlan)
+    'DERIVED_STATE',   // Work lifecycle event only (from status column, auto-commit)
     'INTERNAL_WORK',   // No events; internal deliberation
     'EXTERNAL_WORK',   // No events; outward-facing work (requests, communications)
     'AMBIGUOUS',       // Needs human review
@@ -37,12 +37,6 @@ export const ClassificationResultSchema = z.object({
 
     /** Human-readable explanation for why this classification was chosen */
     rationale: z.string(),
-
-    /** Events emitted for FACT_EMITTED / DERIVED_STATE outcomes */
-    emittedEvents: z.array(z.object({
-        type: z.string(),
-        payload: z.unknown(),
-    })).optional(),
 
     /** For AMBIGUOUS: possible fact kinds this could be */
     candidates: z.array(z.string()).optional(),

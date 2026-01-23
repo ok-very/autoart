@@ -19,6 +19,30 @@ import { MondayBoardsDrawer } from '../drawer/views/MondayBoardsDrawer';
 import { QuickDeclareModal } from '../drawer/views/QuickDeclareModal';
 import { StartCollectionModal } from '../drawer/views/StartCollectionModal';
 import { IntegrationsSection } from '../../pages/settings/IntegrationsSection';
+import { ClassificationPanel } from '../../workflows/import/panels/ClassificationPanel';
+import type { ImportPlan } from '../../api/hooks/imports';
+
+// Wrapper to adapt drawer props to ClassificationPanel props
+const ClassificationDrawerView = ({
+    sessionId,
+    plan,
+    onResolutionsSaved,
+    onClose
+}: {
+    sessionId: string;
+    plan: ImportPlan;
+    onResolutionsSaved?: (updated: ImportPlan) => void;
+    onClose?: () => void;
+}) => (
+    <ClassificationPanel
+        sessionId={sessionId}
+        plan={plan}
+        onResolutionsSaved={(updated) => {
+            onResolutionsSaved?.(updated);
+            onClose?.();
+        }}
+    />
+);
 
 // Map types to components
 export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
@@ -40,6 +64,7 @@ export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
     'template-library': ProjectLibraryDrawer, // Alias for template library
     'integrations': IntegrationsSection, // Integrations settings modal
     'start-collection': StartCollectionModal, // Export collection start modal
+    'classification': ClassificationDrawerView, // Import classification review panel
 };
 
 
@@ -53,7 +78,7 @@ export function OverlayRegistry() {
 
     // Default size can be overridden per type if needed
     let size: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full' = 'md';
-    if (['create-record', 'view-definition', 'project-library'].includes(type)) size = 'xl';
+    if (['create-record', 'view-definition', 'project-library', 'classification'].includes(type)) size = 'xl';
     if (['create-node', 'add-field', 'clone-project'].includes(type)) size = 'lg';
     if (['confirm-delete'].includes(type)) size = 'sm';
 

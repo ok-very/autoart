@@ -22,6 +22,20 @@ import { getSession, getLatestPlan } from './import-sessions.service.js';
 // CLASSIFICATION GENERATION
 // ============================================================================
 
+type ConfidenceLevel = 'low' | 'medium' | 'high';
+const VALID_CONFIDENCE_LEVELS: Set<string> = new Set(['low', 'medium', 'high']);
+
+/**
+ * Normalize confidence value to a valid ConfidenceLevel.
+ * Returns 'medium' for undefined, null, or unexpected values.
+ */
+function normalizeConfidence(confidence: unknown): ConfidenceLevel {
+    if (typeof confidence === 'string' && VALID_CONFIDENCE_LEVELS.has(confidence)) {
+        return confidence as ConfidenceLevel;
+    }
+    return 'medium';
+}
+
 /**
  * Generate classifications for all items in the plan.
  * Uses the V2 interpretation API to determine outcome based on output kinds.
@@ -80,23 +94,13 @@ export function generateClassifications(items: ImportPlanItem[], definitions: Re
             const fieldValues = plan.outputs.filter((o): o is InterpretationOutput & { kind: 'field_value' } => o.kind === 'field_value');
 
             // Fact candidates → FACT_EMITTED
+            // Note: Actual event emission happens during execution via interpretationPlan.outputs
             if (factCandidates.length > 0) {
-                const emittedEvents = factCandidates.map(fc => ({
-                    type: 'FACT_RECORDED' as const,
-                    payload: {
-                        factKind: fc.factKind,
-                        source: 'csv-import' as const,
-                        confidence: fc.confidence,
-                        ...fc.payload,
-                    },
-                }));
-
                 baseClassification = {
                     itemTempId: item.tempId,
                     outcome: 'FACT_EMITTED' as ClassificationOutcome,
-                    confidence: factCandidates[0].confidence || 'medium',
+                    confidence: normalizeConfidence(factCandidates[0].confidence),
                     rationale: `Matched rule for ${factCandidates[0].factKind}`,
-                    emittedEvents,
                     interpretationPlan: plan,
                 };
             }
@@ -177,11 +181,13 @@ export function generateClassificationsForConnectorItems(
                     };
                 }
                 // Records need schema matching to determine target definition
+                // Use DERIVED_STATE (auto-commit) since connector records have structured data
+                // that doesn't require text interpretation like CSV imports
                 baseClassification = {
                     itemTempId: item.tempId,
-                    outcome: 'FACT_EMITTED' as ClassificationOutcome,
+                    outcome: 'DERIVED_STATE' as ClassificationOutcome,
                     confidence: 'high' as const,
-                    rationale: 'Record from connector - requires schema match',
+                    rationale: 'Record from connector with structured field data',
                 };
                 // Add schema matching only for record types
                 return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
@@ -241,8 +247,8 @@ export function addSchemaMatch(
     fieldRecordings: ImportPlanItem['fieldRecordings'],
     definitions: RecordDefinition[]
 ): ItemClassification {
-    // If no field recordings, return with empty schemaMatch for consistent shape
-    if (!fieldRecordings || fieldRecordings.length === 0) {
+    // If no field recordings or no definitions, return with empty schemaMatch for consistent shape
+    if (!fieldRecordings || fieldRecordings.length === 0 || !definitions || definitions.length === 0) {
         return {
             ...classification,
             schemaMatch: {

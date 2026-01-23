@@ -28,12 +28,6 @@ export interface ItemClassification {
     /** Human-readable explanation for the classification */
     rationale: string;
 
-    /** Events to emit for FACT_EMITTED outcomes */
-    emittedEvents?: Array<{
-        type: string;
-        payload: Record<string, unknown>;
-    }>;
-
     /** Candidate fact kinds for AMBIGUOUS outcomes */
     candidates?: string[];
 

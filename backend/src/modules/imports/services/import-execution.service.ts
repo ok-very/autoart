@@ -241,8 +241,9 @@ async function executePlanViaComposer(
                 return acc;
             }, {} as Record<string, unknown>);
 
-            // Add title as a standard field if not present (convention)
-            if (!recordData.name && !recordData.title) {
+            // Add title as a standard field only if neither name nor title were explicitly set
+            // Use 'in' operator to distinguish between "not set" vs "set to falsy value"
+            if (!('name' in recordData) && !('title' in recordData)) {
                 recordData.title = item.title;
             }
 
@@ -324,19 +325,58 @@ async function executePlanViaComposer(
     // Topological sort: ensure all ancestors are processed before descendants
     // Calculate depth (number of item ancestors) for each item to handle multi-level hierarchies
     const itemDepths = new Map<string, number>();
+    const cycleNodes = new Set<string>(); // Track all nodes involved in cycles
 
-    function getItemDepth(tempId: string, visited: Set<string> = new Set()): number {
+    // Phase 1: Detect all nodes that are part of cycles
+    function detectCycles(tempId: string, path: Set<string>, pathOrder: string[]): void {
+        if (cycleNodes.has(tempId)) return; // Already marked as cycle node
+        if (path.has(tempId)) {
+            // Found a cycle - mark all nodes in the cycle portion of the path
+            const cycleStartIndex = pathOrder.indexOf(tempId);
+            for (let i = cycleStartIndex; i < pathOrder.length; i++) {
+                cycleNodes.add(pathOrder[i]);
+            }
+            cycleNodes.add(tempId);
+            return;
+        }
+
+        const item = itemsByTempId.get(tempId);
+        if (!item || !item.parentTempId || !itemsByTempId.has(item.parentTempId)) {
+            return; // Root node or no parent item
+        }
+
+        path.add(tempId);
+        pathOrder.push(tempId);
+        detectCycles(item.parentTempId, path, pathOrder);
+        path.delete(tempId);
+        pathOrder.pop();
+    }
+
+    // Run cycle detection on all items
+    for (const item of plan.items) {
+        detectCycles(item.tempId, new Set(), []);
+    }
+
+    if (cycleNodes.size > 0) {
+        logger.warn({ cycleNodes: Array.from(cycleNodes) }, '[imports.service] Cycles detected in item parent chains - treating cycle nodes as roots');
+    }
+
+    // Phase 2: Calculate depths (cycle nodes treated as depth 0)
+    function getItemDepth(tempId: string): number {
         // Memoization
         if (itemDepths.has(tempId)) return itemDepths.get(tempId)!;
 
-        // Cycle detection
-        if (visited.has(tempId)) {
-            logger.warn({ tempId }, '[imports.service] Cycle detected in item parent chain');
+        // Cycle nodes are treated as roots (depth 0)
+        if (cycleNodes.has(tempId)) {
+            itemDepths.set(tempId, 0);
             return 0;
         }
 
         const item = itemsByTempId.get(tempId);
-        if (!item) return 0;
+        if (!item) {
+            itemDepths.set(tempId, 0);
+            return 0;
+        }
 
         // If no parent or parent is a container (not an item), depth is 0
         if (!item.parentTempId || !itemsByTempId.has(item.parentTempId)) {
@@ -345,8 +385,7 @@ async function executePlanViaComposer(
         }
 
         // Parent is another item - depth is parent's depth + 1
-        visited.add(tempId);
-        const parentDepth = getItemDepth(item.parentTempId, visited);
+        const parentDepth = getItemDepth(item.parentTempId);
         const depth = parentDepth + 1;
         itemDepths.set(tempId, depth);
         return depth;

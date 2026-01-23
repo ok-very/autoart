@@ -85,8 +85,20 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
     const hasUnresolved = hasUnresolvedClassifications(planData);
     const newStatus = hasUnresolved ? 'needs_review' : 'planned';
 
-    // Use transaction to ensure plan insert and session status update are atomic
+    // Use transaction with row-level locking to prevent concurrent plan creation
     await db.transaction().execute(async (trx) => {
+        // Lock the session row to prevent concurrent generatePlan calls
+        const lockedSession = await trx
+            .selectFrom('import_sessions')
+            .select('id')
+            .where('id', '=', sessionId)
+            .forUpdate()
+            .executeTakeFirst();
+
+        if (!lockedSession) {
+            throw new Error(`Session ${sessionId} not found during plan creation`);
+        }
+
         await trx
             .insertInto('import_plans')
             .values({
@@ -258,8 +270,20 @@ export async function generatePlanFromConnector(
         ? 'needs_review'
         : 'planned';
 
-    // Use transaction to ensure plan insert and session status update are atomic
+    // Use transaction with row-level locking to prevent concurrent plan creation
     await db.transaction().execute(async (trx) => {
+        // Lock the session row to prevent concurrent generatePlan calls
+        const lockedSession = await trx
+            .selectFrom('import_sessions')
+            .select('id')
+            .where('id', '=', sessionId)
+            .forUpdate()
+            .executeTakeFirst();
+
+        if (!lockedSession) {
+            throw new Error(`Session ${sessionId} not found during plan creation`);
+        }
+
         await trx
             .insertInto('import_plans')
             .values({

@@ -50,6 +50,14 @@ export async function createSession(params: {
         throw new Error(`Unsupported parser: ${params.parserName}. Supported parsers: ${Object.keys(PARSERS).join(', ')}`);
     }
 
+    // Validate rawData is a string before computing byte length
+    if (params.rawData === null || params.rawData === undefined) {
+        throw new Error('rawData is required and cannot be null or undefined');
+    }
+    if (typeof params.rawData !== 'string') {
+        throw new Error(`rawData must be a string, received ${typeof params.rawData}`);
+    }
+
     // Validate rawData size to prevent DoS (use byte length for accuracy)
     const rawDataByteLength = Buffer.byteLength(params.rawData, 'utf8');
     if (rawDataByteLength > MAX_RAW_DATA_SIZE) {
@@ -134,15 +142,22 @@ export async function getSession(id: string) {
         .executeTakeFirst();
 }
 
+// Maximum allowed limit for session queries to prevent resource exhaustion
+const MAX_LIST_LIMIT = 100;
+const DEFAULT_LIST_LIMIT = 20;
+
 export async function listSessions(params: {
     status?: 'pending' | 'planned' | 'needs_review' | 'executing' | 'completed' | 'failed';
     limit?: number;
 } = {}) {
+    // Cap the limit to prevent excessive result sets
+    const effectiveLimit = Math.min(params.limit ?? DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT);
+
     let query = db
         .selectFrom('import_sessions')
         .selectAll()
         .orderBy('created_at', 'desc')
-        .limit(params.limit ?? 20);
+        .limit(effectiveLimit);
 
     if (params.status) {
         query = query.where('status', '=', params.status);

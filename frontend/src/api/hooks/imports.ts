@@ -55,7 +55,6 @@ export interface ItemClassification {
     outcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'EXTERNAL_WORK' | 'AMBIGUOUS' | 'UNCLASSIFIED';
     confidence: 'high' | 'medium' | 'low';
     rationale: string;
-    emittedEvents?: Array<{ type: string; payload: unknown }>;
     candidates?: string[];
     resolution?: {
         resolvedOutcome: string;
