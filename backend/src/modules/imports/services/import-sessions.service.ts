@@ -11,8 +11,8 @@ import { MondayCSVParser } from '../parsers/monday-csv-parser.js';
 import { GenericCSVParser } from '../parsers/generic-csv-parser.js';
 import type { ImportPlanContainer, ImportPlanItem } from '../types.js';
 
-// Maximum allowed size for connector config JSON (100KB)
-const MAX_CONNECTOR_CONFIG_SIZE = 100 * 1024;
+// Maximum allowed size for config JSON (100KB) - applies to both parser config and connector config
+const MAX_CONFIG_SIZE = 100 * 1024;
 
 // Maximum allowed size for raw data (10MB) - prevents DoS via large payloads
 const MAX_RAW_DATA_SIZE = 10 * 1024 * 1024;
@@ -65,6 +65,12 @@ export async function createSession(params: {
         throw new Error('Config contains non-serializable values (e.g., BigInt, circular references, or functions)');
     }
 
+    // Validate config size to prevent database bloat
+    const configByteLength = Buffer.byteLength(configJson, 'utf8');
+    if (configByteLength > MAX_CONFIG_SIZE) {
+        throw new Error(`Config exceeds maximum allowed size (${MAX_CONFIG_SIZE / 1024}KB)`);
+    }
+
     const session = await db
         .insertInto('import_sessions')
         .values({
@@ -98,17 +104,18 @@ export async function createConnectorSession(params: {
     // Use Buffer.byteLength for accurate byte counting (handles multi-byte UTF-8 characters)
     const configJson = JSON.stringify(params.connectorConfig);
     const configByteLength = Buffer.byteLength(configJson, 'utf8');
-    if (configByteLength > MAX_CONNECTOR_CONFIG_SIZE) {
-        throw new Error(`Connector config exceeds maximum allowed size (${MAX_CONNECTOR_CONFIG_SIZE} bytes)`);
+    if (configByteLength > MAX_CONFIG_SIZE) {
+        throw new Error(`Connector config exceeds maximum allowed size (${MAX_CONFIG_SIZE / 1024}KB)`);
     }
 
     // Store connector config as parser_config, use connectorType as parser_name
+    // Reuse configJson from validation to avoid redundant stringify
     const session = await db
         .insertInto('import_sessions')
         .values({
             parser_name: `connector:${params.connectorType}`,
             raw_data: '', // No raw data for connector imports
-            parser_config: JSON.stringify(params.connectorConfig),
+            parser_config: configJson,
             target_project_id: params.targetProjectId ?? null,
             status: 'pending',
             created_by: params.userId ?? null,
@@ -144,6 +151,14 @@ export async function listSessions(params: {
     return query.execute();
 }
 
+// Custom error class for plan data validation errors (avoids message text matching)
+class PlanDataError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'PlanDataError';
+    }
+}
+
 export async function getLatestPlan(sessionId: string): Promise<import('../types.js').ImportPlan | null> {
     const planRow = await db
         .selectFrom('import_plans')
@@ -158,7 +173,7 @@ export async function getLatestPlan(sessionId: string): Promise<import('../types
         // Handle null/undefined/primitive values before parsing
         if (planRow.plan_data === null || planRow.plan_data === undefined) {
             logger.error({ sessionId }, '[import-sessions] plan_data is null or undefined');
-            throw new Error(`Missing plan data for session ${sessionId}`);
+            throw new PlanDataError(`Missing plan data for session ${sessionId}`);
         }
 
         const planData = typeof planRow.plan_data === 'string'
@@ -168,18 +183,18 @@ export async function getLatestPlan(sessionId: string): Promise<import('../types
         // Validate that planData is an object with required ImportPlan fields
         if (typeof planData !== 'object' || planData === null) {
             logger.error({ sessionId, planDataType: typeof planData }, '[import-sessions] plan_data is not an object');
-            throw new Error(`Invalid plan data format for session ${sessionId}`);
+            throw new PlanDataError(`Invalid plan data format for session ${sessionId}`);
         }
 
         if (!Array.isArray(planData.containers) || !Array.isArray(planData.items) || !Array.isArray(planData.classifications)) {
             logger.error({ sessionId }, '[import-sessions] plan_data missing required arrays');
-            throw new Error(`Incomplete plan data for session ${sessionId}`);
+            throw new PlanDataError(`Incomplete plan data for session ${sessionId}`);
         }
 
         return planData as import('../types.js').ImportPlan;
     } catch (err) {
-        // Re-throw our own errors
-        if (err instanceof Error && err.message.includes('session')) {
+        // Re-throw our validation errors (use error type, not message text)
+        if (err instanceof PlanDataError) {
             throw err;
         }
         logger.error({ sessionId, error: err }, '[import-sessions] Failed to parse plan_data JSON');
