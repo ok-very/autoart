@@ -94,13 +94,15 @@ function formatSampleValue(val: unknown): string {
 }
 
 function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCardProps) {
-    const roleMeta = ROLE_METADATA[column.semanticRole];
     const hasSamples = Array.isArray(column.sampleValues) && column.sampleValues.length > 0;
 
     // Handle invalid semantic roles by providing a fallback value
     // If the current role is not in the valid options, fall back to 'custom'
     const isValidRole = VALID_SEMANTIC_ROLES.has(column.semanticRole);
     const effectiveRole = isValidRole ? column.semanticRole : 'custom';
+
+    // Use effectiveRole for metadata lookup to ensure we always get valid metadata
+    const roleMeta = ROLE_METADATA[effectiveRole];
 
     // If current role is invalid, add it to options temporarily so user can see and change it
     const selectOptions = isValidRole
@@ -174,7 +176,7 @@ function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCard
             {/* Footer: description + confidence */}
             <div className="px-4 py-2 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-4">
                 <span className="text-xs text-slate-500 truncate" title={roleMeta?.description}>
-                    {roleMeta?.description || (isValidRole ? 'No description' : 'Unknown role - please reassign')}
+                    {!isValidRole ? 'Unknown role - please reassign' : (roleMeta?.description || 'No description')}
                 </span>
                 {column.inferenceSource !== 'manual' && column.inferenceConfidence !== undefined && (
                     <Badge variant={getConfidenceVariant(column.inferenceConfidence)} size="xs">

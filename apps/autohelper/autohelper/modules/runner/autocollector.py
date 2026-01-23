@@ -46,12 +46,20 @@ PRIVATE_IP_RANGES = [
 ]
 
 
+class DNSResolutionError(Exception):
+    """Raised when DNS resolution fails for a hostname."""
+    pass
+
+
 def _resolve_all_ips(hostname: str) -> list[str]:
     """
     Resolve hostname to all IP addresses (both IPv4 and IPv6).
 
     Returns:
-        List of IP address strings (empty list if resolution fails)
+        List of IP address strings
+
+    Raises:
+        DNSResolutionError: If hostname cannot be resolved (DNS failure, timeout, etc.)
     """
     ips = []
     try:
@@ -61,13 +69,13 @@ def _resolve_all_ips(hostname: str) -> list[str]:
             ip_str = result[4][0]
             if ip_str not in ips:
                 ips.append(ip_str)
-    except (socket.gaierror, socket.herror, socket.timeout, OSError):
-        # Handle all DNS/network resolution errors gracefully
+    except (socket.gaierror, socket.herror, socket.timeout, OSError) as e:
+        # DNS/network resolution errors should be treated as unsafe
         # - gaierror: address-related errors
         # - herror: legacy host errors
         # - timeout: DNS resolution timeout
         # - OSError: other system-level network errors
-        pass
+        raise DNSResolutionError(f"Failed to resolve hostname '{hostname}': {e}") from e
     return ips
 
 
@@ -119,11 +127,19 @@ async def _is_safe_url(url: str) -> tuple[bool, str]:
     # Try to resolve hostname and check if IP is private
     # Use asyncio.to_thread to avoid blocking the event loop
     # Resolve all IPs (both IPv4 and IPv6)
-    ips = await asyncio.to_thread(_resolve_all_ips, hostname)
-    if ips:
-        is_private, error_msg = _check_ips_against_private_ranges(ips)
-        if is_private:
-            return False, error_msg
+    try:
+        ips = await asyncio.to_thread(_resolve_all_ips, hostname)
+    except DNSResolutionError as e:
+        # Treat unresolvable hostnames as unsafe to prevent SSRF bypass
+        return False, f"DNS resolution failed: {e}"
+
+    if not ips:
+        # No IPs resolved (shouldn't happen if no exception, but be defensive)
+        return False, f"No IP addresses resolved for hostname: {hostname}"
+
+    is_private, error_msg = _check_ips_against_private_ranges(ips)
+    if is_private:
+        return False, error_msg
 
     return True, ""
 
@@ -585,12 +601,13 @@ class AutoCollectorRunner(BaseRunner):
             await asyncio.to_thread(output_folder.mkdir, parents=True, exist_ok=True)
 
             # Offload blocking rglob to thread pool
-            # Resolve source_path to absolute for symlink validation
+            # Resolve source_path to absolute for consistent symlink validation
             resolved_source = source_path.resolve()
 
             def scan_files() -> list[Path]:
                 safe_files = []
-                for item in source_path.rglob("*"):
+                # Iterate using resolved path to ensure consistency with validation
+                for item in resolved_source.rglob("*"):
                     try:
                         if not item.is_file():
                             continue
@@ -598,12 +615,12 @@ class AutoCollectorRunner(BaseRunner):
                         # Skip files we can't access (permission errors, etc.)
                         logger.warning(f"Skipping inaccessible file {item}: {e}")
                         continue
-                    # Resolve symlinks and verify the target is within source_path
+                    # Resolve symlinks and verify the target is within resolved source
                     try:
                         resolved_item = item.resolve()
                         # Check if resolved path is within the source directory
                         resolved_item.relative_to(resolved_source)
-                        safe_files.append(item)
+                        safe_files.append(resolved_item)
                     except (ValueError, OSError) as e:
                         # ValueError: Path is outside source_path (symlink escape attempt)
                         # OSError: Could not resolve path
@@ -626,7 +643,8 @@ class AutoCollectorRunner(BaseRunner):
                 mime_type, _ = mimetypes.guess_type(str(item))
 
                 # Copy file to output_folder preserving relative structure
-                rel_path = item.relative_to(source_path)
+                # Use resolved_source for relative path since items are now resolved paths
+                rel_path = item.relative_to(resolved_source)
                 dest_path = output_folder / rel_path
                 await asyncio.to_thread(dest_path.parent.mkdir, parents=True, exist_ok=True)
                 await asyncio.to_thread(shutil.copy2, item, dest_path)
@@ -685,12 +703,13 @@ class AutoCollectorRunner(BaseRunner):
         await asyncio.to_thread(output_folder.mkdir, parents=True, exist_ok=True)
 
         # Offload blocking rglob to thread pool
-        # Resolve source_path to absolute for symlink validation
+        # Resolve source_path to absolute for consistent symlink validation
         resolved_source = await asyncio.to_thread(source_path.resolve)
 
         def scan_files() -> list[Path]:
             safe_files = []
-            for f in source_path.rglob("*"):
+            # Iterate using resolved path to ensure consistency with validation
+            for f in resolved_source.rglob("*"):
                 try:
                     if not f.is_file():
                         continue
@@ -698,12 +717,12 @@ class AutoCollectorRunner(BaseRunner):
                     # Skip files we can't access (permission errors, etc.)
                     logger.warning(f"Skipping inaccessible file {f}: {e}")
                     continue
-                # Resolve symlinks and verify the target is within source_path
+                # Resolve symlinks and verify the target is within resolved source
                 try:
                     resolved_f = f.resolve()
                     # Check if resolved path is within the source directory
                     resolved_f.relative_to(resolved_source)
-                    safe_files.append(f)
+                    safe_files.append(resolved_f)
                 except (ValueError, OSError) as e:
                     # ValueError: Path is outside source_path (symlink escape attempt)
                     # OSError: Could not resolve path
@@ -743,7 +762,8 @@ class AutoCollectorRunner(BaseRunner):
                     artifact_type = "file"
 
                 # Copy file to output_folder preserving relative structure
-                rel_path = item.relative_to(source_path)
+                # Use resolved_source for relative path since items are now resolved paths
+                rel_path = item.relative_to(resolved_source)
                 dest_path = output_folder / rel_path
                 await asyncio.to_thread(dest_path.parent.mkdir, parents=True, exist_ok=True)
                 await asyncio.to_thread(shutil.copy2, item, dest_path)

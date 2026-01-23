@@ -260,7 +260,9 @@ function getRoleBadgeClass(role: MondayGroupRole): string {
         case 'stage':
             return 'type-badge-ignore';
         default:
-            return 'type-badge-subprocess';
+            // Unknown roles get a distinct warning style to indicate invalid/new role
+            console.warn(`Unknown group role: ${role}`);
+            return 'type-badge-unknown';
     }
 }
 
@@ -349,6 +351,9 @@ function StageDropZone({ stageKind, groups, onGroupUpdate, onRoleChange, allGrou
         data: { type: 'stage', stageKind }
     });
 
+    // Defensive null guard for groups array
+    const safeGroups = groups ?? [];
+
     return (
         <div
             ref={setNodeRef}
@@ -369,17 +374,17 @@ function StageDropZone({ stageKind, groups, onGroupUpdate, onRoleChange, allGrou
                 {getStageKindLabel(stageKind)}
             </Text>
 
-            {groups.length === 0 ? (
+            {safeGroups.length === 0 ? (
                 <div className="py-2 px-3 text-xs text-slate-400 italic border border-dashed border-slate-300 rounded bg-white/50">
                     ↓ Drop items here
                 </div>
             ) : (
                 <Stack gap="xs">
                     <SortableContext
-                        items={groups.map(g => getSortableId(g.groupId, `stage-${stageKind}`))}
+                        items={safeGroups.map(g => getSortableId(g.groupId, `stage-${stageKind}`))}
                         strategy={verticalListSortingStrategy}
                     >
-                        {groups.map((group) => (
+                        {safeGroups.map((group) => (
                             <CollapsibleGroupCard
                                 key={group.groupId}
                                 group={group}
@@ -1007,7 +1012,8 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
                 >
                     <Stack gap="sm">
                         {SECTIONS.map((section) => {
-                            const sectionGroups = groupedGroups[section.id];
+                            // Defensive null guard for section groups
+                            const sectionGroups = groupedGroups[section.id] ?? [];
                             return (
                                 <DroppableSection
                                     key={section.id}
