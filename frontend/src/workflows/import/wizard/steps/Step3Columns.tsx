@@ -15,9 +15,12 @@ import {
 } from '@autoart/ui';
 import { useMondayBoardConfigs, useUpdateMondayColumnConfigs } from '../../../../api/hooks/monday';
 import { useGenerateImportPlan, type ImportSession, type ImportPlan } from '../../../../api/hooks/imports';
-import { MondayColumnConfig } from '../../../../api/types/monday';
+import { MondayColumnConfig, MondayColumnSemanticRole } from '../../../../api/types/monday';
 import { ImportPreviewDrawer } from '../components/ImportPreviewDrawer';
 import { ROLE_METADATA, SEMANTIC_ROLE_OPTIONS } from '../constants/monday-roles';
+
+// Valid semantic roles for type safety
+const VALID_SEMANTIC_ROLES = new Set<string>(Object.keys(ROLE_METADATA));
 
 interface StepProps {
     onNext: () => void;
@@ -127,8 +130,8 @@ function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCard
                     <Select
                         value={column.semanticRole}
                         onChange={(val) => {
-                            if (val) {
-                                onUpdate(boardConfigId, workspaceId, column.columnId, { semanticRole: val });
+                            if (val && VALID_SEMANTIC_ROLES.has(val)) {
+                                onUpdate(boardConfigId, workspaceId, column.columnId, { semanticRole: val as MondayColumnSemanticRole });
                             }
                         }}
                         data={SEMANTIC_ROLE_OPTIONS}

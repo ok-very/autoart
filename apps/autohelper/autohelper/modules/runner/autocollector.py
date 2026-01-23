@@ -9,6 +9,7 @@ import hashlib
 import ipaddress
 import mimetypes
 import re
+import shutil
 import socket
 import uuid
 from pathlib import Path
@@ -87,6 +88,91 @@ async def _is_safe_url(url: str) -> tuple[bool, str]:
 
     except Exception as e:
         return False, f"URL validation error: {e}"
+
+
+def _is_safe_url_sync(url: str) -> tuple[bool, str]:
+    """
+    Synchronous version of URL validation for use in redirect hooks.
+
+    Returns:
+        Tuple of (is_safe, error_message)
+    """
+    try:
+        parsed = urlparse(url)
+
+        # Only allow http/https
+        if parsed.scheme not in ("http", "https"):
+            return False, f"Unsupported URL scheme: {parsed.scheme}"
+
+        hostname = parsed.hostname
+        if not hostname:
+            return False, "Invalid URL: no hostname"
+
+        # Check blocked hostnames
+        hostname_lower = hostname.lower()
+        if hostname_lower in BLOCKED_HOSTNAMES:
+            return False, f"Blocked hostname: {hostname}"
+
+        # Try to resolve hostname and check if IP is private
+        try:
+            ip_str = socket.gethostbyname(hostname)
+            ip = ipaddress.ip_address(ip_str)
+
+            # Check against private ranges
+            for network in PRIVATE_IP_RANGES:
+                if ip in network:
+                    return False, f"URL resolves to private/internal IP: {ip_str}"
+        except socket.gaierror:
+            # DNS resolution failed
+            pass
+
+        return True, ""
+
+    except Exception as e:
+        return False, f"URL validation error: {e}"
+
+
+class SSRFProtectedClient:
+    """HTTP client wrapper that validates redirect URLs for SSRF protection."""
+
+    def __init__(self, timeout: float):
+        self.timeout = timeout
+
+    async def get(self, url: str) -> "httpx.Response":
+        """Fetch URL with SSRF protection on redirects."""
+        httpx = _get_httpx()
+
+        async with httpx.AsyncClient(
+            timeout=self.timeout,
+            follow_redirects=False,  # Handle redirects manually
+        ) as client:
+            max_redirects = 10
+            current_url = url
+
+            for _ in range(max_redirects):
+                response = await client.get(current_url)
+
+                # Check if this is a redirect
+                if response.status_code in (301, 302, 303, 307, 308):
+                    redirect_url = response.headers.get("location")
+                    if not redirect_url:
+                        raise ValueError("Redirect response missing Location header")
+
+                    # Make absolute URL if relative
+                    redirect_url = urljoin(current_url, redirect_url)
+
+                    # Validate redirect URL for SSRF
+                    is_safe, error_msg = _is_safe_url_sync(redirect_url)
+                    if not is_safe:
+                        raise ValueError(f"Unsafe redirect blocked: {error_msg}")
+
+                    current_url = redirect_url
+                    continue
+
+                # Not a redirect, return response
+                return response
+
+            raise ValueError(f"Too many redirects (max {max_redirects})")
 
 # Lazy imports for optional dependencies
 _httpx = None
@@ -222,7 +308,6 @@ class AutoCollectorRunner(BaseRunner):
                 error=f"URL validation failed: {error_msg}",
             )
 
-        httpx = _get_httpx()
         BeautifulSoup = _get_bs4()
 
         artifacts: list[ArtifactRef] = []
@@ -231,11 +316,11 @@ class AutoCollectorRunner(BaseRunner):
             # Ensure output folder exists
             output_folder.mkdir(parents=True, exist_ok=True)
 
-            # Fetch the page
-            async with httpx.AsyncClient(timeout=self.REQUEST_TIMEOUT) as client:
-                response = await client.get(url, follow_redirects=True)
-                response.raise_for_status()
-                html = response.text
+            # Fetch the page with SSRF-protected client
+            protected_client = SSRFProtectedClient(timeout=self.REQUEST_TIMEOUT)
+            response = await protected_client.get(url)
+            response.raise_for_status()
+            html = response.text
             
             # Parse HTML
             soup = BeautifulSoup(html, "lxml")
@@ -285,18 +370,18 @@ class AutoCollectorRunner(BaseRunner):
             yield RunnerProgress(stage="error", message=f"URL validation failed: {error_msg}")
             return
 
-        httpx = _get_httpx()
         BeautifulSoup = _get_bs4()
 
         yield RunnerProgress(stage="connecting", message=f"Fetching {url}...", percent=5)
-        
+
         try:
             output_folder.mkdir(parents=True, exist_ok=True)
-            
-            async with httpx.AsyncClient(timeout=self.REQUEST_TIMEOUT) as client:
-                response = await client.get(url, follow_redirects=True)
-                response.raise_for_status()
-                html = response.text
+
+            # Fetch the page with SSRF-protected client
+            protected_client = SSRFProtectedClient(timeout=self.REQUEST_TIMEOUT)
+            response = await protected_client.get(url)
+            response.raise_for_status()
+            html = response.text
             
             yield RunnerProgress(stage="parsing", message="Parsing page content...", percent=20)
             
@@ -312,18 +397,18 @@ class AutoCollectorRunner(BaseRunner):
             # Get image URLs
             image_urls = self._extract_image_urls(soup, url)
             total_images = min(len(image_urls), self.MAX_IMAGES)
-            
+
             yield RunnerProgress(
                 stage="images",
                 message=f"Found {total_images} images to download",
                 percent=35,
             )
-            
-            # Download images with progress
-            async with httpx.AsyncClient(timeout=self.REQUEST_TIMEOUT) as client:
+
+            # Download images with progress (skip if no images found)
+            if total_images > 0:
                 for i, img_url in enumerate(image_urls[:self.MAX_IMAGES]):
                     try:
-                        await self._download_single_image(client, img_url, output_folder, i)
+                        await self._download_single_image(None, img_url, output_folder, i)
                         progress = 35 + int((i + 1) / total_images * 60)
                         yield RunnerProgress(
                             stage="downloading",
@@ -405,18 +490,16 @@ class AutoCollectorRunner(BaseRunner):
         context_id: str | None,
     ) -> list[ArtifactRef]:
         """Download images to output folder."""
-        httpx = _get_httpx()
         artifacts = []
-        
-        async with httpx.AsyncClient(timeout=self.REQUEST_TIMEOUT) as client:
-            for i, url in enumerate(image_urls[:self.MAX_IMAGES]):
-                try:
-                    artifact = await self._download_single_image(client, url, output_folder, i)
-                    if artifact:
-                        artifacts.append(artifact)
-                except Exception as e:
-                    logger.warning(f"Failed to download {url}: {e}")
-        
+
+        for i, url in enumerate(image_urls[:self.MAX_IMAGES]):
+            try:
+                artifact = await self._download_single_image(None, url, output_folder, i)
+                if artifact:
+                    artifacts.append(artifact)
+            except Exception as e:
+                logger.warning(f"Failed to download {url}: {e}")
+
         return artifacts
     
     async def _download_single_image(
@@ -426,9 +509,17 @@ class AutoCollectorRunner(BaseRunner):
         output_folder: Path,
         index: int,
     ) -> ArtifactRef | None:
-        """Download a single image."""
+        """Download a single image with SSRF protection on redirects."""
+        # Validate initial image URL for SSRF protection
+        is_safe, error_msg = await _is_safe_url(url)
+        if not is_safe:
+            logger.warning(f"Skipping unsafe image URL {url}: {error_msg}")
+            return None
+
         try:
-            response = await client.get(url, follow_redirects=True)
+            # Use SSRF-protected client for image downloads
+            protected_client = SSRFProtectedClient(timeout=self.REQUEST_TIMEOUT)
+            response = await protected_client.get(url)
             response.raise_for_status()
             
             # Determine extension from content-type or URL
@@ -483,6 +574,9 @@ class AutoCollectorRunner(BaseRunner):
         artifacts: list[ArtifactRef] = []
 
         try:
+            # Ensure output folder exists
+            await asyncio.to_thread(output_folder.mkdir, parents=True, exist_ok=True)
+
             # Offload blocking rglob to thread pool
             def scan_files() -> list[Path]:
                 return [item for item in source_path.rglob("*") if item.is_file()]
@@ -501,9 +595,15 @@ class AutoCollectorRunner(BaseRunner):
 
                 mime_type, _ = mimetypes.guess_type(str(item))
 
+                # Copy file to output_folder preserving relative structure
+                rel_path = item.relative_to(source_path)
+                dest_path = output_folder / rel_path
+                await asyncio.to_thread(dest_path.parent.mkdir, parents=True, exist_ok=True)
+                await asyncio.to_thread(shutil.copy2, item, dest_path)
+
                 artifacts.append(ArtifactRef(
                     ref_id=str(uuid.uuid4()),
-                    path=str(item),
+                    path=str(dest_path),
                     artifact_type=artifact_type,
                     mime_type=mime_type,
                 ))
@@ -543,6 +643,17 @@ class AutoCollectorRunner(BaseRunner):
             )
             return
 
+        is_dir = await asyncio.to_thread(source_path.is_dir)
+        if not is_dir:
+            yield RunnerProgress(
+                stage="error",
+                message=f"Source path is not a directory: {source_path}",
+            )
+            return
+
+        # Ensure output folder exists
+        await asyncio.to_thread(output_folder.mkdir, parents=True, exist_ok=True)
+
         # Offload blocking rglob to thread pool
         def scan_files() -> list[Path]:
             return [f for f in source_path.rglob("*") if f.is_file()]
@@ -565,8 +676,28 @@ class AutoCollectorRunner(BaseRunner):
             )
             return
 
-        # Process files
+        # Process files - copy to output folder and create artifact references
+        artifacts_collected = 0
         for i, item in enumerate(files):
+            try:
+                # Determine artifact type from extension
+                ext = item.suffix.lower()
+                if ext in self.SUPPORTED_IMAGE_EXTENSIONS:
+                    artifact_type = "image"
+                elif ext in {".txt", ".md", ".doc", ".docx", ".pdf"}:
+                    artifact_type = "document"
+                else:
+                    artifact_type = "file"
+
+                # Copy file to output_folder preserving relative structure
+                rel_path = item.relative_to(source_path)
+                dest_path = output_folder / rel_path
+                await asyncio.to_thread(dest_path.parent.mkdir, parents=True, exist_ok=True)
+                await asyncio.to_thread(shutil.copy2, item, dest_path)
+                artifacts_collected += 1
+            except Exception as e:
+                logger.warning(f"Failed to copy {item}: {e}")
+
             progress = 30 + int((i + 1) / total * 65)
             if i % 10 == 0:  # Update every 10 files
                 yield RunnerProgress(
@@ -578,6 +709,6 @@ class AutoCollectorRunner(BaseRunner):
 
         yield RunnerProgress(
             stage="complete",
-            message=f"Collected {total} files",
+            message=f"Collected {artifacts_collected} files",
             percent=100,
         )

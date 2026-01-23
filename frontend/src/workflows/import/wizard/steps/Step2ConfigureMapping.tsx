@@ -626,6 +626,7 @@ function CollapsibleGroupCard({ group, sectionId, onUpdate, onRoleChange, allGro
                         {...attributes}
                         {...listeners}
                         className="cursor-grab text-slate-300 hover:text-slate-500 shrink-0"
+                        aria-label={`Drag to reorder ${group.groupTitle}`}
                     >
                         <GripVertical className="w-3 h-3" />
                     </button>
@@ -823,6 +824,7 @@ function DraggableTagPill({ group, variant, onRemove }: DraggableTagPillProps) {
                 {...attributes}
                 {...listeners}
                 className="cursor-grab"
+                aria-label={`Drag to reorder ${group.groupTitle}`}
             >
                 <GripVertical className="w-2.5 h-2.5 opacity-50" />
             </button>

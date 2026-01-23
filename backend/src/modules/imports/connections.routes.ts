@@ -197,6 +197,31 @@ export async function connectionsRoutes(app: FastifyInstance) {
 </html>`;
                 return reply.type('text/html').status(500).send(errorHtml);
             }
+
+            // Validate CLIENT_ORIGIN is a valid HTTPS URL format
+            try {
+                const originUrl = new URL(targetOrigin);
+                if (originUrl.protocol !== 'https:' && originUrl.protocol !== 'http:') {
+                    throw new Error('Invalid protocol');
+                }
+                // Ensure no path/query/fragment that could be used for injection
+                if (originUrl.pathname !== '/' || originUrl.search || originUrl.hash) {
+                    console.warn('Monday OAuth callback: CLIENT_ORIGIN should be just origin (no path/query/hash)');
+                }
+            } catch {
+                console.error('Monday OAuth callback: CLIENT_ORIGIN is not a valid URL:', targetOrigin);
+                const errorHtml = `
+<!DOCTYPE html>
+<html>
+<head><title>Monday OAuth Error</title></head>
+<body>
+<h1>Configuration Error</h1>
+<p>OAuth callback cannot complete: CLIENT_ORIGIN is misconfigured.</p>
+<p>Please contact your administrator.</p>
+</body>
+</html>`;
+                return reply.type('text/html').status(500).send(errorHtml);
+            }
             const html = `
 <!DOCTYPE html>
 <html>

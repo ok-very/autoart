@@ -516,7 +516,18 @@ function generateClassificationsForConnectorItems(
         let baseClassification: ItemClassification;
 
         switch (item.entityType) {
-            case 'record':
+            case 'record': {
+                // Records with no field data should be marked as needing review
+                const hasFieldData = item.fieldRecordings && item.fieldRecordings.length > 0;
+                if (!hasFieldData) {
+                    baseClassification = {
+                        itemTempId: item.tempId,
+                        outcome: 'AMBIGUOUS' as ClassificationOutcome,
+                        confidence: 'low' as const,
+                        rationale: 'Record has no field data - cannot match to schema',
+                    };
+                    return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
+                }
                 // Records need schema matching to determine target definition
                 baseClassification = {
                     itemTempId: item.tempId,
@@ -526,6 +537,7 @@ function generateClassificationsForConnectorItems(
                 };
                 // Add schema matching only for record types
                 return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
+            }
 
             case 'template':
                 // Templates are auto-committed, no schema match needed
