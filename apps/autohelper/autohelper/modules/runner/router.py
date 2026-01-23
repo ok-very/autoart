@@ -59,19 +59,39 @@ async def invoke_runner(request: InvokeRequest) -> RunnerResult:
 async def invoke_runner_stream(request: InvokeRequest) -> StreamingResponse:
     """
     Invoke a runner and stream progress updates via SSE.
-    
+
     Streams Server-Sent Events with progress updates until completion.
     """
     logger.info(f"Streaming runner: {request.runner_id}")
-    
+
     service = get_runner_service()
-    
+
     async def event_generator():
-        async for progress in service.invoke_stream(request):
-            # Format as SSE
-            data = json.dumps(progress.model_dump())
-            yield f"data: {data}\n\n"
-    
+        try:
+            async for progress in service.invoke_stream(request):
+                try:
+                    # Format as SSE
+                    data = json.dumps(progress.model_dump())
+                    yield f"data: {data}\n\n"
+                except (TypeError, ValueError) as e:
+                    # Handle JSON serialization errors
+                    logger.warning(f"Failed to serialize progress: {e}")
+                    error_data = json.dumps({
+                        "stage": "error",
+                        "message": f"Serialization error: {str(e)}",
+                        "percent": None,
+                    })
+                    yield f"data: {error_data}\n\n"
+        except Exception as e:
+            # Handle unexpected errors during streaming
+            logger.exception(f"Error during streaming: {e}")
+            error_data = json.dumps({
+                "stage": "error",
+                "message": f"Stream error: {str(e)}",
+                "percent": None,
+            })
+            yield f"data: {error_data}\n\n"
+
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",

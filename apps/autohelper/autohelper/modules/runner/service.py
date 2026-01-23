@@ -2,6 +2,7 @@
 Runner service - orchestrates runner execution.
 """
 
+import asyncio
 import time
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -56,12 +57,13 @@ class RunnerService:
     Service for managing and executing runners.
     Maintains a registry of available runners and tracks execution state.
     """
-    
+
     def __init__(self) -> None:
         self._runners: dict[RunnerId, BaseRunner] = {}
         self._active: bool = False
         self._current_runner: RunnerId | None = None
         self._current_progress: RunnerProgress | None = None
+        self._lock = asyncio.Lock()  # Protect concurrent access to state
     
     def register(self, runner: BaseRunner) -> None:
         """Register a runner with the service."""
@@ -87,10 +89,10 @@ class RunnerService:
     async def invoke(self, request: InvokeRequest) -> RunnerResult:
         """
         Invoke a runner.
-        
+
         Args:
             request: The invocation request
-            
+
         Returns:
             RunnerResult with success status and artifacts
         """
@@ -100,53 +102,61 @@ class RunnerService:
                 success=False,
                 error=f"Runner '{request.runner_id}' not found",
             )
-        
-        # Track state
-        self._active = True
-        self._current_runner = request.runner_id
-        self._current_progress = RunnerProgress(
-            stage="starting",
-            message="Initializing runner...",
-            percent=0,
-        )
-        
-        start_time = time.perf_counter()
-        
-        try:
-            output_path = Path(request.output_folder)
-            result = await runner.invoke(
-                config=request.config,
-                output_folder=output_path,
-                context_id=request.context_id,
+
+        # Acquire lock to prevent concurrent invocations from corrupting state
+        async with self._lock:
+            if self._active:
+                return RunnerResult(
+                    success=False,
+                    error="Another runner is already active",
+                )
+
+            # Track state
+            self._active = True
+            self._current_runner = request.runner_id
+            self._current_progress = RunnerProgress(
+                stage="starting",
+                message="Initializing runner...",
+                percent=0,
             )
-            
-            # Add duration
-            duration_ms = int((time.perf_counter() - start_time) * 1000)
-            result.duration_ms = duration_ms
-            
-            return result
-            
-        except Exception as e:
-            logger.exception(f"Runner {request.runner_id} failed")
-            return RunnerResult(
-                success=False,
-                error=str(e),
-                duration_ms=int((time.perf_counter() - start_time) * 1000),
-            )
-        finally:
-            self._active = False
-            self._current_runner = None
-            self._current_progress = None
+
+            start_time = time.perf_counter()
+
+            try:
+                output_path = Path(request.output_folder)
+                result = await runner.invoke(
+                    config=request.config,
+                    output_folder=output_path,
+                    context_id=request.context_id,
+                )
+
+                # Add duration
+                duration_ms = int((time.perf_counter() - start_time) * 1000)
+                result.duration_ms = duration_ms
+
+                return result
+
+            except Exception as e:
+                logger.exception(f"Runner {request.runner_id} failed")
+                return RunnerResult(
+                    success=False,
+                    error=str(e),
+                    duration_ms=int((time.perf_counter() - start_time) * 1000),
+                )
+            finally:
+                self._active = False
+                self._current_runner = None
+                self._current_progress = None
     
     async def invoke_stream(
         self, request: InvokeRequest
     ) -> AsyncIterator[RunnerProgress]:
         """
         Invoke a runner with streaming progress.
-        
+
         Args:
             request: The invocation request
-            
+
         Yields:
             RunnerProgress updates
         """
@@ -157,10 +167,21 @@ class RunnerService:
                 message=f"Runner '{request.runner_id}' not found",
             )
             return
-        
+
+        # Acquire lock to check and set state atomically
+        await self._lock.acquire()
+        if self._active:
+            self._lock.release()
+            yield RunnerProgress(
+                stage="error",
+                message="Another runner is already active",
+            )
+            return
+
         self._active = True
         self._current_runner = request.runner_id
-        
+        self._lock.release()
+
         try:
             output_path = Path(request.output_folder)
             async for progress in runner.invoke_stream(
@@ -170,7 +191,7 @@ class RunnerService:
             ):
                 self._current_progress = progress
                 yield progress
-                
+
         except Exception as e:
             logger.exception(f"Runner {request.runner_id} failed")
             yield RunnerProgress(
@@ -178,9 +199,10 @@ class RunnerService:
                 message=str(e),
             )
         finally:
-            self._active = False
-            self._current_runner = None
-            self._current_progress = None
+            async with self._lock:
+                self._active = False
+                self._current_runner = None
+                self._current_progress = None
 
 
 # Global service instance

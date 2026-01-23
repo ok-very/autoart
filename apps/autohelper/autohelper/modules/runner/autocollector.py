@@ -6,8 +6,10 @@ Collects artist data from websites or scans local folders for intake.
 
 import asyncio
 import hashlib
+import ipaddress
 import mimetypes
 import re
+import socket
 import uuid
 from pathlib import Path
 from typing import AsyncIterator
@@ -19,6 +21,71 @@ from .service import BaseRunner
 from .types import ArtifactRef, RunnerId, RunnerProgress, RunnerResult
 
 logger = get_logger(__name__)
+
+# Blocked hostnames/patterns for SSRF protection
+BLOCKED_HOSTNAMES = {
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0",
+    "::1",
+    "metadata.google.internal",
+    "metadata",
+}
+
+# Private/internal IP ranges to block
+PRIVATE_IP_RANGES = [
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("169.254.0.0/16"),  # Link-local / AWS metadata
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),  # IPv6 private
+    ipaddress.ip_network("fe80::/10"),  # IPv6 link-local
+]
+
+
+def _is_safe_url(url: str) -> tuple[bool, str]:
+    """
+    Validate URL to prevent SSRF attacks.
+
+    Returns:
+        Tuple of (is_safe, error_message)
+    """
+    try:
+        parsed = urlparse(url)
+
+        # Only allow http/https
+        if parsed.scheme not in ("http", "https"):
+            return False, f"Unsupported URL scheme: {parsed.scheme}"
+
+        hostname = parsed.hostname
+        if not hostname:
+            return False, "Invalid URL: no hostname"
+
+        # Check blocked hostnames
+        hostname_lower = hostname.lower()
+        if hostname_lower in BLOCKED_HOSTNAMES:
+            return False, f"Blocked hostname: {hostname}"
+
+        # Try to resolve hostname and check if IP is private
+        try:
+            # Resolve to IP address
+            ip_str = socket.gethostbyname(hostname)
+            ip = ipaddress.ip_address(ip_str)
+
+            # Check against private ranges
+            for network in PRIVATE_IP_RANGES:
+                if ip in network:
+                    return False, f"URL resolves to private/internal IP: {ip_str}"
+        except socket.gaierror:
+            # DNS resolution failed - might be intentional for non-existent host
+            pass
+
+        return True, ""
+
+    except Exception as e:
+        return False, f"URL validation error: {e}"
 
 # Lazy imports for optional dependencies
 _httpx = None
@@ -79,6 +146,13 @@ class AutoCollectorRunner(BaseRunner):
         context_id: str | None = None,
     ) -> RunnerResult:
         """Execute the collector."""
+        # Validate config is a dict
+        if not isinstance(config, dict):
+            return RunnerResult(
+                success=False,
+                error="Config must be a dictionary",
+            )
+
         url = config.get("url")
         source_path = config.get("source_path")
         
@@ -101,6 +175,14 @@ class AutoCollectorRunner(BaseRunner):
         context_id: str | None = None,
     ) -> AsyncIterator[RunnerProgress]:
         """Execute with streaming progress."""
+        # Validate config is a dict
+        if not isinstance(config, dict):
+            yield RunnerProgress(
+                stage="error",
+                message="Config must be a dictionary",
+            )
+            return
+
         url = config.get("url")
         source_path = config.get("source_path")
         
@@ -131,15 +213,23 @@ class AutoCollectorRunner(BaseRunner):
         context_id: str | None,
     ) -> RunnerResult:
         """Collect content from a web URL."""
+        # Validate URL for SSRF protection
+        is_safe, error_msg = _is_safe_url(url)
+        if not is_safe:
+            return RunnerResult(
+                success=False,
+                error=f"URL validation failed: {error_msg}",
+            )
+
         httpx = _get_httpx()
         BeautifulSoup = _get_bs4()
-        
+
         artifacts: list[ArtifactRef] = []
-        
+
         try:
             # Ensure output folder exists
             output_folder.mkdir(parents=True, exist_ok=True)
-            
+
             # Fetch the page
             async with httpx.AsyncClient(timeout=self.REQUEST_TIMEOUT) as client:
                 response = await client.get(url, follow_redirects=True)
@@ -188,9 +278,15 @@ class AutoCollectorRunner(BaseRunner):
         context_id: str | None,
     ) -> AsyncIterator[RunnerProgress]:
         """Collect from web with streaming progress."""
+        # Validate URL for SSRF protection
+        is_safe, error_msg = _is_safe_url(url)
+        if not is_safe:
+            yield RunnerProgress(stage="error", message=f"URL validation failed: {error_msg}")
+            return
+
         httpx = _get_httpx()
         BeautifulSoup = _get_bs4()
-        
+
         yield RunnerProgress(stage="connecting", message=f"Fetching {url}...", percent=5)
         
         try:
@@ -293,7 +389,11 @@ class AutoCollectorRunner(BaseRunner):
             urls = re.findall(r'url\(["\']?([^"\']+)["\']?\)', style)
             for url in urls:
                 full_url = urljoin(base_url, url)
-                image_urls.append(full_url)
+                # Filter by extension like <img> tags
+                parsed = urlparse(full_url)
+                ext = Path(parsed.path).suffix.lower()
+                if ext in self.SUPPORTED_IMAGE_EXTENSIONS:
+                    image_urls.append(full_url)
         
         return list(dict.fromkeys(image_urls))  # Dedupe while preserving order
     
@@ -364,47 +464,54 @@ class AutoCollectorRunner(BaseRunner):
         context_id: str | None,
     ) -> RunnerResult:
         """Collect files from a local folder."""
-        if not source_path.exists():
+        # Run blocking filesystem checks in thread pool
+        exists = await asyncio.to_thread(source_path.exists)
+        if not exists:
             return RunnerResult(
                 success=False,
                 error=f"Source path does not exist: {source_path}",
             )
-        
-        if not source_path.is_dir():
+
+        is_dir = await asyncio.to_thread(source_path.is_dir)
+        if not is_dir:
             return RunnerResult(
                 success=False,
                 error=f"Source path is not a directory: {source_path}",
             )
-        
+
         artifacts: list[ArtifactRef] = []
-        
+
         try:
-            # Scan for files
-            for item in source_path.rglob("*"):
-                if item.is_file():
-                    # Determine artifact type from extension
-                    ext = item.suffix.lower()
-                    if ext in self.SUPPORTED_IMAGE_EXTENSIONS:
-                        artifact_type = "image"
-                    elif ext in {".txt", ".md", ".doc", ".docx", ".pdf"}:
-                        artifact_type = "document"
-                    else:
-                        artifact_type = "file"
-                    
-                    mime_type, _ = mimetypes.guess_type(str(item))
-                    
-                    artifacts.append(ArtifactRef(
-                        ref_id=str(uuid.uuid4()),
-                        path=str(item),
-                        artifact_type=artifact_type,
-                        mime_type=mime_type,
-                    ))
-            
+            # Offload blocking rglob to thread pool
+            def scan_files() -> list[Path]:
+                return [item for item in source_path.rglob("*") if item.is_file()]
+
+            files = await asyncio.to_thread(scan_files)
+
+            for item in files:
+                # Determine artifact type from extension
+                ext = item.suffix.lower()
+                if ext in self.SUPPORTED_IMAGE_EXTENSIONS:
+                    artifact_type = "image"
+                elif ext in {".txt", ".md", ".doc", ".docx", ".pdf"}:
+                    artifact_type = "document"
+                else:
+                    artifact_type = "file"
+
+                mime_type, _ = mimetypes.guess_type(str(item))
+
+                artifacts.append(ArtifactRef(
+                    ref_id=str(uuid.uuid4()),
+                    path=str(item),
+                    artifact_type=artifact_type,
+                    mime_type=mime_type,
+                ))
+
             return RunnerResult(
                 success=True,
                 artifacts=artifacts,
             )
-            
+
         except Exception as e:
             logger.exception(f"Folder collection failed for {source_path}")
             return RunnerResult(
@@ -425,25 +532,38 @@ class AutoCollectorRunner(BaseRunner):
             message=f"Scanning {source_path}...",
             percent=10,
         )
-        
-        if not source_path.exists():
+
+        # Run blocking filesystem check in thread pool
+        exists = await asyncio.to_thread(source_path.exists)
+        if not exists:
             yield RunnerProgress(
                 stage="error",
                 message=f"Source path does not exist: {source_path}",
             )
             return
-        
-        # Count files first
-        files = list(source_path.rglob("*"))
-        files = [f for f in files if f.is_file()]
+
+        # Offload blocking rglob to thread pool
+        def scan_files() -> list[Path]:
+            return [f for f in source_path.rglob("*") if f.is_file()]
+
+        files = await asyncio.to_thread(scan_files)
         total = len(files)
-        
+
         yield RunnerProgress(
             stage="processing",
             message=f"Found {total} files",
             percent=30,
         )
-        
+
+        # Handle empty directory case
+        if total == 0:
+            yield RunnerProgress(
+                stage="complete",
+                message="No files found in directory",
+                percent=100,
+            )
+            return
+
         # Process files
         for i, item in enumerate(files):
             progress = 30 + int((i + 1) / total * 65)
@@ -454,7 +574,7 @@ class AutoCollectorRunner(BaseRunner):
                     percent=progress,
                 )
             await asyncio.sleep(0)  # Yield control
-        
+
         yield RunnerProgress(
             stage="complete",
             message=f"Collected {total} files",

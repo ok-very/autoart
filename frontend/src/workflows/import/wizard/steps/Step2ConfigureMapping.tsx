@@ -19,6 +19,7 @@ import {
     DebouncedInput,
     Select,
     Popover,
+    Alert,
 } from '@autoart/ui';
 import {
     DndContext,
@@ -280,10 +281,13 @@ function TypeBadge({ group, onRoleChange }: TypeBadgeProps) {
     return (
         <Popover
             trigger={
-                <button className={clsx(
-                    'type-badge',
-                    badgeClass
-                )}>
+                <button
+                    type="button"
+                    className={clsx(
+                        'type-badge',
+                        badgeClass
+                    )}
+                >
                     {currentLabel} ▾
                 </button>
             }
@@ -293,6 +297,7 @@ function TypeBadge({ group, onRoleChange }: TypeBadgeProps) {
             <div className="text-[10px] font-bold text-slate-400 px-2 py-1 uppercase">Convert To</div>
             {TYPE_OPTIONS.map(opt => (
                 <button
+                    type="button"
                     key={opt.value}
                     onClick={() => onRoleChange(opt.value)}
                     disabled={opt.value === effectiveRole}
@@ -520,6 +525,7 @@ function NestedChildDropZone({ parentGroupId, childGroups, onRemoveChild }: Nest
                             <GripVertical className="w-3 h-3 text-slate-300" />
                             <span className="flex-1 truncate font-medium">{child.groupTitle}</span>
                             <button
+                                type="button"
                                 onClick={() => onRemoveChild(child.groupId)}
                                 className="text-slate-400 hover:text-red-500 text-[10px] px-1"
                                 title="Remove from parent"
@@ -616,6 +622,7 @@ function CollapsibleGroupCard({ group, sectionId, onUpdate, onRoleChange, allGro
                 <div className="px-2 py-1.5 flex items-center gap-2">
                     {/* Drag handle */}
                     <button
+                        type="button"
                         {...attributes}
                         {...listeners}
                         className="cursor-grab text-slate-300 hover:text-slate-500 shrink-0"
@@ -625,7 +632,7 @@ function CollapsibleGroupCard({ group, sectionId, onUpdate, onRoleChange, allGro
 
                     {/* Collapsible trigger with title */}
                     <CollapsiblePrimitive.Trigger asChild>
-                        <button className="flex items-center gap-1 flex-1 min-w-0 text-left group">
+                        <button type="button" className="flex items-center gap-1 flex-1 min-w-0 text-left group">
                             <ChevronDown className="w-3 h-3 text-slate-300 group-hover:text-slate-500 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
                             <span className="font-medium text-sm truncate">{group.groupTitle}</span>
                             {childGroups.length > 0 && (
@@ -812,6 +819,7 @@ function DraggableTagPill({ group, variant, onRemove }: DraggableTagPillProps) {
             title="Drag to move, right-click to remove"
         >
             <button
+                type="button"
                 {...attributes}
                 {...listeners}
                 className="cursor-grab"
@@ -1065,6 +1073,7 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
 
 export function Step2ConfigureMapping({ onNext, onBack, session, onSessionCreated }: StepProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // Extract board IDs from session config
     const boardIds = useMemo(() => {
@@ -1163,11 +1172,14 @@ export function Step2ConfigureMapping({ onNext, onBack, session, onSessionCreate
 
         try {
             setIsRefreshing(true);
+            setError(null);
             const newPlan = await generatePlan.mutateAsync(session.id);
             onSessionCreated(session, newPlan);
             onNext();
         } catch (err) {
             console.error('Failed to refresh plan:', err);
+            const errorMessage = err instanceof Error ? err.message : 'Failed to generate import plan';
+            setError(errorMessage);
         } finally {
             setIsRefreshing(false);
         }
@@ -1212,6 +1224,13 @@ export function Step2ConfigureMapping({ onNext, onBack, session, onSessionCreate
                     onGroupRoleChange={(groupId, newRole) => handleGroupRoleChange(currentConfig, groupId, newRole)}
                 />
             </div>
+
+            {/* Error display */}
+            {error && (
+                <Alert variant="error" className="mt-4">
+                    {error}
+                </Alert>
+            )}
 
             {/* Footer */}
             <Inline justify="between" className="pt-4 mt-4 border-t border-slate-200 shrink-0">
