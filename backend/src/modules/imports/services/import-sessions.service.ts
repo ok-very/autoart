@@ -153,8 +153,9 @@ export async function listSessions(params: {
     status?: 'pending' | 'planned' | 'needs_review' | 'executing' | 'completed' | 'failed';
     limit?: number;
 } = {}) {
-    // Cap the limit to prevent excessive result sets
-    const effectiveLimit = Math.min(params.limit ?? DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT);
+    // Cap the limit to prevent excessive result sets, ensure at least 1
+    const requestedLimit = params.limit ?? DEFAULT_LIST_LIMIT;
+    const effectiveLimit = Math.max(1, Math.min(requestedLimit, MAX_LIST_LIMIT));
 
     let query = db
         .selectFrom('import_sessions')

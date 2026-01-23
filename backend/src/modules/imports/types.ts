@@ -75,6 +75,23 @@ export interface ItemClassification {
             name: string;
             schemaConfig: { fields: Array<{ key: string; type: string; label: string }> };
         };
+        /** Detailed field matching results for UI display */
+        fieldMatches?: Array<{
+            /** Original field name from recording */
+            recordingFieldName: string;
+            /** Render hint from recording */
+            recordingRenderHint?: string;
+            /** Matched definition field key (null if no match) */
+            matchedFieldKey: string | null;
+            /** Matched definition field label (null if no match) */
+            matchedFieldLabel: string | null;
+            /** Quality of the match */
+            matchQuality: 'exact' | 'compatible' | 'partial' | 'none';
+            /** Match score (0-1) */
+            score: number;
+        }>;
+        /** Human-readable explanation of the match decision */
+        matchRationale?: string;
     };
 }
 

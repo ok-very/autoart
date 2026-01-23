@@ -9,6 +9,12 @@ The Import Wizard feature is **fully implemented and functional**. All 6 steps w
 - ✅ ClassificationPanel wired to OverlayRegistry (was completely disconnected)
 - ✅ Dead `emittedEvents` code removed from import classification
 - ✅ Event architecture deviation corrected (events now flow correctly via interpretationPlan)
+- ✅ Schema type mismatch fixed (`fieldMatches` and `matchRationale` added to `schemaMatch` types)
+
+**Audit Verification (2026-01-23):**
+- 🔴 Critical #1 (Dockview) - **CONFIRMED** still present at MainLayout.tsx:409-411
+- 🔴 Critical #2 (Post-import nav) - **CONFIRMED** still uses `window.location.href = '/projects'`
+- 🟡 UX #3 - Reclassified as symptom of Critical #1 (will auto-resolve)
 
 ---
 
@@ -137,20 +143,13 @@ const needsClassification = useMemo(() => {
 
 ---
 
-### 3. Import Step 4: Workspace Layout Context
-**Status:** ✅ Root Cause Identified → See Critical Issue #1
+### ~~3. Import Step 4: Workspace Layout Context~~
+**Status:** ✅ Reclassified → Symptom of Critical Issue #1
 **Location:** [Step4Templates.tsx](frontend/src/workflows/import/wizard/steps/Step4Templates.tsx)
 
-**Problem (from original todo):** "requires a call of workspace to show actual layout of selection inspector and classification panel"
+**Original Note:** "requires a call of workspace to show actual layout of selection inspector and classification panel"
 
-**Root Cause Found:** This issue is a symptom of **Critical Issue #1** (Dockview Hard Constraint). The workspace layout presets define panel positions, but the dockview panel sync logic ignores them and adds everything as tabs.
-
-**Why this matters for Step 4:**
-- Step 4 should show ClassificationPanel in a dedicated region (bottom or right)
-- Selection inspector should appear on right for item inspection
-- Instead, both get tabbed with the main content, making multi-panel review difficult
-
-**Resolution:** Fix Critical Issue #1, and this will be resolved automatically
+**Resolution:** This was a symptom of the Dockview Hard Constraint (Critical #1). Will auto-resolve when #1 is fixed.
 
 ---
 
@@ -311,6 +310,30 @@ Execution → reads interpretationPlan.outputs → emits events
 
 ---
 
+### ~~Schema Type Mismatch in schemaMatch~~
+**Status:** ✅ Fixed (2026-01-23)
+
+**Original Problem:** The `import-classification.service.ts` was adding `fieldMatches` and `matchRationale` to `schemaMatch` objects, but the TypeScript type definitions in `types.ts` and `imports.ts` (frontend) didn't include these fields.
+
+**Fix Applied:**
+- Added `fieldMatches` array type to `ItemClassification.schemaMatch` in [types.ts](backend/src/modules/imports/types.ts)
+- Added `matchRationale` string type to `ItemClassification.schemaMatch` in [types.ts](backend/src/modules/imports/types.ts)
+- Mirrored changes in [imports.ts](frontend/src/api/hooks/imports.ts) for frontend type safety
+
+**Types Now Aligned:**
+```typescript
+schemaMatch?: {
+    definitionId: string | null;
+    definitionName: string | null;
+    matchScore: number;
+    proposedDefinition?: { ... };
+    fieldMatches?: Array<FieldMatchDetail>;  // ← Added
+    matchRationale?: string;                  // ← Added
+};
+```
+
+---
+
 ## 📋 BACKLOG / LOWER PRIORITY
 
 ### Project Workflow View Enhancements
@@ -428,23 +451,27 @@ Create generalized runner script for pulling:
 | Priority | Category | Count |
 |----------|----------|-------|
 | 🔴 Critical | Dockview layout constraint, post-import navigation | 2 |
-| 🟡 High | UX improvements | 4 |
-| 🟢 Medium | Data model maintenance | 1 |
+| 🟡 High | UX improvements (Step 5 clarity, ClassificationPanel indicators, Step 2 pills, Step 3 warnings) | 4 |
+| 🟢 Medium | Data model maintenance (field definitions alignment) | 1 |
 | 🔵 Low | Feature requests | 4 |
-| ⚪ Investigation | Unclear items | 2 |
-| ✅ Completed | ClassificationPanel wiring, event architecture | 2 |
+| ⚪ Investigation | Unclear items (Fields View, Export Context, Step 4 columns) | 3 |
+| ✅ Completed | ClassificationPanel wiring, event architecture, schema types, UX #3 | 4 |
 
 ---
 
 ## 🎯 RECOMMENDED ACTION PLAN
 
-### Phase 1: Critical Fixes (Immediate)
-1. **Fix Dockview Hard Constraint** (Critical #1)
-   - Modify MainLayout.tsx to respect `defaultPlacement` hints
-   - Consider creating dedicated groups for right/bottom regions
-   - This unblocks workspace presets (Plan, Act, Review)
-2. Fix Step 6 post-import navigation to show imported project
-3. Clear stale warning data from Step 3
+### Phase 1: Critical Fixes (Immediate) ← **START HERE**
+1. **Fix Dockview Hard Constraint** (Critical #1) - HIGHEST PRIORITY
+   - Modify MainLayout.tsx lines 409-411 to respect `defaultPlacement` hints
+   - Map `area: 'right'` → `direction: 'right'`, `area: 'bottom'` → `direction: 'below'`
+   - Consider using `api.addGroup()` for dedicated regions
+   - This unblocks ALL workspace presets (Plan, Act, Review, Import)
+2. Fix Step 6 post-import navigation
+   - Use `createdIds` from execution result to get project ID
+   - Navigate to `/projects/{projectId}` instead of `/projects`
+   - Use React Router `navigate()` instead of `window.location.href`
+3. Clear stale warning data from Step 3 (database cleanup)
 
 ### Phase 2: UX Polish (After Dockview Fix)
 1. Add guidance/tooltips to Step 5
@@ -517,6 +544,8 @@ The Import Wizard is **exceptionally well-architected**:
 ### Classification
 - Panel: [ClassificationPanel.tsx](frontend/src/workflows/import/panels/ClassificationPanel.tsx)
 - Layout: [ImportWorkflowLayout.tsx](frontend/src/workspace/layouts/workflows/ImportWorkflowLayout.tsx)
+- Schema Matcher: [schema-matcher.ts](backend/src/modules/imports/schema-matcher.ts) - Definition matching logic
+- Classification Service: [import-classification.service.ts](backend/src/modules/imports/services/import-classification.service.ts)
 
 ### Dockview / Workspace Layout System
 - Main Layout (Dockview): [MainLayout.tsx](frontend/src/ui/layout/MainLayout.tsx) - **Critical Issue #1 location**

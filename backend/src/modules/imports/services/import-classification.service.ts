@@ -7,16 +7,16 @@
  * - Resolution management for user-driven classification
  */
 
-import { isInternalWork, type ClassificationOutcome } from '@autoart/shared';
+import { type ClassificationOutcome, isInternalWork } from '@autoart/shared';
 
+import { getLatestPlan, getSession } from './import-sessions.service.js';
 import { db } from '../../../db/client.js';
-import { logger } from '../../../utils/logger.js';
 import type { RecordDefinition } from '../../../db/schema.js';
-import { interpretCsvRowPlan, type InterpretationOutput } from '../../interpreter/interpreter.service.js';
+import { logger } from '../../../utils/logger.js';
+import { type InterpretationOutput, interpretCsvRowPlan } from '../../interpreter/interpreter.service.js';
 import { matchSchema } from '../schema-matcher.js';
 import type { ImportPlan, ImportPlanItem, ItemClassification } from '../types.js';
 import { hasUnresolvedClassifications } from '../types.js';
-import { getSession, getLatestPlan } from './import-sessions.service.js';
 
 // ============================================================================
 // CLASSIFICATION GENERATION
@@ -38,7 +38,7 @@ function normalizeConfidence(confidence: unknown): ConfidenceLevel {
     if (confidence !== undefined && confidence !== null) {
         logger.warn(
             { receivedConfidence: confidence, receivedType: typeof confidence },
-            '[import-classification] Invalid confidence value coerced to medium - check upstream interpretation pipeline'
+            '[import-classification] Invalid confidence value coerced to medium - check upstream interpretation pipeline',
         );
     }
     return 'medium';
@@ -164,7 +164,7 @@ export function generateClassifications(items: ImportPlanItem[], definitions: Re
  */
 export function generateClassificationsForConnectorItems(
     items: ImportPlanItem[],
-    definitions: RecordDefinition[]
+    definitions: RecordDefinition[],
 ): ItemClassification[] {
     return items.map((item) => {
         let baseClassification: ItemClassification;
@@ -175,6 +175,7 @@ export function generateClassificationsForConnectorItems(
                 const hasFieldData = item.fieldRecordings && item.fieldRecordings.length > 0;
                 if (!hasFieldData) {
                     // Include empty schemaMatch for consistent shape across all classifications
+                    // Must match the shape returned by addSchemaMatch (including fieldMatches and matchRationale)
                     return {
                         itemTempId: item.tempId,
                         outcome: 'UNCLASSIFIED' as ClassificationOutcome,
@@ -185,6 +186,8 @@ export function generateClassificationsForConnectorItems(
                             definitionName: null,
                             matchScore: 0,
                             proposedDefinition: undefined,
+                            fieldMatches: [],
+                            matchRationale: 'No field recordings to match',
                         },
                     };
                 }
@@ -253,10 +256,14 @@ export function generateClassificationsForConnectorItems(
 export function addSchemaMatch(
     classification: ItemClassification,
     fieldRecordings: ImportPlanItem['fieldRecordings'],
-    definitions: RecordDefinition[]
+    definitions: RecordDefinition[],
 ): ItemClassification {
     // If no field recordings or no definitions, return with empty schemaMatch for consistent shape
+    // Must include fieldMatches and matchRationale for shape consistency
     if (!fieldRecordings || fieldRecordings.length === 0 || !definitions || definitions.length === 0) {
+        const rationale = !fieldRecordings || fieldRecordings.length === 0
+            ? 'No field recordings to match'
+            : 'No definitions available for matching';
         return {
             ...classification,
             schemaMatch: {
@@ -264,11 +271,29 @@ export function addSchemaMatch(
                 definitionName: null,
                 matchScore: 0,
                 proposedDefinition: undefined,
+                fieldMatches: [],
+                matchRationale: rationale,
             },
         };
     }
 
-    const schemaResult = matchSchema(fieldRecordings, definitions);
+    let schemaResult;
+    try {
+        schemaResult = matchSchema(fieldRecordings, definitions);
+    } catch (err) {
+        logger.error({ error: err }, '[import-classification] matchSchema threw in addSchemaMatch');
+        return {
+            ...classification,
+            schemaMatch: {
+                definitionId: null,
+                definitionName: null,
+                matchScore: 0,
+                proposedDefinition: undefined,
+                fieldMatches: [],
+                matchRationale: 'Schema matching failed due to an internal error',
+            },
+        };
+    }
 
     return {
         ...classification,
@@ -283,6 +308,7 @@ export function addSchemaMatch(
         },
     };
 }
+
 
 // ============================================================================
 // RESOLUTION API
@@ -302,7 +328,7 @@ export interface Resolution {
  */
 export async function saveResolutions(
     sessionId: string,
-    resolutions: Resolution[]
+    resolutions: Resolution[],
 ): Promise<ImportPlan> {
     const session = await getSession(sessionId);
     if (!session) throw new Error('Session not found');
@@ -350,7 +376,7 @@ export async function saveResolutions(
         if (unknownTempIds.length > 0) {
             logger.warn(
                 { sessionId, unknownTempIds, totalResolutions: resolutions.length },
-                '[import-classification] Some resolutions referenced unknown itemTempIds - these were ignored'
+                '[import-classification] Some resolutions referenced unknown itemTempIds - these were ignored',
             );
         }
 

@@ -41,10 +41,12 @@ const ClassificationDrawerView = ({
         sessionId={sessionId}
         plan={plan}
         onResolutionsSaved={(updated) => {
-            onResolutionsSaved?.(updated);
+            if (typeof onResolutionsSaved === 'function') {
+                onResolutionsSaved(updated);
+            }
             // Only close if not explicitly configured to keep open
-            if (!keepOpenAfterSave) {
-                onClose?.();
+            if (!keepOpenAfterSave && typeof onClose === 'function') {
+                onClose();
             }
         }}
     />
@@ -78,10 +80,11 @@ export function OverlayRegistry() {
     const { activeDrawer, closeDrawer, setActiveProject } = useUIStore();
 
     // Stabilize uiContext so it doesn't change on every render while drawer is open
-    // Recreate only when drawer type changes (new drawer opened)
+    // Recreate when activeDrawer changes (new drawer session opened, even of same type)
+    // Using activeDrawer reference ensures new sessions get fresh openedAt timestamps
     const uiContext = useMemo(
         () => activeDrawer ? createUIContext(activeDrawer.type) : null,
-        [activeDrawer?.type]
+        [activeDrawer]
     );
 
     if (!activeDrawer || !uiContext) return null;
