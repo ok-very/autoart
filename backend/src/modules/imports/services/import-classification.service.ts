@@ -1,0 +1,317 @@
+/**
+ * Import Classification Service
+ *
+ * Handles classification of import items:
+ * - Generate classifications based on text interpretation
+ * - Schema matching against existing definitions
+ * - Resolution management for user-driven classification
+ */
+
+import { isInternalWork, type ClassificationOutcome } from '@autoart/shared';
+
+import { db } from '../../../db/client.js';
+import type { RecordDefinition } from '../../../db/schema.js';
+import { interpretCsvRowPlan, type InterpretationOutput } from '../../interpreter/interpreter.service.js';
+import { matchSchema } from '../schema-matcher.js';
+import type { ImportPlan, ImportPlanItem, ItemClassification } from '../types.js';
+import { hasUnresolvedClassifications } from '../types.js';
+import { getSession, getLatestPlan } from './import-sessions.service.js';
+
+// ============================================================================
+// CLASSIFICATION GENERATION
+// ============================================================================
+
+/**
+ * Generate classifications for all items in the plan.
+ * Uses the V2 interpretation API to determine outcome based on output kinds.
+ *
+ * Classification logic:
+ * - fact_candidate → FACT_EMITTED (needs review before commit)
+ * - action_hint → INTERNAL_WORK (preparatory work, no commit)
+ * - work_event/field_value → DERIVED_STATE (auto-commit)
+ * - No outputs → UNCLASSIFIED
+ */
+export function generateClassifications(items: ImportPlanItem[], definitions: RecordDefinition[]): ItemClassification[] {
+    return items.map((item) => {
+        const text = item.title;
+        const statusValue = (item.metadata as { status?: string })?.status;
+        const targetDate = (item.metadata as { targetDate?: string })?.targetDate;
+        const stageName = (item.metadata as { 'import.stage_name'?: string })?.['import.stage_name'];
+
+        let baseClassification: ItemClassification;
+
+        // Check for parent resolution failures first - these need review
+        const parentFailed = (item.metadata as { _parentResolutionFailed?: boolean })?._parentResolutionFailed;
+        if (parentFailed) {
+            const orphanedParentId = (item.metadata as { _orphanedParentId?: string })?._orphanedParentId;
+            const reason = (item.metadata as { _reason?: string })?._reason;
+            return addSchemaMatch({
+                itemTempId: item.tempId,
+                outcome: 'AMBIGUOUS' as ClassificationOutcome,
+                confidence: 'low' as const,
+                rationale: orphanedParentId
+                    ? `Subitem parent (${orphanedParentId}) not in import batch - needs manual parent assignment`
+                    : `Subitem missing parent reference: ${reason || 'unknown'}`,
+                candidates: ['assign_parent', 'promote_to_item', 'skip'],
+            }, item.fieldRecordings, definitions);
+        }
+
+        // Check for internal work patterns first
+        if (isInternalWork(text)) {
+            baseClassification = {
+                itemTempId: item.tempId,
+                outcome: 'INTERNAL_WORK' as ClassificationOutcome,
+                confidence: 'high' as const,
+                rationale: 'Matches internal work pattern',
+            };
+        } else {
+            // Use V2 interpretation API
+            const plan = interpretCsvRowPlan({
+                text,
+                status: statusValue,
+                targetDate: targetDate,
+                stageName: stageName ?? undefined,
+            });
+
+            // Classify based on output kinds
+            const factCandidates = plan.outputs.filter((o): o is InterpretationOutput & { kind: 'fact_candidate' } => o.kind === 'fact_candidate');
+            const actionHints = plan.outputs.filter((o): o is InterpretationOutput & { kind: 'action_hint' } => o.kind === 'action_hint');
+            const fieldValues = plan.outputs.filter((o): o is InterpretationOutput & { kind: 'field_value' } => o.kind === 'field_value');
+
+            // Fact candidates → FACT_EMITTED
+            if (factCandidates.length > 0) {
+                const emittedEvents = factCandidates.map(fc => ({
+                    type: 'FACT_RECORDED' as const,
+                    payload: {
+                        factKind: fc.factKind,
+                        source: 'csv-import' as const,
+                        confidence: fc.confidence,
+                        ...fc.payload,
+                    },
+                }));
+
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'FACT_EMITTED' as ClassificationOutcome,
+                    confidence: factCandidates[0].confidence || 'medium',
+                    rationale: `Matched rule for ${factCandidates[0].factKind}`,
+                    emittedEvents,
+                    interpretationPlan: plan,
+                };
+            }
+            // Action hints → INTERNAL_WORK
+            else if (actionHints.length > 0) {
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'INTERNAL_WORK' as ClassificationOutcome,
+                    confidence: 'medium' as const,
+                    rationale: `Action hint: ${actionHints[0].hintType} - ${actionHints[0].text}`,
+                    interpretationPlan: plan,
+                };
+            }
+            // Status-derived work event or field values → DERIVED_STATE
+            else if (plan.statusEvent || fieldValues.length > 0) {
+                const rationale = plan.statusEvent
+                    ? `Status "${statusValue}" maps to ${plan.statusEvent.kind === 'work_event' ? plan.statusEvent.eventType : 'work event'}`
+                    : `Extracted ${fieldValues.length} field value(s)`;
+
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'DERIVED_STATE' as ClassificationOutcome,
+                    confidence: 'medium' as const,
+                    rationale,
+                    interpretationPlan: plan,
+                };
+            }
+            // No rules matched - UNCLASSIFIED
+            else {
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'UNCLASSIFIED' as ClassificationOutcome,
+                    confidence: 'low' as const,
+                    rationale: 'No mapping rules matched',
+                };
+            }
+        }
+
+        // Add schema matching to ALL classifications
+        return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
+    });
+}
+
+/**
+ * Generate classifications for connector (Monday) imports.
+ *
+ * Unlike CSV imports which use text interpretation rules,
+ * connector imports classify based on entityType:
+ * - 'record' → DERIVED_STATE (needs schema matching)
+ * - 'template' → DERIVED_STATE (auto-commit, no schema match needed)
+ * - 'action'/'task'/'subtask' → INTERNAL_WORK (create as action)
+ * - others → UNCLASSIFIED
+ */
+export function generateClassificationsForConnectorItems(
+    items: ImportPlanItem[],
+    definitions: RecordDefinition[]
+): ItemClassification[] {
+    return items.map((item) => {
+        let baseClassification: ItemClassification;
+
+        switch (item.entityType) {
+            case 'record': {
+                // Records with no field data should be marked as needing review
+                const hasFieldData = item.fieldRecordings && item.fieldRecordings.length > 0;
+                if (!hasFieldData) {
+                    return {
+                        itemTempId: item.tempId,
+                        outcome: 'UNCLASSIFIED' as ClassificationOutcome,
+                        confidence: 'low' as const,
+                        rationale: 'Record has no field data',
+                    };
+                }
+                // Records need schema matching to determine target definition
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'FACT_EMITTED' as ClassificationOutcome,
+                    confidence: 'high' as const,
+                    rationale: 'Record from connector - requires schema match',
+                };
+                // Add schema matching only for record types
+                return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
+            }
+
+            case 'template':
+                // Templates are auto-committed, no schema match needed
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'DERIVED_STATE' as ClassificationOutcome,
+                    confidence: 'high' as const,
+                    rationale: 'Template from connector - auto-commit',
+                };
+                return baseClassification;
+
+            case 'action':
+            case 'task':
+            case 'subtask':
+                // Actions are created as work items; no record schema match
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'INTERNAL_WORK' as ClassificationOutcome,
+                    confidence: 'high' as const,
+                    rationale: `${item.entityType} from connector - create as action`,
+                };
+                return baseClassification;
+
+            case 'project':
+            case 'stage':
+                // These are containers, not items - treat as internal work without schema match
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'INTERNAL_WORK' as ClassificationOutcome,
+                    confidence: 'high' as const,
+                    rationale: `Container type ${item.entityType} - structural item`,
+                };
+                return baseClassification;
+
+            default:
+                // Unknown entity type - mark unclassified without schema match
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'UNCLASSIFIED' as ClassificationOutcome,
+                    confidence: 'low' as const,
+                    rationale: `Unknown entity type: ${item.entityType ?? 'undefined'}`,
+                };
+                return baseClassification;
+        }
+    });
+}
+
+/**
+ * Add schema matching result to a classification
+ */
+export function addSchemaMatch(
+    classification: ItemClassification,
+    fieldRecordings: ImportPlanItem['fieldRecordings'],
+    definitions: RecordDefinition[]
+): ItemClassification {
+    // If no field recordings, return with empty schemaMatch for consistent shape
+    if (!fieldRecordings || fieldRecordings.length === 0) {
+        return {
+            ...classification,
+            schemaMatch: {
+                definitionId: null,
+                definitionName: null,
+                matchScore: 0,
+                proposedDefinition: undefined,
+            },
+        };
+    }
+
+    const schemaResult = matchSchema(fieldRecordings, definitions);
+
+    return {
+        ...classification,
+        schemaMatch: {
+            definitionId: schemaResult.matchedDefinition?.id ?? null,
+            definitionName: schemaResult.matchedDefinition?.name ?? null,
+            matchScore: schemaResult.matchScore,
+            proposedDefinition: schemaResult.proposedDefinition,
+        },
+    };
+}
+
+// ============================================================================
+// RESOLUTION API
+// ============================================================================
+
+export interface Resolution {
+    itemTempId: string;
+    resolvedOutcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'EXTERNAL_WORK' | 'AMBIGUOUS' | 'UNCLASSIFIED' | 'DEFERRED';
+    resolvedFactKind?: string;
+    resolvedPayload?: Record<string, unknown>;
+}
+
+/**
+ * Save user resolutions for classifications.
+ * Updates the plan and recalculates session status.
+ */
+export async function saveResolutions(
+    sessionId: string,
+    resolutions: Resolution[]
+): Promise<ImportPlan> {
+    const session = await getSession(sessionId);
+    if (!session) throw new Error('Session not found');
+
+    const plan = await getLatestPlan(sessionId);
+    if (!plan) throw new Error('No plan found');
+
+    // Apply resolutions to classifications
+    for (const res of resolutions) {
+        const classification = plan.classifications.find((c: ItemClassification) => c.itemTempId === res.itemTempId);
+        if (classification) {
+            classification.resolution = {
+                resolvedOutcome: res.resolvedOutcome as any,
+                resolvedFactKind: res.resolvedFactKind,
+                resolvedPayload: res.resolvedPayload,
+            };
+        }
+    }
+
+    // Update the plan in database
+    await db
+        .updateTable('import_plans' as any)
+        .set({ plan_data: JSON.stringify(plan) })
+        .where('session_id', '=', sessionId)
+        .execute();
+
+    // Recalculate session status
+    const hasUnresolved = hasUnresolvedClassifications(plan);
+    const newStatus = hasUnresolved ? 'needs_review' : 'planned';
+
+    await db
+        .updateTable('import_sessions')
+        .set({ status: newStatus, updated_at: new Date() })
+        .where('id', '=', sessionId)
+        .execute();
+
+    return plan;
+}

@@ -240,10 +240,13 @@ export function useExecuteImport() {
             );
         },
         onSuccess: () => {
-            // Invalidate related queries
+            // Invalidate related queries - ensure all views refresh after import
             queryClient.invalidateQueries({ queryKey: ['hierarchy'] });
             queryClient.invalidateQueries({ queryKey: ['projects'] });
             queryClient.invalidateQueries({ queryKey: ['actions'] });
+            queryClient.invalidateQueries({ queryKey: ['workflowSurface'] });
+            queryClient.invalidateQueries({ queryKey: ['events'] });
+            queryClient.invalidateQueries({ queryKey: ['records'] });
         },
     });
 }
