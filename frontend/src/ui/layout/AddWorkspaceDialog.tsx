@@ -9,7 +9,7 @@ import { useState, useCallback } from 'react';
 import { Folder } from 'lucide-react';
 
 import { Modal, Button, Text, Inline } from '@autoart/ui';
-import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { useWorkspaceStore, useCustomWorkspaces } from '../../stores/workspaceStore';
 
 interface AddWorkspaceDialogProps {
     open: boolean;
@@ -19,7 +19,7 @@ interface AddWorkspaceDialogProps {
 export function AddWorkspaceDialog({ open, onClose }: AddWorkspaceDialogProps) {
     const [name, setName] = useState('');
     const [error, setError] = useState<string | null>(null);
-    const { saveCurrentAsWorkspace, customWorkspaces } = useWorkspaceStore();
+    const customWorkspaces = useCustomWorkspaces();
 
     const handleSubmit = useCallback((e: React.FormEvent) => {
         e.preventDefault();
@@ -48,7 +48,7 @@ export function AddWorkspaceDialog({ open, onClose }: AddWorkspaceDialogProps) {
 
         // Save workspace with error handling
         try {
-            saveCurrentAsWorkspace(trimmedName);
+            useWorkspaceStore.getState().saveCurrentAsWorkspace(trimmedName);
             // Reset and close only on success
             setName('');
             setError(null);
@@ -56,7 +56,7 @@ export function AddWorkspaceDialog({ open, onClose }: AddWorkspaceDialogProps) {
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to save workspace');
         }
-    }, [name, saveCurrentAsWorkspace, customWorkspaces, onClose]);
+    }, [name, customWorkspaces, onClose]);
 
     const handleClose = useCallback(() => {
         setName('');

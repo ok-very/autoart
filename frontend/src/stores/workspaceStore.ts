@@ -13,7 +13,7 @@ import { persist } from 'zustand/middleware';
 import type { DockviewApi } from 'dockview';
 import type { PanelId } from '../workspace/panelRegistry';
 import { isPermanentPanel, PANEL_DEFINITIONS } from '../workspace/panelRegistry';
-import type { WorkspacePreset, CapturedWorkspaceState, CapturedPanelState } from '../types/workspace';
+import type { WorkspacePreset, CapturedWorkspaceState, CapturedPanelState, PersistedWorkspacePreset } from '../types/workspace';
 import { BUILT_IN_WORKSPACES, DEFAULT_CUSTOM_WORKSPACE_ICON } from '../workspace/workspacePresets';
 import { useUIStore } from './uiStore';
 
@@ -226,7 +226,6 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 }
 
                 // Focus the first panel in the preset using Dockview API
-                const api = state.dockviewApi;
                 if (api && preset.panels.length > 0) {
                     const firstPanel = api.getPanel(preset.panels[0].panelId);
                     if (firstPanel) {
@@ -318,11 +317,8 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 panelParams: Array.from(state.panelParams.entries()),
                 // Workspace presets
                 activeWorkspaceId: state.activeWorkspaceId,
-                // Custom workspaces need icon serialization (store icon name)
-                customWorkspaces: state.customWorkspaces.map(w => ({
-                    ...w,
-                    icon: 'Folder', // Always serialize as Folder, restore at load
-                })),
+                // Custom workspaces: omit icon (not serializable), reattach on load
+                customWorkspaces: state.customWorkspaces.map(({ icon: _, ...w }) => w),
             }),
             merge: (persisted: unknown, current: WorkspaceState) => {
                 const p = persisted as {
@@ -332,7 +328,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     userOverrides?: [PanelId, boolean][];
                     panelParams?: [PanelId, unknown][];
                     activeWorkspaceId?: string | null;
-                    customWorkspaces?: WorkspacePreset[];
+                    customWorkspaces?: PersistedWorkspacePreset[];
                 } | undefined;
 
                 // Handle version mismatch: preserve custom workspaces but reset layout
