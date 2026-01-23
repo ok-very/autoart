@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useUIStore } from '../../stores/uiStore';
 import { Modal } from '@autoart/ui';
 import { createUIContext } from '../../drawer/types';
@@ -27,19 +28,24 @@ const ClassificationDrawerView = ({
     sessionId,
     plan,
     onResolutionsSaved,
-    onClose
+    onClose,
+    keepOpenAfterSave = false
 }: {
     sessionId: string;
     plan: ImportPlan;
     onResolutionsSaved?: (updated: ImportPlan) => void;
     onClose?: () => void;
+    keepOpenAfterSave?: boolean;
 }) => (
     <ClassificationPanel
         sessionId={sessionId}
         plan={plan}
         onResolutionsSaved={(updated) => {
             onResolutionsSaved?.(updated);
-            onClose?.();
+            // Only close if not explicitly configured to keep open
+            if (!keepOpenAfterSave) {
+                onClose?.();
+            }
         }}
     />
 );
@@ -71,7 +77,14 @@ export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
 export function OverlayRegistry() {
     const { activeDrawer, closeDrawer, setActiveProject } = useUIStore();
 
-    if (!activeDrawer) return null;
+    // Stabilize uiContext so it doesn't change on every render while drawer is open
+    // Recreate only when drawer type changes (new drawer opened)
+    const uiContext = useMemo(
+        () => activeDrawer ? createUIContext(activeDrawer.type) : null,
+        [activeDrawer?.type]
+    );
+
+    if (!activeDrawer || !uiContext) return null;
 
     const { type, props } = activeDrawer;
     const Component = OVERLAY_VIEWS[type];
@@ -96,7 +109,7 @@ export function OverlayRegistry() {
             }
             closeDrawer();
         },
-        uiContext: createUIContext(type),
+        uiContext,
     };
 
     return (

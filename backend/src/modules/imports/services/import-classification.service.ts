@@ -28,10 +28,18 @@ const VALID_CONFIDENCE_LEVELS: Set<string> = new Set(['low', 'medium', 'high']);
 /**
  * Normalize confidence value to a valid ConfidenceLevel.
  * Returns 'medium' for undefined, null, or unexpected values.
+ * Logs a warning when coercion occurs to help surface upstream issues.
  */
 function normalizeConfidence(confidence: unknown): ConfidenceLevel {
     if (typeof confidence === 'string' && VALID_CONFIDENCE_LEVELS.has(confidence)) {
         return confidence as ConfidenceLevel;
+    }
+    // Log warning to help identify upstream issues producing invalid confidence values
+    if (confidence !== undefined && confidence !== null) {
+        logger.warn(
+            { receivedConfidence: confidence, receivedType: typeof confidence },
+            '[import-classification] Invalid confidence value coerced to medium - check upstream interpretation pipeline'
+        );
     }
     return 'medium';
 }
@@ -206,12 +214,12 @@ export function generateClassificationsForConnectorItems(
             case 'action':
             case 'task':
             case 'subtask':
-                // Actions are created as work items; no record schema match
+                // Work items (actions, tasks, subtasks) are created as actions in the actions table
                 baseClassification = {
                     itemTempId: item.tempId,
                     outcome: 'INTERNAL_WORK' as ClassificationOutcome,
                     confidence: 'high' as const,
-                    rationale: `${item.entityType} from connector - create as action`,
+                    rationale: `${item.entityType} from connector - create as work item`,
                 };
                 return baseClassification;
 
@@ -269,6 +277,9 @@ export function addSchemaMatch(
             definitionName: schemaResult.matchedDefinition?.name ?? null,
             matchScore: schemaResult.matchScore,
             proposedDefinition: schemaResult.proposedDefinition,
+            // Include detailed matching info for UI and debugging
+            fieldMatches: schemaResult.fieldMatches,
+            matchRationale: schemaResult.rationale,
         },
     };
 }

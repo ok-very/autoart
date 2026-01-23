@@ -5,11 +5,62 @@
 
 The Import Wizard feature is **fully implemented and functional**. All 6 steps work correctly, the ClassificationPanel is comprehensive, and the Monday.com integration is production-ready. Most "issues" in the original todo list are actually UX/clarity improvements or documentation needs rather than bugs.
 
+**Recent Completions (Session 2026-01-23):**
+- ✅ ClassificationPanel wired to OverlayRegistry (was completely disconnected)
+- ✅ Dead `emittedEvents` code removed from import classification
+- ✅ Event architecture deviation corrected (events now flow correctly via interpretationPlan)
+
 ---
 
 ## 🔴 CRITICAL ISSUES
 
-### Import Step 6: Post-Import Navigation
+### 1. Dockview Hard Constraint Nullifies Workspace Layouts
+**Status:** Architecture Issue
+**Location:** [MainLayout.tsx:409-411](frontend/src/ui/layout/MainLayout.tsx#L409-L411)
+
+**Problem:** ALL panels are added as tabs within center-workspace, ignoring `defaultPlacement` hints from `panelRegistry.ts`. This makes workspace presets (Plan, Act, Review) non-functional - users must manually drag panels every time.
+
+**Root Cause:**
+```typescript
+// Lines 409-411 - HARD CONSTRAINT
+position: {
+  referencePanel: centerPanel,  // Always references center
+  direction: 'within',          // Always adds as tab
+},
+```
+
+**Impact:**
+- Workspace presets define `position: 'right'` for selection-inspector, but it opens as a tab
+- "Plan" workspace should have inspector on right - instead gets fullscreen tabs
+- "Act" workspace should have composer on bottom - instead gets fullscreen tabs
+- Users lose workspace context after every panel operation
+
+**Where Hints Are Defined (but ignored):**
+- [panelRegistry.ts:127-135](frontend/src/workspace/panelRegistry.ts#L127-L135) - `defaultPlacement: { area: 'right', size: 30 }`
+- [workspacePresets.ts:48-52](frontend/src/workspace/workspacePresets.ts#L48-L52) - `position: 'right'` for Plan workspace
+
+**Recommended Fix:**
+Make `direction: 'within'` a soft/lazy default that defers to panel definitions:
+```typescript
+const placement = def.defaultPlacement;
+const direction = placement?.area === 'right' ? 'right'
+                : placement?.area === 'bottom' ? 'below'
+                : 'within';
+const position = {
+  referencePanel: findOrCreateGroup(placement?.area) || centerPanel,
+  direction,
+};
+```
+
+**Implementation Considerations:**
+- Need group management for right/bottom areas (may need to create groups on first use)
+- Consider initializing workspace preset layouts on workspace switch instead of dynamic add
+- May need to store "panel belongs to group X" mapping
+- Could use dockview's `api.addGroup()` to create dedicated regions
+
+---
+
+### 2. Import Step 6: Post-Import Navigation
 **Status:** UX Issue
 **Location:** [Step6Execute.tsx:94](frontend/src/workflows/import/wizard/steps/Step6Execute.tsx#L94)
 
@@ -87,21 +138,19 @@ const needsClassification = useMemo(() => {
 ---
 
 ### 3. Import Step 4: Workspace Layout Context
-**Status:** Needs Verification
+**Status:** ✅ Root Cause Identified → See Critical Issue #1
 **Location:** [Step4Templates.tsx](frontend/src/workflows/import/wizard/steps/Step4Templates.tsx)
 
 **Problem (from original todo):** "requires a call of workspace to show actual layout of selection inspector and classification panel"
 
-**Investigation Needed:**
-- Unclear what "call of workspace" means
-- Step 4 displays board configs in table format - appears functional
-- May need to verify if workspace preset needs to be activated for optimal layout
-- Check if ImportWorkflowLayout needs to be explicitly loaded at this step
+**Root Cause Found:** This issue is a symptom of **Critical Issue #1** (Dockview Hard Constraint). The workspace layout presets define panel positions, but the dockview panel sync logic ignores them and adds everything as tabs.
 
-**Verification Tasks:**
-- [ ] Test Step 4 in a fresh browser session
-- [ ] Verify ClassificationPanel appears if needed at Step 4
-- [ ] Check if workspace layout preset is correctly applied
+**Why this matters for Step 4:**
+- Step 4 should show ClassificationPanel in a dedicated region (bottom or right)
+- Selection inspector should appear on right for item inspection
+- Instead, both get tabbed with the main content, making multi-panel review difficult
+
+**Resolution:** Fix Critical Issue #1, and this will be resolved automatically
 
 ---
 
@@ -232,6 +281,36 @@ Comprehensive implementation with:
 
 ---
 
+### ~~ClassificationPanel Wiring to OverlayRegistry~~
+**Status:** ✅ Fixed (2026-01-23)
+
+**Original Problem:** ClassificationPanel was fully implemented but NOT registered in OverlayRegistry, causing `openDrawer('classification', ...)` to show "Unknown overlay type".
+
+**Fix Applied:**
+- Added `ClassificationDrawerView` wrapper component to [OverlayRegistry.tsx](frontend/src/ui/registry/OverlayRegistry.tsx)
+- Added 'classification' entry to `OVERLAY_VIEWS` registry
+- Added 'classification' to xl-size list for proper modal sizing
+
+---
+
+### ~~Import Event Architecture Deviation~~
+**Status:** ✅ Fixed (2026-01-23)
+
+**Original Problem:** Dead code confusion - `emittedEvents` field was generated during classification but NEVER consumed during execution. Execution uses `interpretationPlan.outputs` instead.
+
+**Fix Applied:**
+- Removed `emittedEvents` generation from [import-classification.service.ts](backend/src/modules/imports/services/import-classification.service.ts)
+- Removed `emittedEvents` from `ItemClassification` type in backend, frontend, and shared
+- Updated misleading comment in [classification.ts](shared/src/schemas/classification.ts) to clarify event flow
+
+**Architecture Now Correct:**
+```
+Classification → generates interpretationPlan only
+Execution → reads interpretationPlan.outputs → emits events
+```
+
+---
+
 ## 📋 BACKLOG / LOWER PRIORITY
 
 ### Project Workflow View Enhancements
@@ -348,27 +427,32 @@ Create generalized runner script for pulling:
 
 | Priority | Category | Count |
 |----------|----------|-------|
-| 🔴 Critical | Post-import navigation bug | 1 |
+| 🔴 Critical | Dockview layout constraint, post-import navigation | 2 |
 | 🟡 High | UX improvements | 4 |
 | 🟢 Medium | Data model maintenance | 1 |
 | 🔵 Low | Feature requests | 4 |
-| ⚪ Investigation | Unclear items | 3 |
+| ⚪ Investigation | Unclear items | 2 |
+| ✅ Completed | ClassificationPanel wiring, event architecture | 2 |
 
 ---
 
 ## 🎯 RECOMMENDED ACTION PLAN
 
-### Phase 1: Critical Fixes (Week 1)
-1. Fix Step 6 post-import navigation to show imported project
-2. Verify and test Step 4 workspace layout context
+### Phase 1: Critical Fixes (Immediate)
+1. **Fix Dockview Hard Constraint** (Critical #1)
+   - Modify MainLayout.tsx to respect `defaultPlacement` hints
+   - Consider creating dedicated groups for right/bottom regions
+   - This unblocks workspace presets (Plan, Act, Review)
+2. Fix Step 6 post-import navigation to show imported project
 3. Clear stale warning data from Step 3
 
-### Phase 2: UX Polish (Week 2)
+### Phase 2: UX Polish (After Dockview Fix)
 1. Add guidance/tooltips to Step 5
 2. Improve ClassificationPanel visibility indicators
 3. Implement parent status pill enhancement for Step 2
+4. Test workspace presets with corrected layout behavior
 
-### Phase 3: Data Model Alignment (Week 3-4)
+### Phase 3: Data Model Alignment
 1. Audit and document Monday → AutoArt field type mappings
 2. Implement timeline field support
 3. Reduce reliance on "custom" semantic role
@@ -433,3 +517,11 @@ The Import Wizard is **exceptionally well-architected**:
 ### Classification
 - Panel: [ClassificationPanel.tsx](frontend/src/workflows/import/panels/ClassificationPanel.tsx)
 - Layout: [ImportWorkflowLayout.tsx](frontend/src/workspace/layouts/workflows/ImportWorkflowLayout.tsx)
+
+### Dockview / Workspace Layout System
+- Main Layout (Dockview): [MainLayout.tsx](frontend/src/ui/layout/MainLayout.tsx) - **Critical Issue #1 location**
+- Panel Registry: [panelRegistry.ts](frontend/src/workspace/panelRegistry.ts) - Panel definitions with `defaultPlacement` hints
+- Workspace Presets: [workspacePresets.ts](frontend/src/workspace/workspacePresets.ts) - Built-in workspace definitions
+- Workspace Store: [workspaceStore.ts](frontend/src/stores/workspaceStore.ts) - Layout persistence & workspace switching
+- Workflow Layouts (Fixed regions): [workspace/layouts/](frontend/src/workspace/layouts/) - Alternative layout system
+- Dockview Theme: [dockview-theme.css](frontend/src/styles/dockview-theme.css)

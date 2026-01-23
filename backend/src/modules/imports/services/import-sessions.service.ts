@@ -146,6 +146,9 @@ export async function getSession(id: string) {
 const MAX_LIST_LIMIT = 100;
 const DEFAULT_LIST_LIMIT = 20;
 
+// Valid session statuses for runtime validation
+const VALID_SESSION_STATUSES = new Set(['pending', 'planned', 'needs_review', 'executing', 'completed', 'failed']);
+
 export async function listSessions(params: {
     status?: 'pending' | 'planned' | 'needs_review' | 'executing' | 'completed' | 'failed';
     limit?: number;
@@ -159,8 +162,13 @@ export async function listSessions(params: {
         .orderBy('created_at', 'desc')
         .limit(effectiveLimit);
 
+    // Validate status at runtime to prevent unexpected values from untrusted input
     if (params.status) {
-        query = query.where('status', '=', params.status);
+        if (!VALID_SESSION_STATUSES.has(params.status)) {
+            logger.warn({ providedStatus: params.status }, '[import-sessions] Invalid status parameter ignored');
+        } else {
+            query = query.where('status', '=', params.status);
+        }
     }
 
     return query.execute();
