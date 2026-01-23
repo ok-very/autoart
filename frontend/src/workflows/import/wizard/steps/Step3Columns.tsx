@@ -84,6 +84,15 @@ interface ColumnCardProps {
     onUpdate: (boardConfigId: string, workspaceId: string, columnId: string, update: Record<string, unknown>) => void;
 }
 
+function formatSampleValue(val: unknown): string {
+    if (val === null) return '(null)';
+    if (val === undefined) return '(undefined)';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+    if (typeof val === 'object') return JSON.stringify(val);
+    return String(val);
+}
+
 function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCardProps) {
     const roleMeta = ROLE_METADATA[column.semanticRole];
     const hasSamples = Array.isArray(column.sampleValues) && column.sampleValues.length > 0;
@@ -94,15 +103,18 @@ function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCard
             <div className="px-4 py-3 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
                 {hasSamples ? (
                     <div className="flex flex-wrap gap-2">
-                        {column.sampleValues!.slice(0, 5).map((val, i) => (
-                            <span
-                                key={i}
-                                className="text-sm text-slate-700 bg-white px-2.5 py-1 rounded border border-slate-200 shadow-sm truncate max-w-[200px]"
-                                title={val}
-                            >
-                                "{val}"
-                            </span>
-                        ))}
+                        {column.sampleValues!.slice(0, 5).map((val, i) => {
+                            const displayVal = formatSampleValue(val);
+                            return (
+                                <span
+                                    key={i}
+                                    className="text-sm text-slate-700 bg-white px-2.5 py-1 rounded border border-slate-200 shadow-sm truncate max-w-[200px]"
+                                    title={displayVal}
+                                >
+                                    "{displayVal}"
+                                </span>
+                            );
+                        })}
                         {column.sampleValues!.length > 5 && (
                             <span className="text-xs text-slate-400 self-center">
                                 +{column.sampleValues!.length - 5} more

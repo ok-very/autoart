@@ -46,6 +46,45 @@ PRIVATE_IP_RANGES = [
 ]
 
 
+def _resolve_all_ips(hostname: str) -> list[str]:
+    """
+    Resolve hostname to all IP addresses (both IPv4 and IPv6).
+
+    Returns:
+        List of IP address strings
+    """
+    ips = []
+    try:
+        # Use getaddrinfo to get both IPv4 and IPv6 addresses
+        results = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
+        for result in results:
+            ip_str = result[4][0]
+            if ip_str not in ips:
+                ips.append(ip_str)
+    except socket.gaierror:
+        pass
+    return ips
+
+
+def _check_ips_against_private_ranges(ips: list[str]) -> tuple[bool, str]:
+    """
+    Check if any of the IPs are in private/internal ranges.
+
+    Returns:
+        Tuple of (is_private, error_message)
+    """
+    for ip_str in ips:
+        try:
+            ip = ipaddress.ip_address(ip_str)
+            for network in PRIVATE_IP_RANGES:
+                if ip in network:
+                    return True, f"URL resolves to private/internal IP: {ip_str}"
+        except ValueError:
+            # Invalid IP address format, skip
+            continue
+    return False, ""
+
+
 async def _is_safe_url(url: str) -> tuple[bool, str]:
     """
     Validate URL to prevent SSRF attacks.
@@ -71,60 +110,12 @@ async def _is_safe_url(url: str) -> tuple[bool, str]:
 
         # Try to resolve hostname and check if IP is private
         # Use asyncio.to_thread to avoid blocking the event loop
-        try:
-            # Resolve to IP address in a thread pool to avoid blocking
-            ip_str = await asyncio.to_thread(socket.gethostbyname, hostname)
-            ip = ipaddress.ip_address(ip_str)
-
-            # Check against private ranges
-            for network in PRIVATE_IP_RANGES:
-                if ip in network:
-                    return False, f"URL resolves to private/internal IP: {ip_str}"
-        except socket.gaierror:
-            # DNS resolution failed - might be intentional for non-existent host
-            pass
-
-        return True, ""
-
-    except Exception as e:
-        return False, f"URL validation error: {e}"
-
-
-def _is_safe_url_sync(url: str) -> tuple[bool, str]:
-    """
-    Synchronous version of URL validation for use in redirect hooks.
-
-    Returns:
-        Tuple of (is_safe, error_message)
-    """
-    try:
-        parsed = urlparse(url)
-
-        # Only allow http/https
-        if parsed.scheme not in ("http", "https"):
-            return False, f"Unsupported URL scheme: {parsed.scheme}"
-
-        hostname = parsed.hostname
-        if not hostname:
-            return False, "Invalid URL: no hostname"
-
-        # Check blocked hostnames
-        hostname_lower = hostname.lower()
-        if hostname_lower in BLOCKED_HOSTNAMES:
-            return False, f"Blocked hostname: {hostname}"
-
-        # Try to resolve hostname and check if IP is private
-        try:
-            ip_str = socket.gethostbyname(hostname)
-            ip = ipaddress.ip_address(ip_str)
-
-            # Check against private ranges
-            for network in PRIVATE_IP_RANGES:
-                if ip in network:
-                    return False, f"URL resolves to private/internal IP: {ip_str}"
-        except socket.gaierror:
-            # DNS resolution failed
-            pass
+        # Resolve all IPs (both IPv4 and IPv6)
+        ips = await asyncio.to_thread(_resolve_all_ips, hostname)
+        if ips:
+            is_private, error_msg = _check_ips_against_private_ranges(ips)
+            if is_private:
+                return False, error_msg
 
         return True, ""
 
@@ -161,8 +152,8 @@ class SSRFProtectedClient:
                     # Make absolute URL if relative
                     redirect_url = urljoin(current_url, redirect_url)
 
-                    # Validate redirect URL for SSRF
-                    is_safe, error_msg = _is_safe_url_sync(redirect_url)
+                    # Validate redirect URL for SSRF (using async to avoid blocking)
+                    is_safe, error_msg = await _is_safe_url(redirect_url)
                     if not is_safe:
                         raise ValueError(f"Unsafe redirect blocked: {error_msg}")
 
@@ -408,7 +399,7 @@ class AutoCollectorRunner(BaseRunner):
             if total_images > 0:
                 for i, img_url in enumerate(image_urls[:self.MAX_IMAGES]):
                     try:
-                        await self._download_single_image(None, img_url, output_folder, i)
+                        await self._download_single_image(img_url, output_folder, i)
                         progress = 35 + int((i + 1) / total_images * 60)
                         yield RunnerProgress(
                             stage="downloading",
@@ -494,7 +485,7 @@ class AutoCollectorRunner(BaseRunner):
 
         for i, url in enumerate(image_urls[:self.MAX_IMAGES]):
             try:
-                artifact = await self._download_single_image(None, url, output_folder, i)
+                artifact = await self._download_single_image(url, output_folder, i)
                 if artifact:
                     artifacts.append(artifact)
             except Exception as e:
@@ -504,7 +495,6 @@ class AutoCollectorRunner(BaseRunner):
     
     async def _download_single_image(
         self,
-        client,
         url: str,
         output_folder: Path,
         index: int,
@@ -578,8 +568,25 @@ class AutoCollectorRunner(BaseRunner):
             await asyncio.to_thread(output_folder.mkdir, parents=True, exist_ok=True)
 
             # Offload blocking rglob to thread pool
+            # Resolve source_path to absolute for symlink validation
+            resolved_source = source_path.resolve()
+
             def scan_files() -> list[Path]:
-                return [item for item in source_path.rglob("*") if item.is_file()]
+                safe_files = []
+                for item in source_path.rglob("*"):
+                    if not item.is_file():
+                        continue
+                    # Resolve symlinks and verify the target is within source_path
+                    try:
+                        resolved_item = item.resolve()
+                        # Check if resolved path is within the source directory
+                        resolved_item.relative_to(resolved_source)
+                        safe_files.append(item)
+                    except ValueError:
+                        # Path is outside source_path (symlink escape attempt)
+                        logger.warning(f"Skipping file outside source path: {item} -> {resolved_item}")
+                        continue
+                return safe_files
 
             files = await asyncio.to_thread(scan_files)
 
@@ -655,8 +662,25 @@ class AutoCollectorRunner(BaseRunner):
         await asyncio.to_thread(output_folder.mkdir, parents=True, exist_ok=True)
 
         # Offload blocking rglob to thread pool
+        # Resolve source_path to absolute for symlink validation
+        resolved_source = await asyncio.to_thread(source_path.resolve)
+
         def scan_files() -> list[Path]:
-            return [f for f in source_path.rglob("*") if f.is_file()]
+            safe_files = []
+            for f in source_path.rglob("*"):
+                if not f.is_file():
+                    continue
+                # Resolve symlinks and verify the target is within source_path
+                try:
+                    resolved_f = f.resolve()
+                    # Check if resolved path is within the source directory
+                    resolved_f.relative_to(resolved_source)
+                    safe_files.append(f)
+                except ValueError:
+                    # Path is outside source_path (symlink escape attempt)
+                    logger.warning(f"Skipping file outside source path: {f}")
+                    continue
+            return safe_files
 
         files = await asyncio.to_thread(scan_files)
         total = len(files)

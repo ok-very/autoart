@@ -198,9 +198,14 @@ export async function connectionsRoutes(app: FastifyInstance) {
                 return reply.type('text/html').status(500).send(errorHtml);
             }
 
-            // Validate CLIENT_ORIGIN is a valid HTTPS URL format
+            // Validate CLIENT_ORIGIN is a valid URL with appropriate protocol
             try {
                 const originUrl = new URL(targetOrigin);
+                const isLocalhost = originUrl.hostname === 'localhost' || originUrl.hostname === '127.0.0.1';
+                // Allow HTTP only for localhost (development), require HTTPS otherwise
+                if (originUrl.protocol === 'http:' && !isLocalhost) {
+                    throw new Error('HTTP protocol only allowed for localhost');
+                }
                 if (originUrl.protocol !== 'https:' && originUrl.protocol !== 'http:') {
                     throw new Error('Invalid protocol');
                 }
@@ -208,7 +213,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
                 if (originUrl.pathname !== '/' || originUrl.search || originUrl.hash) {
                     console.warn('Monday OAuth callback: CLIENT_ORIGIN should be just origin (no path/query/hash)');
                 }
-            } catch {
+            } catch (err) {
                 console.error('Monday OAuth callback: CLIENT_ORIGIN is not a valid URL:', targetOrigin);
                 const errorHtml = `
 <!DOCTYPE html>

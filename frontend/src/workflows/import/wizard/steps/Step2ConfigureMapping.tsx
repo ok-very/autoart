@@ -824,11 +824,11 @@ function DraggableTagPill({ group, variant, onRemove }: DraggableTagPillProps) {
                 {...attributes}
                 {...listeners}
                 className="cursor-grab"
-                aria-label={`Drag to reorder ${group.groupTitle}`}
+                aria-label={`Drag to reorder ${group.groupTitle || 'group'}`}
             >
                 <GripVertical className="w-2.5 h-2.5 opacity-50" />
             </button>
-            <span className="truncate max-w-[150px]">{group.groupTitle}</span>
+            <span className="truncate max-w-[150px]">{group.groupTitle || 'Untitled Group'}</span>
         </div>
     );
 }
