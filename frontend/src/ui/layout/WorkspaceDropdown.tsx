@@ -17,30 +17,26 @@ import type { WorkspacePreset } from '../../types/workspace';
 import { AddWorkspaceDialog } from './AddWorkspaceDialog';
 
 /**
- * Color mapping for workspace accent colors
+ * Unified color configuration for workspace styling.
+ * Single source of truth to prevent drift between icon and active states.
  */
-const WORKSPACE_COLORS: Record<string, string> = {
-    pink: 'bg-pink-100 text-pink-700',
-    blue: 'bg-blue-100 text-blue-700',
-    green: 'bg-green-100 text-green-700',
-    purple: 'bg-purple-100 text-purple-700',
-    orange: 'bg-orange-100 text-orange-700',
-    slate: 'bg-slate-100 text-slate-700',
+const WORKSPACE_COLOR_CONFIG: Record<string, { icon: string; active: string }> = {
+    pink: { icon: 'bg-pink-100 text-pink-700', active: 'bg-pink-50' },
+    blue: { icon: 'bg-blue-100 text-blue-700', active: 'bg-blue-50' },
+    green: { icon: 'bg-green-100 text-green-700', active: 'bg-green-50' },
+    purple: { icon: 'bg-purple-100 text-purple-700', active: 'bg-purple-50' },
+    orange: { icon: 'bg-orange-100 text-orange-700', active: 'bg-orange-50' },
+    slate: { icon: 'bg-slate-100 text-slate-700', active: 'bg-slate-50' },
 };
 
-/**
- * Get the active color classes for a workspace
- */
+const DEFAULT_COLOR = 'slate';
+
+function getIconColorClass(color: string): string {
+    return WORKSPACE_COLOR_CONFIG[color]?.icon ?? WORKSPACE_COLOR_CONFIG[DEFAULT_COLOR].icon;
+}
+
 function getActiveColorClass(color: string): string {
-    const colorMap: Record<string, string> = {
-        pink: 'bg-pink-50',
-        blue: 'bg-blue-50',
-        green: 'bg-green-50',
-        purple: 'bg-purple-50',
-        orange: 'bg-orange-50',
-        slate: 'bg-slate-50',
-    };
-    return colorMap[color] ?? 'bg-slate-50';
+    return WORKSPACE_COLOR_CONFIG[color]?.active ?? WORKSPACE_COLOR_CONFIG[DEFAULT_COLOR].active;
 }
 
 interface WorkspaceMenuItemProps {
@@ -52,7 +48,7 @@ interface WorkspaceMenuItemProps {
 
 function WorkspaceMenuItem({ workspace, isActive, onSelect, onDelete }: WorkspaceMenuItemProps) {
     const Icon = workspace.icon;
-    const colorClasses = WORKSPACE_COLORS[workspace.color] ?? WORKSPACE_COLORS.slate;
+    const colorClasses = getIconColorClass(workspace.color);
 
     return (
         <Menu.Item
@@ -106,6 +102,7 @@ export function WorkspaceDropdown() {
     // Determine button styling based on active workspace
     const buttonColor = activeWorkspace?.color ?? 'gray';
     const hasActiveWorkspace = !!activeWorkspace;
+    const ActiveIcon = activeWorkspace?.icon;
 
     return (
         <>
@@ -116,7 +113,7 @@ export function WorkspaceDropdown() {
                         color={hasActiveWorkspace ? buttonColor : 'gray'}
                         size="sm"
                         rightSection={<ChevronDown size={14} />}
-                        leftSection={activeWorkspace ? <activeWorkspace.icon size={14} /> : undefined}
+                        leftSection={ActiveIcon ? <ActiveIcon size={14} /> : undefined}
                     >
                         {activeWorkspace?.label ?? 'Workspace'}
                     </Button>

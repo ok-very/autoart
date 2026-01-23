@@ -153,12 +153,13 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 
             resetLayout: () => {
                 // Restore default layout:
-                // - Keep only permanent panels + selection-inspector
+                // - Reset to DEFAULT_OPEN_PANELS (center-workspace + selection-inspector)
                 // - Clear layout blob (DockviewWorkspace will rebuild default)
-                // - Clear user overrides
+                // - Clear user overrides and active workspace
                 set({
                     layout: null,
                     openPanelIds: [...DEFAULT_OPEN_PANELS],
+                    panelParams: new Map(),
                     userOverrides: new Map(),
                     activeWorkspaceId: null,
                 });
@@ -178,11 +179,21 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     return;
                 }
 
-                // Close all non-permanent panels first (except those in the preset)
                 const presetPanelIds = preset.panels.map(p => p.panelId);
+
+                // Close panels not in preset via Dockview API
                 const panelsToClose = state.openPanelIds.filter(
                     id => !isPermanentPanel(id) && !presetPanelIds.includes(id)
                 );
+                const api = state.dockviewApi;
+                if (api) {
+                    for (const panelId of panelsToClose) {
+                        const panel = api.getPanel(panelId);
+                        if (panel) {
+                            panel.api.close();
+                        }
+                    }
+                }
 
                 // Build new panel list: permanent panels + preset panels
                 const permanentPanels = state.openPanelIds.filter(id => isPermanentPanel(id));
@@ -228,8 +239,10 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 const state = get();
                 const captured = state.captureCurrentState();
 
+                // Use timestamp + random suffix to prevent collision within same millisecond
+                const uniqueId = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
                 const newWorkspace: WorkspacePreset = {
-                    id: `custom-${Date.now()}`,
+                    id: uniqueId,
                     label: name,
                     icon: DEFAULT_CUSTOM_WORKSPACE_ICON,
                     color: 'slate',
@@ -283,7 +296,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     return {
                         id,
                         currentViewMode,
-                        position: def?.defaultPlacement.area as 'center' | 'left' | 'right' | 'bottom',
+                        position: def?.defaultPlacement?.area as 'center' | 'left' | 'right' | 'bottom' | undefined,
                     };
                 });
 
@@ -300,8 +313,9 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 layoutVersion: LAYOUT_VERSION,
                 layout: state.layout,
                 openPanelIds: state.openPanelIds,
-                // Map needs special serialization
+                // Maps need special serialization
                 userOverrides: Array.from(state.userOverrides.entries()),
+                panelParams: Array.from(state.panelParams.entries()),
                 // Workspace presets
                 activeWorkspaceId: state.activeWorkspaceId,
                 // Custom workspaces need icon serialization (store icon name)
@@ -316,14 +330,23 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     layout?: SerializedDockviewState | null;
                     openPanelIds?: PanelId[];
                     userOverrides?: [PanelId, boolean][];
+                    panelParams?: [PanelId, unknown][];
                     activeWorkspaceId?: string | null;
                     customWorkspaces?: WorkspacePreset[];
                 } | undefined;
 
-                // If layout version doesn't match, reset to defaults
+                // Handle version mismatch: preserve custom workspaces but reset layout
                 if (p?.layoutVersion !== LAYOUT_VERSION) {
-                    console.log('Layout version mismatch, resetting to defaults');
-                    return current;
+                    console.log('Layout version mismatch, migrating data');
+                    // Preserve custom workspaces from old version
+                    const customWorkspaces = (p?.customWorkspaces ?? []).map(w => ({
+                        ...w,
+                        icon: DEFAULT_CUSTOM_WORKSPACE_ICON,
+                    }));
+                    return {
+                        ...current,
+                        customWorkspaces,
+                    };
                 }
 
                 // Restore custom workspaces with proper icon
@@ -337,6 +360,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     layout: p?.layout ?? current.layout,
                     openPanelIds: p?.openPanelIds ?? current.openPanelIds,
                     userOverrides: new Map(p?.userOverrides ?? []),
+                    panelParams: new Map(p?.panelParams ?? []),
                     activeWorkspaceId: p?.activeWorkspaceId ?? current.activeWorkspaceId,
                     customWorkspaces,
                 };

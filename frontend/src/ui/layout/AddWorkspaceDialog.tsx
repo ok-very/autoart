@@ -46,13 +46,16 @@ export function AddWorkspaceDialog({ open, onClose }: AddWorkspaceDialogProps) {
             return;
         }
 
-        // Save workspace
-        saveCurrentAsWorkspace(trimmedName);
-
-        // Reset and close
-        setName('');
-        setError(null);
-        onClose();
+        // Save workspace with error handling
+        try {
+            saveCurrentAsWorkspace(trimmedName);
+            // Reset and close only on success
+            setName('');
+            setError(null);
+            onClose();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to save workspace');
+        }
     }, [name, saveCurrentAsWorkspace, customWorkspaces, onClose]);
 
     const handleClose = useCallback(() => {
