@@ -31,6 +31,23 @@ const WORKSPACE_COLOR_CONFIG: Record<string, { icon: string; active: string }> =
 
 const DEFAULT_COLOR = 'slate';
 
+/**
+ * Maps workspace colors to Button component's supported colors.
+ * Button only supports: 'gray' | 'blue' | 'violet' | 'yellow'
+ */
+const BUTTON_COLOR_MAP: Record<string, 'gray' | 'blue' | 'violet' | 'yellow'> = {
+    pink: 'blue',
+    blue: 'blue',
+    green: 'blue',
+    purple: 'violet',
+    orange: 'yellow',
+    slate: 'gray',
+};
+
+function getButtonColor(workspaceColor: string): 'gray' | 'blue' | 'violet' | 'yellow' {
+    return BUTTON_COLOR_MAP[workspaceColor] ?? 'gray';
+}
+
 function getIconColorClass(color: string): string {
     return WORKSPACE_COLOR_CONFIG[color]?.icon ?? WORKSPACE_COLOR_CONFIG[DEFAULT_COLOR].icon;
 }
@@ -111,8 +128,8 @@ export function WorkspaceDropdown() {
     };
 
     // Determine button styling based on active workspace
-    const buttonColor = activeWorkspace?.color ?? 'gray';
     const hasActiveWorkspace = !!activeWorkspace;
+    const buttonColor = getButtonColor(activeWorkspace?.color ?? 'gray');
     const ActiveIcon = activeWorkspace?.icon;
 
     return (
@@ -121,7 +138,7 @@ export function WorkspaceDropdown() {
                 <Menu.Target>
                     <Button
                         variant={hasActiveWorkspace ? 'light' : 'subtle'}
-                        color={hasActiveWorkspace ? buttonColor : 'gray'}
+                        color={buttonColor}
                         size="sm"
                         rightSection={<ChevronDown size={14} />}
                         leftSection={ActiveIcon ? <ActiveIcon size={14} /> : undefined}
