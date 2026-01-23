@@ -247,8 +247,9 @@ async function executePlanViaComposer(
             }
 
             // Use parent container as classification node if available
+            // Ensure null (not undefined) for missing lookups to satisfy DB/downstream expectations
             const parentContainerId = item.parentTempId
-                ? createdIds[item.parentTempId]
+                ? (createdIds[item.parentTempId] ?? null)
                 : null;
 
             // Use tempId as uniqueName to prevent collisions when multiple items share the same title
@@ -320,15 +321,47 @@ async function executePlanViaComposer(
     // Build itemsByTempId lookup for parent resolution
     const itemsByTempId = new Map(plan.items.map(i => [i.tempId, i]));
 
-    // Sort items by parentage depth (items with container parents first, then children of items)
-    // This ensures parents exist in createdIds before children are processed
+    // Topological sort: ensure all ancestors are processed before descendants
+    // Calculate depth (number of item ancestors) for each item to handle multi-level hierarchies
+    const itemDepths = new Map<string, number>();
+
+    function getItemDepth(tempId: string, visited: Set<string> = new Set()): number {
+        // Memoization
+        if (itemDepths.has(tempId)) return itemDepths.get(tempId)!;
+
+        // Cycle detection
+        if (visited.has(tempId)) {
+            logger.warn({ tempId }, '[imports.service] Cycle detected in item parent chain');
+            return 0;
+        }
+
+        const item = itemsByTempId.get(tempId);
+        if (!item) return 0;
+
+        // If no parent or parent is a container (not an item), depth is 0
+        if (!item.parentTempId || !itemsByTempId.has(item.parentTempId)) {
+            itemDepths.set(tempId, 0);
+            return 0;
+        }
+
+        // Parent is another item - depth is parent's depth + 1
+        visited.add(tempId);
+        const parentDepth = getItemDepth(item.parentTempId, visited);
+        const depth = parentDepth + 1;
+        itemDepths.set(tempId, depth);
+        return depth;
+    }
+
+    // Calculate depths for all items
+    for (const item of plan.items) {
+        getItemDepth(item.tempId);
+    }
+
+    // Sort by depth ascending - ancestors (lower depth) come before descendants (higher depth)
     const sortedItems = [...plan.items].sort((a, b) => {
-        // Items whose parent is a container come first
-        const aParentIsItem = Boolean(a.parentTempId && itemsByTempId.has(a.parentTempId));
-        const bParentIsItem = Boolean(b.parentTempId && itemsByTempId.has(b.parentTempId));
-        if (aParentIsItem && !bParentIsItem) return 1;
-        if (!aParentIsItem && bParentIsItem) return -1;
-        return 0;
+        const aDepth = itemDepths.get(a.tempId) ?? 0;
+        const bDepth = itemDepths.get(b.tempId) ?? 0;
+        return aDepth - bDepth;
     });
 
     for (const item of sortedItems) {

@@ -162,11 +162,18 @@ export function generateClassificationsForConnectorItems(
                 // Records with no field data should be marked as needing review
                 const hasFieldData = item.fieldRecordings && item.fieldRecordings.length > 0;
                 if (!hasFieldData) {
+                    // Include empty schemaMatch for consistent shape across all classifications
                     return {
                         itemTempId: item.tempId,
                         outcome: 'UNCLASSIFIED' as ClassificationOutcome,
                         confidence: 'low' as const,
                         rationale: 'Record has no field data',
+                        schemaMatch: {
+                            definitionId: null,
+                            definitionName: null,
+                            matchScore: 0,
+                            proposedDefinition: undefined,
+                        },
                     };
                 }
                 // Records need schema matching to determine target definition
@@ -306,6 +313,9 @@ export async function saveResolutions(
         }
 
         // Apply resolutions to classifications
+        // Track unknown itemTempIds to warn about stale/invalid resolutions
+        const unknownTempIds: string[] = [];
+
         for (const res of resolutions) {
             const classification = plan.classifications.find((c: ItemClassification) => c.itemTempId === res.itemTempId);
             if (classification) {
@@ -314,7 +324,17 @@ export async function saveResolutions(
                     resolvedFactKind: res.resolvedFactKind,
                     resolvedPayload: res.resolvedPayload,
                 };
+            } else {
+                unknownTempIds.push(res.itemTempId);
             }
+        }
+
+        // Warn if any resolutions referenced unknown items (stale UI or ID mismatch)
+        if (unknownTempIds.length > 0) {
+            logger.warn(
+                { sessionId, unknownTempIds, totalResolutions: resolutions.length },
+                '[import-classification] Some resolutions referenced unknown itemTempIds - these were ignored'
+            );
         }
 
         // Update the plan in database (within transaction)

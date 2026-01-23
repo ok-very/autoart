@@ -43,6 +43,16 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
     const parser = PARSERS[session.parser_name];
     if (!parser) throw new Error(`Parser ${session.parser_name} not found`);
 
+    // Validate raw_data exists and is a string before parsing
+    if (session.raw_data === null || session.raw_data === undefined) {
+        logger.error({ sessionId }, '[import-plan] Session raw_data is null or undefined');
+        throw new Error(`Session ${sessionId} has no raw data to parse`);
+    }
+    if (typeof session.raw_data !== 'string') {
+        logger.error({ sessionId, rawDataType: typeof session.raw_data }, '[import-plan] Session raw_data is not a string');
+        throw new Error(`Session ${sessionId} has invalid raw data type`);
+    }
+
     // Parse config from JSONB with error handling
     let config: Record<string, unknown>;
     try {
@@ -71,25 +81,27 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
         classifications,
     };
 
-    // Persist plan
-    await db
-        .insertInto('import_plans')
-        .values({
-            session_id: sessionId,
-            plan_data: JSON.stringify(planData),
-            validation_issues: JSON.stringify(validationIssues),
-        })
-        .execute();
-
     // Determine session status based on classifications
     const hasUnresolved = hasUnresolvedClassifications(planData);
     const newStatus = hasUnresolved ? 'needs_review' : 'planned';
 
-    await db
-        .updateTable('import_sessions')
-        .set({ status: newStatus, updated_at: new Date() })
-        .where('id', '=', sessionId)
-        .execute();
+    // Use transaction to ensure plan insert and session status update are atomic
+    await db.transaction().execute(async (trx) => {
+        await trx
+            .insertInto('import_plans')
+            .values({
+                session_id: sessionId,
+                plan_data: JSON.stringify(planData),
+                validation_issues: JSON.stringify(validationIssues),
+            })
+            .execute();
+
+        await trx
+            .updateTable('import_sessions')
+            .set({ status: newStatus, updated_at: new Date() })
+            .where('id', '=', sessionId)
+            .execute();
+    });
 
     return planData;
 }
@@ -241,26 +253,28 @@ export async function generatePlanFromConnector(
     const definitions = await listDefinitions({ definitionKind: 'record' });
     plan.classifications = generateClassificationsForConnectorItems(plan.items, definitions);
 
-    // Save plan to database
-    await db
-        .insertInto('import_plans')
-        .values({
-            session_id: sessionId,
-            plan_data: JSON.stringify(plan),
-            validation_issues: JSON.stringify(plan.validationIssues),
-        })
-        .execute();
-
-    // Update session status
+    // Determine session status
     const newStatus = hasUnresolvedClassifications(plan)
         ? 'needs_review'
         : 'planned';
 
-    await db
-        .updateTable('import_sessions')
-        .set({ status: newStatus })
-        .where('id', '=', sessionId)
-        .execute();
+    // Use transaction to ensure plan insert and session status update are atomic
+    await db.transaction().execute(async (trx) => {
+        await trx
+            .insertInto('import_plans')
+            .values({
+                session_id: sessionId,
+                plan_data: JSON.stringify(plan),
+                validation_issues: JSON.stringify(plan.validationIssues),
+            })
+            .execute();
+
+        await trx
+            .updateTable('import_sessions')
+            .set({ status: newStatus, updated_at: new Date() })
+            .where('id', '=', sessionId)
+            .execute();
+    });
 
     return plan;
 }

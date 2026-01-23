@@ -14,6 +14,9 @@ import type { ImportPlanContainer, ImportPlanItem } from '../types.js';
 // Maximum allowed size for connector config JSON (100KB)
 const MAX_CONNECTOR_CONFIG_SIZE = 100 * 1024;
 
+// Maximum allowed size for raw data (10MB) - prevents DoS via large payloads
+const MAX_RAW_DATA_SIZE = 10 * 1024 * 1024;
+
 // ============================================================================
 // PARSER REGISTRY
 // ============================================================================
@@ -47,12 +50,27 @@ export async function createSession(params: {
         throw new Error(`Unsupported parser: ${params.parserName}. Supported parsers: ${Object.keys(PARSERS).join(', ')}`);
     }
 
+    // Validate rawData size to prevent DoS (use byte length for accuracy)
+    const rawDataByteLength = Buffer.byteLength(params.rawData, 'utf8');
+    if (rawDataByteLength > MAX_RAW_DATA_SIZE) {
+        throw new Error(`Raw data exceeds maximum allowed size (${MAX_RAW_DATA_SIZE / 1024 / 1024}MB)`);
+    }
+
+    // Safely stringify config - catch non-serializable values (BigInt, circular refs, etc.)
+    let configJson: string;
+    try {
+        configJson = JSON.stringify(params.config);
+    } catch (err) {
+        logger.error({ error: err }, '[import-sessions] Failed to serialize config');
+        throw new Error('Config contains non-serializable values (e.g., BigInt, circular references, or functions)');
+    }
+
     const session = await db
         .insertInto('import_sessions')
         .values({
             parser_name: params.parserName,
             raw_data: params.rawData,
-            parser_config: JSON.stringify(params.config),
+            parser_config: configJson,
             target_project_id: params.targetProjectId ?? null,
             status: 'pending',
             created_by: params.userId ?? null,
@@ -77,8 +95,10 @@ export async function createConnectorSession(params: {
     userId?: string;
 }) {
     // Validate connector config size to prevent database bloat
+    // Use Buffer.byteLength for accurate byte counting (handles multi-byte UTF-8 characters)
     const configJson = JSON.stringify(params.connectorConfig);
-    if (configJson.length > MAX_CONNECTOR_CONFIG_SIZE) {
+    const configByteLength = Buffer.byteLength(configJson, 'utf8');
+    if (configByteLength > MAX_CONNECTOR_CONFIG_SIZE) {
         throw new Error(`Connector config exceeds maximum allowed size (${MAX_CONNECTOR_CONFIG_SIZE} bytes)`);
     }
 
@@ -135,12 +155,33 @@ export async function getLatestPlan(sessionId: string): Promise<import('../types
     if (!planRow) return null;
 
     try {
+        // Handle null/undefined/primitive values before parsing
+        if (planRow.plan_data === null || planRow.plan_data === undefined) {
+            logger.error({ sessionId }, '[import-sessions] plan_data is null or undefined');
+            throw new Error(`Missing plan data for session ${sessionId}`);
+        }
+
         const planData = typeof planRow.plan_data === 'string'
             ? JSON.parse(planRow.plan_data)
             : planRow.plan_data;
 
+        // Validate that planData is an object with required ImportPlan fields
+        if (typeof planData !== 'object' || planData === null) {
+            logger.error({ sessionId, planDataType: typeof planData }, '[import-sessions] plan_data is not an object');
+            throw new Error(`Invalid plan data format for session ${sessionId}`);
+        }
+
+        if (!Array.isArray(planData.containers) || !Array.isArray(planData.items) || !Array.isArray(planData.classifications)) {
+            logger.error({ sessionId }, '[import-sessions] plan_data missing required arrays');
+            throw new Error(`Incomplete plan data for session ${sessionId}`);
+        }
+
         return planData as import('../types.js').ImportPlan;
     } catch (err) {
+        // Re-throw our own errors
+        if (err instanceof Error && err.message.includes('session')) {
+            throw err;
+        }
         logger.error({ sessionId, error: err }, '[import-sessions] Failed to parse plan_data JSON');
         throw new Error(`Malformed plan data for session ${sessionId}`);
     }
