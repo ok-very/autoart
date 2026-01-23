@@ -518,8 +518,7 @@ function generateClassificationsForConnectorItems(
         switch (item.entityType) {
             case 'record': {
                 // Records with no field data should be marked as needing review
-                // Skip schema matching entirely to avoid downstream code misinterpreting
-                // the presence of a schemaMatch object as a valid match
+                // Include empty schemaMatch for consistent object shape across all code paths
                 const hasFieldData = item.fieldRecordings && item.fieldRecordings.length > 0;
                 if (!hasFieldData) {
                     return {
@@ -527,6 +526,12 @@ function generateClassificationsForConnectorItems(
                         outcome: 'AMBIGUOUS' as ClassificationOutcome,
                         confidence: 'low' as const,
                         rationale: 'Record has no field data - cannot match to schema',
+                        schemaMatch: {
+                            definitionId: null,
+                            definitionName: null,
+                            matchScore: 0,
+                            proposedDefinition: undefined,
+                        },
                     };
                 }
                 // Records need schema matching to determine target definition

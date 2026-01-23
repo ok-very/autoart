@@ -264,6 +264,22 @@ function getRoleBadgeClass(role: MondayGroupRole): string {
     }
 }
 
+/**
+ * Generate a globally unique sortable ID to prevent dnd-kit conflicts
+ * when the same groupId could appear in multiple SortableContexts.
+ */
+function getSortableId(groupId: string, context: string): string {
+    return `${context}::${groupId}`;
+}
+
+/**
+ * Extract the original groupId from a sortable ID.
+ */
+function getGroupIdFromSortableId(sortableId: string): string {
+    const parts = sortableId.split('::');
+    return parts.length > 1 ? parts[1] : sortableId;
+}
+
 // ============================================================================
 // TYPE BADGE COMPONENT - Clickable badge to change group role/type
 // ============================================================================
@@ -360,7 +376,7 @@ function StageDropZone({ stageKind, groups, onGroupUpdate, onRoleChange, allGrou
             ) : (
                 <Stack gap="xs">
                     <SortableContext
-                        items={groups.map(g => g.groupId)}
+                        items={groups.map(g => getSortableId(g.groupId, `stage-${stageKind}`))}
                         strategy={verticalListSortingStrategy}
                     >
                         {groups.map((group) => (
@@ -368,6 +384,7 @@ function StageDropZone({ stageKind, groups, onGroupUpdate, onRoleChange, allGrou
                                 key={group.groupId}
                                 group={group}
                                 sectionId="workflow"
+                                sortableContext={`stage-${stageKind}`}
                                 onUpdate={onGroupUpdate}
                                 onRoleChange={onRoleChange}
                                 allGroups={allGroups}
@@ -547,14 +564,16 @@ function NestedChildDropZone({ parentGroupId, childGroups, onRemoveChild }: Nest
 interface CollapsibleGroupCardProps {
     group: MondayGroupConfig;
     sectionId: SectionId;
+    sortableContext: string;  // Context for generating unique sortable ID
     onUpdate: (groupId: string, updates: Partial<MondayGroupConfig>) => void;
     onRoleChange?: (groupId: string, newRole: MondayGroupRole) => void;
     allGroups: MondayGroupConfig[];
 }
 
-function CollapsibleGroupCard({ group, sectionId, onUpdate, onRoleChange, allGroups }: CollapsibleGroupCardProps) {
+function CollapsibleGroupCard({ group, sectionId, sortableContext, onUpdate, onRoleChange, allGroups }: CollapsibleGroupCardProps) {
+    const sortableId = getSortableId(group.groupId, sortableContext);
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: group.groupId,
+        id: sortableId,
     });
 
     const style = {
@@ -781,12 +800,14 @@ function CollapsibleGroupCard({ group, sectionId, onUpdate, onRoleChange, allGro
 interface DraggableTagPillProps {
     group: MondayGroupConfig;
     variant: SectionConfig['variant'];
+    sortableContext: string;  // Context for generating unique sortable ID
     onRemove?: () => void;
 }
 
-function DraggableTagPill({ group, variant, onRemove }: DraggableTagPillProps) {
+function DraggableTagPill({ group, variant, sortableContext, onRemove }: DraggableTagPillProps) {
+    const sortableId = getSortableId(group.groupId, sortableContext);
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: group.groupId,
+        id: sortableId,
     });
 
     const style = {
@@ -861,7 +882,8 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
 
         if (!over) return;
 
-        const groupId = active.id as string;
+        // Extract real groupId from sortable ID (removes context prefix)
+        const groupId = getGroupIdFromSortableId(active.id as string);
         const overId = over.id as string;
         const overData = over.data.current;
 
@@ -913,9 +935,10 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
         // Check if dropped on a section directly
         let targetSectionId: SectionId | null = SECTIONS.find(s => s.id === overId)?.id || null;
 
-        // If not dropped on a section, check if dropped on another card
+        // If not dropped on a section, check if dropped on another card (extract real groupId)
         if (!targetSectionId) {
-            const targetGroup = config.groups.find(g => g.groupId === overId);
+            const overGroupId = getGroupIdFromSortableId(overId);
+            const targetGroup = config.groups.find(g => g.groupId === overGroupId);
             if (targetGroup) {
                 targetSectionId = getSectionForRole(getEffectiveRole(targetGroup));
             }
@@ -941,7 +964,7 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
         });
     }, [config.groups, onGroupUpdate]);
 
-    const activeGroup = activeId ? config.groups.find(g => g.groupId === activeId) : null;
+    const activeGroup = activeId ? config.groups.find(g => g.groupId === getGroupIdFromSortableId(activeId)) : null;
 
     return (
         <Stack gap="md" className="h-full overflow-hidden">
@@ -1007,7 +1030,7 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
                                     ) : undefined}
                                 >
                                     <SortableContext
-                                        items={sectionGroups.map(g => g.groupId)}
+                                        items={sectionGroups.map(g => getSortableId(g.groupId, `section-${section.id}`))}
                                         strategy={verticalListSortingStrategy}
                                     >
                                         {sectionGroups.map((group) => (
@@ -1016,6 +1039,7 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
                                                     key={group.groupId}
                                                     group={group}
                                                     variant={section.variant}
+                                                    sortableContext={`section-${section.id}`}
                                                     onRemove={() => {
                                                         // Right-click removal moves to "ignored" section
                                                         onGroupRoleChange(group.groupId, 'ignore');
@@ -1026,6 +1050,7 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
                                                     key={group.groupId}
                                                     group={group}
                                                     sectionId={section.id}
+                                                    sortableContext={`section-${section.id}`}
                                                     onUpdate={onGroupUpdate}
                                                     onRoleChange={onGroupRoleChange}
                                                     allGroups={config.groups}

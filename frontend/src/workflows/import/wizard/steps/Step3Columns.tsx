@@ -97,6 +97,19 @@ function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCard
     const roleMeta = ROLE_METADATA[column.semanticRole];
     const hasSamples = Array.isArray(column.sampleValues) && column.sampleValues.length > 0;
 
+    // Handle invalid semantic roles by providing a fallback value
+    // If the current role is not in the valid options, fall back to 'custom'
+    const isValidRole = VALID_SEMANTIC_ROLES.has(column.semanticRole);
+    const effectiveRole = isValidRole ? column.semanticRole : 'custom';
+
+    // If current role is invalid, add it to options temporarily so user can see and change it
+    const selectOptions = isValidRole
+        ? SEMANTIC_ROLE_OPTIONS
+        : [
+            { value: column.semanticRole, label: `Unknown: ${column.semanticRole}` },
+            ...SEMANTIC_ROLE_OPTIONS,
+        ];
+
     return (
         <div className="border border-slate-200 rounded-lg bg-white overflow-hidden shadow-sm">
             {/* Sample values - PROMINENT */}
@@ -135,6 +148,11 @@ function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCard
                     <Badge variant="light" size="xs">
                         {column.columnType}
                     </Badge>
+                    {!isValidRole && (
+                        <Badge variant="warning" size="xs" title="Unknown role from backend">
+                            ⚠
+                        </Badge>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
@@ -142,11 +160,12 @@ function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCard
                     <Select
                         value={column.semanticRole}
                         onChange={(val) => {
-                            if (val && VALID_SEMANTIC_ROLES.has(val)) {
+                            // Allow changing from invalid role to any valid role
+                            if (val && (VALID_SEMANTIC_ROLES.has(val) || val === column.semanticRole)) {
                                 onUpdate(boardConfigId, workspaceId, column.columnId, { semanticRole: val as MondayColumnSemanticRole });
                             }
                         }}
-                        data={SEMANTIC_ROLE_OPTIONS}
+                        data={selectOptions}
                         size="sm"
                     />
                 </div>
@@ -155,7 +174,7 @@ function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCard
             {/* Footer: description + confidence */}
             <div className="px-4 py-2 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-4">
                 <span className="text-xs text-slate-500 truncate" title={roleMeta?.description}>
-                    {roleMeta?.description || 'No description'}
+                    {roleMeta?.description || (isValidRole ? 'No description' : 'Unknown role - please reassign')}
                 </span>
                 {column.inferenceSource !== 'manual' && column.inferenceConfidence !== undefined && (
                     <Badge variant={getConfidenceVariant(column.inferenceConfidence)} size="xs">

@@ -51,7 +51,7 @@ def _resolve_all_ips(hostname: str) -> list[str]:
     Resolve hostname to all IP addresses (both IPv4 and IPv6).
 
     Returns:
-        List of IP address strings
+        List of IP address strings (empty list if resolution fails)
     """
     ips = []
     try:
@@ -61,7 +61,12 @@ def _resolve_all_ips(hostname: str) -> list[str]:
             ip_str = result[4][0]
             if ip_str not in ips:
                 ips.append(ip_str)
-    except socket.gaierror:
+    except (socket.gaierror, socket.herror, socket.timeout, OSError):
+        # Handle all DNS/network resolution errors gracefully
+        # - gaierror: address-related errors
+        # - herror: legacy host errors
+        # - timeout: DNS resolution timeout
+        # - OSError: other system-level network errors
         pass
     return ips
 
@@ -94,44 +99,49 @@ async def _is_safe_url(url: str) -> tuple[bool, str]:
     """
     try:
         parsed = urlparse(url)
+    except ValueError as e:
+        # urlparse can raise ValueError for malformed URLs
+        return False, f"Invalid URL format: {e}"
 
-        # Only allow http/https
-        if parsed.scheme not in ("http", "https"):
-            return False, f"Unsupported URL scheme: {parsed.scheme}"
+    # Only allow http/https
+    if parsed.scheme not in ("http", "https"):
+        return False, f"Unsupported URL scheme: {parsed.scheme}"
 
-        hostname = parsed.hostname
-        if not hostname:
-            return False, "Invalid URL: no hostname"
+    hostname = parsed.hostname
+    if not hostname:
+        return False, "Invalid URL: no hostname"
 
-        # Check blocked hostnames
-        hostname_lower = hostname.lower()
-        if hostname_lower in BLOCKED_HOSTNAMES:
-            return False, f"Blocked hostname: {hostname}"
+    # Check blocked hostnames
+    hostname_lower = hostname.lower()
+    if hostname_lower in BLOCKED_HOSTNAMES:
+        return False, f"Blocked hostname: {hostname}"
 
-        # Try to resolve hostname and check if IP is private
-        # Use asyncio.to_thread to avoid blocking the event loop
-        # Resolve all IPs (both IPv4 and IPv6)
-        ips = await asyncio.to_thread(_resolve_all_ips, hostname)
-        if ips:
-            is_private, error_msg = _check_ips_against_private_ranges(ips)
-            if is_private:
-                return False, error_msg
+    # Try to resolve hostname and check if IP is private
+    # Use asyncio.to_thread to avoid blocking the event loop
+    # Resolve all IPs (both IPv4 and IPv6)
+    ips = await asyncio.to_thread(_resolve_all_ips, hostname)
+    if ips:
+        is_private, error_msg = _check_ips_against_private_ranges(ips)
+        if is_private:
+            return False, error_msg
 
-        return True, ""
-
-    except Exception as e:
-        return False, f"URL validation error: {e}"
+    return True, ""
 
 
 class SSRFProtectedClient:
-    """HTTP client wrapper that validates redirect URLs for SSRF protection."""
+    """HTTP client wrapper that validates URLs for SSRF protection."""
 
     def __init__(self, timeout: float):
         self.timeout = timeout
 
     async def get(self, url: str) -> "httpx.Response":
-        """Fetch URL with SSRF protection on redirects."""
+        """Fetch URL with SSRF protection on initial URL and redirects."""
         httpx = _get_httpx()
+
+        # Validate initial URL for SSRF protection (defense in depth)
+        is_safe, error_msg = await _is_safe_url(url)
+        if not is_safe:
+            raise ValueError(f"Unsafe URL blocked: {error_msg}")
 
         async with httpx.AsyncClient(
             timeout=self.timeout,
@@ -514,21 +524,28 @@ class AutoCollectorRunner(BaseRunner):
             
             # Determine extension from content-type or URL
             content_type = response.headers.get("content-type", "")
-            ext = mimetypes.guess_extension(content_type.split(";")[0]) or ".jpg"
-            
+            content_type_base = content_type.split(";")[0].strip().lower()
+
+            # Security: Validate content-type is actually an image
+            if not content_type_base.startswith("image/"):
+                logger.warning(f"Skipping non-image content-type {content_type_base} from {url}")
+                return None
+
+            ext = mimetypes.guess_extension(content_type_base) or ".jpg"
+
             # Generate filename from URL hash
             url_hash = hashlib.md5(url.encode()).hexdigest()[:8]
             filename = f"image_{index:03d}_{url_hash}{ext}"
             filepath = output_folder / filename
-            
-            # Write file
-            filepath.write_bytes(response.content)
-            
+
+            # Write file asynchronously to avoid blocking the event loop
+            await asyncio.to_thread(filepath.write_bytes, response.content)
+
             return ArtifactRef(
                 ref_id=str(uuid.uuid4()),
                 path=str(filepath),
                 artifact_type="image",
-                mime_type=content_type.split(";")[0] or "image/jpeg",
+                mime_type=content_type_base or "image/jpeg",
             )
             
         except Exception as e:
@@ -574,7 +591,12 @@ class AutoCollectorRunner(BaseRunner):
             def scan_files() -> list[Path]:
                 safe_files = []
                 for item in source_path.rglob("*"):
-                    if not item.is_file():
+                    try:
+                        if not item.is_file():
+                            continue
+                    except (OSError, PermissionError) as e:
+                        # Skip files we can't access (permission errors, etc.)
+                        logger.warning(f"Skipping inaccessible file {item}: {e}")
                         continue
                     # Resolve symlinks and verify the target is within source_path
                     try:
@@ -582,9 +604,10 @@ class AutoCollectorRunner(BaseRunner):
                         # Check if resolved path is within the source directory
                         resolved_item.relative_to(resolved_source)
                         safe_files.append(item)
-                    except ValueError:
-                        # Path is outside source_path (symlink escape attempt)
-                        logger.warning(f"Skipping file outside source path: {item} -> {resolved_item}")
+                    except (ValueError, OSError) as e:
+                        # ValueError: Path is outside source_path (symlink escape attempt)
+                        # OSError: Could not resolve path
+                        logger.warning(f"Skipping file {item}: {e}")
                         continue
                 return safe_files
 
@@ -668,7 +691,12 @@ class AutoCollectorRunner(BaseRunner):
         def scan_files() -> list[Path]:
             safe_files = []
             for f in source_path.rglob("*"):
-                if not f.is_file():
+                try:
+                    if not f.is_file():
+                        continue
+                except (OSError, PermissionError) as e:
+                    # Skip files we can't access (permission errors, etc.)
+                    logger.warning(f"Skipping inaccessible file {f}: {e}")
                     continue
                 # Resolve symlinks and verify the target is within source_path
                 try:
@@ -676,9 +704,10 @@ class AutoCollectorRunner(BaseRunner):
                     # Check if resolved path is within the source directory
                     resolved_f.relative_to(resolved_source)
                     safe_files.append(f)
-                except ValueError:
-                    # Path is outside source_path (symlink escape attempt)
-                    logger.warning(f"Skipping file outside source path: {f}")
+                except (ValueError, OSError) as e:
+                    # ValueError: Path is outside source_path (symlink escape attempt)
+                    # OSError: Could not resolve path
+                    logger.warning(f"Skipping file {f}: {e}")
                     continue
             return safe_files
 

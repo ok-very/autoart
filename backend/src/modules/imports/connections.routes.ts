@@ -177,6 +177,32 @@ export async function connectionsRoutes(app: FastifyInstance) {
                 .replace(/'/g, '&#39;');
         };
 
+        /**
+         * Normalize OAuth error messages to prevent reflection of untrusted content.
+         * Maps known error codes to user-friendly messages and redacts unknown ones.
+         */
+        const normalizeOAuthError = (errorParam: string): string => {
+            // Standard OAuth error codes
+            const knownErrors: Record<string, string> = {
+                'access_denied': 'Authorization was denied. Please try again.',
+                'invalid_request': 'Invalid authorization request.',
+                'unauthorized_client': 'This application is not authorized.',
+                'unsupported_response_type': 'Unsupported authorization type.',
+                'invalid_scope': 'Invalid permissions requested.',
+                'server_error': 'The authorization server encountered an error.',
+                'temporarily_unavailable': 'Service temporarily unavailable. Please try again.',
+            };
+
+            const normalized = errorParam.toLowerCase().trim();
+            if (knownErrors[normalized]) {
+                return knownErrors[normalized];
+            }
+
+            // Log unknown errors for debugging but don't expose to user
+            console.warn('Monday OAuth callback: Unknown error code received:', errorParam);
+            return 'Authorization failed. Please try again.';
+        };
+
         // Helper to send HTML that closes the popup
         const sendPopupResponse = (success: boolean, message?: string) => {
             const safeMessage = message ? escapeHtml(message) : 'Unknown error';
@@ -252,7 +278,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
         };
 
         if (error) {
-            return sendPopupResponse(false, error);
+            return sendPopupResponse(false, normalizeOAuthError(error));
         }
 
         if (!code || !state) {
@@ -265,7 +291,16 @@ export async function connectionsRoutes(app: FastifyInstance) {
             return sendPopupResponse(true);
         } catch (err) {
             console.error('Monday OAuth callback error:', err);
-            return sendPopupResponse(false, (err as Error).message);
+            // Don't expose internal error details to the user
+            // Known safe errors from our code can be passed through
+            const errorMessage = (err as Error).message;
+            const safeMessages = [
+                'Invalid or expired state parameter',
+                'Failed to exchange authorization code',
+                'Missing user ID in state',
+            ];
+            const isSafeMessage = safeMessages.some(msg => errorMessage.includes(msg));
+            return sendPopupResponse(false, isSafeMessage ? errorMessage : 'Authorization failed. Please try again.');
         }
     });
 
