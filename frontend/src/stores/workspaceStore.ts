@@ -279,6 +279,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
             captureCurrentState: (): CapturedWorkspaceState => {
                 const state = get();
                 const uiState = useUIStore.getState();
+                const validPositions = ['center', 'left', 'right', 'bottom'] as const;
 
                 const openPanels: CapturedPanelState[] = state.openPanelIds.map(id => {
                     const def = PANEL_DEFINITIONS[id];
@@ -292,10 +293,16 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                         currentViewMode = params.viewMode as string;
                     }
 
+                    // Validate position value - only use if it's a valid position
+                    const rawPosition = def?.defaultPlacement?.area;
+                    const position = validPositions.includes(rawPosition as typeof validPositions[number])
+                        ? (rawPosition as 'center' | 'left' | 'right' | 'bottom')
+                        : undefined;
+
                     return {
                         id,
                         currentViewMode,
-                        position: def?.defaultPlacement?.area as 'center' | 'left' | 'right' | 'bottom' | undefined,
+                        position,
                     };
                 });
 
@@ -332,8 +339,12 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 } | undefined;
 
                 // Handle version mismatch: preserve custom workspaces but reset layout
+                // Layout schema changes require resetting panel arrangement to prevent corruption
                 if (p?.layoutVersion !== LAYOUT_VERSION) {
-                    console.log('Layout version mismatch, migrating data');
+                    console.warn(
+                        `[WorkspaceStore] Layout version changed (${p?.layoutVersion ?? 'none'} -> ${LAYOUT_VERSION}). ` +
+                        'Resetting panel layout to defaults. Custom workspaces preserved.'
+                    );
                     // Preserve custom workspaces from old version
                     const customWorkspaces = (p?.customWorkspaces ?? []).map(w => ({
                         ...w,

@@ -64,6 +64,7 @@ function WorkspaceMenuItem({ workspace, isActive, onSelect, onDelete }: Workspac
                         role="button"
                         tabIndex={0}
                         onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             onDelete();
                         }}
