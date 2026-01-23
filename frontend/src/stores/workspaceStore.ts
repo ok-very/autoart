@@ -324,7 +324,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 panelParams: Array.from(state.panelParams.entries()),
                 // Workspace presets
                 activeWorkspaceId: state.activeWorkspaceId,
-                // Custom workspaces: omit icon (not serializable), reattach on load
+                // Custom workspaces: omit icon (React component functions cannot be JSON serialized), reattach on load
                 customWorkspaces: state.customWorkspaces.map(({ icon: _, ...w }) => w),
             }),
             merge: (persisted: unknown, current: WorkspaceState) => {
