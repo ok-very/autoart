@@ -54,6 +54,12 @@ export interface WorkspacePreset {
 }
 
 /**
+ * Persisted workspace preset (for localStorage).
+ * Icon is omitted since it cannot be serialized; it's reattached on load.
+ */
+export type PersistedWorkspacePreset = Omit<WorkspacePreset, 'icon'>;
+
+/**
  * Captured panel state for saving custom workspaces.
  */
 export interface CapturedPanelState {

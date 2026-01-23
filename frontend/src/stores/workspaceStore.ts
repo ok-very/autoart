@@ -13,7 +13,7 @@ import { persist } from 'zustand/middleware';
 import type { DockviewApi } from 'dockview';
 import type { PanelId } from '../workspace/panelRegistry';
 import { isPermanentPanel, PANEL_DEFINITIONS } from '../workspace/panelRegistry';
-import type { WorkspacePreset, CapturedWorkspaceState, CapturedPanelState } from '../types/workspace';
+import type { WorkspacePreset, CapturedWorkspaceState, CapturedPanelState, PersistedWorkspacePreset } from '../types/workspace';
 import { BUILT_IN_WORKSPACES, DEFAULT_CUSTOM_WORKSPACE_ICON } from '../workspace/workspacePresets';
 import { useUIStore } from './uiStore';
 
@@ -226,7 +226,6 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 }
 
                 // Focus the first panel in the preset using Dockview API
-                const api = state.dockviewApi;
                 if (api && preset.panels.length > 0) {
                     const firstPanel = api.getPanel(preset.panels[0].panelId);
                     if (firstPanel) {
@@ -280,6 +279,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
             captureCurrentState: (): CapturedWorkspaceState => {
                 const state = get();
                 const uiState = useUIStore.getState();
+                const validPositions = ['center', 'left', 'right', 'bottom'] as const;
 
                 const openPanels: CapturedPanelState[] = state.openPanelIds.map(id => {
                     const def = PANEL_DEFINITIONS[id];
@@ -293,10 +293,16 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                         currentViewMode = params.viewMode as string;
                     }
 
+                    // Validate position value - only use if it's a valid position
+                    const rawPosition = def?.defaultPlacement?.area;
+                    const position = validPositions.includes(rawPosition as typeof validPositions[number])
+                        ? (rawPosition as 'center' | 'left' | 'right' | 'bottom')
+                        : undefined;
+
                     return {
                         id,
                         currentViewMode,
-                        position: def?.defaultPlacement?.area as 'center' | 'left' | 'right' | 'bottom' | undefined,
+                        position,
                     };
                 });
 
@@ -318,11 +324,8 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 panelParams: Array.from(state.panelParams.entries()),
                 // Workspace presets
                 activeWorkspaceId: state.activeWorkspaceId,
-                // Custom workspaces need icon serialization (store icon name)
-                customWorkspaces: state.customWorkspaces.map(w => ({
-                    ...w,
-                    icon: 'Folder', // Always serialize as Folder, restore at load
-                })),
+                // Custom workspaces: omit icon (React component functions cannot be JSON serialized), reattach on load
+                customWorkspaces: state.customWorkspaces.map(({ icon: _, ...w }) => w),
             }),
             merge: (persisted: unknown, current: WorkspaceState) => {
                 const p = persisted as {
@@ -332,12 +335,16 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     userOverrides?: [PanelId, boolean][];
                     panelParams?: [PanelId, unknown][];
                     activeWorkspaceId?: string | null;
-                    customWorkspaces?: WorkspacePreset[];
+                    customWorkspaces?: PersistedWorkspacePreset[];
                 } | undefined;
 
                 // Handle version mismatch: preserve custom workspaces but reset layout
+                // Layout schema changes require resetting panel arrangement to prevent corruption
                 if (p?.layoutVersion !== LAYOUT_VERSION) {
-                    console.log('Layout version mismatch, migrating data');
+                    console.warn(
+                        `[WorkspaceStore] Layout version changed (${p?.layoutVersion ?? 'none'} -> ${LAYOUT_VERSION}). ` +
+                        'Resetting panel layout to defaults. Custom workspaces preserved.'
+                    );
                     // Preserve custom workspaces from old version
                     const customWorkspaces = (p?.customWorkspaces ?? []).map(w => ({
                         ...w,

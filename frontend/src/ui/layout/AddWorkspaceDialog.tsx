@@ -10,6 +10,7 @@ import { Folder } from 'lucide-react';
 
 import { Modal, Button, Text, Inline } from '@autoart/ui';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
 
 interface AddWorkspaceDialogProps {
     open: boolean;
@@ -19,7 +20,6 @@ interface AddWorkspaceDialogProps {
 export function AddWorkspaceDialog({ open, onClose }: AddWorkspaceDialogProps) {
     const [name, setName] = useState('');
     const [error, setError] = useState<string | null>(null);
-    const { saveCurrentAsWorkspace, customWorkspaces } = useWorkspaceStore();
 
     const handleSubmit = useCallback((e: React.FormEvent) => {
         e.preventDefault();
@@ -37,8 +37,11 @@ export function AddWorkspaceDialog({ open, onClose }: AddWorkspaceDialogProps) {
             return;
         }
 
-        // Check for duplicate names
-        const isDuplicate = customWorkspaces.some(
+        // Check for duplicate names against BOTH built-in and custom workspaces
+        // Use current store state to avoid stale closure issues
+        const currentCustomWorkspaces = useWorkspaceStore.getState().customWorkspaces;
+        const allWorkspaces = [...BUILT_IN_WORKSPACES, ...currentCustomWorkspaces];
+        const isDuplicate = allWorkspaces.some(
             w => w.label.toLowerCase() === trimmedName.toLowerCase()
         );
         if (isDuplicate) {
@@ -48,7 +51,7 @@ export function AddWorkspaceDialog({ open, onClose }: AddWorkspaceDialogProps) {
 
         // Save workspace with error handling
         try {
-            saveCurrentAsWorkspace(trimmedName);
+            useWorkspaceStore.getState().saveCurrentAsWorkspace(trimmedName);
             // Reset and close only on success
             setName('');
             setError(null);
@@ -56,7 +59,7 @@ export function AddWorkspaceDialog({ open, onClose }: AddWorkspaceDialogProps) {
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to save workspace');
         }
-    }, [name, saveCurrentAsWorkspace, customWorkspaces, onClose]);
+    }, [name, onClose]);
 
     const handleClose = useCallback(() => {
         setName('');

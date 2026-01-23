@@ -11,7 +11,7 @@ import { useState } from 'react';
 
 import { Button } from '@autoart/ui';
 import { Menu } from '@autoart/ui';
-import { useWorkspaceStore, useActiveWorkspaceId } from '../../stores/workspaceStore';
+import { useWorkspaceStore, useActiveWorkspaceId, useCustomWorkspaces } from '../../stores/workspaceStore';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
 import type { WorkspacePreset } from '../../types/workspace';
 import { AddWorkspaceDialog } from './AddWorkspaceDialog';
@@ -30,6 +30,23 @@ const WORKSPACE_COLOR_CONFIG: Record<string, { icon: string; active: string }> =
 };
 
 const DEFAULT_COLOR = 'slate';
+
+/**
+ * Maps workspace colors to Button component's supported colors.
+ * Button only supports: 'gray' | 'blue' | 'violet' | 'yellow'
+ */
+const BUTTON_COLOR_MAP: Record<string, 'gray' | 'blue' | 'violet' | 'yellow'> = {
+    pink: 'blue',
+    blue: 'blue',
+    green: 'blue',
+    purple: 'violet',
+    orange: 'yellow',
+    slate: 'gray',
+};
+
+function getButtonColor(workspaceColor: string): 'gray' | 'blue' | 'violet' | 'yellow' {
+    return BUTTON_COLOR_MAP[workspaceColor] ?? 'gray';
+}
 
 function getIconColorClass(color: string): string {
     return WORKSPACE_COLOR_CONFIG[color]?.icon ?? WORKSPACE_COLOR_CONFIG[DEFAULT_COLOR].icon;
@@ -60,16 +77,26 @@ function WorkspaceMenuItem({ workspace, isActive, onSelect, onDelete }: Workspac
             }
             rightSection={
                 onDelete ? (
-                    <button
+                    <span
+                        role="button"
+                        tabIndex={0}
                         onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             onDelete();
                         }}
-                        className="p-1 hover:bg-red-100 rounded text-slate-400 hover:text-red-600 transition-colors"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onDelete();
+                            }
+                        }}
+                        className="p-1 hover:bg-red-100 rounded text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
                         title="Delete workspace"
                     >
                         <Trash2 size={12} />
-                    </button>
+                    </span>
                 ) : undefined
             }
             className={isActive ? getActiveColorClass(workspace.color) : ''}
@@ -82,13 +109,14 @@ function WorkspaceMenuItem({ workspace, isActive, onSelect, onDelete }: Workspac
 export function WorkspaceDropdown() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const activeWorkspaceId = useActiveWorkspaceId();
-    const { applyWorkspace, customWorkspaces, deleteCustomWorkspace, getAllWorkspaces } = useWorkspaceStore();
+    const customWorkspaces = useCustomWorkspaces();
 
-    const allWorkspaces = getAllWorkspaces();
+    // Derive active workspace from built-in + custom workspaces
+    const allWorkspaces = [...BUILT_IN_WORKSPACES, ...customWorkspaces];
     const activeWorkspace = allWorkspaces.find(w => w.id === activeWorkspaceId);
 
     const handleSelectWorkspace = (workspaceId: string) => {
-        applyWorkspace(workspaceId);
+        useWorkspaceStore.getState().applyWorkspace(workspaceId);
     };
 
     const handleAddWorkspace = () => {
@@ -96,12 +124,12 @@ export function WorkspaceDropdown() {
     };
 
     const handleDeleteWorkspace = (id: string) => {
-        deleteCustomWorkspace(id);
+        useWorkspaceStore.getState().deleteCustomWorkspace(id);
     };
 
     // Determine button styling based on active workspace
-    const buttonColor = activeWorkspace?.color ?? 'gray';
     const hasActiveWorkspace = !!activeWorkspace;
+    const buttonColor = getButtonColor(activeWorkspace?.color ?? 'gray');
     const ActiveIcon = activeWorkspace?.icon;
 
     return (
@@ -110,7 +138,7 @@ export function WorkspaceDropdown() {
                 <Menu.Target>
                     <Button
                         variant={hasActiveWorkspace ? 'light' : 'subtle'}
-                        color={hasActiveWorkspace ? buttonColor : 'gray'}
+                        color={buttonColor}
                         size="sm"
                         rightSection={<ChevronDown size={14} />}
                         leftSection={ActiveIcon ? <ActiveIcon size={14} /> : undefined}
