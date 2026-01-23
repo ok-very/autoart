@@ -689,6 +689,16 @@ export async function bulkCreateRecords(
             .returningAll()
             .executeTakeFirstOrThrow();
 
+          // Create primary alias for mention system
+          await trx
+            .insertInto('record_aliases')
+            .values({
+              record_id: created.id,
+              name: record.uniqueName,
+              type: 'primary',
+            })
+            .execute();
+
           result.created++;
           result.records.push(created);
         }

@@ -102,3 +102,49 @@ export const FIELDS_VIEW_MODE_LABELS: Record<FieldsViewMode, string> = {
   browse: 'Browse',
   aggregate: 'Aggregate',
 };
+
+// ============================================================================
+// STAGE KIND (CANONICAL WORKFLOW POSITIONS)
+// ============================================================================
+
+/**
+ * Stage kind enum - canonical workflow stage positions
+ * Used by both interpretation system and connectors (Monday, CSV, etc.)
+ *
+ * Semantics:
+ * - todo: Not yet started
+ * - in_progress: Actively being worked
+ * - blocked: Waiting on external dependency
+ * - done: Work complete
+ * - archive: Historical/closed
+ */
+export const StageKindSchema = z.enum([
+  'todo',
+  'in_progress',
+  'blocked',
+  'done',
+  'archive',
+]);
+export type StageKind = z.infer<typeof StageKindSchema>;
+
+/**
+ * Stage kind display labels
+ */
+export const STAGE_KIND_LABELS: Record<StageKind, string> = {
+  todo: 'To Do',
+  in_progress: 'In Progress',
+  blocked: 'Blocked',
+  done: 'Done',
+  archive: 'Archive',
+};
+
+/**
+ * Stage progression order (for sorting, not enforcement)
+ */
+export const STAGE_KIND_ORDER: Record<StageKind, number> = {
+  todo: 0,
+  in_progress: 1,
+  blocked: 1, // Parallel to in_progress
+  done: 2,
+  archive: 3,
+};

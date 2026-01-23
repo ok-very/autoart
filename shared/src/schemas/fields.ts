@@ -2,20 +2,43 @@ import { z } from 'zod';
 import { FieldTypeSchema, NodeTypeSchema } from './enums.js';
 
 /**
- * RenderHint - Semantic rendering hints for field display
+ * RenderHint - Canonical rendering hints for field display
  * Determines which UI component to use when editing/displaying field values
+ *
+ * These are universal primitives. Connector-specific concepts (timeline, mirror,
+ * subtasks, doc) should translate to these canonical types.
  */
 export const RenderHintSchema = z.enum([
-    'text',      // Single-line text input (default)
-    'longtext',  // Multi-line textarea
-    'status',    // Status dropdown with project-specific options
-    'date',      // Date picker with calendar
-    'person',    // Person/owner selector from workspace members
-    'select',    // Generic select from options list
-    'number',    // Number input
-    'currency',  // Currency input with formatting
-    'url',       // URL input with link preview
-    'email',     // Email input with validation
+    // Text
+    'text',       // Single-line text input (default)
+    'richtext',   // Multi-line rich text / markdown content
+
+    // Selection
+    'status',     // Status dropdown with project-specific options
+    'select',     // Generic select from options list
+    'checkbox',   // Boolean checkbox
+    'tags',       // Multi-select tags
+
+    // People
+    'person',     // Person/assignee selector from workspace members
+
+    // Dates
+    'date',       // Date picker with calendar
+
+    // Numbers
+    'number',     // Number input
+    'currency',   // Currency input with formatting
+
+    // Communication
+    'url',        // URL input with link preview
+    'email',      // Email input with validation
+    'phone',      // Phone number input
+
+    // Attachments
+    'file',       // File attachment
+
+    // Relations
+    'relation',   // Link to other records
 ]);
 export type RenderHint = z.infer<typeof RenderHintSchema>;
 

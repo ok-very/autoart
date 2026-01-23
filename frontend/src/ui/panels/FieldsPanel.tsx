@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react';
 import type { FieldDescriptor } from '@autoart/shared';
 
 import { useUIStore } from '../../stores/uiStore';
-import { useCollectionModeOptional } from '../../surfaces/export/CollectionModeProvider';
+import { useCollectionModeOptional } from '../../workflows/export/context/CollectionModeProvider';
 import { ResizeHandle, SegmentedControl } from '@autoart/ui';
 import { FieldsMillerColumnsView } from '../composites/FieldsMillerColumnsView';
 import { RegistryPageHeader, type RegistryTab } from '../registry';

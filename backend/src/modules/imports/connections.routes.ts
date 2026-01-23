@@ -159,6 +159,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
     /**
      * Monday OAuth callback
      * Handles redirect from Monday after user authorization
+     * Returns HTML that posts message to parent window and closes popup
      */
     app.get('/connections/monday/callback', async (request, reply) => {
         const { code, state, error } = request.query as {
@@ -167,24 +168,141 @@ export async function connectionsRoutes(app: FastifyInstance) {
             error?: string
         };
 
+        const escapeHtml = (value: string): string => {
+            return value
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        };
+
+        /**
+         * Normalize OAuth error messages to prevent reflection of untrusted content.
+         * Maps known error codes to user-friendly messages and redacts unknown ones.
+         */
+        const normalizeOAuthError = (errorParam: string): string => {
+            // Standard OAuth error codes
+            const knownErrors: Record<string, string> = {
+                'access_denied': 'Authorization was denied. Please try again.',
+                'invalid_request': 'Invalid authorization request.',
+                'unauthorized_client': 'This application is not authorized.',
+                'unsupported_response_type': 'Unsupported authorization type.',
+                'invalid_scope': 'Invalid permissions requested.',
+                'server_error': 'The authorization server encountered an error.',
+                'temporarily_unavailable': 'Service temporarily unavailable. Please try again.',
+            };
+
+            const normalized = errorParam.toLowerCase().trim();
+            if (knownErrors[normalized]) {
+                return knownErrors[normalized];
+            }
+
+            // Log unknown errors for debugging but don't expose to user
+            console.warn('Monday OAuth callback: Unknown error code received:', errorParam);
+            return 'Authorization failed. Please try again.';
+        };
+
+        // Helper to send HTML that closes the popup
+        const sendPopupResponse = (success: boolean, message?: string) => {
+            const safeMessage = message ? escapeHtml(message) : 'Unknown error';
+            const targetOrigin = process.env.CLIENT_ORIGIN;
+
+            // Fail fast if CLIENT_ORIGIN is not configured
+            if (!targetOrigin) {
+                console.error('Monday OAuth callback: CLIENT_ORIGIN environment variable is not set');
+                const errorHtml = `
+<!DOCTYPE html>
+<html>
+<head><title>Monday OAuth Error</title></head>
+<body>
+<h1>Configuration Error</h1>
+<p>OAuth callback cannot complete: CLIENT_ORIGIN is not configured on the server.</p>
+<p>Please contact your administrator.</p>
+</body>
+</html>`;
+                return reply.type('text/html').status(500).send(errorHtml);
+            }
+
+            // Validate CLIENT_ORIGIN is a valid URL with appropriate protocol
+            let safeTargetOrigin: string;
+            try {
+                const originUrl = new URL(targetOrigin);
+                const isLocalhost = originUrl.hostname === 'localhost' || originUrl.hostname === '127.0.0.1';
+                // Allow HTTP only for localhost (development), require HTTPS otherwise
+                if (originUrl.protocol === 'http:' && !isLocalhost) {
+                    throw new Error('HTTP protocol only allowed for localhost');
+                }
+                if (originUrl.protocol !== 'https:' && originUrl.protocol !== 'http:') {
+                    throw new Error('Invalid protocol');
+                }
+                // Strip path/query/fragment - use only the origin for postMessage security
+                if (originUrl.pathname !== '/' || originUrl.search || originUrl.hash) {
+                    console.warn('Monday OAuth callback: CLIENT_ORIGIN had path/query/hash which was stripped');
+                }
+                safeTargetOrigin = originUrl.origin;
+            } catch (err) {
+                console.error('Monday OAuth callback: CLIENT_ORIGIN is not a valid URL:', targetOrigin);
+                const errorHtml = `
+<!DOCTYPE html>
+<html>
+<head><title>Monday OAuth Error</title></head>
+<body>
+<h1>Configuration Error</h1>
+<p>OAuth callback cannot complete: CLIENT_ORIGIN is misconfigured.</p>
+<p>Please contact your administrator.</p>
+</body>
+</html>`;
+                return reply.type('text/html').status(500).send(errorHtml);
+            }
+            const html = `
+<!DOCTYPE html>
+<html>
+<head><title>Monday OAuth</title></head>
+<body>
+<script>
+    (function() {
+        var targetOrigin = ${JSON.stringify(safeTargetOrigin)};
+        if (window.opener && targetOrigin) {
+            window.opener.postMessage({
+                type: 'monday-oauth-callback',
+                success: ${success ? 'true' : 'false'},
+                message: ${JSON.stringify(safeMessage)}
+            }, targetOrigin);
+        }
+        window.close();
+    })();
+</script>
+<p>${success ? 'Connected! This window will close.' : `Error: ${safeMessage}`}</p>
+</body>
+</html>`;
+            return reply.type('text/html').send(html);
+        };
+
         if (error) {
-            // User denied or error occurred
-            return reply.redirect('/?monday_auth=error&message=' + encodeURIComponent(error));
+            return sendPopupResponse(false, normalizeOAuthError(error));
         }
 
         if (!code || !state) {
-            return reply.redirect('/?monday_auth=error&message=missing_parameters');
+            return sendPopupResponse(false, 'Missing parameters');
         }
 
         try {
             const { handleMondayCallback } = await import('./monday-oauth.service.js');
             await handleMondayCallback(code, state);
-
-            // Redirect to settings page with success message
-            return reply.redirect('/settings?monday_auth=success');
+            return sendPopupResponse(true);
         } catch (err) {
             console.error('Monday OAuth callback error:', err);
-            return reply.redirect('/?monday_auth=error&message=' + encodeURIComponent((err as Error).message));
+            // Don't expose internal error details to the user
+            // Known safe errors from our code can be passed through
+            const errorMessage = (err as Error).message;
+            const safeMessages = [
+                'Invalid or expired state parameter',
+                'Failed to exchange authorization code',
+                'Missing user ID in state',
+            ];
+            const isSafeMessage = safeMessages.some(msg => errorMessage.includes(msg));
+            return sendPopupResponse(false, isSafeMessage ? errorMessage : 'Authorization failed. Please try again.');
         }
     });
 

@@ -34,6 +34,7 @@ import { Header } from './Header';
 import { OverlayRegistry } from '../registry/OverlayRegistry';
 import { useWorkspaceStore, useOpenPanelIds, useLayout } from '../../stores/workspaceStore';
 import { useVisiblePanels } from '../../stores/contextStore';
+import { useUIStore } from '../../stores/uiStore';
 import {
   PANEL_DEFINITIONS,
   isPermanentPanel,
@@ -43,7 +44,8 @@ import {
 // Import all panel components
 import { CentralAreaAdapter } from '../workspace/CentralAreaAdapter';
 import { SelectionInspector } from '../composites/SelectionInspector';
-import { ClassificationPanel } from '../../surfaces/import/ClassificationPanel';
+import { ClassificationPanel } from '../../workflows/import/panels/ClassificationPanel';
+import { useImportContextOptional } from '../../workflows/import/context/ImportContextProvider';
 import { RecordsPanel } from '../panels/RecordsPanel';
 import { FieldsPanel } from '../panels/FieldsPanel';
 import { ActionsPanel } from '../panels/ActionsPanel';
@@ -149,25 +151,61 @@ function CenterWorkspacePanel(props: IDockviewPanelProps) {
 }
 
 function SelectionInspectorPanel(props: IDockviewPanelProps) {
+  const importContext = useImportContextOptional();
+
   return (
     <div className="h-full overflow-auto bg-white relative group">
-      <SelectionInspector />
+      <SelectionInspector
+        importContext={importContext ? {
+          plan: importContext.plan,
+          selectedItemId: importContext.selectedItemId,
+          onSelectItem: importContext.selectItem,
+        } : undefined}
+      />
       <SpawnHandle api={props.api} panelId="selection-inspector" />
     </div>
   );
 }
 
-function ClassificationPanelWrapper(_props: IDockviewPanelProps) {
+/**
+ * ClassificationPanelAdapter
+ *
+ * Dockview adapter for ClassificationPanel - used for legacy Dockview integration.
+ * Note: The primary ClassificationPanel now appears via ImportWorkflowLayout
+ * as a fixed bottom region. This adapter exists for standalone Dockview usage.
+ */
+function ClassificationPanelAdapter(_props: IDockviewPanelProps) {
+  const importContext = useImportContextOptional();
+  const { importSession: globalSession, importPlan: globalPlan, setImportPlan } = useUIStore();
+
+  // Use import context if available, otherwise fall back to global store
+  const session = importContext?.session ?? globalSession;
+  const plan = importContext?.plan ?? globalPlan;
+
+  const handleResolutionsSaved = useCallback(
+    (updatedPlan: any) => {
+      if (importContext?.updatePlan) {
+        importContext.updatePlan(updatedPlan);
+      } else {
+        setImportPlan(updatedPlan);
+      }
+    },
+    [importContext?.updatePlan, setImportPlan]
+  );
+
+  const sessionId = session?.id ?? null;
+
   return (
     <div className="h-full overflow-auto bg-white relative">
       <ClassificationPanel
-        sessionId={null}
-        plan={null}
-        onResolutionsSaved={() => { }}
+        sessionId={sessionId}
+        plan={plan}
+        onResolutionsSaved={handleResolutionsSaved}
       />
     </div>
   );
 }
+
 
 function SearchResultsPanel(props: IDockviewPanelProps) {
   return (
@@ -184,7 +222,7 @@ function SearchResultsPanel(props: IDockviewPanelProps) {
 const COMPONENTS: Record<string, React.FunctionComponent<IDockviewPanelProps>> = {
   'center-workspace': CenterWorkspacePanel,
   'selection-inspector': SelectionInspectorPanel,
-  'classification': ClassificationPanelWrapper,
+  'classification': ClassificationPanelAdapter,
   'search-results': SearchResultsPanel,
   'records-list': RecordsPanel,
   'fields-list': FieldsPanel,

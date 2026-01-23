@@ -90,7 +90,7 @@ describe('auth.service', () => {
       // Login
       const result = await authService.loginUser({ email, password });
 
-      expect(result.user.email).toBe(email);
+      expect(result.email).toBe(email);
 
       // Cleanup
       await db.deleteFrom('users').where('id', '=', registeredUser.id).execute();

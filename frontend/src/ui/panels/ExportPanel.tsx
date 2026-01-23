@@ -1,4 +1,4 @@
-import { ExportWorkbench } from '../../surfaces/export/ExportWorkbench';
+import { ExportWorkbench } from '../../workflows/export/views/ExportWorkbench';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 
 export function ExportPanel() {

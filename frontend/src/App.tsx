@@ -8,7 +8,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { useAuthStore } from './stores/authStore';
 import { useUIStore } from './stores/uiStore';
 import { MainLayout } from './ui/layout/MainLayout';
-import { CollectionModeProvider } from './surfaces/export/CollectionModeProvider';
+import { CollectionModeProvider } from './workflows/export/context/CollectionModeProvider';
 
 
 function App() {

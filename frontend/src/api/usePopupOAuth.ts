@@ -66,10 +66,20 @@ export function usePopupOAuth(onPopupClose?: () => void) {
         }
 
         return new Promise((resolve, reject) => {
-            let timeoutId: ReturnType<typeof setTimeout>;
+            // eslint-disable-next-line prefer-const -- mutual reference between timeoutId and checkInterval
+            let checkInterval: ReturnType<typeof setInterval>;
+
+            // Timeout after specified duration
+            const timeoutId = setTimeout(() => {
+                clearInterval(checkInterval);
+                if (!popup.closed) {
+                    popup.close();
+                }
+                reject(new Error('OAuth timeout'));
+            }, timeoutMs);
 
             // Poll for popup close
-            const checkInterval = setInterval(() => {
+            checkInterval = setInterval(() => {
                 if (popup.closed) {
                     clearInterval(checkInterval);
                     clearTimeout(timeoutId);
@@ -78,15 +88,6 @@ export function usePopupOAuth(onPopupClose?: () => void) {
                     resolve();
                 }
             }, 500);
-
-            // Timeout after specified duration
-            timeoutId = setTimeout(() => {
-                clearInterval(checkInterval);
-                if (!popup.closed) {
-                    popup.close();
-                }
-                reject(new Error('OAuth timeout'));
-            }, timeoutMs);
         });
     }, [onPopupClose]);
 }

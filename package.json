@@ -35,7 +35,9 @@
     "test:backend": "pnpm --filter autoart-backend test",
     "test:shared": "pnpm --filter @autoart/shared test",
     "test:coverage": "pnpm --filter autoart-backend test:coverage",
-    "test:db": "tsx scripts/test-db-connection.ts"
+    "test:db": "tsx scripts/test-db-connection.ts",
+    "build:all": "pnpm install && pnpm build:shared && pnpm -r build",
+    "build:all:clean": "pnpm -r exec rm -rf dist && pnpm run build:all"
   },
   "keywords": [
     "process-management",

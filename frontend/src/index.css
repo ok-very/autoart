@@ -300,3 +300,159 @@ body {
     transform: scale(1);
   }
 }
+
+/* ============================================================================
+   RADIX COLLAPSIBLE ANIMATIONS
+   ============================================================================ */
+
+@keyframes collapsible-down {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+  }
+}
+
+@keyframes collapsible-up {
+  from {
+    height: var(--radix-collapsible-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+.animate-collapsible-down {
+  animation: collapsible-down 0.2s ease-out;
+}
+
+.animate-collapsible-up {
+  animation: collapsible-up 0.2s ease-out;
+}
+
+/* ============================================================================
+   TYPE BADGE STYLES - For Monday Import group type switching
+   ============================================================================ */
+
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+
+.type-badge:hover {
+  filter: brightness(0.95);
+}
+
+.type-badge-subprocess {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #dbeafe;
+}
+
+.type-badge-template {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #dcfce7;
+}
+
+.type-badge-reference {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #ffedd5;
+}
+
+.type-badge-ignore {
+  background: #f8fafc;
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+
+/* ============================================================================
+   WORKFLOW LAYOUT - Fixed Panel Region Animations
+   ============================================================================ */
+
+.fixed-panel-region {
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+/* Bottom region animations */
+.fixed-panel-region.region-bottom.is-visible {
+  max-height: var(--panel-size, 33%);
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fixed-panel-region.region-bottom.is-hidden {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(100%);
+}
+
+/* Right region animations */
+.fixed-panel-region.region-right.is-visible {
+  max-width: var(--panel-size, 33%);
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.fixed-panel-region.region-right.is-hidden {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+/* Left region animations */
+.fixed-panel-region.region-left.is-visible {
+  max-width: var(--panel-size, 33%);
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.fixed-panel-region.region-left.is-hidden {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-100%);
+}
+
+/* Top region animations */
+.fixed-panel-region.region-top.is-visible {
+  max-height: var(--panel-size, 33%);
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fixed-panel-region.region-top.is-hidden {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-100%);
+}
+
+/* Workflow layout container */
+.workflow-layout-container {
+  position: relative;
+}
+
+.workflow-main-region {
+  position: relative;
+}
+
+.workflow-bottom-region {
+  border-top: 1px solid #e2e8f0;
+}

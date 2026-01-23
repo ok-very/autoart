@@ -1,0 +1,15 @@
+{
+  "allowed_roots": [
+    "C:/Users/Neal/Ballard Fine Art/One Drive - BALLARD FINE ART - ALL FILES/2. PRIVATE ART"
+  ],
+  "excludes": [
+    "pyc",
+    "__pycache__",
+    ".git",
+    ".idea",
+    "node_modules"
+  ],
+  "mail_enabled": false,
+  "mail_poll_interval": 30,
+  "autoart_session_id": ""
+}

@@ -13,10 +13,10 @@ import { useCallback, useState, useMemo, useEffect } from 'react';
 
 import type { ImportSession, ImportPlan } from '../api/hooks/imports';
 import { useUIStore } from '../stores/uiStore';
-import { ImportSidebar } from '../surfaces/import/ImportSidebar';
-import { ImportWorkbenchView } from '../surfaces/import/ImportWorkbenchView';
-import { MondayImportWizardView } from '../surfaces/import/wizard/MondayImportWizardView';
-// import { MondayPreviewView } from '../surfaces/import/MondayPreviewView'; // Replaced by Wizard
+import { ImportSidebar } from '../workflows/import/panels/ImportSidebar';
+import { ImportWorkbenchView } from '../workflows/import/views/ImportWorkbenchView';
+import { MondayImportWizardView } from '../workflows/import/wizard/MondayImportWizardView';
+// import { MondayPreviewView } from '../workflows/import/views/MondayPreviewView'; // Replaced by Wizard
 import { ResizeHandle } from '@autoart/ui';
 import { SelectionInspector } from '../ui/composites/SelectionInspector';
 import { Header } from '../ui/layout/Header';

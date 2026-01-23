@@ -5,14 +5,13 @@
  * Layout: ImportSidebar | Center View (swappable)
  */
 
-import { useCallback, useState, useMemo, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
 import { useUIStore } from '../../stores/uiStore';
-import { ImportSidebar } from '../../surfaces/import/ImportSidebar';
-import { ImportWorkbenchView } from '../../surfaces/import/ImportWorkbenchView';
-import { MondayImportWizardView } from '../../surfaces/import/wizard/MondayImportWizardView';
-// import { MondayPreviewView } from '../surfaces/import/MondayPreviewView'; // Replaced by Wizard
+import { ImportSidebar } from '../../workflows/import/panels/ImportSidebar';
+import { ImportWorkbenchView } from '../../workflows/import/views/ImportWorkbenchView';
+import { MondayImportWizardView } from '../../workflows/import/wizard/MondayImportWizardView';
 import { ResizeHandle } from '@autoart/ui';
 
 // Source type lifted to panel level
@@ -20,8 +19,6 @@ export type ImportSourceType = 'file' | 'monday' | 'collector' | 'api';
 
 export function ImportPanel() {
     const {
-        openDrawer,
-        activeDrawer,
         importSession,
         importPlan,
         setImportSession,
@@ -38,14 +35,6 @@ export function ImportPanel() {
     const session = importSession;
     const plan = importPlan;
 
-    // Check if there are unresolved classifications
-    const hasUnresolvedClassifications = useMemo(() => {
-        if (!plan?.classifications) return false;
-        return plan.classifications.some(
-            (c) => !c.resolution && (c.outcome === 'AMBIGUOUS' || c.outcome === 'UNCLASSIFIED')
-        );
-    }, [plan]);
-
     const handleSidebarResize = useCallback(
         (delta: number) => {
             setSidebarWidth((w) => Math.max(200, Math.min(400, w + delta)));
@@ -54,32 +43,20 @@ export function ImportPanel() {
     );
 
     const handleSessionCreated = useCallback((newSession: ImportSession, newPlan: ImportPlan) => {
+        const isNewSession = newSession.id !== importSession?.id;
         setImportSession(newSession);
         setImportPlan(newPlan);
-        clearSelection();
-    }, [setImportSession, setImportPlan, clearSelection]);
-
-    const handlePlanUpdated = useCallback((updatedPlan: ImportPlan) => {
-        setImportPlan(updatedPlan);
-    }, [setImportPlan]);
+        // Only clear selection when starting a new session, not on plan updates
+        if (isNewSession) {
+            clearSelection();
+        }
+    }, [importSession?.id, setImportSession, setImportPlan, clearSelection]);
 
     const handleReset = useCallback(() => {
         setImportSession(null);
         setImportPlan(null);
         clearSelection();
     }, [setImportSession, setImportPlan, clearSelection]);
-
-    // Open classification drawer when unresolved items exist
-    // TODO: Verify if drawer works over Dockview. Yes it should (Drawers are z-index overlays).
-    useEffect(() => {
-        if (hasUnresolvedClassifications && session && plan && activeDrawer?.type !== 'classification') {
-            openDrawer('classification', {
-                sessionId: session.id,
-                plan,
-                onResolutionsSaved: handlePlanUpdated,
-            });
-        }
-    }, [hasUnresolvedClassifications, session, plan, openDrawer, activeDrawer, handlePlanUpdated]);
 
     // Auto-switch source type based on session connector type
     useEffect(() => {
@@ -90,9 +67,15 @@ export function ImportPanel() {
             } else if (session.parser_name && !session.parser_name.startsWith('connector:')) {
                 // File-based session
                 setSourceType('file');
+            } else if (session.parser_name?.startsWith('connector:')) {
+                // Fallback for other connector types
+                setSourceType('collector');
             }
+        } else {
+            // Reset to default when there is no active session
+            setSourceType('file');
         }
-    }, [session]);
+    }, [session?.parser_name]);
 
     // Render center view based on source type
     const renderCenterView = () => {

@@ -9,7 +9,7 @@ import { create } from 'zustand';
 
 import { DEFAULT_EXPORT_OPTIONS } from '@autoart/shared';
 
-import type { ExportFormat, ExportOptions } from '../surfaces/export/types';
+import type { ExportFormat, ExportOptions } from '../workflows/export/types';
 
 interface ExportWorkbenchState {
     // Selection state

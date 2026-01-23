@@ -5,7 +5,7 @@
  * Opens as a right-side drawer for selecting Monday boards to import.
  */
 
-import { MondayBoardSelector } from '../../../surfaces/import/MondayBoardSelector';
+import { MondayBoardSelector } from '../../../workflows/import/components/MondayBoardSelector';
 
 // ============================================================================
 // TYPES

@@ -21,7 +21,7 @@ import {
   FIELDS_VIEW_MODE_LABELS,
 } from '../../stores/uiStore';
 import { useCollectionStore } from '../../stores';
-import { useCollectionModeOptional } from '../../surfaces/export/CollectionModeProvider';
+import { useCollectionModeOptional } from '../../workflows/export/context/CollectionModeProvider';
 import { useWorkspaceStore, useOpenPanelIds } from '../../stores/workspaceStore';
 import { Button, IconButton, Inline } from '@autoart/ui';
 import { Menu, SegmentedControl } from '@autoart/ui';

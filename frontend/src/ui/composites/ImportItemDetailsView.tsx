@@ -16,7 +16,7 @@ import { Tag, AlertCircle, List, CheckCircle2, User, Calendar, Hash, FileText } 
 import { useUIStore } from '../../stores/uiStore';
 import { Text, Stack, Inline, Badge, Card } from '@autoart/ui';
 import type { InspectorTabId } from '../../types/ui';
-import type { ImportPlanItem } from '../../api/hooks/imports';
+import type { ImportPlanItem, ImportPlan } from '../../api/hooks/imports';
 
 // ============================================================================
 // TYPES
@@ -25,6 +25,8 @@ import type { ImportPlanItem } from '../../api/hooks/imports';
 interface ImportItemDetailsViewProps {
     itemId: string;
     tab: InspectorTabId;
+    /** Optional plan to use instead of reading from uiStore */
+    plan?: ImportPlan | null;
 }
 
 interface FieldRecording {
@@ -158,8 +160,11 @@ function SectionHeader({ icon: Icon, label, count }: { icon: React.ElementType; 
 // COMPONENT
 // ============================================================================
 
-export function ImportItemDetailsView({ itemId, tab }: ImportItemDetailsViewProps) {
-    const { importPlan } = useUIStore();
+export function ImportItemDetailsView({ itemId, tab, plan: propPlan }: ImportItemDetailsViewProps) {
+    const { importPlan: storePlan } = useUIStore();
+
+    // Use prop plan if provided, otherwise fall back to store
+    const importPlan = propPlan ?? storePlan;
 
     // Find selected item from plan
     const selectedItem = importPlan?.items.find((i) => i.tempId === itemId) ||

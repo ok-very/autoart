@@ -18,6 +18,10 @@ export {
     PROJECT_VIEW_MODE_LABELS,
     RECORDS_VIEW_MODE_LABELS,
     FIELDS_VIEW_MODE_LABELS,
+    // Stage kinds (canonical workflow positions)
+    StageKindSchema,
+    STAGE_KIND_LABELS,
+    STAGE_KIND_ORDER,
     type NodeType,
     type RefMode,
     type ReferenceStatus,
@@ -26,10 +30,15 @@ export {
     type RecordsViewMode,
     type FieldsViewMode,
     type ViewMode,
+    type StageKind,
 } from './enums.js';
 
 // ==================== FIELDS ====================
 export {
+    // RenderHint (canonical field rendering)
+    RenderHintSchema,
+    type RenderHint,
+    // Field descriptors
     FieldDescriptorSchema,
     FieldCategorySchema,
     FieldIndexSchema,

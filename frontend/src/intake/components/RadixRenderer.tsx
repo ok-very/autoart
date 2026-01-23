@@ -52,7 +52,7 @@ export function RadixRenderer({
       return <div className={props.className as string}>{renderedChildren}</div>;
 
 
-    case 'Flex':
+    case 'Flex': {
       const gapMap: Record<string, string> = {
         '1': 'gap-1', '2': 'gap-2', '3': 'gap-3', '4': 'gap-4', '6': 'gap-6', '8': 'gap-8'
       };
@@ -64,9 +64,10 @@ export function RadixRenderer({
           {renderedChildren}
         </div>
       );
+    }
 
 
-    case 'Grid':
+    case 'Grid': {
       const gridColsMap: Record<string, string> = {
         '1': 'grid-cols-1', '2': 'grid-cols-2', '3': 'grid-cols-3', '4': 'grid-cols-4', '6': 'grid-cols-6', '12': 'grid-cols-12'
       };
@@ -82,6 +83,7 @@ export function RadixRenderer({
           {renderedChildren}
         </div>
       );
+    }
 
     case 'Text':
       return (
@@ -91,7 +93,7 @@ export function RadixRenderer({
         </p>
       );
 
-    case 'Heading':
+    case 'Heading': {
       const HeadingTag = `h${props.level || 2}` as any;
       return (
         <HeadingTag className={`font-semibold ${props.className || ''}`}>
@@ -99,6 +101,7 @@ export function RadixRenderer({
           {renderedChildren}
         </HeadingTag>
       );
+    }
 
     case 'Button':
       return (
@@ -111,7 +114,7 @@ export function RadixRenderer({
         </button>
       );
 
-    case 'TextField':
+    case 'TextField': {
       const fieldName = props.name as string;
       return (
         <input
@@ -124,8 +127,9 @@ export function RadixRenderer({
           className={`w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${props.className || ''}`}
         />
       );
+    }
 
-    case 'TextArea':
+    case 'TextArea': {
       const textareaName = props.name as string;
       return (
         <textarea
@@ -138,8 +142,9 @@ export function RadixRenderer({
           className={`w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${props.className || ''}`}
         />
       );
+    }
 
-    case 'Select':
+    case 'Select': {
       const selectName = props.name as string;
       const options = (props.options as Array<{ value: string; label: string }>) || [];
       return (
@@ -158,8 +163,9 @@ export function RadixRenderer({
           ))}
         </select>
       );
+    }
 
-    case 'Checkbox':
+    case 'Checkbox': {
       const checkboxName = props.name as string;
       return (
         <label className={`flex items-center gap-2 ${props.className || ''}`}>
@@ -173,6 +179,7 @@ export function RadixRenderer({
           <span>{props.label as string}</span>
         </label>
       );
+    }
 
     case 'Label':
       return (
@@ -192,7 +199,7 @@ export function RadixRenderer({
     case 'Separator':
       return <hr className={`my-4 border-slate-200 ${props.className || ''}`} />;
 
-    case 'Link':
+    case 'Link': {
       const href = props.href as string || '#';
       // Sanitize href to prevent XSS via dangerous protocols
       const SAFE_URL_PATTERN = /^(https?:|mailto:|tel:|\/|#)/i;
@@ -208,6 +215,7 @@ export function RadixRenderer({
           {renderedChildren}
         </a>
       );
+    }
 
     default:
       return null;

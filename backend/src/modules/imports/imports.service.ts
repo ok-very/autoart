@@ -16,6 +16,8 @@
 import { randomUUID } from 'node:crypto';
 import { isInternalWork, type ClassificationOutcome } from '@autoart/shared';
 
+import { logger } from '../../utils/logger.js';
+
 import { getMondayToken } from './connections.service.js';
 import { MondayConnector } from './connectors/monday-connector.js';
 import { GenericCSVParser } from './parsers/generic-csv-parser.js';
@@ -126,6 +128,9 @@ export async function generatePlanFromConnector(
         throw new Error(`Session ${sessionId} not found`);
     }
 
+    // Use provided userId or fall back to session creator
+    const effectiveUserId = userId ?? session.created_by ?? undefined;
+
     // Parse connector config
     const config = session.parser_config as {
         boardId?: string;
@@ -139,7 +144,7 @@ export async function generatePlanFromConnector(
     }
 
     // Get token for the user
-    const token = await getMondayToken(userId);
+    const token = await getMondayToken(effectiveUserId);
     const connector = new MondayConnector(token);
 
     // Collect all nodes from all boards
@@ -155,7 +160,7 @@ export async function generatePlanFromConnector(
     // 1. Identify/Ensure Workspace
     // For V1, we try to use an existing workspace created by this user or create a default one.
     // In future, UI should allow selecting workspace.
-    const existingWorkspaces = await mondayWorkspaceService.listWorkspaces(userId);
+    const existingWorkspaces = await mondayWorkspaceService.listWorkspaces(effectiveUserId);
     let workspaceConfig: MondayWorkspaceConfig | null = null;
     let workspaceId = existingWorkspaces[0]?.id;
 
@@ -169,7 +174,7 @@ export async function generatePlanFromConnector(
         const newWorkspace = await mondayWorkspaceService.createWorkspace({
             id: workspaceId,
             name: 'Monday.com Workspace',
-            created_by: userId,
+            created_by: effectiveUserId,
             settings: {},
         });
 
@@ -235,7 +240,7 @@ export async function generatePlanFromConnector(
         };
 
         // Save to DB
-        await mondayWorkspaceService.saveFullWorkspaceConfig(updatedConfig, userId);
+        await mondayWorkspaceService.saveFullWorkspaceConfig(updatedConfig, effectiveUserId);
 
         // Refresh local config variable
         const refetched = await mondayWorkspaceService.getFullWorkspaceConfig(workspaceId!);
@@ -252,6 +257,11 @@ export async function generatePlanFromConnector(
         workspaceConfig,
         sessionId
     );
+
+    // 4. Generate classifications for Monday items (same as CSV imports)
+    // This enables proper gating and schema matching for records
+    const definitions = await listDefinitions({ definitionKind: 'record' });
+    plan.classifications = generateClassificationsForConnectorItems(plan.items, definitions);
 
     // Save plan to database
     await db
@@ -489,6 +499,95 @@ function generateClassifications(items: ImportPlanItem[], definitions: RecordDef
 }
 
 /**
+ * Generate classifications for connector (Monday) imports.
+ *
+ * Unlike CSV imports which use text interpretation rules,
+ * connector imports classify based on entityType:
+ * - 'record' → DERIVED_STATE (needs schema matching)
+ * - 'template' → DERIVED_STATE (auto-commit, no schema match needed)
+ * - 'action'/'task'/'subtask' → INTERNAL_WORK (create as action)
+ * - others → UNCLASSIFIED
+ */
+function generateClassificationsForConnectorItems(
+    items: ImportPlanItem[],
+    definitions: RecordDefinition[]
+): ItemClassification[] {
+    return items.map((item) => {
+        let baseClassification: ItemClassification;
+
+        switch (item.entityType) {
+            case 'record': {
+                // Records with no field data should be marked as needing review
+                const hasFieldData = item.fieldRecordings && item.fieldRecordings.length > 0;
+                if (!hasFieldData) {
+                    return {
+                        itemTempId: item.tempId,
+                        outcome: 'UNCLASSIFIED' as ClassificationOutcome,
+                        confidence: 'low' as const,
+                        rationale: 'Record has no field data',
+                    };
+                }
+                // Records need schema matching to determine target definition
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'FACT_EMITTED' as ClassificationOutcome,
+                    confidence: 'high' as const,
+                    rationale: 'Record from connector - requires schema match',
+                };
+                // Add schema matching only for record types
+                return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
+            }
+
+            case 'template':
+                // Templates are auto-committed, no schema match needed
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'DERIVED_STATE' as ClassificationOutcome,
+                    confidence: 'high' as const,
+                    rationale: 'Template from connector - auto-commit',
+                };
+                return baseClassification;
+
+            case 'action':
+            case 'task':
+            case 'subtask':
+                // Actions are created as work items; no record schema match
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'INTERNAL_WORK' as ClassificationOutcome,
+                    confidence: 'high' as const,
+                    rationale: `${item.entityType} from connector - create as action`,
+                };
+                return baseClassification;
+
+            case 'project':
+            case 'stage':
+                // These are containers, not items - treat as internal work without schema match
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'INTERNAL_WORK' as ClassificationOutcome,
+                    confidence: 'high' as const,
+                    rationale: `Container type ${item.entityType} - structural item`,
+                };
+                return baseClassification;
+
+            default:
+                // Unknown entity type - mark unclassified without schema match
+                baseClassification = {
+                    itemTempId: item.tempId,
+                    outcome: 'UNCLASSIFIED' as ClassificationOutcome,
+                    confidence: 'low' as const,
+                    rationale: `Unknown entity type: ${item.entityType ?? 'undefined'}`,
+                };
+                return baseClassification;
+        }
+    });
+}
+
+
+
+
+/**
  * Add schema matching result to a classification
  */
 function addSchemaMatch(
@@ -496,9 +595,17 @@ function addSchemaMatch(
     fieldRecordings: ImportPlanItem['fieldRecordings'],
     definitions: RecordDefinition[]
 ): ItemClassification {
-    // Skip schema matching if no field recordings
+    // If no field recordings, return with empty schemaMatch for consistent shape
     if (!fieldRecordings || fieldRecordings.length === 0) {
-        return classification;
+        return {
+            ...classification,
+            schemaMatch: {
+                definitionId: null,
+                definitionName: null,
+                matchScore: 0,
+                proposedDefinition: undefined,
+            },
+        };
     }
 
     const schemaResult = matchSchema(fieldRecordings, definitions);
@@ -698,14 +805,26 @@ async function executePlanViaComposer(
     userId?: string
 ) {
     const createdIds: Record<string, string> = {};
+    const executionErrors: string[] = [];
     let factEventsEmitted = 0;
     let workEventsEmitted = 0;
     let fieldValuesApplied = 0;
+    let actionsCreated = 0;
+    let recordsCreated = 0;
+    let skippedNoContext = 0;
 
     // Build lookup map: itemTempId -> classification
     const classificationMap = new Map<string, ItemClassification>(
         plan.classifications.map((c: ItemClassification) => [c.itemTempId, c])
     );
+
+    // Diagnostic: Log item distribution by entityType
+    const entityTypeCounts = plan.items.reduce((acc, item) => {
+        const type = item.entityType ?? 'undefined';
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+    logger.debug({ entityTypeCounts, classificationsCount: plan.classifications.length, targetProjectId }, '[imports.service] Plan execution starting');
 
     // Step 1: Create containers (process, subprocess) as hierarchy nodes
     for (const container of plan.containers) {
@@ -713,13 +832,16 @@ async function executePlanViaComposer(
             ? createdIds[container.parentTempId]
             : targetProjectId;
 
+        // Build metadata including provenance info from container
+        const nodeMetadata = container.metadata ?? {};
+
         const created = await db
             .insertInto('hierarchy_nodes')
             .values({
                 parent_id: parentId ?? null,
                 type: container.type,
                 title: container.title,
-                metadata: JSON.stringify({}),
+                metadata: JSON.stringify(nodeMetadata),
             })
             .returning('id')
             .executeTakeFirstOrThrow();
@@ -750,8 +872,13 @@ async function executePlanViaComposer(
         }
     }
 
+    // Diagnostic: Log record filter results
+    const recordCandidates = plan.items.filter(i => i.entityType === 'record').length;
+    logger.debug({ recordCandidates, recordsWithSchema: Array.from(recordsByDef.values()).flat().length }, '[imports.service] Record filter results');
+
     // Execute bulk creation per definition
     for (const [defId, items] of recordsByDef) {
+        logger.debug({ definitionId: defId, count: items.length }, '[imports.service] Creating records for definition');
         const bulkInput = items.map(item => {
             const recordData = (item.fieldRecordings || []).reduce((acc, fr) => {
                 acc[fr.fieldName] = fr.value;
@@ -763,10 +890,15 @@ async function executePlanViaComposer(
                 recordData.title = item.title;
             }
 
+            // Use parent container as classification node if available
+            const parentContainerId = item.parentTempId
+                ? createdIds[item.parentTempId]
+                : null;
+
             return {
                 uniqueName: item.title,
                 data: recordData,
-                classificationNodeId: null // Records are currently flat/global
+                classificationNodeId: parentContainerId
             };
         });
 
@@ -776,15 +908,37 @@ async function executePlanViaComposer(
 
         if (result.errors.length > 0) {
             console.warn(`[imports.service] Bulk record creation had ${result.errors.length} errors`, result.errors);
+            // Propagate errors to response
+            executionErrors.push(
+                ...result.errors.map(e => `Record "${e.uniqueName}": ${e.error}`)
+            );
         }
 
         // Map created records back to items to populate createdIds and mappings
         const recordsByName = new Map(result.records.map(r => [r.unique_name, r]));
+        recordsCreated += result.created;
+        logger.debug({ created: result.created, updated: result.updated, errors: result.errors.length }, '[imports.service] Bulk create result');
 
         for (const item of items) {
             const record = recordsByName.get(item.title);
             if (record) {
                 createdIds[item.tempId] = record.id;
+
+                // Emit RECORD_CREATED event for audit trail
+                if (targetProjectId) {
+                    await emitEvent({
+                        contextId: targetProjectId,
+                        contextType: 'project',
+                        type: 'RECORD_CREATED',
+                        payload: {
+                            recordId: record.id,
+                            definitionId: defId,
+                            uniqueName: record.unique_name,
+                            source: 'import',
+                        },
+                        actorId: userId,
+                    });
+                }
 
                 // Create external source mapping
                 const mondayMeta = (item.metadata as { monday?: { id: string; type: string } })?.monday;
@@ -841,7 +995,7 @@ async function executePlanViaComposer(
 
                 if (existingMapping) {
                     // Link to existing template instead of creating new
-                    console.log(`[imports.service] Template "${item.title}" already exists (mapped from ${mondayId}), reusing entity ${existingMapping.local_entity_id}`);
+                    logger.debug({ title: item.title, mondayId, entityId: existingMapping.local_entity_id }, '[imports.service] Template already exists, reusing');
                     createdIds[item.tempId] = existingMapping.local_entity_id;
                     continue;
                 }
@@ -880,7 +1034,8 @@ async function executePlanViaComposer(
         // Templates without context can still be created (they're hierarchy-agnostic)
         // For non-templates, context is required
         if (!contextId && item.entityType !== 'template') {
-            console.warn(`Context not found for item: ${item.tempId} (${item.title})`);
+            console.warn(`[imports.service] Skipping item without context: ${item.tempId} (${item.title}) - entityType: ${item.entityType}, parentTempId: ${item.parentTempId}`);
+            skippedNoContext++;
             continue;
         }
 
@@ -913,6 +1068,7 @@ async function executePlanViaComposer(
             .executeTakeFirstOrThrow();
 
         createdIds[item.tempId] = action.id;
+        actionsCreated++;
 
         // Record ACTION_DECLARED event - projection system updates views
         await emitEvent({
@@ -1087,13 +1243,28 @@ async function executePlanViaComposer(
         }
     }
 
+    // Final diagnostic summary
+    logger.debug({
+        containers: plan.containers.length,
+        items: plan.items.length,
+        actionsCreated,
+        recordsCreated,
+        skippedNoContext,
+        factEventsEmitted,
+        workEventsEmitted,
+    }, '[imports.service] Execution summary');
+
     return {
         createdIds,
         itemCount: plan.items.length,
         containerCount: plan.containers.length,
+        actionsCreated,
+        recordsCreated,
         factEventsEmitted,
         workEventsEmitted,
         fieldValuesApplied,
+        skippedNoContext,
+        errors: executionErrors.length > 0 ? executionErrors : undefined,
     };
 }
 

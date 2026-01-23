@@ -9,7 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
     ExportOptions,
     BfaProjectExportModel,
-} from '../../surfaces/export/types';
+} from '../../workflows/export/types';
 import { api } from '../client';
 
 // ============================================================================
