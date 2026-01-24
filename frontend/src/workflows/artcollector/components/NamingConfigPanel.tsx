@@ -142,7 +142,10 @@ export function NamingConfigPanel({
                   type="number"
                   min={0}
                   value={config.indexStart}
-                  onChange={(e) => onChange({ indexStart: parseInt(e.target.value) || 1 })}
+                  onChange={(e) => {
+                    const parsed = parseInt(e.target.value);
+                    onChange({ indexStart: Number.isNaN(parsed) ? 0 : parsed });
+                  }}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -238,6 +241,7 @@ export function NamingConfigPanel({
                     indexPadding: 3,
                     prefix: '',
                     suffix: '',
+                    dateFormat: '%Y%m%d',
                     numberingMode: 'sequential',
                     collisionMode: 'suffix',
                   })

@@ -160,13 +160,19 @@ class SharePointStorageBackend:
 
     def _list_item_to_artifact(self, item: dict[str, Any]) -> ArtifactManifestEntry:
         """Convert SharePoint list item to artifact entry."""
-        metadata = {}
+        metadata: dict[str, Any] = {}
         metadata_json = item.get("MetadataJson", "{}")
         if metadata_json:
             try:
-                metadata = json.loads(metadata_json)
+                # If already a dict, use as-is; otherwise attempt JSON deserialization
+                if isinstance(metadata_json, dict):
+                    metadata = metadata_json
+                else:
+                    metadata = json.loads(metadata_json)
             except (json.JSONDecodeError, TypeError):
-                logger.warning(f"Malformed MetadataJson for artifact {item.get('Title')}")
+                logger.warning(
+                    f"Malformed MetadataJson for artifact {item.get('Title')}"
+                )
                 metadata = {}
 
         # Safely parse FileSize, defaulting to 0 if malformed
@@ -176,6 +182,8 @@ class SharePointStorageBackend:
         except (ValueError, TypeError):
             logger.warning(f"Malformed FileSize for artifact {item.get('Title')}")
 
+        collected_at_value = item.get("CollectedAt") or None
+
         return ArtifactManifestEntry(
             artifact_id=item.get("Title", ""),
             original_filename=item.get("OriginalFilename", ""),
@@ -183,11 +191,12 @@ class SharePointStorageBackend:
             content_hash=item.get("ContentHash", ""),
             source_url=item.get("SourceUrl") or None,
             source_path=item.get("SourcePath") or None,
-            collected_at=item.get("CollectedAt", ""),
+            collected_at=collected_at_value,
             mime_type=item.get("MimeType", "application/octet-stream"),
             size=file_size,
             metadata=metadata,
         )
+
 
     async def save_artifact(
         self, artifact: ArtifactManifestEntry, collection_id: str | None = None
@@ -345,7 +354,14 @@ class SharePointStorageBackend:
                 ctx.execute_query()
                 logger.info(f"Created collection in SharePoint: {manifest.manifest_id}")
 
-        await asyncio.to_thread(_save_manifest)
+        # Only save manifest if at least one artifact was saved successfully
+        if saved_count > 0:
+            await asyncio.to_thread(_save_manifest)
+        else:
+            logger.error(
+                f"Collection {manifest.manifest_id}: All {len(manifest.artifacts)} "
+                "artifacts failed to save, skipping manifest creation"
+            )
 
         if failed_artifacts:
             sample = failed_artifacts[:5]

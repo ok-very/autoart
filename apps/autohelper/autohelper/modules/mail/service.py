@@ -317,7 +317,8 @@ class MailService:
             if hasattr(received_time, "timestamp"):
                 received_dt = datetime.fromtimestamp(received_time.timestamp())
             else:
-                received_dt = datetime.now()
+                # Use sentinel date for items without timestamps to ensure deterministic entry_id
+                received_dt = datetime(1970, 1, 1)
 
             date_str = received_dt.strftime("%Y-%m-%d")
             safe_sub = make_safe_filename(clean_subject(subject))
