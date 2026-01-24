@@ -36,10 +36,27 @@ class ConfigStore:
 
     def save(self, config: dict[str, Any]) -> None:
         """Save configuration to disk."""
+        """Save configuration to disk atomically."""
+        import os
+        import tempfile
+
         try:
-            with open(self.config_path, "w", encoding="utf-8") as f:
-                json.dump(config, f, indent=2)
+            # Write to a temp file in the same directory, flush and fsync, then atomically replace.
+            dirpath = self.config_path.parent
+            with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=str(dirpath), delete=False) as tf:
+                json.dump(config, tf, indent=2)
+                tf.flush()
+                os.fsync(tf.fileno())
+                temp_path = Path(tf.name)
+            # Atomic replace
+            os.replace(str(temp_path), str(self.config_path))
         except Exception as e:
+            # Attempt to clean up temp file if it exists
+            try:
+                if 'temp_path' in locals() and temp_path.exists():
+                    temp_path.unlink()
+            except Exception:
+                pass
             logger.error(f"Failed to save config: {e}")
             raise
 
