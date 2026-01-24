@@ -10,6 +10,7 @@ import { logger } from '../../../utils/logger.js';
 import { MondayCSVParser } from '../parsers/monday-csv-parser.js';
 import { GenericCSVParser } from '../parsers/generic-csv-parser.js';
 import type { ImportPlanContainer, ImportPlanItem } from '../types.js';
+import { VALID_SESSION_STATUSES } from './session-status.service.js';
 
 // Maximum allowed size for config JSON (100KB) - applies to both parser config and connector config
 const MAX_CONFIG_SIZE = 100 * 1024;
@@ -32,6 +33,7 @@ interface Parser {
 export const PARSERS: Record<string, Parser> = {
     'monday': new MondayCSVParser(),
     'generic-csv': new GenericCSVParser(),
+    // 'runner': new RunnerParser(), // Placeholder for original JS runner script
 };
 
 // ============================================================================
@@ -148,8 +150,7 @@ export async function getSession(id: string) {
 const MAX_LIST_LIMIT = 100;
 const DEFAULT_LIST_LIMIT = 20;
 
-// Valid session statuses for runtime validation
-const VALID_SESSION_STATUSES = new Set(['pending', 'planned', 'needs_review', 'executing', 'completed', 'failed']);
+// VALID_SESSION_STATUSES imported from session-status.service.ts
 
 export async function listSessions(params: {
     status?: 'pending' | 'planned' | 'needs_review' | 'executing' | 'completed' | 'failed';
@@ -185,6 +186,34 @@ class PlanDataError extends Error {
     }
 }
 
+/**
+ * Parse and validate plan data from a plan row.
+ */
+function parsePlanData(planRow: { plan_data: unknown }, sessionId: string): import('../types.js').ImportPlan {
+    // Handle null/undefined/primitive values before parsing
+    if (planRow.plan_data === null || planRow.plan_data === undefined) {
+        logger.error({ sessionId }, '[import-sessions] plan_data is null or undefined');
+        throw new PlanDataError(`Missing plan data for session ${sessionId}`);
+    }
+
+    const planData = typeof planRow.plan_data === 'string'
+        ? JSON.parse(planRow.plan_data)
+        : planRow.plan_data;
+
+    // Validate that planData is an object with required ImportPlan fields
+    if (typeof planData !== 'object' || planData === null) {
+        logger.error({ sessionId, planDataType: typeof planData }, '[import-sessions] plan_data is not an object');
+        throw new PlanDataError(`Invalid plan data format for session ${sessionId}`);
+    }
+
+    if (!Array.isArray(planData.containers) || !Array.isArray(planData.items) || !Array.isArray(planData.classifications)) {
+        logger.error({ sessionId }, '[import-sessions] plan_data missing required arrays');
+        throw new PlanDataError(`Incomplete plan data for session ${sessionId}`);
+    }
+
+    return planData as import('../types.js').ImportPlan;
+}
+
 export async function getLatestPlan(sessionId: string): Promise<import('../types.js').ImportPlan | null> {
     const planRow = await db
         .selectFrom('import_plans')
@@ -196,28 +225,34 @@ export async function getLatestPlan(sessionId: string): Promise<import('../types
     if (!planRow) return null;
 
     try {
-        // Handle null/undefined/primitive values before parsing
-        if (planRow.plan_data === null || planRow.plan_data === undefined) {
-            logger.error({ sessionId }, '[import-sessions] plan_data is null or undefined');
-            throw new PlanDataError(`Missing plan data for session ${sessionId}`);
+        return parsePlanData(planRow, sessionId);
+    } catch (err) {
+        // Re-throw our validation errors (use error type, not message text)
+        if (err instanceof PlanDataError) {
+            throw err;
         }
+        logger.error({ sessionId, error: err }, '[import-sessions] Failed to parse plan_data JSON');
+        throw new Error(`Malformed plan data for session ${sessionId}`);
+    }
+}
 
-        const planData = typeof planRow.plan_data === 'string'
-            ? JSON.parse(planRow.plan_data)
-            : planRow.plan_data;
+/**
+ * Get the latest plan with its database ID for execution tracking.
+ * This returns both atomically to prevent race conditions between plan generation and execution.
+ */
+export async function getLatestPlanWithId(sessionId: string): Promise<{ planId: string; plan: import('../types.js').ImportPlan } | null> {
+    const planRow = await db
+        .selectFrom('import_plans')
+        .selectAll()
+        .where('session_id', '=', sessionId)
+        .orderBy('created_at', 'desc')
+        .executeTakeFirst();
 
-        // Validate that planData is an object with required ImportPlan fields
-        if (typeof planData !== 'object' || planData === null) {
-            logger.error({ sessionId, planDataType: typeof planData }, '[import-sessions] plan_data is not an object');
-            throw new PlanDataError(`Invalid plan data format for session ${sessionId}`);
-        }
+    if (!planRow) return null;
 
-        if (!Array.isArray(planData.containers) || !Array.isArray(planData.items) || !Array.isArray(planData.classifications)) {
-            logger.error({ sessionId }, '[import-sessions] plan_data missing required arrays');
-            throw new PlanDataError(`Incomplete plan data for session ${sessionId}`);
-        }
-
-        return planData as import('../types.js').ImportPlan;
+    try {
+        const plan = parsePlanData(planRow, sessionId);
+        return { planId: planRow.id, plan };
     } catch (err) {
         // Re-throw our validation errors (use error type, not message text)
         if (err instanceof PlanDataError) {

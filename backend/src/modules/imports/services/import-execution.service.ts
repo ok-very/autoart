@@ -20,7 +20,13 @@ import { logger } from '../../../utils/logger.js';
 import { createMapping } from '../sync.service.js';
 import type { ImportPlan, ImportPlanItem, ItemClassification } from '../types.js';
 import { hasUnresolvedClassifications, countUnresolved } from '../types.js';
-import { getSession, getLatestPlan } from './import-sessions.service.js';
+import { getSession, getLatestPlanWithId } from './import-sessions.service.js';
+import {
+    markSessionNeedsReview,
+    markSessionExecuting,
+    markSessionCompleted,
+    markSessionFailed,
+} from './session-status.service.js';
 
 // ============================================================================
 // IMPORT EXECUTION
@@ -30,17 +36,16 @@ export async function executeImport(sessionId: string, userId?: string) {
     const session = await getSession(sessionId);
     if (!session) throw new Error('Session not found');
 
-    const plan = await getLatestPlan(sessionId);
-    if (!plan) throw new Error('No plan found');
+    // Get plan and its ID atomically to prevent race condition with concurrent plan generation
+    const planResult = await getLatestPlanWithId(sessionId);
+    if (!planResult) throw new Error('No plan found');
+
+    const { planId, plan } = planResult;
 
     // Gate: block execution if unresolved classifications exist
     if (hasUnresolvedClassifications(plan)) {
         const { ambiguous, unclassified } = countUnresolved(plan);
-        await db
-            .updateTable('import_sessions')
-            .set({ status: 'needs_review', updated_at: new Date() })
-            .where('id', '=', sessionId)
-            .execute();
+        await markSessionNeedsReview(sessionId, 'Execution blocked: unresolved classifications');
         return {
             blocked: true,
             unresolvedCount: ambiguous + unclassified,
@@ -50,31 +55,19 @@ export async function executeImport(sessionId: string, userId?: string) {
         };
     }
 
-    // Get latest plan row for the plan_id
-    const planRow = await db
-        .selectFrom('import_plans')
-        .select('id')
-        .where('session_id', '=', sessionId)
-        .orderBy('created_at', 'desc')
-        .executeTakeFirstOrThrow();
-
     // Start execution
     const execution = await db
         .insertInto('import_executions')
         .values({
             session_id: sessionId,
-            plan_id: planRow.id,
+            plan_id: planId,
             status: 'running',
         })
         .returningAll()
         .executeTakeFirstOrThrow();
 
     // Update session status
-    await db
-        .updateTable('import_sessions')
-        .set({ status: 'executing', updated_at: new Date() })
-        .where('id', '=', sessionId)
-        .execute();
+    await markSessionExecuting(sessionId);
 
     try {
         // Execute plan
@@ -92,11 +85,7 @@ export async function executeImport(sessionId: string, userId?: string) {
             .execute();
 
         // Update session status
-        await db
-            .updateTable('import_sessions')
-            .set({ status: 'completed', updated_at: new Date() })
-            .where('id', '=', sessionId)
-            .execute();
+        await markSessionCompleted(sessionId);
 
         return { ...execution, status: 'completed' as const, results };
     } catch (err) {
@@ -112,11 +101,7 @@ export async function executeImport(sessionId: string, userId?: string) {
             .execute();
 
         // Update session status
-        await db
-            .updateTable('import_sessions')
-            .set({ status: 'failed', updated_at: new Date() })
-            .where('id', '=', sessionId)
-            .execute();
+        await markSessionFailed(sessionId, err as Error);
 
         throw err;
     }
@@ -144,41 +129,84 @@ function getContextTypeFromNodeType(nodeType: string | undefined): ContextType {
     }
 }
 
-async function executePlanViaComposer(
-    plan: ImportPlan,
+// ============================================================================
+// EXECUTION CONTEXT
+// ============================================================================
+
+/**
+ * Shared context for plan execution - holds mutable state across phases.
+ */
+interface ExecutionContext {
+    createdIds: Record<string, string>;
+    containerTypes: Map<string, string>;
+    executionErrors: string[];
+    counters: {
+        factEventsEmitted: number;
+        workEventsEmitted: number;
+        fieldValuesApplied: number;
+        actionsCreated: number;
+        recordsCreated: number;
+        skippedNoContext: number;
+    };
+    classificationMap: Map<string, ItemClassification>;
+}
+
+/**
+ * Initialize execution context from an import plan.
+ */
+function createExecutionContext(plan: ImportPlan): ExecutionContext {
+    return {
+        createdIds: {},
+        containerTypes: new Map(),
+        executionErrors: [],
+        counters: {
+            factEventsEmitted: 0,
+            workEventsEmitted: 0,
+            fieldValuesApplied: 0,
+            actionsCreated: 0,
+            recordsCreated: 0,
+            skippedNoContext: 0,
+        },
+        classificationMap: new Map(
+            plan.classifications.map((c: ItemClassification) => [c.itemTempId, c])
+        ),
+    };
+}
+
+// ============================================================================
+// PHASE 1: CONTAINER CREATION
+// ============================================================================
+
+/**
+ * Create hierarchy nodes (process, subprocess) from plan containers.
+ */
+async function createContainers(
+    containers: ImportPlan['containers'],
+    ctx: ExecutionContext,
     targetProjectId: string | null,
     userId?: string
-) {
-    const createdIds: Record<string, string> = {};
-    const containerTypes = new Map<string, string>(); // Track container types for context resolution
-    const executionErrors: string[] = [];
-    let factEventsEmitted = 0;
-    let workEventsEmitted = 0;
-    let fieldValuesApplied = 0;
-    let actionsCreated = 0;
-    let recordsCreated = 0;
-    let skippedNoContext = 0;
+): Promise<void> {
+    for (const container of containers) {
+        let parentId: string | null;
 
-    // Build lookup map: itemTempId -> classification
-    const classificationMap = new Map<string, ItemClassification>(
-        plan.classifications.map((c: ItemClassification) => [c.itemTempId, c])
-    );
+        if (container.parentTempId) {
+            const resolvedParentId = ctx.createdIds[container.parentTempId];
+            if (!resolvedParentId) {
+                // Parent container not yet created - this indicates incorrect ordering
+                // or a reference to a non-existent container
+                logger.warn({
+                    tempId: container.tempId,
+                    title: container.title,
+                    parentTempId: container.parentTempId,
+                }, '[imports.service] Container parent not found in createdIds - creating as root node under project');
+                parentId = targetProjectId;
+            } else {
+                parentId = resolvedParentId;
+            }
+        } else {
+            parentId = targetProjectId;
+        }
 
-    // Diagnostic: Log item distribution by entityType
-    const entityTypeCounts = plan.items.reduce((acc, item) => {
-        const type = item.entityType ?? 'undefined';
-        acc[type] = (acc[type] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
-    logger.debug({ entityTypeCounts, classificationsCount: plan.classifications.length, targetProjectId }, '[imports.service] Plan execution starting');
-
-    // Step 1: Create containers (process, subprocess) as hierarchy nodes
-    for (const container of plan.containers) {
-        const parentId = container.parentTempId
-            ? createdIds[container.parentTempId]
-            : targetProjectId;
-
-        // Build metadata including provenance info from container
         const nodeMetadata = container.metadata ?? {};
 
         const created = await db
@@ -193,26 +221,47 @@ async function executePlanViaComposer(
             .returning('id')
             .executeTakeFirstOrThrow();
 
-        createdIds[container.tempId] = created.id;
-        containerTypes.set(created.id, container.type);
+        ctx.createdIds[container.tempId] = created.id;
+        ctx.containerTypes.set(created.id, container.type);
     }
+}
 
-    // Step 1.5: Bulk Create Records (Optimization)
-    // Identify valid records and group by definition for bulk processing
+// ============================================================================
+// PHASE 2: BULK RECORD CREATION
+// ============================================================================
+
+/**
+ * Check if an item is a creatable record (has classification with schema match).
+ */
+function isCreatableRecord(
+    item: ImportPlanItem,
+    classificationMap: Map<string, ItemClassification>
+): boolean {
+    if (item.entityType !== 'record') return false;
+    const classification = classificationMap.get(item.tempId);
+    return !!classification?.schemaMatch?.definitionId;
+}
+
+/**
+ * Group items by their target definition ID for bulk creation.
+ */
+function groupRecordsByDefinition(
+    items: ImportPlanItem[],
+    classificationMap: Map<string, ItemClassification>
+): Map<string, ImportPlanItem[]> {
     const recordsByDef = new Map<string, ImportPlanItem[]>();
 
-    // Helper to check if an item is a creatable record
-    const isCreatableRecord = (item: ImportPlanItem) => {
-        if (item.entityType !== 'record') return false;
-        const classification = classificationMap.get(item.tempId);
-        return !!classification?.schemaMatch?.definitionId;
-    };
+    for (const item of items) {
+        if (isCreatableRecord(item, classificationMap)) {
+            // Re-fetch to avoid non-null assertion risks
+            const classification = classificationMap.get(item.tempId);
+            const definitionId = classification?.schemaMatch?.definitionId;
 
-    for (const item of plan.items) {
-        if (isCreatableRecord(item)) {
-            const classification = classificationMap.get(item.tempId)!;
-            // We checked existence above
-            const definitionId = classification.schemaMatch!.definitionId!;
+            // Double-check after isCreatableRecord guard (defensive against map mutation)
+            if (!classification || !definitionId) {
+                logger.error({ tempId: item.tempId, title: item.title }, '[imports.service] Classification or definitionId unexpectedly missing after guard check');
+                continue;
+            }
 
             const list = recordsByDef.get(definitionId) || [];
             list.push(item);
@@ -228,131 +277,160 @@ async function executePlanViaComposer(
         }
     }
 
-    // Diagnostic: Log record filter results
-    const recordCandidates = plan.items.filter(i => i.entityType === 'record').length;
-    logger.debug({ recordCandidates, recordsWithSchema: Array.from(recordsByDef.values()).flat().length }, '[imports.service] Record filter results');
+    return recordsByDef;
+}
 
-    // Execute bulk creation per definition
-    for (const [defId, items] of recordsByDef) {
-        logger.debug({ definitionId: defId, count: items.length }, '[imports.service] Creating records for definition');
-        const bulkInput = items.map(item => {
-            const recordData = (item.fieldRecordings || []).reduce((acc, fr) => {
-                acc[fr.fieldName] = fr.value;
-                return acc;
-            }, {} as Record<string, unknown>);
+/**
+ * Build bulk input for record creation from plan items.
+ */
+function buildBulkRecordInput(
+    items: ImportPlanItem[],
+    createdIds: Record<string, string>
+): Array<{ uniqueName: string; data: Record<string, unknown>; classificationNodeId: string | null }> {
+    return items.map(item => {
+        const recordData = (item.fieldRecordings || []).reduce((acc, fr) => {
+            acc[fr.fieldName] = fr.value;
+            return acc;
+        }, {} as Record<string, unknown>);
 
-            // Add title as a standard field only if neither name nor title were explicitly set
-            // Use 'in' operator to distinguish between "not set" vs "set to falsy value"
-            if (!('name' in recordData) && !('title' in recordData)) {
-                recordData.title = item.title;
+        // Add title as a standard field only if neither name nor title were explicitly set
+        if (!('name' in recordData) && !('title' in recordData)) {
+            recordData.title = item.title;
+        }
+
+        // Use parent container as classification node if available
+        let parentContainerId: string | null = null;
+        if (item.parentTempId) {
+            parentContainerId = createdIds[item.parentTempId] ?? null;
+            if (!parentContainerId) {
+                // Parent was specified but not found in createdIds
+                logger.warn({
+                    tempId: item.tempId,
+                    title: item.title,
+                    parentTempId: item.parentTempId,
+                }, '[imports.service] Record parent container not found - creating without classification node');
+            }
+        }
+
+        return {
+            uniqueName: item.tempId,
+            data: recordData,
+            classificationNodeId: parentContainerId
+        };
+    });
+}
+
+/**
+ * Create records in bulk and map results back to items.
+ */
+async function createBulkRecordsForDefinition(
+    defId: string,
+    items: ImportPlanItem[],
+    ctx: ExecutionContext,
+    targetProjectId: string | null,
+    userId?: string
+): Promise<void> {
+    logger.debug({ definitionId: defId, count: items.length }, '[imports.service] Creating records for definition');
+
+    const bulkInput = buildBulkRecordInput(items, ctx.createdIds);
+    const result = await bulkCreateRecords(defId, bulkInput, userId);
+
+    if (result.errors.length > 0) {
+        logger.warn(
+            {
+                module: 'imports.service',
+                operation: 'bulkCreateRecords',
+                definitionId: defId,
+                userId,
+                errorCount: result.errors.length,
+                errors: result.errors.map(e => ({
+                    uniqueName: e.uniqueName,
+                    error: e.error,
+                })),
+            },
+            'Bulk record creation encountered errors'
+        );
+        ctx.executionErrors.push(
+            ...result.errors.map(e => `Record "${e.uniqueName}": ${e.error}`)
+        );
+    }
+
+    // Map created records back to items
+    const recordsByTempId = new Map(result.records.map(r => [r.unique_name, r]));
+    ctx.counters.recordsCreated += result.created;
+    logger.debug({ created: result.created, updated: result.updated, errors: result.errors.length }, '[imports.service] Bulk create result');
+
+    for (const item of items) {
+        const record = recordsByTempId.get(item.tempId);
+        if (record) {
+            ctx.createdIds[item.tempId] = record.id;
+
+            // Emit RECORD_CREATED event for audit trail
+            if (targetProjectId) {
+                await emitEvent({
+                    contextId: targetProjectId,
+                    contextType: 'project',
+                    type: 'RECORD_CREATED',
+                    payload: {
+                        recordId: record.id,
+                        definitionId: defId,
+                        uniqueName: record.unique_name,
+                        source: 'import',
+                    },
+                    actorId: userId,
+                });
             }
 
-            // Use parent container as classification node if available
-            // Ensure null (not undefined) for missing lookups to satisfy DB/downstream expectations
-            const parentContainerId = item.parentTempId
-                ? (createdIds[item.parentTempId] ?? null)
-                : null;
-
-            // Use tempId as uniqueName to prevent collisions when multiple items share the same title
-            // The tempId is guaranteed unique within the import session
-            return {
-                uniqueName: item.tempId,
-                data: recordData,
-                classificationNodeId: parentContainerId
-            };
-        });
-
-        // Execute bulk upsert
-        // Returns { created, updated, errors, records[] }
-        const result = await bulkCreateRecords(defId, bulkInput, userId);
-
-        if (result.errors.length > 0) {
-            logger.warn(
+            // Create external source mapping for Monday items
+            const mondayMeta = (item.metadata as { monday?: { id: string; type: string } })?.monday;
+            if (mondayMeta?.id) {
+                await createMapping({
+                    provider: 'monday',
+                    externalId: mondayMeta.id,
+                    externalType: mondayMeta.type || 'item',
+                    localEntityType: 'record',
+                    localEntityId: record.id,
+                });
+            }
+        } else {
+            logger.error(
                 {
                     module: 'imports.service',
                     operation: 'bulkCreateRecords',
-                    definitionId: defId,
-                    userId,
-                    errorCount: result.errors.length,
-                    errors: result.errors.map(e => ({
-                        uniqueName: e.uniqueName,
-                        error: e.error,
-                    })),
+                    itemTitle: item.title,
+                    tempId: item.tempId,
                 },
-                'Bulk record creation encountered errors'
+                'Failed to match created record for item'
             );
-            // Propagate errors to response
-            executionErrors.push(
-                ...result.errors.map(e => `Record "${e.uniqueName}": ${e.error}`)
-            );
-        }
-
-        // Map created records back to items to populate createdIds and mappings
-        // Records are keyed by tempId (used as uniqueName) for collision-free lookups
-        const recordsByTempId = new Map(result.records.map(r => [r.unique_name, r]));
-        recordsCreated += result.created;
-        logger.debug({ created: result.created, updated: result.updated, errors: result.errors.length }, '[imports.service] Bulk create result');
-
-        for (const item of items) {
-            const record = recordsByTempId.get(item.tempId);
-            if (record) {
-                createdIds[item.tempId] = record.id;
-
-                // Emit RECORD_CREATED event for audit trail
-                if (targetProjectId) {
-                    await emitEvent({
-                        contextId: targetProjectId,
-                        contextType: 'project',
-                        type: 'RECORD_CREATED',
-                        payload: {
-                            recordId: record.id,
-                            definitionId: defId,
-                            uniqueName: record.unique_name,
-                            source: 'import',
-                        },
-                        actorId: userId,
-                    });
-                }
-
-                // Create external source mapping
-                const mondayMeta = (item.metadata as { monday?: { id: string; type: string } })?.monday;
-                if (mondayMeta?.id) {
-                    await createMapping({
-                        provider: 'monday',
-                        externalId: mondayMeta.id,
-                        externalType: mondayMeta.type || 'item',
-                        localEntityType: 'record',
-                        localEntityId: record.id,
-                    });
-                }
-            } else {
-                logger.error(
-                    {
-                        module: 'imports.service',
-                        operation: 'bulkCreateRecords',
-                        itemTitle: item.title,
-                        tempId: item.tempId,
-                    },
-                    'Failed to match created record for item'
-                );
-            }
         }
     }
+}
 
-    // Step 2: Create work items via Actions + Events (proper Composer pattern)
-    // Build itemsByTempId lookup for parent resolution
-    const itemsByTempId = new Map(plan.items.map(i => [i.tempId, i]));
+// ============================================================================
+// PHASE 3: TOPOLOGICAL SORTING
+// ============================================================================
 
-    // Topological sort: ensure all ancestors are processed before descendants
-    // Calculate depth (number of item ancestors) for each item to handle multi-level hierarchies
+interface TopologicalSortResult {
+    sortedItems: ImportPlanItem[];
+    itemDepths: Map<string, number>;
+    cycleNodes: Set<string>;
+}
+
+/**
+ * Sort items topologically to ensure parents are processed before children.
+ * Detects cycles and treats cycle nodes as roots.
+ */
+function topologicalSortItems(
+    items: ImportPlanItem[],
+    itemsByTempId: Map<string, ImportPlanItem>
+): TopologicalSortResult {
     const itemDepths = new Map<string, number>();
-    const cycleNodes = new Set<string>(); // Track all nodes involved in cycles
+    const cycleNodes = new Set<string>();
 
     // Phase 1: Detect all nodes that are part of cycles
     function detectCycles(tempId: string, path: Set<string>, pathOrder: string[]): void {
-        if (cycleNodes.has(tempId)) return; // Already marked as cycle node
+        if (cycleNodes.has(tempId)) return;
         if (path.has(tempId)) {
-            // Found a cycle - mark all nodes in the cycle portion of the path
             const cycleStartIndex = pathOrder.indexOf(tempId);
             for (let i = cycleStartIndex; i < pathOrder.length; i++) {
                 cycleNodes.add(pathOrder[i]);
@@ -363,7 +441,7 @@ async function executePlanViaComposer(
 
         const item = itemsByTempId.get(tempId);
         if (!item || !item.parentTempId || !itemsByTempId.has(item.parentTempId)) {
-            return; // Root node or no parent item
+            return;
         }
 
         path.add(tempId);
@@ -373,8 +451,7 @@ async function executePlanViaComposer(
         pathOrder.pop();
     }
 
-    // Run cycle detection on all items
-    for (const item of plan.items) {
+    for (const item of items) {
         detectCycles(item.tempId, new Set(), []);
     }
 
@@ -384,10 +461,8 @@ async function executePlanViaComposer(
 
     // Phase 2: Calculate depths (cycle nodes treated as depth 0)
     function getItemDepth(tempId: string): number {
-        // Memoization
         if (itemDepths.has(tempId)) return itemDepths.get(tempId)!;
 
-        // Cycle nodes are treated as roots (depth 0)
         if (cycleNodes.has(tempId)) {
             itemDepths.set(tempId, 0);
             return 0;
@@ -399,358 +474,553 @@ async function executePlanViaComposer(
             return 0;
         }
 
-        // If no parent or parent is a container (not an item), depth is 0
         if (!item.parentTempId || !itemsByTempId.has(item.parentTempId)) {
             itemDepths.set(tempId, 0);
             return 0;
         }
 
-        // Parent is another item - depth is parent's depth + 1
         const parentDepth = getItemDepth(item.parentTempId);
         const depth = parentDepth + 1;
         itemDepths.set(tempId, depth);
         return depth;
     }
 
-    // Calculate depths for all items
-    for (const item of plan.items) {
+    for (const item of items) {
         getItemDepth(item.tempId);
     }
 
-    // Sort by depth ascending - ancestors (lower depth) come before descendants (higher depth)
-    const sortedItems = [...plan.items].sort((a, b) => {
+    // Sort by depth ascending
+    const sortedItems = [...items].sort((a, b) => {
         const aDepth = itemDepths.get(a.tempId) ?? 0;
         const bDepth = itemDepths.get(b.tempId) ?? 0;
         return aDepth - bDepth;
     });
 
-    for (const item of sortedItems) {
-        // SKIP if already created (e.g. Bulk Records or Templates)
-        if (createdIds[item.tempId]) {
-            continue;
-        }
+    return { sortedItems, itemDepths, cycleNodes };
+}
 
-        // CROSS-IMPORT TEMPLATE DEDUPLICATION
-        // Templates are singletons - check if already imported from same external source
-        if (item.entityType === 'template') {
-            const mondayMeta = item.metadata?.monday as { id?: string } | undefined;
-            const mondayId = mondayMeta?.id;
+// ============================================================================
+// PHASE 4: ACTION CREATION & EVENTS
+// ============================================================================
 
-            if (mondayId) {
-                // Check if this template already exists via external_source_mapping
-                const existingMapping = await db
-                    .selectFrom('external_source_mappings')
-                    .select('local_entity_id')
-                    .where('provider', '=', 'monday')
-                    .where('external_id', '=', mondayId)
-                    .executeTakeFirst();
+/**
+ * Check if a template already exists via external source mapping.
+ * Returns the existing entity ID if found, or null if not.
+ */
+async function checkTemplateDeduplication(
+    item: ImportPlanItem,
+    ctx: ExecutionContext
+): Promise<boolean> {
+    const mondayMeta = item.metadata?.monday as { id?: string } | undefined;
+    const mondayId = mondayMeta?.id;
 
-                if (existingMapping) {
-                    // Link to existing template instead of creating new
-                    logger.debug({ title: item.title, mondayId, entityId: existingMapping.local_entity_id }, '[imports.service] Template already exists, reusing');
-                    createdIds[item.tempId] = existingMapping.local_entity_id;
-                    continue;
-                }
-            }
-        }
+    if (mondayId) {
+        const existingMapping = await db
+            .selectFrom('external_source_mappings')
+            .select('local_entity_id')
+            .where('provider', '=', 'monday')
+            .where('external_id', '=', mondayId)
+            .executeTakeFirst();
 
-        // Derive parent relationship from parentTempId:
-        // - If parentTempId refers to another item → this is a child action (parent_action_id set)
-        // - If parentTempId refers to a container → this is a container-scoped action
-        // - Type is derived by projection system from context, not set explicitly here
-        const parentIsItem = item.parentTempId && itemsByTempId.has(item.parentTempId);
-
-        let contextId: string | undefined;
-        let parentActionId: string | null = null;
-
-        if (parentIsItem) {
-            // Parent is another action (child relationship)
-            parentActionId = createdIds[item.parentTempId!] ?? null;
-            // Context inherited from parent item's context
-            const parentItem = itemsByTempId.get(item.parentTempId!);
-            if (parentItem?.parentTempId) {
-                // Parent item's parent could be a container
-                contextId = createdIds[parentItem.parentTempId] ?? targetProjectId ?? undefined;
-            } else {
-                contextId = targetProjectId ?? undefined;
-            }
-        } else if (item.parentTempId) {
-            // Parent is a container (container-scoped action)
-            contextId = createdIds[item.parentTempId] ?? targetProjectId ?? undefined;
-        } else {
-            // No parent, use project context
-            // Templates can be context-free, use target project if available
-            contextId = targetProjectId ?? undefined;
-        }
-
-        // Templates without context can still be created (they're hierarchy-agnostic)
-        // For non-templates, context is required
-        if (!contextId && item.entityType !== 'template') {
-            logger.warn(
-                {
-                    module: 'imports.service',
-                    operation: 'executePlanViaComposer',
-                    tempId: item.tempId,
-                    itemTitle: item.title,
-                    entityType: item.entityType,
-                    parentTempId: item.parentTempId,
-                },
-                'Skipping item without context'
-            );
-            skippedNoContext++;
-            continue;
-        }
-
-        // Create action - type will be derived by projection from context and parent relationships
-        // Use entityType hint if available for initial categorization, but projection is authoritative
-        // For templates without context, use empty string to mark as hierarchy-agnostic.
-        // Note: Empty string is intentional - null would violate FK constraints and emitEvent types.
-        // Downstream logic should check for empty string to skip context-based projections.
-        const effectiveContextId = contextId ?? '';
-
-        // Determine correct context type from parent container or target project
-        let effectiveContextType: ContextType = 'subprocess';
-        if (effectiveContextId) {
-            const parentType = containerTypes.get(effectiveContextId);
-            if (parentType) {
-                effectiveContextType = getContextTypeFromNodeType(parentType);
-            } else if (effectiveContextId === targetProjectId) {
-                effectiveContextType = 'project';
-            }
-        }
-
-        // NOTE: Record creation logic removed from here as it is handled by Bulk processing above.
-        // Only Actions fall through to here.
-
-        const action = await db
-            .insertInto('actions')
-            .values({
-                context_type: effectiveContextType,
-                context_id: effectiveContextId,
-                parent_action_id: parentActionId,
-                type: 'Task', // Base type - projection derives actual type from relationships
-                field_bindings: JSON.stringify([
-                    { fieldKey: 'title', value: item.title },
-                    ...item.fieldRecordings.map((fr: { fieldName: string; value: unknown }) => ({
-                        fieldKey: fr.fieldName,
-                        value: fr.value,
-                    })),
-                ]),
-            })
-            .returning('id')
-            .executeTakeFirstOrThrow();
-
-        createdIds[item.tempId] = action.id;
-        actionsCreated++;
-
-        // Record ACTION_DECLARED event - projection system updates views
-        await emitEvent({
-            contextId: effectiveContextId,
-            contextType: effectiveContextType,
-            actionId: action.id,
-            type: 'ACTION_DECLARED',
-            payload: {
-                title: item.title,
-                metadata: item.metadata,
-                parentActionId,
-            },
-            actorId: userId,
-        });
-
-        // Step 2b: Create sync mapping for Monday items (enables future bi-directional sync)
-        const mondayMeta = (item.metadata as { monday?: { id: string; type: string } })?.monday;
-        if (mondayMeta?.id) {
-            await createMapping({
-                provider: 'monday',
-                externalId: mondayMeta.id,
-                externalType: mondayMeta.type || 'item',
-                localEntityType: 'action',
-                localEntityId: action.id,
-            });
-        }
-
-        // Step 3: Use classification's interpretationPlan if available (V2 API)
-        const classification = classificationMap.get(item.tempId);
-        const interpretationPlan = classification?.interpretationPlan;
-
-        if (interpretationPlan) {
-            // V2 Path: Process InterpretationPlan outputs
-
-            // Determine if fact_candidates should be committed
-            // fact_candidate: Only commit if user approved (resolved to FACT_EMITTED)
-            // work_event: Always auto-commit
-            // field_value: Always auto-commit
-            // action_hint: Never commit (stored as classification only)
-            const shouldCommitFacts =
-                classification?.outcome === 'FACT_EMITTED' ||
-                (classification?.resolution?.resolvedOutcome === 'FACT_EMITTED');
-
-            // Process fact_candidate outputs → FACT_RECORDED events (only if approved)
-            if (shouldCommitFacts) {
-                for (const output of interpretationPlan.outputs) {
-                    if (output.kind === 'fact_candidate') {
-                        const factKind = output.factKind as string;
-                        const confidence = (output.confidence as 'low' | 'medium' | 'high') || 'medium';
-                        const { kind: _kind, factKind: _, confidence: __, ...cleanPayload } = output;
-
-                        // Ensure fact kind definition exists (auto-create if needed)
-                        await ensureFactKindDefinition({
-                            factKind,
-                            source: 'csv-import',
-                            confidence,
-                            examplePayload: cleanPayload,
-                        });
-
-                        await emitEvent({
-                            contextId: effectiveContextId,
-                            contextType: effectiveContextType,
-                            actionId: action.id,
-                            type: 'FACT_RECORDED',
-                            payload: {
-                                factKind,
-                                source: 'csv-import',
-                                confidence,
-                                ...cleanPayload,
-                            },
-                            actorId: userId,
-                        });
-                        factEventsEmitted++;
-                    }
-                }
-            }
-
-            // Auto-commit field_value outputs (always)
-            for (const output of interpretationPlan.outputs) {
-                if (output.kind === 'field_value') {
-                    // Field values update the action's field_bindings
-                    // For now, we track them but don't persist separately
-                    // The field binding was already set in action creation
-                    fieldValuesApplied++;
-                }
-            }
-
-            // Auto-commit work_event from status (if present)
-            if (interpretationPlan.statusEvent && interpretationPlan.statusEvent.kind === 'work_event') {
-                const statusEvent = interpretationPlan.statusEvent as {
-                    kind: 'work_event';
-                    eventType: 'WORK_STARTED' | 'WORK_FINISHED' | 'WORK_BLOCKED';
-                    source?: string;
-                };
-                await emitEvent({
-                    contextId: effectiveContextId,
-                    contextType: effectiveContextType,
-                    actionId: action.id,
-                    type: statusEvent.eventType,
-                    payload: {
-                        source: statusEvent.source || 'csv-import',
-                        originalStatus: interpretationPlan.raw.status,
-                    },
-                    actorId: userId,
-                });
-                workEventsEmitted++;
-            }
-        } else {
-            // No stored plan - generate one on-the-fly
-            const statusValue = (item.metadata as { status?: string })?.status;
-            const targetDate = (item.metadata as { targetDate?: string })?.targetDate;
-            const stageName = (item.metadata as { 'import.stage_name'?: string })?.['import.stage_name'];
-
-            const freshPlan = interpretCsvRowPlan({
-                text: item.title,
-                status: statusValue,
-                targetDate: targetDate,
-                stageName: stageName ?? undefined,
-            });
-
-            // Process fact_candidate outputs
-            for (const output of freshPlan.outputs) {
-                if (output.kind === 'fact_candidate') {
-                    const factKind = output.factKind as string;
-                    const confidence = (output.confidence as 'low' | 'medium' | 'high') || 'medium';
-                    const { kind: _kind2, factKind: _, confidence: __, ...cleanPayload } = output;
-
-                    await ensureFactKindDefinition({
-                        factKind,
-                        source: 'csv-import',
-                        confidence,
-                        examplePayload: cleanPayload,
-                    });
-
-                    await emitEvent({
-                        contextId: effectiveContextId,
-                        contextType: effectiveContextType,
-                        actionId: action.id,
-                        type: 'FACT_RECORDED',
-                        payload: {
-                            factKind,
-                            source: 'csv-import',
-                            confidence,
-                            ...cleanPayload,
-                        },
-                        actorId: userId,
-                    });
-                    factEventsEmitted++;
-                }
-            }
-
-            // Auto-commit work_event from status
-            if (freshPlan.statusEvent && freshPlan.statusEvent.kind === 'work_event') {
-                const statusEvent = freshPlan.statusEvent as {
-                    kind: 'work_event';
-                    eventType: 'WORK_STARTED' | 'WORK_FINISHED' | 'WORK_BLOCKED';
-                    source?: string;
-                };
-                await emitEvent({
-                    contextId: effectiveContextId,
-                    contextType: effectiveContextType,
-                    actionId: action.id,
-                    type: statusEvent.eventType,
-                    payload: {
-                        source: statusEvent.source || 'csv-import',
-                        originalStatus: statusValue,
-                    },
-                    actorId: userId,
-                });
-                workEventsEmitted++;
-            }
+        if (existingMapping) {
+            logger.debug({ title: item.title, mondayId, entityId: existingMapping.local_entity_id }, '[imports.service] Template already exists, reusing');
+            ctx.createdIds[item.tempId] = existingMapping.local_entity_id;
+            return true;
         }
     }
+    return false;
+}
 
-    // Final diagnostic summary
+/**
+ * Resolve context and parent for an item.
+ */
+function resolveItemContext(
+    item: ImportPlanItem,
+    itemsByTempId: Map<string, ImportPlanItem>,
+    ctx: ExecutionContext,
+    targetProjectId: string | null
+): { contextId: string | undefined; parentActionId: string | null } {
+    const parentIsItem = item.parentTempId && itemsByTempId.has(item.parentTempId);
+
+    let contextId: string | undefined;
+    let parentActionId: string | null = null;
+
+    if (parentIsItem) {
+        const resolvedParentAction = ctx.createdIds[item.parentTempId!];
+        parentActionId = resolvedParentAction ?? null;
+
+        if (!resolvedParentAction) {
+            logger.warn({
+                tempId: item.tempId,
+                title: item.title,
+                parentTempId: item.parentTempId,
+            }, '[imports.service] Parent item not yet created - action will have null parentActionId');
+        }
+
+        const parentItem = itemsByTempId.get(item.parentTempId!);
+        if (parentItem?.parentTempId) {
+            const grandparentId = ctx.createdIds[parentItem.parentTempId];
+            if (!grandparentId && parentItem.parentTempId) {
+                logger.warn({
+                    tempId: item.tempId,
+                    title: item.title,
+                    grandparentTempId: parentItem.parentTempId,
+                }, '[imports.service] Grandparent container not found - falling back to targetProjectId');
+            }
+            contextId = grandparentId ?? targetProjectId ?? undefined;
+        } else {
+            contextId = targetProjectId ?? undefined;
+        }
+    } else if (item.parentTempId) {
+        const resolvedContainer = ctx.createdIds[item.parentTempId];
+        if (!resolvedContainer) {
+            logger.warn({
+                tempId: item.tempId,
+                title: item.title,
+                parentTempId: item.parentTempId,
+            }, '[imports.service] Parent container not found - falling back to targetProjectId');
+        }
+        contextId = resolvedContainer ?? targetProjectId ?? undefined;
+    } else {
+        contextId = targetProjectId ?? undefined;
+    }
+
+    return { contextId, parentActionId };
+}
+
+/**
+ * Determine the effective context type from container or project.
+ */
+function resolveContextType(
+    effectiveContextId: string,
+    containerTypes: Map<string, string>,
+    targetProjectId: string | null
+): ContextType {
+    if (effectiveContextId) {
+        const parentType = containerTypes.get(effectiveContextId);
+        if (parentType) {
+            return getContextTypeFromNodeType(parentType);
+        } else if (effectiveContextId === targetProjectId) {
+            return 'project';
+        } else {
+            // Context ID exists but is not a known container or the target project
+            // This may indicate an existing hierarchy node from a previous import
+            logger.warn({
+                effectiveContextId,
+                targetProjectId,
+            }, '[imports.service] Context ID not found in containerTypes or targetProjectId - defaulting to subprocess');
+        }
+    }
+    return 'subprocess';
+}
+
+const VALID_CONFIDENCE_VALUES = new Set(['low', 'medium', 'high']);
+
+/**
+ * Process fact candidates from an interpretation plan.
+ */
+async function processFactCandidates(
+    outputs: Array<{ kind: string; [key: string]: unknown }>,
+    actionId: string,
+    effectiveContextId: string,
+    effectiveContextType: ContextType,
+    ctx: ExecutionContext,
+    userId?: string
+): Promise<void> {
+    for (const output of outputs) {
+        if (output.kind === 'fact_candidate') {
+            // Validate factKind is a non-empty string
+            const rawFactKind = output.factKind;
+            if (typeof rawFactKind !== 'string' || !rawFactKind.trim()) {
+                logger.error({ output, actionId }, '[imports.service] Skipping fact_candidate with invalid or missing factKind');
+                continue;
+            }
+            const factKind = rawFactKind.trim();
+
+            // Validate and normalize confidence
+            const rawConfidence = output.confidence;
+            let confidence: 'low' | 'medium' | 'high' = 'medium';
+            if (typeof rawConfidence === 'string' && VALID_CONFIDENCE_VALUES.has(rawConfidence)) {
+                confidence = rawConfidence as 'low' | 'medium' | 'high';
+            } else if (rawConfidence !== undefined && rawConfidence !== null) {
+                logger.warn({ output, actionId, rawConfidence }, '[imports.service] Invalid confidence value, defaulting to medium');
+            }
+
+            const { kind: _kind, factKind: _, confidence: __, ...cleanPayload } = output;
+
+            await ensureFactKindDefinition({
+                factKind,
+                source: 'csv-import',
+                confidence,
+                examplePayload: cleanPayload,
+            });
+
+            await emitEvent({
+                contextId: effectiveContextId,
+                contextType: effectiveContextType,
+                actionId,
+                type: 'FACT_RECORDED',
+                payload: {
+                    factKind,
+                    source: 'csv-import',
+                    confidence,
+                    ...cleanPayload,
+                },
+                actorId: userId,
+            });
+            ctx.counters.factEventsEmitted++;
+        }
+    }
+}
+
+/**
+ * Emit a work event (WORK_STARTED, WORK_FINISHED, WORK_BLOCKED).
+ */
+async function emitWorkEvent(
+    statusEvent: { kind: string; eventType?: string; source?: string },
+    originalStatus: string | undefined,
+    actionId: string,
+    effectiveContextId: string,
+    effectiveContextType: ContextType,
+    ctx: ExecutionContext,
+    userId?: string
+): Promise<void> {
+    const typedEvent = statusEvent as {
+        kind: 'work_event';
+        eventType: 'WORK_STARTED' | 'WORK_FINISHED' | 'WORK_BLOCKED';
+        source?: string;
+    };
+
+    // Guard against 'stage' contextType which is deprecated and will throw in emitEvent
+    // Convert to 'subprocess' as the safe fallback
+    let safeContextType: ContextType = effectiveContextType;
+    if (effectiveContextType === 'stage') {
+        logger.warn({
+            actionId,
+            effectiveContextId,
+            originalContextType: effectiveContextType,
+        }, '[imports.service] Stage context deprecated for work events - using subprocess');
+        safeContextType = 'subprocess';
+    }
+
+    await emitEvent({
+        contextId: effectiveContextId,
+        contextType: safeContextType,
+        actionId,
+        type: typedEvent.eventType,
+        payload: {
+            source: typedEvent.source || 'csv-import',
+            originalStatus,
+        },
+        actorId: userId,
+    });
+    ctx.counters.workEventsEmitted++;
+}
+
+/**
+ * Process interpretation plan for an action (stored or fresh).
+ */
+async function processInterpretationForAction(
+    item: ImportPlanItem,
+    actionId: string,
+    classification: ItemClassification | undefined,
+    effectiveContextId: string,
+    effectiveContextType: ContextType,
+    ctx: ExecutionContext,
+    userId?: string
+): Promise<void> {
+    const interpretationPlan = classification?.interpretationPlan;
+
+    if (interpretationPlan) {
+        // V2 Path: Process stored InterpretationPlan
+        const shouldCommitFacts =
+            classification?.outcome === 'FACT_EMITTED' ||
+            (classification?.resolution?.resolvedOutcome === 'FACT_EMITTED');
+
+        if (shouldCommitFacts) {
+            await processFactCandidates(
+                interpretationPlan.outputs,
+                actionId,
+                effectiveContextId,
+                effectiveContextType,
+                ctx,
+                userId
+            );
+        }
+
+        // Count field values
+        for (const output of interpretationPlan.outputs) {
+            if (output.kind === 'field_value') {
+                ctx.counters.fieldValuesApplied++;
+            }
+        }
+
+        // Auto-commit work_event from status
+        if (interpretationPlan.statusEvent && interpretationPlan.statusEvent.kind === 'work_event') {
+            await emitWorkEvent(
+                interpretationPlan.statusEvent,
+                interpretationPlan.raw.status,
+                actionId,
+                effectiveContextId,
+                effectiveContextType,
+                ctx,
+                userId
+            );
+        }
+    } else {
+        // No stored plan - generate one on-the-fly
+        const statusValue = (item.metadata as { status?: string })?.status;
+        const targetDate = (item.metadata as { targetDate?: string })?.targetDate;
+        const stageName = (item.metadata as { 'import.stage_name'?: string })?.['import.stage_name'];
+
+        const freshPlan = interpretCsvRowPlan({
+            text: item.title,
+            status: statusValue,
+            targetDate: targetDate,
+            stageName: stageName ?? undefined,
+        });
+
+        // Process fact_candidate outputs
+        await processFactCandidates(
+            freshPlan.outputs,
+            actionId,
+            effectiveContextId,
+            effectiveContextType,
+            ctx,
+            userId
+        );
+
+        // Auto-commit work_event from status
+        if (freshPlan.statusEvent && freshPlan.statusEvent.kind === 'work_event') {
+            await emitWorkEvent(
+                freshPlan.statusEvent,
+                statusValue,
+                actionId,
+                effectiveContextId,
+                effectiveContextType,
+                ctx,
+                userId
+            );
+        }
+    }
+}
+
+/**
+ * Create a single action and emit associated events.
+ */
+async function createActionWithEvents(
+    item: ImportPlanItem,
+    itemsByTempId: Map<string, ImportPlanItem>,
+    ctx: ExecutionContext,
+    targetProjectId: string | null,
+    userId?: string
+): Promise<boolean> {
+    // Skip if already created
+    if (ctx.createdIds[item.tempId]) {
+        return false;
+    }
+
+    // Template deduplication
+    if (item.entityType === 'template') {
+        const deduplicated = await checkTemplateDeduplication(item, ctx);
+        if (deduplicated) return false;
+    }
+
+    // Resolve context
+    const { contextId, parentActionId } = resolveItemContext(item, itemsByTempId, ctx, targetProjectId);
+
+    // Templates without context can be created; others require context
+    if (!contextId && item.entityType !== 'template') {
+        logger.warn(
+            {
+                module: 'imports.service',
+                operation: 'executePlanViaComposer',
+                tempId: item.tempId,
+                itemTitle: item.title,
+                entityType: item.entityType,
+                parentTempId: item.parentTempId,
+            },
+            'Skipping item without context'
+        );
+        ctx.counters.skippedNoContext++;
+        return false;
+    }
+
+    const effectiveContextId = contextId ?? '';
+    const effectiveContextType = resolveContextType(effectiveContextId, ctx.containerTypes, targetProjectId);
+
+    // Create action
+    const action = await db
+        .insertInto('actions')
+        .values({
+            context_type: effectiveContextType,
+            context_id: effectiveContextId,
+            parent_action_id: parentActionId,
+            type: 'Task',
+            field_bindings: JSON.stringify([
+                { fieldKey: 'title', value: item.title },
+                ...item.fieldRecordings.map((fr: { fieldName: string; value: unknown }) => ({
+                    fieldKey: fr.fieldName,
+                    value: fr.value,
+                })),
+            ]),
+        })
+        .returning('id')
+        .executeTakeFirstOrThrow();
+
+    ctx.createdIds[item.tempId] = action.id;
+    ctx.counters.actionsCreated++;
+
+    // Emit ACTION_DECLARED event
+    await emitEvent({
+        contextId: effectiveContextId,
+        contextType: effectiveContextType,
+        actionId: action.id,
+        type: 'ACTION_DECLARED',
+        payload: {
+            title: item.title,
+            metadata: item.metadata,
+            parentActionId,
+        },
+        actorId: userId,
+    });
+
+    // Create sync mapping for Monday items
+    const mondayMeta = (item.metadata as { monday?: { id: string; type: string } })?.monday;
+    if (mondayMeta?.id) {
+        await createMapping({
+            provider: 'monday',
+            externalId: mondayMeta.id,
+            externalType: mondayMeta.type || 'item',
+            localEntityType: 'action',
+            localEntityId: action.id,
+        });
+    }
+
+    // Process interpretation plan
+    const classification = ctx.classificationMap.get(item.tempId);
+    await processInterpretationForAction(
+        item,
+        action.id,
+        classification,
+        effectiveContextId,
+        effectiveContextType,
+        ctx,
+        userId
+    );
+
+    return true;
+}
+
+// ============================================================================
+// PHASE 5: RESULTS & PROJECTION REFRESH
+// ============================================================================
+
+interface ExecutionResults {
+    createdIds: Record<string, string>;
+    itemCount: number;
+    containerCount: number;
+    actionsCreated: number;
+    recordsCreated: number;
+    factEventsEmitted: number;
+    workEventsEmitted: number;
+    fieldValuesApplied: number;
+    skippedNoContext: number;
+    errors?: string[];
+}
+
+/**
+ * Build execution results from context.
+ */
+function buildExecutionResults(plan: ImportPlan, ctx: ExecutionContext): ExecutionResults {
     logger.debug({
         containers: plan.containers.length,
         items: plan.items.length,
-        actionsCreated,
-        recordsCreated,
-        skippedNoContext,
-        factEventsEmitted,
-        workEventsEmitted,
+        actionsCreated: ctx.counters.actionsCreated,
+        recordsCreated: ctx.counters.recordsCreated,
+        skippedNoContext: ctx.counters.skippedNoContext,
+        factEventsEmitted: ctx.counters.factEventsEmitted,
+        workEventsEmitted: ctx.counters.workEventsEmitted,
     }, '[imports.service] Execution summary');
 
-    // Force projection refresh for target project to ensure data is visible
-    if (targetProjectId) {
-        const { projectWorkflowSurface } = await import(
-            '../../projections/workflow-surface.projector.js'
-        );
-        try {
-            await projectWorkflowSurface(targetProjectId, 'project');
-            logger.debug({ targetProjectId }, '[imports.service] Project projection refreshed');
-        } catch (err) {
-            logger.warn({ targetProjectId, error: err },
-                '[imports.service] Failed to refresh project projection');
-        }
-    }
-
     return {
-        createdIds,
+        createdIds: ctx.createdIds,
         itemCount: plan.items.length,
         containerCount: plan.containers.length,
-        actionsCreated,
-        recordsCreated,
-        factEventsEmitted,
-        workEventsEmitted,
-        fieldValuesApplied,
-        skippedNoContext,
-        errors: executionErrors.length > 0 ? executionErrors : undefined,
+        actionsCreated: ctx.counters.actionsCreated,
+        recordsCreated: ctx.counters.recordsCreated,
+        factEventsEmitted: ctx.counters.factEventsEmitted,
+        workEventsEmitted: ctx.counters.workEventsEmitted,
+        fieldValuesApplied: ctx.counters.fieldValuesApplied,
+        skippedNoContext: ctx.counters.skippedNoContext,
+        errors: ctx.executionErrors.length > 0 ? ctx.executionErrors : undefined,
     };
+}
+
+/**
+ * Force projection refresh for target project.
+ */
+async function refreshProjectProjection(targetProjectId: string | null): Promise<void> {
+    if (!targetProjectId) return;
+
+    const { projectWorkflowSurface } = await import(
+        '../../projections/workflow-surface.projector.js'
+    );
+
+    try {
+        await projectWorkflowSurface(targetProjectId, 'project');
+        logger.debug({ targetProjectId }, '[imports.service] Project projection refreshed');
+    } catch (err) {
+        logger.warn({ targetProjectId, error: err },
+            '[imports.service] Failed to refresh project projection');
+    }
+}
+
+// ============================================================================
+// MAIN EXECUTION FUNCTION
+// ============================================================================
+
+async function executePlanViaComposer(
+    plan: ImportPlan,
+    targetProjectId: string | null,
+    userId?: string
+): Promise<ExecutionResults> {
+    // Phase 1: Initialize execution context
+    const ctx = createExecutionContext(plan);
+
+    // Diagnostic: Log item distribution by entityType
+    const entityTypeCounts = plan.items.reduce((acc, item) => {
+        const type = item.entityType ?? 'undefined';
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+    logger.debug({ entityTypeCounts, classificationsCount: plan.classifications.length, targetProjectId }, '[imports.service] Plan execution starting');
+
+    // Phase 2: Create containers (process, subprocess) as hierarchy nodes
+    await createContainers(plan.containers, ctx, targetProjectId, userId);
+
+    // Phase 3: Bulk Create Records
+    const recordsByDef = groupRecordsByDefinition(plan.items, ctx.classificationMap);
+
+    // Diagnostic: Log record filter results
+    const recordCandidates = plan.items.filter(i => i.entityType === 'record').length;
+    logger.debug({ recordCandidates, recordsWithSchema: Array.from(recordsByDef.values()).flat().length }, '[imports.service] Record filter results');
+
+    // Execute bulk creation per definition
+    for (const [defId, items] of recordsByDef) {
+        await createBulkRecordsForDefinition(defId, items, ctx, targetProjectId, userId);
+    }
+
+    // Phase 4: Create work items via Actions + Events
+    const itemsByTempId = new Map(plan.items.map(i => [i.tempId, i]));
+    const { sortedItems } = topologicalSortItems(plan.items, itemsByTempId);
+
+    // Create actions with events for each sorted item
+    for (const item of sortedItems) {
+        await createActionWithEvents(item, itemsByTempId, ctx, targetProjectId, userId);
+    }
+
+    // Phase 5: Build results and refresh projections
+    await refreshProjectProjection(targetProjectId);
+    return buildExecutionResults(plan, ctx);
 }

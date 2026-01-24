@@ -20,6 +20,7 @@ import type { ImportPlan } from '../types.js';
 import { hasUnresolvedClassifications } from '../types.js';
 import { getSession, getLatestPlan, PARSERS } from './import-sessions.service.js';
 import { generateClassifications, generateClassificationsForConnectorItems } from './import-classification.service.js';
+import { getPlannedStatus, transitionStatusInTransaction } from './session-status.service.js';
 
 // Re-export getLatestPlan for convenience
 export { getLatestPlan } from './import-sessions.service.js';
@@ -83,14 +84,14 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
 
     // Determine session status based on classifications
     const hasUnresolved = hasUnresolvedClassifications(planData);
-    const newStatus = hasUnresolved ? 'needs_review' : 'planned';
+    const newStatus = getPlannedStatus(hasUnresolved);
 
     // Use transaction with row-level locking to prevent concurrent plan creation
     await db.transaction().execute(async (trx) => {
         // Lock the session row to prevent concurrent generatePlan calls
         const lockedSession = await trx
             .selectFrom('import_sessions')
-            .select('id')
+            .select(['id', 'status'])
             .where('id', '=', sessionId)
             .forUpdate()
             .executeTakeFirst();
@@ -108,11 +109,14 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
             })
             .execute();
 
-        await trx
-            .updateTable('import_sessions')
-            .set({ status: newStatus, updated_at: new Date() })
-            .where('id', '=', sessionId)
-            .execute();
+        // Transition status with validation
+        await transitionStatusInTransaction(
+            trx,
+            sessionId,
+            lockedSession.status as any,
+            newStatus,
+            hasUnresolved ? 'Plan has unresolved classifications' : 'Plan generated successfully'
+        );
     });
 
     return planData;
@@ -275,16 +279,15 @@ export async function generatePlanFromConnector(
     plan.classifications = generateClassificationsForConnectorItems(plan.items, definitions);
 
     // Determine session status
-    const newStatus = hasUnresolvedClassifications(plan)
-        ? 'needs_review'
-        : 'planned';
+    const hasUnresolved = hasUnresolvedClassifications(plan);
+    const newStatus = getPlannedStatus(hasUnresolved);
 
     // Use transaction with row-level locking to prevent concurrent plan creation
     await db.transaction().execute(async (trx) => {
         // Lock the session row to prevent concurrent generatePlan calls
         const lockedSession = await trx
             .selectFrom('import_sessions')
-            .select('id')
+            .select(['id', 'status'])
             .where('id', '=', sessionId)
             .forUpdate()
             .executeTakeFirst();
@@ -302,11 +305,14 @@ export async function generatePlanFromConnector(
             })
             .execute();
 
-        await trx
-            .updateTable('import_sessions')
-            .set({ status: newStatus, updated_at: new Date() })
-            .where('id', '=', sessionId)
-            .execute();
+        // Transition status with validation
+        await transitionStatusInTransaction(
+            trx,
+            sessionId,
+            lockedSession.status as any,
+            newStatus,
+            hasUnresolved ? 'Plan has unresolved classifications' : 'Connector plan generated successfully'
+        );
     });
 
     return plan;
