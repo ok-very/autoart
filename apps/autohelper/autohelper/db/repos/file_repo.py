@@ -92,22 +92,34 @@ class FileRepository:
         Returns:
             Number of files processed
         """
+        if not files:
+            return 0
+
         db = get_db()
         now = datetime.now(UTC).isoformat()
         count = 0
 
+        # Prefetch existing file_ids in batches to avoid N+1 queries
+        # SQLite default limit is 999 params, use 500 for safety
+        all_paths = [f["canonical_path"] for f in files]
+        existing_map: dict[str, str] = {}
+        batch_size = 500
+
+        for i in range(0, len(all_paths), batch_size):
+            batch_paths = all_paths[i : i + batch_size]
+            placeholders = ",".join("?" * len(batch_paths))
+            cursor = db.execute(
+                f"SELECT canonical_path, file_id FROM files WHERE canonical_path IN ({placeholders})",
+                tuple(batch_paths),
+            )
+            for row in cursor:
+                existing_map[row["canonical_path"]] = row["file_id"]
+
         for file_data in files:
             canonical_path = file_data["canonical_path"]
+            file_id = existing_map.get(canonical_path)
 
-            # Check existence
-            cursor = db.execute(
-                "SELECT file_id FROM files WHERE canonical_path = ?",
-                (canonical_path,),
-            )
-            row = cursor.fetchone()
-
-            if row:
-                file_id = row["file_id"]
+            if file_id:
                 db.execute(
                     """UPDATE files SET
                         root_id = ?, rel_path = ?, size = ?, mtime_ns = ?,
