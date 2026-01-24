@@ -132,8 +132,52 @@ class WorkerThread:
 
 
 def get_worker_class():
+    # If Qt is not available, return a small fallback Worker class that
+    # preserves the minimal runtime API used by the rest of this module.
     if not _ensure_qt_imported():
-        return object
+        class _FallbackWorker:
+            def __init__(self, func, parent=None):
+                self.func = func
+                # simple list to hold connected callbacks: mimic Signal.connect API
+                self._callbacks = []
+
+            class _SignalProxy:
+                def __init__(self, callbacks):
+                    self._callbacks = callbacks
+                def connect(self, cb):
+                    self._callbacks.append(cb)
+                def emit(self, *args, **kwargs):
+                    for cb in list(self._callbacks):
+                        try:
+                            cb(*args, **kwargs)
+                        except Exception:
+                            # keep fallback robust; swallow handler errors
+                            pass
+
+            @property
+            def finished(self):
+                return self._signal_proxy
+
+            def start(self):
+                # Run synchronously in fallback mode
+                try:
+                    self.func()
+                    # emit success
+                    self._signal_proxy.emit(True, "Done")
+                except Exception as e:
+                    self._signal_proxy.emit(False, str(e))
+
+            # initialize proxy after instance created
+            def __post_init__(self):
+                pass
+
+            def __new__(cls, *args, **kwargs):
+                instance = super().__new__(cls)
+                instance._callbacks = []
+                instance._signal_proxy = cls._SignalProxy(instance._callbacks)
+                return instance
+
+        return _FallbackWorker
 
     class Worker(QThread):
         finished = Signal(bool, str)  # success, message
