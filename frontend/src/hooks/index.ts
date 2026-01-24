@@ -8,3 +8,12 @@ export { useTableSort, type SortConfig, type SortDirection } from './useTableSor
 export { useTableSelection } from './useTableSelection';
 export { useTablePagination } from './useTablePagination';
 export { useTableRowExpansion } from './useTableRowExpansion';
+
+// Layout hooks
+export { default as useJustifiedLayout } from './justified-layout';
+export type {
+  LayoutInputItem,
+  Box,
+  LayoutGeometry,
+  LayoutConfiguration,
+} from './justified-layout';

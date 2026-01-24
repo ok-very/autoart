@@ -13,6 +13,7 @@
 export { DataFieldWidget, type DataFieldKind, type StatusDisplayConfig, type DataFieldWidgetProps } from './DataFieldWidget';
 export { FieldGroup } from './FieldGroup';
 export { FieldRenderer, type FieldRendererProps, type FieldRendererCallbacks, type StatusConfig } from './FieldRenderer';
+export { ImageFieldRenderer } from './ImageFieldRenderer';
 export { ReferenceBlock, type ReferenceBlockProps, type ReferenceStatus, type ReferenceMode } from './ReferenceBlock';
 export { ReferenceStatusBadge, type ReferenceStatusBadgeProps, getStatusBgClass, getStatusTextClass } from './ReferenceStatusBadge';
 

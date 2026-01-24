@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 class IntakeSubmissionData(BaseModel):
     """Submission data from AutoArt API."""
-    
+
     id: str
     form_id: str
     upload_code: str
@@ -17,7 +17,7 @@ class IntakeSubmissionData(BaseModel):
 
 class IntakeCSVExportRequest(BaseModel):
     """Request for intake CSV export."""
-    
+
     form_id: str
     form_title: str  # Used for filename
     submissions: list[IntakeSubmissionData]
@@ -26,7 +26,7 @@ class IntakeCSVExportRequest(BaseModel):
 
 class IntakeCSVExportResponse(BaseModel):
     """Response from intake CSV export."""
-    
+
     file_path: str
     row_count: int
     columns: list[str]

@@ -25,7 +25,9 @@ import type {
   TextElement,
   TearsheetConfig,
   StreamProgress,
+  NamingConfig,
 } from '../types';
+import { DEFAULT_NAMING_CONFIG } from '../types';
 
 const STEPS = [
   { number: 1, title: 'Select Source', component: Step1Source },
@@ -50,6 +52,12 @@ export function ArtCollectorWizardView() {
   const [sourceType, setSourceType] = useState<'web' | 'local'>('local');
   const [sourceUrl, setSourceUrl] = useState('');
   const [sourcePath, setSourcePath] = useState('');
+  const [namingConfig, setNamingConfig] = useState<NamingConfig>(DEFAULT_NAMING_CONFIG);
+
+  // Naming config handlers
+  const updateNamingConfig = useCallback((updates: Partial<NamingConfig>) => {
+    setNamingConfig((prev) => ({ ...prev, ...updates }));
+  }, []);
 
   // Step 2: Artifacts
   const [artifacts, setArtifacts] = useState<ArtifactPreview[]>([]);
@@ -202,6 +210,9 @@ export function ArtCollectorWizardView() {
       setSourceUrl,
       sourcePath,
       setSourcePath,
+      namingConfig,
+      setNamingConfig,
+      updateNamingConfig,
       artifacts,
       addArtifact,
       toggleArtifactSelection,
@@ -233,6 +244,8 @@ export function ArtCollectorWizardView() {
       sourceType,
       sourceUrl,
       sourcePath,
+      namingConfig,
+      updateNamingConfig,
       artifacts,
       addArtifact,
       toggleArtifactSelection,

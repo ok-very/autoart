@@ -29,7 +29,7 @@ def clear_request_context() -> None:
 
 class ContextFilter(logging.Filter):
     """Add request context to log records."""
-    
+
     def filter(self, record: logging.LogRecord) -> bool:
         ctx = get_request_context()
         if ctx:
@@ -47,7 +47,7 @@ def setup_logging(level: str = "INFO") -> logging.Logger:
     """Configure application logging."""
     logger = logging.getLogger("autohelper")
     logger.setLevel(getattr(logging, level.upper(), logging.INFO))
-    
+
     if not logger.handlers:
         handler = logging.StreamHandler(sys.stdout)
         handler.setFormatter(
@@ -58,7 +58,7 @@ def setup_logging(level: str = "INFO") -> logging.Logger:
         )
         handler.addFilter(ContextFilter())
         logger.addHandler(handler)
-    
+
     return logger
 
 

@@ -5,10 +5,11 @@ Fetches project/record definitions from the AutoArt backend.
 Provides a fallback context source alongside Monday.com.
 """
 
-import requests
-from typing import Any
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
+from typing import Any
+
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -16,17 +17,15 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AutoArtClientConfig:
     """Configuration for AutoArt client"""
+
     api_url: str = "http://localhost:3000"
     api_key: str | None = None
 
 
 class AutoArtClientError(Exception):
     """Error from AutoArt API"""
-    def __init__(
-        self,
-        message: str,
-        status_code: int | None = None
-    ):
+
+    def __init__(self, message: str, status_code: int | None = None):
         super().__init__(message)
         self.status_code = status_code
 
@@ -52,7 +51,7 @@ class AutoArtClient:
         self,
         api_url: str = "http://localhost:3000",
         api_key: str | None = None,
-        session_id: str | None = None
+        session_id: str | None = None,
     ):
         self.api_url = api_url.rstrip("/")
         self.api_key = api_key
@@ -70,20 +69,13 @@ class AutoArtClient:
         return headers
 
     def _request(
-        self,
-        method: str,
-        endpoint: str,
-        params: dict[str, Any] | None = None
+        self, method: str, endpoint: str, params: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Make a request to the AutoArt API."""
         url = f"{self.api_url}{endpoint}"
         try:
             response = requests.request(
-                method=method,
-                url=url,
-                headers=self._get_headers(),
-                params=params,
-                timeout=10
+                method=method, url=url, headers=self._get_headers(), params=params, timeout=10
             )
         except requests.RequestException as e:
             logger.error(f"AutoArt API request failed: {e}")
@@ -91,8 +83,7 @@ class AutoArtClient:
 
         if response.status_code != 200:
             raise AutoArtClientError(
-                f"HTTP {response.status_code}: {response.text}",
-                status_code=response.status_code
+                f"HTTP {response.status_code}: {response.text}", status_code=response.status_code
             )
 
         return response.json()
@@ -108,7 +99,7 @@ class AutoArtClient:
     def fetch_projects(self, force_refresh: bool = False) -> list[dict[str, Any]]:
         """
         Fetch all projects/records from AutoArt.
-        
+
         Returns list of dicts with:
             - id: Record ID
             - name: Record name (project name)
@@ -117,7 +108,7 @@ class AutoArtClient:
         """
         if self._cached_projects and not force_refresh:
             return self._cached_projects
-        
+
         try:
             result = self._request("GET", "/api/records", {"definitionType": "Project"})
             records = result.get("data", []) if isinstance(result, dict) else result
@@ -138,18 +129,18 @@ class AutoArtClient:
     def fetch_developers(self, force_refresh: bool = False) -> list[str]:
         """
         Fetch known developer names from AutoArt.
-        
+
         These can be extracted from project naming conventions
         or a dedicated "Developer" definition type.
         """
         if self._cached_developers and not force_refresh:
             return self._cached_developers
-        
+
         try:
             # Try to fetch records of type "Developer" or "Client"
             result = self._request("GET", "/api/records", {"definitionType": "Developer"})
             records = result.get("data", []) if isinstance(result, dict) else result
-            
+
             if not records:
                 # Fallback: extract from project names (e.g., "Developer - Project")
                 projects = self.fetch_projects(force_refresh)
@@ -167,29 +158,29 @@ class AutoArtClient:
                     for r in records
                     if r.get("name") or r.get("title")
                 ]
-            
+
             return self._cached_developers
         except AutoArtClientError as e:
             logger.warning(f"Failed to fetch developers from AutoArt: {e}")
             return []
-    
+
     def clear_cache(self) -> None:
         """Clear cached data."""
         self._cached_projects = None
         self._cached_developers = None
-    
+
     # =========================================================================
     # PAIRING & CREDENTIAL PROXYING
     # =========================================================================
-    
+
     def pair_with_code(self, code: str, instance_name: str = "AutoHelper") -> str | None:
         """
         Exchange a pairing code for a session ID.
-        
+
         Args:
             code: 6-digit pairing code from AutoArt
             instance_name: Name to identify this AutoHelper instance
-            
+
         Returns:
             Session ID on success, None on failure
         """
@@ -198,9 +189,9 @@ class AutoArtClient:
                 f"{self.api_url}/api/connections/autohelper/handshake",
                 json={"code": code, "instanceName": instance_name},
                 headers={"Content-Type": "application/json"},
-                timeout=10
+                timeout=10,
             )
-            
+
             if response.status_code == 200:
                 result = response.json()
                 session_id = result.get("sessionId")
@@ -209,58 +200,54 @@ class AutoArtClient:
             else:
                 logger.warning(f"Pairing failed: {response.status_code} - {response.text}")
                 return None
-                
+
         except requests.RequestException as e:
             logger.error(f"Pairing request failed: {e}")
             return None
-    
+
     def get_monday_token(self, session_id: str) -> str | None:
         """
         Fetch Monday API token from AutoArt using session credentials.
-        
+
         This makes AutoArt the single source of truth for API tokens,
         eliminating the need to store the Monday key locally.
-        
+
         Args:
             session_id: Valid session ID from pairing
-            
+
         Returns:
             Monday API token on success, None on failure
         """
         try:
             response = requests.get(
                 f"{self.api_url}/api/connections/autohelper/credentials",
-                headers={
-                    "X-AutoHelper-Session": session_id,
-                    "Content-Type": "application/json"
-                },
-                timeout=10
+                headers={"X-AutoHelper-Session": session_id, "Content-Type": "application/json"},
+                timeout=10,
             )
-            
+
             if response.status_code == 200:
                 result = response.json()
                 token = result.get("monday_api_token")
                 if token:
                     logger.debug("Retrieved Monday token from AutoArt")
                     return token
-                    
+
             logger.warning(f"Failed to get Monday token: {response.status_code}")
             return None
-            
+
         except requests.RequestException as e:
             logger.error(f"Credential fetch failed: {e}")
             return None
-    
+
     def verify_session(self, session_id: str) -> bool:
         """
         Verify that a session ID is still valid.
-        
+
         Args:
             session_id: Session ID to verify
-            
+
         Returns:
             True if session is valid, False otherwise
         """
         # The credentials endpoint will fail if session is invalid
         return self.get_monday_token(session_id) is not None
-

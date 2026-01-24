@@ -6,12 +6,14 @@
  */
 
 import { useCallback, useRef, useState, useEffect } from 'react';
-import type { ArtifactPreview, StreamProgress } from '../types';
+import type { ArtifactPreview, StreamProgress, NamingConfig } from '../types';
 
 export interface StreamConfig {
   sourceType: 'web' | 'local';
   sourceUrl?: string;
   sourcePath?: string;
+  /** Naming configuration for artifact filenames */
+  namingConfig?: NamingConfig;
 }
 
 export interface UseArtifactStreamOptions {
@@ -85,12 +87,26 @@ export function useArtifactStream(
         abortControllerRef.current = new AbortController();
 
         // Build the request payload
+        // Convert camelCase to snake_case for backend compatibility
+        const namingConfigPayload = config.namingConfig
+          ? {
+              template: config.namingConfig.template,
+              index_start: config.namingConfig.indexStart,
+              index_padding: config.namingConfig.indexPadding,
+              prefix: config.namingConfig.prefix,
+              suffix: config.namingConfig.suffix,
+              date_format: config.namingConfig.dateFormat,
+              numbering_mode: config.namingConfig.numberingMode,
+            }
+          : undefined;
+
         const payload = {
           runner_id: 'autocollector',
           config: {
             source_type: config.sourceType,
             source_url: config.sourceUrl,
             source_path: config.sourcePath,
+            naming_config: namingConfigPayload,
           },
         };
 
@@ -210,6 +226,7 @@ function handleStreamEvent(
       // Ensure artifact has required fields with defaults
       const normalizedArtifact: ArtifactPreview = {
         ref_id: artifact.ref_id,
+        artifact_id: artifact.artifact_id,
         path: artifact.path || '',
         thumbnailUrl: artifact.thumbnailUrl || `/api/runner/thumbnail/${artifact.ref_id}`,
         artifact_type: artifact.artifact_type || 'image',

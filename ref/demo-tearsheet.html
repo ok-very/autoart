@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artist Tearsheet - Brian Jungen</title>
+
+    <!-- Carlito is a metric-compatible open source alternative to Calibri -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --font-main: 'Carlito', 'Calibri', sans-serif;
+            --bg-color: #ffffff;
+            --text-color: #222222;
+            --caption-color: #555555;
+            --gap-size: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: #f0f0f0;
+            /* Light gray for screen viewing distinction */
+            color: var(--text-color);
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* The main container simulating a landscape piece of paper 
+           Standard Letter Landscape is approx ratio 1.29 (11/8.5)
+        */
+        .tearsheet-container {
+            width: 100%;
+            max-width: 1200px;
+            /* Max width for large screens */
+            aspect-ratio: 11 / 8.5;
+            background-color: var(--bg-color);
+            padding: 40px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            /* Fixed sidebar, flexible gallery */
+            gap: 40px;
+            overflow: hidden;
+            /* clean edges */
+        }
+
+        /* --- Left Column: Info & Bio --- */
+        .artist-info {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #eee;
+            padding-right: 30px;
+        }
+
+        .header-section {
+            margin-bottom: 30px;
+        }
+
+        h1.artist-name {
+            font-size: 24pt;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+            line-height: 1.1;
+        }
+
+        h2.artist-region {
+            font-size: 14pt;
+            font-weight: 400;
+            color: var(--caption-color);
+            margin-bottom: 20px;
+        }
+
+        .bio-text {
+            font-size: 11pt;
+            line-height: 1.4;
+            text-align: justify;
+        }
+
+        .bio-text p {
+            margin-bottom: 12px;
+        }
+
+        .contact-info {
+            margin-top: auto;
+            /* Pushes this to the bottom of the column */
+            font-size: 10pt;
+            color: var(--caption-color);
+            padding-top: 20px;
+        }
+
+        .contact-info a {
+            color: var(--text-color);
+            text-decoration: none;
+            border-bottom: 1px solid #ccc;
+        }
+
+        /* --- Right Column: Gallery --- */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            /* 3 Columns */
+            grid-template-rows: repeat(2, 1fr);
+            /* 2 Rows */
+            gap: 20px;
+            align-content: start;
+        }
+
+        .artwork-item {
+            display: flex;
+            flex-direction: column;
+            break-inside: avoid;
+            /* Prevents breaking inside figures in masonry/print */
+        }
+
+        /* Image styling to ensure fit */
+        .image-wrapper {
+            width: 100%;
+            height: 200px;
+            /* Fixed height for uniformity in layout, or remove for masonry */
+            background-color: #eee;
+            margin-bottom: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* Crops to fill. Use 'contain' to see full image with whitespace */
+            transition: transform 0.3s ease;
+        }
+
+        /* Optional hover effect for screen users */
+        .image-wrapper:hover img {
+            transform: scale(1.05);
+        }
+
+        .artwork-caption {
+            font-size: 9pt;
+            color: var(--text-color);
+            line-height: 1.3;
+        }
+
+        .artwork-title {
+            font-weight: 700;
+            font-style: italic;
+        }
+
+        .artwork-year {
+            color: var(--caption-color);
+        }
+
+        /* --- Responsive Design for Screens --- */
+        @media (max-width: 900px) {
+            .tearsheet-container {
+                aspect-ratio: auto;
+                height: auto;
+                grid-template-columns: 1fr;
+                /* Stack vertically on small screens */
+                padding: 30px;
+            }
+
+            .artist-info {
+                border-right: none;
+                border-bottom: 1px solid #eee;
+                padding-right: 0;
+                padding-bottom: 30px;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* --- Print Specific Styles --- */
+        @media print {
+            @page {
+                size: landscape;
+                margin: 0.5in;
+            }
+
+            body {
+                background-color: white;
+                display: block;
+                padding: 0;
+                margin: 0;
+                height: auto;
+            }
+
+            .tearsheet-container {
+                width: 100%;
+                max-width: none;
+                box-shadow: none;
+                padding: 0;
+                aspect-ratio: auto;
+                /* Allow flow */
+                display: grid;
+                grid-template-columns: 28% 68%;
+                /* Specific print proportions */
+                gap: 4%;
+            }
+
+            .image-wrapper {
+                /* Ensure images print clearly */
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                height: auto;
+                /* Let images find natural height on print */
+                max-height: 250px;
+            }
+
+            .image-wrapper img {
+                object-fit: contain;
+                /* Show full artwork on print */
+                background: #f9f9f9;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Main Container -->
+    <div class="tearsheet-container">
+
+        <!-- Sidebar: Artist Info -->
+        <aside class="artist-info">
+            <div class="header-section">
+                <h1 class="artist-name">Jungen, Brian</h1>
+                <h2 class="artist-region">(North Okanagan)</h2>
+            </div>
+
+            <div class="bio-text">
+                <p>
+                    For more than two decades, Brian Jungen has been lauded for his ability to transform everyday
+                    commercial products into a range of museological objects. His sculptures and installations imitate
+                    forms as large and as small as the skeleton of a whale in <em>Cetology</em> (2002), which is
+                    composed of plastic chairs, and Indigenous ceremonial objects, like masks produced from dissected
+                    and reconfigured Nike Air Jordan trainers.
+                </p>
+                <p>
+                    These works, such as the series <em>Prototype for New Understanding</em> (2005), address the issues
+                    of dispossession and appropriation latent in the aesthetics of contemporary global economic,
+                    political, and cultural conflict.
+                </p>
+                <p>
+                    Jungen is a graduate of the Emily Carr College of Art and Design. In 2002, he won the inaugural
+                    Sobey Art Award and the Gershon Iskowitz Prize in 2010. He has exhibited extensively
+                    internationally, and is included in many public and private collections.
+                </p>
+            </div>
+
+            <div class="contact-info">
+                <p>Represented by Catriona Jeffries</p>
+                <p><a href="https://catrionajeffries.com/artists/brian-jungen/works">catrionajeffries.com</a></p>
+            </div>
+        </aside>
+
+        <!-- Main Content: Image Grid -->
+        <main class="gallery-grid">
+
+            <!-- Artwork 1 -->
+            <figure class="artwork-item">
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1549887534-1541e9326642?q=80&w=800&auto=format&fit=crop"
+                        alt="Broken Arrangement">
+                </div>
+                <figcaption class="artwork-caption">
+                    <span class="artwork-title">Broken Arrangement</span><br>
+                    <span class="artwork-year">2015-16</span>
+                </figcaption>
+            </figure>
+
+            <!-- Artwork 2 -->
+            <figure class="artwork-item">
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1536924940846-227afb31e2a5?q=80&w=800&auto=format&fit=crop"
+                        alt="Shapeshifter">
+                </div>
+                <figcaption class="artwork-caption">
+                    <span class="artwork-title">Shapeshifter</span><br>
+                    <span class="artwork-year">2000</span>
+                </figcaption>
+            </figure>
+
+            <!-- Artwork 3 -->
+            <figure class="artwork-item">
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1554188248-986adbb73be0?q=80&w=800&auto=format&fit=crop"
+                        alt="The Ghosts on the top of my Head">
+                </div>
+                <figcaption class="artwork-caption">
+                    <span class="artwork-title">The Ghosts on the top of my Head</span><br>
+                    <span class="artwork-year">2010-11 (The Banff Centre)</span>
+                </figcaption>
+            </figure>
+
+            <!-- Artwork 4 -->
+            <figure class="artwork-item">
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=800&auto=format&fit=crop"
+                        alt="Upside down pole">
+                </div>
+                <figcaption class="artwork-caption">
+                    <span class="artwork-title">Upside down pole</span><br>
+                    <span class="artwork-year">2016, Polygon Gallery</span>
+                </figcaption>
+            </figure>
+
+            <!-- Artwork 5 -->
+            <figure class="artwork-item">
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1515405295579-ba7f9f92f413?q=80&w=800&auto=format&fit=crop"
+                        alt="1980">
+                </div>
+                <figcaption class="artwork-caption">
+                    <span class="artwork-title">1980</span><br>
+                    <span class="artwork-year">2007</span>
+                </figcaption>
+            </figure>
+
+            <!-- Artwork 6 -->
+            <figure class="artwork-item">
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1574169208507-84376144848b?q=80&w=800&auto=format&fit=crop"
+                        alt="Cetology">
+                </div>
+                <figcaption class="artwork-caption">
+                    <span class="artwork-title">Cetology</span><br>
+                    <span class="artwork-year">2002</span>
+                </figcaption>
+            </figure>
+
+        </main>
+    </div>
+
+</body>
+
+</html>

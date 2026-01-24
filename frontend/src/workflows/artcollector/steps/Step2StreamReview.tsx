@@ -20,6 +20,7 @@ export function Step2StreamReview({ onNext, onBack }: ArtCollectorStepProps) {
     sourceType,
     sourceUrl,
     sourcePath,
+    namingConfig,
     isStreaming,
     setIsStreaming,
     streamProgress,
@@ -77,6 +78,7 @@ export function Step2StreamReview({ onNext, onBack }: ArtCollectorStepProps) {
       sourceType,
       sourceUrl,
       sourcePath,
+      namingConfig,
     });
   };
 

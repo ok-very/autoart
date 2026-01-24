@@ -9,6 +9,10 @@ import { generateArtifactSlug } from './slugify';
 
 export interface ExportableArtwork {
   refId: string;
+  /** Persistent artifact ID for AutoHelper lookup (survives file moves) */
+  artifact_id?: string;
+  /** Content hash for fallback lookup by file content */
+  content_hash?: string;
   slug: string;
   title: string;
   path: string;
@@ -59,6 +63,8 @@ export function buildExportPayload(
 
       artworks.push({
         refId,
+        artifact_id: artifact.artifact_id,
+        content_hash: artifact.metadata?.content_hash,
         slug,
         title: artifact.metadata?.title || slug,
         path: artifact.path,
@@ -111,6 +117,8 @@ export function toBulkImportFormat(
         slug: artwork.slug,
         path: artwork.path,
         thumbnailUrl: artwork.thumbnailUrl,
+        artifact_id: artwork.artifact_id,
+        content_hash: artwork.content_hash,
         pageNumber: artwork.pageNumber,
         positionOnPage: artwork.positionOnPage,
         width: artwork.metadata?.width,

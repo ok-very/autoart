@@ -278,14 +278,16 @@ export {
   mailQueryKeys,
 } from './mail';
 
-// AutoHelper Filetree & Export
+// AutoHelper Filetree, Export & Artifact Lookup
 export {
   useFiletree,
   useExportIntakeCSV,
+  useArtifactLookup,
   type FiletreeNode,
   type FiletreeResponse,
   type IntakeCSVExportRequest,
   type IntakeCSVExportResponse,
+  type ArtifactLookupResult,
 } from './autohelper';
 
 // Interpretation (Also exported via ./operations)
