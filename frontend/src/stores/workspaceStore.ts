@@ -30,6 +30,8 @@ export interface SerializedDockviewState {
 // Default panels to open on fresh start
 const DEFAULT_OPEN_PANELS: PanelId[] = ['center-workspace', 'selection-inspector'];
 
+type PanelPosition = 'center' | 'left' | 'right' | 'bottom';
+
 interface WorkspaceState {
     // Single layout for entire workspace
     layout: SerializedDockviewState | null;
@@ -50,6 +52,9 @@ interface WorkspaceState {
     activeWorkspaceId: string | null;
     customWorkspaces: WorkspacePreset[];
 
+    // Pending panel positions from workspace presets (consumed by MainLayout)
+    pendingPanelPositions: Map<PanelId, PanelPosition>;
+
     // Panel actions
     openPanel: (panelId: PanelId, params?: unknown) => void;
     closePanel: (panelId: PanelId) => void;
@@ -59,6 +64,7 @@ interface WorkspaceState {
     clearUserOverride: (panelId: PanelId) => void;
     resetLayout: () => void;
     setDockviewApi: (api: DockviewApi | null) => void;
+    clearPendingPositions: () => void;
 
     // Workspace preset actions
     applyWorkspace: (workspaceId: string) => void;
@@ -77,6 +83,7 @@ const initialState = {
     dockviewApi: null as DockviewApi | null,
     activeWorkspaceId: null as string | null,
     customWorkspaces: [] as WorkspacePreset[],
+    pendingPanelPositions: new Map<PanelId, PanelPosition>(),
 };
 
 export const useWorkspaceStore = create<WorkspaceState>()(
@@ -113,6 +120,10 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 
             setDockviewApi: (api: DockviewApi | null) => {
                 set({ dockviewApi: api });
+            },
+
+            clearPendingPositions: () => {
+                set({ pendingPanelPositions: new Map() });
             },
 
             getPanelParams: <T = unknown>(panelId: PanelId): T | undefined => {
@@ -199,10 +210,19 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 const permanentPanels = state.openPanelIds.filter(id => isPermanentPanel(id));
                 const newOpenPanelIds = [...new Set([...permanentPanels, ...presetPanelIds])];
 
-                // Apply the panel configuration
+                // Build position hints for panels (non-center positions)
+                const positionMap = new Map<PanelId, PanelPosition>();
+                for (const panel of preset.panels) {
+                    if (panel.position && panel.position !== 'center') {
+                        positionMap.set(panel.panelId, panel.position);
+                    }
+                }
+
+                // Apply the panel configuration with position hints
                 set({
                     openPanelIds: newOpenPanelIds,
                     activeWorkspaceId: workspaceId,
+                    pendingPanelPositions: positionMap,
                 });
 
                 // Set view modes for panels that specify them
@@ -382,3 +402,4 @@ export const useLayout = () => useWorkspaceStore((s) => s.layout);
 export const useActiveWorkspaceId = () => useWorkspaceStore((s) => s.activeWorkspaceId);
 export const useCustomWorkspaces = () => useWorkspaceStore((s) => s.customWorkspaces);
 export const useAllWorkspaces = () => useWorkspaceStore((s) => s.getAllWorkspaces());
+export const usePendingPanelPositions = () => useWorkspaceStore((s) => s.pendingPanelPositions);

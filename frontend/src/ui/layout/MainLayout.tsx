@@ -32,7 +32,7 @@ import {
 
 import { Header } from './Header';
 import { OverlayRegistry } from '../registry/OverlayRegistry';
-import { useWorkspaceStore, useOpenPanelIds, useLayout } from '../../stores/workspaceStore';
+import { useWorkspaceStore, useOpenPanelIds, useLayout, usePendingPanelPositions } from '../../stores/workspaceStore';
 import { useVisiblePanels } from '../../stores/contextStore';
 import { useUIStore } from '../../stores/uiStore';
 import {
@@ -346,7 +346,8 @@ export function MainLayout() {
   const openPanelIds = useOpenPanelIds();
   const savedLayout = useLayout();
   const visiblePanels = useVisiblePanels();
-  const { openPanel, saveLayout, setDockviewApi } = useWorkspaceStore();
+  const pendingPanelPositions = usePendingPanelPositions();
+  const { openPanel, saveLayout, setDockviewApi, clearPendingPositions } = useWorkspaceStore();
 
   // Build default layout - single center workspace panel
   const buildDefaultLayout = useCallback((api: DockviewApi) => {
@@ -387,7 +388,8 @@ export function MainLayout() {
     });
   }, [savedLayout, buildDefaultLayout, saveLayout, setDockviewApi]);
 
-  // Sync panels when openPanelIds changes - add as tabs by default
+  // Sync panels when openPanelIds changes
+  // Workspace presets provide position hints; single panel opens default to tabs
   useEffect(() => {
     const api = apiRef.current;
     if (!api) return;
@@ -400,7 +402,18 @@ export function MainLayout() {
         const centerPanel = api.getPanel('center-workspace');
         if (!centerPanel) return;
 
-        // Add new panels as tabs (within) - user can drag to split
+        // Check for position hint from workspace preset
+        const pendingPosition = pendingPanelPositions.get(id as PanelId);
+
+        // Map position hint to dockview direction
+        // 'center' and undefined both default to 'within' (tabs)
+        let direction: 'within' | 'right' | 'below' = 'within';
+        if (pendingPosition === 'right' || pendingPosition === 'left') {
+          direction = 'right';
+        } else if (pendingPosition === 'bottom') {
+          direction = 'below';
+        }
+
         api.addPanel({
           id,
           component: id,
@@ -408,11 +421,16 @@ export function MainLayout() {
           tabComponent: 'icon-tab',
           position: {
             referencePanel: centerPanel,
-            direction: 'within',
+            direction,
           },
         });
       }
     });
+
+    // Clear consumed position hints
+    if (pendingPanelPositions.size > 0) {
+      clearPendingPositions();
+    }
 
     api.panels.forEach((panel) => {
       const panelId = panel.id as PanelId;
@@ -420,7 +438,7 @@ export function MainLayout() {
         panel.api.close();
       }
     });
-  }, [openPanelIds]);
+  }, [openPanelIds, pendingPanelPositions, clearPendingPositions]);
 
   // Auto-show/hide panels based on context
   useEffect(() => {
