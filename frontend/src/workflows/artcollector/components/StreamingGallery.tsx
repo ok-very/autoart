@@ -140,8 +140,8 @@ function getProgressText(
     return `${totalArtifacts} collected, ${selectedCount} selected`;
   }
 
-  // Streaming
-  if (progress.total && progress.current) {
+  // Streaming - use explicit undefined checks to handle current === 0
+  if (progress.total !== undefined && progress.current !== undefined) {
     return `${progress.current} of ~${progress.total} collected, ${selectedCount} selected`;
   }
 

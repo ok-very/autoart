@@ -110,6 +110,36 @@ export function useBulkDeleteRecords() {
   });
 }
 
+export interface BulkImportRecord {
+  uniqueName: string;
+  data: Record<string, unknown>;
+  classificationNodeId?: string | null;
+}
+
+export interface BulkImportInput {
+  definitionId: string;
+  records: BulkImportRecord[];
+}
+
+export interface BulkImportResult {
+  created: number;
+  updated: number;
+  errors: Array<{ index: number; error: string }>;
+  records: DataRecord[];
+}
+
+export function useBulkImportRecords() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: BulkImportInput) =>
+      api.post<BulkImportResult>('/records/bulk/import', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['records'] });
+      queryClient.invalidateQueries({ queryKey: ['record-stats'] });
+    },
+  });
+}
+
 export interface RecordAlias {
   id: string;
   record_id: string;

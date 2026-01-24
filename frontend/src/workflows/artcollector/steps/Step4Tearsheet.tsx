@@ -5,8 +5,8 @@
  * Features page navigation, shuffle/shake, and export options.
  */
 
-import { useCallback } from 'react';
-import { Stack, Text, Button, Inline } from '@autoart/ui';
+import { useCallback, useState, useMemo } from 'react';
+import { Stack, Text, Button, Inline, Badge } from '@autoart/ui';
 import {
   Shuffle,
   Download,
@@ -15,8 +15,11 @@ import {
   ChevronRight,
   Plus,
   X,
+  Check,
 } from 'lucide-react';
 import { useArtCollectorContext } from '../context/ArtCollectorContext';
+import { ExportRecordsDialog } from '../components/ExportRecordsDialog';
+import { buildExportPayload } from '../utils/tearsheetExport';
 import type { ArtCollectorStepProps } from '../types';
 
 const MAX_IMAGES_PER_PAGE = 6;
@@ -33,9 +36,22 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
     selectedIds,
     textElements,
     prunedTextIds,
+    slugOverrides,
   } = useArtCollectorContext();
 
   const { pages, currentPageIndex } = tearsheet;
+
+  // Export dialog state
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [exportResult, setExportResult] = useState<{
+    created: number;
+    updated: number;
+  } | null>(null);
+
+  // Build export payload when dialog opens
+  const exportPayload = useMemo(() => {
+    return buildExportPayload(artifacts, pages, slugOverrides, textElements, prunedTextIds);
+  }, [artifacts, pages, slugOverrides, textElements, prunedTextIds]);
 
   // Guard against out-of-range index
   const safePageIndex = pages.length > 0 ? Math.min(currentPageIndex, pages.length - 1) : 0;
@@ -106,12 +122,19 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
 
   const handleExportPDF = () => {
     // TODO: Implement PDF export via print dialog
-    window.print();
+    if (typeof window !== 'undefined' && typeof window.print === 'function') {
+      window.print();
+    }
   };
 
   const handleExportRecords = () => {
-    // TODO: Implement records export
-    console.log('Export Records - will create database entries');
+    setShowExportDialog(true);
+  };
+
+  const handleExportSuccess = (result: { created: number; updated: number }) => {
+    setExportResult(result);
+    // Clear success message after 5 seconds
+    setTimeout(() => setExportResult(null), 5000);
   };
 
   return (
@@ -324,10 +347,26 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
         <Button onClick={onBack} variant="secondary">
           Back
         </Button>
-        <Text size="sm" color="muted">
-          {selectedArtifacts.length} images total, {totalPages} page{totalPages !== 1 ? 's' : ''} created
-        </Text>
+        <Inline gap="md" align="center">
+          {exportResult && (
+            <Badge variant="success" size="sm">
+              <Check className="w-3 h-3 mr-1" />
+              Exported: {exportResult.created} created, {exportResult.updated} updated
+            </Badge>
+          )}
+          <Text size="sm" color="muted">
+            {selectedArtifacts.length} images total, {totalPages} page{totalPages !== 1 ? 's' : ''} created
+          </Text>
+        </Inline>
       </Inline>
+
+      {/* Export Records Dialog */}
+      <ExportRecordsDialog
+        isOpen={showExportDialog}
+        onClose={() => setShowExportDialog(false)}
+        exportPayload={exportPayload}
+        onSuccess={handleExportSuccess}
+      />
     </Stack>
   );
 }

@@ -428,10 +428,16 @@ export function MainLayout() {
     openPanelIds.forEach((id) => {
       if (!api.getPanel(id)) {
         const def = PANEL_DEFINITIONS[id];
-        if (!def) return;
+        if (!def) {
+          console.warn('[MainLayout] No panel definition found for:', id);
+          return;
+        }
 
         const centerPanel = api.getPanel('center-workspace');
-        if (!centerPanel) return;
+        if (!centerPanel) {
+          console.warn('[MainLayout] center-workspace panel not found; cannot add panel:', id);
+          return;
+        }
 
         // Check for position hint from workspace preset
         const rawPendingPosition = pendingPanelPositions.get(id as PanelId);

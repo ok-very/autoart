@@ -178,6 +178,11 @@ function handleStreamEvent(
 
   const event = data as Record<string, unknown>;
 
+  if (typeof event.type !== 'string') {
+    console.warn('[useArtifactStream] Received event with non-string type:', event.type);
+    return;
+  }
+
   switch (event.type) {
     case 'artifact': {
       const artifact = event.artifact as ArtifactPreview;
