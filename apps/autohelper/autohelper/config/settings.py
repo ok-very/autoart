@@ -4,10 +4,17 @@ Supports env vars and optional .env file.
 """
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+# =============================================================================
+# Metadata Backend Types
+# =============================================================================
+
+MetadataBackendType = Literal["manifest", "sharepoint"]
 
 
 class Settings(BaseSettings):
@@ -54,7 +61,16 @@ class Settings(BaseSettings):
     autoart_api_key: str = ""  # Optional API key for AutoArt
     autoart_session_id: str = ""  # Session ID from AutoArt pairing (Monday token proxied via this)
     context_providers: list[str] = Field(default=["autoart", "monday"])  # Priority order
-    
+
+    # Artifact Storage Settings
+    # Backend selection: "manifest" (default, local JSON) or "sharepoint" (requires credentials)
+    metadata_backend: MetadataBackendType = "manifest"
+
+    # SharePoint settings (only used if metadata_backend == "sharepoint")
+    sharepoint_site_url: str | None = None
+    sharepoint_client_id: str | None = None
+    sharepoint_client_secret: str | None = None
+
     def get_allowed_roots(self) -> list[Path]:
         """Parse and validate allowed root paths."""
         return [Path(r).resolve() for r in self.allowed_roots if r]

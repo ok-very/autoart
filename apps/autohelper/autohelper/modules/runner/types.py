@@ -4,7 +4,7 @@ Mirrors backend TypeScript types in runner/types.ts.
 """
 
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -12,6 +12,44 @@ from pydantic import BaseModel, Field
 class RunnerId(str, Enum):
     """Available runner identifiers."""
     AUTOCOLLECTOR = "autocollector"
+
+
+# =============================================================================
+# Naming Configuration
+# =============================================================================
+
+class NumberingMode(str, Enum):
+    """How to number artifacts during collection."""
+    SEQUENTIAL = "sequential"  # Global counter across all sources
+    BY_SOURCE = "by_source"    # Separate counter per source URL/path
+
+
+class NamingConfig(BaseModel):
+    """
+    Configuration for artifact filename generation.
+
+    Template variables:
+    - {index}: Sequential number (padded)
+    - {hash}: Content/URL hash (8 chars)
+    - {date}: Collection date (configurable format)
+    - {ext}: File extension from MIME type
+    - {artist}: Artist name from page metadata (fallback: "unknown-artist")
+    - {title}: Artwork title from alt text/caption (fallback: "untitled-{index}")
+    - {source}: Hostname or folder name (fallback: "local")
+    """
+    template: str = Field(
+        default="{index}_{hash}",
+        description="Filename template using {var} placeholders"
+    )
+    index_start: int = Field(default=1, ge=0, description="Starting index for numbering")
+    index_padding: int = Field(default=3, ge=1, le=6, description="Zero-padding width for index")
+    prefix: str = Field(default="", description="Prefix prepended to all filenames")
+    suffix: str = Field(default="", description="Suffix appended before extension")
+    date_format: str = Field(default="%Y%m%d", description="strftime format for {date}")
+    numbering_mode: NumberingMode = Field(
+        default=NumberingMode.SEQUENTIAL,
+        description="How to count artifacts"
+    )
 
 
 class RunnerConfig(BaseModel):
@@ -64,3 +102,50 @@ class RunnerStatus(BaseModel):
     active: bool = False
     current_runner: RunnerId | None = None
     progress: RunnerProgress | None = None
+
+
+# =============================================================================
+# Artifact Manifest Types
+# =============================================================================
+
+class ArtifactManifestEntry(BaseModel):
+    """
+    Persistent metadata for a collected artifact.
+    Stored in manifest.json for later retrieval even if file is moved.
+    """
+    artifact_id: str = Field(..., description="Stable UUID (content-based)")
+    original_filename: str = Field(..., description="Filename at collection time")
+    current_filename: str = Field(..., description="Current filename (updated if renamed)")
+    content_hash: str = Field(..., description="SHA-256 hash for relocation detection")
+    source_url: str | None = Field(default=None, description="Source URL if web collection")
+    source_path: str | None = Field(default=None, description="Source path if local collection")
+    collected_at: str = Field(..., description="ISO timestamp of collection")
+    mime_type: str = Field(..., description="Detected MIME type")
+    size: int = Field(..., ge=0, description="File size in bytes")
+    metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Additional metadata (dimensions, title, artist, etc.)"
+    )
+
+
+class CollectionManifest(BaseModel):
+    """
+    Manifest file tracking all artifacts from a collection session.
+    Stored at {output_folder}/.artcollector/manifest.json
+    """
+    manifest_id: str = Field(..., description="Unique ID for this collection")
+    version: str = Field(default="1.0", description="Manifest schema version")
+    created_at: str = Field(..., description="ISO timestamp of collection start")
+    updated_at: str = Field(..., description="ISO timestamp of last update")
+    source_type: Literal["web", "local"] = Field(..., description="Collection source type")
+    source_url: str | None = Field(default=None, description="Source URL if web collection")
+    source_path: str | None = Field(default=None, description="Source path if local collection")
+    output_folder: str = Field(..., description="Output folder path")
+    naming_config: NamingConfig = Field(
+        default_factory=NamingConfig,
+        description="Naming configuration used for this collection"
+    )
+    artifacts: list[ArtifactManifestEntry] = Field(
+        default_factory=list,
+        description="List of collected artifacts"
+    )
