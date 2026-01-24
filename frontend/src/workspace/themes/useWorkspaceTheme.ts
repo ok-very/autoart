@@ -41,14 +41,26 @@ export function setWorkspaceTheme(id: WorkspaceThemeId): void {
   }
 
   const previousTheme = workspaceThemeRegistry.get(currentThemeId);
-  previousTheme?.behavior?.onDeactivate?.();
+  try {
+    previousTheme?.behavior?.onDeactivate?.();
+  } catch (err) {
+    console.warn(`Theme "${currentThemeId}" onDeactivate threw:`, err);
+  }
 
   currentThemeId = id;
   if (typeof window !== 'undefined') {
-    localStorage.setItem(THEME_STORAGE_KEY, id);
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, id);
+    } catch {
+      // localStorage may throw in privacy mode or when storage is full
+    }
   }
 
-  theme.behavior?.onActivate?.();
+  try {
+    theme.behavior?.onActivate?.();
+  } catch (err) {
+    console.warn(`Theme "${id}" onActivate threw:`, err);
+  }
   notifyThemeChange();
 }
 

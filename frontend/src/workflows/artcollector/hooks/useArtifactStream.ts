@@ -50,6 +50,19 @@ export function useArtifactStream(
   const [error, setError] = useState<Error | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
+
+  // Cleanup on unmount to prevent setState on unmounted component
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
+  }, []);
 
   const stopStream = useCallback(() => {
     if (abortControllerRef.current) {
@@ -111,7 +124,7 @@ export function useArtifactStream(
         // Process the SSE stream
         while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done || !isMountedRef.current) break;
 
           buffer += decoder.decode(value, { stream: true });
 
@@ -120,7 +133,7 @@ export function useArtifactStream(
           buffer = lines.pop() || ''; // Keep incomplete line in buffer
 
           for (const line of lines) {
-            if (line.startsWith('data: ')) {
+            if (line.startsWith('data: ') && isMountedRef.current) {
               try {
                 const data = JSON.parse(line.slice(6));
                 handleStreamEvent(data, onArtifact, onProgress, setProgress);
@@ -131,16 +144,21 @@ export function useArtifactStream(
           }
         }
 
-        // Stream complete
-        setProgress({ stage: 'complete', percent: 100 });
-        onProgress({ stage: 'complete', percent: 100 });
-        onComplete();
-        setIsStreaming(false);
+        // Stream complete - clear controller and guard against unmount
+        abortControllerRef.current = null;
+        if (isMountedRef.current) {
+          setProgress({ stage: 'complete', percent: 100 });
+          onProgress({ stage: 'complete', percent: 100 });
+          onComplete();
+          setIsStreaming(false);
+        }
       } catch (err) {
         if ((err as Error).name === 'AbortError') {
           // Stream was intentionally stopped
           return;
         }
+        // Guard against unmount before setting error state
+        if (!isMountedRef.current) return;
         const streamError = err instanceof Error ? err : new Error(String(err));
         setError(streamError);
         setProgress({ stage: 'error', percent: 0, message: streamError.message });
@@ -270,6 +288,7 @@ export function useMockArtifactStream(
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+    countRef.current = 0;
     setIsStreaming(false);
     setProgress({ stage: 'idle', percent: 0 });
   }, []);
@@ -355,8 +374,10 @@ export function useMockArtifactStream(
 export function useAutoArtifactStream(
   options: UseArtifactStreamOptions
 ): UseArtifactStreamReturn {
-  const envValue = import.meta.env.VITE_USE_MOCK_STREAM;
-  const useMock = envValue === 'true' || (envValue !== 'false' && import.meta.env.DEV);
+  // Guard against environments without import.meta.env (SSR, some test runners)
+  const env = typeof import.meta !== 'undefined' ? import.meta.env : undefined;
+  const envValue = env?.VITE_USE_MOCK_STREAM;
+  const useMock = envValue === 'true' || (envValue !== 'false' && env?.DEV);
 
   // We must call both hooks unconditionally to satisfy React's rules of hooks,
   // but we only use the results from the appropriate one

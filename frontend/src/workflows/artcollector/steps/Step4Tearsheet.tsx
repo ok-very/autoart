@@ -129,18 +129,26 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
 
   const handleDeletePage = useCallback(
     (pageIndex: number) => {
-      const deletedPage = pages[pageIndex];
+      // Access current tearsheet state at call time to avoid stale closure
+      const currentPages = tearsheet.pages;
+      const currentIdx = tearsheet.currentPageIndex;
+
+      // Guard against out-of-range pageIndex
+      if (pageIndex < 0 || pageIndex >= currentPages.length) {
+        return;
+      }
+      const deletedPage = currentPages[pageIndex];
       // Return images from deleted page to available pool
-      if (deletedPage && deletedPage.imageRefs.length > 0) {
+      if (deletedPage.imageRefs.length > 0) {
         returnImagesToAvailable(deletedPage.imageRefs);
       }
-      const newPages = pages.filter((_, i) => i !== pageIndex);
+      const newPages = currentPages.filter((_, i) => i !== pageIndex);
       updateTearsheet({
         pages: newPages,
-        currentPageIndex: Math.min(currentPageIndex, Math.max(0, newPages.length - 1)),
+        currentPageIndex: Math.min(currentIdx, Math.max(0, newPages.length - 1)),
       });
     },
-    [pages, currentPageIndex, updateTearsheet, returnImagesToAvailable]
+    [tearsheet, updateTearsheet, returnImagesToAvailable]
   );
 
   const handleOpenPrintPreview = () => {
