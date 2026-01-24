@@ -40,7 +40,7 @@ function generatePreview(config: NamingConfig): string {
 
   // Replace template variables with example values
   const exampleValues: Record<string, string> = {
-    index: '001'.padStart(config.indexPadding, '0'),
+    index: String(config.indexStart).padStart(config.indexPadding, '0'),
     hash: 'a1b2c3d4',
     date: '20260124',
     artist: 'jane-doe',
