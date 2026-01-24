@@ -3,72 +3,72 @@
  *
  * Edit extracted text (bio, captions, alt text) and generate/override slugs.
  * Combines text pruning and slug editing in a single step.
- *
- * TODO: Implement collapsible text sections, slug table with duplicate detection
  */
 
+import { useCallback } from 'react';
 import { Stack, Text, Button, Inline } from '@autoart/ui';
 import { useArtCollectorContext } from '../context/ArtCollectorContext';
+import { TextPruningSection } from '../components/TextPruningSection';
+import { SlugEditorSection } from '../components/SlugEditorSection';
 import type { ArtCollectorStepProps } from '../types';
 
 export function Step3TextSlugs({ onNext, onBack }: ArtCollectorStepProps) {
-  const { textElements, prunedTextIds, artifacts, selectedIds, slugOverrides } =
-    useArtCollectorContext();
+  const {
+    textElements,
+    prunedTextIds,
+    pruneText,
+    restoreText,
+    updateTextElement,
+    artifacts,
+    selectedIds,
+    slugOverrides,
+    setSlugOverride,
+    clearSlugOverride,
+  } = useArtCollectorContext();
 
-  const activeTextCount = textElements.length - prunedTextIds.size;
+  // Get only selected artifacts for slug editing
   const selectedArtifacts = artifacts.filter((a) => selectedIds.has(a.ref_id));
+
+  // Regenerate all slugs (clear all overrides)
+  const handleRegenerateAll = useCallback(() => {
+    selectedArtifacts.forEach((a) => {
+      clearSlugOverride(a.ref_id);
+    });
+  }, [selectedArtifacts, clearSlugOverride]);
 
   return (
     <Stack className="h-full" gap="lg">
-      <div>
+      {/* Header */}
+      <div className="flex-shrink-0">
         <Text size="lg" weight="bold">
           Text & Slugs
         </Text>
         <Text size="sm" color="muted" className="mt-1">
-          Edit extracted text and configure image slugs
+          Edit extracted text and configure image slugs for export
         </Text>
       </div>
 
-      {/* Text Elements Section */}
-      <div className="border border-slate-200 rounded-lg overflow-hidden">
-        <div className="bg-slate-50 px-4 py-3 flex items-center justify-between">
-          <Text weight="medium">Text Elements</Text>
-          <Text size="sm" color="muted">
-            {activeTextCount} of {textElements.length} items
-          </Text>
-        </div>
-        <div className="p-4 border-t border-slate-200">
-          {textElements.length === 0 ? (
-            <Text size="sm" color="muted">
-              No text elements extracted
-            </Text>
-          ) : (
-            <Text size="sm" color="muted">
-              Text editing interface will be implemented here
-            </Text>
-          )}
-        </div>
-      </div>
+      {/* Scrollable content */}
+      <div className="flex-1 min-h-0 overflow-auto">
+        <Stack gap="lg">
+          {/* Text Elements Section */}
+          <TextPruningSection
+            textElements={textElements}
+            prunedTextIds={prunedTextIds}
+            onPrune={pruneText}
+            onRestore={restoreText}
+            onUpdateText={updateTextElement}
+          />
 
-      {/* Slugs Section */}
-      <div className="border border-slate-200 rounded-lg overflow-hidden flex-1">
-        <div className="bg-slate-50 px-4 py-3 flex items-center justify-between">
-          <Text weight="medium">Image Slugs</Text>
-          <Text size="sm" color="muted">
-            {selectedArtifacts.length} images, {slugOverrides.size} overrides
-          </Text>
-        </div>
-        <div className="p-4 border-t border-slate-200">
-          {selectedArtifacts.length === 0 ? (
-            <Text size="sm" color="muted">
-              No images selected
-            </Text>
-          ) : (
-            <Text size="sm" color="muted">
-              Slug editor table will be implemented here
-            </Text>
-          )}
-        </div>
+          {/* Slugs Section */}
+          <SlugEditorSection
+            artifacts={selectedArtifacts}
+            slugOverrides={slugOverrides}
+            onSetOverride={setSlugOverride}
+            onClearOverride={clearSlugOverride}
+            onRegenerateAll={handleRegenerateAll}
+          />
+        </Stack>
       </div>
 
       {/* Footer */}
@@ -76,7 +76,14 @@ export function Step3TextSlugs({ onNext, onBack }: ArtCollectorStepProps) {
         <Button onClick={onBack} variant="secondary">
           Back
         </Button>
-        <Button onClick={onNext}>Next: Tearsheet</Button>
+        <Inline gap="sm" align="center">
+          <Text size="sm" color="muted">
+            {selectedArtifacts.length} images ready
+          </Text>
+          <Button onClick={onNext} disabled={selectedArtifacts.length === 0}>
+            Next: Tearsheet
+          </Button>
+        </Inline>
       </Inline>
     </Stack>
   );

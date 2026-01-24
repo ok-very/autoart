@@ -7,11 +7,11 @@
  * - Integrations: External service connections (Monday, Google, AutoHelper)
  */
 
-import { Settings, User, Plug, Loader2 } from 'lucide-react';
+import { Settings, User, Plug, Palette, Loader2 } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { AccountSection, IntegrationsSection } from './settings';
+import { AccountSection, AppearanceSection, IntegrationsSection } from './settings';
 import { useConnections, useConnectMonday, useDisconnectMonday, useGeneratePairingCode, useConnectGoogle, useDisconnectGoogle, useConnectMicrosoft, useDisconnectMicrosoft, useMondayOAuthStatus, useConnectMondayOAuth } from '../api/connections';
 import { useCurrentUser } from '../api/hooks';
 
@@ -19,7 +19,7 @@ import { useCurrentUser } from '../api/hooks';
 // TYPES
 // ============================================================================
 
-type SettingsTab = 'account' | 'integrations';
+type SettingsTab = 'account' | 'appearance' | 'integrations';
 
 interface NavItem {
     id: SettingsTab;

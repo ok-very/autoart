@@ -111,6 +111,12 @@ export function ArtCollectorWizardView() {
     });
   }, []);
 
+  const updateTextElement = useCallback((id: string, content: string) => {
+    setTextElements((prev) =>
+      prev.map((el) => (el.id === id ? { ...el, content } : el))
+    );
+  }, []);
+
   // Slug handlers
   const setSlugOverride = useCallback((artifactId: string, slug: string) => {
     setSlugOverrides((prev) => new Map(prev).set(artifactId, slug));
@@ -204,6 +210,7 @@ export function ArtCollectorWizardView() {
       setStreamProgress,
       textElements,
       setTextElements,
+      updateTextElement,
       pruneText,
       restoreText,
       prunedTextIds,
@@ -230,6 +237,7 @@ export function ArtCollectorWizardView() {
       isStreaming,
       streamProgress,
       textElements,
+      updateTextElement,
       pruneText,
       restoreText,
       prunedTextIds,

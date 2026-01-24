@@ -229,6 +229,7 @@ Add any additional CSS rules needed for this theme. These will be scoped to `[da
 Describe any interactive behaviors this theme should have.
 
 ### Panel Open Animation
+
 - [ ] Fade in
 - [ ] Slide from direction: ___________
 - [ ] Scale up
@@ -236,6 +237,7 @@ Describe any interactive behaviors this theme should have.
 - Duration: ___________
 
 ### Panel Close Animation
+
 - [ ] Fade out
 - [ ] Slide to direction: ___________
 - [ ] Scale down
@@ -243,17 +245,20 @@ Describe any interactive behaviors this theme should have.
 - Duration: ___________
 
 ### Tab Strip Visibility
+
 - [ ] Always visible
 - [ ] Hide when single tab
 - [ ] Hide until hover
 - [ ] Hide until group is focused
 
 ### Sash (Resize Handle) Visibility
+
 - [ ] Always visible
 - [ ] Show on hover only
 - [ ] Show with grab indicator
 
 ### Active Group Feedback
+
 - [ ] Ring/outline
 - [ ] Shadow increase
 - [ ] Background tint

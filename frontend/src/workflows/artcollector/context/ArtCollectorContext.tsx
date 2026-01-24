@@ -42,6 +42,7 @@ export interface ArtCollectorContextValue {
   // Text elements
   textElements: TextElement[];
   setTextElements: (elements: TextElement[]) => void;
+  updateTextElement: (id: string, content: string) => void;
   pruneText: (id: string) => void;
   restoreText: (id: string) => void;
   prunedTextIds: Set<string>;

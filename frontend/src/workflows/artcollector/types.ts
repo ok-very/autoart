@@ -36,6 +36,9 @@ export interface TearsheetPage {
 export interface StreamProgress {
   stage: string;
   percent: number;
+  message?: string;
+  total?: number;
+  current?: number;
 }
 
 export interface TearsheetConfig {

@@ -3,61 +3,125 @@
  *
  * Stream incoming artifacts in real-time from AutoHelper/Playwright.
  * Allows select/discard before proceeding to text & slugs.
- *
- * TODO: Implement SSE streaming, progressive image grid, bulk actions
  */
 
+import { useCallback } from 'react';
 import { Stack, Text, Button, Inline } from '@autoart/ui';
+import { Play, StopCircle } from 'lucide-react';
 import { useArtCollectorContext } from '../context/ArtCollectorContext';
-import type { ArtCollectorStepProps } from '../types';
+import { useMockArtifactStream } from '../hooks/useArtifactStream';
+import { StreamingGallery } from '../components/StreamingGallery';
+import type { ArtCollectorStepProps, ArtifactPreview, StreamProgress } from '../types';
 
 export function Step2StreamReview({ onNext, onBack }: ArtCollectorStepProps) {
-  const { artifacts, selectedIds, sourceType, sourceUrl, sourcePath, isStreaming, setIsStreaming } =
-    useArtCollectorContext();
+  const {
+    artifacts,
+    selectedIds,
+    sourceType,
+    sourceUrl,
+    sourcePath,
+    isStreaming,
+    setIsStreaming,
+    streamProgress,
+    setStreamProgress,
+    addArtifact,
+    toggleArtifactSelection,
+    selectAllArtifacts,
+    deselectAllArtifacts,
+  } = useArtCollectorContext();
 
   const source = sourceType === 'web' ? sourceUrl : sourcePath;
 
+  // Handle artifact received from stream
+  const handleArtifact = useCallback(
+    (artifact: ArtifactPreview) => {
+      addArtifact(artifact);
+    },
+    [addArtifact]
+  );
+
+  // Handle progress updates
+  const handleProgress = useCallback(
+    (progress: StreamProgress) => {
+      setStreamProgress(progress);
+    },
+    [setStreamProgress]
+  );
+
+  // Handle stream complete
+  const handleComplete = useCallback(() => {
+    setIsStreaming(false);
+  }, [setIsStreaming]);
+
+  // Handle stream error
+  const handleError = useCallback(
+    (error: Error) => {
+      console.error('Stream error:', error);
+      setIsStreaming(false);
+    },
+    [setIsStreaming]
+  );
+
+  // Use mock stream for development (replace with useArtifactStream for production)
+  const { startStream, stopStream } = useMockArtifactStream({
+    onArtifact: handleArtifact,
+    onProgress: handleProgress,
+    onComplete: handleComplete,
+    onError: handleError,
+  });
+
   const handleStartCollection = () => {
-    // TODO: Implement SSE streaming via useArtifactStream hook
     setIsStreaming(true);
-    console.log('Starting collection from:', source);
-    // Placeholder: simulate collection completing after delay
-    setTimeout(() => setIsStreaming(false), 2000);
+    startStream({
+      sourceType,
+      sourceUrl,
+      sourcePath,
+    });
   };
 
   const handleStopCollection = () => {
+    stopStream();
     setIsStreaming(false);
   };
 
   return (
     <Stack className="h-full" gap="lg">
-      <div>
-        <Text size="lg" weight="bold">
-          Stream & Review
-        </Text>
-        <Text size="sm" color="muted" className="mt-1">
-          Streaming from: {source}
-        </Text>
-      </div>
-
-      {/* Placeholder content */}
-      <div className="flex-1 border-2 border-dashed border-slate-200 rounded-lg p-8 flex items-center justify-center">
-        <Stack align="center" gap="md">
-          <Text color="muted">
-            {artifacts.length === 0
-              ? 'No artifacts streamed yet. Click "Start Collection" to begin.'
-              : `${artifacts.length} artifacts collected, ${selectedIds.size} selected`}
+      {/* Header */}
+      <Inline justify="between" align="center" className="flex-shrink-0">
+        <div>
+          <Text size="lg" weight="bold">
+            Stream & Review
           </Text>
+          <Text size="sm" color="muted" className="mt-1">
+            {sourceType === 'web' ? 'URL' : 'Folder'}: {source}
+          </Text>
+        </div>
+        <div>
           {isStreaming ? (
             <Button variant="secondary" onClick={handleStopCollection}>
+              <StopCircle className="w-4 h-4 mr-2" />
               Stop Collection
             </Button>
           ) : (
             <Button variant="primary" onClick={handleStartCollection}>
+              <Play className="w-4 h-4 mr-2" />
               Start Collection
             </Button>
           )}
-        </Stack>
+        </div>
+      </Inline>
+
+      {/* Gallery */}
+      <div className="flex-1 min-h-0 border border-slate-200 rounded-lg bg-white p-4 overflow-hidden">
+        <StreamingGallery
+          artifacts={artifacts}
+          selectedIds={selectedIds}
+          isStreaming={isStreaming}
+          progress={streamProgress}
+          onToggleSelect={toggleArtifactSelection}
+          onSelectAll={selectAllArtifacts}
+          onDeselectAll={deselectAllArtifacts}
+        />
       </div>
 
       {/* Footer */}
@@ -65,9 +129,16 @@ export function Step2StreamReview({ onNext, onBack }: ArtCollectorStepProps) {
         <Button onClick={onBack} variant="secondary">
           Back
         </Button>
-        <Button onClick={onNext} disabled={selectedIds.size === 0}>
-          Next: Text & Slugs
-        </Button>
+        <Inline gap="sm" align="center">
+          {selectedIds.size > 0 && (
+            <Text size="sm" color="muted">
+              {selectedIds.size} of {artifacts.length} selected
+            </Text>
+          )}
+          <Button onClick={onNext} disabled={selectedIds.size === 0}>
+            Next: Text & Slugs
+          </Button>
+        </Inline>
       </Inline>
     </Stack>
   );
