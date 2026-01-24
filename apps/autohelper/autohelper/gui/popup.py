@@ -448,12 +448,9 @@ def get_window_class():
             c_layout = QVBoxLayout(context_grp)
 
             c_layout.addWidget(QLabel("AutoArt Connection"))
-            c_layout.addWidget(
-                QLabel(
-                    "Connect to AutoArt to access Monday.com data",
-                    styleSheet="color: #78909c; font-size: 11px;",
-                )
-            )
+            info_label = QLabel("Connect to AutoArt to access Monday.com data")
+            info_label.setStyleSheet("color: #78909c; font-size: 11px;")
+            c_layout.addWidget(info_label)
 
             # Show current connection status
             session_id = self.current_config.get("autoart_session_id", "")
