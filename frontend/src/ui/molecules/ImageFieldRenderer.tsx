@@ -1,4 +1,4 @@
-import { clsx } from 'clsx';
+import clsx from 'clsx';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 import { useArtifactLookup } from '../../api/hooks';
