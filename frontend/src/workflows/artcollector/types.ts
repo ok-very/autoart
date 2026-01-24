@@ -12,6 +12,9 @@
 
 export type NumberingMode = 'sequential' | 'by_source';
 
+/** How to handle filename collisions when names match (case-insensitive) */
+export type CollisionMode = 'suffix' | 'replace';
+
 export interface NamingConfig {
   /** Filename template using {var} placeholders */
   template: string;
@@ -27,6 +30,8 @@ export interface NamingConfig {
   dateFormat: string;
   /** How to count artifacts: sequential or per-source */
   numberingMode: NumberingMode;
+  /** How to handle filename collisions: add suffix (_1, _2) or replace existing */
+  collisionMode: CollisionMode;
 }
 
 export const DEFAULT_NAMING_CONFIG: NamingConfig = {
@@ -37,6 +42,7 @@ export const DEFAULT_NAMING_CONFIG: NamingConfig = {
   suffix: '',
   dateFormat: '%Y%m%d',
   numberingMode: 'sequential',
+  collisionMode: 'suffix',
 };
 
 // =============================================================================

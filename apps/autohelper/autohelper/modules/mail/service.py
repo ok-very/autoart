@@ -401,7 +401,7 @@ class MailService:
 
         db.execute(
             """
-            INSERT INTO transient_emails
+            INSERT OR IGNORE INTO transient_emails
                 (id, subject, sender, received_at, project_id, body_preview, metadata)
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """,

@@ -27,6 +27,13 @@ class NumberingMode(str, Enum):
     BY_SOURCE = "by_source"  # Separate counter per source URL/path
 
 
+class CollisionMode(str, Enum):
+    """How to handle filename collisions when names match (case-insensitive)."""
+
+    SUFFIX = "suffix"  # Add _1, _2, etc. suffix to avoid collision
+    REPLACE = "replace"  # Overwrite existing file (no suffix)
+
+
 class NamingConfig(BaseModel):
     """
     Configuration for artifact filename generation.
@@ -51,6 +58,10 @@ class NamingConfig(BaseModel):
     date_format: str = Field(default="%Y%m%d", description="strftime format for {date}")
     numbering_mode: NumberingMode = Field(
         default=NumberingMode.SEQUENTIAL, description="How to count artifacts"
+    )
+    collision_mode: CollisionMode = Field(
+        default=CollisionMode.SUFFIX,
+        description="How to handle filename collisions: add suffix or replace",
     )
 
 

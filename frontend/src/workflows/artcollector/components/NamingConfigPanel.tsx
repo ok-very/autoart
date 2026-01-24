@@ -14,7 +14,7 @@ import { Stack, Text, Inline, Button } from '@autoart/ui';
 import { ChevronDown, ChevronRight, Settings } from 'lucide-react';
 import clsx from 'clsx';
 
-import type { NamingConfig, NumberingMode } from '../types';
+import type { NamingConfig, NumberingMode, CollisionMode } from '../types';
 
 interface NamingConfigPanelProps {
   config: NamingConfig;
@@ -173,6 +173,19 @@ export function NamingConfigPanel({
                   <option value="by_source">Per Source</option>
                 </select>
               </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  On Name Collision
+                </label>
+                <select
+                  value={config.collisionMode}
+                  onChange={(e) => onChange({ collisionMode: e.target.value as CollisionMode })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="suffix">Add suffix (_1, _2, ...)</option>
+                  <option value="replace">Replace existing</option>
+                </select>
+              </div>
             </Inline>
 
             {/* Prefix/Suffix row */}
@@ -226,6 +239,7 @@ export function NamingConfigPanel({
                     prefix: '',
                     suffix: '',
                     numberingMode: 'sequential',
+                    collisionMode: 'suffix',
                   })
                 }
               >

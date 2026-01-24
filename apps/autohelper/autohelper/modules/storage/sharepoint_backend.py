@@ -350,10 +350,12 @@ class SharePointStorageBackend:
         if failed_artifacts:
             sample = failed_artifacts[:5]
             suffix = "..." if len(failed_artifacts) > 5 else ""
-            logger.warning(
+            msg = (
                 f"Collection {manifest.manifest_id} saved with {len(failed_artifacts)} "
                 f"failed artifacts: {sample}{suffix}"
             )
+            logger.warning(msg)
+            raise RuntimeError(msg)
 
     async def load_collection(self, manifest_id: str) -> CollectionManifest | None:
         """Load collection manifest from SharePoint."""
