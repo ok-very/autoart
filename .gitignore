@@ -68,6 +68,7 @@ certs/
 
 postgres_data/
 
+ref/
 
 .aye/
 .well-known/

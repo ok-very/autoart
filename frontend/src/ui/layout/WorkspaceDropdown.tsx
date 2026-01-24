@@ -36,7 +36,7 @@ const DEFAULT_COLOR = 'slate';
  * Button only supports: 'gray' | 'blue' | 'violet' | 'yellow'
  */
 const BUTTON_COLOR_MAP: Record<string, 'gray' | 'blue' | 'violet' | 'yellow'> = {
-    pink: 'blue',
+    pink: 'violet',
     blue: 'blue',
     green: 'blue',
     purple: 'violet',
@@ -111,9 +111,10 @@ export function WorkspaceDropdown() {
     const activeWorkspaceId = useActiveWorkspaceId();
     const customWorkspaces = useCustomWorkspaces();
 
-    // Derive active workspace from built-in + custom workspaces
+    // Combine built-in + custom workspaces for iteration
     const allWorkspaces = [...BUILT_IN_WORKSPACES, ...customWorkspaces];
     const activeWorkspace = allWorkspaces.find(w => w.id === activeWorkspaceId);
+    const buttonColor = getButtonColor(activeWorkspace?.color ?? DEFAULT_COLOR);
 
     const handleSelectWorkspace = (workspaceId: string) => {
         useWorkspaceStore.getState().applyWorkspace(workspaceId);
@@ -133,12 +134,12 @@ export function WorkspaceDropdown() {
                 <Menu.Target>
                     <Button
                         variant="subtle"
-                        color="gray"
+                        color={buttonColor}
                         size="sm"
                         rightSection={<ChevronDown size={14} />}
                         leftSection={<Dna size={14} />}
                     >
-                        Workspaces
+                        {activeWorkspace?.label ?? 'Workspaces'}
                     </Button>
                 </Menu.Target>
 

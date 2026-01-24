@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useUIStore } from '../../stores/uiStore';
 import { Modal } from '@autoart/ui';
 import { createUIContext } from '../../drawer/types';
@@ -19,6 +20,37 @@ import { MondayBoardsDrawer } from '../drawer/views/MondayBoardsDrawer';
 import { QuickDeclareModal } from '../drawer/views/QuickDeclareModal';
 import { StartCollectionModal } from '../drawer/views/StartCollectionModal';
 import { IntegrationsSection } from '../../pages/settings/IntegrationsSection';
+import { ClassificationPanel } from '../../workflows/import/panels/ClassificationPanel';
+import type { ImportPlan } from '../../api/hooks/imports';
+
+// Wrapper to adapt drawer props to ClassificationPanel props
+const ClassificationDrawerView = ({
+    sessionId,
+    plan,
+    onResolutionsSaved,
+    onClose,
+    keepOpenAfterSave = false
+}: {
+    sessionId: string;
+    plan: ImportPlan;
+    onResolutionsSaved?: (updated: ImportPlan) => void;
+    onClose?: () => void;
+    keepOpenAfterSave?: boolean;
+}) => (
+    <ClassificationPanel
+        sessionId={sessionId}
+        plan={plan}
+        onResolutionsSaved={(updated) => {
+            if (typeof onResolutionsSaved === 'function') {
+                onResolutionsSaved(updated);
+            }
+            // Only close if not explicitly configured to keep open
+            if (!keepOpenAfterSave && typeof onClose === 'function') {
+                onClose();
+            }
+        }}
+    />
+);
 
 // Map types to components
 export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
@@ -40,20 +72,29 @@ export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
     'template-library': ProjectLibraryDrawer, // Alias for template library
     'integrations': IntegrationsSection, // Integrations settings modal
     'start-collection': StartCollectionModal, // Export collection start modal
+    'classification': ClassificationDrawerView, // Import classification review panel
 };
 
 
 export function OverlayRegistry() {
     const { activeDrawer, closeDrawer, setActiveProject } = useUIStore();
 
-    if (!activeDrawer) return null;
+    // Stabilize uiContext so it doesn't change on every render while drawer is open
+    // Recreate when activeDrawer changes (new drawer session opened, even of same type)
+    // Using activeDrawer reference ensures new sessions get fresh openedAt timestamps
+    const uiContext = useMemo(
+        () => activeDrawer ? createUIContext(activeDrawer.type) : null,
+        [activeDrawer]
+    );
+
+    if (!activeDrawer || !uiContext) return null;
 
     const { type, props } = activeDrawer;
     const Component = OVERLAY_VIEWS[type];
 
     // Default size can be overridden per type if needed
     let size: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full' = 'md';
-    if (['create-record', 'view-definition', 'project-library'].includes(type)) size = 'xl';
+    if (['create-record', 'view-definition', 'project-library', 'classification'].includes(type)) size = 'xl';
     if (['create-node', 'add-field', 'clone-project'].includes(type)) size = 'lg';
     if (['confirm-delete'].includes(type)) size = 'sm';
 
@@ -71,7 +112,7 @@ export function OverlayRegistry() {
             }
             closeDrawer();
         },
-        uiContext: createUIContext(type),
+        uiContext,
     };
 
     return (

@@ -55,7 +55,6 @@ export interface ItemClassification {
     outcome: 'FACT_EMITTED' | 'DERIVED_STATE' | 'INTERNAL_WORK' | 'EXTERNAL_WORK' | 'AMBIGUOUS' | 'UNCLASSIFIED';
     confidence: 'high' | 'medium' | 'low';
     rationale: string;
-    emittedEvents?: Array<{ type: string; payload: unknown }>;
     candidates?: string[];
     resolution?: {
         resolvedOutcome: string;
@@ -73,6 +72,23 @@ export interface ItemClassification {
             name: string;
             schemaConfig: { fields: Array<{ key: string; type: string; label: string }> };
         };
+        /** Detailed field matching results for UI display */
+        fieldMatches?: Array<{
+            /** Original field name from recording */
+            recordingFieldName: string;
+            /** Render hint from recording */
+            recordingRenderHint?: string;
+            /** Matched definition field key (null if no match) */
+            matchedFieldKey: string | null;
+            /** Matched definition field label (null if no match) */
+            matchedFieldLabel: string | null;
+            /** Quality of the match */
+            matchQuality: 'exact' | 'compatible' | 'partial' | 'none';
+            /** Match score (0-1) */
+            score: number;
+        }>;
+        /** Human-readable explanation of the match decision */
+        matchRationale?: string;
     };
 }
 
@@ -239,11 +255,20 @@ export function useExecuteImport() {
                 {}
             );
         },
-        onSuccess: () => {
-            // Invalidate related queries
-            queryClient.invalidateQueries({ queryKey: ['hierarchy'] });
-            queryClient.invalidateQueries({ queryKey: ['projects'] });
-            queryClient.invalidateQueries({ queryKey: ['actions'] });
+        onSuccess: async (_data, sessionId) => {
+            // Invalidate related queries - ensure all views refresh after import
+            // Await all invalidations to ensure caches are refreshed before callback completes
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['hierarchy'] }),
+                queryClient.invalidateQueries({ queryKey: ['projects'] }),
+                queryClient.invalidateQueries({ queryKey: ['actions'] }),
+                queryClient.invalidateQueries({ queryKey: ['workflowSurface'] }),
+                queryClient.invalidateQueries({ queryKey: ['events'] }),
+                queryClient.invalidateQueries({ queryKey: ['records'] }),
+                // Also invalidate session-specific queries to reflect updated status
+                queryClient.invalidateQueries({ queryKey: ['import-session', sessionId] }),
+                queryClient.invalidateQueries({ queryKey: ['import-plan', sessionId] }),
+            ]);
         },
     });
 }

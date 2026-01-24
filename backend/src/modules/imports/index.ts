@@ -5,7 +5,7 @@
 export { importsRoutes } from './imports.routes.js';
 export { connectionsRoutes } from './connections.routes.js';
 export { mondayWorkspaceRoutes } from './monday/monday-workspace.routes.js';
-export * from './imports.service.js';
+export * from './services/index.js';
 export * from './types.js';
 export * from './schema-matcher.js';
 
