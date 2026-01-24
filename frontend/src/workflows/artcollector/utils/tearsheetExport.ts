@@ -40,6 +40,8 @@ export function buildExportPayload(
   prunedTextIds: Set<string>
 ): ExportPayload {
   const artifactMap = new Map(artifacts.map((a) => [a.ref_id, a]));
+  // Build stable index map from original artifacts array for deterministic slug generation
+  const artifactIndexMap = new Map(artifacts.map((a, i) => [a.ref_id, i]));
 
   // Build artworks array from all pages
   const artworks: ExportableArtwork[] = [];
@@ -49,9 +51,11 @@ export function buildExportPayload(
       const artifact = artifactMap.get(refId);
       if (!artifact) return;
 
+      // Use stable index from original artifacts array for deterministic slug generation
+      const stableIndex = artifactIndexMap.get(refId) ?? 0;
       // Get slug (override or auto-generated)
       const slug =
-        slugOverrides.get(refId) || generateArtifactSlug(artifact, artworks.length);
+        slugOverrides.get(refId) || generateArtifactSlug(artifact, stableIndex);
 
       artworks.push({
         refId,
@@ -95,9 +99,12 @@ export function toBulkImportFormat(
     data: Record<string, unknown>;
   }>;
 } {
+  // Capture timestamp once for consistent exportedAt across all records in this batch
+  const exportedAt = new Date().toISOString();
+
   return {
     definitionId,
-    records: payload.artworks.map((artwork) => ({
+    records: (payload.artworks ?? []).map((artwork) => ({
       uniqueName: artwork.slug,
       data: {
         title: artwork.title,
@@ -106,10 +113,10 @@ export function toBulkImportFormat(
         thumbnailUrl: artwork.thumbnailUrl,
         pageNumber: artwork.pageNumber,
         positionOnPage: artwork.positionOnPage,
-        width: artwork.metadata.width,
-        height: artwork.metadata.height,
+        width: artwork.metadata?.width,
+        height: artwork.metadata?.height,
         artistBio: payload.artistBio,
-        exportedAt: new Date().toISOString(),
+        exportedAt,
       },
     })),
   };
@@ -119,7 +126,8 @@ export function toBulkImportFormat(
  * Generate a summary of what will be exported
  */
 export function getExportSummary(payload: ExportPayload): string {
-  const { artworks, totalPages } = payload;
+  const artworks = payload.artworks ?? [];
+  const { totalPages } = payload;
   const uniqueSlugs = new Set(artworks.map((a) => a.slug));
   const hasDuplicates = uniqueSlugs.size < artworks.length;
 

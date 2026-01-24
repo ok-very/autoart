@@ -186,18 +186,24 @@ function handleStreamEvent(
   switch (event.type) {
     case 'artifact': {
       const artifact = event.artifact as ArtifactPreview;
-      if (artifact?.ref_id) {
-        // Ensure artifact has required fields with defaults
-        const normalizedArtifact: ArtifactPreview = {
-          ref_id: artifact.ref_id,
-          path: artifact.path || '',
-          thumbnailUrl: artifact.thumbnailUrl || `/api/runner/thumbnail/${artifact.ref_id}`,
-          artifact_type: artifact.artifact_type || 'image',
-          selected: artifact.selected ?? true,
-          metadata: artifact.metadata,
-        };
-        onArtifact(normalizedArtifact);
+      if (!artifact?.ref_id) {
+        console.warn('[useArtifactStream] Artifact event missing ref_id:', event);
+        break;
       }
+      // Warn about missing critical fields for debugging
+      if (!artifact.path) {
+        console.warn('[useArtifactStream] Artifact missing path, using empty string:', artifact.ref_id);
+      }
+      // Ensure artifact has required fields with defaults
+      const normalizedArtifact: ArtifactPreview = {
+        ref_id: artifact.ref_id,
+        path: artifact.path || '',
+        thumbnailUrl: artifact.thumbnailUrl || `/api/runner/thumbnail/${artifact.ref_id}`,
+        artifact_type: artifact.artifact_type || 'image',
+        selected: artifact.selected ?? true,
+        metadata: artifact.metadata,
+      };
+      onArtifact(normalizedArtifact);
       break;
     }
 

@@ -3,6 +3,7 @@
  *
  * Create print-ready tearsheets using justified-layout.
  * Features page navigation, shuffle/shake, and export options.
+ * Includes print preview mode with sidebar layout.
  */
 
 import { useCallback, useState, useMemo } from 'react';
@@ -16,9 +17,11 @@ import {
   Plus,
   X,
   Check,
+  Eye,
 } from 'lucide-react';
 import { useArtCollectorContext } from '../context/ArtCollectorContext';
 import { ExportRecordsDialog } from '../components/ExportRecordsDialog';
+import { PrintPreviewView } from '../components/PrintPreviewView';
 import { buildExportPayload } from '../utils/tearsheetExport';
 import type { ArtCollectorStepProps } from '../types';
 
@@ -40,6 +43,9 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
   } = useArtCollectorContext();
 
   const { pages, currentPageIndex } = tearsheet;
+
+  // View mode: 'editor' or 'preview'
+  const [viewMode, setViewMode] = useState<'editor' | 'preview'>('editor');
 
   // Export dialog state
   const [showExportDialog, setShowExportDialog] = useState(false);
@@ -120,11 +126,25 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
     [removeImageFromPage, safePageIndex]
   );
 
-  const handleExportPDF = () => {
-    // TODO: Implement PDF export via print dialog
-    if (typeof window !== 'undefined' && typeof window.print === 'function') {
-      window.print();
-    }
+  const handleDeletePage = useCallback(
+    (pageIndex: number) => {
+      const newPages = pages.filter((_, i) => i !== pageIndex);
+      // Return images from deleted page to available pool
+      const deletedPage = pages[pageIndex];
+      if (deletedPage) {
+        // Note: We don't have direct access to setAvailableImages here,
+        // so we need to handle this in the updateTearsheet or context
+      }
+      updateTearsheet({
+        pages: newPages,
+        currentPageIndex: Math.min(currentPageIndex, Math.max(0, newPages.length - 1)),
+      });
+    },
+    [pages, currentPageIndex, updateTearsheet]
+  );
+
+  const handleOpenPrintPreview = () => {
+    setViewMode('preview');
   };
 
   const handleExportRecords = () => {
@@ -137,6 +157,23 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
     setTimeout(() => setExportResult(null), 5000);
   };
 
+  // Show print preview view
+  if (viewMode === 'preview') {
+    return (
+      <PrintPreviewView
+        pages={pages}
+        artifacts={artifacts}
+        textElements={textElements}
+        prunedTextIds={prunedTextIds}
+        onShufflePage={shufflePage}
+        onBack={() => setViewMode('editor')}
+        onAddPage={handleAddPage}
+        onDeletePage={handleDeletePage}
+      />
+    );
+  }
+
+  // Editor view
   return (
     <Stack className="h-full" gap="md">
       {/* Toolbar */}
@@ -183,9 +220,9 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
             Shuffle
           </Button>
 
-          <Button variant="secondary" size="sm" onClick={handleExportPDF}>
-            <Download className="w-4 h-4 mr-1" />
-            Export PDF
+          <Button variant="secondary" size="sm" onClick={handleOpenPrintPreview}>
+            <Eye className="w-4 h-4 mr-1" />
+            Print Preview
           </Button>
 
           <Button variant="primary" size="sm" onClick={handleExportRecords}>

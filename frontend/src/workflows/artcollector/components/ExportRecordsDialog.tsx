@@ -35,11 +35,12 @@ export function ExportRecordsDialog({
     return definitions?.filter((d) => d.definition_kind === 'record') ?? [];
   }, [definitions]);
 
+  const artworks = exportPayload.artworks ?? [];
   const summary = getExportSummary(exportPayload);
   const hasDuplicateSlugs = useMemo(() => {
-    const slugs = exportPayload.artworks.map((a) => a.slug);
+    const slugs = artworks.map((a) => a.slug);
     return new Set(slugs).size < slugs.length;
-  }, [exportPayload.artworks]);
+  }, [artworks]);
 
   const handleExport = async () => {
     if (!selectedDefinitionId) return;
@@ -139,7 +140,7 @@ export function ExportRecordsDialog({
             </div>
 
             {/* Preview */}
-            {exportPayload.artworks.length > 0 && (
+            {artworks.length > 0 && (
               <div>
                 <Text size="sm" weight="medium" className="mb-2">
                   Artworks Preview
@@ -160,7 +161,7 @@ export function ExportRecordsDialog({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {exportPayload.artworks.slice(0, 10).map((artwork) => (
+                      {artworks.slice(0, 10).map((artwork) => (
                         <tr key={artwork.refId} className="hover:bg-slate-50">
                           <td className="px-3 py-2">
                             <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">
@@ -177,13 +178,13 @@ export function ExportRecordsDialog({
                           </td>
                         </tr>
                       ))}
-                      {exportPayload.artworks.length > 10 && (
+                      {artworks.length > 10 && (
                         <tr>
                           <td
                             colSpan={3}
                             className="px-3 py-2 text-center text-slate-500"
                           >
-                            ...and {exportPayload.artworks.length - 10} more
+                            ...and {artworks.length - 10} more
                           </td>
                         </tr>
                       )}
@@ -218,7 +219,7 @@ export function ExportRecordsDialog({
               disabled={
                 !selectedDefinitionId ||
                 bulkImport.isPending ||
-                exportPayload.artworks.length === 0
+                artworks.length === 0
               }
             >
               {bulkImport.isPending ? (
@@ -226,7 +227,7 @@ export function ExportRecordsDialog({
               ) : (
                 <>
                   <Check className="w-4 h-4 mr-1" />
-                  Export {exportPayload.artworks.length} Records
+                  Export {artworks.length} Records
                 </>
               )}
             </Button>

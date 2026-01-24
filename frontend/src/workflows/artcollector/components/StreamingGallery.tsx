@@ -137,7 +137,9 @@ function getProgressText(
   }
 
   if (progress.stage === 'complete') {
-    return `${totalArtifacts} collected, ${selectedCount} selected`;
+    // Prefer stream metadata total if available for consistency
+    const displayTotal = progress.total ?? totalArtifacts;
+    return `${displayTotal} collected, ${selectedCount} selected`;
   }
 
   // Streaming - use explicit undefined checks to handle current === 0
