@@ -64,7 +64,7 @@ interface WorkspaceState {
     clearUserOverride: (panelId: PanelId) => void;
     resetLayout: () => void;
     setDockviewApi: (api: DockviewApi | null) => void;
-    clearPendingPositions: () => void;
+    clearPendingPositions: (panelIds?: PanelId[]) => void;
 
     // Workspace preset actions
     applyWorkspace: (workspaceId: string) => void;
@@ -122,8 +122,17 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 set({ dockviewApi: api });
             },
 
-            clearPendingPositions: () => {
-                set({ pendingPanelPositions: new Map() });
+            clearPendingPositions: (panelIds?: PanelId[]) => {
+                if (!panelIds) {
+                    set({ pendingPanelPositions: new Map() });
+                    return;
+                }
+                const current = get().pendingPanelPositions;
+                const updated = new Map(current);
+                for (const id of panelIds) {
+                    updated.delete(id);
+                }
+                set({ pendingPanelPositions: updated });
             },
 
             getPanelParams: <T = unknown>(panelId: PanelId): T | undefined => {
@@ -225,7 +234,8 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     pendingPanelPositions: positionMap,
                 });
 
-                // Set view modes for panels that specify them
+                // Set view modes for panels that specify them (batched to avoid race conditions)
+                const newParams = new Map(get().panelParams);
                 for (const panel of preset.panels) {
                     if (panel.viewMode) {
                         // For center-workspace, coordinate with uiStore's projectViewMode
@@ -237,13 +247,12 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                         }
                         // Other panels can store view mode in panelParams
                         else {
-                            const newParams = new Map(get().panelParams);
                             const existing = newParams.get(panel.panelId) as Record<string, unknown> | undefined;
                             newParams.set(panel.panelId, { ...existing, viewMode: panel.viewMode });
-                            set({ panelParams: newParams });
                         }
                     }
                 }
+                set({ panelParams: newParams });
 
                 // Focus the first panel in the preset using Dockview API
                 if (api && preset.panels.length > 0) {

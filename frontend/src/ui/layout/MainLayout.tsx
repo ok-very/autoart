@@ -351,10 +351,15 @@ export function MainLayout() {
 
   // Build default layout - single center workspace panel
   const buildDefaultLayout = useCallback((api: DockviewApi) => {
+    const def = PANEL_DEFINITIONS['center-workspace'];
+    if (!def) {
+      console.error('center-workspace panel definition missing');
+      return;
+    }
     api.addPanel({
       id: 'center-workspace',
       component: 'center-workspace',
-      title: PANEL_DEFINITIONS['center-workspace'].title,
+      title: def.title,
       tabComponent: 'icon-tab',
     });
   }, []);
@@ -394,6 +399,8 @@ export function MainLayout() {
     const api = apiRef.current;
     if (!api) return;
 
+    const consumedPositions: PanelId[] = [];
+
     openPanelIds.forEach((id) => {
       if (!api.getPanel(id)) {
         const def = PANEL_DEFINITIONS[id];
@@ -404,6 +411,11 @@ export function MainLayout() {
 
         // Check for position hint from workspace preset
         const pendingPosition = pendingPanelPositions.get(id as PanelId);
+
+        // Track consumed positions for cleanup
+        if (pendingPosition) {
+          consumedPositions.push(id as PanelId);
+        }
 
         // Map position hint to dockview direction
         // 'center' and undefined both default to 'within' (tabs)
@@ -427,9 +439,9 @@ export function MainLayout() {
       }
     });
 
-    // Clear consumed position hints
-    if (pendingPanelPositions.size > 0) {
-      clearPendingPositions();
+    // Clear only consumed position hints, preserving hints for panels not yet opened
+    if (consumedPositions.length > 0) {
+      clearPendingPositions(consumedPositions);
     }
 
     api.panels.forEach((panel) => {
