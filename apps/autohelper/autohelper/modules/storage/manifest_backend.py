@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from pydantic import ValidationError
+
 from ..runner.types import (
     ArtifactManifestEntry,
     CollectionManifest,
@@ -61,7 +63,7 @@ class ManifestStorageBackend:
                 manifest_dict = json.loads(data)
                 self._cache = CollectionManifest.model_validate(manifest_dict)
                 return self._cache
-            except (json.JSONDecodeError, ValueError) as e:
+            except (json.JSONDecodeError, ValueError, ValidationError) as e:
                 logger.warning(f"Failed to load manifest, creating new: {e}")
 
         # Create new manifest
@@ -116,7 +118,30 @@ class ManifestStorageBackend:
             return [a for a in manifest.artifacts if a.content_hash == content_hash]
 
     async def update_location(self, artifact_id: str, new_path: str) -> bool:
-        """Update artifact location after file move."""
+        """
+        Update artifact location after file move.
+
+        Args:
+            artifact_id: The artifact's persistent ID
+            new_path: New file path (must be within output_folder)
+
+        Returns:
+            True if updated, False if artifact not found
+
+        Raises:
+            ValueError: If new_path is outside the output folder
+        """
+        # Validate that new_path is within the output folder
+        try:
+            resolved_new = Path(new_path).resolve()
+            resolved_output = self.output_folder.resolve()
+            resolved_new.relative_to(resolved_output)
+        except ValueError:
+            raise ValueError(
+                f"new_path must be within output folder. "
+                f"Got '{new_path}', expected path under '{self.output_folder}'"
+            )
+
         async with self._lock:
             manifest = await self._load_or_create()
 

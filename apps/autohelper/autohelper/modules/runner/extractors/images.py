@@ -1,0 +1,72 @@
+"""
+Image URL extraction from HTML.
+
+Extracts image URLs from parsed HTML, including img tags and CSS background images.
+"""
+
+import re
+from pathlib import Path
+from typing import TYPE_CHECKING
+from urllib.parse import urljoin, urlparse
+
+if TYPE_CHECKING:
+    from bs4 import BeautifulSoup
+
+# Supported image file extensions
+SUPPORTED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff"}
+
+
+def extract_image_urls(
+    soup: "BeautifulSoup",
+    base_url: str,
+    supported_extensions: set[str] | None = None,
+) -> list[str]:
+    """
+    Extract image URLs from parsed HTML.
+
+    Searches for:
+    - img tags (src, data-src, data-lazy-src attributes)
+    - CSS background-image URLs in style attributes
+
+    Args:
+        soup: BeautifulSoup parsed HTML document
+        base_url: Base URL for resolving relative URLs
+        supported_extensions: Optional set of allowed extensions (default: common image formats)
+
+    Returns:
+        List of absolute image URLs, deduplicated while preserving order
+    """
+    if supported_extensions is None:
+        supported_extensions = SUPPORTED_IMAGE_EXTENSIONS
+
+    image_urls = []
+
+    # Find all img tags
+    for img in soup.find_all("img"):
+        src = img.get("src") or img.get("data-src") or img.get("data-lazy-src")
+        if src:
+            full_url = urljoin(base_url, src)
+            if _is_supported_image(full_url, supported_extensions):
+                image_urls.append(full_url)
+
+    # Check for background images in style attributes
+    for el in soup.find_all(style=re.compile(r"background.*url")):
+        style = el.get("style", "")
+        urls = re.findall(r'url\(["\']?([^"\']+)["\']?\)', style)
+        for url in urls:
+            full_url = urljoin(base_url, url)
+            if _is_supported_image(full_url, supported_extensions):
+                image_urls.append(full_url)
+
+    # Deduplicate while preserving order
+    return list(dict.fromkeys(image_urls))
+
+
+def _is_supported_image(url: str, supported_extensions: set[str]) -> bool:
+    """Check if URL points to a supported image type by extension."""
+    try:
+        parsed = urlparse(url)
+        ext = Path(parsed.path).suffix.lower()
+        return ext in supported_extensions
+    except Exception:
+        return False

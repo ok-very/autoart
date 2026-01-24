@@ -6,6 +6,7 @@ Provides configurable filename generation with template variables and fallback c
 
 import hashlib
 import re
+import unicodedata
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -70,6 +71,9 @@ def _slugify(text: str, max_length: int = 50) -> str:
     """
     Convert text to a filesystem-safe slug.
 
+    Uses Unicode NFKD normalization to transliterate accented characters
+    (e.g., "Björk" → "bjork", "café" → "cafe") instead of stripping them.
+
     Args:
         text: Input text
         max_length: Maximum slug length
@@ -77,8 +81,13 @@ def _slugify(text: str, max_length: int = 50) -> str:
     Returns:
         Slugified string
     """
+    # Normalize Unicode to decomposed form (NFKD) and encode to ASCII
+    # This converts "é" to "e", "ñ" to "n", etc.
+    normalized = unicodedata.normalize("NFKD", text)
+    ascii_text = normalized.encode("ascii", "ignore").decode("ascii")
+
     # Lowercase and replace spaces/underscores with hyphens
-    slug = text.lower().strip()
+    slug = ascii_text.lower().strip()
     slug = re.sub(r'[\s_]+', '-', slug)
     # Remove non-alphanumeric characters except hyphens
     slug = re.sub(r'[^a-z0-9\-]', '', slug)
@@ -229,7 +238,38 @@ def generate_filename(
     filename = re.sub(r'[<>:"/\\|?*]', '', filename)
     filename = filename.strip('. ')
 
-    return filename or f"artifact_{index:03d}{extension}"
+    # If sanitization removed the entire filename, use fallback with prefix/suffix
+    if not filename:
+        base_fallback = f"artifact_{index:03d}"
+        if config.prefix:
+            base_fallback = f"{config.prefix}{base_fallback}"
+        if config.suffix:
+            base_fallback = f"{base_fallback}{config.suffix}"
+        filename = f"{base_fallback}{extension}"
+
+    return filename
+
+
+def _normalize_source(source: str) -> str:
+    """
+    Normalize source string for consistent ID generation.
+
+    For file paths, resolves to absolute path with forward slashes.
+    For URLs, returns as-is.
+    """
+    # Check if it looks like a URL
+    if source.startswith(("http://", "https://", "ftp://")):
+        return source
+
+    # Treat as file path - normalize for consistent IDs across platforms
+    try:
+        # Resolve to absolute path (handles symlinks, .., etc.)
+        normalized = Path(source).resolve()
+        # Use forward slashes for cross-platform consistency
+        return normalized.as_posix()
+    except (OSError, ValueError):
+        # If path resolution fails, just normalize slashes
+        return source.replace("\\", "/")
 
 
 def generate_persistent_id(
@@ -252,7 +292,8 @@ def generate_persistent_id(
         UUID string (stable for same inputs)
     """
     content_hash = hashlib.sha256(content).hexdigest()
-    id_input = f"{content_hash}:{source}:{timestamp}"
+    normalized_source = _normalize_source(source)
+    id_input = f"{content_hash}:{normalized_source}:{timestamp}"
     return str(uuid.uuid5(uuid.NAMESPACE_URL, id_input))
 
 
@@ -271,7 +312,7 @@ def compute_content_hash(content: bytes) -> str:
 
 def compute_url_hash(url: str) -> str:
     """
-    Compute MD5 hash of URL (for filename generation).
+    Compute MD5 hash of URL (for filename generation, not security).
 
     Args:
         url: URL string
@@ -279,4 +320,5 @@ def compute_url_hash(url: str) -> str:
     Returns:
         First 8 characters of hex-encoded hash
     """
-    return hashlib.md5(url.encode()).hexdigest()[:8]
+    # usedforsecurity=False: This hash is for filename shortening, not cryptographic security
+    return hashlib.md5(url.encode(), usedforsecurity=False).hexdigest()[:8]
