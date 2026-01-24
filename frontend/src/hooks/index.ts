@@ -10,7 +10,7 @@ export { useTablePagination } from './useTablePagination';
 export { useTableRowExpansion } from './useTableRowExpansion';
 
 // Layout hooks
-export { useJustifiedLayout } from './justified-layout';
+export { default as useJustifiedLayout } from './justified-layout';
 export type {
   LayoutInputItem,
   Box,
