@@ -12,10 +12,17 @@ import { useArtCollectorContext } from '../context/ArtCollectorContext';
 import type { ArtCollectorStepProps } from '../types';
 
 export function Step2StreamReview({ onNext, onBack }: ArtCollectorStepProps) {
-  const { artifacts, selectedIds, sourceType, sourceUrl, sourcePath } =
+  const { artifacts, selectedIds, sourceType, sourceUrl, sourcePath, isStreaming, setIsStreaming } =
     useArtCollectorContext();
 
   const source = sourceType === 'web' ? sourceUrl : sourcePath;
+
+  const handleStartCollection = () => {
+    // TODO: Implement SSE streaming via useArtifactStream hook
+    setIsStreaming(true);
+    console.log('Starting collection from:', source);
+    // Placeholder: In a real implementation, this would trigger the SSE stream
+  };
 
   return (
     <Stack className="h-full" gap="lg">
@@ -36,7 +43,13 @@ export function Step2StreamReview({ onNext, onBack }: ArtCollectorStepProps) {
               ? 'No artifacts streamed yet. Click "Start Collection" to begin.'
               : `${artifacts.length} artifacts collected, ${selectedIds.size} selected`}
           </Text>
-          <Button variant="primary">Start Collection</Button>
+          <Button
+            variant="primary"
+            onClick={handleStartCollection}
+            disabled={isStreaming}
+          >
+            {isStreaming ? 'Collecting...' : 'Start Collection'}
+          </Button>
         </Stack>
       </div>
 

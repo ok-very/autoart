@@ -40,6 +40,13 @@ import {
   isPermanentPanel,
   type PanelId,
 } from '../../workspace/panelRegistry';
+import {
+  useWorkspaceTheme,
+  useThemeBehavior,
+  useThemeCSS,
+  useThemeRootAttributes,
+  ThemedTab,
+} from '../../workspace/themes';
 
 // Import all panel components
 import { CentralAreaAdapter } from '../workspace/CentralAreaAdapter';
@@ -55,6 +62,7 @@ import { ExportPanel } from '../panels/ExportPanel';
 import { ComposerPanel } from '../panels/ComposerPanel';
 import { MailPanel } from '../panels/MailPanel';
 import { IntakePanel } from '../panels/IntakePanel';
+import { ArtCollectorPanel } from '../panels/ArtCollectorPanel';
 
 // ============================================================================
 // PANEL SPAWN HANDLE
@@ -233,6 +241,7 @@ const COMPONENTS: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   'composer-workbench': ComposerPanel,
   'mail-panel': MailPanel,
   'intake-workbench': IntakePanel,
+  'artcollector-workbench': ArtCollectorPanel,
 };
 
 // ============================================================================
@@ -332,8 +341,9 @@ function IconTab(props: IDockviewPanelHeaderProps) {
   );
 }
 
-const TAB_COMPONENTS = {
+const DEFAULT_TAB_COMPONENTS = {
   'icon-tab': IconTab,
+  'themed-tab': ThemedTab,
 };
 
 // ============================================================================
@@ -348,6 +358,20 @@ export function MainLayout() {
   const visiblePanels = useVisiblePanels();
   const pendingPanelPositions = usePendingPanelPositions();
   const { openPanel, saveLayout, setDockviewApi, clearPendingPositions } = useWorkspaceStore();
+
+  // Theme integration
+  const theme = useWorkspaceTheme();
+  const themeRootAttributes = useThemeRootAttributes();
+  useThemeCSS();
+  useThemeBehavior(apiRef.current);
+
+  // Build tab components - theme can override
+  const tabComponents = theme?.components?.tabComponent
+    ? { ...DEFAULT_TAB_COMPONENTS, 'icon-tab': theme.components.tabComponent }
+    : DEFAULT_TAB_COMPONENTS;
+
+  // Theme can provide custom watermark
+  const watermark = theme?.components?.watermarkComponent || WatermarkComponent;
 
   // Build default layout - single center workspace panel
   const buildDefaultLayout = useCallback((api: DockviewApi) => {
@@ -469,7 +493,7 @@ export function MainLayout() {
   }, [setDockviewApi]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" {...themeRootAttributes}>
       {/* Fixed Header */}
       <Header />
 
@@ -479,8 +503,8 @@ export function MainLayout() {
           className="dockview-theme-light"
           onReady={onReady}
           components={COMPONENTS}
-          tabComponents={TAB_COMPONENTS}
-          watermarkComponent={WatermarkComponent}
+          tabComponents={tabComponents}
+          watermarkComponent={watermark}
         />
       </div>
 

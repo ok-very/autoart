@@ -131,8 +131,9 @@ export function ArtCollectorWizardView() {
 
   const addImageToPage = useCallback(
     (artifactId: string, pageIndex?: number) => {
-      const targetIndex = pageIndex ?? tearsheet.currentPageIndex;
       setTearsheet((prev) => {
+        // Read currentPageIndex from prev state to avoid stale closure
+        const targetIndex = pageIndex ?? prev.currentPageIndex;
         const pages = [...prev.pages];
         if (!pages[targetIndex]) {
           pages[targetIndex] = {
@@ -149,7 +150,7 @@ export function ArtCollectorWizardView() {
       });
       setAvailableImages((prev) => prev.filter((id) => id !== artifactId));
     },
-    [tearsheet.currentPageIndex]
+    []
   );
 
   const removeImageFromPage = useCallback(
@@ -244,9 +245,11 @@ export function ArtCollectorWizardView() {
     ]
   );
 
-  // Navigation
-  const progress = (currentStep / STEPS.length) * 100;
-  const CurrentStepComponent = STEPS[currentStep - 1].component;
+  // Navigation - with bounds safety
+  const safeStep = Math.max(1, Math.min(currentStep, STEPS.length));
+  const progress = (safeStep / STEPS.length) * 100;
+  const currentStepData = STEPS[safeStep - 1];
+  const CurrentStepComponent = currentStepData.component;
 
   const handleNext = useCallback(() => {
     if (currentStep < STEPS.length) {
@@ -271,7 +274,7 @@ export function ArtCollectorWizardView() {
                 Art Collector
               </Text>
               <Text size="sm" color="muted">
-                Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1].title}
+                Step {safeStep} of {STEPS.length}: {currentStepData.title}
               </Text>
             </Inline>
             <ProgressBar value={progress} size="sm" />

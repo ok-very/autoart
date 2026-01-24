@@ -55,7 +55,8 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
     e.stopPropagation();
     setIsDragOver(false);
 
-    const items = e.dataTransfer.items;
+    // Guard against null dataTransfer (can happen in some browsers/scenarios)
+    const items = e.dataTransfer?.items;
     if (items && items.length > 0) {
       const item = items[0];
       if (item.kind === 'file') {
@@ -71,6 +72,11 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
 
   const handleBrowseFolder = async () => {
     try {
+      // Guard against SSR/non-browser environments
+      if (typeof window === 'undefined') {
+        setError('Folder selection is only available in the browser.');
+        return;
+      }
       // Use the File System Access API if available
       if ('showDirectoryPicker' in window) {
         const dirHandle = await (window as any).showDirectoryPicker();
