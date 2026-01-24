@@ -65,6 +65,10 @@ def get_metadata_backend(
                 ) from e
 
             logger.debug(f"Using SharePoint backend for {output_folder}")
+            # Type narrowing: we've validated these are not None above
+            assert settings.sharepoint_site_url is not None
+            assert settings.sharepoint_client_id is not None
+            assert settings.sharepoint_client_secret is not None
             return SharePointStorageBackend(
                 site_url=settings.sharepoint_site_url,
                 client_id=settings.sharepoint_client_id,

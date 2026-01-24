@@ -94,6 +94,7 @@ class TestRenameDetection:
         db = get_db()
         canonical_a = str(file_a.resolve())
         file_id = get_file_id(db, canonical_a)
+        assert file_id is not None, f"File not indexed: {canonical_a}"
 
         # Add Reference
         db.execute(
@@ -124,6 +125,7 @@ class TestRenameDetection:
         assert match_a is not None
         assert match_a.path.lower() == canonical_c.lower()
         assert match_a.matched_alias is True
+        assert match_a.alias_of is not None
         assert match_a.alias_of.lower() == canonical_a.lower()
 
         # Search for B (Intermediate name)
@@ -133,6 +135,7 @@ class TestRenameDetection:
         assert match_b is not None
         assert match_b.path.lower() == canonical_c.lower()
         assert match_b.matched_alias is True
+        assert match_b.alias_of is not None
         assert match_b.alias_of.lower() == canonical_b.lower()
 
         # Search for C (Current name)

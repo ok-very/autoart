@@ -35,7 +35,7 @@ def _escape_odata_string(value: str) -> str:
     return value.replace("'", "''")
 
 
-def _lazy_import_office365():
+def _lazy_import_office365() -> tuple[type, type]:
     """Lazily import office365 to avoid import errors when not installed."""
     try:
         from office365.runtime.auth.client_credential import ClientCredential
@@ -87,18 +87,15 @@ class SharePointStorageBackend:
         self.client_secret = client_secret
         self.output_folder = Path(output_folder)
 
-        # Lazy initialization of SharePoint context
-        self._ctx = None
-        self._lock = asyncio.Lock()
+        # Lock only for _ensure_lists coordination
+        self._lists_lock = asyncio.Lock()
         self._lists_ensured = False
 
-    def _get_context(self):
-        """Get or create SharePoint client context."""
-        if self._ctx is None:
-            ClientCredential, ClientContext = _lazy_import_office365()
-            credentials = ClientCredential(self.client_id, self.client_secret)
-            self._ctx = ClientContext(self.site_url).with_credentials(credentials)
-        return self._ctx
+    def _create_context(self) -> Any:
+        """Create a new SharePoint client context (thread-safe, one per operation)."""
+        ClientCredential, ClientContext = _lazy_import_office365()
+        credentials = ClientCredential(self.client_id, self.client_secret)
+        return ClientContext(self.site_url).with_credentials(credentials)
 
     async def _ensure_lists(self) -> None:
         """Ensure required SharePoint lists exist (cached after first check)."""
@@ -106,13 +103,12 @@ class SharePointStorageBackend:
         if self._lists_ensured:
             return
 
-        async with self._lock:
+        async with self._lists_lock:
             if self._lists_ensured:
                 return
 
-            ctx = self._get_context()
-
-            def _create_lists():
+            def _create_lists() -> None:
+                ctx = self._create_context()
                 web = ctx.web
                 ctx.load(web.lists)
                 ctx.execute_query()
@@ -197,228 +193,250 @@ class SharePointStorageBackend:
         self, artifact: ArtifactManifestEntry, collection_id: str | None = None
     ) -> None:
         """Save artifact metadata to SharePoint list."""
-        async with self._lock:
-            await self._ensure_lists()
-            ctx = self._get_context()
+        await self._ensure_lists()
 
-            def _save():
-                artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
+        def _save() -> None:
+            ctx = self._create_context()
+            artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
 
-                # Check if artifact already exists using CAML query
-                items = artifacts_list.get_items().filter(
-                    f"Title eq '{_escape_odata_string(artifact.artifact_id)}'"
-                )
-                ctx.load(items)
+            # Check if artifact already exists using CAML query
+            items = artifacts_list.get_items().filter(
+                f"Title eq '{_escape_odata_string(artifact.artifact_id)}'"
+            )
+            ctx.load(items)
+            ctx.execute_query()
+
+            item_data = self._artifact_to_list_item(artifact, collection_id)
+
+            if len(items) > 0:
+                # Update existing item
+                existing_item = items[0]
+                for key, value in item_data.items():
+                    if key != "Title":  # Don't update Title (primary key)
+                        existing_item.set_property(key, value)
+                existing_item.update()
                 ctx.execute_query()
+                logger.debug(f"Updated artifact in SharePoint: {artifact.artifact_id}")
+            else:
+                # Create new item
+                artifacts_list.add_item(item_data)
+                ctx.execute_query()
+                logger.debug(f"Created artifact in SharePoint: {artifact.artifact_id}")
 
-                item_data = self._artifact_to_list_item(artifact, collection_id)
-
-                if len(items) > 0:
-                    # Update existing item
-                    existing_item = items[0]
-                    for key, value in item_data.items():
-                        if key != "Title":  # Don't update Title (primary key)
-                            existing_item.set_property(key, value)
-                    existing_item.update()
-                    ctx.execute_query()
-                    logger.debug(f"Updated artifact in SharePoint: {artifact.artifact_id}")
-                else:
-                    # Create new item
-                    artifacts_list.add_item(item_data)
-                    ctx.execute_query()
-                    logger.debug(f"Created artifact in SharePoint: {artifact.artifact_id}")
-
-            await asyncio.to_thread(_save)
+        await asyncio.to_thread(_save)
 
     async def find_by_id(self, artifact_id: str) -> ArtifactManifestEntry | None:
         """Find artifact by persistent ID."""
-        async with self._lock:
-            await self._ensure_lists()
-            ctx = self._get_context()
+        await self._ensure_lists()
 
-            def _find():
-                artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
-                items = artifacts_list.get_items().filter(
-                    f"Title eq '{_escape_odata_string(artifact_id)}'"
-                )
-                ctx.load(items)
-                ctx.execute_query()
+        def _find() -> dict[str, Any] | None:
+            ctx = self._create_context()
+            artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
+            items = artifacts_list.get_items().filter(
+                f"Title eq '{_escape_odata_string(artifact_id)}'"
+            )
+            ctx.load(items)
+            ctx.execute_query()
 
-                if len(items) > 0:
-                    return items[0].properties
-                return None
-
-            result = await asyncio.to_thread(_find)
-
-            if result:
-                return self._list_item_to_artifact(result)
+            if len(items) > 0:
+                return items[0].properties
             return None
+
+        result = await asyncio.to_thread(_find)
+
+        if result:
+            return self._list_item_to_artifact(result)
+        return None
 
     async def find_by_hash(self, content_hash: str) -> list[ArtifactManifestEntry]:
         """Find artifacts by content hash."""
-        async with self._lock:
-            await self._ensure_lists()
-            ctx = self._get_context()
+        await self._ensure_lists()
 
-            def _find():
-                artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
-                items = artifacts_list.get_items().filter(
-                    f"ContentHash eq '{_escape_odata_string(content_hash)}'"
-                )
-                ctx.load(items)
-                ctx.execute_query()
-                return [item.properties for item in items]
+        def _find() -> list[dict[str, Any]]:
+            ctx = self._create_context()
+            artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
+            items = artifacts_list.get_items().filter(
+                f"ContentHash eq '{_escape_odata_string(content_hash)}'"
+            )
+            ctx.load(items)
+            ctx.execute_query()
+            return [item.properties for item in items]
 
-            results = await asyncio.to_thread(_find)
-            return [self._list_item_to_artifact(r) for r in results]
+        results = await asyncio.to_thread(_find)
+        return [self._list_item_to_artifact(r) for r in results]
 
     async def update_location(self, artifact_id: str, new_path: str) -> bool:
         """Update artifact location after file move."""
-        async with self._lock:
-            await self._ensure_lists()
-            ctx = self._get_context()
+        await self._ensure_lists()
 
-            def _update():
-                artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
-                items = artifacts_list.get_items().filter(
-                    f"Title eq '{_escape_odata_string(artifact_id)}'"
-                )
-                ctx.load(items)
+        def _update() -> bool:
+            ctx = self._create_context()
+            artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
+            items = artifacts_list.get_items().filter(
+                f"Title eq '{_escape_odata_string(artifact_id)}'"
+            )
+            ctx.load(items)
+            ctx.execute_query()
+
+            if len(items) > 0:
+                items[0].set_property("CurrentFilename", new_path)
+                items[0].update()
                 ctx.execute_query()
+                logger.debug(f"Updated location for {artifact_id}: {new_path}")
+                return True
+            return False
 
-                if len(items) > 0:
-                    items[0].set_property("CurrentFilename", new_path)
-                    items[0].update()
-                    ctx.execute_query()
-                    logger.debug(f"Updated location for {artifact_id}: {new_path}")
-                    return True
-                return False
-
-            return await asyncio.to_thread(_update)
+        return await asyncio.to_thread(_update)
 
     async def save_collection(self, manifest: CollectionManifest) -> None:
         """Save full collection manifest to SharePoint."""
-        async with self._lock:
-            await self._ensure_lists()
-            ctx = self._get_context()
+        await self._ensure_lists()
 
-            def _save_manifest():
-                collections_list = ctx.web.lists.get_by_title(COLLECTIONS_LIST)
-
-                # Check if collection exists
-                items = collections_list.get_items().filter(
-                    f"Title eq '{_escape_odata_string(manifest.manifest_id)}'"
-                )
-                ctx.load(items)
-                ctx.execute_query()
-
-                item_data = {
-                    "Title": manifest.manifest_id,
-                    "Version": manifest.version,
-                    "CreatedAt": manifest.created_at,
-                    "UpdatedAt": datetime.now(UTC).isoformat(),
-                    "SourceType": manifest.source_type,
-                    "SourceUrl": manifest.source_url or "",
-                    "SourcePath": manifest.source_path or "",
-                    "OutputFolder": manifest.output_folder,
-                    "NamingTemplate": manifest.naming_config.template,
-                    "IndexStart": manifest.naming_config.index_start,
-                    "IndexPadding": manifest.naming_config.index_padding,
-                    "ArtifactCount": len(manifest.artifacts),
-                }
-
-                if len(items) > 0:
-                    # Update existing
-                    existing_item = items[0]
-                    for key, value in item_data.items():
-                        if key != "Title":
-                            existing_item.set_property(key, value)
-                    existing_item.update()
-                    ctx.execute_query()
-                    logger.info(f"Updated collection in SharePoint: {manifest.manifest_id}")
-                else:
-                    # Create new
-                    collections_list.add_item(item_data)
-                    ctx.execute_query()
-                    logger.info(f"Created collection in SharePoint: {manifest.manifest_id}")
-
-            await asyncio.to_thread(_save_manifest)
-
-        # Save all artifacts with collection_id (outside the lock for manifest)
+        # First save all artifacts, track failures
+        failed_artifacts: list[str] = []
         for artifact in manifest.artifacts:
-            await self.save_artifact(artifact, collection_id=manifest.manifest_id)
+            try:
+                await self.save_artifact(artifact, collection_id=manifest.manifest_id)
+            except Exception as e:
+                logger.error(f"Failed to save artifact {artifact.artifact_id}: {e}")
+                failed_artifacts.append(artifact.artifact_id)
+
+        # Calculate actual saved count
+        saved_count = len(manifest.artifacts) - len(failed_artifacts)
+
+        def _save_manifest() -> None:
+            ctx = self._create_context()
+            collections_list = ctx.web.lists.get_by_title(COLLECTIONS_LIST)
+
+            # Check if collection exists
+            items = collections_list.get_items().filter(
+                f"Title eq '{_escape_odata_string(manifest.manifest_id)}'"
+            )
+            ctx.load(items)
+            ctx.execute_query()
+
+            item_data = {
+                "Title": manifest.manifest_id,
+                "Version": manifest.version,
+                "CreatedAt": manifest.created_at,
+                "UpdatedAt": datetime.now(UTC).isoformat(),
+                "SourceType": manifest.source_type,
+                "SourceUrl": manifest.source_url or "",
+                "SourcePath": manifest.source_path or "",
+                "OutputFolder": manifest.output_folder,
+                "NamingTemplate": manifest.naming_config.template,
+                "IndexStart": manifest.naming_config.index_start,
+                "IndexPadding": manifest.naming_config.index_padding,
+                "ArtifactCount": saved_count,  # Reflect actual saved count
+            }
+
+            if len(items) > 0:
+                # Update existing
+                existing_item = items[0]
+                for key, value in item_data.items():
+                    if key != "Title":
+                        existing_item.set_property(key, value)
+                existing_item.update()
+                ctx.execute_query()
+                logger.info(f"Updated collection in SharePoint: {manifest.manifest_id}")
+            else:
+                # Create new
+                collections_list.add_item(item_data)
+                ctx.execute_query()
+                logger.info(f"Created collection in SharePoint: {manifest.manifest_id}")
+
+        await asyncio.to_thread(_save_manifest)
+
+        if failed_artifacts:
+            sample = failed_artifacts[:5]
+            suffix = "..." if len(failed_artifacts) > 5 else ""
+            logger.warning(
+                f"Collection {manifest.manifest_id} saved with {len(failed_artifacts)} "
+                f"failed artifacts: {sample}{suffix}"
+            )
 
     async def load_collection(self, manifest_id: str) -> CollectionManifest | None:
         """Load collection manifest from SharePoint."""
-        async with self._lock:
-            await self._ensure_lists()
-            ctx = self._get_context()
+        await self._ensure_lists()
 
-            def _load():
-                collections_list = ctx.web.lists.get_by_title(COLLECTIONS_LIST)
-                items = collections_list.get_items().filter(
-                    f"Title eq '{_escape_odata_string(manifest_id)}'"
-                )
-                ctx.load(items)
-                ctx.execute_query()
-
-                if len(items) > 0:
-                    return items[0].properties
-                return None
-
-            collection_data = await asyncio.to_thread(_load)
-
-            if not collection_data:
-                return None
-
-            # Load artifacts for this collection
-            def _load_artifacts():
-                artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
-                items = artifacts_list.get_items().filter(
-                    f"CollectionId eq '{_escape_odata_string(manifest_id)}'"
-                )
-                ctx.load(items)
-                ctx.execute_query()
-                return [item.properties for item in items]
-
-            artifact_data = await asyncio.to_thread(_load_artifacts)
-            artifacts = [self._list_item_to_artifact(a) for a in artifact_data]
-
-            # Reconstruct naming config from stored fields
-            naming_config = NamingConfig(
-                template=collection_data.get("NamingTemplate", "{index}_{hash}"),
-                index_start=int(collection_data.get("IndexStart", 1)),
-                index_padding=int(collection_data.get("IndexPadding", 3)),
+        def _load() -> dict[str, Any] | None:
+            ctx = self._create_context()
+            collections_list = ctx.web.lists.get_by_title(COLLECTIONS_LIST)
+            items = collections_list.get_items().filter(
+                f"Title eq '{_escape_odata_string(manifest_id)}'"
             )
+            ctx.load(items)
+            ctx.execute_query()
 
-            return CollectionManifest(
-                manifest_id=collection_data.get("Title", ""),
-                version=collection_data.get("Version", "1.0"),
-                created_at=collection_data.get("CreatedAt", ""),
-                updated_at=collection_data.get("UpdatedAt", ""),
-                source_type=collection_data.get("SourceType", "local"),
-                source_url=collection_data.get("SourceUrl") or None,
-                source_path=collection_data.get("SourcePath") or None,
-                output_folder=collection_data.get("OutputFolder", ""),
-                naming_config=naming_config,
-                artifacts=artifacts,
+            if len(items) > 0:
+                return items[0].properties
+            return None
+
+        collection_data = await asyncio.to_thread(_load)
+
+        if not collection_data:
+            return None
+
+        # Load artifacts for this collection
+        def _load_artifacts() -> list[dict[str, Any]]:
+            ctx = self._create_context()
+            artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
+            items = artifacts_list.get_items().filter(
+                f"CollectionId eq '{_escape_odata_string(manifest_id)}'"
             )
+            ctx.load(items)
+            ctx.execute_query()
+            return [item.properties for item in items]
+
+        artifact_data = await asyncio.to_thread(_load_artifacts)
+        artifacts = [self._list_item_to_artifact(a) for a in artifact_data]
+
+        # Safely parse index fields with defaults for malformed values
+        index_start = 1
+        index_padding = 3
+        try:
+            index_start = int(collection_data.get("IndexStart", 1))
+        except (ValueError, TypeError):
+            logger.warning(f"Malformed IndexStart for collection {manifest_id}, using default")
+        try:
+            index_padding = int(collection_data.get("IndexPadding", 3))
+        except (ValueError, TypeError):
+            logger.warning(f"Malformed IndexPadding for collection {manifest_id}, using default")
+
+        # Reconstruct naming config from stored fields
+        naming_config = NamingConfig(
+            template=collection_data.get("NamingTemplate", "{index}_{hash}"),
+            index_start=index_start,
+            index_padding=index_padding,
+        )
+
+        return CollectionManifest(
+            manifest_id=collection_data.get("Title", ""),
+            version=collection_data.get("Version", "1.0"),
+            created_at=collection_data.get("CreatedAt", ""),
+            updated_at=collection_data.get("UpdatedAt", ""),
+            source_type=collection_data.get("SourceType", "local"),
+            source_url=collection_data.get("SourceUrl") or None,
+            source_path=collection_data.get("SourcePath") or None,
+            output_folder=collection_data.get("OutputFolder", ""),
+            naming_config=naming_config,
+            artifacts=artifacts,
+        )
 
     async def list_collections(self) -> list[str]:
         """List all collection manifest IDs from SharePoint."""
-        async with self._lock:
-            await self._ensure_lists()
-            ctx = self._get_context()
+        await self._ensure_lists()
 
-            def _list():
-                collections_list = ctx.web.lists.get_by_title(COLLECTIONS_LIST)
-                items = collections_list.get_items().select(["Title"])
-                ctx.load(items)
-                ctx.execute_query()
-                return [
-                    item.properties.get("Title", "")
-                    for item in items
-                    if item.properties.get("Title")
-                ]
+        def _list() -> list[str]:
+            ctx = self._create_context()
+            collections_list = ctx.web.lists.get_by_title(COLLECTIONS_LIST)
+            items = collections_list.get_items().select(["Title"])
+            ctx.load(items)
+            ctx.execute_query()
+            return [
+                item.properties.get("Title", "")
+                for item in items
+                if item.properties.get("Title")
+            ]
 
-            return await asyncio.to_thread(_list)
+        return await asyncio.to_thread(_list)

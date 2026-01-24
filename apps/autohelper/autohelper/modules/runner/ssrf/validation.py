@@ -28,12 +28,12 @@ def _resolve_all_ips(hostname: str) -> list[str]:
     Raises:
         DNSResolutionError: If hostname cannot be resolved (DNS failure, timeout, etc.)
     """
-    ips = []
+    ips: list[str] = []
     try:
         # Use getaddrinfo to get both IPv4 and IPv6 addresses
         results = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
         for result in results:
-            ip_str = result[4][0]
+            ip_str = str(result[4][0])  # Ensure string type for IP address
             if ip_str not in ips:
                 ips.append(ip_str)
     except (TimeoutError, socket.gaierror, socket.herror, OSError) as e:

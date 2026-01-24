@@ -81,7 +81,7 @@ ACTION_PATTERNS = {
 }
 
 URGENCY_KEYWORDS = ["urgent", "asap", "deadline", "immediately", "critical", "time-sensitive"]
-VIP_DOMAINS = []  # Configurable later
+VIP_DOMAINS: list[str] = []  # Configurable later
 
 # =============================================================================
 # HELPER FUNCTIONS (Pure Logic)
@@ -152,10 +152,13 @@ def make_safe_filename(text: str, max_length: int = 50) -> str:
 
 
 class MailService:
-    _instance = None
+    _instance: "MailService | None" = None
     _lock = threading.Lock()
+    initialized: bool
+    running: bool
+    thread: threading.Thread | None
 
-    def __new__(cls):
+    def __new__(cls) -> "MailService":
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -163,7 +166,7 @@ class MailService:
                     cls._instance.initialized = False
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         if self.initialized:
             return
 
@@ -173,7 +176,7 @@ class MailService:
         self.stop_event = threading.Event()
         self.initialized = True
 
-    def start(self):
+    def start(self) -> None:
         """Start the background polling thread if enabled."""
         if not _HAS_WIN32:
             logger.warning("Mail Service: Cannot start - pywin32 not available (Windows only)")
@@ -183,28 +186,34 @@ class MailService:
             logger.info("Mail Service: Disabled in settings")
             return
 
-        if self.running:
-            return
+        with self._lock:
+            if self.running:
+                return
 
-        logger.info("Mail Service: Starting background polling...")
-        self.stop_event.clear()
-        self.running = True
-        self.thread = threading.Thread(target=self._poll_loop, daemon=True)
-        self.thread.start()
+            logger.info("Mail Service: Starting background polling...")
+            self.stop_event.clear()
+            self.thread = threading.Thread(target=self._poll_loop, daemon=True)
+            self.thread.start()
+            self.running = True
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the background polling thread."""
-        if not self.running:
-            return
+        with self._lock:
+            if not self.running:
+                return
 
-        logger.info("Mail Service: Stopping...")
-        self.stop_event.set()
-        if self.thread:
-            self.thread.join(timeout=5)
-        self.running = False
+            logger.info("Mail Service: Stopping...")
+            self.running = False
+            self.stop_event.set()
+            thread = self.thread
+            self.thread = None
+
+        # Join outside lock to avoid deadlock
+        if thread:
+            thread.join(timeout=5)
         logger.info("Mail Service: Stopped")
 
-    def _poll_loop(self):
+    def _poll_loop(self) -> None:
         """Main polling loop running in background thread."""
         pythoncom.CoInitialize()  # Initialize COM for this thread
 
@@ -224,7 +233,7 @@ class MailService:
         finally:
             pythoncom.CoUninitialize()
 
-    def _get_outlook(self):
+    def _get_outlook(self) -> Any:
         """Get Outlook Application object securely."""
         if not _HAS_WIN32 or win32com_client is None:
             return None
@@ -233,7 +242,7 @@ class MailService:
         except Exception:
             return None
 
-    def _check_inbox(self):
+    def _check_inbox(self) -> None:
         """Check Inbox for new emails in the last interval."""
         outlook = self._get_outlook()
         if not outlook:
@@ -265,12 +274,14 @@ class MailService:
                     continue
 
                 received = item.ReceivedTime
-                # Pywin32 time conversion
+                # Pywin32 time conversion - skip items without valid timestamps
                 if hasattr(received, "timestamp"):
                     dt = datetime.fromtimestamp(received.timestamp())
                 else:
-                    # Fallback
-                    dt = datetime.now()
+                    # Skip items without parseable timestamp to avoid reprocessing
+                    subj = getattr(item, "Subject", "?")
+                    logger.debug(f"Skipping item without valid timestamp: {subj}")
+                    continue
 
                 if dt < cutoff:
                     break  # We are done
@@ -286,7 +297,7 @@ class MailService:
                 logger.warning(f"Skipping item due to error: {e}")
                 continue
 
-    def _process_email_item(self, item) -> bool:
+    def _process_email_item(self, item: Any) -> bool:
         """Process a single email item."""
         try:
             subject = getattr(item, "Subject", "(no subject)")
@@ -355,20 +366,33 @@ class MailService:
             logger.error(f"Failed to process email: {e}")
             return False
 
-    def _is_processed(self, entry_id) -> bool:
+    def _is_processed(self, entry_id: str) -> bool:
         """Check if email ID is already in our DB."""
+        if not entry_id:
+            # Empty entry_id cannot be reliably tracked - treat as unprocessed
+            # but caller should generate a fallback ID
+            return False
         db = get_db()
         row = db.execute("SELECT 1 FROM transient_emails WHERE id = ?", (entry_id,)).fetchone()
         return row is not None
 
-    def _save_transient_record(self, item, project_id, received_dt):
+    def _save_transient_record(self, item: Any, project_id: str, received_dt: datetime) -> None:
         """Save email metadata to SQLite."""
+        import hashlib
+
         db = get_db()
 
         entry_id = getattr(item, "EntryID", "")
         subject = getattr(item, "Subject", "")
         sender = getattr(item, "SenderEmailAddress", "")
         body = getattr(item, "Body", "")[:500]  # Preview
+
+        # Generate fallback ID if EntryID is missing/empty
+        if not entry_id:
+            # Create deterministic ID from content to enable duplicate detection
+            content_key = f"{sender}|{subject}|{received_dt.isoformat()}"
+            entry_id = f"gen_{hashlib.sha256(content_key.encode()).hexdigest()[:16]}"
+            logger.debug(f"Generated fallback entry_id for email: {subject[:50]}")
 
         metadata = {
             "importance": getattr(item, "Importance", 1),
@@ -389,7 +413,7 @@ class MailService:
     # PST INGESTION
     # =========================================================================
 
-    def ingest_pst(self, pst_path: str) -> dict:
+    def ingest_pst(self, pst_path: str) -> dict[str, Any]:
         """
         Ingest a PST file, extract emails, and cleanup.
         Ran in a separate thread usually, or blocking if called directly.
@@ -490,48 +514,68 @@ class MailService:
         finally:
             pythoncom.CoUninitialize()
 
-    def _process_folder_recursive(self, folder, ingest_id) -> int:
+    def _process_folder_recursive(self, folder: Any, ingest_id: int | None) -> int:
         count = 0
+        folder_name = getattr(folder, "Name", "<unknown>")
 
         # Items
         try:
             for item in folder.Items:
-                # olMail class, and successfully processed
-                if getattr(item, "Class", 0) == 43 and self._process_ingested_item(
-                    item, ingest_id
-                ):
-                    count += 1
-        except Exception:
-            pass
+                try:
+                    # olMail class, and successfully processed
+                    if getattr(item, "Class", 0) == 43 and self._process_ingested_item(
+                        item, ingest_id
+                    ):
+                        count += 1
+                except Exception as item_err:
+                    logger.warning(f"Error processing item in folder '{folder_name}': {item_err}")
+                    continue
+        except Exception as items_err:
+            logger.error(f"Error iterating items in folder '{folder_name}': {items_err}")
 
         # Subfolders
         try:
             for sub in folder.Folders:
-                count += self._process_folder_recursive(sub, ingest_id)
-        except Exception:
-            pass
+                try:
+                    count += self._process_folder_recursive(sub, ingest_id)
+                except Exception as sub_err:
+                    sub_name = getattr(sub, "Name", "<unknown>")
+                    logger.error(f"Error processing subfolder '{sub_name}': {sub_err}")
+                    continue
+        except Exception as folders_err:
+            logger.error(f"Error iterating subfolders in '{folder_name}': {folders_err}")
 
         return count
 
-    def _process_ingested_item(self, item, ingest_id) -> bool:
+    def _process_ingested_item(self, item: Any, ingest_id: int | None) -> bool:
         """Process item from PST."""
-        # Check DB
+        import hashlib
+
+        subject = getattr(item, "Subject", "(no subject)")
+        sender = getattr(item, "SenderEmailAddress", "")
+
+        received_time = getattr(item, "ReceivedTime", None)
+        if received_time and hasattr(received_time, "timestamp"):
+            received_dt = datetime.fromtimestamp(received_time.timestamp())
+        else:
+            # Use a sentinel date for items without timestamps
+            received_dt = datetime(1970, 1, 1)
+
+        # Get or generate entry_id
         entry_id = getattr(item, "EntryID", "")
+        if not entry_id:
+            # Generate deterministic ID from content
+            content_key = f"{sender}|{subject}|{received_dt.isoformat()}"
+            entry_id = f"pst_{hashlib.sha256(content_key.encode()).hexdigest()[:16]}"
+
+        # Check DB for duplicates
         if self._is_processed(entry_id):
             return False
 
-        subject = getattr(item, "Subject", "(no subject)")
         dev, proj, proj_id = extract_project_info(subject)
-
-        received_time = getattr(item, "ReceivedTime", datetime.now())
-        if hasattr(received_time, "timestamp"):
-            received_dt = datetime.fromtimestamp(received_time.timestamp())
-        else:
-            received_dt = datetime.now()
 
         # Save to Transient DB with ingest_id
         db = get_db()
-        sender = getattr(item, "SenderEmailAddress", "")
         body = getattr(item, "Body", "")[:500]
 
         metadata = {
