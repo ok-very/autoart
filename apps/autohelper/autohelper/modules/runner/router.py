@@ -5,13 +5,15 @@ Runner module API router.
 import json
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 
 from autohelper.shared.logging import get_logger
 
+from .lookup_service import get_lookup_service
 from .service import get_runner_service
-from .types import InvokeRequest, RunnerId, RunnerResult
+from .types import ArtifactManifestEntry, CollectionManifest, InvokeRequest, RunnerId, RunnerResult
 
 logger = get_logger(__name__)
 
@@ -100,3 +102,178 @@ async def invoke_runner_stream(request: InvokeRequest) -> StreamingResponse:
             "Connection": "keep-alive",
         },
     )
+
+
+# =============================================================================
+# Artifact Lookup Endpoints
+# =============================================================================
+
+
+class ArtifactResponse(BaseModel):
+    """Response for single artifact lookup."""
+
+    found: bool
+    artifact: ArtifactManifestEntry | None = None
+
+
+class ArtifactListResponse(BaseModel):
+    """Response for multiple artifact lookup."""
+
+    count: int
+    artifacts: list[ArtifactManifestEntry]
+
+
+class CollectionListResponse(BaseModel):
+    """Response for collection listing."""
+
+    count: int
+    collections: list[dict[str, Any]]
+
+
+class CollectionResponse(BaseModel):
+    """Response for single collection lookup."""
+
+    found: bool
+    collection: CollectionManifest | None = None
+
+
+class UpdateLocationRequest(BaseModel):
+    """Request to update artifact location."""
+
+    artifact_id: str
+    new_path: str
+    output_folder: str
+
+
+@router.get("/artifacts/{artifact_id}")
+async def get_artifact_by_id(
+    artifact_id: str,
+    output_folder: str | None = Query(None, description="Specific folder to search"),
+) -> ArtifactResponse:
+    """
+    Look up an artifact by its persistent ID.
+
+    The artifact ID is stable across file moves and renames.
+    If output_folder is provided, only searches that folder's manifest.
+    Otherwise, searches the database for all known collections.
+    """
+    service = get_lookup_service()
+    artifact = await service.find_artifact_by_id(artifact_id, output_folder)
+
+    return ArtifactResponse(
+        found=artifact is not None,
+        artifact=artifact,
+    )
+
+
+@router.get("/artifacts/hash/{content_hash}")
+async def get_artifacts_by_hash(
+    content_hash: str,
+    output_folder: str | None = Query(None, description="Specific folder to search"),
+) -> ArtifactListResponse:
+    """
+    Find artifacts by content hash.
+
+    Useful for finding files that have been moved or renamed.
+    The content hash is a SHA-256 hash of the file contents.
+    """
+    service = get_lookup_service()
+    artifacts = await service.find_artifacts_by_hash(content_hash, output_folder)
+
+    return ArtifactListResponse(
+        count=len(artifacts),
+        artifacts=artifacts,
+    )
+
+
+@router.get("/collections")
+async def list_collections(
+    output_folder: str | None = Query(None, description="Filter to specific folder"),
+) -> CollectionListResponse:
+    """
+    List all artifact collections.
+
+    Returns summaries of all active collections with their metadata.
+    """
+    service = get_lookup_service()
+    collections = await service.list_collections(output_folder)
+
+    return CollectionListResponse(
+        count=len(collections),
+        collections=collections,
+    )
+
+
+@router.get("/collections/{collection_id}")
+async def get_collection(collection_id: str) -> CollectionResponse:
+    """
+    Get a full collection manifest by ID.
+
+    Returns the complete manifest including all artifact entries.
+    """
+    service = get_lookup_service()
+    collection = await service.get_collection(collection_id)
+
+    return CollectionResponse(
+        found=collection is not None,
+        collection=collection,
+    )
+
+
+@router.post("/artifacts/update-location")
+async def update_artifact_location(request: UpdateLocationRequest) -> dict[str, Any]:
+    """
+    Update an artifact's location after file move.
+
+    Updates both the manifest and database with the new path.
+    """
+    service = get_lookup_service()
+
+    try:
+        success = await service.update_artifact_location(
+            artifact_id=request.artifact_id,
+            new_path=request.new_path,
+            output_folder=request.output_folder,
+        )
+
+        if not success:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Artifact {request.artifact_id} not found",
+            )
+
+        return {
+            "success": True,
+            "artifact_id": request.artifact_id,
+            "new_path": request.new_path,
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/artifacts/compute-hash")
+async def compute_file_hash(
+    file_path: str = Query(..., description="Path to file to hash"),
+) -> dict[str, str]:
+    """
+    Compute SHA-256 hash of a file.
+
+    Useful for finding moved files by their content hash.
+    """
+    from pathlib import Path
+
+    path = Path(file_path)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"File not found: {file_path}")
+
+    if not path.is_file():
+        raise HTTPException(status_code=400, detail=f"Path is not a file: {file_path}")
+
+    service = get_lookup_service()
+    content_hash = await service.compute_file_hash(file_path)
+
+    return {
+        "file_path": str(path),
+        "content_hash": content_hash,
+    }
