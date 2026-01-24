@@ -30,11 +30,14 @@ export function Step3TextSlugs({ onNext, onBack }: ArtCollectorStepProps) {
   const selectedArtifacts = artifacts.filter((a) => selectedIds.has(a.ref_id));
 
   // Regenerate all slugs (clear all overrides)
+  // Derive from artifacts/selectedIds at call time to avoid stale closure
   const handleRegenerateAll = useCallback(() => {
-    selectedArtifacts.forEach((a) => {
-      clearSlugOverride(a.ref_id);
+    artifacts.forEach((a) => {
+      if (selectedIds.has(a.ref_id)) {
+        clearSlugOverride(a.ref_id);
+      }
     });
-  }, [selectedArtifacts, clearSlugOverride]);
+  }, [artifacts, selectedIds, clearSlugOverride]);
 
   return (
     <Stack className="h-full" gap="lg">

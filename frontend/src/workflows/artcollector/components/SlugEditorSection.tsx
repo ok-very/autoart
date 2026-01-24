@@ -4,7 +4,7 @@
  * Table-based editor for managing image slugs with duplicate detection.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Stack, Text, Button, Inline, Badge } from '@autoart/ui';
 import { ChevronDown, ChevronRight, RefreshCw, AlertTriangle, Check } from 'lucide-react';
 import clsx from 'clsx';
@@ -170,6 +170,11 @@ function SlugRow({
   onClearOverride,
 }: SlugRowProps) {
   const [inputValue, setInputValue] = useState(overrideValue);
+
+  // Sync local state when overrideValue changes externally (e.g., Regenerate All)
+  useEffect(() => {
+    setInputValue(overrideValue);
+  }, [overrideValue]);
 
   const handleBlur = () => {
     const trimmed = inputValue.trim();

@@ -5,7 +5,7 @@
  * Allows select/discard before proceeding to text & slugs.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Stack, Text, Button, Inline } from '@autoart/ui';
 import { Play, StopCircle } from 'lucide-react';
 import { useArtCollectorContext } from '../context/ArtCollectorContext';
@@ -83,6 +83,13 @@ export function Step2StreamReview({ onNext, onBack }: ArtCollectorStepProps) {
     stopStream();
     setIsStreaming(false);
   };
+
+  // Cleanup stream on unmount to prevent resource leaks
+  useEffect(() => {
+    return () => {
+      stopStream();
+    };
+  }, [stopStream]);
 
   return (
     <Stack className="h-full" gap="lg">

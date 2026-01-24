@@ -67,10 +67,11 @@ export function AppearanceSection() {
         <div className="grid grid-cols-2 gap-3">
           {availableThemes.map((theme) => {
             const themeId = theme.id as WorkspaceThemeId;
+            const isKnownTheme = themeId in THEME_ICONS;
             const isSelected = currentThemeId === themeId;
             const label = WORKSPACE_THEME_LABELS[themeId] || theme.label;
             const description = WORKSPACE_THEME_DESCRIPTIONS[themeId] || theme.description;
-            const icon = THEME_ICONS[themeId];
+            const icon = isKnownTheme ? THEME_ICONS[themeId] : <Palette className="w-5 h-5" />;
             const previewClass = THEME_PREVIEWS[themeId] || 'bg-white border-slate-200';
 
             return (

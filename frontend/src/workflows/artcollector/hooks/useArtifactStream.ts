@@ -5,7 +5,7 @@
  * Provides real-time artifact collection with progress updates.
  */
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import type { ArtifactPreview, StreamProgress } from '../types';
 
 export interface StreamConfig {
@@ -197,9 +197,14 @@ function handleStreamEvent(
     }
 
     case 'progress': {
+      const rawPercent = event.percent;
+      const percent =
+        typeof rawPercent === 'number' && Number.isFinite(rawPercent)
+          ? Math.max(0, Math.min(100, rawPercent))
+          : 0;
       const progress: StreamProgress = {
         stage: (event.stage as string) || 'streaming',
-        percent: (event.percent as number) || 0,
+        percent,
         message: event.message as string | undefined,
         total: event.total as number | undefined,
         current: event.current as number | undefined,
@@ -316,6 +321,16 @@ export function useMockArtifactStream(
     },
     [stopStream, onArtifact, onProgress, onComplete]
   );
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []);
 
   return {
     startStream,

@@ -69,7 +69,10 @@ export function StreamingGallery({
       {/* Progress bar during streaming */}
       {isStreaming && progress.stage !== 'idle' && (
         <div className="flex-shrink-0">
-          <ProgressBar value={progress.percent} size="sm" />
+          <ProgressBar
+            value={Math.max(0, Math.min(100, progress.percent ?? 0))}
+            size="sm"
+          />
         </div>
       )}
 

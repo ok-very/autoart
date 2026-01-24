@@ -11,6 +11,13 @@ interface SlugifyOptions {
 }
 
 /**
+ * Escape special regex characters in a string
+ */
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * Convert a string to a URL-safe slug
  *
  * @param text - The text to slugify
@@ -19,6 +26,7 @@ interface SlugifyOptions {
  */
 export function slugify(text: string, options: SlugifyOptions = {}): string {
   const { lower = true, strict = true, replacement = '-' } = options;
+  const escapedReplacement = escapeRegExp(replacement);
 
   let slug = text
     // Normalize unicode characters
@@ -28,11 +36,11 @@ export function slugify(text: string, options: SlugifyOptions = {}): string {
     // Replace spaces and underscores with replacement char
     .replace(/[\s_]+/g, replacement)
     // Remove non-alphanumeric characters (except replacement)
-    .replace(new RegExp(`[^a-zA-Z0-9${replacement}]`, 'g'), strict ? '' : replacement)
+    .replace(new RegExp(`[^a-zA-Z0-9${escapedReplacement}]`, 'g'), strict ? '' : replacement)
     // Remove duplicate replacement characters
-    .replace(new RegExp(`${replacement}+`, 'g'), replacement)
+    .replace(new RegExp(`${escapedReplacement}+`, 'g'), replacement)
     // Trim replacement from ends
-    .replace(new RegExp(`^${replacement}|${replacement}$`, 'g'), '');
+    .replace(new RegExp(`^${escapedReplacement}|${escapedReplacement}$`, 'g'), '');
 
   if (lower) {
     slug = slug.toLowerCase();

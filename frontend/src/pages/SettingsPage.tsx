@@ -29,6 +29,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
     { id: 'account', label: 'Account', icon: <User className="w-4 h-4" /> },
+    { id: 'appearance', label: 'Appearance', icon: <Palette className="w-4 h-4" /> },
     { id: 'integrations', label: 'Integrations', icon: <Plug className="w-4 h-4" /> },
 ];
 
@@ -156,8 +157,11 @@ export function SettingsPage() {
 
                     {/* Content Area */}
                     <div className="flex-1 min-w-0">
-                        {activeTab === 'account' && <AccountSection />}
-                        {activeTab === 'integrations' && (
+                        {activeTab === 'account' ? (
+                            <AccountSection />
+                        ) : activeTab === 'appearance' ? (
+                            <AppearanceSection />
+                        ) : activeTab === 'integrations' ? (
                             <IntegrationsSection
                                 microsoftStatus={{ connected: (connections as any)?.microsoft?.connected ?? false }}
                                 mondayStatus={{ connected: connections?.monday?.connected ?? false }}
@@ -173,6 +177,8 @@ export function SettingsPage() {
                                 onGoogleDisconnect={handleGoogleDisconnect}
                                 onAutoHelperGenerateCode={handleAutoHelperGenerateCode}
                             />
+                        ) : (
+                            <AccountSection />
                         )}
                     </div>
                 </div>

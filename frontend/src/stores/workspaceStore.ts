@@ -30,6 +30,10 @@ export interface SerializedDockviewState {
 // Default panels to open on fresh start
 const DEFAULT_OPEN_PANELS: PanelId[] = ['center-workspace', 'selection-inspector'];
 
+/**
+ * Panel position hint for workspace presets.
+ * Note: 'left' is normalized to 'right' at runtime since Dockview doesn't support left splits.
+ */
 type PanelPosition = 'center' | 'left' | 'right' | 'bottom';
 
 interface WorkspaceState {
