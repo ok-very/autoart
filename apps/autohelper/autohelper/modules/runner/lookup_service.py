@@ -14,8 +14,8 @@ from typing import Any
 from autohelper.config.settings import Settings, get_settings
 from autohelper.db.conn import get_db
 
-from .types import ArtifactManifestEntry, CollectionManifest
 from ..storage.router import get_metadata_backend
+from .types import ArtifactManifestEntry, CollectionManifest
 
 logger = logging.getLogger(__name__)
 
@@ -383,8 +383,10 @@ class ArtifactLookupService:
         if row.get("metadata_json"):
             try:
                 metadata = json.loads(row["metadata_json"])
-            except (json.JSONDecodeError, TypeError):
-                pass
+            except (json.JSONDecodeError, TypeError) as e:
+                logger.warning(
+                    f"Malformed metadata_json for artifact {row.get('artifact_id')}: {e}"
+                )
 
         return ArtifactManifestEntry(
             artifact_id=row["artifact_id"],

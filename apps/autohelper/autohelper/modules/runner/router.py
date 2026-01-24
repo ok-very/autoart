@@ -250,6 +250,9 @@ async def update_artifact_location(request: UpdateLocationRequest) -> dict[str, 
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception(f"Failed to update artifact location: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/artifacts/compute-hash")
@@ -260,10 +263,26 @@ async def compute_file_hash(
     Compute SHA-256 hash of a file.
 
     Useful for finding moved files by their content hash.
+    File must be within allowed roots configured in settings.
     """
     from pathlib import Path
+    from autohelper.config.settings import get_settings
 
-    path = Path(file_path)
+    path = Path(file_path).resolve()
+
+    # Security: validate path is within allowed roots
+    settings = get_settings()
+    allowed_roots = settings.get_allowed_roots()
+    is_allowed = any(
+        path == root or root in path.parents
+        for root in allowed_roots
+    )
+    if not is_allowed:
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: path is not within allowed directories",
+        )
+
     if not path.exists():
         raise HTTPException(status_code=404, detail=f"File not found: {file_path}")
 

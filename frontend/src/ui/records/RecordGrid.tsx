@@ -9,7 +9,17 @@ import {
   useBulkDeleteRecords,
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
+import { ImageFieldRenderer } from '../molecules';
 import type { DataRecord, FieldDef } from '../../types';
+
+/** Check if a field should be rendered as an image */
+function isImageField(type: string, key: string): boolean {
+  if (type === 'image' || type === 'file') return true;
+  // Common image field patterns
+  const imagePatterns = ['thumbnail', 'image', 'photo', 'picture', 'avatar'];
+  const lowerKey = key.toLowerCase();
+  return imagePatterns.some((p) => lowerKey.includes(p));
+}
 
 interface RecordGridProps {
   definitionId: string | null;
@@ -386,14 +396,31 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
                     )}
 
                     {/* Dynamic cells */}
-                    {columns.map((col) => (
-                      <td
-                        key={col.key}
-                        className="px-4 py-3 text-sm text-slate-700 truncate max-w-xs"
-                      >
-                        {getCellValue(record, col.key)}
-                      </td>
-                    ))}
+                    {columns.map((col) => {
+                      const data = record.data as Record<string, unknown>;
+                      // Check if this is an image field
+                      if (isImageField(col.type, col.key)) {
+                        const value = data?.[col.key];
+                        const artifactId = data?.artifact_id as string | undefined;
+                        return (
+                          <td key={col.key} className="px-4 py-3">
+                            <ImageFieldRenderer
+                              value={value as string | undefined}
+                              artifactId={artifactId}
+                              size="sm"
+                            />
+                          </td>
+                        );
+                      }
+                      return (
+                        <td
+                          key={col.key}
+                          className="px-4 py-3 text-sm text-slate-700 truncate max-w-xs"
+                        >
+                          {getCellValue(record, col.key)}
+                        </td>
+                      );
+                    })}
 
                     {/* Actions */}
                     <td

@@ -29,6 +29,12 @@ COLLECTIONS_LIST = "ArtifactCollections"
 ARTIFACTS_LIST = "CollectedArtifacts"
 
 
+def _escape_odata_string(value: str) -> str:
+    """Escape a string for safe use in OData filter expressions."""
+    # OData string literals use single quotes; escape embedded single quotes by doubling them
+    return value.replace("'", "''")
+
+
 def _lazy_import_office365():
     """Lazily import office365 to avoid import errors when not installed."""
     try:
@@ -96,42 +102,47 @@ class SharePointStorageBackend:
 
     async def _ensure_lists(self) -> None:
         """Ensure required SharePoint lists exist (cached after first check)."""
+        # Double-check pattern: quick check, then lock, then re-check
         if self._lists_ensured:
             return
 
-        ctx = self._get_context()
+        async with self._lock:
+            if self._lists_ensured:
+                return
 
-        def _create_lists():
-            web = ctx.web
-            ctx.load(web.lists)
-            ctx.execute_query()
+            ctx = self._get_context()
 
-            list_titles = {lst.properties.get("Title", "") for lst in web.lists}
-
-            # Create collections list if missing
-            if COLLECTIONS_LIST not in list_titles:
-                logger.info(f"Creating SharePoint list: {COLLECTIONS_LIST}")
-                list_creation_info = {
-                    "Title": COLLECTIONS_LIST,
-                    "Description": "Artifact collection manifests",
-                    "BaseTemplate": 100,  # Generic list
-                }
-                web.lists.add(list_creation_info)
+            def _create_lists():
+                web = ctx.web
+                ctx.load(web.lists)
                 ctx.execute_query()
 
-            # Create artifacts list if missing
-            if ARTIFACTS_LIST not in list_titles:
-                logger.info(f"Creating SharePoint list: {ARTIFACTS_LIST}")
-                list_creation_info = {
-                    "Title": ARTIFACTS_LIST,
-                    "Description": "Collected artifact metadata",
-                    "BaseTemplate": 100,
-                }
-                web.lists.add(list_creation_info)
-                ctx.execute_query()
+                list_titles = {lst.properties.get("Title", "") for lst in web.lists}
 
-        await asyncio.to_thread(_create_lists)
-        self._lists_ensured = True
+                # Create collections list if missing
+                if COLLECTIONS_LIST not in list_titles:
+                    logger.info(f"Creating SharePoint list: {COLLECTIONS_LIST}")
+                    list_creation_info = {
+                        "Title": COLLECTIONS_LIST,
+                        "Description": "Artifact collection manifests",
+                        "BaseTemplate": 100,  # Generic list
+                    }
+                    web.lists.add(list_creation_info)
+                    ctx.execute_query()
+
+                # Create artifacts list if missing
+                if ARTIFACTS_LIST not in list_titles:
+                    logger.info(f"Creating SharePoint list: {ARTIFACTS_LIST}")
+                    list_creation_info = {
+                        "Title": ARTIFACTS_LIST,
+                        "Description": "Collected artifact metadata",
+                        "BaseTemplate": 100,
+                    }
+                    web.lists.add(list_creation_info)
+                    ctx.execute_query()
+
+            await asyncio.to_thread(_create_lists)
+            self._lists_ensured = True
 
     def _artifact_to_list_item(
         self, artifact: ArtifactManifestEntry, collection_id: str | None = None
@@ -159,7 +170,15 @@ class SharePointStorageBackend:
             try:
                 metadata = json.loads(metadata_json)
             except (json.JSONDecodeError, TypeError):
+                logger.warning(f"Malformed MetadataJson for artifact {item.get('Title')}")
                 metadata = {}
+
+        # Safely parse FileSize, defaulting to 0 if malformed
+        file_size = 0
+        try:
+            file_size = int(item.get("FileSize", 0))
+        except (ValueError, TypeError):
+            logger.warning(f"Malformed FileSize for artifact {item.get('Title')}")
 
         return ArtifactManifestEntry(
             artifact_id=item.get("Title", ""),
@@ -170,11 +189,13 @@ class SharePointStorageBackend:
             source_path=item.get("SourcePath") or None,
             collected_at=item.get("CollectedAt", ""),
             mime_type=item.get("MimeType", "application/octet-stream"),
-            size=int(item.get("FileSize", 0)),
+            size=file_size,
             metadata=metadata,
         )
 
-    async def save_artifact(self, artifact: ArtifactManifestEntry) -> None:
+    async def save_artifact(
+        self, artifact: ArtifactManifestEntry, collection_id: str | None = None
+    ) -> None:
         """Save artifact metadata to SharePoint list."""
         async with self._lock:
             await self._ensure_lists()
@@ -197,11 +218,11 @@ class SharePointStorageBackend:
                         <RowLimit>1</RowLimit>
                     </View>
                 """
-                items = artifacts_list.get_items().filter(f"Title eq '{artifact.artifact_id}'")
+                items = artifacts_list.get_items().filter(f"Title eq '{_escape_odata_string(artifact.artifact_id)}'")
                 ctx.load(items)
                 ctx.execute_query()
 
-                item_data = self._artifact_to_list_item(artifact)
+                item_data = self._artifact_to_list_item(artifact, collection_id)
 
                 if len(items) > 0:
                     # Update existing item
@@ -228,7 +249,7 @@ class SharePointStorageBackend:
 
             def _find():
                 artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
-                items = artifacts_list.get_items().filter(f"Title eq '{artifact_id}'")
+                items = artifacts_list.get_items().filter(f"Title eq '{_escape_odata_string(artifact_id)}'")
                 ctx.load(items)
                 ctx.execute_query()
 
@@ -250,7 +271,7 @@ class SharePointStorageBackend:
 
             def _find():
                 artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
-                items = artifacts_list.get_items().filter(f"ContentHash eq '{content_hash}'")
+                items = artifacts_list.get_items().filter(f"ContentHash eq '{_escape_odata_string(content_hash)}'")
                 ctx.load(items)
                 ctx.execute_query()
                 return [item.properties for item in items]
@@ -266,7 +287,7 @@ class SharePointStorageBackend:
 
             def _update():
                 artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
-                items = artifacts_list.get_items().filter(f"Title eq '{artifact_id}'")
+                items = artifacts_list.get_items().filter(f"Title eq '{_escape_odata_string(artifact_id)}'")
                 ctx.load(items)
                 ctx.execute_query()
 
@@ -291,7 +312,7 @@ class SharePointStorageBackend:
 
                 # Check if collection exists
                 items = collections_list.get_items().filter(
-                    f"Title eq '{manifest.manifest_id}'"
+                    f"Title eq '{_escape_odata_string(manifest.manifest_id)}'"
                 )
                 ctx.load(items)
                 ctx.execute_query()
@@ -328,9 +349,9 @@ class SharePointStorageBackend:
 
             await asyncio.to_thread(_save_manifest)
 
-        # Save all artifacts (outside the lock for manifest)
+        # Save all artifacts with collection_id (outside the lock for manifest)
         for artifact in manifest.artifacts:
-            await self.save_artifact(artifact)
+            await self.save_artifact(artifact, collection_id=manifest.manifest_id)
 
     async def load_collection(self, manifest_id: str) -> CollectionManifest | None:
         """Load collection manifest from SharePoint."""
@@ -340,7 +361,7 @@ class SharePointStorageBackend:
 
             def _load():
                 collections_list = ctx.web.lists.get_by_title(COLLECTIONS_LIST)
-                items = collections_list.get_items().filter(f"Title eq '{manifest_id}'")
+                items = collections_list.get_items().filter(f"Title eq '{_escape_odata_string(manifest_id)}'")
                 ctx.load(items)
                 ctx.execute_query()
 
@@ -357,7 +378,7 @@ class SharePointStorageBackend:
             def _load_artifacts():
                 artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
                 items = artifacts_list.get_items().filter(
-                    f"CollectionId eq '{manifest_id}'"
+                    f"CollectionId eq '{_escape_odata_string(manifest_id)}'"
                 )
                 ctx.load(items)
                 ctx.execute_query()

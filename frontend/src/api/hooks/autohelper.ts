@@ -18,6 +18,20 @@ export interface FiletreeNode {
     ext: string | null;
 }
 
+/** Artifact metadata from AutoHelper lookup */
+export interface ArtifactLookupResult {
+    artifact_id: string;
+    original_filename: string;
+    current_filename: string;
+    content_hash: string;
+    source_url?: string;
+    source_path?: string;
+    collected_at: string;
+    mime_type: string;
+    size: number;
+    metadata: Record<string, unknown>;
+}
+
 export interface FiletreeResponse {
     roots: FiletreeNode[];
 }
@@ -79,5 +93,24 @@ export function useExportIntakeCSV() {
     return useMutation({
         mutationFn: (request: IntakeCSVExportRequest) =>
             autohelperApi.post<IntakeCSVExportResponse>('/export/intake-csv', request),
+    });
+}
+
+// ==================== ARTIFACT LOOKUP HOOKS ====================
+
+/**
+ * Look up artifact by persistent ID from AutoHelper.
+ * Used to get current file location when files may have been moved/renamed.
+ *
+ * @param artifactId - The persistent artifact UUID (survives file moves)
+ * @returns Query result with current artifact data including updated path
+ */
+export function useArtifactLookup(artifactId: string | undefined) {
+    return useQuery({
+        queryKey: ['autohelper-artifact', artifactId],
+        queryFn: () =>
+            autohelperApi.get<ArtifactLookupResult>(`/runner/artifacts/${artifactId}`),
+        enabled: !!artifactId,
+        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     });
 }
