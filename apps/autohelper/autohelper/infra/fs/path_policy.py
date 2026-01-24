@@ -88,7 +88,7 @@ class PathPolicy:
         # Check each component (except the root)
         parts = path.parts
         for i in range(1, len(parts)):
-            partial = Path(*parts[: i + 1])
+            partial = path.parents[i - 1]
             if partial.exists() and partial.is_symlink():
                 return True
 
