@@ -15,9 +15,9 @@ from pathlib import Path
 
 from ..naming import (
     IndexCounter,
-    compute_content_hash,
+    compute_content_hash_streaming,
     generate_filename,
-    generate_persistent_id,
+    generate_persistent_id_from_hash,
 )
 from ..types import (
     ArtifactManifestEntry,
@@ -261,14 +261,14 @@ class FolderCollector:
             Tuple of (ArtifactRef, ArtifactManifestEntry) or None if failed
         """
         try:
-            # Read file content for hashing
-            content = await asyncio.to_thread(item.read_bytes)
-            content_hash = compute_content_hash(content)
+            # Compute content hash using streaming (memory-efficient for large files)
+            content_hash = await asyncio.to_thread(compute_content_hash_streaming, item)
 
             # Get file metadata
             ext = item.suffix.lower()
             artifact_type = get_artifact_type(ext)
             mime_type, _ = mimetypes.guess_type(str(item))
+            file_size = await asyncio.to_thread(lambda: item.stat().st_size)
 
             # Build context for filename generation
             context = {
@@ -295,8 +295,8 @@ class FolderCollector:
             # Copy file
             await asyncio.to_thread(shutil.copy2, item, dest_path)
 
-            # Generate persistent ID
-            artifact_id = generate_persistent_id(content, str(item), timestamp)
+            # Generate persistent ID from pre-computed hash
+            artifact_id = generate_persistent_id_from_hash(content_hash, str(item), timestamp)
 
             # Create artifact reference
             artifact = ArtifactRef(
@@ -315,7 +315,7 @@ class FolderCollector:
                 source_path=str(item),
                 collected_at=timestamp,
                 mime_type=mime_type or "application/octet-stream",
-                size=len(content),
+                size=file_size,
                 metadata={
                     "original_path": str(rel_path),
                     "source_folder": str(resolved_source),

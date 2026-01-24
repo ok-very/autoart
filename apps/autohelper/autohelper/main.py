@@ -31,11 +31,25 @@ def main() -> None:
     server = uvicorn.Server(config)
 
     if "--popup" in sys.argv:
-        print("Starting Config Popup...")
+        print("Starting Config Popup with server...")
         from autohelper.gui.popup import launch_config_popup
 
-        launch_config_popup()
-        sys.exit(0)
+        # Run server in background thread (same as --tray mode)
+        server_thread = threading.Thread(target=server.run, daemon=True)
+        server_thread.start()
+
+        try:
+            exit_code = launch_config_popup()
+        except Exception as e:
+            print(f"Popup failed: {e}")
+            exit_code = 1
+        finally:
+            # Cleanup after Qt app exits or fails
+            print("Stopping server...")
+            server.should_exit = True
+            server_thread.join(timeout=2)
+
+        sys.exit(exit_code)
 
     if "--tray" in sys.argv:
         print("Starting in System Tray mode (Qt)...")
@@ -47,13 +61,13 @@ def main() -> None:
             server_thread.start()
 
             # Run Qt App (Blocking Main Thread)
-            launch_config_popup()
+            exit_code = launch_config_popup()
 
             # Cleanup after Qt app exits
             print("Stopping server...")
             server.should_exit = True
             server_thread.join(timeout=2)
-            sys.exit(0)
+            sys.exit(exit_code)
 
         except Exception as e:
             print(f"Failed to start GUI mode: {e}")

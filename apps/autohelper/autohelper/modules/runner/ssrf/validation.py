@@ -11,6 +11,13 @@ from urllib.parse import urlparse
 
 from .constants import BLOCKED_HOSTNAMES, DNS_TIMEOUT_SECONDS, PRIVATE_IP_RANGES
 
+# Blocked hostname suffixes for subdomain matching
+BLOCKED_HOSTNAME_SUFFIXES = {
+    ".localhost",
+    ".internal",
+    ".metadata.google.internal",
+}
+
 
 class DNSResolutionError(Exception):
     """Raised when DNS resolution fails for a hostname."""
@@ -94,10 +101,40 @@ async def is_safe_url(url: str) -> tuple[bool, str]:
     if not hostname:
         return False, "Invalid URL: no hostname"
 
-    # Check blocked hostnames (normalize trailing dot for FQDN)
+    # Normalize hostname: lowercase, strip trailing dot, handle IDNA
     hostname_lower = hostname.lower().rstrip(".")
-    if hostname_lower in BLOCKED_HOSTNAMES:
+
+    # Strip IPv6 zone ID if present (e.g., "fe80::1%eth0" -> "fe80::1")
+    if "%" in hostname_lower:
+        hostname_lower = hostname_lower.split("%")[0]
+
+    # Handle IDNA/punycode encoding for Unicode hostnames
+    try:
+        # Encode to ASCII (punycode) then decode back to normalized form
+        hostname_normalized = hostname_lower.encode("idna").decode("ascii").lower()
+    except (UnicodeError, UnicodeDecodeError):
+        # If IDNA encoding fails, use the original (will likely fail DNS anyway)
+        hostname_normalized = hostname_lower
+
+    # Check blocked hostnames (exact match)
+    if hostname_normalized in BLOCKED_HOSTNAMES:
         return False, f"Blocked hostname: {hostname}"
+
+    # Check blocked hostname suffixes (subdomain matching)
+    for suffix in BLOCKED_HOSTNAME_SUFFIXES:
+        if hostname_normalized.endswith(suffix) or hostname_normalized == suffix.lstrip("."):
+            return False, f"Blocked hostname: {hostname}"
+
+    # Check if hostname is an IP literal (skip DNS resolution)
+    try:
+        ip = ipaddress.ip_address(hostname_normalized)
+        is_private, error_msg = _check_ips_against_private_ranges([str(ip)])
+        if is_private:
+            return False, error_msg
+        return True, ""
+    except ValueError:
+        # Not an IP literal, proceed with DNS resolution
+        pass
 
     # Try to resolve hostname and check if IP is private
     # Use asyncio.to_thread to avoid blocking the event loop
@@ -105,17 +142,15 @@ async def is_safe_url(url: str) -> tuple[bool, str]:
     # Add timeout to prevent unbounded blocking on slow/stuck DNS resolution
     try:
         ips = await asyncio.wait_for(
-            asyncio.to_thread(_resolve_all_ips, hostname),
+            asyncio.to_thread(_resolve_all_ips, hostname_normalized),
             timeout=DNS_TIMEOUT_SECONDS,
         )
     except TimeoutError:
-        return (
-            False,
-            f"DNS resolution timed out after {DNS_TIMEOUT_SECONDS}s for hostname: {hostname}",
-        )
-    except DNSResolutionError as e:
-        # Treat unresolvable hostnames as unsafe to prevent SSRF bypass
-        return False, f"DNS resolution failed: {e}"
+        # Sanitized error: don't expose timeout duration or internal details
+        return False, "DNS resolution timed out"
+    except DNSResolutionError:
+        # Sanitized error: don't expose internal DNS error details
+        return False, "DNS resolution failed for hostname"
 
     if not ips:
         # No IPs resolved (shouldn't happen if no exception, but be defensive)

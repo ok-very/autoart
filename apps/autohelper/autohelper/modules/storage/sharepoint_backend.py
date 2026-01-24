@@ -324,11 +324,19 @@ class SharePointStorageBackend:
             ctx.load(items)
             ctx.execute_query()
 
+            # Parse ISO strings to datetime for SharePoint DateTime field compatibility
+            try:
+                created_at_dt = datetime.fromisoformat(manifest.created_at.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                # Fallback to current time if parsing fails
+                created_at_dt = datetime.now(UTC)
+            updated_at_dt = datetime.now(UTC)
+
             item_data = {
                 "Title": manifest.manifest_id,
                 "Version": manifest.version,
-                "CreatedAt": manifest.created_at,
-                "UpdatedAt": datetime.now(UTC).isoformat(),
+                "CreatedAt": created_at_dt,
+                "UpdatedAt": updated_at_dt,
                 "SourceType": manifest.source_type,
                 "SourceUrl": manifest.source_url or "",
                 "SourcePath": manifest.source_path or "",
@@ -357,21 +365,20 @@ class SharePointStorageBackend:
         # Only save manifest if at least one artifact was saved successfully
         if saved_count > 0:
             await asyncio.to_thread(_save_manifest)
+            # Log partial failures as warning, but don't raise (partial success)
+            if failed_artifacts:
+                sample = failed_artifacts[:5]
+                suffix = "..." if len(failed_artifacts) > 5 else ""
+                logger.warning(
+                    f"Collection {manifest.manifest_id} saved with {len(failed_artifacts)} "
+                    f"failed artifacts: {sample}{suffix}"
+                )
         else:
-            logger.error(
+            # All artifacts failed - raise error
+            raise RuntimeError(
                 f"Collection {manifest.manifest_id}: All {len(manifest.artifacts)} "
-                "artifacts failed to save, skipping manifest creation"
+                "artifacts failed to save"
             )
-
-        if failed_artifacts:
-            sample = failed_artifacts[:5]
-            suffix = "..." if len(failed_artifacts) > 5 else ""
-            msg = (
-                f"Collection {manifest.manifest_id} saved with {len(failed_artifacts)} "
-                f"failed artifacts: {sample}{suffix}"
-            )
-            logger.warning(msg)
-            raise RuntimeError(msg)
 
     async def load_collection(self, manifest_id: str) -> CollectionManifest | None:
         """Load collection manifest from SharePoint."""
@@ -428,11 +435,19 @@ class SharePointStorageBackend:
             index_padding=index_padding,
         )
 
+        # Handle datetime values from SharePoint - convert to ISO strings if needed
+        def _to_iso_string(val: Any) -> str:
+            if val is None:
+                return ""
+            if isinstance(val, datetime):
+                return val.isoformat()
+            return str(val)
+
         return CollectionManifest(
             manifest_id=collection_data.get("Title", ""),
             version=collection_data.get("Version", "1.0"),
-            created_at=collection_data.get("CreatedAt", ""),
-            updated_at=collection_data.get("UpdatedAt", ""),
+            created_at=_to_iso_string(collection_data.get("CreatedAt")),
+            updated_at=_to_iso_string(collection_data.get("UpdatedAt")),
             source_type=collection_data.get("SourceType", "local"),
             source_url=collection_data.get("SourceUrl") or None,
             source_path=collection_data.get("SourcePath") or None,

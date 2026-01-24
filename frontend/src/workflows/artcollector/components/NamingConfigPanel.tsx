@@ -14,6 +14,7 @@ import { Stack, Text, Inline, Button } from '@autoart/ui';
 import { ChevronDown, ChevronRight, Settings } from 'lucide-react';
 import clsx from 'clsx';
 
+import { DEFAULT_NAMING_CONFIG } from '../types';
 import type { NamingConfig, NumberingMode, CollisionMode } from '../types';
 
 interface NamingConfigPanelProps {
@@ -144,7 +145,8 @@ export function NamingConfigPanel({
                   value={config.indexStart}
                   onChange={(e) => {
                     const parsed = parseInt(e.target.value);
-                    onChange({ indexStart: Number.isNaN(parsed) ? 0 : parsed });
+                    // Clamp to minimum of 0 to prevent negative indices; default to 0 when empty/invalid
+                    onChange({ indexStart: Number.isNaN(parsed) ? 0 : Math.max(0, parsed) });
                   }}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -234,18 +236,7 @@ export function NamingConfigPanel({
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() =>
-                  onChange({
-                    template: '{index}_{hash}',
-                    indexStart: 1,
-                    indexPadding: 3,
-                    prefix: '',
-                    suffix: '',
-                    dateFormat: '%Y%m%d',
-                    numberingMode: 'sequential',
-                    collisionMode: 'suffix',
-                  })
-                }
+                onClick={() => onChange(DEFAULT_NAMING_CONFIG)}
               >
                 Reset to Defaults
               </Button>

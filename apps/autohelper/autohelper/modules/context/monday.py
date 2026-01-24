@@ -93,12 +93,21 @@ class MondayClient:
             logger.error(f"Monday API request failed: {e}")
             raise MondayClientError(f"Request failed: {e}") from e
 
-        if response.status_code != 200:
+        if not response.ok:
+            # Truncate response body to prevent leaking sensitive details in exceptions
+            body_preview = response.text[:200] + "..." if len(response.text) > 200 else response.text
             raise MondayClientError(
-                f"HTTP {response.status_code}: {response.text}", status_code=response.status_code
+                f"HTTP {response.status_code}: {body_preview}", status_code=response.status_code
             )
 
-        result = response.json()
+        try:
+            result = response.json()
+        except ValueError as e:
+            # JSON decode error - response wasn't valid JSON (e.g., HTML error page)
+            body_preview = response.text[:200] + "..." if len(response.text) > 200 else response.text
+            raise MondayClientError(
+                f"Invalid JSON response: {body_preview}", status_code=response.status_code
+            ) from e
 
         if "errors" in result:
             errors = result["errors"]

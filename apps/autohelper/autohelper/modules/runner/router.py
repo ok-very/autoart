@@ -2,6 +2,7 @@
 Runner module API router.
 """
 
+import asyncio
 import json
 from typing import Any
 
@@ -271,26 +272,40 @@ async def compute_file_hash(
 
     from autohelper.config.settings import get_settings
 
-    path = Path(file_path).resolve()
+    # Offload blocking Path operations to threadpool
+    def _validate_path() -> tuple[Path, str | None]:
+        """Validate path and return (resolved_path, error_message)."""
+        path = Path(file_path).resolve()
 
-    # Security: validate path is within allowed roots
-    settings = get_settings()
-    allowed_roots = settings.get_allowed_roots()
-    is_allowed = any(path == root or root in path.parents for root in allowed_roots)
-    if not is_allowed:
+        settings = get_settings()
+        allowed_roots = settings.get_allowed_roots()
+        is_allowed = any(path == root or path.is_relative_to(root) for root in allowed_roots)
+        if not is_allowed:
+            return path, "forbidden"
+
+        if not path.exists():
+            return path, "not_found"
+
+        if not path.is_file():
+            return path, "not_file"
+
+        return path, None
+
+    path, error = await asyncio.to_thread(_validate_path)
+
+    if error == "forbidden":
         raise HTTPException(
             status_code=403,
             detail="Access denied: path is not within allowed directories",
         )
-
-    if not path.exists():
+    elif error == "not_found":
         raise HTTPException(status_code=404, detail=f"File not found: {file_path}")
-
-    if not path.is_file():
+    elif error == "not_file":
         raise HTTPException(status_code=400, detail=f"Path is not a file: {file_path}")
 
     service = get_lookup_service()
-    content_hash = await service.compute_file_hash(file_path)
+    # Use resolved path to ensure consistent handling
+    content_hash = await service.compute_file_hash(str(path))
 
     return {
         "file_path": str(path),

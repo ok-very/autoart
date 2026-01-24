@@ -79,6 +79,7 @@ class FileRepository:
                 ),
             )
 
+        db.commit()
         return file_id
 
     def upsert_batch(self, files: list[dict]) -> int:
@@ -188,13 +189,22 @@ class FileRepository:
         row = cursor.fetchone()
         return dict(row) if row else {}
 
-    def mark_missing(self, root_id: str, seen_before: str) -> int:
+    def purge_missing(self, root_id: str, seen_before: str) -> int:
         """
-        Mark files not seen since timestamp as missing.
-        Returns count of files marked.
+        Permanently delete files not seen since timestamp.
+
+        This is a destructive operation - files are hard-deleted from the database.
+        Use with caution. For soft-delete behavior, consider adding a 'deleted_at'
+        column in a future migration.
+
+        Args:
+            root_id: The root to purge files from
+            seen_before: ISO timestamp - files with last_seen_at before this are deleted
+
+        Returns:
+            Count of files deleted
         """
         db = get_db()
-        # For now, just delete unseen files (can add soft delete later)
         cursor = db.execute(
             "DELETE FROM files WHERE root_id = ? AND last_seen_at < ?",
             (root_id, seen_before),

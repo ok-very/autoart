@@ -29,6 +29,7 @@ from autohelper.shared.ids import generate_request_id
 from autohelper.shared.logging import (
     clear_request_context,
     get_logger,
+    get_request_context,
     set_request_context,
     setup_logging,
 )
@@ -125,15 +126,15 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     @app.exception_handler(AutoHelperError)
     async def autohelper_error_handler(request: Request, exc: AutoHelperError) -> JSONResponse:
         """Handle AutoHelperError with consistent JSON response."""
-        ctx = getattr(request.state, "context", None)
+        ctx = get_request_context()
 
         return JSONResponse(
             status_code=exc.http_status,
             content={
                 "error": exc.to_dict(),
-                "request_id": getattr(ctx, "request_id", None) if ctx else None,
-                "work_item_id": getattr(ctx, "work_item_id", None) if ctx else None,
-                "context_id": getattr(ctx, "context_id", None) if ctx else None,
+                "request_id": ctx.request_id if ctx else None,
+                "work_item_id": ctx.work_item_id if ctx else None,
+                "context_id": ctx.context_id if ctx else None,
             },
         )
 

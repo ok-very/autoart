@@ -890,10 +890,17 @@ def get_tray_class():
     return AutoHelperTray
 
 
-def launch_config_popup():
-    """Launch the PySide6 configuration popup with System Tray."""
+def launch_config_popup() -> int:
+    """
+    Launch the PySide6 configuration popup with System Tray.
+
+    Returns:
+        Exit code from the Qt application (0 for success)
+    """
     if not _ensure_qt_imported():
-        return
+        return 1
+
+    from PySide6.QtCore import QThread
 
     # Check if we're creating a new app or reusing existing
     existing_app = QApplication.instance()
@@ -922,11 +929,15 @@ def launch_config_popup():
     window.align_to_tray()
     window.show()
 
-    # Run event loop - wrap in sys.exit only if we created the app
-    if not existing_app:
-        sys.exit(app.exec())
-    else:
-        app.exec()
+    # Only start event loop if we created the app and no loop is running
+    # Calling exec() on an existing running app causes nested event loop issues
+    if existing_app and QThread.currentThread() == app.thread():
+        # Already running in an existing app's event loop - don't call exec()
+        # Just return 0; the existing event loop will handle events
+        return 0
+
+    # Run event loop and return exit code (let caller handle sys.exit if needed)
+    return app.exec()
 
 
 # --- WINDOWS TRAY GEOMETRY & ALIGNMENT ---
@@ -1071,80 +1082,88 @@ def get_tray_location_win32(tooltip_text):
 
             try:
                 for i in range(count):
-                    # Buffer for TBBUTTON
-                    lp_btn = ctypes.windll.kernel32.VirtualAllocEx(
-                        h_process,
-                        None,
-                        ctypes.sizeof(TBBUTTON),
-                        win32con.MEM_COMMIT,
-                        win32con.PAGE_READWRITE,
-                    )
+                    # Track allocations for guaranteed cleanup
+                    lp_btn = None
+                    lp_txt = None
+                    lp_rect = None
+                    try:
+                        # Buffer for TBBUTTON
+                        lp_btn = ctypes.windll.kernel32.VirtualAllocEx(
+                            h_process,
+                            None,
+                            ctypes.sizeof(TBBUTTON),
+                            win32con.MEM_COMMIT,
+                            win32con.PAGE_READWRITE,
+                        )
+                        if not lp_btn:
+                            continue
 
-                    # Get Button
-                    win32gui.SendMessage(hwnd_tb, 0x0417, i, lp_btn)  # TB_GETBUTTON
+                        # Get Button
+                        win32gui.SendMessage(hwnd_tb, 0x0417, i, lp_btn)  # TB_GETBUTTON
 
-                    button = TBBUTTON()
-                    read_process_memory(
-                        h_process, lp_btn, ctypes.byref(button), ctypes.sizeof(button)
-                    )
-
-                    # Get Text
-                    txt_len = win32gui.SendMessage(
-                        hwnd_tb, 0x044B, button.idCommand, 0
-                    )  # TB_GETBUTTONTEXTW length
-                    if txt_len > 0:
-                        # Allocate for text
-                        # Note: txt_len is chars, need bytes (wchar = 2 bytes) + null
-                        buf_size = (txt_len + 1) * 2
-                        lp_txt = ctypes.windll.kernel32.VirtualAllocEx(
-                            h_process, None, buf_size, win32con.MEM_COMMIT, win32con.PAGE_READWRITE
+                        button = TBBUTTON()
+                        read_process_memory(
+                            h_process, lp_btn, ctypes.byref(button), ctypes.sizeof(button)
                         )
 
-                        win32gui.SendMessage(hwnd_tb, 0x044B, button.idCommand, lp_txt)
-
-                        local_txt = ctypes.create_unicode_buffer(txt_len + 1)
-                        read_process_memory(h_process, lp_txt, ctypes.byref(local_txt), buf_size)
-
-                        text = local_txt.value
-                        if tooltip_text in text:
-                            # Found match! Get Rect.
-                            lp_rect = ctypes.windll.kernel32.VirtualAllocEx(
-                                h_process,
-                                None,
-                                ctypes.sizeof(wintypes.RECT),
-                                win32con.MEM_COMMIT,
-                                win32con.PAGE_READWRITE,
+                        # Get Text
+                        txt_len = win32gui.SendMessage(
+                            hwnd_tb, 0x044B, button.idCommand, 0
+                        )  # TB_GETBUTTONTEXTW length
+                        if txt_len > 0:
+                            # Allocate for text
+                            # Note: txt_len is chars, need bytes (wchar = 2 bytes) + null
+                            buf_size = (txt_len + 1) * 2
+                            lp_txt = ctypes.windll.kernel32.VirtualAllocEx(
+                                h_process, None, buf_size, win32con.MEM_COMMIT, win32con.PAGE_READWRITE
                             )
-                            win32gui.SendMessage(hwnd_tb, 0x041D, i, lp_rect)  # TB_GETITEMRECT
+                            if not lp_txt:
+                                continue
 
-                            rect = wintypes.RECT()
-                            read_process_memory(
-                                h_process, lp_rect, ctypes.byref(rect), ctypes.sizeof(rect)
-                            )
+                            win32gui.SendMessage(hwnd_tb, 0x044B, button.idCommand, lp_txt)
 
-                            # Map to Screen
-                            p1 = win32gui.ClientToScreen(hwnd_tb, (rect.left, rect.top))
-                            p2 = win32gui.ClientToScreen(hwnd_tb, (rect.right, rect.bottom))
+                            local_txt = ctypes.create_unicode_buffer(txt_len + 1)
+                            read_process_memory(h_process, lp_txt, ctypes.byref(local_txt), buf_size)
 
-                            ctypes.windll.kernel32.VirtualFreeEx(
-                                h_process, lp_btn, 0, win32con.MEM_RELEASE
-                            )
-                            ctypes.windll.kernel32.VirtualFreeEx(
-                                h_process, lp_txt, 0, win32con.MEM_RELEASE
-                            )
+                            text = local_txt.value
+                            if tooltip_text in text:
+                                # Found match! Get Rect.
+                                lp_rect = ctypes.windll.kernel32.VirtualAllocEx(
+                                    h_process,
+                                    None,
+                                    ctypes.sizeof(wintypes.RECT),
+                                    win32con.MEM_COMMIT,
+                                    win32con.PAGE_READWRITE,
+                                )
+                                if lp_rect:
+                                    win32gui.SendMessage(hwnd_tb, 0x041D, i, lp_rect)  # TB_GETITEMRECT
+
+                                    rect = wintypes.RECT()
+                                    read_process_memory(
+                                        h_process, lp_rect, ctypes.byref(rect), ctypes.sizeof(rect)
+                                    )
+
+                                    # Map to Screen
+                                    p1 = win32gui.ClientToScreen(hwnd_tb, (rect.left, rect.top))
+                                    p2 = win32gui.ClientToScreen(hwnd_tb, (rect.right, rect.bottom))
+
+                                    center_x = (p1[0] + p2[0]) // 2
+                                    top_y = p1[1]  # Top of icon
+                                    return center_x, top_y
+                    finally:
+                        # Guaranteed cleanup of all allocations
+                        if lp_rect:
                             ctypes.windll.kernel32.VirtualFreeEx(
                                 h_process, lp_rect, 0, win32con.MEM_RELEASE
                             )
-
-                            center_x = (p1[0] + p2[0]) // 2
-                            top_y = p1[1]  # Top of icon
-                            return center_x, top_y
-
-                        ctypes.windll.kernel32.VirtualFreeEx(
-                            h_process, lp_txt, 0, win32con.MEM_RELEASE
-                        )
-
-                    ctypes.windll.kernel32.VirtualFreeEx(h_process, lp_btn, 0, win32con.MEM_RELEASE)
+                        if lp_txt:
+                            ctypes.windll.kernel32.VirtualFreeEx(
+                                h_process, lp_txt, 0, win32con.MEM_RELEASE
+                            )
+                        if lp_btn:
+                            ctypes.windll.kernel32.VirtualFreeEx(
+                                h_process, lp_btn, 0, win32con.MEM_RELEASE
+                            )
 
             finally:
                 ctypes.windll.kernel32.CloseHandle(h_process)

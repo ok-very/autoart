@@ -26,12 +26,21 @@ async function generate() {
 
     // 3. Process each artist
     let count = 0;
+    const usedNames = new Map(); // Track name usage counts
     for (const artist of artists) {
         const html = generateArtistHtml(artist, cssContent, jsContent);
 
-        const safeName = (artist.name || "Unknown")
+        let safeName = (artist.name || "Unknown")
             .replace(/[^a-z0-9\s-_]/gi, '')
-            .trim();
+            .trim() || "Unknown";
+
+        // Handle collisions by appending index
+        const baseKey = safeName.toLowerCase();
+        const useCount = usedNames.get(baseKey) || 0;
+        usedNames.set(baseKey, useCount + 1);
+        if (useCount > 0) {
+            safeName = `${safeName}_${useCount}`;
+        }
 
         const outPath = path.join(OUTPUT_DIR, `${safeName}.html`);
         await fs.writeFile(outPath, html);

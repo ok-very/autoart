@@ -299,26 +299,37 @@ class MailService:
 
     def _process_email_item(self, item: Any) -> bool:
         """Process a single email item."""
+        import hashlib
+
         try:
             subject = getattr(item, "Subject", "(no subject)")
+            sender = getattr(item, "SenderEmailAddress", "")
 
-            # 1. Check if we already processed it (DB check)
-            entry_id = getattr(item, "EntryID", "")
-            if self._is_processed(entry_id):
-                return False
-
-            # 2. Extract Data
-            dev, proj, proj_id = extract_project_info(subject)
-
-            # 3. Save to Disk (OneDrive)
-            output_base = self.settings.mail_output_path
-
-            received_time = item.ReceivedTime
-            if hasattr(received_time, "timestamp"):
+            # Get received time first (needed for fallback entry_id generation)
+            # Use getattr to safely handle non-mail items that lack ReceivedTime
+            received_time = getattr(item, "ReceivedTime", None)
+            if received_time is not None and hasattr(received_time, "timestamp"):
                 received_dt = datetime.fromtimestamp(received_time.timestamp())
             else:
                 # Use sentinel date for items without timestamps to ensure deterministic entry_id
                 received_dt = datetime(1970, 1, 1)
+
+            # 1. Get or generate entry_id BEFORE duplicate check
+            entry_id = getattr(item, "EntryID", "")
+            if not entry_id:
+                # Generate deterministic fallback ID from content
+                content_key = f"{sender}|{subject}|{received_dt.isoformat()}"
+                entry_id = f"gen_{hashlib.sha256(content_key.encode()).hexdigest()[:16]}"
+
+            # 2. Check if we already processed it (DB check)
+            if self._is_processed(entry_id):
+                return False
+
+            # 3. Extract Data
+            dev, proj, proj_id = extract_project_info(subject)
+
+            # 4. Save to Disk (OneDrive)
+            output_base = self.settings.mail_output_path
 
             date_str = received_dt.strftime("%Y-%m-%d")
             safe_sub = make_safe_filename(clean_subject(subject))
@@ -338,12 +349,13 @@ class MailService:
             with open(email_folder / "body.txt", "w", encoding="utf-8") as f:
                 f.write(body)
 
-            # Attachments
-            if item.Attachments.Count > 0:
+            # Attachments - guard against items without Attachments collection
+            attachments = getattr(item, "Attachments", None)
+            if attachments is not None and attachments.Count > 0:
                 att_folder = email_folder / "attachments"
                 att_folder.mkdir(exist_ok=True)
-                for i in range(item.Attachments.Count):
-                    att = item.Attachments.Item(i + 1)
+                for i in range(attachments.Count):
+                    att = attachments.Item(i + 1)
 
                     # Sanitize filename and handle collisions
                     raw_name = getattr(att, "FileName", "") or "attachment"
@@ -358,8 +370,8 @@ class MailService:
 
                     att.SaveAsFile(str(candidate))
 
-            # 4. Save to DB (Transient)
-            self._save_transient_record(item, proj_id, received_dt)
+            # 5. Save to DB (Transient)
+            self._save_transient_record(item, proj_id, received_dt, entry_id)
 
             return True
 
@@ -377,23 +389,15 @@ class MailService:
         row = db.execute("SELECT 1 FROM transient_emails WHERE id = ?", (entry_id,)).fetchone()
         return row is not None
 
-    def _save_transient_record(self, item: Any, project_id: str, received_dt: datetime) -> None:
+    def _save_transient_record(
+        self, item: Any, project_id: str, received_dt: datetime, entry_id: str
+    ) -> None:
         """Save email metadata to SQLite."""
-        import hashlib
-
         db = get_db()
 
-        entry_id = getattr(item, "EntryID", "")
         subject = getattr(item, "Subject", "")
         sender = getattr(item, "SenderEmailAddress", "")
         body = getattr(item, "Body", "")[:500]  # Preview
-
-        # Generate fallback ID if EntryID is missing/empty
-        if not entry_id:
-            # Create deterministic ID from content to enable duplicate detection
-            content_key = f"{sender}|{subject}|{received_dt.isoformat()}"
-            entry_id = f"gen_{hashlib.sha256(content_key.encode()).hexdigest()[:16]}"
-            logger.debug(f"Generated fallback entry_id for email: {subject[:50]}")
 
         metadata = {
             "importance": getattr(item, "Importance", 1),

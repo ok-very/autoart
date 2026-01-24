@@ -319,6 +319,31 @@ def generate_persistent_id(
     return str(uuid.uuid5(uuid.NAMESPACE_URL, id_input))
 
 
+def generate_persistent_id_from_hash(
+    content_hash: str,
+    source: str,
+    timestamp: str,
+) -> str:
+    """
+    Generate a stable, persistent artifact ID from pre-computed hash.
+
+    Use this when you already have the content hash (e.g., from streaming computation)
+    to avoid re-hashing the content.
+
+    Args:
+        content_hash: Pre-computed SHA-256 hash of content
+        source: Source URL or path
+        timestamp: ISO timestamp string
+
+    Returns:
+        UUID string (stable for same inputs)
+    """
+    normalized_source = _normalize_source(source)
+    normalized_timestamp = _normalize_timestamp(timestamp)
+    id_input = f"{content_hash}:{normalized_source}:{normalized_timestamp}"
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, id_input))
+
+
 def compute_content_hash(content: bytes) -> str:
     """
     Compute SHA-256 hash of file content.
@@ -330,6 +355,27 @@ def compute_content_hash(content: bytes) -> str:
         Hex-encoded hash string
     """
     return hashlib.sha256(content).hexdigest()
+
+
+def compute_content_hash_streaming(file_path: Path, chunk_size: int = 65536) -> str:
+    """
+    Compute SHA-256 hash of file using streaming reads.
+
+    Memory-efficient for large files - reads in chunks rather than
+    loading entire file into memory.
+
+    Args:
+        file_path: Path to file to hash
+        chunk_size: Size of chunks to read (default 64KB)
+
+    Returns:
+        Hex-encoded hash string
+    """
+    sha256 = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(chunk_size), b""):
+            sha256.update(chunk)
+    return sha256.hexdigest()
 
 
 def compute_url_hash(url: str) -> str:
