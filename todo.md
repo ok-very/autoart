@@ -3,11 +3,11 @@ Priority: Import Wizard
 HIGHEST PRIORITY:
 - Step 6: successful import operation seems to run but populated records aren't visible anywhere
 -Step 5: nothing really seems to happen in this view: do we still need it?
--step 4: requires a call of workspace to show acutal layout of selection inspector and classification panel
-    - subtask: ClassificationPanel still not displaying properly - trace the file through git and find the version that contained complete functionality rather than placeholder code, reimpliment. Handled external-internal work, fact definitions, and so on.
+-step 4: requires a call of workspace to show actual layout of selection inspector and classification panel
+    - subtask: ClassificationPanel still not displaying properly - trace the file through git and find the version that contained complete functionality rather than placeholder code, reimplement. Handled external-internal work, fact definitions, and so on.
 -general maintenance: field definitions have changed and things like timeline can be aligned; "custom" field is nonspecific and should be avoided
 
--step 2: housekeeping item: when entries are heirarchically linked, it is helpful to know that the parent is "In Progress" with the pill-tag, but it is also helpful to tag it with the parent's name (same format)
+-step 2: housekeeping item: when entries are hierarchically linked, it is helpful to know that the parent is "In Progress" with the pill-tag, but it is also helpful to tag it with the parent's name (same format)
 
 -step 3: "Attention: Anthem - East 2nd: No Title column mapped. Items without titles are harder to identify." Warning appears with unclear context, probably stale.
     -general maintenance: field definitions have changed and things like timeline can be aligned; "custom" field is nonspecific and should be avoided. make sure mappings reflect actual project architecture.

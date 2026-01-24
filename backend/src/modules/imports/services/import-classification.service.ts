@@ -363,7 +363,7 @@ export async function saveResolutions(
             const classification = plan.classifications.find((c: ItemClassification) => c.itemTempId === res.itemTempId);
             if (classification) {
                 classification.resolution = {
-                    resolvedOutcome: res.resolvedOutcome as any,
+                    resolvedOutcome: res.resolvedOutcome,
                     resolvedFactKind: res.resolvedFactKind,
                     resolvedPayload: res.resolvedPayload,
                 };
@@ -380,11 +380,11 @@ export async function saveResolutions(
             );
         }
 
-        // Update the plan in database (within transaction)
+        // Update only the specific plan row that was locked (not all historical plans for this session)
         await trx
             .updateTable('import_plans' as any)
             .set({ plan_data: JSON.stringify(plan) })
-            .where('session_id', '=', sessionId)
+            .where('id', '=', planRow.id)
             .execute();
 
         // Recalculate session status
@@ -400,3 +400,4 @@ export async function saveResolutions(
         return plan;
     });
 }
+

@@ -133,12 +133,21 @@ export async function generatePlanFromConnector(
     // Use provided userId or fall back to session creator
     const effectiveUserId = userId ?? session.created_by ?? undefined;
 
-    // Parse connector config
-    const config = session.parser_config as {
+    // Parse connector config with defensive handling
+    // createConnectorSession stores config as JSON string, so parse if needed
+    let config: {
         boardId?: string;
         boardIds?: string[];
         includeSubitems?: boolean;
     };
+    try {
+        config = typeof session.parser_config === 'string'
+            ? JSON.parse(session.parser_config)
+            : (session.parser_config as typeof config) ?? {};
+    } catch (err) {
+        logger.error({ sessionId, error: err }, '[import-plan] Failed to parse connector parser_config JSON');
+        throw new Error(`Malformed connector config for session ${sessionId}`);
+    }
 
     const boardIds = config.boardIds ?? (config.boardId ? [config.boardId] : []);
     if (boardIds.length === 0) {

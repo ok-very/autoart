@@ -96,10 +96,12 @@ export async function createSession(params: {
 }
 
 /**
- * Create an import session from an external connector (Monday, Asana, etc.)
+ * Create an import session from the Monday connector.
+ * Note: Only Monday is currently supported by generatePlanFromConnector.
+ * Extend this type union when adding support for other connectors.
  */
 export async function createConnectorSession(params: {
-    connectorType: 'monday' | 'asana' | 'notion';
+    connectorType: 'monday';
     connectorConfig: {
         boardId?: string;
         boardIds?: string[];

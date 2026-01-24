@@ -267,7 +267,20 @@ async function executePlanViaComposer(
         const result = await bulkCreateRecords(defId, bulkInput, userId);
 
         if (result.errors.length > 0) {
-            console.warn(`[imports.service] Bulk record creation had ${result.errors.length} errors`, result.errors);
+            logger.warn(
+                {
+                    module: 'imports.service',
+                    operation: 'bulkCreateRecords',
+                    definitionId: defId,
+                    userId,
+                    errorCount: result.errors.length,
+                    errors: result.errors.map(e => ({
+                        uniqueName: e.uniqueName,
+                        error: e.error,
+                    })),
+                },
+                'Bulk record creation encountered errors'
+            );
             // Propagate errors to response
             executionErrors.push(
                 ...result.errors.map(e => `Record "${e.uniqueName}": ${e.error}`)
@@ -313,7 +326,15 @@ async function executePlanViaComposer(
                     });
                 }
             } else {
-                console.error(`[imports.service] Failed to match created record for item "${item.title}"`);
+                logger.error(
+                    {
+                        module: 'imports.service',
+                        operation: 'bulkCreateRecords',
+                        itemTitle: item.title,
+                        tempId: item.tempId,
+                    },
+                    'Failed to match created record for item'
+                );
             }
         }
     }
@@ -465,7 +486,17 @@ async function executePlanViaComposer(
         // Templates without context can still be created (they're hierarchy-agnostic)
         // For non-templates, context is required
         if (!contextId && item.entityType !== 'template') {
-            console.warn(`[imports.service] Skipping item without context: ${item.tempId} (${item.title}) - entityType: ${item.entityType}, parentTempId: ${item.parentTempId}`);
+            logger.warn(
+                {
+                    module: 'imports.service',
+                    operation: 'executePlanViaComposer',
+                    tempId: item.tempId,
+                    itemTitle: item.title,
+                    entityType: item.entityType,
+                    parentTempId: item.parentTempId,
+                },
+                'Skipping item without context'
+            );
             skippedNoContext++;
             continue;
         }
