@@ -104,6 +104,67 @@ export const FIELDS_VIEW_MODE_LABELS: Record<FieldsViewMode, string> = {
 };
 
 // ============================================================================
+// WORKSPACE THEME SCHEMAS
+// ============================================================================
+
+/**
+ * Workspace theme density - controls spacing and sizing
+ */
+export const WorkspaceThemeDensitySchema = z.enum(['compact', 'default', 'comfortable']);
+export type WorkspaceThemeDensity = z.infer<typeof WorkspaceThemeDensitySchema>;
+
+/**
+ * Workspace theme variant - visual style category
+ */
+export const WorkspaceThemeVariantSchema = z.enum(['solid', 'floating', 'minimal', 'glass']);
+export type WorkspaceThemeVariant = z.infer<typeof WorkspaceThemeVariantSchema>;
+
+/**
+ * Built-in workspace theme IDs
+ */
+export const WorkspaceThemeIdSchema = z.enum(['default', 'compact', 'floating', 'minimal']);
+export type WorkspaceThemeId = z.infer<typeof WorkspaceThemeIdSchema>;
+
+/**
+ * Theme density labels for UI display
+ */
+export const WORKSPACE_THEME_DENSITY_LABELS: Record<WorkspaceThemeDensity, string> = {
+  compact: 'Compact',
+  default: 'Default',
+  comfortable: 'Comfortable',
+};
+
+/**
+ * Theme variant labels for UI display
+ */
+export const WORKSPACE_THEME_VARIANT_LABELS: Record<WorkspaceThemeVariant, string> = {
+  solid: 'Solid',
+  floating: 'Floating',
+  minimal: 'Minimal',
+  glass: 'Glass',
+};
+
+/**
+ * Theme labels for UI display
+ */
+export const WORKSPACE_THEME_LABELS: Record<WorkspaceThemeId, string> = {
+  default: 'Default',
+  compact: 'Compact',
+  floating: 'Floating',
+  minimal: 'Minimal',
+};
+
+/**
+ * Theme descriptions for UI display
+ */
+export const WORKSPACE_THEME_DESCRIPTIONS: Record<WorkspaceThemeId, string> = {
+  default: 'Clean, professional workspace layout',
+  compact: 'Dense layout with smaller tabs and reduced spacing',
+  floating: 'Elevated panels with shadows and rounded corners',
+  minimal: 'Hidden chrome, maximum content area',
+};
+
+// ============================================================================
 // STAGE KIND (CANONICAL WORKFLOW POSITIONS)
 // ============================================================================
 

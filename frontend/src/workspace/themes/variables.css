@@ -1,0 +1,160 @@
+/**
+ * Workspace Theme CSS Variables Contract
+ *
+ * All themes MUST provide values for these variables.
+ * Core components consume these - not hardcoded colors.
+ *
+ * Usage: Theme CSS sets these on [data-workspace-theme="theme-id"]
+ */
+
+/* ============================================================================
+   DEFAULT VALUES (light theme baseline)
+   ============================================================================ */
+
+:root {
+  /* -------------------------------------------------------------------------
+     Workspace Container
+     ------------------------------------------------------------------------- */
+  --ws-bg: #f8fafc;
+  --ws-fg: #1e293b;
+  --ws-muted-fg: #64748b;
+  --ws-accent: #3b82f6;
+  --ws-accent-fg: #ffffff;
+
+  /* -------------------------------------------------------------------------
+     Group / Panel Frame
+     ------------------------------------------------------------------------- */
+  --ws-group-bg: #ffffff;
+  --ws-group-border: #e2e8f0;
+  --ws-group-radius: 0px;
+  --ws-group-shadow: none;
+  --ws-group-padding: 0px;
+
+  /* Active group highlight */
+  --ws-group-active-ring: 0px;
+  --ws-group-active-ring-color: var(--ws-accent);
+
+  /* -------------------------------------------------------------------------
+     Tab Strip
+     ------------------------------------------------------------------------- */
+  --ws-tabstrip-bg: #f1f5f9;
+  --ws-tabstrip-border: #e2e8f0;
+  --ws-tabstrip-height: 36px;
+
+  /* -------------------------------------------------------------------------
+     Individual Tabs
+     ------------------------------------------------------------------------- */
+  --ws-tab-height: 32px;
+  --ws-tab-padding-x: 12px;
+  --ws-tab-padding-y: 6px;
+  --ws-tab-gap: 2px;
+  --ws-tab-radius: 0px;
+
+  /* Tab colors */
+  --ws-tab-fg: #64748b;
+  --ws-tab-fg-hover: #475569;
+  --ws-tab-fg-active: #1e293b;
+
+  --ws-tab-bg: transparent;
+  --ws-tab-bg-hover: #e2e8f0;
+  --ws-tab-bg-active: #ffffff;
+
+  --ws-tab-border: transparent;
+  --ws-tab-border-active: var(--ws-accent);
+
+  /* Tab indicator (underline/pill) */
+  --ws-tab-indicator-height: 2px;
+  --ws-tab-indicator-color: var(--ws-accent);
+  --ws-tab-indicator-radius: 1px;
+
+  /* Tab close button */
+  --ws-tab-close-size: 16px;
+  --ws-tab-close-hover-bg: #cbd5e1;
+  --ws-tab-close-hover-fg: #1e293b;
+
+  /* Tab icon */
+  --ws-tab-icon-size: 14px;
+  --ws-tab-icon-gap: 6px;
+
+  /* -------------------------------------------------------------------------
+     Panel Content Area
+     ------------------------------------------------------------------------- */
+  --ws-panel-bg: #ffffff;
+  --ws-panel-fg: #1e293b;
+  --ws-panel-padding: 0px;
+  --ws-panel-border: #e2e8f0;
+
+  /* Scrollbar (where applicable) */
+  --ws-scrollbar-width: 8px;
+  --ws-scrollbar-track: #f1f5f9;
+  --ws-scrollbar-thumb: #cbd5e1;
+  --ws-scrollbar-thumb-hover: #94a3b8;
+
+  /* -------------------------------------------------------------------------
+     Splitters / Sashes (resize handles)
+     ------------------------------------------------------------------------- */
+  --ws-sash-size: 4px;
+  --ws-sash-hit-size: 8px;
+  --ws-sash-bg: transparent;
+  --ws-sash-bg-hover: var(--ws-accent);
+  --ws-sash-bg-active: var(--ws-accent);
+  --ws-sash-opacity-hover: 0.5;
+  --ws-sash-opacity-active: 0.8;
+
+  /* -------------------------------------------------------------------------
+     Drag & Drop
+     ------------------------------------------------------------------------- */
+  --ws-drop-target-bg: rgba(59, 130, 246, 0.1);
+  --ws-drop-target-border: var(--ws-accent);
+  --ws-drop-target-radius: 4px;
+
+  --ws-drag-ghost-opacity: 0.8;
+  --ws-drag-ghost-scale: 0.95;
+
+  /* -------------------------------------------------------------------------
+     Motion / Animation
+     ------------------------------------------------------------------------- */
+  --ws-motion-duration-fast: 100ms;
+  --ws-motion-duration: 150ms;
+  --ws-motion-duration-slow: 300ms;
+  --ws-motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ws-motion-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* -------------------------------------------------------------------------
+     Focus States
+     ------------------------------------------------------------------------- */
+  --ws-focus-ring-width: 2px;
+  --ws-focus-ring-color: var(--ws-accent);
+  --ws-focus-ring-offset: 2px;
+
+  /* -------------------------------------------------------------------------
+     Empty State / Watermark
+     ------------------------------------------------------------------------- */
+  --ws-watermark-bg: #f8fafc;
+  --ws-watermark-fg: #94a3b8;
+  --ws-watermark-icon-size: 48px;
+}
+
+/* ============================================================================
+   STATE ATTRIBUTES (applied by behavior modules)
+   ============================================================================ */
+
+/* Active panel/group */
+[data-ws-active="true"] {
+  /* Themes can style active state */
+}
+
+/* Dragging state */
+[data-ws-dragging="true"] {
+  cursor: grabbing;
+}
+
+/* Resizing state */
+[data-ws-resizing="true"] {
+  /* Themes can add visual feedback */
+}
+
+/* Panel closing (for exit animations) */
+[data-ws-closing="true"] {
+  pointer-events: none;
+}

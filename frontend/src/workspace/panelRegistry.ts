@@ -23,6 +23,7 @@ import {
     Hammer,
     Wand2,
     Mail,
+    Image,
     type LucideIcon,
 } from 'lucide-react';
 
@@ -37,7 +38,7 @@ import {
 export type CorePanelId = 'center-workspace';
 export type ToolPanelId = 'selection-inspector' | 'classification' | 'search-results' | 'mail-panel';
 export type RegistryPanelId = 'records-list' | 'fields-list' | 'actions-list' | 'events-list';
-export type WorkbenchPanelId = 'import-workbench' | 'export-workbench' | 'composer-workbench' | 'intake-workbench';
+export type WorkbenchPanelId = 'import-workbench' | 'export-workbench' | 'composer-workbench' | 'intake-workbench' | 'artcollector-workbench';
 export type PanelId = CorePanelId | ToolPanelId | RegistryPanelId | WorkbenchPanelId;
 
 // Permanent panels cannot be closed by user
@@ -237,6 +238,15 @@ export const PANEL_DEFINITIONS: Record<PanelId, PanelDefinition> = {
         permanent: false,
         defaultPlacement: { area: 'center' },
         shouldShow: () => false,
+        canActOn: () => true,
+    },
+    'artcollector-workbench': {
+        id: 'artcollector-workbench',
+        title: 'Art Collector',
+        icon: Image,
+        permanent: false,
+        defaultPlacement: { area: 'center' },
+        shouldShow: () => false, // On-demand
         canActOn: () => true,
     },
 };

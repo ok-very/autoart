@@ -32,7 +32,7 @@ import {
 
 import { Header } from './Header';
 import { OverlayRegistry } from '../registry/OverlayRegistry';
-import { useWorkspaceStore, useOpenPanelIds, useLayout } from '../../stores/workspaceStore';
+import { useWorkspaceStore, useOpenPanelIds, useLayout, usePendingPanelPositions } from '../../stores/workspaceStore';
 import { useVisiblePanels } from '../../stores/contextStore';
 import { useUIStore } from '../../stores/uiStore';
 import {
@@ -40,6 +40,13 @@ import {
   isPermanentPanel,
   type PanelId,
 } from '../../workspace/panelRegistry';
+import {
+  useWorkspaceTheme,
+  useThemeBehavior,
+  useThemeCSS,
+  useThemeRootAttributes,
+  ThemedTab,
+} from '../../workspace/themes';
 
 // Import all panel components
 import { CentralAreaAdapter } from '../workspace/CentralAreaAdapter';
@@ -55,6 +62,7 @@ import { ExportPanel } from '../panels/ExportPanel';
 import { ComposerPanel } from '../panels/ComposerPanel';
 import { MailPanel } from '../panels/MailPanel';
 import { IntakePanel } from '../panels/IntakePanel';
+import { ArtCollectorPanel } from '../panels/ArtCollectorPanel';
 
 // ============================================================================
 // PANEL SPAWN HANDLE
@@ -233,6 +241,7 @@ const COMPONENTS: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   'composer-workbench': ComposerPanel,
   'mail-panel': MailPanel,
   'intake-workbench': IntakePanel,
+  'artcollector-workbench': ArtCollectorPanel,
 };
 
 // ============================================================================
@@ -332,8 +341,9 @@ function IconTab(props: IDockviewPanelHeaderProps) {
   );
 }
 
-const TAB_COMPONENTS = {
+const DEFAULT_TAB_COMPONENTS = {
   'icon-tab': IconTab,
+  'themed-tab': ThemedTab,
 };
 
 // ============================================================================
@@ -346,14 +356,34 @@ export function MainLayout() {
   const openPanelIds = useOpenPanelIds();
   const savedLayout = useLayout();
   const visiblePanels = useVisiblePanels();
-  const { openPanel, saveLayout, setDockviewApi } = useWorkspaceStore();
+  const pendingPanelPositions = usePendingPanelPositions();
+  const { openPanel, saveLayout, setDockviewApi, clearPendingPositions } = useWorkspaceStore();
+
+  // Theme integration
+  const theme = useWorkspaceTheme();
+  const themeRootAttributes = useThemeRootAttributes();
+  useThemeCSS();
+  useThemeBehavior(apiRef.current);
+
+  // Build tab components - theme can override
+  const tabComponents = theme?.components?.tabComponent
+    ? { ...DEFAULT_TAB_COMPONENTS, 'icon-tab': theme.components.tabComponent }
+    : DEFAULT_TAB_COMPONENTS;
+
+  // Theme can provide custom watermark
+  const watermark = theme?.components?.watermarkComponent || WatermarkComponent;
 
   // Build default layout - single center workspace panel
   const buildDefaultLayout = useCallback((api: DockviewApi) => {
+    const def = PANEL_DEFINITIONS['center-workspace'];
+    if (!def) {
+      console.error('center-workspace panel definition missing');
+      return;
+    }
     api.addPanel({
       id: 'center-workspace',
       component: 'center-workspace',
-      title: PANEL_DEFINITIONS['center-workspace'].title,
+      title: def.title,
       tabComponent: 'icon-tab',
     });
   }, []);
@@ -387,20 +417,55 @@ export function MainLayout() {
     });
   }, [savedLayout, buildDefaultLayout, saveLayout, setDockviewApi]);
 
-  // Sync panels when openPanelIds changes - add as tabs by default
+  // Sync panels when openPanelIds changes
+  // Workspace presets provide position hints; single panel opens default to tabs
   useEffect(() => {
     const api = apiRef.current;
     if (!api) return;
 
+    const consumedPositions: PanelId[] = [];
+
     openPanelIds.forEach((id) => {
       if (!api.getPanel(id)) {
         const def = PANEL_DEFINITIONS[id];
-        if (!def) return;
+        if (!def) {
+          console.warn('[MainLayout] No panel definition found for:', id);
+          return;
+        }
 
         const centerPanel = api.getPanel('center-workspace');
-        if (!centerPanel) return;
+        if (!centerPanel) {
+          console.warn('[MainLayout] center-workspace panel not found; cannot add panel:', id);
+          return;
+        }
 
-        // Add new panels as tabs (within) - user can drag to split
+        // Check for position hint from workspace preset
+        const rawPendingPosition = pendingPanelPositions.get(id as PanelId);
+        // Normalize 'left' to 'right' - Dockview does not support explicit left splits
+        const pendingPosition =
+          rawPendingPosition === 'left' ? 'right' : rawPendingPosition;
+
+        if (rawPendingPosition === 'left') {
+          console.warn(
+            '[MainLayout] PanelPosition "left" is not supported by Dockview; using "right" instead for panel:',
+            id
+          );
+        }
+
+        // Track consumed positions for cleanup
+        if (pendingPosition) {
+          consumedPositions.push(id as PanelId);
+        }
+
+        // Map position hint to dockview direction
+        // 'center' and undefined both default to 'within' (tabs)
+        let direction: 'within' | 'right' | 'below' = 'within';
+        if (pendingPosition === 'right') {
+          direction = 'right';
+        } else if (pendingPosition === 'bottom') {
+          direction = 'below';
+        }
+
         api.addPanel({
           id,
           component: id,
@@ -408,11 +473,16 @@ export function MainLayout() {
           tabComponent: 'icon-tab',
           position: {
             referencePanel: centerPanel,
-            direction: 'within',
+            direction,
           },
         });
       }
     });
+
+    // Clear only consumed position hints, preserving hints for panels not yet opened
+    if (consumedPositions.length > 0) {
+      clearPendingPositions(consumedPositions);
+    }
 
     api.panels.forEach((panel) => {
       const panelId = panel.id as PanelId;
@@ -420,7 +490,7 @@ export function MainLayout() {
         panel.api.close();
       }
     });
-  }, [openPanelIds]);
+  }, [openPanelIds, pendingPanelPositions, clearPendingPositions]);
 
   // Auto-show/hide panels based on context
   useEffect(() => {
@@ -439,7 +509,7 @@ export function MainLayout() {
   }, [setDockviewApi]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" {...themeRootAttributes}>
       {/* Fixed Header */}
       <Header />
 
@@ -449,8 +519,8 @@ export function MainLayout() {
           className="dockview-theme-light"
           onReady={onReady}
           components={COMPONENTS}
-          tabComponents={TAB_COMPONENTS}
-          watermarkComponent={WatermarkComponent}
+          tabComponents={tabComponents}
+          watermarkComponent={watermark}
         />
       </div>
 

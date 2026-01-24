@@ -5,6 +5,7 @@ packages:
   - 'frontend'
   - 'apps/*'
   - 'packages/*'
+  - 'use-justified-layout'
 
 # Catalog: centralized dependency versions
 # Usage in package.json: "typescript": "catalog:"

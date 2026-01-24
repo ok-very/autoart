@@ -22,6 +22,14 @@ export {
     StageKindSchema,
     STAGE_KIND_LABELS,
     STAGE_KIND_ORDER,
+    // Workspace themes
+    WorkspaceThemeDensitySchema,
+    WorkspaceThemeVariantSchema,
+    WorkspaceThemeIdSchema,
+    WORKSPACE_THEME_DENSITY_LABELS,
+    WORKSPACE_THEME_VARIANT_LABELS,
+    WORKSPACE_THEME_LABELS,
+    WORKSPACE_THEME_DESCRIPTIONS,
     type NodeType,
     type RefMode,
     type ReferenceStatus,
@@ -31,6 +39,9 @@ export {
     type FieldsViewMode,
     type ViewMode,
     type StageKind,
+    type WorkspaceThemeDensity,
+    type WorkspaceThemeVariant,
+    type WorkspaceThemeId,
 } from './enums.js';
 
 // ==================== FIELDS ====================

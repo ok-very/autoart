@@ -15,6 +15,7 @@ import {
     CheckSquare,
     Truck,
     Folder,
+    Image,
 } from 'lucide-react';
 import type { WorkspacePreset } from '../types/workspace';
 
@@ -28,6 +29,18 @@ import type { WorkspacePreset } from '../types/workspace';
  * 5. Deliver (project) - Export workbench for final output
  */
 export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
+    {
+        id: 'collect',
+        label: '0. Collect',
+        icon: Image,
+        color: 'cyan',
+        scope: 'global',
+        isBuiltIn: true,
+        panels: [
+            { panelId: 'artcollector-workbench', position: 'center' },
+            { panelId: 'selection-inspector', position: 'right' },
+        ],
+    },
     {
         id: 'intake',
         label: '1. Intake',
