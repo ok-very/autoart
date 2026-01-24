@@ -8,6 +8,8 @@ Delegates to specialized collectors for each source type.
 from pathlib import Path
 from typing import AsyncIterator
 
+from pydantic import ValidationError
+
 from autohelper.shared.logging import get_logger
 
 from .collectors import FolderCollector, WebCollector
@@ -66,8 +68,14 @@ class AutoCollectorRunner(BaseRunner):
                 error="Config must be a dictionary",
             )
 
-        # Parse naming config
-        naming_config = NamingConfig(**(config.get("naming_config") or {}))
+        # Parse naming config with validation error handling
+        try:
+            naming_config = NamingConfig(**(config.get("naming_config") or {}))
+        except ValidationError as e:
+            return RunnerResult(
+                success=False,
+                error=f"Invalid naming_config: {e}",
+            )
 
         url = config.get("url")
         source_path = config.get("source_path")
@@ -111,8 +119,15 @@ class AutoCollectorRunner(BaseRunner):
             )
             return
 
-        # Parse naming config
-        naming_config = NamingConfig(**(config.get("naming_config") or {}))
+        # Parse naming config with validation error handling
+        try:
+            naming_config = NamingConfig(**(config.get("naming_config") or {}))
+        except ValidationError as e:
+            yield RunnerProgress(
+                stage="error",
+                message=f"Invalid naming_config: {e}",
+            )
+            return
 
         url = config.get("url")
         source_path = config.get("source_path")

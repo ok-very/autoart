@@ -94,8 +94,8 @@ async def is_safe_url(url: str) -> tuple[bool, str]:
     if not hostname:
         return False, "Invalid URL: no hostname"
 
-    # Check blocked hostnames
-    hostname_lower = hostname.lower()
+    # Check blocked hostnames (normalize trailing dot for FQDN)
+    hostname_lower = hostname.lower().rstrip(".")
     if hostname_lower in BLOCKED_HOSTNAMES:
         return False, f"Blocked hostname: {hostname}"
 

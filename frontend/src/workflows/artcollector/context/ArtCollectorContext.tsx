@@ -14,6 +14,7 @@ import type {
   TextElement,
   TearsheetConfig,
   StreamProgress,
+  NamingConfig,
 } from '../types';
 
 export interface ArtCollectorContextValue {
@@ -24,6 +25,11 @@ export interface ArtCollectorContextValue {
   setSourceUrl: (url: string) => void;
   sourcePath: string;
   setSourcePath: (path: string) => void;
+
+  // Naming config
+  namingConfig: NamingConfig;
+  setNamingConfig: (config: NamingConfig) => void;
+  updateNamingConfig: (updates: Partial<NamingConfig>) => void;
 
   // Artifacts
   artifacts: ArtifactPreview[];

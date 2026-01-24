@@ -206,8 +206,10 @@ def generate_filename(
     if extension and not extension.startswith("."):
         extension = f".{extension}"
 
-    # Add extension to context for {ext} variable
-    context = {**context, "extension": extension}
+    # Add extension to context for {ext} variable only if not already set
+    local_context = {**context}
+    if "extension" not in local_context:
+        local_context["extension"] = extension
 
     # Parse template and replace variables
     template = config.template
@@ -216,7 +218,7 @@ def generate_filename(
         var_name = match.group(1)
         return resolve_template_var(
             var_name,
-            context,
+            local_context,
             index,
             index_padding=config.index_padding,
             date_format=config.date_format,
@@ -254,7 +256,7 @@ def _normalize_source(source: str) -> str:
     """
     Normalize source string for consistent ID generation.
 
-    For file paths, resolves to absolute path with forward slashes.
+    For file paths, converts to absolute path with forward slashes.
     For URLs, returns as-is.
     """
     # Check if it looks like a URL
@@ -262,14 +264,33 @@ def _normalize_source(source: str) -> str:
         return source
 
     # Treat as file path - normalize for consistent IDs across platforms
+    # Use absolute() instead of resolve() to avoid environment-dependent
+    # behavior (resolve() can fail or produce different results based on
+    # filesystem state, symlink resolution, etc.)
     try:
-        # Resolve to absolute path (handles symlinks, .., etc.)
-        normalized = Path(source).resolve()
+        normalized = Path(source).absolute()
         # Use forward slashes for cross-platform consistency
         return normalized.as_posix()
     except (OSError, ValueError):
-        # If path resolution fails, just normalize slashes
+        # If path conversion fails, just normalize slashes
         return source.replace("\\", "/")
+
+
+def _normalize_timestamp(timestamp: str) -> str:
+    """
+    Normalize timestamp string to a consistent format for ID generation.
+
+    Parses the timestamp and re-formats to ensure identical logical times
+    produce identical strings regardless of input formatting.
+    """
+    try:
+        dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        # Convert to UTC and format consistently
+        utc_dt = dt.astimezone(timezone.utc)
+        return utc_dt.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    except (ValueError, AttributeError):
+        # If parsing fails, return as-is to maintain backward compatibility
+        return timestamp
 
 
 def generate_persistent_id(
@@ -293,7 +314,8 @@ def generate_persistent_id(
     """
     content_hash = hashlib.sha256(content).hexdigest()
     normalized_source = _normalize_source(source)
-    id_input = f"{content_hash}:{normalized_source}:{timestamp}"
+    normalized_timestamp = _normalize_timestamp(timestamp)
+    id_input = f"{content_hash}:{normalized_source}:{normalized_timestamp}"
     return str(uuid.uuid5(uuid.NAMESPACE_URL, id_input))
 
 

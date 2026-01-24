@@ -99,8 +99,8 @@ async def scan_files_safe(source_path: Path) -> list[Path]:
     """
     Scan directory for files with symlink safety.
 
-    - Resolves symlinks
-    - Validates targets stay within source directory
+    - Does not follow symlinked directories during traversal
+    - Resolves symlinked files and validates targets stay within source
     - Deduplicates files (multiple symlinks to same target)
     - Skips inaccessible files gracefully
 
@@ -115,30 +115,47 @@ async def scan_files_safe(source_path: Path) -> list[Path]:
     def _scan() -> list[Path]:
         safe_files = []
         seen_paths: set[Path] = set()
+        dirs_to_scan = [resolved_source]
 
-        for item in resolved_source.rglob("*"):
+        while dirs_to_scan:
+            current_dir = dirs_to_scan.pop()
             try:
-                if not item.is_file():
-                    continue
+                entries = list(current_dir.iterdir())
             except (OSError, PermissionError) as e:
-                logger.warning(f"Skipping inaccessible file {item}: {e}")
+                logger.warning(f"Skipping inaccessible directory {current_dir}: {e}")
                 continue
 
-            # Resolve symlinks and verify target is within source
-            try:
-                resolved_item = item.resolve()
-                # Check if resolved path is within the source directory
-                resolved_item.relative_to(resolved_source)
-                # Skip if already seen (multiple symlinks to same target)
-                if resolved_item in seen_paths:
+            for item in entries:
+                try:
+                    # For directories, only recurse if not a symlink
+                    if item.is_dir():
+                        if not item.is_symlink():
+                            dirs_to_scan.append(item)
+                        else:
+                            logger.debug(f"Skipping symlinked directory: {item}")
+                        continue
+
+                    if not item.is_file():
+                        continue
+                except (OSError, PermissionError) as e:
+                    logger.warning(f"Skipping inaccessible item {item}: {e}")
                     continue
-                seen_paths.add(resolved_item)
-                safe_files.append(resolved_item)
-            except (ValueError, OSError) as e:
-                # ValueError: Path is outside source_path (symlink escape attempt)
-                # OSError: Could not resolve path
-                logger.warning(f"Skipping file {item}: {e}")
-                continue
+
+                # Resolve symlinks and verify target is within source
+                try:
+                    resolved_item = item.resolve()
+                    # Check if resolved path is within the source directory
+                    resolved_item.relative_to(resolved_source)
+                    # Skip if already seen (multiple symlinks to same target)
+                    if resolved_item in seen_paths:
+                        continue
+                    seen_paths.add(resolved_item)
+                    safe_files.append(resolved_item)
+                except (ValueError, OSError) as e:
+                    # ValueError: Path is outside source_path (symlink escape attempt)
+                    # OSError: Could not resolve path
+                    logger.warning(f"Skipping file {item}: {e}")
+                    continue
 
         return safe_files
 

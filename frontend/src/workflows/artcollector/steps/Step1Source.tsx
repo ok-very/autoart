@@ -11,6 +11,7 @@ import { FolderOpen, Globe, Check } from 'lucide-react';
 import clsx from 'clsx';
 
 import { useArtCollectorContext } from '../context/ArtCollectorContext';
+import { NamingConfigPanel } from '../components/NamingConfigPanel';
 import type { ArtCollectorStepProps } from '../types';
 
 type SourceMode = 'local' | 'web';
@@ -23,6 +24,8 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
     setSourceUrl,
     sourcePath,
     setSourcePath,
+    namingConfig,
+    updateNamingConfig,
   } = useArtCollectorContext();
 
   const [isDragOver, setIsDragOver] = useState(false);
@@ -251,6 +254,11 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
             </Text>
           </div>
         )}
+
+        {/* Naming Config Panel */}
+        <div className="mt-6">
+          <NamingConfigPanel config={namingConfig} onChange={updateNamingConfig} />
+        </div>
       </div>
 
       {/* Footer */}

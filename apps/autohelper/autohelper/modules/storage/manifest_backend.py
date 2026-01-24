@@ -52,8 +52,12 @@ class ManifestStorageBackend:
         """Ensure manifest directory exists."""
         self.manifest_dir.mkdir(parents=True, exist_ok=True)
 
-    async def _load_or_create(self) -> CollectionManifest:
-        """Load existing manifest or create a new one."""
+    async def _load_or_create_locked(self) -> CollectionManifest:
+        """
+        Load existing manifest or create a new one.
+
+        IMPORTANT: Caller must hold self._lock before calling this method.
+        """
         if self._cache is not None:
             return self._cache
 
@@ -88,7 +92,7 @@ class ManifestStorageBackend:
     async def save_artifact(self, artifact: ArtifactManifestEntry) -> None:
         """Save artifact metadata to manifest."""
         async with self._lock:
-            manifest = await self._load_or_create()
+            manifest = await self._load_or_create_locked()
 
             # Check for existing artifact with same ID (update case)
             existing_idx = next(
@@ -105,7 +109,7 @@ class ManifestStorageBackend:
     async def find_by_id(self, artifact_id: str) -> ArtifactManifestEntry | None:
         """Find artifact by persistent ID."""
         async with self._lock:
-            manifest = await self._load_or_create()
+            manifest = await self._load_or_create_locked()
             return next(
                 (a for a in manifest.artifacts if a.artifact_id == artifact_id),
                 None
@@ -114,7 +118,7 @@ class ManifestStorageBackend:
     async def find_by_hash(self, content_hash: str) -> list[ArtifactManifestEntry]:
         """Find artifacts by content hash."""
         async with self._lock:
-            manifest = await self._load_or_create()
+            manifest = await self._load_or_create_locked()
             return [a for a in manifest.artifacts if a.content_hash == content_hash]
 
     async def update_location(self, artifact_id: str, new_path: str) -> bool:
@@ -132,10 +136,14 @@ class ManifestStorageBackend:
             ValueError: If new_path is outside the output folder
         """
         # Validate that new_path is within the output folder
-        try:
+        # Offload blocking Path.resolve() calls to thread pool
+        def _validate_path() -> None:
             resolved_new = Path(new_path).resolve()
             resolved_output = self.output_folder.resolve()
             resolved_new.relative_to(resolved_output)
+
+        try:
+            await asyncio.to_thread(_validate_path)
         except ValueError:
             raise ValueError(
                 f"new_path must be within output folder. "
@@ -143,7 +151,7 @@ class ManifestStorageBackend:
             )
 
         async with self._lock:
-            manifest = await self._load_or_create()
+            manifest = await self._load_or_create_locked()
 
             for artifact in manifest.artifacts:
                 if artifact.artifact_id == artifact_id:
@@ -161,7 +169,7 @@ class ManifestStorageBackend:
     async def load_collection(self, manifest_id: str) -> CollectionManifest | None:
         """Load collection manifest by ID."""
         async with self._lock:
-            manifest = await self._load_or_create()
+            manifest = await self._load_or_create_locked()
             if manifest.manifest_id == manifest_id:
                 return manifest
             return None
@@ -170,7 +178,7 @@ class ManifestStorageBackend:
         """List all collection manifest IDs in this output folder."""
         async with self._lock:
             if self.manifest_path.exists():
-                manifest = await self._load_or_create()
+                manifest = await self._load_or_create_locked()
                 return [manifest.manifest_id]
             return []
 

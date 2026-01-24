@@ -117,9 +117,9 @@ class FolderCollector:
                     artifacts.append(artifact)
                     manifest_entries.append(entry)
 
-            # Save manifest
+            # Save manifest with resolved source path for consistency
             await self._save_manifest(
-                output_folder, str(source_path), naming_config, manifest_entries, now
+                output_folder, str(resolved_source), naming_config, manifest_entries, now
             )
 
             return RunnerResult(success=True, artifacts=artifacts)
@@ -233,9 +233,9 @@ class FolderCollector:
                     )
                 await asyncio.sleep(0)  # Yield control
 
-            # Save manifest
+            # Save manifest with resolved source path for consistency
             await self._save_manifest(
-                output_folder, str(source_path), naming_config, manifest_entries, now
+                output_folder, str(resolved_source), naming_config, manifest_entries, now
             )
 
             yield RunnerProgress(

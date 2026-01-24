@@ -6,8 +6,47 @@
  * and produces layouts using justified-layout.
  */
 
+// =============================================================================
+// Naming Configuration
+// =============================================================================
+
+export type NumberingMode = 'sequential' | 'by_source';
+
+export interface NamingConfig {
+  /** Filename template using {var} placeholders */
+  template: string;
+  /** Starting index for numbering (default: 1) */
+  indexStart: number;
+  /** Zero-padding width for index (default: 3) */
+  indexPadding: number;
+  /** Prefix prepended to all filenames */
+  prefix: string;
+  /** Suffix appended before extension */
+  suffix: string;
+  /** strftime format for {date} variable */
+  dateFormat: string;
+  /** How to count artifacts: sequential or per-source */
+  numberingMode: NumberingMode;
+}
+
+export const DEFAULT_NAMING_CONFIG: NamingConfig = {
+  template: '{index}_{hash}',
+  indexStart: 1,
+  indexPadding: 3,
+  prefix: '',
+  suffix: '',
+  dateFormat: '%Y%m%d',
+  numberingMode: 'sequential',
+};
+
+// =============================================================================
+// Artifact Types
+// =============================================================================
+
 export interface ArtifactPreview {
   ref_id: string;
+  /** Persistent artifact ID (content-based, stable across moves) */
+  artifact_id?: string;
   path: string;
   thumbnailUrl: string;
   artifact_type: 'image' | 'text' | 'document';
@@ -17,6 +56,7 @@ export interface ArtifactPreview {
     height?: number;
     size?: number;
     title?: string;
+    content_hash?: string;
   };
 }
 
@@ -60,6 +100,7 @@ export interface ArtCollectorState {
   sourceType: 'web' | 'local';
   sourceUrl: string;
   sourcePath: string;
+  namingConfig: NamingConfig;
 
   // Step 2: Stream & Review
   artifacts: ArtifactPreview[];

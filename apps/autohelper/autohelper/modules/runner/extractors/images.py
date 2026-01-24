@@ -50,11 +50,22 @@ def extract_image_urls(
                 image_urls.append(full_url)
 
     # Check for background images in style attributes
+    # Regex handles: url("..."), url('...'), and url(...)
+    # Uses non-greedy matching with proper delimiter awareness
     for el in soup.find_all(style=re.compile(r"background.*url")):
         style = el.get("style", "")
-        urls = re.findall(r'url\(["\']?([^"\']+)["\']?\)', style)
-        for url in urls:
-            full_url = urljoin(base_url, url)
+        # Match url() with double quotes, single quotes, or no quotes
+        # Handle each quote type separately to avoid truncation issues
+        for match in re.finditer(r'url\(\s*"([^"]*)"\s*\)', style):
+            full_url = urljoin(base_url, match.group(1))
+            if _is_supported_image(full_url, supported_extensions):
+                image_urls.append(full_url)
+        for match in re.finditer(r"url\(\s*'([^']*)'\s*\)", style):
+            full_url = urljoin(base_url, match.group(1))
+            if _is_supported_image(full_url, supported_extensions):
+                image_urls.append(full_url)
+        for match in re.finditer(r'url\(\s*([^"\'\s)]+)\s*\)', style):
+            full_url = urljoin(base_url, match.group(1))
             if _is_supported_image(full_url, supported_extensions):
                 image_urls.append(full_url)
 
