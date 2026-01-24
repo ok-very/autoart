@@ -17,11 +17,17 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
     useArtCollectorContext();
 
   const { pages, currentPageIndex } = tearsheet;
-  const currentPage = pages[currentPageIndex];
+  // Guard against out-of-range index
+  const safePageIndex = pages.length > 0 ? Math.min(currentPageIndex, pages.length - 1) : 0;
+  const currentPage = pages.length > 0 ? pages[safePageIndex] : null;
+  const totalPages = Math.max(pages.length, 1);
+  const displayPageNumber = pages.length > 0 ? safePageIndex + 1 : 0;
   const selectedArtifacts = artifacts.filter((a) => selectedIds.has(a.ref_id));
 
   const handleShuffle = () => {
-    shufflePage(currentPageIndex);
+    if (pages.length > 0) {
+      shufflePage(safePageIndex);
+    }
   };
 
   const handleExportPDF = () => {
@@ -44,9 +50,9 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
         <Inline gap="sm">
           <Inline gap="xs" align="center" className="text-sm text-slate-600">
             <span>Page</span>
-            <span className="font-medium">{currentPageIndex + 1}</span>
+            <span className="font-medium">{displayPageNumber}</span>
             <span>of</span>
-            <span className="font-medium">{Math.max(pages.length, 1)}</span>
+            <span className="font-medium">{totalPages}</span>
           </Inline>
           <Button variant="secondary" size="sm" onClick={handleShuffle}>
             <Shuffle className="w-4 h-4 mr-1" />
@@ -121,7 +127,7 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
               })}
               {/* Fill empty slots */}
               {Array.from({
-                length: Math.max(0, 6 - (currentPage?.imageRefs.length || 0)),
+                length: Math.max(0, 6 - (currentPage?.imageRefs?.length ?? 0)),
               }).map((_, i) => (
                 <div
                   key={`empty-${i}`}

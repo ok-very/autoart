@@ -127,6 +127,9 @@ export function useThemeBehavior(api: DockviewApi | null): void {
   }, [api, theme]);
 }
 
+// Track all CSS variables set by themes to ensure complete cleanup
+const appliedCssVariables = new Set<string>();
+
 /**
  * Inject theme CSS variables and stylesheets
  */
@@ -134,10 +137,17 @@ export function useThemeCSS(): void {
   const theme = useWorkspaceTheme();
 
   useEffect(() => {
-    if (!theme?.css) return;
-
     const styleElements: HTMLStyleElement[] = [];
     const linkElements: HTMLLinkElement[] = [];
+    const root = document.documentElement;
+
+    // First, clean up ALL previously applied CSS variables
+    appliedCssVariables.forEach((key) => {
+      root.style.removeProperty(key);
+    });
+    appliedCssVariables.clear();
+
+    if (!theme?.css) return;
 
     // Inject inline CSS
     if (theme.css.text) {
@@ -158,28 +168,12 @@ export function useThemeCSS(): void {
       linkElements.push(link);
     }
 
-    // Apply CSS variables to root
+    // Apply CSS variables to root and track them
     if (theme.css.variables) {
-      const root = document.documentElement;
-      const previousValues: Record<string, string> = {};
-
       Object.entries(theme.css.variables).forEach(([key, value]) => {
-        previousValues[key] = root.style.getPropertyValue(key);
         root.style.setProperty(key, value);
+        appliedCssVariables.add(key);
       });
-
-      // Cleanup function restores previous values
-      return () => {
-        Object.entries(previousValues).forEach(([key, value]) => {
-          if (value) {
-            root.style.setProperty(key, value);
-          } else {
-            root.style.removeProperty(key);
-          }
-        });
-        styleElements.forEach((el) => el.remove());
-        linkElements.forEach((el) => el.remove());
-      };
     }
 
     return () => {

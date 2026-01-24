@@ -21,7 +21,12 @@ export function Step2StreamReview({ onNext, onBack }: ArtCollectorStepProps) {
     // TODO: Implement SSE streaming via useArtifactStream hook
     setIsStreaming(true);
     console.log('Starting collection from:', source);
-    // Placeholder: In a real implementation, this would trigger the SSE stream
+    // Placeholder: simulate collection completing after delay
+    setTimeout(() => setIsStreaming(false), 2000);
+  };
+
+  const handleStopCollection = () => {
+    setIsStreaming(false);
   };
 
   return (
@@ -43,13 +48,15 @@ export function Step2StreamReview({ onNext, onBack }: ArtCollectorStepProps) {
               ? 'No artifacts streamed yet. Click "Start Collection" to begin.'
               : `${artifacts.length} artifacts collected, ${selectedIds.size} selected`}
           </Text>
-          <Button
-            variant="primary"
-            onClick={handleStartCollection}
-            disabled={isStreaming}
-          >
-            {isStreaming ? 'Collecting...' : 'Start Collection'}
-          </Button>
+          {isStreaming ? (
+            <Button variant="secondary" onClick={handleStopCollection}>
+              Stop Collection
+            </Button>
+          ) : (
+            <Button variant="primary" onClick={handleStartCollection}>
+              Start Collection
+            </Button>
+          )}
         </Stack>
       </div>
 
