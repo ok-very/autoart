@@ -111,12 +111,8 @@ def build_app(settings: Settings | None = None) -> FastAPI:
             work_item_id=request.headers.get("X-Work-Item-ID"),
             context_id=request.headers.get("X-Context-ID"),
             actor=request.headers.get("X-Actor", "system"),
-            ctx = RequestContext()
-            ctx.request_id = request.headers.get("X-Request-ID", generate_request_id())
-            ctx.work_item_id = request.headers.get("X-Work-Item-ID")
-            ctx.context_id = request.headers.get("X-Context-ID")
-            ctx.actor = request.headers.get("X-Actor", "system")
-            ctx.idempotency_key = request.headers.get("X-Idempotency-Key")
+            idempotency_key=request.headers.get("X-Idempotency-Key"),
+        )
         set_request_context(ctx)
 
         try:

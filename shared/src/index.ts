@@ -15,11 +15,15 @@ export { z } from 'zod';
 
 // ==================== SCHEMAS ====================
 // All Zod schemas and their inferred types (authoritative source)
-export * from './schemas/index.js';
+// Export Schemas
+export * from './schemas/composer.js';
+export * from './schemas/exports.js';
 
 // ==================== TYPES ====================
 // Pure TypeScript types (projections)
+// Export Types
 export * from './types/index.js';
+export * from './types/gantt.js';
 
 // ==================== DOMAIN ====================
 // Domain logic: field visibility, completeness, reference resolution, etc.

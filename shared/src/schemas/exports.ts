@@ -22,6 +22,7 @@ export const ExportFormatSchema = z.enum([
     'google-sheets',
     'google-slides',
     'pdf',
+    'gantt', // New format
 ]);
 export type ExportFormat = z.infer<typeof ExportFormatSchema>;
 

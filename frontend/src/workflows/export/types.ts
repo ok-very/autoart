@@ -82,4 +82,10 @@ export const EXPORT_FORMATS: ExportFormatOption[] = [
         description: 'Export to portable document format',
         extension: '.pdf',
     },
+    {
+        id: 'gantt', // Maps to PDF target but with Gantt projection
+        label: 'Gantt Chart (PDF)',
+        description: 'Visual timeline with drag-and-drop',
+        extension: '.pdf',
+    },
 ];

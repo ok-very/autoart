@@ -190,6 +190,13 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
         return Array.from(groups.values());
     }, [subprocessRecords, definitions]);
 
+    // Memoize the Gantt Projection
+    const ganttProjection = useMemo(() => {
+        if (!project || activeTab !== 'gantt') return null;
+        const allNodes = Object.values(storeNodes);
+        return mapHierarchyToGantt(project, allNodes);
+    }, [project, storeNodes, activeTab]);
+
     // Selected record ID for floating tables
     const selectedRecordId = selection?.type === 'record' ? selection.id : null;
 
@@ -244,6 +251,31 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
         );
     }
 
+    import { GanttView } from './GanttView';
+    import { mapHierarchyToGantt } from '../../utils/gantt-mapper';
+
+    // ... (in ProjectView component)
+
+    // ... existing activeTab state
+    const [activeTab, setActiveTab] = useState<'workflow' | 'log' | 'gantt'>('workflow');
+
+    // ... existing hooks
+
+    // Memoize the Gantt Projection
+    const ganttProjection = useMemo(() => {
+        if (!project || activeTab !== 'gantt') return null;
+        // Flatten all descendants for the mapper
+        // We need to fetch ALL children of the project for a complete timeline
+        // current getChildren(projectId) only gives 1st level (Process)
+        // We'd need a recursive fetch or rely on storeNodes containing all
+
+        // For MVP, lets just map what we have in storeNodes which should be the full tree if useProjectTree loaded it
+        const allNodes = Object.values(storeNodes);
+        return mapHierarchyToGantt(project, allNodes);
+    }, [project, storeNodes, activeTab]);
+
+    // ... existing empty states
+
     return (
         <div className={`flex-1 flex overflow-hidden bg-white ${className || ''}`}
             data-aa-component="ProjectView"
@@ -259,15 +291,17 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                     <SegmentedControl
                         size="xs"
                         value={activeTab}
-                        onChange={(value) => setActiveTab(value as 'workflow' | 'log')}
+                        onChange={(value) => setActiveTab(value as any)}
                         data={[
                             { value: 'workflow', label: 'Workflow' },
+                            { value: 'gantt', label: 'Gantt' },
                             { value: 'log', label: 'Log' },
                         ]}
                         className="mt-2"
                     />
                 </div>
 
+                {/* Subprocess Sidebar Content - Only show for Workflow tab */}
                 {activeTab === 'workflow' && (
                     <div className="flex-1 overflow-y-auto p-2 custom-scroll">
                         {subprocesses.length === 0 ? (
@@ -297,6 +331,14 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                                 })}
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* Gantt Sidebar Content (optional filters?) */}
+                {activeTab === 'gantt' && (
+                    <div className="flex-1 p-4">
+                        <p className="text-xs font-medium text-slate-600 mb-2">Gantt Controls</p>
+                        <p className="text-xs text-slate-400">Filter lanes by process or stage (Coming Soon)</p>
                     </div>
                 )}
 
@@ -380,6 +422,19 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                             ))}
                         </div>
                     </div>
+                </main>
+            ) : activeTab === 'gantt' ? (
+                <main className="flex-1 flex flex-col overflow-hidden">
+                    {ganttProjection ? (
+                        <GanttView
+                            projection={ganttProjection}
+                            projectId={projectId}
+                        />
+                    ) : (
+                        <div className="flex-1 flex items-center justify-center text-slate-400">
+                            Loading Gantt...
+                        </div>
+                    )}
                 </main>
             ) : (
                 <ProjectLogView projectId={projectId} />

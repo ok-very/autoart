@@ -10,17 +10,20 @@ import { writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
+
 import {
     generatePdfHtml,
+    generateGanttHtml,
     type ExportOptions,
     type BfaProjectExportModel,
     type ExportResult,
-    type PdfPagePreset
+    type PdfPagePreset,
+    type GanttProjectionOutput
 } from '@autoart/shared';
 import { env } from '@config/env.js';
 
-import { projectBfaExportModels } from '../projectors/bfa-project.projector.js';
 import type { ExportTarget, ValidationResult } from './export-target.interface.js';
+import { projectBfaExportModels } from '../projectors/bfa-project.projector.js';
 
 // ============================================================================
 // PDF TARGET
@@ -70,15 +73,31 @@ export class PdfTarget implements ExportTarget {
         config: Record<string, unknown>
     ): Promise<ExportResult> {
         try {
-            const projects = projection as BfaProjectExportModel[];
-            const options = config.options as ExportOptions;
-            const pagePreset = (config.pagePreset as PdfPagePreset) || 'letter';
+            // Determine content type and generate HTML
+            let html: string;
 
-            // Generate HTML for PDF using shared formatter
-            const html = generatePdfHtml(projects, options, {
-                pagePreset,
-                autoHelperBaseUrl: env.AUTOHELPER_URL
-            });
+            // Check if this is a Gantt projection (duck typing)
+            const isGantt = (p: unknown): boolean =>
+                !!p && typeof p === 'object' && 'lanes' in p && 'ticks' in p;
+
+            if (isGantt(projection)) {
+                // Use safe cast since we verified structure with isGantt
+                const ganttProjection = projection as GanttProjectionOutput;
+                html = generateGanttHtml(ganttProjection, {
+                    title: `Gantt Export - ${ganttProjection.projectId}`,
+                    printBackground: true
+                });
+            } else {
+                // Default to BFA Project Export
+                const projects = projection as BfaProjectExportModel[];
+                const htmlOptions = config.options as ExportOptions;
+
+                // Generate HTML for PDF using shared formatter
+                html = generatePdfHtml(projects, htmlOptions, {
+                    pagePreset,
+                    autoHelperBaseUrl: env.AUTOHELPER_URL
+                });
+            }
 
             // Call AutoHelper to render PDF
             const response = await fetch(`${env.AUTOHELPER_URL}/render/pdf`, {
