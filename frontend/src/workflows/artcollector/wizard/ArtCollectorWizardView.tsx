@@ -189,6 +189,10 @@ export function ArtCollectorWizardView() {
     });
   }, []);
 
+  const returnImagesToAvailable = useCallback((imageIds: string[]) => {
+    setAvailableImages((prev) => [...prev, ...imageIds]);
+  }, []);
+
   // Create context value
   const contextValue = useMemo<ArtCollectorContextValue>(
     () => ({
@@ -223,6 +227,7 @@ export function ArtCollectorWizardView() {
       removeImageFromPage,
       shufflePage,
       availableImages,
+      returnImagesToAvailable,
     }),
     [
       sourceType,
@@ -250,6 +255,7 @@ export function ArtCollectorWizardView() {
       removeImageFromPage,
       shufflePage,
       availableImages,
+      returnImagesToAvailable,
     ]
   );
 

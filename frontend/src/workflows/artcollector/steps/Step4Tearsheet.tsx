@@ -35,6 +35,7 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
     addImageToPage,
     removeImageFromPage,
     shufflePage,
+    returnImagesToAvailable,
     artifacts,
     selectedIds,
     textElements,
@@ -128,19 +129,18 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
 
   const handleDeletePage = useCallback(
     (pageIndex: number) => {
-      const newPages = pages.filter((_, i) => i !== pageIndex);
-      // Return images from deleted page to available pool
       const deletedPage = pages[pageIndex];
-      if (deletedPage) {
-        // Note: We don't have direct access to setAvailableImages here,
-        // so we need to handle this in the updateTearsheet or context
+      // Return images from deleted page to available pool
+      if (deletedPage && deletedPage.imageRefs.length > 0) {
+        returnImagesToAvailable(deletedPage.imageRefs);
       }
+      const newPages = pages.filter((_, i) => i !== pageIndex);
       updateTearsheet({
         pages: newPages,
         currentPageIndex: Math.min(currentPageIndex, Math.max(0, newPages.length - 1)),
       });
     },
-    [pages, currentPageIndex, updateTearsheet]
+    [pages, currentPageIndex, updateTearsheet, returnImagesToAvailable]
   );
 
   const handleOpenPrintPreview = () => {

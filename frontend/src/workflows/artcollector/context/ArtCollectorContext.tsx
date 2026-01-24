@@ -59,6 +59,7 @@ export interface ArtCollectorContextValue {
   removeImageFromPage: (artifactId: string, pageIndex: number) => void;
   shufflePage: (pageIndex: number) => void;
   availableImages: string[];
+  returnImagesToAvailable: (imageIds: string[]) => void;
 }
 
 const ArtCollectorContext = createContext<ArtCollectorContextValue | null>(null);

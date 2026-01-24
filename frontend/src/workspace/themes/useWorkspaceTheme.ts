@@ -44,7 +44,9 @@ export function setWorkspaceTheme(id: WorkspaceThemeId): void {
   previousTheme?.behavior?.onDeactivate?.();
 
   currentThemeId = id;
-  localStorage.setItem(THEME_STORAGE_KEY, id);
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(THEME_STORAGE_KEY, id);
+  }
 
   theme.behavior?.onActivate?.();
   notifyThemeChange();

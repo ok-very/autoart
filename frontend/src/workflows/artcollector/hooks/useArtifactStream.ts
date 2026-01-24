@@ -49,14 +49,9 @@ export function useArtifactStream(
   });
   const [error, setError] = useState<Error | null>(null);
 
-  const eventSourceRef = useRef<EventSource | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const stopStream = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-    }
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -259,7 +254,7 @@ function handleStreamEvent(
 export function useMockArtifactStream(
   options: UseArtifactStreamOptions
 ): UseArtifactStreamReturn {
-  const { onArtifact, onProgress, onComplete, onError } = options;
+  const { onArtifact, onProgress, onComplete, onError: _onError } = options;
 
   const [isStreaming, setIsStreaming] = useState(false);
   const [progress, setProgress] = useState<StreamProgress>({
@@ -267,7 +262,7 @@ export function useMockArtifactStream(
     percent: 0,
   });
   const [error, setError] = useState<Error | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countRef = useRef(0);
 
   const stopStream = useCallback(() => {
@@ -280,7 +275,7 @@ export function useMockArtifactStream(
   }, []);
 
   const startStream = useCallback(
-    (config: StreamConfig) => {
+    (_config: StreamConfig) => {
       stopStream();
       setError(null);
       setIsStreaming(true);
@@ -350,4 +345,23 @@ export function useMockArtifactStream(
     progress,
     error,
   };
+}
+
+/**
+ * Auto-selecting hook that uses real stream in production and mock stream in development.
+ * Set VITE_USE_MOCK_STREAM=true to force mock stream in any environment.
+ * Set VITE_USE_MOCK_STREAM=false to force real stream in development.
+ */
+export function useAutoArtifactStream(
+  options: UseArtifactStreamOptions
+): UseArtifactStreamReturn {
+  const envValue = import.meta.env.VITE_USE_MOCK_STREAM;
+  const useMock = envValue === 'true' || (envValue !== 'false' && import.meta.env.DEV);
+
+  // We must call both hooks unconditionally to satisfy React's rules of hooks,
+  // but we only use the results from the appropriate one
+  const realStream = useArtifactStream(options);
+  const mockStream = useMockArtifactStream(options);
+
+  return useMock ? mockStream : realStream;
 }

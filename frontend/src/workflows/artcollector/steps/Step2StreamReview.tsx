@@ -9,7 +9,7 @@ import { useCallback, useEffect } from 'react';
 import { Stack, Text, Button, Inline } from '@autoart/ui';
 import { Play, StopCircle } from 'lucide-react';
 import { useArtCollectorContext } from '../context/ArtCollectorContext';
-import { useMockArtifactStream } from '../hooks/useArtifactStream';
+import { useAutoArtifactStream } from '../hooks/useArtifactStream';
 import { StreamingGallery } from '../components/StreamingGallery';
 import type { ArtCollectorStepProps, ArtifactPreview, StreamProgress } from '../types';
 
@@ -62,8 +62,9 @@ export function Step2StreamReview({ onNext, onBack }: ArtCollectorStepProps) {
     [setIsStreaming]
   );
 
-  // Use mock stream for development (replace with useArtifactStream for production)
-  const { startStream, stopStream } = useMockArtifactStream({
+  // Auto-selects between real and mock stream based on environment
+  // Set VITE_USE_MOCK_STREAM=false to use real stream in development
+  const { startStream, stopStream } = useAutoArtifactStream({
     onArtifact: handleArtifact,
     onProgress: handleProgress,
     onComplete: handleComplete,
