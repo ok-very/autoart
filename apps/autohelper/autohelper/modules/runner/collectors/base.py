@@ -6,8 +6,9 @@ Provides the CollectorProtocol interface and shared utilities for artifact colle
 
 import asyncio
 import logging
+from collections.abc import AsyncIterator
 from pathlib import Path
-from typing import TYPE_CHECKING, AsyncIterator, Protocol
+from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from ..types import NamingConfig, RunnerProgress, RunnerResult

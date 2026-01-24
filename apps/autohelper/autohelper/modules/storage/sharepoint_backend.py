@@ -12,7 +12,7 @@ Or install the optional dependency:
 import asyncio
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -205,20 +205,9 @@ class SharePointStorageBackend:
                 artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
 
                 # Check if artifact already exists using CAML query
-                caml_query = f"""
-                    <View>
-                        <Query>
-                            <Where>
-                                <Eq>
-                                    <FieldRef Name='Title'/>
-                                    <Value Type='Text'>{artifact.artifact_id}</Value>
-                                </Eq>
-                            </Where>
-                        </Query>
-                        <RowLimit>1</RowLimit>
-                    </View>
-                """
-                items = artifacts_list.get_items().filter(f"Title eq '{_escape_odata_string(artifact.artifact_id)}'")
+                items = artifacts_list.get_items().filter(
+                    f"Title eq '{_escape_odata_string(artifact.artifact_id)}'"
+                )
                 ctx.load(items)
                 ctx.execute_query()
 
@@ -249,7 +238,9 @@ class SharePointStorageBackend:
 
             def _find():
                 artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
-                items = artifacts_list.get_items().filter(f"Title eq '{_escape_odata_string(artifact_id)}'")
+                items = artifacts_list.get_items().filter(
+                    f"Title eq '{_escape_odata_string(artifact_id)}'"
+                )
                 ctx.load(items)
                 ctx.execute_query()
 
@@ -271,7 +262,9 @@ class SharePointStorageBackend:
 
             def _find():
                 artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
-                items = artifacts_list.get_items().filter(f"ContentHash eq '{_escape_odata_string(content_hash)}'")
+                items = artifacts_list.get_items().filter(
+                    f"ContentHash eq '{_escape_odata_string(content_hash)}'"
+                )
                 ctx.load(items)
                 ctx.execute_query()
                 return [item.properties for item in items]
@@ -287,7 +280,9 @@ class SharePointStorageBackend:
 
             def _update():
                 artifacts_list = ctx.web.lists.get_by_title(ARTIFACTS_LIST)
-                items = artifacts_list.get_items().filter(f"Title eq '{_escape_odata_string(artifact_id)}'")
+                items = artifacts_list.get_items().filter(
+                    f"Title eq '{_escape_odata_string(artifact_id)}'"
+                )
                 ctx.load(items)
                 ctx.execute_query()
 
@@ -321,7 +316,7 @@ class SharePointStorageBackend:
                     "Title": manifest.manifest_id,
                     "Version": manifest.version,
                     "CreatedAt": manifest.created_at,
-                    "UpdatedAt": datetime.now(timezone.utc).isoformat(),
+                    "UpdatedAt": datetime.now(UTC).isoformat(),
                     "SourceType": manifest.source_type,
                     "SourceUrl": manifest.source_url or "",
                     "SourcePath": manifest.source_path or "",
@@ -361,7 +356,9 @@ class SharePointStorageBackend:
 
             def _load():
                 collections_list = ctx.web.lists.get_by_title(COLLECTIONS_LIST)
-                items = collections_list.get_items().filter(f"Title eq '{_escape_odata_string(manifest_id)}'")
+                items = collections_list.get_items().filter(
+                    f"Title eq '{_escape_odata_string(manifest_id)}'"
+                )
                 ctx.load(items)
                 ctx.execute_query()
 
@@ -418,6 +415,10 @@ class SharePointStorageBackend:
                 items = collections_list.get_items().select(["Title"])
                 ctx.load(items)
                 ctx.execute_query()
-                return [item.properties.get("Title", "") for item in items if item.properties.get("Title")]
+                return [
+                    item.properties.get("Title", "")
+                    for item in items
+                    if item.properties.get("Title")
+                ]
 
             return await asyncio.to_thread(_list)

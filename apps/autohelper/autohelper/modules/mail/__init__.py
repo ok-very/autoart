@@ -1,14 +1,14 @@
-from .service import MailService
 from .router import router as mail_router
 from .schemas import (
-    MailServiceStatus,
-    TransientEmail,
-    TransientEmailList,
     IngestionLogEntry,
     IngestionLogList,
     IngestRequest,
     IngestResponse,
+    MailServiceStatus,
+    TransientEmail,
+    TransientEmailList,
 )
+from .service import MailService
 
 __all__ = [
     "MailService",

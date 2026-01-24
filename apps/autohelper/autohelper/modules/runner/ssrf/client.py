@@ -24,11 +24,10 @@ def _get_httpx():
             import httpx
 
             _httpx = httpx
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
-                "httpx is required for web collection. "
-                "Install with: pip install httpx"
-            )
+                "httpx is required for web collection. Install with: pip install httpx"
+            ) from e
     return _httpx
 
 

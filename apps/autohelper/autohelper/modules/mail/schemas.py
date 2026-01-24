@@ -7,13 +7,14 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-
 # =============================================================================
 # STATUS
 # =============================================================================
 
+
 class MailServiceStatus(BaseModel):
     """Mail service status response."""
+
     enabled: bool
     running: bool
     poll_interval: int
@@ -25,8 +26,10 @@ class MailServiceStatus(BaseModel):
 # EMAILS
 # =============================================================================
 
+
 class TransientEmail(BaseModel):
     """Single transient email record."""
+
     id: str
     subject: str | None
     sender: str | None
@@ -40,6 +43,7 @@ class TransientEmail(BaseModel):
 
 class TransientEmailList(BaseModel):
     """List of transient emails with pagination."""
+
     emails: list[TransientEmail]
     total: int
     limit: int
@@ -50,8 +54,10 @@ class TransientEmailList(BaseModel):
 # INGESTION
 # =============================================================================
 
+
 class IngestionLogEntry(BaseModel):
     """Single ingestion log record."""
+
     id: int
     source_path: str
     ingested_at: datetime | None
@@ -62,17 +68,20 @@ class IngestionLogEntry(BaseModel):
 
 class IngestionLogList(BaseModel):
     """List of ingestion log entries."""
+
     entries: list[IngestionLogEntry]
     total: int
 
 
 class IngestRequest(BaseModel):
     """Request to ingest a PST/OST file."""
+
     file_path: str = Field(..., description="Absolute path to the PST/OST file")
 
 
 class IngestResponse(BaseModel):
     """Response from ingestion operation."""
+
     success: bool
     count: int | None = None
     error: str | None = None

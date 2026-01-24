@@ -8,16 +8,16 @@ from fastapi import APIRouter, HTTPException, Query
 
 from autohelper.config import get_settings
 from autohelper.db import get_db
-from autohelper.modules.mail.service import MailService
 from autohelper.modules.mail.schemas import (
-    MailServiceStatus,
-    TransientEmail,
-    TransientEmailList,
     IngestionLogEntry,
     IngestionLogList,
     IngestRequest,
     IngestResponse,
+    MailServiceStatus,
+    TransientEmail,
+    TransientEmailList,
 )
+from autohelper.modules.mail.service import MailService
 
 router = APIRouter(prefix="/mail", tags=["mail"])
 
@@ -70,25 +70,31 @@ async def list_emails(
         count_sql = "SELECT COUNT(*) FROM transient_emails WHERE project_id = ?"
         total = db.execute(count_sql, (project_id,)).fetchone()[0]
 
-        rows = db.execute("""
+        rows = db.execute(
+            """
             SELECT id, subject, sender, received_at, project_id, body_preview,
                    metadata, ingestion_id, created_at
             FROM transient_emails
             WHERE project_id = ?
             ORDER BY received_at DESC
             LIMIT ? OFFSET ?
-        """, (project_id, limit, offset)).fetchall()
+        """,
+            (project_id, limit, offset),
+        ).fetchall()
     else:
         count_sql = "SELECT COUNT(*) FROM transient_emails"
         total = db.execute(count_sql).fetchone()[0]
 
-        rows = db.execute("""
+        rows = db.execute(
+            """
             SELECT id, subject, sender, received_at, project_id, body_preview,
                    metadata, ingestion_id, created_at
             FROM transient_emails
             ORDER BY received_at DESC
             LIMIT ? OFFSET ?
-        """, (limit, offset)).fetchall()
+        """,
+            (limit, offset),
+        ).fetchall()
 
     emails = []
     for row in rows:
@@ -99,17 +105,19 @@ async def list_emails(
             except (json.JSONDecodeError, TypeError):
                 metadata = None
 
-        emails.append(TransientEmail(
-            id=row[0],
-            subject=row[1],
-            sender=row[2],
-            received_at=row[3],
-            project_id=row[4],
-            body_preview=row[5],
-            metadata=metadata,
-            ingestion_id=row[7],
-            created_at=row[8],
-        ))
+        emails.append(
+            TransientEmail(
+                id=row[0],
+                subject=row[1],
+                sender=row[2],
+                received_at=row[3],
+                project_id=row[4],
+                body_preview=row[5],
+                metadata=metadata,
+                ingestion_id=row[7],
+                created_at=row[8],
+            )
+        )
 
     return TransientEmailList(
         emails=emails,
@@ -124,12 +132,15 @@ async def get_email(email_id: str) -> TransientEmail:
     """Get a single transient email by ID."""
     db = get_db()
 
-    row = db.execute("""
+    row = db.execute(
+        """
         SELECT id, subject, sender, received_at, project_id, body_preview,
                metadata, ingestion_id, created_at
         FROM transient_emails
         WHERE id = ?
-    """, (email_id,)).fetchone()
+    """,
+        (email_id,),
+    ).fetchone()
 
     if not row:
         raise HTTPException(status_code=404, detail="Email not found")
@@ -163,12 +174,15 @@ async def list_ingestion_log(
 
     total = db.execute("SELECT COUNT(*) FROM mail_ingestion_log").fetchone()[0]
 
-    rows = db.execute("""
+    rows = db.execute(
+        """
         SELECT id, source_path, ingested_at, email_count, status, error_message
         FROM mail_ingestion_log
         ORDER BY ingested_at DESC
         LIMIT ?
-    """, (limit,)).fetchall()
+    """,
+        (limit,),
+    ).fetchall()
 
     entries = [
         IngestionLogEntry(

@@ -13,7 +13,7 @@ from autohelper.shared.logging import get_logger
 
 from .lookup_service import get_lookup_service
 from .service import get_runner_service
-from .types import ArtifactManifestEntry, CollectionManifest, InvokeRequest, RunnerId, RunnerResult
+from .types import ArtifactManifestEntry, CollectionManifest, InvokeRequest, RunnerResult
 
 logger = get_logger(__name__)
 
@@ -25,7 +25,7 @@ async def get_status() -> dict[str, Any]:
     """Get status of the runner system and available runners."""
     service = get_runner_service()
     status = service.get_status()
-    
+
     return {
         "status": "ok",
         "runners": service.list_runners(),
@@ -39,21 +39,19 @@ async def get_status() -> dict[str, Any]:
 async def invoke_runner(request: InvokeRequest) -> RunnerResult:
     """
     Invoke a runner synchronously.
-    
+
     Returns the result once the runner completes.
     """
     logger.info(f"Invoking runner: {request.runner_id}")
-    
+
     service = get_runner_service()
     result = await service.invoke(request)
-    
+
     if not result.success:
         logger.warning(f"Runner {request.runner_id} failed: {result.error}")
     else:
-        logger.info(
-            f"Runner {request.runner_id} completed: {len(result.artifacts)} artifacts"
-        )
-    
+        logger.info(f"Runner {request.runner_id} completed: {len(result.artifacts)} artifacts")
+
     return result
 
 
@@ -78,20 +76,24 @@ async def invoke_runner_stream(request: InvokeRequest) -> StreamingResponse:
                 except (TypeError, ValueError) as e:
                     # Handle JSON serialization errors
                     logger.warning(f"Failed to serialize progress: {e}")
-                    error_data = json.dumps({
-                        "stage": "error",
-                        "message": f"Serialization error: {str(e)}",
-                        "percent": None,
-                    })
+                    error_data = json.dumps(
+                        {
+                            "stage": "error",
+                            "message": f"Serialization error: {str(e)}",
+                            "percent": None,
+                        }
+                    )
                     yield f"data: {error_data}\n\n"
         except Exception as e:
             # Handle unexpected errors during streaming
             logger.exception(f"Error during streaming: {e}")
-            error_data = json.dumps({
-                "stage": "error",
-                "message": f"Stream error: {str(e)}",
-                "percent": None,
-            })
+            error_data = json.dumps(
+                {
+                    "stage": "error",
+                    "message": f"Stream error: {str(e)}",
+                    "percent": None,
+                }
+            )
             yield f"data: {error_data}\n\n"
 
     return StreamingResponse(
@@ -249,10 +251,10 @@ async def update_artifact_location(request: UpdateLocationRequest) -> dict[str, 
         }
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.exception(f"Failed to update artifact location: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @router.post("/artifacts/compute-hash")
@@ -266,6 +268,7 @@ async def compute_file_hash(
     File must be within allowed roots configured in settings.
     """
     from pathlib import Path
+
     from autohelper.config.settings import get_settings
 
     path = Path(file_path).resolve()
@@ -273,10 +276,7 @@ async def compute_file_hash(
     # Security: validate path is within allowed roots
     settings = get_settings()
     allowed_roots = settings.get_allowed_roots()
-    is_allowed = any(
-        path == root or root in path.parents
-        for root in allowed_roots
-    )
+    is_allowed = any(path == root or root in path.parents for root in allowed_roots)
     if not is_allowed:
         raise HTTPException(
             status_code=403,

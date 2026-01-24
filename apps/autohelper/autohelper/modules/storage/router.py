@@ -43,11 +43,13 @@ def get_metadata_backend(
 
         case "sharepoint":
             # Validate SharePoint configuration
-            if not all([
-                settings.sharepoint_site_url,
-                settings.sharepoint_client_id,
-                settings.sharepoint_client_secret,
-            ]):
+            if not all(
+                [
+                    settings.sharepoint_site_url,
+                    settings.sharepoint_client_id,
+                    settings.sharepoint_client_secret,
+                ]
+            ):
                 raise ValueError(
                     "SharePoint backend requires AUTOHELPER_SHAREPOINT_SITE_URL, "
                     "AUTOHELPER_SHAREPOINT_CLIENT_ID, and AUTOHELPER_SHAREPOINT_CLIENT_SECRET"

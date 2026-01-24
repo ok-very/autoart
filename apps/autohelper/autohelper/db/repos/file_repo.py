@@ -9,7 +9,7 @@ from autohelper.shared.ids import generate_file_id
 
 class FileRepository:
     """CRUD operations for files table with memory-efficient batching."""
-    
+
     def upsert(
         self,
         root_id: str,
@@ -25,14 +25,14 @@ class FileRepository:
         """Insert or update a file entry. Returns file_id."""
         db = get_db()
         now = datetime.now(UTC).isoformat()
-        
+
         # Check if exists
         cursor = db.execute(
             "SELECT file_id FROM files WHERE canonical_path = ?",
             (canonical_path,),
         )
         row = cursor.fetchone()
-        
+
         if row:
             # Update existing
             file_id = row["file_id"]
@@ -42,8 +42,18 @@ class FileRepository:
                     content_hash = ?, is_dir = ?, ext = ?, mime = ?,
                     last_seen_at = ?
                 WHERE file_id = ?""",
-                (root_id, rel_path, size, mtime_ns, content_hash, 
-                 int(is_dir), ext, mime, now, file_id),
+                (
+                    root_id,
+                    rel_path,
+                    size,
+                    mtime_ns,
+                    content_hash,
+                    int(is_dir),
+                    ext,
+                    mime,
+                    now,
+                    file_id,
+                ),
             )
         else:
             # Insert new
@@ -53,36 +63,48 @@ class FileRepository:
                     (file_id, root_id, canonical_path, rel_path, size, mtime_ns,
                      content_hash, indexed_at, last_seen_at, is_dir, ext, mime)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (file_id, root_id, canonical_path, rel_path, size, mtime_ns,
-                 content_hash, now, now, int(is_dir), ext, mime),
+                (
+                    file_id,
+                    root_id,
+                    canonical_path,
+                    rel_path,
+                    size,
+                    mtime_ns,
+                    content_hash,
+                    now,
+                    now,
+                    int(is_dir),
+                    ext,
+                    mime,
+                ),
             )
-        
+
         return file_id
-    
+
     def upsert_batch(self, files: list[dict]) -> int:
         """
         Batch upsert files. Memory-efficient for large crawls.
-        
+
         Args:
             files: List of dicts with keys matching upsert() params
-        
+
         Returns:
             Number of files processed
         """
         db = get_db()
         now = datetime.now(UTC).isoformat()
         count = 0
-        
+
         for file_data in files:
             canonical_path = file_data["canonical_path"]
-            
+
             # Check existence
             cursor = db.execute(
                 "SELECT file_id FROM files WHERE canonical_path = ?",
                 (canonical_path,),
             )
             row = cursor.fetchone()
-            
+
             if row:
                 file_id = row["file_id"]
                 db.execute(
@@ -91,10 +113,18 @@ class FileRepository:
                         content_hash = ?, is_dir = ?, ext = ?, mime = ?,
                         last_seen_at = ?
                     WHERE file_id = ?""",
-                    (file_data["root_id"], file_data["rel_path"], 
-                     file_data["size"], file_data["mtime_ns"],
-                     file_data.get("content_hash"), int(file_data["is_dir"]),
-                     file_data["ext"], file_data.get("mime"), now, file_id),
+                    (
+                        file_data["root_id"],
+                        file_data["rel_path"],
+                        file_data["size"],
+                        file_data["mtime_ns"],
+                        file_data.get("content_hash"),
+                        int(file_data["is_dir"]),
+                        file_data["ext"],
+                        file_data.get("mime"),
+                        now,
+                        file_id,
+                    ),
                 )
             else:
                 file_id = generate_file_id()
@@ -103,16 +133,26 @@ class FileRepository:
                         (file_id, root_id, canonical_path, rel_path, size, mtime_ns,
                          content_hash, indexed_at, last_seen_at, is_dir, ext, mime)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (file_id, file_data["root_id"], canonical_path,
-                     file_data["rel_path"], file_data["size"], file_data["mtime_ns"],
-                     file_data.get("content_hash"), now, now,
-                     int(file_data["is_dir"]), file_data["ext"], file_data.get("mime")),
+                    (
+                        file_id,
+                        file_data["root_id"],
+                        canonical_path,
+                        file_data["rel_path"],
+                        file_data["size"],
+                        file_data["mtime_ns"],
+                        file_data.get("content_hash"),
+                        now,
+                        now,
+                        int(file_data["is_dir"]),
+                        file_data["ext"],
+                        file_data.get("mime"),
+                    ),
                 )
             count += 1
-        
+
         db.commit()
         return count
-    
+
     def get_by_path(self, canonical_path: str) -> dict | None:
         """Get file by canonical path."""
         db = get_db()
@@ -122,7 +162,7 @@ class FileRepository:
         )
         row = cursor.fetchone()
         return dict(row) if row else None
-    
+
     def get_by_root(self, root_id: str) -> Iterator[dict]:
         """Stream files for a root (memory-efficient generator)."""
         db = get_db()
@@ -132,7 +172,7 @@ class FileRepository:
         )
         while row := cursor.fetchone():
             yield dict(row)
-    
+
     def get_file_stats(self, root_id: str) -> dict:
         """Get quick stats for a root without loading all files."""
         db = get_db()
@@ -147,7 +187,7 @@ class FileRepository:
         )
         row = cursor.fetchone()
         return dict(row) if row else {}
-    
+
     def mark_missing(self, root_id: str, seen_before: str) -> int:
         """
         Mark files not seen since timestamp as missing.
@@ -161,7 +201,7 @@ class FileRepository:
         )
         db.commit()
         return cursor.rowcount
-    
+
     def get_changed_since(self, root_id: str, since: str) -> Iterator[dict]:
         """Stream files changed since timestamp."""
         db = get_db()
@@ -171,7 +211,7 @@ class FileRepository:
         )
         while row := cursor.fetchone():
             yield dict(row)
-    
+
     def count_by_root(self, root_id: str) -> int:
         """Count files in a root."""
         db = get_db()

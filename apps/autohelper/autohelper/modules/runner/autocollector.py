@@ -5,8 +5,8 @@ Orchestrates artifact collection from web URLs and local folders.
 Delegates to specialized collectors for each source type.
 """
 
+from collections.abc import AsyncIterator
 from pathlib import Path
-from typing import AsyncIterator
 
 from pydantic import ValidationError
 
@@ -81,9 +81,7 @@ class AutoCollectorRunner(BaseRunner):
         source_path = config.get("source_path")
 
         if url:
-            return await self._web_collector.collect(
-                url, output_folder, naming_config, context_id
-            )
+            return await self._web_collector.collect(url, output_folder, naming_config, context_id)
         elif source_path:
             return await self._folder_collector.collect(
                 source_path, output_folder, naming_config, context_id

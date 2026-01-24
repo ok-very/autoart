@@ -5,13 +5,12 @@ Runner service - orchestrates runner execution.
 import asyncio
 import time
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from pathlib import Path
-from typing import AsyncIterator
 
 from autohelper.shared.logging import get_logger
 
 from .types import (
-    ArtifactRef,
     InvokeRequest,
     RunnerId,
     RunnerProgress,
@@ -24,13 +23,13 @@ logger = get_logger(__name__)
 
 class BaseRunner(ABC):
     """Abstract base class for runners."""
-    
+
     @property
     @abstractmethod
     def runner_id(self) -> RunnerId:
         """The unique identifier for this runner."""
         ...
-    
+
     @abstractmethod
     async def invoke(
         self,
@@ -40,7 +39,7 @@ class BaseRunner(ABC):
     ) -> RunnerResult:
         """Execute the runner synchronously."""
         ...
-    
+
     @abstractmethod
     async def invoke_stream(
         self,
@@ -64,20 +63,20 @@ class RunnerService:
         self._current_runner: RunnerId | None = None
         self._current_progress: RunnerProgress | None = None
         self._lock = asyncio.Lock()  # Protect concurrent access to state
-    
+
     def register(self, runner: BaseRunner) -> None:
         """Register a runner with the service."""
         self._runners[runner.runner_id] = runner
         logger.info(f"Registered runner: {runner.runner_id}")
-    
+
     def get_runner(self, runner_id: RunnerId) -> BaseRunner | None:
         """Get a runner by ID."""
         return self._runners.get(runner_id)
-    
+
     def list_runners(self) -> list[str]:
         """List all registered runner IDs."""
-        return [r.value for r in self._runners.keys()]
-    
+        return [r.value for r in self._runners]
+
     def get_status(self) -> RunnerStatus:
         """Get current runner status."""
         return RunnerStatus(
@@ -85,7 +84,7 @@ class RunnerService:
             current_runner=self._current_runner,
             progress=self._current_progress,
         )
-    
+
     async def invoke(self, request: InvokeRequest) -> RunnerResult:
         """
         Invoke a runner.
@@ -147,10 +146,8 @@ class RunnerService:
                 self._active = False
                 self._current_runner = None
                 self._current_progress = None
-    
-    async def invoke_stream(
-        self, request: InvokeRequest
-    ) -> AsyncIterator[RunnerProgress]:
+
+    async def invoke_stream(self, request: InvokeRequest) -> AsyncIterator[RunnerProgress]:
         """
         Invoke a runner with streaming progress.
 
@@ -216,5 +213,6 @@ def get_runner_service() -> RunnerService:
         _runner_service = RunnerService()
         # Register default runners
         from .autocollector import AutoCollectorRunner
+
         _runner_service.register(AutoCollectorRunner())
     return _runner_service

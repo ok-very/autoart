@@ -8,9 +8,10 @@ import asyncio
 import logging
 import mimetypes
 import uuid
-from datetime import datetime, timezone
+from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, AsyncIterator
+from typing import TYPE_CHECKING
 
 from ..extractors import extract_bio_text, extract_image_urls
 from ..naming import (
@@ -48,11 +49,11 @@ def _get_bs4():
             from bs4 import BeautifulSoup
 
             _bs4 = BeautifulSoup
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "beautifulsoup4 is required for web collection. "
                 "Install with: pip install beautifulsoup4 lxml"
-            )
+            ) from e
     return _bs4
 
 
@@ -120,7 +121,7 @@ class WebCollector:
         BeautifulSoup = _get_bs4()
         artifacts: list[ArtifactRef] = []
         manifest_entries: list[ArtifactManifestEntry] = []
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         try:
             # Ensure output folder exists
@@ -145,9 +146,7 @@ class WebCollector:
             bio_text = extract_bio_text(soup)
             if bio_text:
                 bio_path = output_folder / "bio.txt"
-                await asyncio.to_thread(
-                    bio_path.write_text, bio_text, encoding="utf-8"
-                )
+                await asyncio.to_thread(bio_path.write_text, bio_text, encoding="utf-8")
                 artifacts.append(
                     ArtifactRef(
                         ref_id=str(uuid.uuid4()),
@@ -174,9 +173,7 @@ class WebCollector:
                     manifest_entries.append(entry)
 
             # Save manifest
-            await self._save_manifest(
-                output_folder, source, naming_config, manifest_entries, now
-            )
+            await self._save_manifest(output_folder, source, naming_config, manifest_entries, now)
 
             return RunnerResult(success=True, artifacts=artifacts)
 
@@ -206,14 +203,12 @@ class WebCollector:
         # Validate URL for SSRF protection
         is_safe, error_msg = await is_safe_url(source)
         if not is_safe:
-            yield RunnerProgress(
-                stage="error", message=f"URL validation failed: {error_msg}"
-            )
+            yield RunnerProgress(stage="error", message=f"URL validation failed: {error_msg}")
             return
 
         BeautifulSoup = _get_bs4()
         manifest_entries: list[ArtifactManifestEntry] = []
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         yield RunnerProgress(stage="connecting", message=f"Fetching {source}...", percent=5)
 
@@ -240,9 +235,7 @@ class WebCollector:
             bio_text = extract_bio_text(soup)
             if bio_text:
                 bio_path = output_folder / "bio.txt"
-                await asyncio.to_thread(
-                    bio_path.write_text, bio_text, encoding="utf-8"
-                )
+                await asyncio.to_thread(bio_path.write_text, bio_text, encoding="utf-8")
                 yield RunnerProgress(stage="bio", message="Extracted bio text", percent=30)
 
             # Get image URLs
@@ -281,9 +274,7 @@ class WebCollector:
                         logger.warning(f"Failed to download {img_url}: {e}")
 
             # Save manifest
-            await self._save_manifest(
-                output_folder, source, naming_config, manifest_entries, now
-            )
+            await self._save_manifest(output_folder, source, naming_config, manifest_entries, now)
 
             yield RunnerProgress(stage="complete", message="Collection complete!", percent=100)
 

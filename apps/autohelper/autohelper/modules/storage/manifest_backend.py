@@ -8,16 +8,14 @@ Stores artifact metadata in a local JSON file at:
 import asyncio
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 from pydantic import ValidationError
 
 from ..runner.types import (
     ArtifactManifestEntry,
     CollectionManifest,
-    NamingConfig,
 )
 
 logger = logging.getLogger(__name__)
@@ -71,7 +69,7 @@ class ManifestStorageBackend:
                 logger.warning(f"Failed to load manifest, creating new: {e}")
 
         # Create new manifest
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         self._cache = CollectionManifest(
             manifest_id=self.output_folder.name,
             created_at=now,
@@ -84,7 +82,7 @@ class ManifestStorageBackend:
     async def _save(self, manifest: CollectionManifest) -> None:
         """Save manifest to disk."""
         await self._ensure_dir()
-        manifest.updated_at = datetime.now(timezone.utc).isoformat()
+        manifest.updated_at = datetime.now(UTC).isoformat()
         data = manifest.model_dump_json(indent=2)
         await asyncio.to_thread(self.manifest_path.write_text, data, encoding="utf-8")
         self._cache = manifest
@@ -96,8 +94,12 @@ class ManifestStorageBackend:
 
             # Check for existing artifact with same ID (update case)
             existing_idx = next(
-                (i for i, a in enumerate(manifest.artifacts) if a.artifact_id == artifact.artifact_id),
-                None
+                (
+                    i
+                    for i, a in enumerate(manifest.artifacts)
+                    if a.artifact_id == artifact.artifact_id
+                ),
+                None,
             )
             if existing_idx is not None:
                 manifest.artifacts[existing_idx] = artifact
@@ -110,10 +112,7 @@ class ManifestStorageBackend:
         """Find artifact by persistent ID."""
         async with self._lock:
             manifest = await self._load_or_create_locked()
-            return next(
-                (a for a in manifest.artifacts if a.artifact_id == artifact_id),
-                None
-            )
+            return next((a for a in manifest.artifacts if a.artifact_id == artifact_id), None)
 
     async def find_by_hash(self, content_hash: str) -> list[ArtifactManifestEntry]:
         """Find artifacts by content hash."""
@@ -135,6 +134,7 @@ class ManifestStorageBackend:
         Raises:
             ValueError: If new_path is outside the output folder
         """
+
         # Validate that new_path is within the output folder
         # Offload blocking Path.resolve() calls to thread pool
         def _validate_path() -> None:
@@ -144,11 +144,11 @@ class ManifestStorageBackend:
 
         try:
             await asyncio.to_thread(_validate_path)
-        except ValueError:
+        except ValueError as e:
             raise ValueError(
                 f"new_path must be within output folder. "
                 f"Got '{new_path}', expected path under '{self.output_folder}'"
-            )
+            ) from e
 
         async with self._lock:
             manifest = await self._load_or_create_locked()

@@ -32,6 +32,7 @@ dev = [
     "httpx>=0.26.0",
     "ruff>=0.1.0",
     "mypy>=1.8.0",
+    "types-requests>=2.31.0",
 ]
 sharepoint = [
     # SharePoint metadata storage backend
@@ -49,6 +50,22 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 python_version = "3.11"
 strict = true
 warn_return_any = true
+
+# Relax strictness for GUI modules (Qt lazy imports cause many false positives)
+[[tool.mypy.overrides]]
+module = "autohelper.gui.*"
+ignore_errors = true
+
+# Relax strictness for test files
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_untyped_calls = false
+
+# Relax strictness for scripts
+[[tool.mypy.overrides]]
+module = "scripts.*"
+ignore_errors = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

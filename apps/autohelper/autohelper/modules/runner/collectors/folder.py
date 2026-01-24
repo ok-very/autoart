@@ -9,9 +9,9 @@ import logging
 import mimetypes
 import shutil
 import uuid
-from datetime import datetime, timezone
+from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import AsyncIterator
 
 from ..naming import (
     IndexCounter,
@@ -28,8 +28,6 @@ from ..types import (
     RunnerResult,
 )
 from .base import (
-    SUPPORTED_DOCUMENT_EXTENSIONS,
-    SUPPORTED_IMAGE_EXTENSIONS,
     get_artifact_type,
     scan_files_safe,
 )
@@ -87,7 +85,7 @@ class FolderCollector:
 
         artifacts: list[ArtifactRef] = []
         manifest_entries: list[ArtifactManifestEntry] = []
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         try:
             # Ensure output folder exists
@@ -173,7 +171,7 @@ class FolderCollector:
             return
 
         manifest_entries: list[ArtifactManifestEntry] = []
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
 
         try:
             # Ensure output folder exists

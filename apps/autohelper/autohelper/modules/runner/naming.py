@@ -8,7 +8,7 @@ import hashlib
 import re
 import unicodedata
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -88,16 +88,16 @@ def _slugify(text: str, max_length: int = 50) -> str:
 
     # Lowercase and replace spaces/underscores with hyphens
     slug = ascii_text.lower().strip()
-    slug = re.sub(r'[\s_]+', '-', slug)
+    slug = re.sub(r"[\s_]+", "-", slug)
     # Remove non-alphanumeric characters except hyphens
-    slug = re.sub(r'[^a-z0-9\-]', '', slug)
+    slug = re.sub(r"[^a-z0-9\-]", "", slug)
     # Collapse multiple hyphens
-    slug = re.sub(r'-+', '-', slug)
+    slug = re.sub(r"-+", "-", slug)
     # Trim leading/trailing hyphens
-    slug = slug.strip('-')
+    slug = slug.strip("-")
     # Truncate
     if len(slug) > max_length:
-        slug = slug[:max_length].rstrip('-')
+        slug = slug[:max_length].rstrip("-")
     return slug or "untitled"
 
 
@@ -129,7 +129,7 @@ def resolve_template_var(
             # Use content hash or URL hash from context
             content_hash = context.get("content_hash", "")
             url_hash = context.get("url_hash", "")
-            return (content_hash[:8] or url_hash[:8] or "00000000")
+            return content_hash[:8] or url_hash[:8] or "00000000"
 
         case "date":
             timestamp = context.get("timestamp")
@@ -137,9 +137,9 @@ def resolve_template_var(
                 try:
                     dt = datetime.fromisoformat(timestamp)
                 except ValueError:
-                    dt = datetime.now(timezone.utc)
+                    dt = datetime.now(UTC)
             else:
-                dt = datetime.now(timezone.utc)
+                dt = datetime.now(UTC)
             return dt.strftime(date_format)
 
         case "ext":
@@ -225,7 +225,7 @@ def generate_filename(
         )
 
     # Replace {var} patterns
-    filename = re.sub(r'\{(\w+)\}', replace_var, template)
+    filename = re.sub(r"\{(\w+)\}", replace_var, template)
 
     # Apply prefix and suffix
     if config.prefix:
@@ -237,8 +237,8 @@ def generate_filename(
     filename = f"{filename}{extension}"
 
     # Sanitize filename (remove dangerous characters)
-    filename = re.sub(r'[<>:"/\\|?*]', '', filename)
-    filename = filename.strip('. ')
+    filename = re.sub(r'[<>:"/\\|?*]', "", filename)
+    filename = filename.strip(". ")
 
     # If sanitization removed the entire filename, use fallback with prefix/suffix
     if not filename:
@@ -286,7 +286,7 @@ def _normalize_timestamp(timestamp: str) -> str:
     try:
         dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
         # Convert to UTC and format consistently
-        utc_dt = dt.astimezone(timezone.utc)
+        utc_dt = dt.astimezone(UTC)
         return utc_dt.strftime("%Y-%m-%dT%H:%M:%S+00:00")
     except (ValueError, AttributeError):
         # If parsing fails, return as-is to maintain backward compatibility

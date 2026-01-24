@@ -12,7 +12,7 @@ router = APIRouter()
 async def health() -> HealthResponse:
     """
     Simple health check.
-    
+
     Returns ok if the service is running.
     """
     service = HealthService()
@@ -23,7 +23,7 @@ async def health() -> HealthResponse:
 async def status() -> StatusResponse:
     """
     Detailed status check.
-    
+
     Returns:
     - Database connectivity
     - Migration status

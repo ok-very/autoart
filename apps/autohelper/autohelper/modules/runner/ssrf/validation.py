@@ -36,7 +36,7 @@ def _resolve_all_ips(hostname: str) -> list[str]:
             ip_str = result[4][0]
             if ip_str not in ips:
                 ips.append(ip_str)
-    except (socket.gaierror, socket.herror, socket.timeout, OSError) as e:
+    except (TimeoutError, socket.gaierror, socket.herror, OSError) as e:
         # DNS/network resolution errors should be treated as unsafe
         # - gaierror: address-related errors
         # - herror: legacy host errors
@@ -108,7 +108,7 @@ async def is_safe_url(url: str) -> tuple[bool, str]:
             asyncio.to_thread(_resolve_all_ips, hostname),
             timeout=DNS_TIMEOUT_SECONDS,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         return (
             False,
             f"DNS resolution timed out after {DNS_TIMEOUT_SECONDS}s for hostname: {hostname}",
