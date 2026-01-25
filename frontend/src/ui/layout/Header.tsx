@@ -43,9 +43,22 @@ export function Header() {
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
 
   // Get workspace color for bound styling
-  const workspaceColor = activeWorkspaceId
+  const rawWorkspaceColor = activeWorkspaceId
     ? BUILT_IN_WORKSPACES.find((w) => w.id === activeWorkspaceId)?.color
     : null;
+
+  // Map workspace colors to valid Button color props
+  const buttonColorMap: Record<string, 'blue' | 'gray' | 'violet' | 'yellow'> = {
+    blue: 'blue',
+    cyan: 'blue',
+    green: 'blue',
+    purple: 'violet',
+    pink: 'violet',
+    orange: 'yellow',
+    amber: 'yellow',
+    slate: 'gray',
+  };
+  const workspaceColor = rawWorkspaceColor ? buttonColorMap[rawWorkspaceColor] ?? 'gray' : null;
 
   // Check if there are any bound panels
   const hasBoundPanels = boundPanelIds.size > 0;
