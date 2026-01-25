@@ -530,9 +530,22 @@ const END_DATE_KEYS = ['dueDate', 'due_date', 'endDate', 'end_date', 'due', 'end
 /** Cache for auto-detected field mappings by definition ID */
 const fieldMappingCache = new Map<string, RecordTimelineFieldMapping>();
 
+/** Maximum number of cached field mappings before eviction */
+const FIELD_MAPPING_CACHE_MAX_SIZE = 100;
+
 /** Clear the field mapping cache (useful for testing or when definitions change) */
 export function clearFieldMappingCache(): void {
     fieldMappingCache.clear();
+}
+
+/** Add to cache with size-based eviction */
+function cacheFieldMapping(definitionId: string, mapping: RecordTimelineFieldMapping): void {
+    // Simple eviction: clear cache when it exceeds max size
+    // Field mappings are cheap to recompute, so full eviction is acceptable
+    if (fieldMappingCache.size >= FIELD_MAPPING_CACHE_MAX_SIZE) {
+        fieldMappingCache.clear();
+    }
+    fieldMappingCache.set(definitionId, mapping);
 }
 
 /**
@@ -699,7 +712,7 @@ function recordToRenderItem(
     if (!autoMapping) {
         autoMapping = autoDetectFieldMapping(fields);
         if (definition.id) {
-            fieldMappingCache.set(definition.id, autoMapping);
+            cacheFieldMapping(definition.id, autoMapping);
         }
     }
 

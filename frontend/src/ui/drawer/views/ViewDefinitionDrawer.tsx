@@ -4,9 +4,6 @@ import { useRecord, useRecordDefinition } from '@/api/hooks';
 import { useUIStore } from '@/stores';
 import type { FieldDef } from '@/types';
 
-import { CloneExcludedToggle } from '../../common/CloneExcludedToggle';
-
-
 interface ViewDefinitionDrawerProps {
   recordId?: string;
   definitionId?: string;
@@ -130,7 +127,6 @@ export function ViewDefinitionDrawer({ recordId, definitionId }: ViewDefinitionD
               </div>
             )}
           </div>
-          <CloneExcludedToggle definition={definition} />
         </div>
       </div>
 
