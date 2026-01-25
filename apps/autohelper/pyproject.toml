@@ -23,6 +23,8 @@ dependencies = [
     "lxml>=5.0.0",
     # HTTP client for AutoArt API (pairing)
     "requests>=2.31.0",
+    # Scheduler for garbage collection
+    "apscheduler>=3.10.0",
     # Windows-specific:
     "pywin32>=306; sys_platform == 'win32'",
 ]

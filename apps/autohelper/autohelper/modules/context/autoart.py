@@ -253,3 +253,102 @@ class AutoArtClient:
         """
         # The credentials endpoint will fail if session is invalid
         return self.get_monday_token(session_id) is not None
+
+    # =========================================================================
+    # GARBAGE COLLECTION
+    # =========================================================================
+
+    def delete_stale_import_sessions(
+        self, older_than_days: int = 7
+    ) -> tuple[int, list[str]]:
+        """
+        Delete stale import sessions from the backend.
+
+        Args:
+            older_than_days: Delete sessions older than this many days
+
+        Returns:
+            Tuple of (deleted_count, session_ids)
+        """
+        try:
+            response = requests.delete(
+                f"{self.api_url}/api/imports/sessions/stale",
+                params={"older_than_days": older_than_days},
+                headers=self._get_headers(),
+                timeout=30,
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                return result.get("deleted_count", 0), result.get("session_ids", [])
+            else:
+                logger.warning(
+                    f"Failed to delete stale import sessions: {response.status_code}"
+                )
+                return 0, []
+
+        except requests.RequestException as e:
+            logger.error(f"Error deleting stale import sessions: {e}")
+            return 0, []
+
+    def delete_stale_export_sessions(
+        self, older_than_days: int = 7
+    ) -> tuple[int, list[str]]:
+        """
+        Delete stale export sessions from the backend.
+
+        Args:
+            older_than_days: Delete sessions older than this many days
+
+        Returns:
+            Tuple of (deleted_count, session_ids)
+        """
+        try:
+            response = requests.delete(
+                f"{self.api_url}/api/exports/sessions/stale",
+                params={"older_than_days": older_than_days},
+                headers=self._get_headers(),
+                timeout=30,
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                return result.get("deleted_count", 0), result.get("session_ids", [])
+            else:
+                logger.warning(
+                    f"Failed to delete stale export sessions: {response.status_code}"
+                )
+                return 0, []
+
+        except requests.RequestException as e:
+            logger.error(f"Error deleting stale export sessions: {e}")
+            return 0, []
+
+    def get_gc_stats(self, retention_days: int = 7) -> dict[str, Any] | None:
+        """
+        Get garbage collection stats from the backend.
+
+        Args:
+            retention_days: Retention period for stats calculation
+
+        Returns:
+            Stats dict or None on failure
+        """
+        try:
+            response = requests.get(
+                f"{self.api_url}/api/gc/stats",
+                params={"retention_days": retention_days},
+                headers=self._get_headers(),
+                timeout=10,
+            )
+
+            if response.status_code == 200:
+                result: dict[str, Any] = response.json()
+                return result
+            else:
+                logger.warning(f"Failed to get GC stats: {response.status_code}")
+                return None
+
+        except requests.RequestException as e:
+            logger.error(f"Error getting GC stats: {e}")
+            return None
