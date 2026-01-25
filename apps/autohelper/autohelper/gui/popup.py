@@ -454,8 +454,6 @@ def get_window_class():
 
             layout.addWidget(status_grp)
 
-            layout.addWidget(status_grp)
-
             # 3. Ingestion Section
             ingest_grp = QFrame()
             ingest_grp.setStyleSheet(
@@ -523,7 +521,7 @@ def get_window_class():
             layout.addStretch()
 
         def pair_with_autoart(self):
-            """Pair with AutoArt using the 6-digit code."""
+            """Pair with AutoArt using the 6-digit code (async)."""
             code = self.txt_pairing_code.text().strip()
             if not code or len(code) != 6:
                 self.lbl_context_status.setText("Enter 6-digit code")
@@ -532,28 +530,35 @@ def get_window_class():
 
             self.lbl_context_status.setText("Pairing...")
             self.lbl_context_status.setStyleSheet("color: #2196f3;")
-            QApplication.processEvents()
 
-            try:
+            # Store result for callback
+            self._pairing_result = None
+
+            def _do_pair():
                 from autohelper.config.settings import get_settings
                 from autohelper.modules.context.autoart import AutoArtClient
 
                 settings = get_settings()
                 client = AutoArtClient(api_url=settings.autoart_api_url)
-                session_id = client.pair_with_code(code)
+                self._pairing_result = client.pair_with_code(code)
+                if not self._pairing_result:
+                    raise ValueError("Invalid or expired code")
 
-                if session_id:
-                    # Save session ID
-                    self.current_config["autoart_session_id"] = session_id
-                    self.lbl_context_status.setText("✓ Connected to AutoArt")
-                    self.lbl_context_status.setStyleSheet("color: #4caf50;")
-                    self.txt_pairing_code.clear()
-                    self.mark_dirty()  # Enable save to persist session
-                else:
-                    self.lbl_context_status.setText("✗ Invalid or expired code")
-                    self.lbl_context_status.setStyleSheet("color: #d32f2f;")
-            except Exception as e:
-                self.lbl_context_status.setText(f"✗ Error: {str(e)[:30]}")
+            self._pairing_worker = Worker(_do_pair)
+            self._pairing_worker.finished.connect(self._on_pairing_finished)
+            self._pairing_worker.start()
+
+        def _on_pairing_finished(self, success, msg):
+            """Handle pairing result on main thread."""
+            if success and self._pairing_result:
+                self.current_config["autoart_session_id"] = self._pairing_result
+                self.lbl_context_status.setText("✓ Connected to AutoArt")
+                self.lbl_context_status.setStyleSheet("color: #4caf50;")
+                self.txt_pairing_code.clear()
+                self.mark_dirty()
+            else:
+                error_msg = msg if msg != "Done" else "Invalid or expired code"
+                self.lbl_context_status.setText(f"✗ {error_msg[:30]}")
                 self.lbl_context_status.setStyleSheet("color: #d32f2f;")
 
         def ingest_pst_dialog(self):
@@ -720,6 +725,7 @@ def get_window_class():
                 reset_settings()
 
                 # Reinitialize context service with new token
+                context_reinit_error = None
                 try:
                     from autohelper.modules.context.service import get_context_service
 
@@ -728,6 +734,7 @@ def get_window_class():
                     # Trigger a background refresh
                     ctx_svc.refresh()
                 except Exception as e:
+                    context_reinit_error = str(e)
                     print(f"Context service reinit warning: {e}")
 
                 # Toggle mail service based on new config
@@ -741,6 +748,14 @@ def get_window_class():
                     mail_svc.start()
                 else:
                     mail_svc.stop()
+
+                # Show warning if context reinit failed (save still succeeded)
+                if context_reinit_error:
+                    QMessageBox.warning(
+                        self,
+                        "Context Service Warning",
+                        f"Settings saved, but context service failed to reinitialize:\n{context_reinit_error}\n\nRestart may be required.",
+                    )
 
             except Exception as e:
                 QMessageBox.critical(self, "Save Error", str(e))
@@ -927,12 +942,10 @@ def get_tray_class():
                     self.window.activateWindow()
 
         def position_window(self):
+            if not hasattr(self.window, 'move_to_tray_area'):
+                return
             rect = get_tray_icon_rect(self)
-            if rect:
-                self.window.move_to_tray_area(rect)
-            else:
-                # Fallback to cursor
-                self.window.move_to_tray_area(None)
+            self.window.move_to_tray_area(rect)
 
         def restart_app(self):
             """Restart the application by spawning a new process and quitting."""

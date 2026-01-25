@@ -378,7 +378,7 @@ class WebCollector:
         timestamp: str,
     ) -> None:
         """Save collection manifest to output folder."""
-        from ..storage import get_metadata_backend
+        from ...storage import get_metadata_backend
 
         manifest = CollectionManifest(
             manifest_id=str(uuid.uuid4()),
