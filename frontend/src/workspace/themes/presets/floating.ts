@@ -84,15 +84,16 @@ export const floatingTheme: WorkspaceThemeModule = {
   behavior: {
     attach(api: DockviewApi) {
       // Add active group tracking
-      const disposable = api.onDidActiveGroupChange((event) => {
+      // Note: onDidActiveGroupChange receives the group directly (or undefined), not an event wrapper
+      const disposable = api.onDidActiveGroupChange((group) => {
         // Remove active from all groups
         document.querySelectorAll('.groupview').forEach((el) => {
           el.classList.remove('active-group');
         });
 
         // Add active to current group
-        if (event.group) {
-          const groupEl = document.querySelector(`[data-group-id="${event.group.id}"]`);
+        if (group) {
+          const groupEl = document.querySelector(`[data-group-id="${group.id}"]`);
           groupEl?.classList.add('active-group');
         }
       });

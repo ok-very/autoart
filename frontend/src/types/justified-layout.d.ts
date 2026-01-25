@@ -29,8 +29,10 @@ declare module 'justified-layout' {
         fullWidthBreakoutRowCadence?: number | false;
     }
 
+    type LayoutInputItem = number | { width: number; height: number };
+
     function justifiedLayout(
-        input: number[] | Array<{ width: number; height: number }>,
+        input: LayoutInputItem[],
         config?: JustifiedLayoutConfig
     ): JustifiedLayoutResult;
 

@@ -22,7 +22,7 @@ export const ExportFormatSchema = z.enum([
     'google-sheets',
     'google-slides',
     'pdf',
-    'gantt', // New format
+    // Note: Gantt is not an export format - it's a projection type that uses PDF format
 ]);
 export type ExportFormat = z.infer<typeof ExportFormatSchema>;
 

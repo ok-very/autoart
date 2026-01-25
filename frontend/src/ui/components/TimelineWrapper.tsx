@@ -218,6 +218,9 @@ export function TimelineWrapper({
     const [internalViewMode, setInternalViewMode] = useState<ViewMode>(ViewMode.Day);
     const [selectedTaskId, setSelectedTaskId] = useState<string>('');
 
+    // Silence unused state setter - reserved for future view mode selector UI
+    void setInternalViewMode;
+
     // Map data to tasks
     const mappedData = useMemo<MappedGanttData>(() => {
         if (projection) {
@@ -271,7 +274,7 @@ export function TimelineWrapper({
         let newSelectedIds: string[];
 
         if (isSelected) {
-            // Add to selection (or replace if not already present)
+            // Single-select: replace selection with clicked task (library limitation)
             newSelectedIds = currentSelection.includes(task.id)
                 ? currentSelection
                 : [task.id];
