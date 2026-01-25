@@ -15,7 +15,7 @@ import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useUIStore } from '../stores/uiStore';
-import { ResizeHandle } from '../ui/common/ResizeHandle';
+import { ResizeHandle } from '@autoart/ui';
 import { SelectionInspector } from '../ui/composites/SelectionInspector';
 import { Header } from '../ui/layout/Header';
 import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../ui/registry';

@@ -28,7 +28,6 @@ import {
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
 import type { NodeType, FieldDef, RecordDefinition, HierarchyNode } from '../../types';
-import { CloneExcludedToggle } from '../common/CloneExcludedToggle';
 import { EmojiPicker } from '@autoart/ui';
 
 const STYLE_COLORS = [
@@ -316,7 +315,6 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
                         )}
                     </div>
                     <div className="flex gap-2">
-                        {definition && <CloneExcludedToggle definition={definition} theme="dark" />}
                         <button
                             onClick={openCloneDrawer}
                             disabled={!definition}

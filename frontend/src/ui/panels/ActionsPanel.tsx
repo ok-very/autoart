@@ -9,7 +9,7 @@ import { Zap } from 'lucide-react';
 import { useCallback, useState } from 'react';
 // import { useNavigate } from 'react-router-dom'; // No navigation
 
-import { ResizeHandle } from '../common/ResizeHandle';
+import { ResizeHandle } from '@autoart/ui';
 import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../registry';
 import { ActionInstancesView } from '../tables/ActionInstancesView';
 

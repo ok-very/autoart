@@ -254,7 +254,8 @@ export function renderHierarchy(
         const hasUnclassifiedRecords = records.some(r => !r.record.classification_node_id);
 
         if (unclassifiedRecordHandling === 'unclassified-lane' && hasUnclassifiedRecords) {
-            unclassifiedLaneId = 'unclassified-records';
+            // Namespace the synthetic lane ID by project to avoid collisions with real node IDs
+            unclassifiedLaneId = `${project.id}::unclassified-records`;
             items.push({
                 actionId: unclassifiedLaneId,
                 label: 'Unclassified Records',
@@ -492,8 +493,8 @@ function calculateProgress(tasks: HierarchyNode[]): number {
     if (tasks.length === 0) return 0;
 
     const completed = tasks.filter(t => {
-        const meta = t.metadata as Record<string, unknown>;
-        return meta?.status === 'completed';
+        if (!t.metadata || typeof t.metadata !== 'object') return false;
+        return (t.metadata as Record<string, unknown>).status === 'completed';
     }).length;
 
     return Math.round((completed / tasks.length) * 100);
@@ -526,6 +527,27 @@ const START_DATE_KEYS = ['startDate', 'start_date', 'start', 'startdate', 'begin
 /** Conventional end date field keys (checked in order) */
 const END_DATE_KEYS = ['dueDate', 'due_date', 'endDate', 'end_date', 'due', 'end', 'deadline'];
 
+/** Cache for auto-detected field mappings by definition ID */
+const fieldMappingCache = new Map<string, RecordTimelineFieldMapping>();
+
+/** Maximum number of cached field mappings before eviction */
+const FIELD_MAPPING_CACHE_MAX_SIZE = 100;
+
+/** Clear the field mapping cache (useful for testing or when definitions change) */
+export function clearFieldMappingCache(): void {
+    fieldMappingCache.clear();
+}
+
+/** Add to cache with size-based eviction */
+function cacheFieldMapping(definitionId: string, mapping: RecordTimelineFieldMapping): void {
+    // Simple eviction: clear cache when it exceeds max size
+    // Field mappings are cheap to recompute, so full eviction is acceptable
+    if (fieldMappingCache.size >= FIELD_MAPPING_CACHE_MAX_SIZE) {
+        fieldMappingCache.clear();
+    }
+    fieldMappingCache.set(definitionId, mapping);
+}
+
 /**
  * Find a date field in the record definition by renderHint or conventional naming.
  */
@@ -545,7 +567,7 @@ function findDateField(
     if (timelineFields.length > 0) {
         for (const key of preferredKeys) {
             const match = timelineFields.find(f =>
-                f.key.toLowerCase().includes(key.toLowerCase())
+                f.key && f.key.toLowerCase().includes(key.toLowerCase())
             );
             if (match) return match;
         }
@@ -555,7 +577,7 @@ function findDateField(
     for (const key of preferredKeys) {
         const match = fields.find(f =>
             f.type === 'date' &&
-            (f.key === key || f.key.toLowerCase() === key.toLowerCase())
+            f.key && (f.key === key || f.key.toLowerCase() === key.toLowerCase())
         );
         if (match) return match;
     }
@@ -575,7 +597,7 @@ function autoDetectFieldMapping(fields: FieldDef[]): RecordTimelineFieldMapping 
         fields.find(f => f.type === 'status') ||
         fields.find(f =>
             (f.type === 'select' || f.type === 'status') &&
-            ['status', 'state', 'stage'].includes(f.key.toLowerCase())
+            f.key && ['status', 'state', 'stage'].includes(f.key.toLowerCase())
         );
 
     // For progress: prioritize type='percent', then fall back to conventional names with number/percent type
@@ -583,7 +605,7 @@ function autoDetectFieldMapping(fields: FieldDef[]): RecordTimelineFieldMapping 
         fields.find(f => f.type === 'percent') ||
         fields.find(f =>
             (f.type === 'number' || f.type === 'percent') &&
-            ['progress', 'completion', 'percent_complete', 'percentComplete'].includes(f.key.toLowerCase())
+            f.key && ['progress', 'completion', 'percent_complete', 'percentcomplete'].includes(f.key.toLowerCase())
         );
 
     return {
@@ -668,6 +690,17 @@ function extractRecordProgress(
 }
 
 /**
+ * Extract a label value from record data, safely converting to string.
+ */
+function extractRecordLabel(value: unknown): string | null {
+    if (value == null) return null;
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    // For objects/arrays, return null to fall back to unique_name
+    return null;
+}
+
+/**
  * Convert a single record to a GanttRenderItem.
  * Returns null if the record has no valid dates.
  */
@@ -682,8 +715,19 @@ function recordToRenderItem(
     // Get fields from definition schema
     const fields = definition.schema_config?.fields ?? [];
 
+    // Use cached auto-detected mapping if available (only cache if definition has an id)
+    let autoMapping: RecordTimelineFieldMapping | undefined;
+    if (definition.id) {
+        autoMapping = fieldMappingCache.get(definition.id);
+    }
+    if (!autoMapping) {
+        autoMapping = autoDetectFieldMapping(fields);
+        if (definition.id) {
+            cacheFieldMapping(definition.id, autoMapping);
+        }
+    }
+
     // Resolve field mapping (explicit overrides auto-detected)
-    const autoMapping = autoDetectFieldMapping(fields);
     const mapping: RecordTimelineFieldMapping = {
         ...autoMapping,
         ...explicitMapping,
@@ -713,7 +757,7 @@ function recordToRenderItem(
     const status = extractRecordStatus(data, mapping.statusField);
     const progress = extractRecordProgress(data, mapping.progressField);
     const label = mapping.labelField
-        ? (data[mapping.labelField] as string) || record.unique_name
+        ? extractRecordLabel(data[mapping.labelField]) || record.unique_name
         : record.unique_name;
 
     const isCompleted = status === 'completed' || status === 'done';

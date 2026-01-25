@@ -14,7 +14,7 @@ import { Database } from 'lucide-react';
 import { useCallback, useState, useEffect } from 'react';
 
 import { useUIStore, isRecordsViewMode } from '../stores/uiStore';
-import { ResizeHandle } from '../ui/common/ResizeHandle';
+import { ResizeHandle } from '@autoart/ui';
 import { SelectionInspector } from '../ui/composites';
 import { RecordView } from '../ui/composites/RecordView';
 import { Header } from '../ui/layout/Header';

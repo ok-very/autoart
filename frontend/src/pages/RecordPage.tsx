@@ -10,7 +10,7 @@
 import { useCallback, useState } from 'react';
 
 import { useUIStore } from '../stores/uiStore';
-import { ResizeHandle } from '../ui/common/ResizeHandle';
+import { ResizeHandle } from '@autoart/ui';
 import { RecordView } from '../ui/composites/RecordView';
 import { SelectionInspector } from '../ui/composites/SelectionInspector';
 import { Header } from '../ui/layout/Header';
