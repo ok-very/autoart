@@ -49,10 +49,12 @@ class AutoArtClient:
 
     def __init__(
         self,
-        api_url: str = "http://localhost:3000",
+        api_url: str | None = None,
         api_key: str | None = None,
         session_id: str | None = None,
     ):
+        if api_url is None:
+            api_url = "http://localhost:3001"
         self.api_url = api_url.rstrip("/")
         self.api_key = api_key
         self.session_id = session_id

@@ -89,14 +89,18 @@ class ContextService:
 
         # AutoArt client (local server, may not be running)
         # Use session_id from ConfigStore if available, otherwise fall back to settings
-        autoart_url = getattr(self.settings, "autoart_api_url", "http://localhost:3000")
+        autoart_url = getattr(self.settings, "autoart_api_url", "http://localhost:3001")
         autoart_key = getattr(self.settings, "autoart_api_key", None)
         autoart_session_id = config.get("autoart_session_id") or getattr(
             self.settings, "autoart_session_id", ""
         )
-        self._autoart_client = AutoArtClient(
-            api_url=autoart_url, api_key=autoart_key, session_id=autoart_session_id
-        )
+        try:
+            self._autoart_client = AutoArtClient(
+                api_url=autoart_url, api_key=autoart_key, session_id=autoart_session_id
+            )
+        except Exception as e:
+            logger.warning(f"Failed to init AutoArt client: {e}")
+            self._autoart_client = None
 
         # Monday client is now accessed via AutoArt proxy (using session_id)
         # Direct Monday client is only initialized if we have a direct token in settings
