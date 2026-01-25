@@ -3,7 +3,7 @@ Application factory - builds FastAPI app with all middleware and routes.
 Pattern mirrors AutoArt's buildApp().
 """
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -104,7 +104,9 @@ def build_app(settings: Settings | None = None) -> FastAPI:
 
     # Request context middleware
     @app.middleware("http")
-    async def request_context_middleware(request: Request, call_next: Any) -> Response:
+    async def request_context_middleware(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         """Attach request context for logging and tracing."""
         ctx = RequestContext(
             request_id=request.headers.get("X-Request-ID", generate_request_id()),

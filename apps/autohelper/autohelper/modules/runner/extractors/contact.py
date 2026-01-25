@@ -5,11 +5,27 @@ Cross-platform heuristics for email, phone, and location extraction.
 """
 
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 from urllib.parse import unquote
 
+from bs4 import BeautifulSoup
+from bs4.element import Tag
+
 if TYPE_CHECKING:
-    from bs4 import BeautifulSoup
+    pass
+
+# Type alias for elements that support find_all and get_text
+SoupElement = Union[BeautifulSoup, Tag]
+
+
+def _get_str_attr(tag: "Tag", attr: str, default: str = "") -> str:
+    """Safely get string attribute from BS4 tag (handles list returns)."""
+    val = tag.get(attr)
+    if val is None:
+        return default
+    if isinstance(val, list):
+        return val[0] if val else default
+    return val
 
 # Email regex - conservative to avoid false positives
 EMAIL_PATTERN = re.compile(
@@ -44,7 +60,7 @@ CITY_COUNTRY_PATTERN = re.compile(
 )
 
 
-def extract_emails(soup: "BeautifulSoup") -> list[str]:
+def extract_emails(soup: SoupElement) -> list[str]:
     """
     Extract email addresses from HTML.
 
@@ -53,7 +69,7 @@ def extract_emails(soup: "BeautifulSoup") -> list[str]:
     2. Visible text content (regex scan)
 
     Args:
-        soup: BeautifulSoup parsed HTML document
+        soup: BeautifulSoup document or Tag element
 
     Returns:
         Deduplicated list of email addresses
@@ -62,7 +78,7 @@ def extract_emails(soup: "BeautifulSoup") -> list[str]:
 
     # 1. Extract from mailto: links
     for link in soup.find_all("a", href=True):
-        href = link.get("href", "")
+        href = _get_str_attr(link, "href")
         if href.lower().startswith("mailto:"):
             # Remove mailto: prefix and any query params (?subject=...)
             mailto_content = href[7:].split("?")[0].strip()
@@ -83,7 +99,7 @@ def extract_emails(soup: "BeautifulSoup") -> list[str]:
     return list(dict.fromkeys(emails))  # Preserve order, dedupe
 
 
-def extract_phones(soup: "BeautifulSoup") -> list[str]:
+def extract_phones(soup: SoupElement) -> list[str]:
     """
     Extract phone numbers from HTML.
 
@@ -92,7 +108,7 @@ def extract_phones(soup: "BeautifulSoup") -> list[str]:
     2. Visible text content (regex scan, conservative)
 
     Args:
-        soup: BeautifulSoup parsed HTML document
+        soup: BeautifulSoup document or Tag element
 
     Returns:
         Deduplicated list of phone numbers
@@ -101,7 +117,7 @@ def extract_phones(soup: "BeautifulSoup") -> list[str]:
 
     # 1. Extract from tel: links
     for link in soup.find_all("a", href=True):
-        href = link.get("href", "")
+        href = _get_str_attr(link, "href")
         if href.lower().startswith("tel:"):
             phone = href[4:].strip()
             phone = unquote(phone)
@@ -129,7 +145,7 @@ def _normalize_phone(phone: str) -> str:
 
 
 def extract_location(
-    soup: "BeautifulSoup", bio_text: str | None = None
+    soup: SoupElement, bio_text: str | None = None
 ) -> tuple[str | None, list[str]]:
     """
     Extract location from HTML.

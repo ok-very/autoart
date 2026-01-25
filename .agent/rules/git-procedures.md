@@ -6,6 +6,56 @@ description: Standard git procedures for branch management, file cleanup, and co
 
 This workflow defines standard procedures to avoid common pitfalls like orphaned files, stale branches, and incomplete cleanups.
 
+## CRITICAL: Stacked PRs for Multi-Phase Plans
+
+**When executing a plan with multiple phases or breakpoints, you MUST use stacked PRs.**
+
+This is NOT optional. Each phase/breakpoint in a plan = one stacked PR.
+
+### Why This Matters
+- Enables incremental review at each logical checkpoint
+- Allows reverting individual phases without losing all work
+- Makes progress visible and trackable
+- Prevents monolithic PRs that are hard to review
+
+### Procedure for Plan Execution
+
+1. **At each plan breakpoint/phase completion:**
+   ```bash
+   # Commit current phase work
+   git add <files>
+   git commit -m "phase N: description"
+
+   # Create stacked PR using the wizard
+   pnpm git:stack
+   ```
+
+2. **Continue to next phase** on the new branch created by the wizard
+
+3. **Result:** Each phase has its own PR targeting the previous phase's branch
+
+### Example: 3-Phase Plan
+
+```
+Plan: "Reduce mypy errors from 195 to 50"
+- Phase 1: Fix adapter files (195 → 150)
+- Phase 2: Fix core modules (150 → 100)
+- Phase 3: Fix remaining (100 → 50)
+
+Execution:
+main
+ └── fix/mypy-phase-1 (PR #100 → main)
+      └── fix/mypy-phase-2 (PR #101 → #100)
+           └── fix/mypy-phase-3 (PR #102 → #101)
+```
+
+### Consequences of NOT Following This
+
+- ❌ Single large PR is hard to review
+- ❌ Can't checkpoint progress
+- ❌ Can't partially merge/revert
+- ❌ Loses logical separation of work
+
 ## After Switching Branches
 
 When switching to a new branch or pulling changes that delete/rename files:

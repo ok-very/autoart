@@ -4,6 +4,7 @@ Simple migration runner using schema_migrations table.
 
 import re
 from pathlib import Path
+from typing import Any
 
 from autohelper.shared.logging import get_logger
 
@@ -84,7 +85,7 @@ def run_migrations(db: Database) -> list[str]:
     return applied
 
 
-def get_migration_status(db: Database) -> dict:
+def get_migration_status(db: Database) -> dict[str, Any]:
     """Get migration status summary."""
     applied = get_applied_migrations(db)
     pending = get_pending_migrations(db)

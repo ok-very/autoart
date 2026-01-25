@@ -2,6 +2,7 @@
 
 import json
 from datetime import UTC, datetime
+from typing import Any
 
 from autohelper.db import get_db
 from autohelper.shared.ids import generate_index_run_id
@@ -27,7 +28,7 @@ class IndexRunRepository:
         self,
         run_id: str,
         status: IndexRunStatus,
-        stats: dict | None = None,
+        stats: dict[str, Any] | None = None,
     ) -> None:
         """Mark run as complete with final status and stats."""
         db = get_db()
@@ -41,7 +42,7 @@ class IndexRunRepository:
         )
         db.commit()
 
-    def get(self, run_id: str) -> dict | None:
+    def get(self, run_id: str) -> dict[str, Any] | None:
         """Get index run by ID."""
         db = get_db()
         cursor = db.execute(
@@ -56,7 +57,7 @@ class IndexRunRepository:
             return result
         return None
 
-    def get_latest(self, kind: str | None = None) -> dict | None:
+    def get_latest(self, kind: str | None = None) -> dict[str, Any] | None:
         """Get most recent index run, optionally filtered by kind."""
         db = get_db()
         if kind:
@@ -75,7 +76,7 @@ class IndexRunRepository:
             return result
         return None
 
-    def get_running(self) -> dict | None:
+    def get_running(self) -> dict[str, Any] | None:
         """Get currently running index run if any."""
         db = get_db()
         cursor = db.execute(

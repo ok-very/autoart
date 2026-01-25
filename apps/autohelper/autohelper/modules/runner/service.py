@@ -7,6 +7,7 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 from pathlib import Path
+from typing import Any
 
 from autohelper.shared.logging import get_logger
 
@@ -33,7 +34,7 @@ class BaseRunner(ABC):
     @abstractmethod
     async def invoke(
         self,
-        config: dict,
+        config: dict[str, Any],
         output_folder: Path,
         context_id: str | None = None,
     ) -> RunnerResult:
@@ -41,9 +42,9 @@ class BaseRunner(ABC):
         ...
 
     @abstractmethod
-    async def invoke_stream(
+    def invoke_stream(
         self,
-        config: dict,
+        config: dict[str, Any],
         output_folder: Path,
         context_id: str | None = None,
     ) -> AsyncIterator[RunnerProgress]:

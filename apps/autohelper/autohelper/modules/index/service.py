@@ -316,7 +316,7 @@ class IndexService:
                     missing_files.append(info)
 
             # Group missing by size for matching
-            missing_by_size = {}
+            missing_by_size: dict[int, list[dict[str, Any]]] = {}
             for m in missing_files:
                 if m["content_hash"]:
                     missing_by_size.setdefault(m["size"], []).append(m)

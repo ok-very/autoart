@@ -43,7 +43,7 @@ class FolderCollector:
     and creates manifest entries for tracking.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the folder collector."""
         pass
 

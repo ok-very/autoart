@@ -6,11 +6,17 @@ multiple providers (AutoArt, Monday.com) for use in mail processing
 and other modules.
 """
 
+from __future__ import annotations
+
 import logging
 import threading
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from autohelper.modules.context.autoart import AutoArtClient
+    from autohelper.modules.context.monday import MondayClient
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +55,11 @@ class ContextService:
         projects = service.get_projects()
     """
 
-    _instance = None
+    _instance: "ContextService | None" = None
     _lock = threading.Lock()
+    _initialized: bool
 
-    def __new__(cls):
+    def __new__(cls) -> "ContextService":
         """Singleton pattern for global context access."""
         with cls._lock:
             if cls._instance is None:
@@ -60,7 +67,7 @@ class ContextService:
                 cls._instance._initialized = False
             return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         if self._initialized:
             return
         self._initialized = True
@@ -70,8 +77,8 @@ class ContextService:
 
         self.settings = get_settings()
         self._context = ContextData()
-        self._monday_client = None
-        self._autoart_client = None
+        self._monday_client: MondayClient | None = None
+        self._autoart_client: AutoArtClient | None = None
         self._refresh_lock = threading.Lock()
 
         # Initialize clients based on settings

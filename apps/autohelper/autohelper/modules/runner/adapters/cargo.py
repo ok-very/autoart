@@ -16,6 +16,18 @@ from ..types import ExtractedMetadata
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
+    from bs4.element import Tag
+
+
+def _get_str_attr(tag: "Tag", attr: str, default: str = "") -> str:
+    """Safely get string attribute from BS4 tag (handles list returns)."""
+    val = tag.get(attr)
+    if val is None:
+        return default
+    if isinstance(val, list):
+        return val[0] if val else default
+    return val
+
 
 # Supported image extensions
 SUPPORTED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff"}
@@ -80,14 +92,14 @@ class CargoAdapter(SiteAdapter):
         # Also check for data-content-data attributes
         for el in soup.find_all(attrs={"data-content-data": True}):
             try:
-                data = json.loads(el.get("data-content-data", ""))
+                data = json.loads(_get_str_attr(el, "data-content-data"))
                 urls.extend(self._find_project_urls(data, base_url))
             except (json.JSONDecodeError, TypeError):
                 pass
 
         # Also look for navigation links
         for link in soup.find_all("a", href=True):
-            href = link.get("href", "")
+            href = _get_str_attr(link, "href")
             # Skip anchors and mailto links
             if href.startswith("#") or href.startswith("mailto:"):
                 continue
@@ -259,7 +271,7 @@ class CargoAdapter(SiteAdapter):
         urls: list[str] = []
 
         for img in soup.find_all("img"):
-            src = img.get("src") or img.get("data-src") or img.get("data-lazy-src")
+            src = _get_str_attr(img, "src") or _get_str_attr(img, "data-src") or _get_str_attr(img, "data-lazy-src")
             if src:
                 full_url = urljoin(base_url, src)
                 # Validate domain: allow same domain or Cargo CDN

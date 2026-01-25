@@ -123,16 +123,6 @@ class RunnerStatus(BaseModel):
     progress: RunnerProgress | None = None
 
 
-class ExtractedMetadata(BaseModel):
-    """Metadata extracted from a site."""
-
-    emails: list[str] = Field(default_factory=list)
-    phones: list[str] = Field(default_factory=list)
-    socials: list[str] = Field(default_factory=list)
-    title: str | None = None
-    description: str | None = None
-
-
 # =============================================================================
 # Artifact Manifest Types
 # =============================================================================

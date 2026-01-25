@@ -4,13 +4,13 @@ from PySide6.QtGui import QColor, QIcon, QPixmap
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon
 
 
-def create_icon():
+def create_icon() -> QIcon:
     pixmap = QPixmap(64, 64)
     pixmap.fill(QColor("red"))
     return QIcon(pixmap)
 
 
-def main():
+def main() -> None:
     QApplication(sys.argv)
 
     if not QSystemTrayIcon.isSystemTrayAvailable():
