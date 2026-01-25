@@ -4,9 +4,12 @@ Site adapter base class and types.
 Provides the foundation for site-specific scraping strategies.
 """
 
+import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
+
+from ..types import ExtractedMetadata
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
@@ -91,3 +94,45 @@ class SiteAdapter(ABC):
             Bio text or None if not found
         """
         return None
+
+    async def extract_metadata(
+        self, soup: "BeautifulSoup", base_url: str, bio_text: str | None = None
+    ) -> ExtractedMetadata:
+        """
+        Extract contact info and metadata from page.
+
+        Default implementation uses cross-platform extractors.
+        Site-specific adapters can override for custom extraction.
+
+        Args:
+            soup: Parsed HTML document
+            base_url: Base URL for resolving relative URLs
+            bio_text: Optional bio text (if already extracted)
+
+        Returns:
+            ExtractedMetadata with emails, phones, cv_links, location
+        """
+        # Run CPU-bound HTML processing in thread to avoid blocking event loop
+        return await asyncio.to_thread(
+            self._extract_metadata_sync, soup, base_url, bio_text
+        )
+
+    def _extract_metadata_sync(
+        self, soup: "BeautifulSoup", base_url: str, bio_text: str | None
+    ) -> ExtractedMetadata:
+        """Synchronous implementation of metadata extraction."""
+        from ..extractors.contact import extract_emails, extract_location, extract_phones
+        from ..extractors.documents import extract_cv_links
+
+        emails = extract_emails(soup)
+        phones = extract_phones(soup)
+        cv_links = extract_cv_links(soup, base_url)
+        location, location_candidates = extract_location(soup, bio_text)
+
+        return ExtractedMetadata(
+            emails=emails,
+            phones=phones,
+            cv_links=cv_links,
+            location=location,
+            raw_location_candidates=location_candidates,
+        )

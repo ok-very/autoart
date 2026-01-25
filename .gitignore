@@ -83,3 +83,5 @@ __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+
+apps\autohelper\_collected\

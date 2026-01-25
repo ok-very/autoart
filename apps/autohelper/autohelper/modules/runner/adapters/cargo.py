@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urljoin, urlparse
 
 from .base import SiteAdapter, SiteMatch
+from ..types import ExtractedMetadata
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup

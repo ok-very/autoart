@@ -148,6 +148,25 @@ class ArtifactManifestEntry(BaseModel):
     )
 
 
+class ExtractedMetadata(BaseModel):
+    """
+    Metadata extracted from a web page.
+
+    Contains contact info, CV links, and location data extracted
+    during collection. Consumed by wizard to populate record fields.
+    """
+
+    emails: list[str] = Field(default_factory=list, description="Email addresses found")
+    phones: list[str] = Field(default_factory=list, description="Phone numbers found")
+    cv_links: list[str] = Field(
+        default_factory=list, description="PDF URLs containing cv/resume keywords"
+    )
+    location: str | None = Field(default=None, description="Best location guess (City, Country)")
+    raw_location_candidates: list[str] = Field(
+        default_factory=list, description="All location candidates for manual review"
+    )
+
+
 class CollectionManifest(BaseModel):
     """
     Manifest file tracking all artifacts from a collection session.
@@ -167,4 +186,8 @@ class CollectionManifest(BaseModel):
     )
     artifacts: list[ArtifactManifestEntry] = Field(
         default_factory=list, description="List of collected artifacts"
+    )
+    extracted_metadata: ExtractedMetadata | None = Field(
+        default=None,
+        description="Contact info and metadata extracted from source, deployed by wizard to records",
     )

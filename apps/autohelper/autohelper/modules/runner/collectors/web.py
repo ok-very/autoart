@@ -26,6 +26,7 @@ from ..types import (
     ArtifactManifestEntry,
     ArtifactRef,
     CollectionManifest,
+    ExtractedMetadata,
     NamingConfig,
     RunnerProgress,
     RunnerResult,
@@ -151,14 +152,24 @@ class WebCollector:
             if bio_text:
                 bio_path = output_folder / "bio.txt"
                 await asyncio.to_thread(bio_path.write_text, bio_text, encoding="utf-8")
+                bio_ref_id = await asyncio.to_thread(lambda: str(uuid.uuid4()))
                 artifacts.append(
                     ArtifactRef(
-                        ref_id=str(uuid.uuid4()),
+                        ref_id=bio_ref_id,
                         path=str(bio_path),
                         artifact_type="text",
                         mime_type="text/plain",
                     )
                 )
+
+            # Extract metadata (contact info, CV links, location)
+            extracted_metadata = await adapter.extract_metadata(soup, source, bio_text)
+            logger.info(
+                f"Extracted metadata: {len(extracted_metadata.emails)} emails, "
+                f"{len(extracted_metadata.phones)} phones, "
+                f"{len(extracted_metadata.cv_links)} CV links, "
+                f"location: {extracted_metadata.location}"
+            )
 
             # Extract sub-pages (for multi-page sites like Cargo)
             all_pages: list[tuple[str, "BeautifulSoup"]] = [(source, soup)]
@@ -200,8 +211,23 @@ class WebCollector:
                     artifacts.append(artifact)
                     manifest_entries.append(entry)
 
-            # Save manifest
-            await self._save_manifest(output_folder, source, naming_config, manifest_entries, now)
+            # Download CV/resume PDFs
+            if extracted_metadata.cv_links:
+                cv_results = await self._download_cv_pdfs(
+                    extracted_metadata.cv_links,
+                    output_folder,
+                    counter,
+                    source,
+                    now,
+                )
+                for artifact, entry in cv_results:
+                    artifacts.append(artifact)
+                    manifest_entries.append(entry)
+
+            # Save manifest with extracted metadata
+            await self._save_manifest(
+                output_folder, source, naming_config, manifest_entries, now, extracted_metadata
+            )
 
             return RunnerResult(success=True, artifacts=artifacts)
 
@@ -274,7 +300,26 @@ class WebCollector:
             if bio_text:
                 bio_path = output_folder / "bio.txt"
                 await asyncio.to_thread(bio_path.write_text, bio_text, encoding="utf-8")
-                yield RunnerProgress(stage="bio", message="Extracted bio text", percent=25)
+                yield RunnerProgress(stage="bio", message="Extracted bio text", percent=23)
+
+            # Extract metadata (contact info, CV links, location)
+            extracted_metadata = await adapter.extract_metadata(soup, source, bio_text)
+            metadata_msg = []
+            if extracted_metadata.emails:
+                metadata_msg.append(f"{len(extracted_metadata.emails)} emails")
+            if extracted_metadata.phones:
+                metadata_msg.append(f"{len(extracted_metadata.phones)} phones")
+            if extracted_metadata.cv_links:
+                metadata_msg.append(f"{len(extracted_metadata.cv_links)} CVs")
+            if extracted_metadata.location:
+                metadata_msg.append(f"location: {extracted_metadata.location}")
+
+            if metadata_msg:
+                yield RunnerProgress(
+                    stage="metadata",
+                    message=f"Found {', '.join(metadata_msg)}",
+                    percent=25,
+                )
 
             # Extract sub-pages (for multi-page sites)
             all_pages: list[tuple[str, "BeautifulSoup"]] = [(source, soup)]
@@ -331,7 +376,7 @@ class WebCollector:
                             _, entry = result
                             manifest_entries.append(entry)
 
-                        progress = 35 + int((i + 1) / total_images * 60)
+                        progress = 35 + int((i + 1) / total_images * 55)
                         yield RunnerProgress(
                             stage="downloading",
                             message=f"Downloaded image {i + 1}/{total_images}",
@@ -340,8 +385,27 @@ class WebCollector:
                     except Exception as e:
                         logger.warning(f"Failed to download {img_url}: {e}")
 
-            # Save manifest
-            await self._save_manifest(output_folder, source, naming_config, manifest_entries, now)
+            # Download CV/resume PDFs
+            if extracted_metadata.cv_links:
+                yield RunnerProgress(
+                    stage="documents",
+                    message=f"Downloading {len(extracted_metadata.cv_links)} CV/resume PDFs...",
+                    percent=92,
+                )
+                cv_results = await self._download_cv_pdfs(
+                    extracted_metadata.cv_links,
+                    output_folder,
+                    counter,
+                    source,
+                    now,
+                )
+                for _, entry in cv_results:
+                    manifest_entries.append(entry)
+
+            # Save manifest with extracted metadata
+            await self._save_manifest(
+                output_folder, source, naming_config, manifest_entries, now, extracted_metadata
+            )
 
             yield RunnerProgress(stage="complete", message="Collection complete!", percent=100)
 
@@ -436,6 +500,88 @@ class WebCollector:
             logger.warning(f"Failed to download image {url}: {e}")
             return None
 
+    async def _download_cv_pdfs(
+        self,
+        cv_links: list[str],
+        output_folder: Path,
+        counter: IndexCounter,
+        source_url: str,
+        timestamp: str,
+    ) -> list[tuple[ArtifactRef, ArtifactManifestEntry]]:
+        """
+        Download CV/resume PDFs and create manifest entries.
+
+        Args:
+            cv_links: List of PDF URLs to download
+            output_folder: Output folder for artifacts
+            counter: Index counter for naming
+            source_url: Source page URL
+            timestamp: Collection timestamp
+
+        Returns:
+            List of (ArtifactRef, ArtifactManifestEntry) tuples
+        """
+        results: list[tuple[ArtifactRef, ArtifactManifestEntry]] = []
+
+        for url in cv_links:
+            # SSRF validation
+            is_safe, error_msg = await is_safe_url(url)
+            if not is_safe:
+                logger.warning(f"Skipping unsafe CV URL {url}: {error_msg}")
+                continue
+
+            try:
+                client = SSRFProtectedClient(timeout=self.timeout)
+                response = await client.get(url)
+                response.raise_for_status()
+                content = response.content
+
+                # Validate content-type
+                content_type = response.headers.get("content-type", "")
+                content_type_base = content_type.split(";")[0].strip().lower()
+                if "pdf" not in content_type_base:
+                    logger.warning(f"Skipping non-PDF content-type {content_type_base} from {url}")
+                    continue
+
+                # Generate filename (cv_001.pdf, cv_002.pdf, etc.)
+                index = counter.next(source_key="cv")
+                filename = f"cv_{index:03d}.pdf"
+                filepath = output_folder / filename
+
+                # Write file
+                await asyncio.to_thread(filepath.write_bytes, content)
+
+                # Generate persistent ID
+                content_hash = compute_content_hash(content)
+                artifact_id = generate_persistent_id(content, url, timestamp)
+
+                artifact = ArtifactRef(
+                    ref_id=artifact_id,
+                    path=str(filepath),
+                    artifact_type="document",
+                    mime_type="application/pdf",
+                )
+
+                entry = ArtifactManifestEntry(
+                    artifact_id=artifact_id,
+                    original_filename=filename,
+                    current_filename=filename,
+                    content_hash=content_hash,
+                    source_url=url,
+                    collected_at=timestamp,
+                    mime_type="application/pdf",
+                    size=len(content),
+                    metadata={"document_type": "cv", "source_page": source_url},
+                )
+
+                results.append((artifact, entry))
+                logger.info(f"Downloaded CV: {filename} from {url}")
+
+            except Exception as e:
+                logger.warning(f"Failed to download CV {url}: {e}")
+
+        return results
+
     async def _save_manifest(
         self,
         output_folder: Path,
@@ -443,12 +589,16 @@ class WebCollector:
         naming_config: NamingConfig,
         entries: list[ArtifactManifestEntry],
         timestamp: str,
+        extracted_metadata: ExtractedMetadata | None = None,
     ) -> None:
         """Save collection manifest to output folder."""
         from ...storage import get_metadata_backend
 
+        # Generate UUID in thread to avoid blocking event loop on entropy reads
+        manifest_id = await asyncio.to_thread(lambda: str(uuid.uuid4()))
+
         manifest = CollectionManifest(
-            manifest_id=str(uuid.uuid4()),
+            manifest_id=manifest_id,
             created_at=timestamp,
             updated_at=timestamp,
             source_type="web",
@@ -456,6 +606,7 @@ class WebCollector:
             output_folder=str(output_folder),
             naming_config=naming_config,
             artifacts=entries,
+            extracted_metadata=extracted_metadata,
         )
 
         backend = get_metadata_backend(output_folder)
