@@ -37,7 +37,9 @@
     "test:coverage": "pnpm --filter autoart-backend test:coverage",
     "test:db": "tsx scripts/test-db-connection.ts",
     "build:all": "pnpm install && pnpm --filter autohelper run install:deps && pnpm build:shared && pnpm -r build",
-    "build:all:clean": "pnpm -r exec rm -rf dist && pnpm run build:all"
+    "build:all:clean": "pnpm -r exec rm -rf dist && pnpm run build:all",
+    "git:stack": "bash scripts/git/stack-pr.sh",
+    "git:merge-stack": "bash scripts/git/merge-stack.sh"
   },
   "keywords": [
     "process-management",
