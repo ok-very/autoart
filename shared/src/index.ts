@@ -84,6 +84,16 @@ export * from './formatters/index.js';
 // Shared utility functions
 export { generateId } from './utils.js';
 
+// Action field extraction helpers
+export {
+    extractFieldValue,
+    extractTitle,
+    extractStartDate,
+    extractDueDate,
+    extractStatus,
+    extractAssignee,
+} from './utils/action-field-helpers.js';
+
 // ==================== INTAKE ====================
 // Form generator utilities and schemas
 export * from './intake/index.js';

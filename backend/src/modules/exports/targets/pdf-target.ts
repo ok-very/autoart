@@ -73,6 +73,9 @@ export class PdfTarget implements ExportTarget {
         config: Record<string, unknown>
     ): Promise<ExportResult> {
         try {
+            // Get page preset from config or default to letter
+            const pagePreset = (config.pagePreset as PdfPagePreset) || 'letter';
+
             // Determine content type and generate HTML
             let html: string;
 
@@ -90,7 +93,7 @@ export class PdfTarget implements ExportTarget {
             } else {
                 // Default to BFA Project Export
                 const projects = projection as BfaProjectExportModel[];
-                const htmlOptions = config.options as ExportOptions;
+                const htmlOptions = (config.options as ExportOptions) ?? {};
 
                 // Generate HTML for PDF using shared formatter
                 html = generatePdfHtml(projects, htmlOptions, {

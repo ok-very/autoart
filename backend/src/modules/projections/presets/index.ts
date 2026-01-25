@@ -7,6 +7,7 @@
 export { StageProjection } from './stage-projection.js';
 export { HierarchyProjection } from './hierarchy-projection.js';
 export { ProcessProjection } from './process-projection.js';
+export { TimelineProjection } from './timeline-projection.js';
 
 // Re-export types for convenience
 export type {
@@ -15,5 +16,6 @@ export type {
     ContainerInput,
     StageProjectionOutput,
     HierarchyProjectionOutput,
+    TimelineProjectionOutput,
     ProjectionRef,
 } from '@autoart/shared';

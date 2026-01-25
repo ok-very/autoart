@@ -203,8 +203,10 @@ export function mapProjectionToTasks(
     const endDate = new Date(projection.endDate);
     const totalMs = endDate.getTime() - startDate.getTime();
 
-    // Calculate ms per pixel for reverse mapping
-    const msPerPixel = totalMs / projection.totalWidth;
+    // Calculate ms per pixel for reverse mapping (guard against zero/negative duration and width)
+    const msPerPixel = (projection.totalWidth > 0 && totalMs > 0)
+        ? totalMs / projection.totalWidth
+        : 1;
 
     projection.lanes.forEach(lane => {
         // Add lane as project group

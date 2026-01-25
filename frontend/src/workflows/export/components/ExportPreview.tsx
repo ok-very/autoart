@@ -264,13 +264,13 @@ function renderPreview(model: BfaProjectExportModel, _format: ExportFormat, opti
     lines.push('');
 
     // Contacts
-    if (options.includeContacts && model.contactsBlock.lines.length > 0) {
+    if (options.includeContacts && (model.contactsBlock?.lines?.length ?? 0) > 0) {
         lines.push(...model.contactsBlock.lines);
         lines.push('');
     }
 
     // Milestones
-    if (options.includeMilestones && model.timelineBlock.milestones.length > 0) {
+    if (options.includeMilestones && (model.timelineBlock?.milestones?.length ?? 0) > 0) {
         for (const m of model.timelineBlock.milestones) {
             lines.push(`${m.kind}: ${m.dateText || 'TBC'}`);
         }
@@ -291,9 +291,10 @@ function renderPreview(model: BfaProjectExportModel, _format: ExportFormat, opti
     }
 
     // Next Steps
+    const allBullets = model.nextStepsBullets ?? [];
     const bullets = options.includeOnlyOpenNextSteps
-        ? model.nextStepsBullets.filter((b) => !b.completed)
-        : model.nextStepsBullets;
+        ? allBullets.filter((b) => !b.completed)
+        : allBullets;
 
     if (bullets.length > 0) {
         for (const bullet of bullets) {

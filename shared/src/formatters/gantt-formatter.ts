@@ -8,6 +8,18 @@
 import { GanttProjectionOutput } from '../types/gantt.js';
 
 /**
+ * Escape HTML special characters to prevent XSS
+ */
+function escapeHtml(str: string): string {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/**
  * Generate standalone HTML for Gantt chart.
  */
 export function generateGanttHtml(
@@ -34,52 +46,59 @@ export function generateGanttHtml(
         h1 { font-size: 24px; margin-bottom: 20px; }
     `;
 
-    // Generate Ticks HTML
+    // Generate Ticks HTML for header (with visible labels)
     const ticksHtml = ticks.map(t => `
-        <div class="tick ${t.type}" style="left: ${t.x}px;">
-            <div class="tick-label">${t.label}</div>
+        <div class="tick ${escapeHtml(t.type)}" style="left: ${t.x}px;">
+            <div class="tick-label">${escapeHtml(t.label)}</div>
         </div>
+    `).join('');
+
+    // Generate grid lines for body (labels hidden via CSS)
+    const gridLinesHtml = ticks.map(t => `
+        <div class="tick ${escapeHtml(t.type)}" style="left: ${t.x}px;"></div>
     `).join('');
 
     // Generate Lanes & Items HTML
     const lanesHtml = lanes.map(lane => {
         const itemsHtml = lane.items.map(item => `
             <div class="item" style="
-                left: ${item.x}px; 
-                top: ${item.y}px; 
-                width: ${item.width}px; 
-                height: ${item.height}px; 
-                background-color: ${item.color || '#3b82f6'};
+                left: ${item.x}px;
+                top: ${item.y}px;
+                width: ${item.width}px;
+                height: ${item.height}px;
+                background-color: ${escapeHtml(item.color || '#3b82f6')};
             ">
-                ${item.label}
+                ${escapeHtml(item.label)}
             </div>
         `).join('');
 
         return `
             <div class="lane" style="top: ${lane.y}px; height: ${lane.height}px;">
                 <div class="lane-label" style="padding-left: ${lane.depth * 20 + 8}px;">
-                    ${lane.label}
+                    ${escapeHtml(lane.label)}
                 </div>
                 ${itemsHtml}
             </div>
         `;
     }).join('');
 
+    const safeTitle = escapeHtml(options.title || 'Gantt Export');
+
     return `
         <!DOCTYPE html>
         <html>
         <head>
-            <title>${options.title || 'Gantt Export'}</title>
+            <title>${safeTitle}</title>
             <style>${styles}</style>
         </head>
         <body>
-            ${options.title ? `<h1>${options.title}</h1>` : ''}
+            ${options.title ? `<h1>${safeTitle}</h1>` : ''}
             <div class="gantt-container" style="width: ${totalWidth}px; height: ${totalHeight + 40}px;">
                 <div class="gantt-header" style="position: relative; width: 100%;">
                     ${ticksHtml}
                 </div>
                 <div class="gantt-body" style="position: relative; height: ${totalHeight}px;">
-                    ${ticksHtml.replace(/tick-label/g, 'hidden')} <!-- Grid lines in body -->
+                    ${gridLinesHtml}
                     ${lanesHtml}
                 </div>
             </div>

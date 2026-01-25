@@ -16,8 +16,18 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { DataTableFlat } from './DataTableFlat';
 import { DataTableHierarchy, type HierarchyFieldDef } from './DataTableHierarchy';
+import { GanttView } from './GanttView';
 import { ProjectLogView } from './ProjectLogView';
-import { useProjectTree, useRecordDefinitions, useRecords } from '../../api/hooks';
+import { GanttFilters } from '../components/GanttFilters';
+import {
+    mapActionsToGantt,
+    actionToProjectionInput,
+    extractUniqueStatuses,
+    extractUniqueAssignees,
+    extractDateRange,
+    type TimelineFilter,
+} from '../../utils/timeline-mapper';
+import { useProjectTree, useRecordDefinitions, useRecords, useActions } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
 import type { HierarchyNode, DataRecord, RecordDefinition } from '../../types';
@@ -73,8 +83,11 @@ function collectSubprocesses(
 // ==================== PROJECT VIEW ====================
 
 export function ProjectView({ projectId, className }: ProjectViewProps) {
-    // Tab state for switching between Workflow and Log views
-    const [activeTab, setActiveTab] = useState<'workflow' | 'log'>('workflow');
+    // Tab state for switching between Workflow, Gantt, and Log views
+    const [activeTab, setActiveTab] = useState<'workflow' | 'gantt' | 'log'>('workflow');
+
+    // Gantt filter state
+    const [ganttFilter, setGanttFilter] = useState<TimelineFilter>({});
 
     // Subscribe to nodes directly to ensure reactivity when nodes are updated
     const storeNodes = useHierarchyStore((state) => state.nodes);
@@ -190,12 +203,27 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
         return Array.from(groups.values());
     }, [subprocessRecords, definitions]);
 
-    // Memoize the Gantt Projection
+    // Fetch actions for the project (for Gantt view)
+    const { data: projectActions = [] } = useActions(projectId, 'project');
+
+    // Convert actions to projection input format for filter helpers
+    const actionInputs = useMemo(() => {
+        return projectActions.map(a => actionToProjectionInput(a));
+    }, [projectActions]);
+
+    // Extract filter options from actions
+    const availableStatuses = useMemo(() => extractUniqueStatuses(actionInputs), [actionInputs]);
+    const availableAssignees = useMemo(() => extractUniqueAssignees(actionInputs), [actionInputs]);
+    const dateRangeBounds = useMemo(() => extractDateRange(actionInputs), [actionInputs]);
+
+    // Memoize the Gantt Projection from Actions
     const ganttProjection = useMemo(() => {
         if (!project || activeTab !== 'gantt') return null;
-        const allNodes = Object.values(storeNodes);
-        return mapHierarchyToGantt(project, allNodes);
-    }, [project, storeNodes, activeTab]);
+        if (projectActions.length === 0) return null;
+
+        // Map actions to Gantt projection with filtering
+        return mapActionsToGantt(projectActions, project.id, ganttFilter);
+    }, [project, projectActions, activeTab, ganttFilter]);
 
     // Selected record ID for floating tables
     const selectedRecordId = selection?.type === 'record' ? selection.id : null;
@@ -250,31 +278,6 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
             </div>
         );
     }
-
-    import { GanttView } from './GanttView';
-    import { mapHierarchyToGantt } from '../../utils/gantt-mapper';
-
-    // ... (in ProjectView component)
-
-    // ... existing activeTab state
-    const [activeTab, setActiveTab] = useState<'workflow' | 'log' | 'gantt'>('workflow');
-
-    // ... existing hooks
-
-    // Memoize the Gantt Projection
-    const ganttProjection = useMemo(() => {
-        if (!project || activeTab !== 'gantt') return null;
-        // Flatten all descendants for the mapper
-        // We need to fetch ALL children of the project for a complete timeline
-        // current getChildren(projectId) only gives 1st level (Process)
-        // We'd need a recursive fetch or rely on storeNodes containing all
-
-        // For MVP, lets just map what we have in storeNodes which should be the full tree if useProjectTree loaded it
-        const allNodes = Object.values(storeNodes);
-        return mapHierarchyToGantt(project, allNodes);
-    }, [project, storeNodes, activeTab]);
-
-    // ... existing empty states
 
     return (
         <div className={`flex-1 flex overflow-hidden bg-white ${className || ''}`}
@@ -334,11 +337,24 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                     </div>
                 )}
 
-                {/* Gantt Sidebar Content (optional filters?) */}
+                {/* Gantt Sidebar Content */}
                 {activeTab === 'gantt' && (
-                    <div className="flex-1 p-4">
-                        <p className="text-xs font-medium text-slate-600 mb-2">Gantt Controls</p>
-                        <p className="text-xs text-slate-400">Filter lanes by process or stage (Coming Soon)</p>
+                    <div className="flex-1 overflow-y-auto p-3 custom-scroll">
+                        <p className="text-xs font-semibold text-slate-700 mb-3">Timeline Controls</p>
+                        <GanttFilters
+                            filter={ganttFilter}
+                            onFilterChange={setGanttFilter}
+                            availableStatuses={availableStatuses}
+                            availableAssignees={availableAssignees}
+                            dateRange={dateRangeBounds}
+                        />
+                        {projectActions.length > 0 && (
+                            <div className="mt-4 pt-3 border-t border-slate-200">
+                                <p className="text-[10px] text-slate-400">
+                                    {projectActions.length} action{projectActions.length !== 1 ? 's' : ''} in project
+                                </p>
+                            </div>
+                        )}
                     </div>
                 )}
 

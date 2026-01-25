@@ -25,6 +25,9 @@ export function GanttView({ projection, projectId }: GanttViewProps) {
     const handleFit = () => setScale(1.0);
 
     const handlePrint = () => {
+        // Guard for SSR/test environments
+        if (typeof window === 'undefined') return;
+
         // Generate the static HTML using the shared formatter
         const html = generateGanttHtml(projection, {
             title: `Gantt Chart - ${projectId}`
@@ -104,7 +107,7 @@ export function GanttView({ projection, projectId }: GanttViewProps) {
                     <div className="absolute bottom-4 right-4 z-50">
                         <Card padding="sm" className="shadow-lg animate-in slide-in-from-bottom-2">
                             <Text size="xs" weight="medium">
-                                {selection.selectedItemIds!.length} item(s) selected
+                                {selection.selectedItemIds?.length ?? 0} item(s) selected
                             </Text>
                         </Card>
                     </div>
