@@ -212,6 +212,35 @@ export async function importsRoutes(app: FastifyInstance) {
 
         return reply.send({ suggestions });
     });
+
+    /**
+     * Delete stale import sessions
+     * Removes sessions older than the specified number of days (default: 7)
+     * Used by garbage collection service (internal API)
+     */
+    app.delete('/sessions/stale', async (request, reply) => {
+        const { older_than_days } = StaleQuerySchema.parse(request.query);
+
+        const { db } = await import('../../db/client.js');
+
+        // Calculate cutoff date
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - older_than_days);
+
+        // Atomic delete with RETURNING to avoid race conditions
+        const deletedSessions = await db
+            .deleteFrom('import_sessions')
+            .where('created_at', '<', cutoffDate)
+            .returning('id')
+            .execute();
+
+        const sessionIds = deletedSessions.map(s => s.id);
+
+        return reply.send({
+            deleted_count: sessionIds.length,
+            session_ids: sessionIds,
+        });
+    });
 }
 
 // Resolution schema
@@ -222,6 +251,10 @@ const ResolutionBodySchema = z.object({
         resolvedFactKind: z.string().optional(),
         resolvedPayload: z.record(z.string(), z.unknown()).optional(),
     })),
+});
+
+const StaleQuerySchema = z.object({
+    older_than_days: z.coerce.number().int().positive().default(7),
 });
 
 export default importsRoutes;

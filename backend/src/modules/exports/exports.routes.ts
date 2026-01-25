@@ -48,6 +48,10 @@ const SessionIdParamSchema = z.object({
     id: z.string().uuid(),
 });
 
+const StaleQuerySchema = z.object({
+    older_than_days: z.coerce.number().int().positive().default(7),
+});
+
 // ============================================================================
 // ROUTES
 // ============================================================================
@@ -207,6 +211,35 @@ export async function exportsRoutes(app: FastifyInstance) {
         }
 
         return reply.status(204).send();
+    });
+
+    /**
+     * Delete stale export sessions
+     * Removes sessions older than the specified number of days (default: 7)
+     * Used by garbage collection service (internal API)
+     */
+    app.delete('/sessions/stale', async (request, reply) => {
+        const { older_than_days } = StaleQuerySchema.parse(request.query);
+
+        const { db } = await import('../../db/client.js');
+
+        // Calculate cutoff date
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - older_than_days);
+
+        // Atomic delete with RETURNING to avoid race conditions
+        const deletedSessions = await db
+            .deleteFrom('export_sessions')
+            .where('created_at', '<', cutoffDate)
+            .returning('id')
+            .execute();
+
+        const sessionIds = deletedSessions.map(s => s.id);
+
+        return reply.send({
+            deleted_count: sessionIds.length,
+            session_ids: sessionIds,
+        });
     });
 
     // ========================================================================
