@@ -1,9 +1,11 @@
 /**
  * Gantt Chart Types
- * 
+ *
  * Defines the projection output for Gantt charts, ensuring deterministic
  * layout calculations for both interactive (React) and static (PDF) rendering.
  */
+
+import type { DataRecord, RecordDefinition } from '../schemas/records.js';
 
 // ============================================================================
 // PRIMITIVES
@@ -83,7 +85,7 @@ export interface GanttProjectionOutput {
 // ============================================================================
 
 export interface GanttSelection {
-    /** 
+    /**
      * Selected time range.
      * If only start is present, it's a point selection (cursor).
      */
@@ -95,4 +97,34 @@ export interface GanttSelection {
 
     /** Selected lane IDs */
     selectedLaneIds?: string[];
+}
+
+// ============================================================================
+// RECORD TIMELINE INTEGRATION
+// ============================================================================
+
+/**
+ * Configuration for mapping record fields to timeline properties.
+ * Used when rendering DataRecords on the Gantt chart.
+ */
+export interface RecordTimelineFieldMapping {
+    /** Field key for start date. If not specified, auto-detected. */
+    startField?: string;
+    /** Field key for end/due date. If not specified, auto-detected. */
+    endField?: string;
+    /** Field key for item label. Defaults to record.unique_name */
+    labelField?: string;
+    /** Field key for status (affects coloring). */
+    statusField?: string;
+    /** Field key for progress percentage. */
+    progressField?: string;
+}
+
+/**
+ * Input for rendering a record on the Gantt chart.
+ * Pairs a record with its definition for field resolution.
+ */
+export interface GanttRecordInput {
+    record: DataRecord;
+    definition: RecordDefinition;
 }

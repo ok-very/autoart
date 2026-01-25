@@ -12,7 +12,14 @@
 
 import type { Task as LibraryTask } from 'gantt-task-react';
 import { ViewMode } from 'gantt-task-react';
-import type { HierarchyNode, GanttProjectionOutput, GanttLane } from '@autoart/shared';
+import type {
+    HierarchyNode,
+    GanttProjectionOutput,
+    GanttLane,
+    RecordTimelineFieldMapping,
+    GanttRecordInput,
+} from '@autoart/shared';
+import type { FieldDef } from '@autoart/shared';
 
 // ============================================================================
 // PUBLIC TYPES (What our codebase sees)
@@ -48,6 +55,12 @@ export interface GanttRenderItem {
         progressColor?: string;
         progressSelectedColor?: string;
     };
+    /** Source type: 'node' for hierarchy nodes, 'record' for data records */
+    sourceType?: 'node' | 'record';
+    /** For records: the record ID (same as actionId but explicit) */
+    recordId?: string;
+    /** For records: the definition ID for context-aware editing */
+    definitionId?: string;
 }
 
 /**
@@ -73,6 +86,14 @@ export interface GanttAdapterOptions {
     viewStartDate?: Date;
     /** End date for the view (defaults to latest item end) */
     viewEndDate?: Date;
+    /** Records to render on the timeline */
+    records?: GanttRecordInput[];
+    /** Field mapping for records (auto-detected if not specified) */
+    recordFieldMapping?: RecordTimelineFieldMapping;
+    /** How to handle records without classification_node_id */
+    unclassifiedRecordHandling?: 'hide' | 'unclassified-lane' | 'root-lane';
+    /** Whether to render records (default: true if records provided) */
+    showRecords?: boolean;
 }
 
 // ============================================================================
@@ -105,7 +126,11 @@ export function renderHierarchy(
     const {
         defaultColor = DEFAULT_COLORS.default,
         statusColors = DEFAULT_COLORS,
-        showDependencies = true
+        showDependencies = true,
+        records = [],
+        showRecords = true,
+        recordFieldMapping = {},
+        unclassifiedRecordHandling = 'hide',
     } = options;
 
     const items: GanttRenderItem[] = [];
@@ -146,6 +171,7 @@ export function renderHierarchy(
         type: 'lane',
         progress: calculateProgress(taskNodes),
         hideChildren: false,
+        sourceType: 'node',
         styles: {
             backgroundColor: statusColors[getStatus(project.metadata)] || defaultColor,
             backgroundSelectedColor: shadeColor(statusColors[getStatus(project.metadata)] || defaultColor, -15),
@@ -169,6 +195,7 @@ export function renderHierarchy(
             progress: calculateProgress(spItems),
             laneId: project.id,
             hideChildren: false,
+            sourceType: 'node',
             styles: {
                 backgroundColor: '#e2e8f0', // slate-200
                 backgroundSelectedColor: '#cbd5e1', // slate-300
@@ -205,6 +232,7 @@ export function renderHierarchy(
                 progress: status === 'completed' ? 100 : status === 'in_progress' ? 50 : 0,
                 laneId: sp.id,
                 dependencies: deps.length > 0 ? deps : undefined,
+                sourceType: 'node',
                 styles: {
                     backgroundColor: color,
                     backgroundSelectedColor: shadeColor(color, -15),
@@ -214,6 +242,61 @@ export function renderHierarchy(
             });
         });
     });
+
+    // Process records if provided
+    if (showRecords && records.length > 0) {
+        // Build set of valid lane IDs (project + subprocesses)
+        const validLaneIds = new Set<string>([project.id]);
+        subprocesses.forEach(sp => validLaneIds.add(sp.id));
+
+        // Create unclassified lane if needed
+        let unclassifiedLaneId: string | undefined;
+        const hasUnclassifiedRecords = records.some(r => !r.record.classification_node_id);
+
+        if (unclassifiedRecordHandling === 'unclassified-lane' && hasUnclassifiedRecords) {
+            unclassifiedLaneId = 'unclassified-records';
+            items.push({
+                actionId: unclassifiedLaneId,
+                label: 'Unclassified Records',
+                start: minDate,
+                end: maxDate,
+                type: 'lane',
+                laneId: project.id,
+                hideChildren: false,
+                sourceType: 'node',
+                styles: {
+                    backgroundColor: '#f1f5f9', // slate-100
+                    backgroundSelectedColor: '#e2e8f0',
+                }
+            });
+        }
+
+        // Process each record
+        for (const input of records) {
+            const item = recordToRenderItem(input, recordFieldMapping, { defaultColor, statusColors });
+
+            if (!item) continue; // No valid dates
+
+            // Determine lane assignment
+            if (!item.laneId) {
+                if (unclassifiedRecordHandling === 'hide') {
+                    continue;
+                } else if (unclassifiedRecordHandling === 'unclassified-lane') {
+                    // Fall back to root lane if unclassified lane wasn't created
+                    item.laneId = unclassifiedLaneId ?? project.id;
+                } else if (unclassifiedRecordHandling === 'root-lane') {
+                    item.laneId = project.id;
+                }
+            } else if (!validLaneIds.has(item.laneId)) {
+                // Record's classification_node_id doesn't match any visible lane
+                // Assign to root lane instead
+                item.laneId = project.id;
+            }
+
+            trackDates({ start: item.start, end: item.end });
+            items.push(item);
+        }
+    }
 
     // Determine view mode based on date range
     const rangeDays = (maxDate.getTime() - minDate.getTime()) / ONE_DAY_MS;
@@ -417,15 +500,243 @@ function calculateProgress(tasks: HierarchyNode[]): number {
 }
 
 /**
- * Shade a hex color lighter (positive) or darker (negative)
+ * Shade a hex color lighter (positive) or darker (negative).
+ * Returns original color if not a valid 6-digit hex.
  */
 function shadeColor(color: string, percent: number): string {
-    const num = parseInt(color.replace('#', ''), 16);
+    // Validate: must be #RRGGBB format
+    if (!/^#[0-9A-Fa-f]{6}$/.test(color)) {
+        return color;
+    }
+    const num = parseInt(color.slice(1), 16);
     const amt = Math.round(2.55 * percent);
     const R = Math.max(0, Math.min(255, (num >> 16) + amt));
     const G = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amt));
     const B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
     return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+}
+
+// ============================================================================
+// RECORD FIELD EXTRACTION
+// ============================================================================
+
+/** Conventional start date field keys (checked in order) */
+const START_DATE_KEYS = ['startDate', 'start_date', 'start', 'startdate', 'begin', 'begin_date'];
+
+/** Conventional end date field keys (checked in order) */
+const END_DATE_KEYS = ['dueDate', 'due_date', 'endDate', 'end_date', 'due', 'end', 'deadline'];
+
+/**
+ * Find a date field in the record definition by renderHint or conventional naming.
+ */
+function findDateField(
+    fields: FieldDef[],
+    preferredKeys: string[],
+    renderHint?: string
+): FieldDef | undefined {
+    // First: check for explicit renderHint
+    if (renderHint) {
+        const hintMatch = fields.find(f => f.type === 'date' && f.renderHint === renderHint);
+        if (hintMatch) return hintMatch;
+    }
+
+    // Second: check for timeline renderHint with start/end suffix
+    const timelineFields = fields.filter(f => f.renderHint === 'timeline' && f.type === 'date');
+    if (timelineFields.length > 0) {
+        for (const key of preferredKeys) {
+            const match = timelineFields.find(f =>
+                f.key.toLowerCase().includes(key.toLowerCase())
+            );
+            if (match) return match;
+        }
+    }
+
+    // Third: check by conventional field names
+    for (const key of preferredKeys) {
+        const match = fields.find(f =>
+            f.type === 'date' &&
+            (f.key === key || f.key.toLowerCase() === key.toLowerCase())
+        );
+        if (match) return match;
+    }
+
+    return undefined;
+}
+
+/**
+ * Auto-detect field mapping for a record definition.
+ */
+function autoDetectFieldMapping(fields: FieldDef[]): RecordTimelineFieldMapping {
+    const startField = findDateField(fields, START_DATE_KEYS, 'timeline-start');
+    const endField = findDateField(fields, END_DATE_KEYS, 'timeline-end');
+
+    // For status: prioritize type='status', then fall back to conventional names with status/select type
+    const statusField =
+        fields.find(f => f.type === 'status') ||
+        fields.find(f =>
+            (f.type === 'select' || f.type === 'status') &&
+            ['status', 'state', 'stage'].includes(f.key.toLowerCase())
+        );
+
+    // For progress: prioritize type='percent', then fall back to conventional names with number/percent type
+    const progressField =
+        fields.find(f => f.type === 'percent') ||
+        fields.find(f =>
+            (f.type === 'number' || f.type === 'percent') &&
+            ['progress', 'completion', 'percent_complete', 'percentComplete'].includes(f.key.toLowerCase())
+        );
+
+    return {
+        startField: startField?.key,
+        endField: endField?.key,
+        statusField: statusField?.key,
+        progressField: progressField?.key,
+    };
+}
+
+/**
+ * Extract a date value from record data.
+ */
+function extractRecordDate(
+    data: Record<string, unknown>,
+    fieldKey: string | undefined
+): Date | null {
+    if (!fieldKey) return null;
+
+    const value = data[fieldKey];
+    if (!value) return null;
+
+    if (typeof value === 'string') {
+        const date = new Date(value);
+        return isNaN(date.getTime()) ? null : date;
+    }
+
+    if (value instanceof Date) {
+        return value;
+    }
+
+    // Handle number (timestamp) - detect seconds vs milliseconds
+    // Timestamps before year 2001 in ms would be < 1e12, but in seconds would be reasonable dates
+    // Use 1e11 as threshold: values below are likely seconds (dates after 1973)
+    if (typeof value === 'number') {
+        const timestamp = value < 1e11 ? value * 1000 : value;
+        const date = new Date(timestamp);
+        return isNaN(date.getTime()) ? null : date;
+    }
+
+    return null;
+}
+
+/**
+ * Extract status value from record data.
+ */
+function extractRecordStatus(
+    data: Record<string, unknown>,
+    fieldKey: string | undefined
+): string {
+    if (!fieldKey) return 'default';
+
+    const value = data[fieldKey];
+    if (typeof value === 'string') return value;
+
+    return 'default';
+}
+
+/**
+ * Extract progress value from record data.
+ */
+function extractRecordProgress(
+    data: Record<string, unknown>,
+    fieldKey: string | undefined
+): number | undefined {
+    if (!fieldKey) return undefined;
+
+    const value = data[fieldKey];
+    if (typeof value === 'number') {
+        return Math.max(0, Math.min(100, value));
+    }
+
+    // Handle string values like "75" or "75%"
+    if (typeof value === 'string') {
+        const parsed = parseFloat(value.replace('%', ''));
+        if (!isNaN(parsed)) {
+            return Math.max(0, Math.min(100, parsed));
+        }
+    }
+
+    return undefined;
+}
+
+/**
+ * Convert a single record to a GanttRenderItem.
+ * Returns null if the record has no valid dates.
+ */
+function recordToRenderItem(
+    input: GanttRecordInput,
+    explicitMapping: RecordTimelineFieldMapping,
+    options: { defaultColor?: string; statusColors?: Record<string, string> }
+): GanttRenderItem | null {
+    const { record, definition } = input;
+    const { defaultColor = DEFAULT_COLORS.default, statusColors = DEFAULT_COLORS } = options;
+
+    // Get fields from definition schema
+    const fields = definition.schema_config?.fields ?? [];
+
+    // Resolve field mapping (explicit overrides auto-detected)
+    const autoMapping = autoDetectFieldMapping(fields);
+    const mapping: RecordTimelineFieldMapping = {
+        ...autoMapping,
+        ...explicitMapping,
+    };
+
+    // Extract dates
+    const data = record.data ?? {};
+    const start = extractRecordDate(data, mapping.startField);
+    const end = extractRecordDate(data, mapping.endField);
+
+    // Must have at least one date
+    if (!start && !end) {
+        return null;
+    }
+
+    // Default dates
+    const now = new Date();
+    const effectiveStart = start || end || now;
+    let effectiveEnd = end || start || now;
+
+    // Ensure end is after start
+    if (effectiveEnd <= effectiveStart) {
+        effectiveEnd = new Date(effectiveStart.getTime() + ONE_DAY_MS);
+    }
+
+    // Extract other fields
+    const status = extractRecordStatus(data, mapping.statusField);
+    const progress = extractRecordProgress(data, mapping.progressField);
+    const label = mapping.labelField
+        ? (data[mapping.labelField] as string) || record.unique_name
+        : record.unique_name;
+
+    const isCompleted = status === 'completed' || status === 'done';
+    const color = statusColors[status] || defaultColor;
+
+    return {
+        actionId: record.id,
+        label,
+        start: effectiveStart,
+        end: effectiveEnd,
+        type: isCompleted ? 'milestone' : 'item',
+        progress: progress ?? (isCompleted ? 100 : 0),
+        laneId: record.classification_node_id || undefined,
+        sourceType: 'record',
+        recordId: record.id,
+        definitionId: definition.id,
+        styles: {
+            backgroundColor: color,
+            backgroundSelectedColor: shadeColor(color, -15),
+            progressColor: shadeColor(color, -30),
+            progressSelectedColor: shadeColor(color, -40),
+        },
+    };
 }
 
 // ============================================================================

@@ -13,7 +13,13 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Gantt, Task as LibraryTask, ViewMode, StylingOption } from 'gantt-task-react';
 import 'gantt-task-react/dist/index.css';
-import type { HierarchyNode, GanttProjectionOutput, GanttSelection } from '@autoart/shared';
+import type {
+    HierarchyNode,
+    GanttProjectionOutput,
+    GanttSelection,
+    GanttRecordInput,
+    RecordTimelineFieldMapping,
+} from '@autoart/shared';
 import {
     renderHierarchy,
     renderProjection,
@@ -40,7 +46,14 @@ export interface TimelineWrapperProps {
     project?: HierarchyNode;
     children?: HierarchyNode[];
 
-    /** Adapter options for mapping */
+    /** Records to display on timeline (requires project/children data source) */
+    records?: GanttRecordInput[];
+    /** Field mapping for records (auto-detected if not specified) */
+    recordFieldMapping?: RecordTimelineFieldMapping;
+    /** How to handle records without classification_node_id */
+    unclassifiedRecordHandling?: 'hide' | 'unclassified-lane' | 'root-lane';
+
+    /** Adapter options for mapping (records can also be passed here) */
     adapterOptions?: GanttAdapterOptions;
 
     /** Selection state (controlled) */
@@ -206,6 +219,9 @@ export function TimelineWrapper({
     projection,
     project,
     children,
+    records,
+    recordFieldMapping,
+    unclassifiedRecordHandling,
     adapterOptions = {},
     selection,
     onSelectionChange,
@@ -228,13 +244,22 @@ export function TimelineWrapper({
     // Silence unused state setter - reserved for future view mode selector UI
     void setInternalViewMode;
 
+    // Merge record props into adapter options
+    const mergedAdapterOptions = useMemo<GanttAdapterOptions>(() => ({
+        ...adapterOptions,
+        // Record props override adapterOptions if provided
+        ...(records && { records }),
+        ...(recordFieldMapping && { recordFieldMapping }),
+        ...(unclassifiedRecordHandling && { unclassifiedRecordHandling }),
+    }), [adapterOptions, records, recordFieldMapping, unclassifiedRecordHandling]);
+
     // Map data to our clean render output
     const renderOutput = useMemo<GanttRenderOutput>(() => {
         if (projection) {
-            return renderProjection(projection, adapterOptions);
+            return renderProjection(projection, mergedAdapterOptions);
         }
         if (project && children) {
-            return renderHierarchy(project, children, adapterOptions);
+            return renderHierarchy(project, children, mergedAdapterOptions);
         }
         // Empty state
         return {
@@ -242,7 +267,7 @@ export function TimelineWrapper({
             viewMode: ViewMode.Day,
             viewDate: new Date()
         };
-    }, [projection, project, children, adapterOptions]);
+    }, [projection, project, children, mergedAdapterOptions]);
 
     // Internal state: library tasks (quarantined)
     const [libraryTasks, setLibraryTasks] = useState<LibraryTask[]>(() =>
