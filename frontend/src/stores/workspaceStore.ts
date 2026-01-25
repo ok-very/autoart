@@ -320,6 +320,11 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                         positionMap.set(uniqueId as PanelId, panelConfig.position);
                     }
 
+                    // Set content type for center-workspace
+                    if (baseId === 'center-workspace' && panelConfig.contentType) {
+                        useUIStore.getState().setCenterContentType(panelConfig.contentType);
+                    }
+
                     // Set view mode
                     if (panelConfig.viewMode) {
                         if (baseId === 'center-workspace') {

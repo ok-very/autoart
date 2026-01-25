@@ -52,7 +52,7 @@ import {
 } from '../../workspace/themes';
 
 // Import all panel components
-import { CentralAreaAdapter } from '../workspace/CentralAreaAdapter';
+import { CenterContentRouter } from '../workspace/CenterContentRouter';
 import { SelectionInspector } from '../composites/SelectionInspector';
 import { ClassificationPanel } from '../../workflows/import/panels/ClassificationPanel';
 import { useImportContextOptional } from '../../workflows/import/context/ImportContextProvider';
@@ -156,7 +156,7 @@ function SpawnHandle({ api }: SpawnHandleProps) {
 function CenterWorkspacePanel(props: IDockviewPanelProps) {
   return (
     <div className="h-full overflow-hidden bg-white relative">
-      <CentralAreaAdapter />
+      <CenterContentRouter />
       <SpawnHandle api={props.api} panelId="center-workspace" />
     </div>
   );

@@ -113,10 +113,10 @@ export interface PanelDefinition {
 // ============================================================================
 
 export const PANEL_DEFINITIONS: Record<PanelId, PanelDefinition> = {
-    // Core - always open
+    // Core - always open (agnostic container for any content type)
     'center-workspace': {
         id: 'center-workspace',
-        title: 'Projects',
+        title: 'Workspace',
         icon: Layout,
         permanent: true,
         defaultPlacement: { area: 'center', size: 70 },
