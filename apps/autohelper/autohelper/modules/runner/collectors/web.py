@@ -11,7 +11,9 @@ import uuid
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Any
+
+from bs4 import BeautifulSoup
 
 from ..adapters import AdapterRegistry
 from ..naming import (
@@ -33,23 +35,20 @@ from ..types import (
 )
 from .base import MAX_IMAGES, REQUEST_TIMEOUT
 
-if TYPE_CHECKING:
-    from bs4 import BeautifulSoup
-
 logger = logging.getLogger(__name__)
 
 # Lazy imports for optional dependencies
-_bs4 = None
+_bs4: type[BeautifulSoup] | None = None
 
 
-def _get_bs4():
+def _get_bs4() -> type[BeautifulSoup]:
     """Lazy import BeautifulSoup."""
     global _bs4
     if _bs4 is None:
         try:
-            from bs4 import BeautifulSoup
+            from bs4 import BeautifulSoup as BS4Class
 
-            _bs4 = BeautifulSoup
+            _bs4 = BS4Class
         except ImportError as e:
             raise ImportError(
                 "beautifulsoup4 is required for web collection. "
@@ -157,7 +156,7 @@ class WebCollector:
                 error=f"URL validation failed: {error_msg}",
             )
 
-        BeautifulSoup = _get_bs4()
+        BS4 = _get_bs4()
         artifacts: list[ArtifactRef] = []
         manifest_entries: list[ArtifactManifestEntry] = []
         now = datetime.now(UTC).isoformat()
@@ -179,7 +178,7 @@ class WebCollector:
             html = response.text
 
             # Parse HTML
-            soup = BeautifulSoup(html, _get_html_parser())
+            soup = BS4(html, _get_html_parser())
 
             # Detect site type and get appropriate adapter
             adapter, match = AdapterRegistry.detect(source, html)
@@ -210,7 +209,7 @@ class WebCollector:
             )
 
             # Extract sub-pages (for multi-page sites like Cargo)
-            all_pages: list[tuple[str, "BeautifulSoup"]] = [(source, soup)]
+            all_pages: list[tuple[str, BeautifulSoup]] = [(source, soup)]
             page_urls = await adapter.extract_pages(soup, source)
 
             for page_url in page_urls[:10]:  # Limit sub-pages
@@ -220,7 +219,7 @@ class WebCollector:
                         continue
                     page_response = await client.get(page_url)
                     page_response.raise_for_status()
-                    page_soup = BeautifulSoup(page_response.text, _get_html_parser())
+                    page_soup = BS4(page_response.text, _get_html_parser())
                     all_pages.append((page_url, page_soup))
                 except Exception as e:
                     logger.warning(f"Failed to fetch sub-page {page_url}: {e}")
@@ -298,7 +297,7 @@ class WebCollector:
             yield RunnerProgress(stage="error", message=f"URL validation failed: {error_msg}")
             return
 
-        BeautifulSoup = _get_bs4()
+        BS4 = _get_bs4()
         manifest_entries: list[ArtifactManifestEntry] = []
         now = datetime.now(UTC).isoformat()
 
@@ -321,7 +320,7 @@ class WebCollector:
 
             yield RunnerProgress(stage="parsing", message="Parsing page content...", percent=15)
 
-            soup = BeautifulSoup(html, _get_html_parser())
+            soup = BS4(html, _get_html_parser())
 
             # Detect site type and get appropriate adapter
             adapter, match = AdapterRegistry.detect(source, html)
@@ -360,7 +359,7 @@ class WebCollector:
                 )
 
             # Extract sub-pages (for multi-page sites)
-            all_pages: list[tuple[str, "BeautifulSoup"]] = [(source, soup)]
+            all_pages: list[tuple[str, BeautifulSoup]] = [(source, soup)]
             page_urls = await adapter.extract_pages(soup, source)
 
             if page_urls:
@@ -377,7 +376,7 @@ class WebCollector:
                         continue
                     page_response = await client.get(page_url)
                     page_response.raise_for_status()
-                    page_soup = BeautifulSoup(page_response.text, _get_html_parser())
+                    page_soup = BS4(page_response.text, _get_html_parser())
                     all_pages.append((page_url, page_soup))
                 except Exception as e:
                     logger.warning(f"Failed to fetch sub-page {page_url}: {e}")

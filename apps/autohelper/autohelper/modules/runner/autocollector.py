@@ -8,6 +8,7 @@ Delegates to specialized collectors for each source type.
 import asyncio
 from collections.abc import AsyncIterator
 from pathlib import Path
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -23,7 +24,7 @@ logger = get_logger(__name__)
 DEFAULT_CRAWL_DEPTH = 20
 
 
-def _safe_int(val, default: int) -> int:
+def _safe_int(val: Any, default: int) -> int:
     """Safely coerce a value to int, returning default on failure."""
     if val is None:
         return default
@@ -49,7 +50,7 @@ class AutoCollectorRunner(BaseRunner):
     creates manifests for artifact tracking.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the collector with web and folder handlers."""
         self._config_store = ConfigStore()
         self._folder_collector = FolderCollector()
@@ -73,7 +74,7 @@ class AutoCollectorRunner(BaseRunner):
 
     async def invoke(
         self,
-        config: dict,
+        config: dict[str, Any],
         output_folder: Path,
         context_id: str | None = None,
     ) -> RunnerResult:
@@ -122,7 +123,7 @@ class AutoCollectorRunner(BaseRunner):
 
     async def invoke_stream(
         self,
-        config: dict,
+        config: dict[str, Any],
         output_folder: Path,
         context_id: str | None = None,
     ) -> AsyncIterator[RunnerProgress]:

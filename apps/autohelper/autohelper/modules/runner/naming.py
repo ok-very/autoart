@@ -144,7 +144,7 @@ def resolve_template_var(
 
         case "ext":
             # Extension without the dot
-            ext = context.get("extension", ".jpg")
+            ext: str = context.get("extension", ".jpg")
             return ext.lstrip(".")
 
         case "artist":
@@ -214,7 +214,7 @@ def generate_filename(
     # Parse template and replace variables
     template = config.template
 
-    def replace_var(match: re.Match) -> str:
+    def replace_var(match: re.Match[str]) -> str:
         var_name = match.group(1)
         return resolve_template_var(
             var_name,

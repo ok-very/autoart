@@ -5,15 +5,17 @@ Cross-platform heuristics for email, phone, and location extraction.
 """
 
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 from urllib.parse import unquote
 
+from bs4 import BeautifulSoup
+from bs4.element import Tag
+
 if TYPE_CHECKING:
-    from bs4 import BeautifulSoup
-    from bs4.element import Tag
+    pass
 
 # Type alias for elements that support find_all and get_text
-SoupElement = "BeautifulSoup | Tag"
+SoupElement = Union[BeautifulSoup, Tag]
 
 
 def _get_str_attr(tag: "Tag", attr: str, default: str = "") -> str:

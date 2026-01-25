@@ -66,7 +66,7 @@ class ArtifactLookupService:
 
         # Otherwise, search database for collection containing this artifact
         try:
-            def _query_db():
+            def _query_db() -> Any:
                 db = get_db()
                 return db.execute(
                     """
@@ -112,7 +112,7 @@ class ArtifactLookupService:
 
         # Search database
         try:
-            def _query_db():
+            def _query_db() -> list[Any]:
                 db = get_db()
                 return db.execute(
                     """
@@ -149,7 +149,7 @@ class ArtifactLookupService:
             List of collection summaries with id, source, artifact_count
         """
         try:
-            def _query_db():
+            def _query_db() -> list[Any]:
                 db = get_db()
                 if output_folder:
                     return db.execute(
@@ -194,7 +194,7 @@ class ArtifactLookupService:
             The collection manifest if found, None otherwise
         """
         try:
-            def _query_db():
+            def _query_db() -> Any:
                 db = get_db()
                 return db.execute(
                     "SELECT output_folder FROM artifact_collections WHERE collection_id = ?",
@@ -224,7 +224,7 @@ class ArtifactLookupService:
             manifest: The collection manifest to sync
         """
         try:
-            def _sync_db():
+            def _sync_db() -> None:
                 db = get_db()
 
                 # Upsert collection
@@ -320,7 +320,7 @@ class ArtifactLookupService:
 
         # Also update in database, scoped to the collection's output_folder
         try:
-            def _update_db():
+            def _update_db() -> None:
                 db = get_db()
                 # Get collection_id for this output_folder to scope the update
                 collection_row = db.execute(
@@ -362,9 +362,7 @@ class ArtifactLookupService:
         Returns:
             Hex-encoded SHA-256 hash
         """
-        import asyncio
-
-        def _hash_file():
+        def _hash_file() -> str:
             sha256 = hashlib.sha256()
             with open(file_path, "rb") as f:
                 for chunk in iter(lambda: f.read(65536), b""):
