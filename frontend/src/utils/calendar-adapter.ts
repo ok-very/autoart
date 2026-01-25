@@ -57,8 +57,17 @@ export function actionsToCalendarEvents(
             }
 
             // For events with only one date, use it for both start and end
-            const start = startDate ? new Date(startDate) : new Date(dueDate!);
-            const end = dueDate ? new Date(dueDate) : new Date(startDate!);
+            // Use nullish coalescing - at this point at least one is defined
+            const effectiveStartDate = startDate ?? dueDate;
+            const effectiveDueDate = dueDate ?? startDate;
+
+            // Defensive check in case guard logic is refactored
+            if (!effectiveStartDate || !effectiveDueDate) {
+                return null;
+            }
+
+            const start = new Date(effectiveStartDate);
+            const end = new Date(effectiveDueDate);
 
             // Validate dates - skip if invalid
             if (isNaN(start.getTime()) || isNaN(end.getTime())) {
