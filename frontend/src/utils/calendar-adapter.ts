@@ -74,14 +74,16 @@ export function actionsToCalendarEvents(
                 return null;
             }
 
-            // Ensure end is not before start
-            const adjustedEnd = end >= start ? end : new Date(start);
+            // Reject reversed date ranges (indicates data issue)
+            if (end < start) {
+                return null;
+            }
 
             const event: CalendarEvent = {
                 actionId: action.id,
                 title: extractTitle(action),
                 start,
-                end: adjustedEnd,
+                end,
                 allDay: true,
                 metadata: {
                     // Spread raw metadata first, then override with explicitly extracted values

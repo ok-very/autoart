@@ -353,7 +353,7 @@ function IconTab(props: IDockviewPanelHeaderProps) {
           </span>
         )}
       </div>
-      {!def?.permanent && (
+      {!isPermanentPanel(componentType) && (
         <div
           onClick={handleClose}
           className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-slate-200 rounded cursor-pointer transition-opacity"
