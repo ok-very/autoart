@@ -34,7 +34,7 @@ class OneDriveManager:
             try:
                 import ctypes
 
-                self._kernel32 = ctypes.windll.kernel32  # type: ignore
+                self._kernel32 = ctypes.windll.kernel32
             except Exception as e:
                 logger.warning(f"Failed to load kernel32: {e}")
 

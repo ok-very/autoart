@@ -4,6 +4,7 @@ Runner module API router.
 
 import asyncio
 import json
+from collections.abc import AsyncGenerator
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
@@ -67,7 +68,7 @@ async def invoke_runner_stream(request: InvokeRequest) -> StreamingResponse:
 
     service = get_runner_service()
 
-    async def event_generator():
+    async def event_generator() -> AsyncGenerator[str, None]:
         try:
             async for progress in service.invoke_stream(request):
                 try:

@@ -2,6 +2,7 @@
 
 from collections.abc import Iterator
 from datetime import UTC, datetime
+from typing import Any
 
 from autohelper.db import get_db
 from autohelper.shared.ids import generate_file_id
@@ -35,7 +36,7 @@ class FileRepository:
 
         if row:
             # Update existing
-            file_id = row["file_id"]
+            file_id: str = row["file_id"]
             db.execute(
                 """UPDATE files SET
                     root_id = ?, rel_path = ?, size = ?, mtime_ns = ?,
@@ -82,7 +83,7 @@ class FileRepository:
         db.commit()
         return file_id
 
-    def upsert_batch(self, files: list[dict]) -> int:
+    def upsert_batch(self, files: list[dict[str, Any]]) -> int:
         """
         Batch upsert files. Memory-efficient for large crawls.
 
@@ -166,7 +167,7 @@ class FileRepository:
         db.commit()
         return count
 
-    def get_by_path(self, canonical_path: str) -> dict | None:
+    def get_by_path(self, canonical_path: str) -> dict[str, Any] | None:
         """Get file by canonical path."""
         db = get_db()
         cursor = db.execute(
@@ -176,7 +177,7 @@ class FileRepository:
         row = cursor.fetchone()
         return dict(row) if row else None
 
-    def get_by_root(self, root_id: str) -> Iterator[dict]:
+    def get_by_root(self, root_id: str) -> Iterator[dict[str, Any]]:
         """Stream files for a root (memory-efficient generator)."""
         db = get_db()
         cursor = db.execute(
@@ -186,7 +187,7 @@ class FileRepository:
         while row := cursor.fetchone():
             yield dict(row)
 
-    def get_file_stats(self, root_id: str) -> dict:
+    def get_file_stats(self, root_id: str) -> dict[str, Any]:
         """Get quick stats for a root without loading all files."""
         db = get_db()
         cursor = db.execute(
@@ -224,7 +225,7 @@ class FileRepository:
         db.commit()
         return cursor.rowcount
 
-    def get_changed_since(self, root_id: str, since: str) -> Iterator[dict]:
+    def get_changed_since(self, root_id: str, since: str) -> Iterator[dict[str, Any]]:
         """Stream files changed since timestamp."""
         db = get_db()
         cursor = db.execute(
@@ -241,4 +242,5 @@ class FileRepository:
             "SELECT COUNT(*) as cnt FROM files WHERE root_id = ?",
             (root_id,),
         )
-        return cursor.fetchone()["cnt"]
+        row = cursor.fetchone()
+        return int(row["cnt"]) if row else 0

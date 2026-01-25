@@ -49,10 +49,11 @@ class ContextService:
         projects = service.get_projects()
     """
 
-    _instance = None
+    _instance: "ContextService | None" = None
     _lock = threading.Lock()
+    _initialized: bool
 
-    def __new__(cls):
+    def __new__(cls) -> "ContextService":
         """Singleton pattern for global context access."""
         with cls._lock:
             if cls._instance is None:
@@ -60,7 +61,7 @@ class ContextService:
                 cls._instance._initialized = False
             return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         if self._initialized:
             return
         self._initialized = True

@@ -10,6 +10,17 @@ from urllib.parse import unquote, urljoin, urlparse
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
+    from bs4.element import Tag
+
+
+def _get_str_attr(tag: "Tag", attr: str, default: str = "") -> str:
+    """Safely get string attribute from BS4 tag (handles list returns)."""
+    val = tag.get(attr)
+    if val is None:
+        return default
+    if isinstance(val, list):
+        return val[0] if val else default
+    return val
 
 # Keywords indicating CV/resume documents (case-insensitive)
 CV_KEYWORDS = {"cv", "resume", "curriculum", "vitae", "lebenslauf"}
@@ -33,7 +44,7 @@ def extract_cv_links(soup: "BeautifulSoup", base_url: str) -> list[str]:
     cv_links: list[str] = []
 
     for link in soup.find_all("a", href=True):
-        href = link.get("href", "")
+        href = _get_str_attr(link, "href")
 
         # Must be a PDF link
         if ".pdf" not in href.lower():
@@ -75,7 +86,7 @@ def extract_pdf_links(soup: "BeautifulSoup", base_url: str) -> list[str]:
     pdf_links: list[str] = []
 
     for link in soup.find_all("a", href=True):
-        href = link.get("href", "")
+        href = _get_str_attr(link, "href")
         if ".pdf" in href.lower():
             full_url = urljoin(base_url, href)
             if full_url not in pdf_links:

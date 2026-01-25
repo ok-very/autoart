@@ -1,6 +1,7 @@
 """Repository for root directory operations."""
 
 from pathlib import Path
+from typing import Any
 
 from autohelper.db import get_db
 from autohelper.shared.ids import generate_root_id
@@ -21,7 +22,7 @@ class RootRepository:
         db.commit()
         return root_id
 
-    def get_by_id(self, root_id: str) -> dict | None:
+    def get_by_id(self, root_id: str) -> dict[str, Any] | None:
         """Get root by ID."""
         db = get_db()
         cursor = db.execute(
@@ -31,7 +32,7 @@ class RootRepository:
         row = cursor.fetchone()
         return dict(row) if row else None
 
-    def get_by_path(self, path: Path) -> dict | None:
+    def get_by_path(self, path: Path) -> dict[str, Any] | None:
         """Get root by path."""
         db = get_db()
         cursor = db.execute(
@@ -48,7 +49,7 @@ class RootRepository:
             return existing["root_id"], False
         return self.create(path), True
 
-    def list_enabled(self) -> list[dict]:
+    def list_enabled(self) -> list[dict[str, Any]]:
         """List all enabled roots."""
         db = get_db()
         cursor = db.execute(
@@ -56,7 +57,7 @@ class RootRepository:
         )
         return [dict(row) for row in cursor.fetchall()]
 
-    def list_all(self) -> list[dict]:
+    def list_all(self) -> list[dict[str, Any]]:
         """List all roots."""
         db = get_db()
         cursor = db.execute("SELECT root_id, path, enabled, created_at FROM roots")

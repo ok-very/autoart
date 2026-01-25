@@ -4,6 +4,7 @@ SSRF-protected HTTP client.
 Provides an HTTP client wrapper that validates URLs and redirects for SSRF protection.
 """
 
+import types
 from typing import TYPE_CHECKING
 from urllib.parse import urljoin
 
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
 _httpx = None
 
 
-def _get_httpx():
+def _get_httpx() -> types.ModuleType:
     """Lazy import httpx."""
     global _httpx
     if _httpx is None:

@@ -10,6 +10,17 @@ from urllib.parse import unquote
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
+    from bs4.element import Tag
+
+
+def _get_str_attr(tag: "Tag", attr: str, default: str = "") -> str:
+    """Safely get string attribute from BS4 tag (handles list returns)."""
+    val = tag.get(attr)
+    if val is None:
+        return default
+    if isinstance(val, list):
+        return val[0] if val else default
+    return val
 
 # Email regex - conservative to avoid false positives
 EMAIL_PATTERN = re.compile(
@@ -62,7 +73,7 @@ def extract_emails(soup: "BeautifulSoup") -> list[str]:
 
     # 1. Extract from mailto: links
     for link in soup.find_all("a", href=True):
-        href = link.get("href", "")
+        href = _get_str_attr(link, "href")
         if href.lower().startswith("mailto:"):
             # Remove mailto: prefix and any query params (?subject=...)
             mailto_content = href[7:].split("?")[0].strip()
@@ -101,7 +112,7 @@ def extract_phones(soup: "BeautifulSoup") -> list[str]:
 
     # 1. Extract from tel: links
     for link in soup.find_all("a", href=True):
-        href = link.get("href", "")
+        href = _get_str_attr(link, "href")
         if href.lower().startswith("tel:"):
             phone = href[4:].strip()
             phone = unquote(phone)

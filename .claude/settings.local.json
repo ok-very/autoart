@@ -65,7 +65,17 @@
       "Bash(curl:*)",
       "Bash(gh issue list:*)",
       "Bash(gh label list:*)",
-      "Bash(gh issue view:*)"
+      "Bash(gh issue view:*)",
+      "Bash(chmod:*)",
+      "Bash(git update-index:*)",
+      "Bash(where claude)",
+      "Bash(claude --version)",
+      "Bash(\"/c/Users/silen/.local/bin/claude.exe\" --version)",
+      "Bash(export PATH=\"/c/Users/silen/.local/bin:$PATH\")",
+      "Bash(PATH=\"/c/Users/silen/.local/bin:$PATH\")",
+      "Bash(~/.bashrc)",
+      "Bash(source ~/.bashrc)",
+      "Bash(python -m mypy:*)"
     ]
   }
 }

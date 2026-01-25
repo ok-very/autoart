@@ -11,6 +11,17 @@ from urllib.parse import urljoin, urlparse
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
+    from bs4.element import Tag
+
+
+def _get_str_attr(tag: "Tag", attr: str, default: str = "") -> str:
+    """Safely get string attribute from BS4 tag (handles list returns)."""
+    val = tag.get(attr)
+    if val is None:
+        return default
+    if isinstance(val, list):
+        return val[0] if val else default
+    return val
 
 # Supported image file extensions
 SUPPORTED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tiff"}
@@ -43,7 +54,11 @@ def extract_image_urls(
 
     # Find all img tags
     for img in soup.find_all("img"):
-        src = img.get("src") or img.get("data-src") or img.get("data-lazy-src")
+        src = (
+            _get_str_attr(img, "src")
+            or _get_str_attr(img, "data-src")
+            or _get_str_attr(img, "data-lazy-src")
+        )
         if src:
             full_url = urljoin(base_url, src)
             if _is_supported_image(full_url, supported_extensions):
@@ -53,7 +68,7 @@ def extract_image_urls(
     # Regex handles: url("..."), url('...'), and url(...)
     # Uses non-greedy matching with proper delimiter awareness
     for el in soup.find_all(style=re.compile(r"background.*url")):
-        style = el.get("style", "")
+        style = _get_str_attr(el, "style")
         # Match url() with double quotes, single quotes, or no quotes
         # Handle each quote type separately to avoid truncation issues
         for match in re.finditer(r'url\(\s*"([^"]*)"\s*\)', style):
