@@ -88,8 +88,12 @@ export {
     extractTitle,
     extractStartDate,
     extractDueDate,
+    extractDurationDays,
+    extractScheduleMode,
+    computeScheduledDates,
     extractStatus,
     extractAssignee,
+    type ComputedDates,
 } from './utils/action-field-helpers.js';
 
 // ==================== INTAKE ====================

@@ -56,8 +56,9 @@ export type FieldType = z.infer<typeof FieldTypeSchema>;
  * - columns: Miller columns hierarchical navigation
  * - list: Radix-styled action list/table view
  * - cards: Responsive card grid view
+ * - calendar: Calendar-based timeline view with drag-and-drop
  */
-export const ProjectViewModeSchema = z.enum(['log', 'workflow', 'columns', 'list', 'cards']);
+export const ProjectViewModeSchema = z.enum(['log', 'workflow', 'columns', 'list', 'cards', 'calendar']);
 export type ProjectViewMode = z.infer<typeof ProjectViewModeSchema>;
 
 /**
@@ -91,6 +92,7 @@ export const PROJECT_VIEW_MODE_LABELS: Record<ProjectViewMode, string> = {
   columns: 'Columns',
   list: 'List',
   cards: 'Cards',
+  calendar: 'Calendar',
 };
 
 export const RECORDS_VIEW_MODE_LABELS: Record<RecordsViewMode, string> = {

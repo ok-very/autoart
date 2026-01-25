@@ -17,8 +17,7 @@ import type {
 } from '@autoart/shared';
 import {
     extractTitle,
-    extractStartDate,
-    extractDueDate,
+    computeScheduledDates,
     extractStatus,
     extractAssignee,
 } from '@autoart/shared';
@@ -39,13 +38,13 @@ export const TimelineProjection: ProjectionPreset<
         contextTypes: ['project', 'process', 'subprocess'],
     },
 
-    derive(input: { actions: ActionProjectionInput[] }) {
-        const { actions } = input;
+    derive(input: { actions: ActionProjectionInput[]; useWorkingDays?: boolean }) {
+        const { actions, useWorkingDays = false } = input;
 
         const entries = actions
             .map((action) => {
-                const startDate = extractStartDate(action);
-                const endDate = extractDueDate(action);
+                // Use computeScheduledDates to handle duration-based date inference
+                const { startDate, dueDate: endDate, isStartInferred, isDueInferred } = computeScheduledDates(action, useWorkingDays);
 
                 // Skip actions without any date information
                 if (!startDate && !endDate) {
@@ -65,6 +64,8 @@ export const TimelineProjection: ProjectionPreset<
                         parent_action_id: action.parent_action_id,
                         status: extractStatus(action),
                         assignee: extractAssignee(action),
+                        isStartInferred,
+                        isDueInferred,
                     },
                 };
             })

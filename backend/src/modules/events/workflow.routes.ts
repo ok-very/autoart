@@ -549,4 +549,68 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       return reply.status(201).send({ event });
     }
   );
+
+  // ============================================================================
+  // SCHEDULING ROUTES (Calendar/Timeline)
+  // ============================================================================
+
+  /**
+   * POST /workflow/actions/:actionId/reschedule
+   * Emit FIELD_VALUE_RECORDED events for scheduling fields.
+   * Used by CalendarView and GanttView for drag-and-drop operations.
+   */
+  fastify.post<{
+    Params: { actionId: string };
+    Body: {
+      startDate?: string;
+      dueDate?: string;
+      durationDays?: number;
+      scheduleMode?: 'explicit' | 'anchor_start' | 'anchor_due';
+    };
+  }>(
+    '/actions/:actionId/reschedule',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          required: ['actionId'],
+          properties: {
+            actionId: { type: 'string', format: 'uuid' },
+          },
+        },
+        body: {
+          type: 'object',
+          properties: {
+            startDate: { type: 'string' },
+            dueDate: { type: 'string' },
+            durationDays: { type: 'number', minimum: 0 },
+            scheduleMode: { type: 'string', enum: ['explicit', 'anchor_start', 'anchor_due'] },
+          },
+        },
+        response: {
+          201: {
+            type: 'object',
+            properties: {
+              events: { type: 'array', items: eventSchema },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { actionId } = request.params;
+      const { startDate, dueDate, durationDays, scheduleMode } = request.body || {};
+
+      const events = await workflowService.rescheduleAction({
+        actionId,
+        actorId: (request as any).user?.id,
+        startDate,
+        dueDate,
+        durationDays,
+        scheduleMode,
+      });
+
+      return reply.status(201).send({ events });
+    }
+  );
 }
