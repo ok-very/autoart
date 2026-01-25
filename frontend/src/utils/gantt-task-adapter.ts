@@ -254,7 +254,8 @@ export function renderHierarchy(
         const hasUnclassifiedRecords = records.some(r => !r.record.classification_node_id);
 
         if (unclassifiedRecordHandling === 'unclassified-lane' && hasUnclassifiedRecords) {
-            unclassifiedLaneId = 'unclassified-records';
+            // Namespace the synthetic lane ID by project to avoid collisions with real node IDs
+            unclassifiedLaneId = `${project.id}::unclassified-records`;
             items.push({
                 actionId: unclassifiedLaneId,
                 label: 'Unclassified Records',
@@ -526,6 +527,14 @@ const START_DATE_KEYS = ['startDate', 'start_date', 'start', 'startdate', 'begin
 /** Conventional end date field keys (checked in order) */
 const END_DATE_KEYS = ['dueDate', 'due_date', 'endDate', 'end_date', 'due', 'end', 'deadline'];
 
+/** Cache for auto-detected field mappings by definition ID */
+const fieldMappingCache = new Map<string, RecordTimelineFieldMapping>();
+
+/** Clear the field mapping cache (useful for testing or when definitions change) */
+export function clearFieldMappingCache(): void {
+    fieldMappingCache.clear();
+}
+
 /**
  * Find a date field in the record definition by renderHint or conventional naming.
  */
@@ -583,7 +592,7 @@ function autoDetectFieldMapping(fields: FieldDef[]): RecordTimelineFieldMapping 
         fields.find(f => f.type === 'percent') ||
         fields.find(f =>
             (f.type === 'number' || f.type === 'percent') &&
-            ['progress', 'completion', 'percent_complete', 'percentComplete'].includes(f.key.toLowerCase())
+            ['progress', 'completion', 'percent_complete', 'percentcomplete'].includes(f.key.toLowerCase())
         );
 
     return {
@@ -682,8 +691,14 @@ function recordToRenderItem(
     // Get fields from definition schema
     const fields = definition.schema_config?.fields ?? [];
 
+    // Use cached auto-detected mapping if available
+    let autoMapping = fieldMappingCache.get(definition.id);
+    if (!autoMapping) {
+        autoMapping = autoDetectFieldMapping(fields);
+        fieldMappingCache.set(definition.id, autoMapping);
+    }
+
     // Resolve field mapping (explicit overrides auto-detected)
-    const autoMapping = autoDetectFieldMapping(fields);
     const mapping: RecordTimelineFieldMapping = {
         ...autoMapping,
         ...explicitMapping,
