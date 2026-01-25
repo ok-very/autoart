@@ -243,6 +243,54 @@ git push origin --delete branch-name
 
 ---
 
+## CRITICAL: Link PRs to GitHub Issues
+
+**Every PR that addresses work tracked in GitHub issues MUST reference the issue.**
+
+### Why This Matters
+- Creates bidirectional traceability (issue → PR, PR → issue)
+- GitHub auto-updates issue when PR is merged
+- Enables implementation progress tracking
+- Prevents orphaned work
+
+### How to Link
+
+**In PR title (for single issue):**
+```bash
+gh pr create --title "feat: add command palette (#87)"
+```
+
+**In PR body (preferred, supports multiple):**
+```bash
+gh pr create --title "feat: add command palette" --body "$(cat <<'EOF'
+## Summary
+- Implement global command palette with fuzzy search
+
+Closes #87
+
+## Test plan
+- [x] Cmd+K opens palette
+EOF
+)"
+```
+
+### Keywords That Auto-Close Issues
+When PR merges to default branch:
+- `Closes #N` / `Close #N`
+- `Fixes #N` / `Fix #N`
+- `Resolves #N` / `Resolve #N`
+
+### Keywords That Link Without Closing
+- `Refs #N` / `Related to #N`
+- `Part of #N`
+- `Addresses #N`
+
+### Enforcement
+- PRs without issue links for tracked work = rule violation
+- Exception: pure refactors, dependency updates, or doc fixes not tied to issues
+
+---
+
 ## Stacked PRs Workflow
 
 Stacked PRs allow you to build features incrementally, with each PR targeting the previous one instead of main. This keeps PRs small and reviewable while maintaining a logical progression.
