@@ -493,8 +493,8 @@ function calculateProgress(tasks: HierarchyNode[]): number {
     if (tasks.length === 0) return 0;
 
     const completed = tasks.filter(t => {
-        const meta = t.metadata as Record<string, unknown>;
-        return meta?.status === 'completed';
+        if (!t.metadata || typeof t.metadata !== 'object') return false;
+        return (t.metadata as Record<string, unknown>).status === 'completed';
     }).length;
 
     return Math.round((completed / tasks.length) * 100);
@@ -554,7 +554,7 @@ function findDateField(
     if (timelineFields.length > 0) {
         for (const key of preferredKeys) {
             const match = timelineFields.find(f =>
-                f.key.toLowerCase().includes(key.toLowerCase())
+                f.key && f.key.toLowerCase().includes(key.toLowerCase())
             );
             if (match) return match;
         }
@@ -564,7 +564,7 @@ function findDateField(
     for (const key of preferredKeys) {
         const match = fields.find(f =>
             f.type === 'date' &&
-            (f.key === key || f.key.toLowerCase() === key.toLowerCase())
+            f.key && (f.key === key || f.key.toLowerCase() === key.toLowerCase())
         );
         if (match) return match;
     }
@@ -584,7 +584,7 @@ function autoDetectFieldMapping(fields: FieldDef[]): RecordTimelineFieldMapping 
         fields.find(f => f.type === 'status') ||
         fields.find(f =>
             (f.type === 'select' || f.type === 'status') &&
-            ['status', 'state', 'stage'].includes(f.key.toLowerCase())
+            f.key && ['status', 'state', 'stage'].includes(f.key.toLowerCase())
         );
 
     // For progress: prioritize type='percent', then fall back to conventional names with number/percent type
@@ -592,7 +592,7 @@ function autoDetectFieldMapping(fields: FieldDef[]): RecordTimelineFieldMapping 
         fields.find(f => f.type === 'percent') ||
         fields.find(f =>
             (f.type === 'number' || f.type === 'percent') &&
-            ['progress', 'completion', 'percent_complete', 'percentcomplete'].includes(f.key.toLowerCase())
+            f.key && ['progress', 'completion', 'percent_complete', 'percentcomplete'].includes(f.key.toLowerCase())
         );
 
     return {
@@ -691,11 +691,16 @@ function recordToRenderItem(
     // Get fields from definition schema
     const fields = definition.schema_config?.fields ?? [];
 
-    // Use cached auto-detected mapping if available
-    let autoMapping = fieldMappingCache.get(definition.id);
+    // Use cached auto-detected mapping if available (only cache if definition has an id)
+    let autoMapping: RecordTimelineFieldMapping | undefined;
+    if (definition.id) {
+        autoMapping = fieldMappingCache.get(definition.id);
+    }
     if (!autoMapping) {
         autoMapping = autoDetectFieldMapping(fields);
-        fieldMappingCache.set(definition.id, autoMapping);
+        if (definition.id) {
+            fieldMappingCache.set(definition.id, autoMapping);
+        }
     }
 
     // Resolve field mapping (explicit overrides auto-detected)

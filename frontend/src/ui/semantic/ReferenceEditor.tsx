@@ -19,7 +19,7 @@ import {
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
 import type { SearchResult } from '../../types';
-import { RecordSearchCombobox } from '../common/RecordSearchCombobox';
+import { RecordSearchCombobox } from '../editor/RecordSearchCombobox';
 
 export interface ReferenceEditorProps {
     /** The reference ID if a link exists, or empty string if not */

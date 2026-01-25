@@ -1,7 +1,7 @@
 import { Plus, ChevronDown, Wand2, PanelLeftClose, PanelLeftOpen, Layers, FolderOpen, Check, Copy, FileText, FileMinus, Database } from 'lucide-react';
 import { useEffect, useMemo, useCallback, useState } from 'react';
 import { ProjectSidebarPanel } from '../panels/ProjectSidebarPanel';
-import { ResizeHandle } from '../common/ResizeHandle';
+import { ResizeHandle } from '@autoart/ui';
 import type { DerivedStatus } from '@autoart/shared';
 
 import {

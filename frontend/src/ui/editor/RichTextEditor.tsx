@@ -23,7 +23,7 @@ import {
 import { createConfiguredExtensions, MentionAttributes } from './MentionExtension';
 import { useCreateReference } from '../../api/hooks';
 import type { SearchResult } from '../../types';
-import { RecordSearchCombobox } from '../common/RecordSearchCombobox';
+import { RecordSearchCombobox } from './RecordSearchCombobox';
 
 
 
