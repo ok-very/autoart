@@ -319,8 +319,9 @@ class ArtifactLookupService:
             return False
 
         # Also update in database, scoped to the collection's output_folder
+        db_updated = False
         try:
-            def _update_db() -> None:
+            def _update_db() -> bool:
                 db = get_db()
                 # Get collection_id for this output_folder to scope the update
                 collection_row = db.execute(
@@ -338,19 +339,23 @@ class ArtifactLookupService:
                         (new_path, artifact_id, collection_row["collection_id"]),
                     )
                     db.commit()
+                    return True
                 else:
-                    # No collection found for folder - skip DB update to avoid
-                    # accidentally updating artifacts in other collections
+                    # No collection found for folder - this is a data integrity issue
                     logger.warning(
                         f"No collection found for output_folder {output_folder}, "
-                        f"skipping database update for artifact {artifact_id}"
+                        f"database not updated for artifact {artifact_id}"
                     )
+                    return False
 
-            await asyncio.to_thread(_update_db)
+            db_updated = await asyncio.to_thread(_update_db)
         except RuntimeError:
-            pass  # Database not available, manifest was updated
+            # Database not available - manifest was updated but DB sync failed
+            logger.warning("Database not available, only manifest was updated")
+            db_updated = False
 
-        return True
+        # Return True only if both manifest and database were updated
+        return db_updated
 
     async def compute_file_hash(self, file_path: str | Path) -> str:
         """
@@ -361,13 +366,28 @@ class ArtifactLookupService:
 
         Returns:
             Hex-encoded SHA-256 hash
+
+        Raises:
+            FileNotFoundError: If file does not exist
+            PermissionError: If file cannot be read
+            OSError: For other filesystem errors
         """
         def _hash_file() -> str:
-            sha256 = hashlib.sha256()
-            with open(file_path, "rb") as f:
-                for chunk in iter(lambda: f.read(65536), b""):
-                    sha256.update(chunk)
-            return sha256.hexdigest()
+            try:
+                sha256 = hashlib.sha256()
+                with open(file_path, "rb") as f:
+                    for chunk in iter(lambda: f.read(65536), b""):
+                        sha256.update(chunk)
+                return sha256.hexdigest()
+            except FileNotFoundError:
+                logger.error(f"File not found for hashing: {file_path}")
+                raise
+            except PermissionError:
+                logger.error(f"Permission denied reading file: {file_path}")
+                raise
+            except OSError as e:
+                logger.error(f"OS error hashing file {file_path}: {e}")
+                raise
 
         return await asyncio.to_thread(_hash_file)
 

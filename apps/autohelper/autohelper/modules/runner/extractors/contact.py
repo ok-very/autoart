@@ -60,7 +60,7 @@ CITY_COUNTRY_PATTERN = re.compile(
 )
 
 
-def extract_emails(soup: SoupElement) -> list[str]:
+def extract_emails(soup: SoupElement | None) -> list[str]:
     """
     Extract email addresses from HTML.
 
@@ -72,8 +72,11 @@ def extract_emails(soup: SoupElement) -> list[str]:
         soup: BeautifulSoup document or Tag element
 
     Returns:
-        Deduplicated list of email addresses
+        Deduplicated list of email addresses (empty if soup is None)
     """
+    if soup is None:
+        return []
+
     emails: list[str] = []
 
     # 1. Extract from mailto: links
@@ -99,7 +102,7 @@ def extract_emails(soup: SoupElement) -> list[str]:
     return list(dict.fromkeys(emails))  # Preserve order, dedupe
 
 
-def extract_phones(soup: SoupElement) -> list[str]:
+def extract_phones(soup: SoupElement | None) -> list[str]:
     """
     Extract phone numbers from HTML.
 
@@ -111,8 +114,11 @@ def extract_phones(soup: SoupElement) -> list[str]:
         soup: BeautifulSoup document or Tag element
 
     Returns:
-        Deduplicated list of phone numbers
+        Deduplicated list of phone numbers (empty if soup is None)
     """
+    if soup is None:
+        return []
+
     phones: list[str] = []
 
     # 1. Extract from tel: links
@@ -145,7 +151,7 @@ def _normalize_phone(phone: str) -> str:
 
 
 def extract_location(
-    soup: SoupElement, bio_text: str | None = None
+    soup: SoupElement | None, bio_text: str | None = None
 ) -> tuple[str | None, list[str]]:
     """
     Extract location from HTML.
@@ -156,13 +162,22 @@ def extract_location(
     3. Fallback to page-wide pattern search
 
     Args:
-        soup: Parsed HTML document
+        soup: Parsed HTML document (can be None)
         bio_text: Optional bio text (if already extracted)
 
     Returns:
         Tuple of (best_location, all_candidates)
     """
     candidates: list[str] = []
+
+    # Handle None soup - can still extract from bio_text
+    if soup is None:
+        if bio_text:
+            for match in CITY_COUNTRY_PATTERN.finditer(bio_text):
+                location = f"{match.group(1)}, {match.group(2)}"
+                if location not in candidates:
+                    candidates.append(location)
+        return (candidates[0] if candidates else None, candidates)
 
     # 1. Check explicit location elements
     for selector in LOCATION_SELECTORS:
