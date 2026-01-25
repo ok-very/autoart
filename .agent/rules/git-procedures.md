@@ -365,17 +365,15 @@ gh pr edit 101 --base main
 gh pr edit 102 --base main
 
 # Step 2: Now merge in order (each targets main, no orphaning)
-gh pr merge 100 --squash --delete-branch --admin
-gh pr merge 101 --squash --delete-branch --admin
-gh pr merge 102 --squash --delete-branch --admin
+gh pr merge 100 --squash --delete-branch
+gh pr merge 101 --squash --delete-branch
+gh pr merge 102 --squash --delete-branch
 ```
 
 **Alternative using the merge-stack script** (if PRs don't need retargeting):
 ```bash
 pnpm git:merge-stack 100 101 102
 ```
-
-**Important:** The `--admin` flag may be required to bypass branch protection rules.
 
 ### Rebasing a Stack onto Updated Main
 
@@ -437,17 +435,3 @@ gh pr edit <number> --base correct-parent-branch
 **Need to add commits to middle of stack:**
 - Checkout that branch, commit, push
 - Rebase all child branches onto updated parent
-
-### Required Permissions for Stack Operations
-
-The agent needs these capabilities to manage stacks effectively:
-
-1. **`--admin` flag access** for `gh pr merge` to bypass branch protection during merges
-2. **Or**: Branch protection rules configured to allow merges without blocking requirements
-
-Without admin access, stack merges may fail with:
-```
-Pull request is not mergeable: the base branch policy prohibits the merge.
-```
-
-**Recommendation:** Configure a GitHub App or bot account with admin permissions for automated stack management, or temporarily relax branch protection for stack merges.
