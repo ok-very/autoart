@@ -190,3 +190,125 @@ git log main..origin/branch-name --oneline
 # If empty output, safe to delete
 git push origin --delete branch-name
 ```
+
+---
+
+## Stacked PRs Workflow
+
+Stacked PRs allow you to build features incrementally, with each PR targeting the previous one instead of main. This keeps PRs small and reviewable while maintaining a logical progression.
+
+### When to Use Stacked PRs
+
+- Feature requires multiple logical steps
+- You want early review on foundational changes
+- Breaking a large change into reviewable chunks
+
+### Creating a Stacked PR
+
+**Prerequisites:** Requires bash (Git Bash on Windows) and `gh` CLI authenticated.
+
+// turbo
+1. Complete and commit work on your current branch (this becomes the base)
+
+2. Run the stack wizard:
+```bash
+pnpm git:stack
+```
+
+3. The wizard will:
+   - Prompt for new branch name
+   - Create branch from current HEAD
+   - Push to origin
+   - Prompt for PR title and body
+   - Create PR targeting the current branch (not main)
+
+### Example Stack
+
+```
+main
+ └── fix/autohelper-adapters (PR #120 → main)
+      └── upgrade/styling-hotzones (PR #119 → #120)
+           └── feature/desk-workspace (PR #122 → #119)
+                └── refactor/center-content (PR #121 → #122)
+```
+
+Each PR only shows its own changes, making review easier.
+
+### Merging a Stack
+
+Merge PRs in order from bottom to top:
+
+```bash
+# Merge all in order (merge commits, deletes branches)
+pnpm git:merge-stack 120 119 122 121
+```
+
+Or merge individually:
+```bash
+gh pr merge 120 --merge --delete-branch
+gh pr merge 119 --merge --delete-branch
+# ... and so on
+```
+
+**Important:** Merge in order. Each PR's base branch must be merged first.
+
+### Rebasing a Stack onto Updated Main
+
+If main receives changes you need:
+
+// turbo
+1. Rebase the bottom branch onto main:
+```bash
+git checkout fix/autohelper-adapters
+git fetch origin
+git rebase origin/main
+git push --force-with-lease
+```
+
+2. Rebase each subsequent branch onto its parent:
+```bash
+git checkout upgrade/styling-hotzones
+git rebase fix/autohelper-adapters
+git push --force-with-lease
+```
+
+3. Repeat up the stack.
+
+### Collapsing a Stack (Squash All to Main)
+
+If you want to merge all stacked changes as a single commit to main:
+
+// turbo
+1. Ensure the top branch has all changes:
+```bash
+git checkout refactor/center-content
+git rebase origin/main
+```
+
+2. Close superseded PRs:
+```bash
+gh pr close 120 --comment "Superseded by #121"
+gh pr close 119 --comment "Superseded by #121"
+gh pr close 122 --comment "Superseded by #121"
+```
+
+3. Retarget and merge the top PR:
+```bash
+gh pr edit 121 --base main
+gh pr merge 121 --squash --delete-branch
+```
+
+### Common Stack Issues
+
+**Base branch has conflicts after parent merged:**
+- GitHub auto-retargets PRs when their base is merged
+- If conflicts appear, rebase locally and force-push
+
+**Accidentally targeted main instead of parent:**
+```bash
+gh pr edit <number> --base correct-parent-branch
+```
+
+**Need to add commits to middle of stack:**
+- Checkout that branch, commit, push
+- Rebase all child branches onto updated parent
