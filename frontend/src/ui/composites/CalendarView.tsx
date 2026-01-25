@@ -5,7 +5,7 @@
  * Supports drag-and-drop for rescheduling and hot zones for cross-month navigation.
  */
 
-import { Calendar, dateFnsLocalizer, type View, type Event } from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, type View } from 'react-big-calendar';
 import withDragAndDrop, {
     type EventInteractionArgs,
 } from 'react-big-calendar/lib/addons/dragAndDrop';

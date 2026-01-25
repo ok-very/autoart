@@ -63,7 +63,7 @@ export function actionsToCalendarEvents(
             // Ensure end is not before start
             const adjustedEnd = end >= start ? end : new Date(start);
 
-            return {
+            const event: CalendarEvent = {
                 actionId: action.id,
                 title: extractTitle(action),
                 start,
@@ -79,6 +79,7 @@ export function actionsToCalendarEvents(
                     isDueInferred,
                 },
             };
+            return event;
         })
         .filter((e): e is CalendarEvent => e !== null);
 }

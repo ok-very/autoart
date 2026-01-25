@@ -510,7 +510,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                             }}
                             onSelectEvent={(event) => {
                                 // Check if this action has a corresponding hierarchy node
-                                const node = storeNodes.find(n => n.id === event.actionId);
+                                const node = storeNodes[event.actionId];
                                 if (node) {
                                     setInspectorMode('record');
                                     inspectNode(event.actionId);

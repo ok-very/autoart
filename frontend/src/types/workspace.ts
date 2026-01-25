@@ -27,6 +27,8 @@ export interface WorkspacePanelConfig {
     viewMode?: string;
     /** Default position hint (actual position determined by Dockview) */
     position?: 'center' | 'left' | 'right' | 'bottom';
+    /** If true, panel follows workspace's bound project */
+    bound?: boolean;
 }
 
 /**

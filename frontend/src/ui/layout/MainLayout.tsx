@@ -41,6 +41,7 @@ import {
   isPermanentPanel,
   type PanelId,
 } from '../../workspace/panelRegistry';
+import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
 import {
   useWorkspaceTheme,
   useThemeBehavior,
@@ -64,6 +65,7 @@ import { ComposerPanel } from '../panels/ComposerPanel';
 import { MailPanel } from '../panels/MailPanel';
 import { IntakePanel } from '../panels/IntakePanel';
 import { ArtCollectorPanel } from '../panels/ArtCollectorPanel';
+import { ProjectPanel } from '../panels/ProjectPanel';
 
 // ============================================================================
 // PANEL SPAWN HANDLE
@@ -243,6 +245,7 @@ const COMPONENTS: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   'mail-panel': MailPanel,
   'intake-workbench': IntakePanel,
   'artcollector-workbench': ArtCollectorPanel,
+  'project-panel': ProjectPanel,
 };
 
 // ============================================================================
@@ -301,19 +304,54 @@ function WatermarkComponent() {
 
 function IconTab(props: IDockviewPanelHeaderProps) {
   const { api } = props;
-  const def = PANEL_DEFINITIONS[api.id as PanelId];
+
+  // Get component type from dynamic panel ID (e.g., "project-panel-123" -> "project-panel")
+  const getComponentType = (panelId: string): PanelId => {
+    if (panelId.startsWith('project-panel-')) {
+      return 'project-panel';
+    }
+    return panelId as PanelId;
+  };
+
+  const componentType = getComponentType(api.id);
+  const def = PANEL_DEFINITIONS[componentType];
   const Icon = def?.icon;
+
+  // Check if this panel is bound to workspace
+  const isBound = useWorkspaceStore((s) => s.boundPanelIds.has(api.id));
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+
+  // Get workspace color for bound styling
+  const workspaceColor = activeWorkspaceId
+    ? BUILT_IN_WORKSPACES.find((w) => w.id === activeWorkspaceId)?.color
+    : null;
 
   const handleClose = (e: React.MouseEvent) => {
     e.stopPropagation();
     api.close();
   };
 
+  // Build color classes for bound panels
+  const boundColorClasses = isBound && workspaceColor
+    ? `border-l-2 border-l-${workspaceColor}-500`
+    : '';
+
   return (
-    <div className="flex items-center gap-2 text-current overflow-hidden w-full group">
+    <div className={`flex items-center gap-2 text-current overflow-hidden w-full group ${boundColorClasses}`}>
       <div className="flex items-center gap-2 flex-1 overflow-hidden min-w-0">
         {Icon && <Icon size={14} strokeWidth={2} className="flex-shrink-0" />}
         <span className="truncate">{def?.title || api.title}</span>
+        {isBound && (
+          <span
+            className={`text-[9px] px-1.5 py-0.5 rounded-full ${
+              workspaceColor
+                ? `bg-${workspaceColor}-100 text-${workspaceColor}-600`
+                : 'bg-slate-100 text-slate-500'
+            }`}
+          >
+            Bound
+          </span>
+        )}
       </div>
       {!def?.permanent && (
         <div
@@ -420,17 +458,28 @@ export function MainLayout() {
 
   // Sync panels when openPanelIds changes
   // Workspace presets provide position hints; single panel opens default to tabs
+  // Handles dynamic panel IDs (e.g., project-panel-1234567890-0)
   useEffect(() => {
     const api = apiRef.current;
     if (!api) return;
 
-    const consumedPositions: PanelId[] = [];
+    const consumedPositions: string[] = [];
+
+    // Helper to extract component type from dynamic panel ID
+    const getComponentType = (panelId: string): PanelId => {
+      // For dynamic IDs like "project-panel-1234567890-0", extract "project-panel"
+      if (panelId.startsWith('project-panel-')) {
+        return 'project-panel';
+      }
+      return panelId as PanelId;
+    };
 
     openPanelIds.forEach((id) => {
       if (!api.getPanel(id)) {
-        const def = PANEL_DEFINITIONS[id];
+        const componentType = getComponentType(id);
+        const def = PANEL_DEFINITIONS[componentType];
         if (!def) {
-          console.warn('[MainLayout] No panel definition found for:', id);
+          console.warn('[MainLayout] No panel definition found for:', id, 'componentType:', componentType);
           return;
         }
 
@@ -457,7 +506,7 @@ export function MainLayout() {
 
         // Track consumed positions for cleanup (only for preset-provided positions)
         if (rawPendingPosition) {
-          consumedPositions.push(id as PanelId);
+          consumedPositions.push(id);
         }
 
         // Map position to dockview direction
@@ -471,7 +520,7 @@ export function MainLayout() {
 
         api.addPanel({
           id,
-          component: id,
+          component: componentType, // Use base component type, not dynamic ID
           title: def.title,
           tabComponent: 'icon-tab',
           position: {
@@ -484,12 +533,15 @@ export function MainLayout() {
 
     // Clear only consumed position hints, preserving hints for panels not yet opened
     if (consumedPositions.length > 0) {
-      clearPendingPositions(consumedPositions);
+      clearPendingPositions(consumedPositions as PanelId[]);
     }
 
+    // Close panels not in openPanelIds (handle both static and dynamic IDs)
     api.panels.forEach((panel) => {
-      const panelId = panel.id as PanelId;
-      if (!openPanelIds.includes(panelId) && !isPermanentPanel(panelId)) {
+      const panelId = panel.id;
+      const isInOpenList = openPanelIds.includes(panelId as PanelId);
+      const componentType = getComponentType(panelId);
+      if (!isInOpenList && !isPermanentPanel(componentType)) {
         panel.api.close();
       }
     });
