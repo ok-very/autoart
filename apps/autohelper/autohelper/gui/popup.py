@@ -401,6 +401,75 @@ def get_window_class():
 
             layout.addWidget(metrics)
 
+            # Collector Settings
+            collector_grp = QFrame()
+            collector_grp.setStyleSheet(
+                "background: white; border: 1px solid #eceff1; border-radius: 4px;"
+            )
+            coll_layout = QVBoxLayout(collector_grp)
+            coll_layout.addWidget(QLabel("Collector Settings"))
+
+            row_depth = QHBoxLayout()
+            row_depth.addWidget(QLabel("Crawl Depth:"))
+            self.spin_crawl_depth = QSpinBox()
+            self.spin_crawl_depth.setRange(10, 100)
+            self.spin_crawl_depth.setSingleStep(5)
+            self.spin_crawl_depth.setValue(self.current_config.get("crawl_depth", 20))
+            self.spin_crawl_depth.setToolTip("Max images to collect per web page (10-100)")
+            self.spin_crawl_depth.valueChanged.connect(self.mark_dirty)
+            row_depth.addWidget(self.spin_crawl_depth)
+            coll_layout.addLayout(row_depth)
+
+            # Width bounds
+            row_width = QHBoxLayout()
+            row_width.addWidget(QLabel("Width (px):"))
+            self.spin_min_width = QSpinBox()
+            self.spin_min_width.setRange(1, 10000)
+            self.spin_min_width.setValue(self.current_config.get("min_width", 100))
+            self.spin_min_width.valueChanged.connect(self.mark_dirty)
+            row_width.addWidget(self.spin_min_width)
+            row_width.addWidget(QLabel("–"))
+            self.spin_max_width = QSpinBox()
+            self.spin_max_width.setRange(1, 10000)
+            self.spin_max_width.setValue(self.current_config.get("max_width", 5000))
+            self.spin_max_width.valueChanged.connect(self.mark_dirty)
+            row_width.addWidget(self.spin_max_width)
+            coll_layout.addLayout(row_width)
+
+            # Height bounds
+            row_height = QHBoxLayout()
+            row_height.addWidget(QLabel("Height (px):"))
+            self.spin_min_height = QSpinBox()
+            self.spin_min_height.setRange(1, 10000)
+            self.spin_min_height.setValue(self.current_config.get("min_height", 100))
+            self.spin_min_height.valueChanged.connect(self.mark_dirty)
+            row_height.addWidget(self.spin_min_height)
+            row_height.addWidget(QLabel("–"))
+            self.spin_max_height = QSpinBox()
+            self.spin_max_height.setRange(1, 10000)
+            self.spin_max_height.setValue(self.current_config.get("max_height", 5000))
+            self.spin_max_height.valueChanged.connect(self.mark_dirty)
+            row_height.addWidget(self.spin_max_height)
+            coll_layout.addLayout(row_height)
+
+            # Filesize bounds (KB)
+            row_size = QHBoxLayout()
+            row_size.addWidget(QLabel("Size (KB):"))
+            self.spin_min_filesize = QSpinBox()
+            self.spin_min_filesize.setRange(1, 50000)
+            self.spin_min_filesize.setValue(self.current_config.get("min_filesize_kb", 100))
+            self.spin_min_filesize.valueChanged.connect(self.mark_dirty)
+            row_size.addWidget(self.spin_min_filesize)
+            row_size.addWidget(QLabel("–"))
+            self.spin_max_filesize = QSpinBox()
+            self.spin_max_filesize.setRange(1, 50000)
+            self.spin_max_filesize.setValue(self.current_config.get("max_filesize_kb", 12000))
+            self.spin_max_filesize.valueChanged.connect(self.mark_dirty)
+            row_size.addWidget(self.spin_max_filesize)
+            coll_layout.addLayout(row_size)
+
+            layout.addWidget(collector_grp)
+
             # Actions
             layout.addWidget(QLabel("Index Operations"))
 
@@ -709,6 +778,13 @@ def get_window_class():
                 "mail_enabled": self.chk_mail_enabled.isChecked(),
                 "mail_poll_interval": self.spin_mail_interval.value(),
                 "autoart_session_id": self.current_config.get("autoart_session_id", ""),
+                "crawl_depth": self.spin_crawl_depth.value(),
+                "min_width": self.spin_min_width.value(),
+                "max_width": self.spin_max_width.value(),
+                "min_height": self.spin_min_height.value(),
+                "max_height": self.spin_max_height.value(),
+                "min_filesize_kb": self.spin_min_filesize.value(),
+                "max_filesize_kb": self.spin_max_filesize.value(),
             }
             try:
                 self.config_store.save(new_config)
