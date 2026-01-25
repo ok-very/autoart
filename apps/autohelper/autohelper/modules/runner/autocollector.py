@@ -108,17 +108,24 @@ class AutoCollectorRunner(BaseRunner):
         url = config.get("url")
         source_path = config.get("source_path")
 
-        if url:
-            web_collector = await self._get_web_collector()
-            return await web_collector.collect(url, output_folder, naming_config, context_id)
-        elif source_path:
-            return await self._folder_collector.collect(
-                source_path, output_folder, naming_config, context_id
-            )
-        else:
+        try:
+            if url:
+                web_collector = await self._get_web_collector()
+                return await web_collector.collect(url, output_folder, naming_config, context_id)
+            elif source_path:
+                return await self._folder_collector.collect(
+                    source_path, output_folder, naming_config, context_id
+                )
+            else:
+                return RunnerResult(
+                    success=False,
+                    error="Config must include 'url' or 'source_path'",
+                )
+        except Exception as e:
+            logger.exception(f"Collector failed: {e}")
             return RunnerResult(
                 success=False,
-                error="Config must include 'url' or 'source_path'",
+                error=f"Collector error: {e}",
             )
 
     async def invoke_stream(
@@ -159,19 +166,26 @@ class AutoCollectorRunner(BaseRunner):
         url = config.get("url")
         source_path = config.get("source_path")
 
-        if url:
-            web_collector = await self._get_web_collector()
-            async for progress in web_collector.collect_stream(
-                url, output_folder, naming_config, context_id
-            ):
-                yield progress
-        elif source_path:
-            async for progress in self._folder_collector.collect_stream(
-                source_path, output_folder, naming_config, context_id
-            ):
-                yield progress
-        else:
+        try:
+            if url:
+                web_collector = await self._get_web_collector()
+                async for progress in web_collector.collect_stream(
+                    url, output_folder, naming_config, context_id
+                ):
+                    yield progress
+            elif source_path:
+                async for progress in self._folder_collector.collect_stream(
+                    source_path, output_folder, naming_config, context_id
+                ):
+                    yield progress
+            else:
+                yield RunnerProgress(
+                    stage="error",
+                    message="Config must include 'url' or 'source_path'",
+                )
+        except Exception as e:
+            logger.exception(f"Collector stream failed: {e}")
             yield RunnerProgress(
                 stage="error",
-                message="Config must include 'url' or 'source_path'",
+                message=f"Collector error: {e}",
             )

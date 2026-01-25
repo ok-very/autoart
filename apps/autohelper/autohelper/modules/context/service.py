@@ -68,7 +68,8 @@ class ContextService:
             return cls._instance
 
     def __init__(self) -> None:
-        if self._initialized:
+        # Use getattr to safely handle non-standard instance creation paths
+        if getattr(self, "_initialized", False):
             return
         self._initialized = True
 

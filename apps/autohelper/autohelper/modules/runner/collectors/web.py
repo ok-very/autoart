@@ -7,6 +7,7 @@ Collects artifacts from web pages with SSRF protection and manifest tracking.
 import asyncio
 import logging
 import mimetypes
+import threading
 import uuid
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
