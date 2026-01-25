@@ -215,7 +215,7 @@ export function TimelineWrapper({
     headerHeight = 50,
 }: TimelineWrapperProps) {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [internalViewMode, setInternalViewMode] = useState<ViewMode>('Day');
+    const [internalViewMode, setInternalViewMode] = useState<ViewMode>(ViewMode.Day);
     const [selectedTaskId, setSelectedTaskId] = useState<string>('');
 
     // Map data to tasks
@@ -229,7 +229,7 @@ export function TimelineWrapper({
         // Empty state
         return {
             tasks: [],
-            viewMode: 'Day',
+            viewMode: ViewMode.Day,
             viewDate: new Date()
         };
     }, [projection, project, children, adapterOptions]);
@@ -244,7 +244,8 @@ export function TimelineWrapper({
 
     // View mode
     const viewMode = controlledViewMode ?? internalViewMode;
-    const handleViewModeChange = useCallback((mode: ViewMode) => {
+    // handleViewModeChange reserved for future view mode selector UI
+    const _handleViewModeChange = useCallback((mode: ViewMode) => {
         if (onViewModeChange) {
             onViewModeChange(mode);
         } else {
@@ -263,7 +264,7 @@ export function TimelineWrapper({
         setSelectedTaskId(isSelected ? task.id : '');
         if (onSelectionChange) {
             onSelectionChange({
-                ...selection,
+                ...(selection ?? {}),
                 selectedItemIds: isSelected ? [task.id] : []
             });
         }

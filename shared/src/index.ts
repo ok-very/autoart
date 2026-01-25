@@ -15,9 +15,7 @@ export { z } from 'zod';
 
 // ==================== SCHEMAS ====================
 // All Zod schemas and their inferred types (authoritative source)
-// Export Schemas
-export * from './schemas/composer.js';
-export * from './schemas/exports.js';
+export * from './schemas/index.js';
 
 // ==================== TYPES ====================
 // Pure TypeScript types (projections)

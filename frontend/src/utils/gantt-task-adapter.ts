@@ -6,8 +6,9 @@
  * to the gantt-task-react library for interactive rendering.
  */
 
-import type { Task, ViewMode } from 'gantt-task-react';
-import type { HierarchyNode, GanttProjectionOutput, GanttLane, GanttItem } from '@autoart/shared';
+import type { Task } from 'gantt-task-react';
+import { ViewMode } from 'gantt-task-react';
+import type { HierarchyNode, GanttProjectionOutput, GanttLane } from '@autoart/shared';
 
 // ============================================================================
 // TYPES
@@ -169,9 +170,9 @@ export function mapHierarchyToTasks(
 
     // Determine view mode based on date range
     const rangeDays = (maxDate.getTime() - minDate.getTime()) / ONE_DAY_MS;
-    let viewMode: ViewMode = 'Day';
-    if (rangeDays > 180) viewMode = 'Month';
-    else if (rangeDays > 60) viewMode = 'Week';
+    let viewMode: ViewMode = ViewMode.Day;
+    if (rangeDays > 180) viewMode = ViewMode.Month;
+    else if (rangeDays > 60) viewMode = ViewMode.Week;
 
     // Pad view date range
     const viewDate = new Date(minDate);
@@ -253,9 +254,9 @@ export function mapProjectionToTasks(
 
     // Determine view mode based on date range
     const rangeDays = (endDate.getTime() - startDate.getTime()) / ONE_DAY_MS;
-    let viewMode: ViewMode = 'Day';
-    if (rangeDays > 180) viewMode = 'Month';
-    else if (rangeDays > 60) viewMode = 'Week';
+    let viewMode: ViewMode = ViewMode.Day;
+    if (rangeDays > 180) viewMode = ViewMode.Month;
+    else if (rangeDays > 60) viewMode = ViewMode.Week;
 
     const viewDate = new Date(startDate);
     viewDate.setDate(viewDate.getDate() - 7);

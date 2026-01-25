@@ -5,7 +5,7 @@
  * Manages zoom level, selection state, and print actions.
  */
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Printer, ZoomIn, ZoomOut, Maximize, Calendar } from 'lucide-react';
 import { GanttCanvas } from '../components/GanttCanvas';
 import { GanttProjectionOutput, GanttSelection, generateGanttHtml } from '@autoart/shared';
@@ -56,7 +56,7 @@ export function GanttView({ projection, projectId }: GanttViewProps) {
                     <div className="h-4 w-px bg-slate-200 mx-2" />
                     <Stack gap="xs" className="flex-row">
                         <IconButton
-                            icon={<ZoomOut size={16} />}
+                            icon={ZoomOut}
                             label="Zoom Out"
                             onClick={handleZoomOut}
                             variant="ghost"
@@ -66,14 +66,14 @@ export function GanttView({ projection, projectId }: GanttViewProps) {
                             {Math.round(scale * 100)}%
                         </Text>
                         <IconButton
-                            icon={<ZoomIn size={16} />}
+                            icon={ZoomIn}
                             label="Zoom In"
                             onClick={handleZoomIn}
                             variant="ghost"
                             size="sm"
                         />
                         <IconButton
-                            icon={<Maximize size={16} />}
+                            icon={Maximize}
                             label="Fit"
                             onClick={handleFit}
                             variant="ghost"

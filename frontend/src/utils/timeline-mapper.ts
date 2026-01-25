@@ -23,7 +23,6 @@ import {
     extractDueDate,
     extractStatus,
     extractAssignee,
-    extractFieldValue,
 } from '@autoart/shared';
 
 // ============================================================================

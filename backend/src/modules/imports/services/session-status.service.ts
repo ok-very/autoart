@@ -195,7 +195,7 @@ export async function markSessionNeedsReview(
 // ============================================================================
 
 import type { Transaction } from 'kysely';
-import type { DB } from '../../../db/schema.js';
+import type { Database } from '../../../db/schema.js';
 
 /**
  * Update session status within a transaction (for atomic operations).
@@ -209,7 +209,7 @@ import type { DB } from '../../../db/schema.js';
  * @throws InvalidStatusTransitionError if transition is not allowed
  */
 export async function transitionStatusInTransaction(
-    trx: Transaction<DB>,
+    trx: Transaction<Database>,
     sessionId: string,
     currentStatus: ImportSessionStatus,
     newStatus: ImportSessionStatus,

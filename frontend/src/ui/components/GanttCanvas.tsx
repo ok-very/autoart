@@ -10,9 +10,9 @@
  * - onSelect: Handler for selection events
  */
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
+import { clsx } from 'clsx';
 import { GanttProjectionOutput, GanttSelection } from '@autoart/shared';
-import { cn } from '../../utils/cn';
 
 export interface GanttCanvasProps {
     projection: GanttProjectionOutput;
@@ -43,7 +43,7 @@ export function GanttCanvas({
     return (
         <div
             ref={containerRef}
-            className={cn("relative overflow-auto bg-white select-none", className)}
+            className={clsx("relative overflow-auto bg-white select-none", className)}
             onClick={handleBgClick}
         >
             <div
@@ -59,7 +59,7 @@ export function GanttCanvas({
                     {ticks.map((tick, i) => (
                         <div
                             key={`tick-${i}`}
-                            className={cn(
+                            className={clsx(
                                 "absolute top-0 bottom-0 border-l px-1 py-1 text-[10px] text-slate-500",
                                 tick.type === 'major' ? "border-slate-300 font-medium" : "border-slate-100"
                             )}
@@ -75,7 +75,7 @@ export function GanttCanvas({
                     {ticks.map((tick, i) => (
                         <div
                             key={`grid-${i}`}
-                            className={cn(
+                            className={clsx(
                                 "absolute top-0 bottom-0 border-l",
                                 tick.type === 'major' ? "border-slate-200" : "border-slate-50"
                             )}
@@ -89,7 +89,7 @@ export function GanttCanvas({
                     {lanes.map((lane) => (
                         <div
                             key={lane.id}
-                            className={cn(
+                            className={clsx(
                                 "absolute w-full border-b border-slate-100 hover:bg-slate-50/50 transition-colors group",
                                 selection?.selectedLaneIds?.includes(lane.id) && "bg-blue-50/30"
                             )}
@@ -119,7 +119,7 @@ export function GanttCanvas({
                                 return (
                                     <div
                                         key={item.id}
-                                        className={cn(
+                                        className={clsx(
                                             "absolute rounded text-[10px] text-white px-1 flex items-center overflow-hidden whitespace-nowrap cursor-pointer hover:brightness-110 shadow-sm transition-all",
                                             isSelected ? "ring-2 ring-blue-500 ring-offset-1 z-30" : "z-20"
                                         )}

@@ -6,7 +6,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Search, Filter, X, Calendar, User, CircleDot } from 'lucide-react';
+import { Search, Filter, X, User, CircleDot } from 'lucide-react';
 import type { TimelineFilter } from '../../utils/timeline-mapper';
 
 interface GanttFiltersProps {
@@ -27,7 +27,7 @@ export function GanttFilters({
     onFilterChange,
     availableStatuses,
     availableAssignees,
-    dateRange,
+    // dateRange reserved for future date picker UI
 }: GanttFiltersProps) {
     const [isExpanded, setIsExpanded] = useState(false);
 
