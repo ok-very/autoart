@@ -16,6 +16,17 @@ from .base import SiteAdapter, SiteMatch
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
+    from bs4.element import Tag
+
+
+def _get_str_attr(tag: "Tag", attr: str, default: str = "") -> str:
+    """Safely get string attribute from BS4 tag (handles list returns)."""
+    val = tag.get(attr)
+    if val is None:
+        return default
+    if isinstance(val, list):
+        return val[0] if val else default
+    return val
 
 
 SUPPORTED_EXTENSIONS = {
@@ -100,7 +111,7 @@ class WordPressAdapter(SiteAdapter):
         others: list[str] = []
 
         for a in soup.find_all("a", href=True):
-            href = (a.get("href") or "").strip()
+            href = _get_str_attr(a, "href").strip()
             if not href:
                 continue
             if href.startswith("#") or href.startswith("mailto:") or href.startswith("tel:"):
@@ -140,15 +151,15 @@ class WordPressAdapter(SiteAdapter):
         # 1) <img> and <source> tags (lazy attrs + srcset)
         for img in soup.find_all(["img", "source"]):
             # Common lazy patterns across WP themes/plugins
-            candidates = [
-                img.get("src"),
-                img.get("data-src"),
-                img.get("data-lazy-src"),
-                img.get("data-original"),
-                img.get("data-srcset"),  # sometimes present instead of srcset
+            candidates: list[str] = [
+                _get_str_attr(img, "src"),
+                _get_str_attr(img, "data-src"),
+                _get_str_attr(img, "data-lazy-src"),
+                _get_str_attr(img, "data-original"),
+                _get_str_attr(img, "data-srcset"),  # sometimes present instead of srcset
             ]
 
-            srcset = img.get("srcset") or img.get("data-srcset")
+            srcset = _get_str_attr(img, "srcset") or _get_str_attr(img, "data-srcset")
             if srcset:
                 best = self._best_from_srcset(srcset, base_url)
                 if best:
@@ -157,10 +168,10 @@ class WordPressAdapter(SiteAdapter):
             for c in candidates:
                 if not c:
                     continue
-                if isinstance(c, str) and c.startswith("data:"):
+                if c.startswith("data:"):
                     continue
 
-                u = urljoin(base_url, c) if isinstance(c, str) else ""
+                u = urljoin(base_url, c)
                 if not u:
                     continue
 
@@ -170,7 +181,7 @@ class WordPressAdapter(SiteAdapter):
 
         # 2) linked full-size images (<a href="...jpg">)
         for a in soup.find_all("a", href=True):
-            href = (a.get("href") or "").strip()
+            href = _get_str_attr(a, "href").strip()
             if not href:
                 continue
             u = urljoin(base_url, href)
@@ -178,7 +189,7 @@ class WordPressAdapter(SiteAdapter):
 
         # 3) background-image URLs in inline styles
         for el in soup.find_all(style=True):
-            style = el.get("style") or ""
+            style = _get_str_attr(el, "style")
             for _, raw in BG_URL_RE.findall(style):
                 if not raw or raw.startswith("data:"):
                     continue

@@ -21,6 +21,17 @@ from .base import SiteAdapter, SiteMatch
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
+    from bs4.element import Tag
+
+
+def _get_str_attr(tag: "Tag", attr: str, default: str = "") -> str:
+    """Safely get string attribute from BS4 tag (handles list returns)."""
+    val = tag.get(attr)
+    if val is None:
+        return default
+    if isinstance(val, list):
+        return val[0] if val else default
+    return val
 
 
 SUPPORTED_EXTENSIONS = {
@@ -96,7 +107,7 @@ class SquarespaceAdapter(SiteAdapter):
         urls: list[str] = []
 
         for a in soup.find_all("a", href=True):
-            href = (a.get("href") or "").strip()
+            href = _get_str_attr(a, "href").strip()
             if not href:
                 continue
             if href.startswith("#") or href.startswith("mailto:") or href.startswith("tel:"):
@@ -153,9 +164,9 @@ class SquarespaceAdapter(SiteAdapter):
 
         # 0) social/meta images (often highest-quality hero)
         for meta in soup.find_all("meta"):
-            prop = (meta.get("property") or meta.get("name") or "").lower()
+            prop = (_get_str_attr(meta, "property") or _get_str_attr(meta, "name")).lower()
             if prop in ("og:image", "twitter:image"):
-                content = meta.get("content")
+                content = _get_str_attr(meta, "content")
                 if content:
                     u = self._normalize_sqs_image(urljoin(base_url, content))
                     if self._is_supported_image(u):
@@ -166,14 +177,14 @@ class SquarespaceAdapter(SiteAdapter):
             candidates: list[str] = []
 
             for key in ("src", "data-src", "data-lazy", "data-image", "data-image-url", "data-srcset"):
-                v = el.get(key)
+                v = _get_str_attr(el, key)
                 if not v:
                     continue
-                if isinstance(v, str) and v.startswith("data:"):
+                if v.startswith("data:"):
                     continue
                 candidates.append(v)
 
-            srcset = el.get("srcset") or el.get("data-srcset")
+            srcset = _get_str_attr(el, "srcset") or _get_str_attr(el, "data-srcset")
             if srcset:
                 best = self._best_from_srcset(srcset, base_url)
                 if best:
@@ -209,7 +220,7 @@ class SquarespaceAdapter(SiteAdapter):
 
         # 3) inline background images
         for el in soup.find_all(style=True):
-            style = el.get("style") or ""
+            style = _get_str_attr(el, "style")
             for _, raw in BG_URL_RE.findall(style):
                 if not raw or raw.startswith("data:"):
                     continue
