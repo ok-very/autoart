@@ -28,7 +28,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                 ref={ref}
                 className={clsx(
                     'flex flex-col',
-                    gapClasses[gap],
+                    gapClasses[gap] ?? gapClasses.md,
                     align && alignClasses[align],
                     className
                 )}

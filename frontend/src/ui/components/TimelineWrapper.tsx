@@ -261,15 +261,30 @@ export function TimelineWrapper({
         selectionRef.current = selection;
         if (selection?.selectedItemIds?.length) {
             setSelectedTaskId(selection.selectedItemIds[0]);
+        } else {
+            setSelectedTaskId('');
         }
     }, [selection]);
 
     const handleSelect = useCallback((task: Task, isSelected: boolean) => {
-        setSelectedTaskId(isSelected ? task.id : '');
+        const currentSelection = selectionRef.current?.selectedItemIds ?? [];
+        let newSelectedIds: string[];
+
+        if (isSelected) {
+            // Add to selection (or replace if not already present)
+            newSelectedIds = currentSelection.includes(task.id)
+                ? currentSelection
+                : [task.id];
+        } else {
+            // Remove from selection
+            newSelectedIds = currentSelection.filter(id => id !== task.id);
+        }
+
+        setSelectedTaskId(newSelectedIds[0] ?? '');
         if (onSelectionChange) {
             onSelectionChange({
                 ...(selectionRef.current ?? {}),
-                selectedItemIds: isSelected ? [task.id] : []
+                selectedItemIds: newSelectedIds
             });
         }
         if (onTaskClick && isSelected) {

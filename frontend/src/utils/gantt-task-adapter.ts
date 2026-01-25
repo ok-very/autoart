@@ -200,14 +200,22 @@ export function mapProjectionToTasks(
     } = options;
 
     const tasks: Task[] = [];
-    const startDate = new Date(projection.startDate);
-    const endDate = new Date(projection.endDate);
+    let startDate = new Date(projection.startDate);
+    let endDate = new Date(projection.endDate);
+
+    // Ensure valid date range (minimum 30 days if invalid/equal)
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || endDate <= startDate) {
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+        endDate = new Date(startDate.getTime() + 30 * ONE_DAY_MS);
+    }
+
     const totalMs = endDate.getTime() - startDate.getTime();
 
-    // Calculate ms per pixel for reverse mapping (guard against zero/negative duration and width)
-    const msPerPixel = (projection.totalWidth > 0 && totalMs > 0)
+    // Calculate ms per pixel for reverse mapping
+    const msPerPixel = projection.totalWidth > 0
         ? totalMs / projection.totalWidth
-        : 1;
+        : ONE_DAY_MS; // Default to 1 day per pixel if no width
 
     projection.lanes.forEach(lane => {
         // Add lane as project group
