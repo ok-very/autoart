@@ -305,6 +305,7 @@ function WatermarkComponent() {
 
 function IconTab(props: IDockviewPanelHeaderProps) {
   const { api } = props;
+  const closePanel = useWorkspaceStore((s) => s.closePanel);
 
   // Get component type from dynamic panel ID (e.g., "project-panel-123" -> "project-panel")
   const getComponentType = (panelId: string): PanelId => {
@@ -332,7 +333,8 @@ function IconTab(props: IDockviewPanelHeaderProps) {
 
   const handleClose = (e: React.MouseEvent) => {
     e.stopPropagation();
-    api.close();
+    // Use store's closePanel to keep Dockview and state in sync
+    closePanel(api.id as PanelId);
   };
 
   // Build color classes for bound panels
