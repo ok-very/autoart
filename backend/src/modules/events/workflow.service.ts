@@ -296,3 +296,68 @@ export async function moveWorkflowRow(
     actorId: input.actorId,
   });
 }
+
+// ============================================================================
+// SCHEDULING EVENTS (Calendar/Timeline)
+// ============================================================================
+
+export interface RescheduleInput {
+  actionId: string;
+  actorId?: string;
+  startDate?: string;
+  dueDate?: string;
+  durationDays?: number;
+  scheduleMode?: 'explicit' | 'anchor_start' | 'anchor_due';
+}
+
+/**
+ * Reschedule an action by emitting FIELD_VALUE_RECORDED events for date fields.
+ * This is a convenience function for calendar/timeline DnD operations.
+ * Returns all emitted events.
+ */
+export async function rescheduleAction(input: RescheduleInput): Promise<Event[]> {
+  const action = await actionsService.getActionById(input.actionId);
+  if (!action) {
+    throw new Error(`Action not found: ${input.actionId}`);
+  }
+
+  const events: Event[] = [];
+  const baseInput = {
+    actionId: input.actionId,
+    actorId: input.actorId,
+  };
+
+  if (input.startDate !== undefined) {
+    events.push(await recordFieldValue({
+      ...baseInput,
+      fieldKey: 'startDate',
+      value: input.startDate,
+    }));
+  }
+
+  if (input.dueDate !== undefined) {
+    events.push(await recordFieldValue({
+      ...baseInput,
+      fieldKey: 'dueDate',
+      value: input.dueDate,
+    }));
+  }
+
+  if (input.durationDays !== undefined) {
+    events.push(await recordFieldValue({
+      ...baseInput,
+      fieldKey: 'durationDays',
+      value: input.durationDays,
+    }));
+  }
+
+  if (input.scheduleMode !== undefined) {
+    events.push(await recordFieldValue({
+      ...baseInput,
+      fieldKey: 'scheduleMode',
+      value: input.scheduleMode,
+    }));
+  }
+
+  return events;
+}

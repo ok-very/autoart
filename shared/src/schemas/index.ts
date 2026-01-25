@@ -201,6 +201,8 @@ export {
     type ContextType,
     EventTypeSchema,
     type EventType,
+    ScheduleModeSchema,
+    type ScheduleMode,
     FieldBindingSchema,
     ActionSchema,
     CreateActionInputSchema,
@@ -370,6 +372,17 @@ export {
     type IntakeSubmissionResponse,
     type IntakeSubmissionsResponse,
 } from './intake/index.js';
+
+// ==================== SCHEDULING ====================
+export {
+    DayModeSchema,
+    SchedulingSettingsSchema,
+    RescheduleInputSchema,
+    DEFAULT_SCHEDULING_SETTINGS,
+    type DayMode,
+    type SchedulingSettings,
+    type RescheduleInput,
+} from './scheduling.js';
 
 // ==================== EXPORTS ====================
 export {

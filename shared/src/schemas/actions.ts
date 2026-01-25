@@ -95,7 +95,20 @@ export type EventType = z.infer<typeof EventTypeSchema>;
  * Example: { fieldKey: 'stakeholder', value: { type: 'External', domain: 'client.com' } }
  * - type: 'Internal' | 'External' | 'Government' | 'System'
  * - domain: Optional email domain for context
+ *
+ * Duration/Scheduling Pattern:
+ * - 'scheduleMode': 'explicit' | 'anchor_start' | 'anchor_due'
+ * - 'durationDays': number (calendar or working days)
+ * - 'startDate': ISO string (anchor when scheduleMode='anchor_start')
+ * - 'dueDate': ISO string (anchor when scheduleMode='anchor_due')
+ *
+ * When 'explicit': both startDate and dueDate are set manually
+ * When 'anchor_start': startDate + durationDays computes dueDate
+ * When 'anchor_due': dueDate - durationDays computes startDate
  */
+
+export const ScheduleModeSchema = z.enum(['explicit', 'anchor_start', 'anchor_due']);
+export type ScheduleMode = z.infer<typeof ScheduleModeSchema>;
 export const FieldBindingSchema = z.object({
   fieldKey: z.string(),
   fieldDefId: z.string().uuid().optional(),
