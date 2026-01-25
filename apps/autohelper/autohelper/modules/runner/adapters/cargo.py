@@ -144,6 +144,55 @@ class CargoAdapter(SiteAdapter):
                     return text
         return None
 
+    async def extract_metadata(
+        self, soup: "BeautifulSoup", base_url: str, bio_text: str | None = None
+    ) -> ExtractedMetadata:
+        """
+        Cargo-specific metadata extraction.
+
+        Cargo sites often have contact info in footer or dedicated contact sections.
+        This override extracts from those areas and merges with base extraction.
+        """
+        # Get base extraction via parent (runs in thread)
+        metadata = await super().extract_metadata(soup, base_url, bio_text)
+
+        # Run Cargo-specific extraction in thread
+        return await asyncio.to_thread(
+            self._extract_cargo_metadata_sync, soup, metadata
+        )
+
+    def _extract_cargo_metadata_sync(
+        self, soup: "BeautifulSoup", metadata: ExtractedMetadata
+    ) -> ExtractedMetadata:
+        """Synchronous Cargo-specific metadata extraction."""
+        from ..extractors.contact import extract_emails, extract_phones
+
+        # Cargo-specific: check footer and contact sections for contact info
+        contact_selectors = [
+            "footer",
+            ".footer",
+            "#footer",
+            ".contact",
+            "#contact",
+            "[data-contact]",
+        ]
+
+        for selector in contact_selectors:
+            section = soup.select_one(selector)
+            if section:
+                section_emails = extract_emails(section)
+                section_phones = extract_phones(section)
+
+                # Merge, prioritizing contact section (often has canonical contact)
+                for email in section_emails:
+                    if email not in metadata.emails:
+                        metadata.emails.insert(0, email)
+                for phone in section_phones:
+                    if phone not in metadata.phones:
+                        metadata.phones.insert(0, phone)
+
+        return metadata
+
     def _find_project_urls(self, data: Any, base_url: str) -> list[str]:
         """Recursively find project URLs in JSON data."""
         urls: list[str] = []
@@ -155,17 +204,21 @@ class CargoAdapter(SiteAdapter):
                     value = data[key]
                     if isinstance(value, str) and value:
                         full_url = urljoin(base_url, value)
-                        if self._is_same_domain(full_url, base_url):
+                        # Allow same-domain or Cargo host URLs
+                        if self._is_same_domain(full_url, base_url) or self._is_allowed_image_domain(full_url, base_url):
                             urls.append(full_url)
 
             # Look for projects/pages arrays
-            for key in ("projects", "pages", "items", "works", "children"):
+            handled_collection_keys = {"projects", "pages", "items", "works", "children"}
+            for key in handled_collection_keys:
                 if key in data and isinstance(data[key], list):
                     for item in data[key]:
                         urls.extend(self._find_project_urls(item, base_url))
 
-            # Recurse into all dict values
-            for value in data.values():
+            # Recurse into all dict values, excluding collections already handled
+            for key, value in data.items():
+                if key in handled_collection_keys:
+                    continue
                 if isinstance(value, (dict, list)):
                     urls.extend(self._find_project_urls(value, base_url))
 
@@ -174,6 +227,7 @@ class CargoAdapter(SiteAdapter):
                 urls.extend(self._find_project_urls(item, base_url))
 
         return urls
+
 
     def _extract_images_from_json(self, soup: "BeautifulSoup", base_url: str) -> list[str]:
         """Extract image URLs from JSON data in script tags."""

@@ -89,20 +89,27 @@ class AdapterRegistry:
 
 def _register_adapters() -> None:
     """Register built-in adapters (idempotent)."""
+    # Import outside lock to avoid potential deadlock with module loading
+    from .cargo import CargoAdapter
+    from .default import DefaultAdapter
+    from .squarespace import SquarespaceAdapter
+    from .wordpress import WordPressAdapter
+
     with AdapterRegistry._lock:
         if AdapterRegistry._initialized:
             return
+
+        # Register default adapter first (lowest priority)
+        default = DefaultAdapter()
+        AdapterRegistry.register(default, is_default=True)
+
+        # Register site-specific adapters (higher confidence wins)
+        AdapterRegistry.register(CargoAdapter())
+        AdapterRegistry.register(SquarespaceAdapter())
+        AdapterRegistry.register(WordPressAdapter())
+
+        # Mark initialized AFTER all registrations complete
         AdapterRegistry._initialized = True
-
-    from .cargo import CargoAdapter
-    from .default import DefaultAdapter
-
-    # Register default adapter first (lowest priority)
-    default = DefaultAdapter()
-    AdapterRegistry.register(default, is_default=True)
-
-    # Register site-specific adapters
-    AdapterRegistry.register(CargoAdapter())
 
 
 # Register adapters on module load
