@@ -690,6 +690,17 @@ function extractRecordProgress(
 }
 
 /**
+ * Extract a label value from record data, safely converting to string.
+ */
+function extractRecordLabel(value: unknown): string | null {
+    if (value == null) return null;
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    // For objects/arrays, return null to fall back to unique_name
+    return null;
+}
+
+/**
  * Convert a single record to a GanttRenderItem.
  * Returns null if the record has no valid dates.
  */
@@ -746,7 +757,7 @@ function recordToRenderItem(
     const status = extractRecordStatus(data, mapping.statusField);
     const progress = extractRecordProgress(data, mapping.progressField);
     const label = mapping.labelField
-        ? (data[mapping.labelField] as string) || record.unique_name
+        ? extractRecordLabel(data[mapping.labelField]) || record.unique_name
         : record.unique_name;
 
     const isCompleted = status === 'completed' || status === 'done';

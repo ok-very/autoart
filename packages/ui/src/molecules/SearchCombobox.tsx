@@ -161,10 +161,14 @@ export function SearchCombobox<T extends SearchComboboxItem>({
         setSelectedIndex(0);
     }, [filteredItems, currentChildren]);
 
-    // Focus input on mount
+    // Focus input on mount, or container when in child mode
     useEffect(() => {
-        inputRef.current?.focus();
-    }, []);
+        if (showChildren) {
+            containerRef.current?.focus();
+        } else {
+            inputRef.current?.focus();
+        }
+    }, [showChildren]);
 
     const selectItem = useCallback(
         (index: number) => {
@@ -253,7 +257,9 @@ export function SearchCombobox<T extends SearchComboboxItem>({
     const dropdown = (
         <div
             ref={containerRef}
-            className="fixed bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden z-[9999]"
+            tabIndex={-1}
+            onKeyDown={handleKeyDown}
+            className="fixed bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden z-[9999] outline-none"
             style={{
                 top: position.top,
                 left: position.left,
@@ -290,7 +296,6 @@ export function SearchCombobox<T extends SearchComboboxItem>({
                                 type="text"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                onKeyDown={handleKeyDown}
                                 placeholder={placeholder}
                                 className="w-full pl-7 pr-8 py-1.5 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             />
@@ -307,22 +312,22 @@ export function SearchCombobox<T extends SearchComboboxItem>({
                 )}
             </div>
 
-            {/* Results */}
-            <div className="overflow-y-auto" style={{ maxHeight: maxHeight - 100 }}>
+            {/* Results - subtract header (~52px) and footer (~28px) heights, with floor at 0 */}
+            <div className="overflow-y-auto" style={{ maxHeight: Math.max(0, maxHeight - 80) }}>
                 {isLoading ? (
                     <div className="p-4 text-center text-slate-400 text-sm">
                         <div className="inline-block animate-spin w-4 h-4 border-2 border-slate-300 border-t-blue-500 rounded-full mr-2" />
                         Searching...
                     </div>
                 ) : showChildren ? (
-                    currentChildren.length === 0 ? (
+                    currentChildren.length === 0 || !selectedItem ? (
                         <div className="p-4 text-center text-slate-400 text-sm">
                             No items available
                         </div>
                     ) : (
                         currentChildren.map((child, index) => (
                             <div key={child.id} onClick={() => selectChild(child.id)}>
-                                {renderChild(child, index === selectedIndex, selectedItem!)}
+                                {renderChild(child, index === selectedIndex, selectedItem)}
                             </div>
                         ))
                     )
@@ -347,6 +352,11 @@ export function SearchCombobox<T extends SearchComboboxItem>({
             </div>
         </div>
     );
+
+    // SSR guard: don't render portal if document is not available
+    if (typeof document === 'undefined') {
+        return null;
+    }
 
     return createPortal(dropdown, document.body);
 }

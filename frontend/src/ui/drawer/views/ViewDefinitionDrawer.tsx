@@ -4,6 +4,33 @@ import { useRecord, useRecordDefinition } from '@/api/hooks';
 import { useUIStore } from '@/stores';
 import type { FieldDef } from '@/types';
 
+/** Map Tailwind color names to hex values for inline styles (avoids purge issues with dynamic classes) */
+const TAILWIND_COLORS: Record<string, Record<number, string>> = {
+  slate: { 100: '#f1f5f9', 500: '#64748b' },
+  gray: { 100: '#f3f4f6', 500: '#6b7280' },
+  red: { 100: '#fee2e2', 500: '#ef4444' },
+  orange: { 100: '#ffedd5', 500: '#f97316' },
+  amber: { 100: '#fef3c7', 500: '#f59e0b' },
+  yellow: { 100: '#fef9c3', 500: '#eab308' },
+  lime: { 100: '#ecfccb', 500: '#84cc16' },
+  green: { 100: '#dcfce7', 500: '#22c55e' },
+  emerald: { 100: '#d1fae5', 500: '#10b981' },
+  teal: { 100: '#ccfbf1', 500: '#14b8a6' },
+  cyan: { 100: '#cffafe', 500: '#06b6d4' },
+  sky: { 100: '#e0f2fe', 500: '#0ea5e9' },
+  blue: { 100: '#dbeafe', 500: '#3b82f6' },
+  indigo: { 100: '#e0e7ff', 500: '#6366f1' },
+  violet: { 100: '#ede9fe', 500: '#8b5cf6' },
+  purple: { 100: '#f3e8ff', 500: '#a855f7' },
+  fuchsia: { 100: '#fae8ff', 500: '#d946ef' },
+  pink: { 100: '#fce7f3', 500: '#ec4899' },
+  rose: { 100: '#ffe4e6', 500: '#f43f5e' },
+};
+
+function getTailwindColor(colorName: string, shade: number): string {
+  return TAILWIND_COLORS[colorName]?.[shade] ?? '#f1f5f9';
+}
+
 interface ViewDefinitionDrawerProps {
   recordId?: string;
   definitionId?: string;
@@ -67,13 +94,11 @@ export function ViewDefinitionDrawer({ recordId, definitionId }: ViewDefinitionD
         <div className="flex items-start gap-3">
           {/* Emoji/Color Badge */}
           <div
-            className={`w-12 h-12 rounded-lg flex items-center justify-center text-2xl shrink-0 ${
-              styling.color ? `bg-${styling.color}-100` : 'bg-slate-100'
-            }`}
+            className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl shrink-0"
             style={{
               backgroundColor: styling.color
-                ? `var(--tw-color-${styling.color}-100, #f1f5f9)`
-                : undefined,
+                ? getTailwindColor(styling.color, 100)
+                : '#f1f5f9',
             }}
           >
             {styling.icon || definition.name.charAt(0).toUpperCase()}
@@ -89,7 +114,7 @@ export function ViewDefinitionDrawer({ recordId, definitionId }: ViewDefinitionD
               </div>
             )}
             <div className="text-xs text-slate-400 font-mono mt-1">
-              ID: {definition.id.slice(0, 8)}
+              ID: {String(definition.id ?? '').slice(0, 8)}
             </div>
           </div>
         </div>
@@ -121,7 +146,8 @@ export function ViewDefinitionDrawer({ recordId, definitionId }: ViewDefinitionD
             {styling.color && (
               <div className="flex items-center gap-2">
                 <div
-                  className={`w-6 h-6 rounded-md border border-slate-200 bg-${styling.color}-500`}
+                  className="w-6 h-6 rounded-md border border-slate-200"
+                  style={{ backgroundColor: getTailwindColor(styling.color, 500) }}
                 />
                 <span className="text-sm text-slate-600 capitalize">{styling.color}</span>
               </div>
