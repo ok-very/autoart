@@ -440,30 +440,32 @@ export function MainLayout() {
           return;
         }
 
-        // Check for position hint from workspace preset
+        // Check for position hint from workspace preset, fallback to panel's defaultPlacement
         const rawPendingPosition = pendingPanelPositions.get(id as PanelId);
-        // Normalize 'left' to 'right' - Dockview does not support explicit left splits
-        const pendingPosition =
-          rawPendingPosition === 'left' ? 'right' : rawPendingPosition;
+        const defaultArea = def.defaultPlacement?.area;
+        const rawPosition = rawPendingPosition ?? defaultArea;
 
-        if (rawPendingPosition === 'left') {
+        // Normalize 'left' to 'right' - Dockview does not support explicit left splits
+        const effectivePosition = rawPosition === 'left' ? 'right' : rawPosition;
+
+        if (rawPosition === 'left') {
           console.warn(
             '[MainLayout] PanelPosition "left" is not supported by Dockview; using "right" instead for panel:',
             id
           );
         }
 
-        // Track consumed positions for cleanup
-        if (pendingPosition) {
+        // Track consumed positions for cleanup (only for preset-provided positions)
+        if (rawPendingPosition) {
           consumedPositions.push(id as PanelId);
         }
 
-        // Map position hint to dockview direction
+        // Map position to dockview direction
         // 'center' and undefined both default to 'within' (tabs)
         let direction: 'within' | 'right' | 'below' = 'within';
-        if (pendingPosition === 'right') {
+        if (effectivePosition === 'right') {
           direction = 'right';
-        } else if (pendingPosition === 'bottom') {
+        } else if (effectivePosition === 'bottom') {
           direction = 'below';
         }
 

@@ -81,6 +81,12 @@ class WebCollector:
         self,
         timeout: float = REQUEST_TIMEOUT,
         max_images: int = MAX_IMAGES,
+        min_width: int = 100,
+        max_width: int = 5000,
+        min_height: int = 100,
+        max_height: int = 5000,
+        min_filesize_kb: int = 100,
+        max_filesize_kb: int = 12000,
     ):
         """
         Initialize the web collector.
@@ -88,9 +94,21 @@ class WebCollector:
         Args:
             timeout: Request timeout in seconds
             max_images: Maximum images to collect per page
+            min_width: Minimum image width in pixels
+            max_width: Maximum image width in pixels
+            min_height: Minimum image height in pixels
+            max_height: Maximum image height in pixels
+            min_filesize_kb: Minimum file size in KB
+            max_filesize_kb: Maximum file size in KB
         """
         self.timeout = timeout
         self.max_images = max_images
+        self.min_width = min_width
+        self.max_width = max_width
+        self.min_height = min_height
+        self.max_height = max_height
+        self.min_filesize_bytes = min_filesize_kb * 1024
+        self.max_filesize_bytes = max_filesize_kb * 1024
 
     async def collect(
         self,
@@ -447,6 +465,31 @@ class WebCollector:
                 return None
 
             ext = mimetypes.guess_extension(content_type_base) or ".jpg"
+
+            # Check filesize bounds
+            file_size = len(content)
+            if file_size < self.min_filesize_bytes:
+                logger.debug(f"Skipping image {url}: size {file_size} < min {self.min_filesize_bytes}")
+                return None
+            if file_size > self.max_filesize_bytes:
+                logger.debug(f"Skipping image {url}: size {file_size} > max {self.max_filesize_bytes}")
+                return None
+
+            # Check image dimensions
+            try:
+                from PIL import Image
+                import io
+                img = Image.open(io.BytesIO(content))
+                width, height = img.size
+                if width < self.min_width or width > self.max_width:
+                    logger.debug(f"Skipping image {url}: width {width} outside [{self.min_width}, {self.max_width}]")
+                    return None
+                if height < self.min_height or height > self.max_height:
+                    logger.debug(f"Skipping image {url}: height {height} outside [{self.min_height}, {self.max_height}]")
+                    return None
+            except Exception as e:
+                logger.warning(f"Could not read image dimensions for {url}: {e}")
+                # Continue anyway - dimension check is best-effort
 
             # Build context for filename generation
             context = {

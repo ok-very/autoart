@@ -5,6 +5,7 @@ Provides artifact lookup across storage backends (manifest JSON or SharePoint).
 Can find artifacts by ID or content hash, even if files have been moved.
 """
 
+import asyncio
 import hashlib
 import json
 import logging
@@ -59,22 +60,25 @@ class ArtifactLookupService:
             The artifact entry if found, None otherwise
         """
         # If specific folder provided, use its backend directly
-        if output_folder:
+        if output_folder is not None:
             backend = get_metadata_backend(output_folder, self._settings)
             return await backend.find_by_id(artifact_id)
 
         # Otherwise, search database for collection containing this artifact
         try:
-            db = get_db()
-            row = db.execute(
-                """
-                SELECT ca.*, ac.output_folder
-                FROM collected_artifacts ca
-                JOIN artifact_collections ac ON ca.collection_id = ac.collection_id
-                WHERE ca.artifact_id = ?
-                """,
-                (artifact_id,),
-            ).fetchone()
+            def _query_db():
+                db = get_db()
+                return db.execute(
+                    """
+                    SELECT ca.*, ac.output_folder
+                    FROM collected_artifacts ca
+                    JOIN artifact_collections ac ON ca.collection_id = ac.collection_id
+                    WHERE ca.artifact_id = ?
+                    """,
+                    (artifact_id,),
+                ).fetchone()
+
+            row = await asyncio.to_thread(_query_db)
 
             if row:
                 return self._row_to_artifact_entry(dict(row))
@@ -102,22 +106,25 @@ class ArtifactLookupService:
             List of matching artifact entries
         """
         # If specific folder provided, use its backend directly
-        if output_folder:
+        if output_folder is not None:
             backend = get_metadata_backend(output_folder, self._settings)
             return await backend.find_by_hash(content_hash)
 
         # Search database
         try:
-            db = get_db()
-            rows = db.execute(
-                """
-                SELECT ca.*, ac.output_folder
-                FROM collected_artifacts ca
-                JOIN artifact_collections ac ON ca.collection_id = ac.collection_id
-                WHERE ca.content_hash = ?
-                """,
-                (content_hash,),
-            ).fetchall()
+            def _query_db():
+                db = get_db()
+                return db.execute(
+                    """
+                    SELECT ca.*, ac.output_folder
+                    FROM collected_artifacts ca
+                    JOIN artifact_collections ac ON ca.collection_id = ac.collection_id
+                    WHERE ca.content_hash = ?
+                    """,
+                    (content_hash,),
+                ).fetchall()
+
+            rows = await asyncio.to_thread(_query_db)
 
             if rows:
                 return [self._row_to_artifact_entry(dict(row)) for row in rows]
@@ -142,29 +149,31 @@ class ArtifactLookupService:
             List of collection summaries with id, source, artifact_count
         """
         try:
-            db = get_db()
-            if output_folder:
-                rows = db.execute(
-                    """
-                    SELECT collection_id, source_type, source_url, source_path,
-                           output_folder, artifact_count, created_at, status
-                    FROM artifact_collections
-                    WHERE output_folder = ? AND status = 'active'
-                    ORDER BY created_at DESC
-                    """,
-                    (str(output_folder),),
-                ).fetchall()
-            else:
-                rows = db.execute(
-                    """
-                    SELECT collection_id, source_type, source_url, source_path,
-                           output_folder, artifact_count, created_at, status
-                    FROM artifact_collections
-                    WHERE status = 'active'
-                    ORDER BY created_at DESC
-                    """,
-                ).fetchall()
+            def _query_db():
+                db = get_db()
+                if output_folder:
+                    return db.execute(
+                        """
+                        SELECT collection_id, source_type, source_url, source_path,
+                               output_folder, artifact_count, created_at, status
+                        FROM artifact_collections
+                        WHERE output_folder = ? AND status = 'active'
+                        ORDER BY created_at DESC
+                        """,
+                        (str(output_folder),),
+                    ).fetchall()
+                else:
+                    return db.execute(
+                        """
+                        SELECT collection_id, source_type, source_url, source_path,
+                               output_folder, artifact_count, created_at, status
+                        FROM artifact_collections
+                        WHERE status = 'active'
+                        ORDER BY created_at DESC
+                        """,
+                    ).fetchall()
 
+            rows = await asyncio.to_thread(_query_db)
             return [dict(row) for row in rows]
 
         except RuntimeError:
@@ -185,11 +194,14 @@ class ArtifactLookupService:
             The collection manifest if found, None otherwise
         """
         try:
-            db = get_db()
-            row = db.execute(
-                "SELECT output_folder FROM artifact_collections WHERE collection_id = ?",
-                (collection_id,),
-            ).fetchone()
+            def _query_db():
+                db = get_db()
+                return db.execute(
+                    "SELECT output_folder FROM artifact_collections WHERE collection_id = ?",
+                    (collection_id,),
+                ).fetchone()
+
+            row = await asyncio.to_thread(_query_db)
 
             if row:
                 output_folder = row["output_folder"]
@@ -212,63 +224,66 @@ class ArtifactLookupService:
             manifest: The collection manifest to sync
         """
         try:
-            db = get_db()
+            def _sync_db():
+                db = get_db()
 
-            # Upsert collection
-            db.execute(
-                """
-                INSERT INTO artifact_collections (
-                    collection_id, manifest_path, source_type, source_url,
-                    source_path, output_folder, naming_template, created_at,
-                    updated_at, artifact_count, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
-                ON CONFLICT(collection_id) DO UPDATE SET
-                    updated_at = excluded.updated_at,
-                    artifact_count = excluded.artifact_count
-                """,
-                (
-                    manifest.manifest_id,
-                    f"{manifest.output_folder}/.artcollector/manifest.json",
-                    manifest.source_type,
-                    manifest.source_url,
-                    manifest.source_path,
-                    manifest.output_folder,
-                    manifest.naming_config.template,
-                    manifest.created_at,
-                    manifest.updated_at,
-                    len(manifest.artifacts),
-                ),
-            )
-
-            # Upsert artifacts
-            for artifact in manifest.artifacts:
+                # Upsert collection
                 db.execute(
                     """
-                    INSERT INTO collected_artifacts (
-                        artifact_id, collection_id, content_hash, original_filename,
-                        current_filename, source_url, source_path, collected_at,
-                        mime_type, size, metadata_json
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(artifact_id) DO UPDATE SET
-                        current_filename = excluded.current_filename,
-                        metadata_json = excluded.metadata_json
+                    INSERT INTO artifact_collections (
+                        collection_id, manifest_path, source_type, source_url,
+                        source_path, output_folder, naming_template, created_at,
+                        updated_at, artifact_count, status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+                    ON CONFLICT(collection_id) DO UPDATE SET
+                        updated_at = excluded.updated_at,
+                        artifact_count = excluded.artifact_count
                     """,
                     (
-                        artifact.artifact_id,
                         manifest.manifest_id,
-                        artifact.content_hash,
-                        artifact.original_filename,
-                        artifact.current_filename,
-                        artifact.source_url,
-                        artifact.source_path,
-                        artifact.collected_at,
-                        artifact.mime_type,
-                        artifact.size,
-                        json.dumps(artifact.metadata),
+                        f"{manifest.output_folder}/.artcollector/manifest.json",
+                        manifest.source_type,
+                        manifest.source_url,
+                        manifest.source_path,
+                        manifest.output_folder,
+                        manifest.naming_config.template,
+                        manifest.created_at,
+                        manifest.updated_at,
+                        len(manifest.artifacts),
                     ),
                 )
 
-            db.commit()
+                # Upsert artifacts
+                for artifact in manifest.artifacts:
+                    db.execute(
+                        """
+                        INSERT INTO collected_artifacts (
+                            artifact_id, collection_id, content_hash, original_filename,
+                            current_filename, source_url, source_path, collected_at,
+                            mime_type, size, metadata_json
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(artifact_id) DO UPDATE SET
+                            current_filename = excluded.current_filename,
+                            metadata_json = excluded.metadata_json
+                        """,
+                        (
+                            artifact.artifact_id,
+                            manifest.manifest_id,
+                            artifact.content_hash,
+                            artifact.original_filename,
+                            artifact.current_filename,
+                            artifact.source_url,
+                            artifact.source_path,
+                            artifact.collected_at,
+                            artifact.mime_type,
+                            artifact.size,
+                            json.dumps(artifact.metadata),
+                        ),
+                    )
+
+                db.commit()
+
+            await asyncio.to_thread(_sync_db)
             logger.info(
                 f"Synced collection {manifest.manifest_id} "
                 f"with {len(manifest.artifacts)} artifacts to database"
@@ -303,18 +318,35 @@ class ArtifactLookupService:
         if not success:
             return False
 
-        # Also update in database
+        # Also update in database, scoped to the collection's output_folder
         try:
-            db = get_db()
-            db.execute(
-                """
-                UPDATE collected_artifacts
-                SET current_filename = ?
-                WHERE artifact_id = ?
-                """,
-                (new_path, artifact_id),
-            )
-            db.commit()
+            def _update_db():
+                db = get_db()
+                # Get collection_id for this output_folder to scope the update
+                collection_row = db.execute(
+                    "SELECT collection_id FROM artifact_collections WHERE output_folder = ?",
+                    (str(output_folder),),
+                ).fetchone()
+
+                if collection_row:
+                    db.execute(
+                        """
+                        UPDATE collected_artifacts
+                        SET current_filename = ?
+                        WHERE artifact_id = ? AND collection_id = ?
+                        """,
+                        (new_path, artifact_id, collection_row["collection_id"]),
+                    )
+                    db.commit()
+                else:
+                    # No collection found for folder - skip DB update to avoid
+                    # accidentally updating artifacts in other collections
+                    logger.warning(
+                        f"No collection found for output_folder {output_folder}, "
+                        f"skipping database update for artifact {artifact_id}"
+                    )
+
+            await asyncio.to_thread(_update_db)
         except RuntimeError:
             pass  # Database not available, manifest was updated
 
