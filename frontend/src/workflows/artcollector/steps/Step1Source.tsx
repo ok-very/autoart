@@ -7,8 +7,10 @@
 
 import { useState } from 'react';
 import { Stack, Text, Button, Inline } from '@autoart/ui';
-import { FolderOpen, Globe, Check } from 'lucide-react';
+import { FolderOpen, Globe, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import clsx from 'clsx';
+
+import { FiletreeSelector } from '../../../components/common/FiletreeSelector';
 
 import { useArtCollectorContext } from '../context/ArtCollectorContext';
 import { NamingConfigPanel } from '../components/NamingConfigPanel';
@@ -30,6 +32,7 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showFiletree, setShowFiletree] = useState(false);
 
   const activeMode: SourceMode = sourceType;
   const hasValidSource =
@@ -60,39 +63,28 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
 
     // Guard against null dataTransfer (can happen in some browsers/scenarios)
     const items = e.dataTransfer?.items;
-    if (items && items.length > 0) {
-      const item = items[0];
-      if (item.kind === 'file') {
-        const entry = item.webkitGetAsEntry?.();
-        if (entry?.isDirectory) {
-          // For security reasons, browsers don't expose the full path
-          // We'll show the folder name and prompt user to use browse
-          setError('Drop detected. Please use Browse button for folder selection.');
-        }
-      }
+    if (!items || items.length === 0) {
+      return;
     }
-  };
 
-  const handleBrowseFolder = async () => {
-    try {
-      // Guard against SSR/non-browser environments
-      if (typeof window === 'undefined') {
-        setError('Folder selection is only available in the browser.');
-        return;
-      }
-      // Use the File System Access API if available
-      if ('showDirectoryPicker' in window) {
-        const dirHandle = await (window as any).showDirectoryPicker();
-        setSourcePath(dirHandle.name);
-        setError(null);
-      } else {
-        setError('Folder selection not supported in this browser. Please paste the path manually.');
-      }
-    } catch (err) {
-      if ((err as Error).name !== 'AbortError') {
-        setError('Failed to select folder');
-      }
+    const item = items[0];
+    if (item.kind !== 'file') {
+      return;
     }
+
+    const entry = (item as any).webkitGetAsEntry?.();
+
+    if (entry && entry.isDirectory) {
+      // For security reasons, browsers don't expose the full path
+      // Prompt user to use the indexed folder browser instead
+      setError('Drop detected. Please use "Browse Indexed Folders" to select a folder with full path.');
+      setShowFiletree(true);
+      return;
+    }
+
+    // Fallback / non-directory handling
+    setError('File drops are not supported. Please select a folder using "Browse Indexed Folders" or paste a path.');
+    setShowFiletree(true);
   };
 
   const handleNext = () => {
@@ -174,10 +166,30 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
                 <Text size="sm" className="text-green-600 font-mono bg-green-100 px-3 py-1 rounded inline-block">
                   {sourcePath}
                 </Text>
-                <div className="mt-4">
-                  <Button variant="secondary" size="sm" onClick={handleBrowseFolder}>
+                <div className="mt-4 space-y-3">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setShowFiletree(!showFiletree)}
+                  >
                     Change Folder
                   </Button>
+                  {showFiletree && (
+                    <div className="max-w-lg mx-auto">
+                      <FiletreeSelector
+                        onSelect={(path, isDir) => {
+                          if (isDir) {
+                            setSourcePath(path);
+                            setShowFiletree(false);
+                            setError(null);
+                          }
+                        }}
+                        allowDirSelection={true}
+                        height={200}
+                        placeholder="No indexed folders. Connect AutoHelper first."
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -185,18 +197,43 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
               <>
                 <FolderOpen className="w-12 h-12 mx-auto mb-4 text-slate-400" />
                 <Text weight="medium" className="mb-2">
-                  Drop folder here or{' '}
-                  <button
-                    type="button"
-                    onClick={handleBrowseFolder}
-                    className="text-blue-600 hover:text-blue-700 hover:underline"
-                  >
-                    browse
-                  </button>
+                  Select from indexed folders or paste a path
                 </Text>
 
+                {/* Toggle button for FiletreeSelector */}
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowFiletree(!showFiletree)}
+                  className="mb-4"
+                >
+                  {showFiletree ? (
+                    <ChevronUp className="w-4 h-4 mr-2" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 mr-2" />
+                  )}
+                  Browse Indexed Folders
+                </Button>
+
+                {/* FiletreeSelector */}
+                {showFiletree && (
+                  <div className="mb-4 max-w-lg mx-auto">
+                    <FiletreeSelector
+                      onSelect={(path, isDir) => {
+                        if (isDir) {
+                          setSourcePath(path);
+                          setShowFiletree(false);
+                          setError(null);
+                        }
+                      }}
+                      allowDirSelection={true}
+                      height={200}
+                      placeholder="No indexed folders. Connect AutoHelper first."
+                    />
+                  </div>
+                )}
+
                 {/* Divider */}
-                <div className="flex items-center gap-3 my-6">
+                <div className="flex items-center gap-3 my-4">
                   <div className="flex-1 border-t border-slate-200" />
                   <Text size="xs" color="muted">
                     or paste path
@@ -216,9 +253,6 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
                     placeholder="C:\path\to\folder or /home/user/images"
                     className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                  <Button variant="secondary" onClick={handleBrowseFolder}>
-                    Browse...
-                  </Button>
                 </Inline>
               </>
             )}
