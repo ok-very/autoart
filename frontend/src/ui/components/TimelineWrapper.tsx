@@ -298,50 +298,58 @@ export function TimelineWrapper({
                 selectedItemIds: newSelectedIds
             });
         }
-        if (onItemClick && isSelected) {
+        // Always fire click callback regardless of selection state
+        if (onItemClick) {
             onItemClick(fromLibraryFormat(libraryTask));
         }
     }, [onSelectionChange, onItemClick]);
 
     // Item mutations - library callbacks translated to our domain
+    // Use functional state updaters to avoid stale closure issues with rapid changes
     const handleDateChange = useCallback((libraryTask: LibraryTask) => {
-        const newLibraryTasks = libraryTasks.map(t =>
-            t.id === libraryTask.id ? { ...t, start: libraryTask.start, end: libraryTask.end } : t
-        );
-        setLibraryTasks(newLibraryTasks);
+        setLibraryTasks(prev => {
+            const newLibraryTasks = prev.map(t =>
+                t.id === libraryTask.id ? { ...t, start: libraryTask.start, end: libraryTask.end } : t
+            );
+
+            // Sync projection for WYSIWYG PDF (inside updater to use fresh state)
+            if (onProjectionChange && project) {
+                const items = newLibraryTasks.map(fromLibraryFormat);
+                const newProjection = projectionFromRender(
+                    { items, viewMode: renderOutput.viewMode, viewDate: renderOutput.viewDate },
+                    project.id
+                );
+                // Schedule projection update outside state update
+                queueMicrotask(() => onProjectionChange(newProjection));
+            }
+
+            return newLibraryTasks;
+        });
 
         if (onDateChange) {
             onDateChange(fromLibraryFormat(libraryTask), libraryTask.start, libraryTask.end);
         }
-
-        // Sync projection for WYSIWYG PDF
-        if (onProjectionChange && project) {
-            // Convert library tasks back to our render output, then to projection
-            const items = newLibraryTasks.map(fromLibraryFormat);
-            const newProjection = projectionFromRender(
-                { items, viewMode: renderOutput.viewMode, viewDate: renderOutput.viewDate },
-                project.id
-            );
-            onProjectionChange(newProjection);
-        }
-    }, [libraryTasks, onDateChange, onProjectionChange, project, renderOutput.viewMode, renderOutput.viewDate]);
+    }, [onDateChange, onProjectionChange, project, renderOutput.viewMode, renderOutput.viewDate]);
 
     const handleProgressChange = useCallback((libraryTask: LibraryTask) => {
-        const newLibraryTasks = libraryTasks.map(t =>
-            t.id === libraryTask.id ? { ...t, progress: libraryTask.progress } : t
+        setLibraryTasks(prev =>
+            prev.map(t =>
+                t.id === libraryTask.id ? { ...t, progress: libraryTask.progress } : t
+            )
         );
-        setLibraryTasks(newLibraryTasks);
 
         if (onProgressChange) {
             onProgressChange(fromLibraryFormat(libraryTask), libraryTask.progress);
         }
-    }, [libraryTasks, onProgressChange]);
+    }, [onProgressChange]);
 
     const handleExpanderClick = useCallback((libraryTask: LibraryTask) => {
-        setLibraryTasks(libraryTasks.map(t =>
-            t.id === libraryTask.id ? { ...t, hideChildren: !t.hideChildren } : t
-        ));
-    }, [libraryTasks]);
+        setLibraryTasks(prev =>
+            prev.map(t =>
+                t.id === libraryTask.id ? { ...t, hideChildren: !t.hideChildren } : t
+            )
+        );
+    }, []);
 
     const handleDoubleClick = useCallback((libraryTask: LibraryTask) => {
         if (onItemDoubleClick) {
@@ -387,19 +395,25 @@ export function TimelineWrapper({
         );
     }
 
+    // CSP NOTE: The inline <style> below may be blocked by strict Content Security Policy.
+    // For CSP-strict deployments, move these rules to an external stylesheet:
+    //   .gantt-wrapper ._1nBOt { background: var(--gantt-header-bg, #f8fafc) !important; }
+    //   .gantt-wrapper ._34SS0 { stroke: var(--gantt-border, #e2e8f0) !important; }
+    //   .gantt-wrapper ._9w8d5 { fill: #1e293b !important; font-family: inherit !important; }
+    //   .gantt-wrapper ._WuQ0f { stroke-width: 1.5 !important; }
     return (
         <div
             ref={containerRef}
-            className={`gantt-wrapper overflow-auto ${className}`}
+            className={`gantt-wrapper gantt-theme-overrides overflow-auto ${className}`}
             style={{
-                // Override gantt-task-react's default styles
+                // CSS custom properties for theme customization
                 ['--gantt-header-bg' as string]: '#f8fafc',
                 ['--gantt-border' as string]: '#e2e8f0',
             }}
         >
             <style>{`
-                .gantt-wrapper ._1nBOt { background: var(--gantt-header-bg) !important; }
-                .gantt-wrapper ._34SS0 { stroke: var(--gantt-border) !important; }
+                .gantt-wrapper ._1nBOt { background: var(--gantt-header-bg, #f8fafc) !important; }
+                .gantt-wrapper ._34SS0 { stroke: var(--gantt-border, #e2e8f0) !important; }
                 .gantt-wrapper ._9w8d5 { fill: #1e293b !important; font-family: inherit !important; }
                 .gantt-wrapper ._WuQ0f { stroke-width: 1.5 !important; }
             `}</style>

@@ -123,13 +123,21 @@ export function renderHierarchy(
         }
     });
 
-    // Track date range for view
+    // Track date range for view - include all items
     let minDate = new Date();
     let maxDate = new Date();
     let hasAnyDates = false;
 
+    // Helper to update date range
+    const trackDates = (dates: { start: Date; end: Date }) => {
+        if (dates.start < minDate || !hasAnyDates) minDate = new Date(dates.start);
+        if (dates.end > maxDate || !hasAnyDates) maxDate = new Date(dates.end);
+        hasAnyDates = true;
+    };
+
     // Add project as root lane
     const projectDates = extractDates(project.metadata);
+    trackDates(projectDates);
     items.push({
         actionId: project.id,
         label: project.title,
@@ -150,6 +158,7 @@ export function renderHierarchy(
     subprocesses.forEach(sp => {
         const spItems = tasksBySubprocess.get(sp.id) || [];
         const spDates = extractDates(sp.metadata, spItems);
+        trackDates(spDates);
 
         items.push({
             actionId: sp.id,
@@ -173,11 +182,7 @@ export function renderHierarchy(
             const nodeDates = extractDates(node.metadata);
             const status = getStatus(node.metadata);
             const color = statusColors[status] || defaultColor;
-
-            // Track date range
-            if (nodeDates.start < minDate || !hasAnyDates) minDate = new Date(nodeDates.start);
-            if (nodeDates.end > maxDate || !hasAnyDates) maxDate = new Date(nodeDates.end);
-            hasAnyDates = true;
+            trackDates(nodeDates);
 
             // Extract dependencies from metadata
             const deps: string[] = [];
@@ -281,21 +286,25 @@ export function renderProjection(
         lane.items.forEach(laneItem => {
             const itemStart = new Date(startDate.getTime() + (laneItem.x * msPerPixel));
             let itemEnd = new Date(startDate.getTime() + ((laneItem.x + laneItem.width) * msPerPixel));
+            const status = getStatus(laneItem.metadata);
 
-            // Ensure end is after start (minimum 1 day duration)
-            if (itemEnd <= itemStart) {
+            // Determine if this is a milestone (zero-width or completed status)
+            const isMilestone = laneItem.width === 0 || status === 'completed';
+
+            // For non-milestones, ensure end is after start (minimum 1 day)
+            // Milestones can have start === end (point in time)
+            if (!isMilestone && itemEnd <= itemStart) {
                 itemEnd = new Date(itemStart.getTime() + ONE_DAY_MS);
             }
 
-            const status = getStatus(laneItem.metadata);
             const color = laneItem.color || statusColors[status] || defaultColor;
 
             items.push({
                 actionId: laneItem.id,
                 label: laneItem.label,
                 start: itemStart,
-                end: itemEnd,
-                type: 'item',
+                end: isMilestone ? itemStart : itemEnd,
+                type: isMilestone ? 'milestone' : 'item',
                 progress: status === 'completed' ? 100 : status === 'in_progress' ? 50 : 0,
                 laneId: lane.id,
                 styles: {
@@ -435,6 +444,22 @@ export function projectionFromRender(
     const { dayWidth = 30, laneHeight = 60 } = options;
     const { items } = renderOutput;
 
+    // Handle empty items - use default 30-day range from today
+    if (items.length === 0) {
+        const now = new Date();
+        const defaultStart = new Date(now.getTime() - 7 * ONE_DAY_MS);
+        const defaultEnd = new Date(now.getTime() + 30 * ONE_DAY_MS);
+        return {
+            projectId,
+            startDate: defaultStart.toISOString(),
+            endDate: defaultEnd.toISOString(),
+            totalWidth: 37 * dayWidth,
+            totalHeight: 0,
+            ticks: [],
+            lanes: [],
+        };
+    }
+
     // Find date range
     const allDates = items.flatMap(item => [item.start, item.end]);
     const minDate = new Date(Math.min(...allDates.map(d => d.getTime())));
@@ -536,7 +561,8 @@ export function toLibraryFormat(items: GanttRenderItem[]): LibraryTask[] {
         start: item.start,
         end: item.end,
         type: item.type === 'lane' ? 'project' : item.type === 'milestone' ? 'milestone' : 'task',
-        progress: item.progress ?? 0,
+        // Milestones default to 100% (completed) if no explicit progress
+        progress: item.progress ?? (item.type === 'milestone' ? 100 : 0),
         project: item.laneId,
         dependencies: item.dependencies,
         hideChildren: item.hideChildren,
