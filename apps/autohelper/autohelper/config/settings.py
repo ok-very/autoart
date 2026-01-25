@@ -74,6 +74,14 @@ class Settings(BaseSettings):
     sharepoint_client_id: str | None = None
     sharepoint_client_secret: str | None = None
 
+    # Garbage Collection Settings
+    gc_enabled: bool = True  # Enable/disable GC scheduler
+    gc_schedule_hours: int = Field(default=24, ge=1)  # Run every N hours (min: 1)
+    gc_retention_days: int = Field(default=7, ge=1)  # Retain files/sessions N days (min: 1)
+    gc_rtf_temp_path: str | None = None  # Custom RTF temp path (default: system temp)
+    gc_cleanup_orphaned_manifests: bool = False  # Disabled by default (risky)
+    gc_cleanup_mail_ingest: bool = True  # Clean up processed mail files
+
     def get_allowed_roots(self) -> list[Path]:
         """Parse and validate allowed root paths."""
         return [Path(r).resolve() for r in self.allowed_roots if r]

@@ -16,6 +16,8 @@ from autohelper.db import get_db, init_db
 from autohelper.db.migrate import run_migrations
 from autohelper.modules.export.router import router as export_router
 from autohelper.modules.filetree.router import router as filetree_router
+from autohelper.modules.gc.router import router as gc_router
+from autohelper.modules.gc.scheduler import start_gc_scheduler, stop_gc_scheduler
 
 # Import routers
 from autohelper.modules.health.router import router as health_router
@@ -63,10 +65,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     MailService().start()
 
+    # Start GC Scheduler
+    start_gc_scheduler()
+
     yield
 
     # Shutdown
     logger.info("Shutting down AutoHelper...")
+    stop_gc_scheduler()
     MailService().stop()
     db = get_db()
     db.close()
@@ -149,6 +155,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(filetree_router)
     app.include_router(export_router)
     app.include_router(runner_router)
+    app.include_router(gc_router)
 
     # Root endpoint
     @app.get("/")
