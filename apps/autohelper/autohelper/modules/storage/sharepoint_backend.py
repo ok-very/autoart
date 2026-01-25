@@ -38,8 +38,8 @@ def _escape_odata_string(value: str) -> str:
 def _lazy_import_office365() -> tuple[type, type]:
     """Lazily import office365 to avoid import errors when not installed."""
     try:
-        from office365.runtime.auth.client_credential import ClientCredential
-        from office365.sharepoint.client_context import ClientContext
+        from office365.runtime.auth.client_credential import ClientCredential  # type: ignore
+        from office365.sharepoint.client_context import ClientContext  # type: ignore
 
         return ClientCredential, ClientContext
     except ImportError as e:

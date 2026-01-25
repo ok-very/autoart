@@ -1,0 +1,21 @@
+{
+  "manifest_id": "b9a2d53d-7663-41d2-a65d-ca549dbfd3ce",
+  "version": "1.0",
+  "created_at": "2026-01-25T05:51:44.546552+00:00",
+  "updated_at": "2026-01-25T05:51:46.219744+00:00",
+  "source_type": "web",
+  "source_url": "https://emilyhermant.com/",
+  "source_path": null,
+  "output_folder": "_collected",
+  "naming_config": {
+    "template": "{index}_{hash}",
+    "index_start": 1,
+    "index_padding": 3,
+    "prefix": "",
+    "suffix": "",
+    "date_format": "%Y%m%d",
+    "numbering_mode": "sequential",
+    "collision_mode": "suffix"
+  },
+  "artifacts": []
+}

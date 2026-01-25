@@ -37,6 +37,8 @@ export function useConnections() {
         queryFn: async (): Promise<ConnectionsStatus> => {
             return api.get<ConnectionsStatus>('/connections');
         },
+        // Poll every 5 seconds to detect new AutoHelper connections
+        refetchInterval: 5000,
     });
 }
 
