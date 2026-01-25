@@ -6,4 +6,12 @@
 
 export { GanttCanvas } from './GanttCanvas';
 export { GanttFilters } from './GanttFilters';
-export { TimelineWrapper, type TimelineMode, type TimelineWrapperProps, ViewMode, type Task, type MappedGanttData } from './TimelineWrapper';
+export {
+    TimelineWrapper,
+    type TimelineMode,
+    type TimelineWrapperProps,
+    ViewMode,
+    type GanttRenderItem,
+    type GanttRenderOutput,
+    type GanttAdapterOptions,
+} from './TimelineWrapper';

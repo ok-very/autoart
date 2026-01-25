@@ -4,18 +4,25 @@
  * Adapter component that wraps gantt-task-react with Tailwind-friendly
  * customization. Provides a unified interface for both Gantt View
  * (with dependencies/sidebar) and Project Log (minimal timeline).
+ *
+ * NOMENCLATURE BOUNDARY:
+ * The library's "Task" type is quarantined within this component.
+ * External consumers only see GanttRenderItem and actionId-based callbacks.
  */
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { Gantt, Task, ViewMode, StylingOption } from 'gantt-task-react';
+import { Gantt, Task as LibraryTask, ViewMode, StylingOption } from 'gantt-task-react';
 import 'gantt-task-react/dist/index.css';
 import type { HierarchyNode, GanttProjectionOutput, GanttSelection } from '@autoart/shared';
 import {
-    mapHierarchyToTasks,
-    mapProjectionToTasks,
-    tasksToProjection,
-    GanttTaskAdapterOptions,
-    MappedGanttData
+    renderHierarchy,
+    renderProjection,
+    projectionFromRender,
+    toLibraryFormat,
+    fromLibraryFormat,
+    type GanttAdapterOptions,
+    type GanttRenderOutput,
+    type GanttRenderItem,
 } from '../../utils/gantt-task-adapter';
 
 // ============================================================================
@@ -34,19 +41,19 @@ export interface TimelineWrapperProps {
     children?: HierarchyNode[];
 
     /** Adapter options for mapping */
-    adapterOptions?: GanttTaskAdapterOptions;
+    adapterOptions?: GanttAdapterOptions;
 
     /** Selection state (controlled) */
     selection?: GanttSelection;
     onSelectionChange?: (selection: GanttSelection) => void;
 
-    /** Task events */
-    onTaskClick?: (task: Task) => void;
-    onTaskDoubleClick?: (task: Task) => void;
-    onDateChange?: (task: Task, start: Date, end: Date) => void;
-    onProgressChange?: (task: Task, progress: number) => void;
+    /** Item events - uses actionId (not library's "task" terminology) */
+    onItemClick?: (item: GanttRenderItem) => void;
+    onItemDoubleClick?: (item: GanttRenderItem) => void;
+    onDateChange?: (item: GanttRenderItem, start: Date, end: Date) => void;
+    onProgressChange?: (item: GanttRenderItem, progress: number) => void;
 
-    /** For WYSIWYG PDF sync - called when tasks change */
+    /** For WYSIWYG PDF sync - called when items change */
     onProjectionChange?: (projection: GanttProjectionOutput) => void;
 
     /** View control */
@@ -65,7 +72,7 @@ export interface TimelineWrapperProps {
 // ============================================================================
 
 interface TooltipContentProps {
-    task: Task;
+    task: LibraryTask;
     fontSize: string;
     fontFamily: string;
 }
@@ -122,7 +129,7 @@ const TaskListHeader = ({ headerHeight }: TaskListHeaderProps) => (
 );
 
 interface TaskListTableProps {
-    tasks: Task[];
+    tasks: LibraryTask[];
     rowHeight: number;
     rowWidth: string;
     fontFamily: string;
@@ -130,7 +137,7 @@ interface TaskListTableProps {
     locale: string;
     selectedTaskId: string;
     setSelectedTask: (taskId: string) => void;
-    onExpanderClick: (task: Task) => void;
+    onExpanderClick: (task: LibraryTask) => void;
 }
 
 const TaskListTable = ({
@@ -202,8 +209,8 @@ export function TimelineWrapper({
     adapterOptions = {},
     selection,
     onSelectionChange,
-    onTaskClick,
-    onTaskDoubleClick,
+    onItemClick,
+    onItemDoubleClick,
     onDateChange,
     onProgressChange,
     onProjectionChange,
@@ -221,32 +228,34 @@ export function TimelineWrapper({
     // Silence unused state setter - reserved for future view mode selector UI
     void setInternalViewMode;
 
-    // Map data to tasks
-    const mappedData = useMemo<MappedGanttData>(() => {
+    // Map data to our clean render output
+    const renderOutput = useMemo<GanttRenderOutput>(() => {
         if (projection) {
-            return mapProjectionToTasks(projection, adapterOptions);
+            return renderProjection(projection, adapterOptions);
         }
         if (project && children) {
-            return mapHierarchyToTasks(project, children, adapterOptions);
+            return renderHierarchy(project, children, adapterOptions);
         }
         // Empty state
         return {
-            tasks: [],
+            items: [],
             viewMode: ViewMode.Day,
             viewDate: new Date()
         };
     }, [projection, project, children, adapterOptions]);
 
-    // Task state for interactivity
-    const [tasks, setTasks] = useState<Task[]>(mappedData.tasks);
+    // Internal state: library tasks (quarantined)
+    const [libraryTasks, setLibraryTasks] = useState<LibraryTask[]>(() =>
+        toLibraryFormat(renderOutput.items)
+    );
 
-    // Sync tasks when data changes
+    // Sync library tasks when render output changes
     useEffect(() => {
-        setTasks(mappedData.tasks);
-    }, [mappedData.tasks]);
+        setLibraryTasks(toLibraryFormat(renderOutput.items));
+    }, [renderOutput.items]);
 
-    // View mode
-    const viewMode = controlledViewMode ?? internalViewMode;
+    // View mode: prefer controlled, then internal, then data-suggested
+    const viewMode = controlledViewMode ?? internalViewMode ?? renderOutput.viewMode;
     // Note: handleViewModeChange reserved for future view mode selector UI
     // Uncomment when view mode UI is added:
     // const handleViewModeChange = useCallback((mode: ViewMode) => {
@@ -269,18 +278,17 @@ export function TimelineWrapper({
         }
     }, [selection]);
 
-    const handleSelect = useCallback((task: Task, isSelected: boolean) => {
+    // Library callback wrapper - translates library Task to our domain
+    const handleSelect = useCallback((libraryTask: LibraryTask, isSelected: boolean) => {
         const currentSelection = selectionRef.current?.selectedItemIds ?? [];
         let newSelectedIds: string[];
 
         if (isSelected) {
-            // Single-select: replace selection with clicked task (library limitation)
-            newSelectedIds = currentSelection.includes(task.id)
-                ? currentSelection
-                : [task.id];
+            // Single-select: always set to exactly this item (library limitation)
+            newSelectedIds = [libraryTask.id];
         } else {
             // Remove from selection
-            newSelectedIds = currentSelection.filter(id => id !== task.id);
+            newSelectedIds = currentSelection.filter(id => id !== libraryTask.id);
         }
 
         setSelectedTaskId(newSelectedIds[0] ?? '');
@@ -290,51 +298,56 @@ export function TimelineWrapper({
                 selectedItemIds: newSelectedIds
             });
         }
-        if (onTaskClick && isSelected) {
-            onTaskClick(task);
+        if (onItemClick && isSelected) {
+            onItemClick(fromLibraryFormat(libraryTask));
         }
-    }, [onSelectionChange, onTaskClick]);
+    }, [onSelectionChange, onItemClick]);
 
-    // Task mutations
-    const handleDateChange = useCallback((task: Task) => {
-        const newTasks = tasks.map(t =>
-            t.id === task.id ? { ...t, start: task.start, end: task.end } : t
+    // Item mutations - library callbacks translated to our domain
+    const handleDateChange = useCallback((libraryTask: LibraryTask) => {
+        const newLibraryTasks = libraryTasks.map(t =>
+            t.id === libraryTask.id ? { ...t, start: libraryTask.start, end: libraryTask.end } : t
         );
-        setTasks(newTasks);
+        setLibraryTasks(newLibraryTasks);
 
         if (onDateChange) {
-            onDateChange(task, task.start, task.end);
+            onDateChange(fromLibraryFormat(libraryTask), libraryTask.start, libraryTask.end);
         }
 
         // Sync projection for WYSIWYG PDF
         if (onProjectionChange && project) {
-            const newProjection = tasksToProjection(newTasks, project.id);
+            // Convert library tasks back to our render output, then to projection
+            const items = newLibraryTasks.map(fromLibraryFormat);
+            const newProjection = projectionFromRender(
+                { items, viewMode: renderOutput.viewMode, viewDate: renderOutput.viewDate },
+                project.id
+            );
             onProjectionChange(newProjection);
         }
-    }, [tasks, onDateChange, onProjectionChange, project]);
+    }, [libraryTasks, onDateChange, onProjectionChange, project, renderOutput.viewMode, renderOutput.viewDate]);
 
-    const handleProgressChange = useCallback((task: Task) => {
-        const newTasks = tasks.map(t =>
-            t.id === task.id ? { ...t, progress: task.progress } : t
+    const handleProgressChange = useCallback((libraryTask: LibraryTask) => {
+        const newLibraryTasks = libraryTasks.map(t =>
+            t.id === libraryTask.id ? { ...t, progress: libraryTask.progress } : t
         );
-        setTasks(newTasks);
+        setLibraryTasks(newLibraryTasks);
 
         if (onProgressChange) {
-            onProgressChange(task, task.progress);
+            onProgressChange(fromLibraryFormat(libraryTask), libraryTask.progress);
         }
-    }, [tasks, onProgressChange]);
+    }, [libraryTasks, onProgressChange]);
 
-    const handleExpanderClick = useCallback((task: Task) => {
-        setTasks(tasks.map(t =>
-            t.id === task.id ? { ...t, hideChildren: !t.hideChildren } : t
+    const handleExpanderClick = useCallback((libraryTask: LibraryTask) => {
+        setLibraryTasks(libraryTasks.map(t =>
+            t.id === libraryTask.id ? { ...t, hideChildren: !t.hideChildren } : t
         ));
-    }, [tasks]);
+    }, [libraryTasks]);
 
-    const handleDoubleClick = useCallback((task: Task) => {
-        if (onTaskDoubleClick) {
-            onTaskDoubleClick(task);
+    const handleDoubleClick = useCallback((libraryTask: LibraryTask) => {
+        if (onItemDoubleClick) {
+            onItemDoubleClick(fromLibraryFormat(libraryTask));
         }
-    }, [onTaskDoubleClick]);
+    }, [onItemDoubleClick]);
 
     // Styling options
     const styling: StylingOption = useMemo(() => ({
@@ -357,19 +370,19 @@ export function TimelineWrapper({
                 {...props}
                 selectedTaskId={selectedTaskId}
                 setSelectedTask={(id) => {
-                    const task = tasks.find(t => t.id === id);
+                    const task = libraryTasks.find(t => t.id === id);
                     if (task) handleSelect(task, true);
                 }}
                 onExpanderClick={handleExpanderClick}
             />
         ),
-    }), [mode, headerHeight, rowHeight, columnWidth, selectedTaskId, tasks, handleSelect, handleExpanderClick]);
+    }), [mode, headerHeight, rowHeight, columnWidth, selectedTaskId, libraryTasks, handleSelect, handleExpanderClick]);
 
     // Empty state
-    if (tasks.length === 0) {
+    if (libraryTasks.length === 0) {
         return (
             <div className={`flex items-center justify-center h-full text-slate-400 ${className}`}>
-                No tasks to display
+                No items to display
             </div>
         );
     }
@@ -391,9 +404,9 @@ export function TimelineWrapper({
                 .gantt-wrapper ._WuQ0f { stroke-width: 1.5 !important; }
             `}</style>
             <Gantt
-                tasks={tasks}
+                tasks={libraryTasks}
                 viewMode={viewMode}
-                viewDate={mappedData.viewDate}
+                viewDate={renderOutput.viewDate}
                 onSelect={handleSelect}
                 onDateChange={handleDateChange}
                 onProgressChange={handleProgressChange}
@@ -409,5 +422,8 @@ export function TimelineWrapper({
 // EXPORTS
 // ============================================================================
 
+// Re-export library's ViewMode (it's fine - not "Task" terminology)
 export { ViewMode };
-export type { Task, MappedGanttData };
+
+// Export our clean types (NOT the library's Task type)
+export type { GanttRenderItem, GanttRenderOutput, GanttAdapterOptions };

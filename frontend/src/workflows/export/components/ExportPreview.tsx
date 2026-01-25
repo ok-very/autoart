@@ -148,25 +148,9 @@ export function ExportPreview({ projectId, format, options, sessionId }: ExportP
                             Export Preview
                         </Text>
                     </Inline>
-                    {format === 'gantt' ? (
-                        <div className="h-[400px] border border-slate-100 rounded overflow-hidden">
-                            {/* Use a simplified projection for preview or fetch real one */}
-                            {/* For preview, we might just show a placeholder or map the exportModel? 
-                               Actually exportModel doesn't have the full hierarchy needed for Gantt.
-                               We need to use the useExportProjection hook data properly or fetch it.
-                               If useExportProjection returns BFA models, it might not return Gantt.
-                               Backend projection logic depends on format.
-                               If format is gantt, backend should return GanttProjectionOutput.
-                            */}
-                            <div className="flex items-center justify-center h-full text-slate-400 text-sm">
-                                Gantt Preview (Coming Soon)
-                            </div>
-                        </div>
-                    ) : (
-                        <pre className="text-xs font-mono text-slate-700 whitespace-pre-wrap leading-relaxed">
-                            {renderPreview(exportModel, format, options)}
-                        </pre>
-                    )}
+                    <pre className="text-xs font-mono text-slate-700 whitespace-pre-wrap leading-relaxed">
+                        {renderPreview(exportModel, format, options)}
+                    </pre>
                 </Card>
             </div>
 

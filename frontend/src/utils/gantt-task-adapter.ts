@@ -1,36 +1,78 @@
 /**
- * Gantt Task Adapter
+ * Gantt Render Adapter
  *
- * Maps autoart data structures to gantt-task-react's Task format.
- * This adapter bridges your HierarchyNode/GanttProjectionOutput
- * to the gantt-task-react library for interactive rendering.
+ * Maps autoart data structures to gantt-task-react for rendering.
+ *
+ * NOMENCLATURE BOUNDARY:
+ * The gantt-task-react library uses "Task" as its core type, which conflicts
+ * with our hierarchy nomenclature (project → process → stage → subprocess → task).
+ * This adapter quarantines that terminology - the library's "Task" type is used
+ * ONLY internally. Our codebase sees GanttRenderItem and GanttRenderOutput.
  */
 
-import type { Task } from 'gantt-task-react';
+import type { Task as LibraryTask } from 'gantt-task-react';
 import { ViewMode } from 'gantt-task-react';
 import type { HierarchyNode, GanttProjectionOutput, GanttLane } from '@autoart/shared';
 
 // ============================================================================
-// TYPES
+// PUBLIC TYPES (What our codebase sees)
 // ============================================================================
 
-export interface GanttTaskAdapterOptions {
-    /** Default task color if none specified */
+/**
+ * A renderable item in the Gantt chart.
+ * Clean domain type that hides library terminology.
+ */
+export interface GanttRenderItem {
+    /** Action ID (from our domain) */
+    actionId: string;
+    /** Display label */
+    label: string;
+    /** Start date */
+    start: Date;
+    /** End date */
+    end: Date;
+    /** Item type: 'lane' for grouping rows, 'item' for individual bars, 'milestone' for points */
+    type: 'lane' | 'item' | 'milestone';
+    /** Parent lane ID (for items within lanes) */
+    laneId?: string;
+    /** Progress percentage (0-100) */
+    progress?: number;
+    /** Dependencies (other action IDs) */
+    dependencies?: string[];
+    /** Hide children in collapsed view */
+    hideChildren?: boolean;
+    /** Visual styling */
+    styles?: {
+        backgroundColor?: string;
+        backgroundSelectedColor?: string;
+        progressColor?: string;
+        progressSelectedColor?: string;
+    };
+}
+
+/**
+ * Output from render functions - what components receive.
+ */
+export interface GanttRenderOutput {
+    /** Renderable items */
+    items: GanttRenderItem[];
+    /** Suggested view mode based on date range */
+    viewMode: ViewMode;
+    /** Suggested view start date */
+    viewDate: Date;
+}
+
+export interface GanttAdapterOptions {
+    /** Default item color if none specified */
     defaultColor?: string;
     /** Color mapping by status (metadata.status) */
     statusColors?: Record<string, string>;
-    /** Show dependencies between tasks */
+    /** Show dependencies between items */
     showDependencies?: boolean;
-    /** Base date for the view (defaults to earliest task start) */
+    /** Base date for the view (defaults to earliest item start) */
     viewStartDate?: Date;
-    /** End date for the view (defaults to latest task end) */
+    /** End date for the view (defaults to latest item end) */
     viewEndDate?: Date;
-}
-
-export interface MappedGanttData {
-    tasks: Task[];
-    viewMode: ViewMode;
-    viewDate: Date;
 }
 
 // ============================================================================
@@ -48,25 +90,25 @@ const DEFAULT_COLORS: Record<string, string> = {
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 // ============================================================================
-// HIERARCHY NODE -> TASK MAPPING
+// HIERARCHY NODE -> RENDER OUTPUT
 // ============================================================================
 
 /**
- * Maps HierarchyNode[] to gantt-task-react Task[].
+ * Renders HierarchyNode[] to GanttRenderOutput.
  * This is the primary adapter for interactive Gantt views.
  */
-export function mapHierarchyToTasks(
+export function renderHierarchy(
     project: HierarchyNode,
     children: HierarchyNode[],
-    options: GanttTaskAdapterOptions = {}
-): MappedGanttData {
+    options: GanttAdapterOptions = {}
+): GanttRenderOutput {
     const {
         defaultColor = DEFAULT_COLORS.default,
         statusColors = DEFAULT_COLORS,
         showDependencies = true
     } = options;
 
-    const tasks: Task[] = [];
+    const items: GanttRenderItem[] = [];
 
     // Group by type for hierarchy
     const subprocesses = children.filter(n => n.type === 'subprocess');
@@ -86,14 +128,14 @@ export function mapHierarchyToTasks(
     let maxDate = new Date();
     let hasAnyDates = false;
 
-    // Add project as root task
+    // Add project as root lane
     const projectDates = extractDates(project.metadata);
-    tasks.push({
-        id: project.id,
-        name: project.title,
+    items.push({
+        actionId: project.id,
+        label: project.title,
         start: projectDates.start,
         end: projectDates.end,
-        type: 'project',
+        type: 'lane',
         progress: calculateProgress(taskNodes),
         hideChildren: false,
         styles: {
@@ -104,19 +146,19 @@ export function mapHierarchyToTasks(
         }
     });
 
-    // Add subprocesses as project groups
+    // Add subprocesses as lane groups
     subprocesses.forEach(sp => {
-        const spTasks = tasksBySubprocess.get(sp.id) || [];
-        const spDates = extractDates(sp.metadata, spTasks);
+        const spItems = tasksBySubprocess.get(sp.id) || [];
+        const spDates = extractDates(sp.metadata, spItems);
 
-        tasks.push({
-            id: sp.id,
-            name: sp.title,
+        items.push({
+            actionId: sp.id,
+            label: sp.title,
             start: spDates.start,
             end: spDates.end,
-            type: 'project',
-            progress: calculateProgress(spTasks),
-            project: project.id,
+            type: 'lane',
+            progress: calculateProgress(spItems),
+            laneId: project.id,
             hideChildren: false,
             styles: {
                 backgroundColor: '#e2e8f0', // slate-200
@@ -126,38 +168,38 @@ export function mapHierarchyToTasks(
             }
         });
 
-        // Add tasks within subprocess
-        spTasks.forEach(task => {
-            const taskDates = extractDates(task.metadata);
-            const status = getStatus(task.metadata);
+        // Add hierarchy tasks as render items within subprocess
+        spItems.forEach(node => {
+            const nodeDates = extractDates(node.metadata);
+            const status = getStatus(node.metadata);
             const color = statusColors[status] || defaultColor;
 
             // Track date range
-            if (taskDates.start < minDate || !hasAnyDates) minDate = new Date(taskDates.start);
-            if (taskDates.end > maxDate || !hasAnyDates) maxDate = new Date(taskDates.end);
+            if (nodeDates.start < minDate || !hasAnyDates) minDate = new Date(nodeDates.start);
+            if (nodeDates.end > maxDate || !hasAnyDates) maxDate = new Date(nodeDates.end);
             hasAnyDates = true;
 
             // Extract dependencies from metadata
-            const dependencies: string[] = [];
-            if (showDependencies && task.metadata) {
-                const meta = task.metadata as Record<string, unknown>;
+            const deps: string[] = [];
+            if (showDependencies && node.metadata) {
+                const meta = node.metadata as Record<string, unknown>;
                 if (Array.isArray(meta.dependencies)) {
-                    dependencies.push(...meta.dependencies.filter((d): d is string => typeof d === 'string'));
+                    deps.push(...meta.dependencies.filter((d): d is string => typeof d === 'string'));
                 }
                 if (typeof meta.dependsOn === 'string') {
-                    dependencies.push(meta.dependsOn);
+                    deps.push(meta.dependsOn);
                 }
             }
 
-            tasks.push({
-                id: task.id,
-                name: task.title,
-                start: taskDates.start,
-                end: taskDates.end,
-                type: status === 'completed' ? 'milestone' : 'task',
+            items.push({
+                actionId: node.id,
+                label: node.title,
+                start: nodeDates.start,
+                end: nodeDates.end,
+                type: status === 'completed' ? 'milestone' : 'item',
                 progress: status === 'completed' ? 100 : status === 'in_progress' ? 50 : 0,
-                project: sp.id,
-                dependencies: dependencies.length > 0 ? dependencies : undefined,
+                laneId: sp.id,
+                dependencies: deps.length > 0 ? deps : undefined,
                 styles: {
                     backgroundColor: color,
                     backgroundSelectedColor: shadeColor(color, -15),
@@ -178,28 +220,28 @@ export function mapHierarchyToTasks(
     const viewDate = new Date(minDate);
     viewDate.setDate(viewDate.getDate() - 7);
 
-    return { tasks, viewMode, viewDate };
+    return { items, viewMode, viewDate };
 }
 
 // ============================================================================
-// PROJECTION OUTPUT -> TASK MAPPING
+// PROJECTION OUTPUT -> RENDER OUTPUT
 // ============================================================================
 
 /**
- * Maps GanttProjectionOutput back to gantt-task-react Task[].
+ * Renders GanttProjectionOutput to GanttRenderOutput.
  * Useful when you have a pre-calculated projection and want to render it
- * with gantt-task-react (reverse mapping from pixel positions to dates).
+ * (reverse mapping from pixel positions to dates).
  */
-export function mapProjectionToTasks(
+export function renderProjection(
     projection: GanttProjectionOutput,
-    options: GanttTaskAdapterOptions = {}
-): MappedGanttData {
+    options: GanttAdapterOptions = {}
+): GanttRenderOutput {
     const {
         defaultColor = DEFAULT_COLORS.default,
         statusColors = DEFAULT_COLORS,
     } = options;
 
-    const tasks: Task[] = [];
+    const items: GanttRenderItem[] = [];
     let startDate = new Date(projection.startDate);
     let endDate = new Date(projection.endDate);
 
@@ -218,15 +260,15 @@ export function mapProjectionToTasks(
         : ONE_DAY_MS; // Default to 1 day per pixel if no width
 
     projection.lanes.forEach(lane => {
-        // Add lane as project group
+        // Add lane as grouping row
         const laneDates = getLaneDateRange(lane, startDate, msPerPixel);
 
-        tasks.push({
-            id: lane.id,
-            name: lane.label,
+        items.push({
+            actionId: lane.id,
+            label: lane.label,
             start: laneDates.start,
             end: laneDates.end,
-            type: 'project',
+            type: 'lane',
             progress: 0,
             hideChildren: false,
             styles: {
@@ -236,26 +278,26 @@ export function mapProjectionToTasks(
         });
 
         // Add items within lane
-        lane.items.forEach(item => {
-            const itemStart = new Date(startDate.getTime() + (item.x * msPerPixel));
-            let itemEnd = new Date(startDate.getTime() + ((item.x + item.width) * msPerPixel));
+        lane.items.forEach(laneItem => {
+            const itemStart = new Date(startDate.getTime() + (laneItem.x * msPerPixel));
+            let itemEnd = new Date(startDate.getTime() + ((laneItem.x + laneItem.width) * msPerPixel));
 
             // Ensure end is after start (minimum 1 day duration)
             if (itemEnd <= itemStart) {
                 itemEnd = new Date(itemStart.getTime() + ONE_DAY_MS);
             }
 
-            const status = getStatus(item.metadata);
-            const color = item.color || statusColors[status] || defaultColor;
+            const status = getStatus(laneItem.metadata);
+            const color = laneItem.color || statusColors[status] || defaultColor;
 
-            tasks.push({
-                id: item.id,
-                name: item.label,
+            items.push({
+                actionId: laneItem.id,
+                label: laneItem.label,
                 start: itemStart,
                 end: itemEnd,
-                type: 'task',
+                type: 'item',
                 progress: status === 'completed' ? 100 : status === 'in_progress' ? 50 : 0,
-                project: lane.id,
+                laneId: lane.id,
                 styles: {
                     backgroundColor: color,
                     backgroundSelectedColor: shadeColor(color, -15),
@@ -275,7 +317,7 @@ export function mapProjectionToTasks(
     const viewDate = new Date(startDate);
     viewDate.setDate(viewDate.getDate() - 7);
 
-    return { tasks, viewMode, viewDate };
+    return { items, viewMode, viewDate };
 }
 
 // ============================================================================
@@ -378,22 +420,23 @@ function shadeColor(color: string, percent: number): string {
 }
 
 // ============================================================================
-// TASK -> PROJECTION SYNC (for WYSIWYG PDF)
+// RENDER OUTPUT -> PROJECTION (for WYSIWYG PDF)
 // ============================================================================
 
 /**
- * Converts gantt-task-react Task[] back to GanttProjectionOutput
+ * Converts GanttRenderOutput back to GanttProjectionOutput
  * for PDF generation (ensuring what-you-see-is-what-you-print).
  */
-export function tasksToProjection(
-    tasks: Task[],
+export function projectionFromRender(
+    renderOutput: GanttRenderOutput,
     projectId: string,
     options: { dayWidth?: number; laneHeight?: number } = {}
 ): GanttProjectionOutput {
     const { dayWidth = 30, laneHeight = 60 } = options;
+    const { items } = renderOutput;
 
     // Find date range
-    const allDates = tasks.flatMap(t => [t.start, t.end]);
+    const allDates = items.flatMap(item => [item.start, item.end]);
     const minDate = new Date(Math.min(...allDates.map(d => d.getTime())));
     const maxDate = new Date(Math.max(...allDates.map(d => d.getTime())));
 
@@ -429,37 +472,37 @@ export function tasksToProjection(
         current.setDate(current.getDate() + 1);
     }
 
-    // Build lanes from project-type tasks
-    const projectTasks = tasks.filter(t => t.type === 'project' && t.project);
-    const itemTasks = tasks.filter(t => t.type !== 'project');
+    // Build lanes from lane-type items
+    const laneItems = items.filter(item => item.type === 'lane' && item.laneId);
+    const nonLaneItems = items.filter(item => item.type !== 'lane');
 
     const lanes: GanttProjectionOutput['lanes'] = [];
     let currentY = 0;
 
-    projectTasks.forEach(pt => {
-        const laneItems = itemTasks
-            .filter(t => t.project === pt.id)
-            .map(t => {
-                const x = Math.floor((t.start.getTime() - minDate.getTime()) / ONE_DAY_MS) * dayWidth;
-                const width = Math.max(dayWidth, Math.ceil((t.end.getTime() - t.start.getTime()) / ONE_DAY_MS) * dayWidth);
+    laneItems.forEach(laneItem => {
+        const childItems = nonLaneItems
+            .filter(item => item.laneId === laneItem.actionId)
+            .map(item => {
+                const x = Math.floor((item.start.getTime() - minDate.getTime()) / ONE_DAY_MS) * dayWidth;
+                const width = Math.max(dayWidth, Math.ceil((item.end.getTime() - item.start.getTime()) / ONE_DAY_MS) * dayWidth);
 
                 return {
-                    id: t.id,
-                    label: t.name,
+                    id: item.actionId,
+                    label: item.label,
                     x,
                     y: 10,
                     width,
                     height: 40,
-                    color: t.styles?.backgroundColor,
+                    color: item.styles?.backgroundColor,
                 };
             });
 
         lanes.push({
-            id: pt.id,
-            label: pt.name,
+            id: laneItem.actionId,
+            label: laneItem.label,
             y: currentY,
             height: laneHeight,
-            items: laneItems,
+            items: childItems,
             depth: 0,
         });
 
@@ -474,5 +517,58 @@ export function tasksToProjection(
         totalHeight: currentY,
         ticks,
         lanes,
+    };
+}
+
+// ============================================================================
+// LIBRARY BOUNDARY (Internal - converts to/from gantt-task-react types)
+// ============================================================================
+
+/**
+ * Converts our clean GanttRenderItem[] to the library's Task[].
+ * This is the ONLY place where library types should be constructed.
+ * @internal Used by TimelineWrapper
+ */
+export function toLibraryFormat(items: GanttRenderItem[]): LibraryTask[] {
+    return items.map(item => ({
+        id: item.actionId,
+        name: item.label,
+        start: item.start,
+        end: item.end,
+        type: item.type === 'lane' ? 'project' : item.type === 'milestone' ? 'milestone' : 'task',
+        progress: item.progress ?? 0,
+        project: item.laneId,
+        dependencies: item.dependencies,
+        hideChildren: item.hideChildren,
+        styles: item.styles,
+    }));
+}
+
+/**
+ * Extracts the actionId from a library Task.
+ * Use this to translate library callbacks back to our domain.
+ * @internal Used by TimelineWrapper event handlers
+ */
+export function actionIdFromLibrary(libraryTask: LibraryTask): string {
+    return libraryTask.id;
+}
+
+/**
+ * Converts a library Task back to our GanttRenderItem.
+ * Use this when you need the full item data from a library callback.
+ * @internal Used by TimelineWrapper when items are modified by the library
+ */
+export function fromLibraryFormat(libraryTask: LibraryTask): GanttRenderItem {
+    return {
+        actionId: libraryTask.id,
+        label: libraryTask.name,
+        start: libraryTask.start,
+        end: libraryTask.end,
+        type: libraryTask.type === 'project' ? 'lane' : libraryTask.type === 'milestone' ? 'milestone' : 'item',
+        progress: libraryTask.progress,
+        laneId: libraryTask.project,
+        dependencies: libraryTask.dependencies,
+        hideChildren: libraryTask.hideChildren,
+        styles: libraryTask.styles as GanttRenderItem['styles'],
     };
 }

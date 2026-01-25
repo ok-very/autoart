@@ -60,7 +60,8 @@
       "Bash(move backendsrcmodulesimportsservices_session-status.service.ts backendsrcmodulesimportsservicessession-status.service.ts)",
       "Bash(pnpm --filter frontend build:*)",
       "Bash(cmd /c \"npx tsc --noEmit 2>&1\")",
-      "Bash(pnpm --filter @autoart/shared build:*)"
+      "Bash(pnpm --filter @autoart/shared build:*)",
+      "Bash(pnpm tsc:*)"
     ]
   }
 }

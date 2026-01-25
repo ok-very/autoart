@@ -7,47 +7,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import type {
+    ExportFormat,
+    ExportSessionStatus,
     ExportOptions,
+    ExportSession,
+    ExportResult,
     BfaProjectExportModel,
 } from '../../workflows/export/types';
 import { api } from '../client';
 
-// ============================================================================
-// TYPES (Backend-aligned)
-// ============================================================================
-
-export type ExportFormat = 'rtf' | 'plaintext' | 'markdown' | 'csv' | 'google-doc' | 'google-sheets' | 'google-slides' | 'pdf';
-
-export type ExportSessionStatus =
-    | 'configuring'
-    | 'projecting'
-    | 'ready'
-    | 'executing'
-    | 'completed'
-    | 'failed';
-
-export interface ExportSession {
-    id: string;
-    format: ExportFormat;
-    projectIds: string[];
-    options: ExportOptions;
-    targetConfig?: Record<string, unknown>;
-    status: ExportSessionStatus;
-    projectionCache?: BfaProjectExportModel[];
-    error?: string;
-    createdBy?: string;
-    createdAt: string;
-    executedAt?: string;
-}
-
-export interface ExportResult {
-    success: boolean;
-    format: ExportFormat;
-    downloadUrl?: string;
-    content?: string;
-    externalUrl?: string;
-    error?: string;
-}
+// Re-export types for consumers
+export type { ExportFormat, ExportSessionStatus, ExportSession, ExportResult };
 
 // ============================================================================
 // HOOKS

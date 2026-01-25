@@ -86,6 +86,9 @@ export const floatingTheme: WorkspaceThemeModule = {
       // Add active group tracking
       // Note: onDidActiveGroupChange receives the group directly (or undefined), not an event wrapper
       const disposable = api.onDidActiveGroupChange((group) => {
+        // Guard against SSR/test environments
+        if (typeof document === 'undefined') return;
+
         // Remove active from all groups
         document.querySelectorAll('.groupview').forEach((el) => {
           el.classList.remove('active-group');
