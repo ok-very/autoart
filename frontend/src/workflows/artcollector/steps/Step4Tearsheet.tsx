@@ -10,7 +10,6 @@ import { useCallback, useState, useMemo } from 'react';
 import { Stack, Text, Button, Inline, Badge } from '@autoart/ui';
 import {
   Shuffle,
-  Download,
   FileText,
   ChevronLeft,
   ChevronRight,

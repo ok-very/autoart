@@ -230,7 +230,13 @@ export function mapProjectionToTasks(
         // Add items within lane
         lane.items.forEach(item => {
             const itemStart = new Date(startDate.getTime() + (item.x * msPerPixel));
-            const itemEnd = new Date(startDate.getTime() + ((item.x + item.width) * msPerPixel));
+            let itemEnd = new Date(startDate.getTime() + ((item.x + item.width) * msPerPixel));
+
+            // Ensure end is after start (minimum 1 day duration)
+            if (itemEnd <= itemStart) {
+                itemEnd = new Date(itemStart.getTime() + ONE_DAY_MS);
+            }
+
             const status = getStatus(item.metadata);
             const color = item.color || statusColors[status] || defaultColor;
 

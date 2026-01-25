@@ -234,6 +234,27 @@ Create generalized runner script for pulling:
 
 The backend removed `emittedEvents` from classification types, but the frontend type definition still includes it. Remove for type consistency.
 
+### 2. Frontend Build Errors (2026-01-24)
+
+**Status:** In Progress
+**Priority:** High (blocking build)
+
+#### Fixed
+
+- [x] `justified-layout` type declarations - Added [frontend/src/types/justified-layout.d.ts](frontend/src/types/justified-layout.d.ts)
+- [x] `hooks/index.ts` - Changed `export { default as useJustifiedLayout }` to named export
+- [x] `Stack` component - Added `align` prop to [packages/ui/src/atoms/Stack.tsx](packages/ui/src/atoms/Stack.tsx)
+- [x] `TimelineWrapper.tsx` - Commented out unused `_handleViewModeChange`
+
+#### Remaining
+
+- [ ] `SlugEditorSection.tsx` - Unused `Stack` import
+- [ ] `Step4Tearsheet.tsx` - Unused `Download` import
+- [ ] `useWorkspaceTheme.ts` - Unused `useUIStore` import
+- [ ] `ExportRecordsDialog.tsx` - Select component API mismatch, definition_kind property access
+- [ ] `MainLayout.tsx` - Dockview component type mismatch (ComponentClass vs FunctionComponent)
+- [ ] `floating.ts` - `event` possibly undefined, missing `group` property
+
 ---
 
 ## Completed (Archived)

@@ -3,6 +3,7 @@ import { forwardRef, HTMLAttributes } from 'react';
 
 interface StackProps extends HTMLAttributes<HTMLDivElement> {
     gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg';
+    align?: 'start' | 'center' | 'end' | 'stretch';
 }
 
 const gapClasses = {
@@ -13,14 +14,22 @@ const gapClasses = {
     lg: 'gap-6',
 };
 
+const alignClasses = {
+    start: 'items-start',
+    center: 'items-center',
+    end: 'items-end',
+    stretch: 'items-stretch',
+};
+
 export const Stack = forwardRef<HTMLDivElement, StackProps>(
-    ({ gap = 'md', className, children, ...props }, ref) => {
+    ({ gap = 'md', align, className, children, ...props }, ref) => {
         return (
             <div
                 ref={ref}
                 className={clsx(
                     'flex flex-col',
                     gapClasses[gap],
+                    align && alignClasses[align],
                     className
                 )}
                 {...props}

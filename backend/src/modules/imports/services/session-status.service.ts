@@ -237,12 +237,36 @@ export async function transitionStatusInTransaction(
         inTransaction: true,
     }, '[session-status] Status transition');
 
-    // Perform the update within transaction
-    await trx
+    // Perform the update within transaction, validating current status atomically
+    const result = await trx
         .updateTable('import_sessions')
         .set({ status: newStatus, updated_at: new Date() })
         .where('id', '=', sessionId)
-        .execute();
+        .where('status', '=', currentStatus)
+        .executeTakeFirst();
+
+    // Check if update was successful (status may have changed since validation)
+    if (result.numUpdatedRows === 0n) {
+        const session = await trx
+            .selectFrom('import_sessions')
+            .select('status')
+            .where('id', '=', sessionId)
+            .executeTakeFirst();
+
+        if (!session) {
+            throw new Error(`Session ${sessionId} not found`);
+        }
+
+        const actualStatus = session.status as ImportSessionStatus;
+        logger.error({
+            sessionId,
+            expectedStatus: currentStatus,
+            actualStatus,
+            toStatus: newStatus,
+        }, '[session-status] Status changed during transaction');
+
+        throw new InvalidStatusTransitionError(sessionId, actualStatus, newStatus);
+    }
 }
 
 /**

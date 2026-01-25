@@ -244,17 +244,21 @@ export function TimelineWrapper({
 
     // View mode
     const viewMode = controlledViewMode ?? internalViewMode;
-    // handleViewModeChange reserved for future view mode selector UI
-    const _handleViewModeChange = useCallback((mode: ViewMode) => {
-        if (onViewModeChange) {
-            onViewModeChange(mode);
-        } else {
-            setInternalViewMode(mode);
-        }
-    }, [onViewModeChange]);
+    // Note: handleViewModeChange reserved for future view mode selector UI
+    // Uncomment when view mode UI is added:
+    // const handleViewModeChange = useCallback((mode: ViewMode) => {
+    //     if (onViewModeChange) {
+    //         onViewModeChange(mode);
+    //     } else {
+    //         setInternalViewMode(mode);
+    //     }
+    // }, [onViewModeChange]);
+    void onViewModeChange; // Silence unused prop warning until view mode UI is added
 
-    // Selection sync
+    // Selection sync - use ref to avoid stale closure in handleSelect
+    const selectionRef = useRef<GanttSelection | undefined>(selection);
     useEffect(() => {
+        selectionRef.current = selection;
         if (selection?.selectedItemIds?.length) {
             setSelectedTaskId(selection.selectedItemIds[0]);
         }
@@ -264,14 +268,14 @@ export function TimelineWrapper({
         setSelectedTaskId(isSelected ? task.id : '');
         if (onSelectionChange) {
             onSelectionChange({
-                ...(selection ?? {}),
+                ...(selectionRef.current ?? {}),
                 selectedItemIds: isSelected ? [task.id] : []
             });
         }
         if (onTaskClick && isSelected) {
             onTaskClick(task);
         }
-    }, [selection, onSelectionChange, onTaskClick]);
+    }, [onSelectionChange, onTaskClick]);
 
     // Task mutations
     const handleDateChange = useCallback((task: Task) => {
