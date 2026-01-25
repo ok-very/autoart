@@ -174,6 +174,17 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 }
 
                 const state = get();
+
+                // Close via Dockview API first
+                const api = state.dockviewApi;
+                if (api) {
+                    const panel = api.getPanel(panelId);
+                    if (panel) {
+                        panel.api.close();
+                    }
+                }
+
+                // Then update state
                 set({
                     openPanelIds: state.openPanelIds.filter((id) => id !== panelId),
                 });

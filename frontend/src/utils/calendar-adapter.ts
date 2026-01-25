@@ -60,6 +60,11 @@ export function actionsToCalendarEvents(
             const start = startDate ? new Date(startDate) : new Date(dueDate!);
             const end = dueDate ? new Date(dueDate) : new Date(startDate!);
 
+            // Validate dates - skip if invalid
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                return null;
+            }
+
             // Ensure end is not before start
             const adjustedEnd = end >= start ? end : new Date(start);
 

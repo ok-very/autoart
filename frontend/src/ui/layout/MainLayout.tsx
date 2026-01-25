@@ -42,6 +42,7 @@ import {
   type PanelId,
 } from '../../workspace/panelRegistry';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
+import { getWorkspaceColorClasses } from '../../workspace/workspaceColors';
 import {
   useWorkspaceTheme,
   useThemeBehavior,
@@ -326,15 +327,16 @@ function IconTab(props: IDockviewPanelHeaderProps) {
     ? BUILT_IN_WORKSPACES.find((w) => w.id === activeWorkspaceId)?.color
     : null;
 
+  // Get color classes using lookup (ensures Tailwind can detect classes)
+  const colorClasses = getWorkspaceColorClasses(isBound ? workspaceColor : null);
+
   const handleClose = (e: React.MouseEvent) => {
     e.stopPropagation();
     api.close();
   };
 
   // Build color classes for bound panels
-  const boundColorClasses = isBound && workspaceColor
-    ? `border-l-2 border-l-${workspaceColor}-500`
-    : '';
+  const boundColorClasses = isBound ? `border-l-2 ${colorClasses.borderL500}` : '';
 
   return (
     <div className={`flex items-center gap-2 text-current overflow-hidden w-full group ${boundColorClasses}`}>
@@ -343,11 +345,7 @@ function IconTab(props: IDockviewPanelHeaderProps) {
         <span className="truncate">{def?.title || api.title}</span>
         {isBound && (
           <span
-            className={`text-[9px] px-1.5 py-0.5 rounded-full ${
-              workspaceColor
-                ? `bg-${workspaceColor}-100 text-${workspaceColor}-600`
-                : 'bg-slate-100 text-slate-500'
-            }`}
+            className={`text-[9px] px-1.5 py-0.5 rounded-full ${colorClasses.bg100} ${colorClasses.text600}`}
           >
             Bound
           </span>

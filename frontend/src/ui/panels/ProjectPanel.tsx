@@ -14,6 +14,7 @@ import { useProjects } from '../../api/hooks';
 import { ProjectView } from '../composites/ProjectView';
 import { Menu } from '@autoart/ui';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
+import { getWorkspaceColorClasses } from '../../workspace/workspaceColors';
 
 interface ProjectPanelProps {
     panelId: string;
@@ -39,6 +40,9 @@ export function ProjectPanelContent({ panelId }: ProjectPanelProps) {
         ? BUILT_IN_WORKSPACES.find((w) => w.id === activeWorkspaceId)?.color
         : null;
 
+    // Get color classes using lookup (ensures Tailwind can detect classes)
+    const colorClasses = getWorkspaceColorClasses(isBound ? workspaceColor : null);
+
     // Handler for when user manually changes project in panel
     const handleProjectChange = (newProjectId: string) => {
         // Unbind from workspace, store override
@@ -61,20 +65,12 @@ export function ProjectPanelContent({ panelId }: ProjectPanelProps) {
         <div className="h-full flex flex-col overflow-hidden">
             {/* Panel Header with Project Selector */}
             <div
-                className={`h-10 px-3 border-b flex items-center justify-between shrink-0 ${
-                    isBound && workspaceColor
-                        ? `bg-${workspaceColor}-50 border-${workspaceColor}-200`
-                        : 'bg-slate-50 border-slate-200'
-                }`}
+                className={`h-10 px-3 border-b flex items-center justify-between shrink-0 ${colorClasses.bg50} ${colorClasses.border200}`}
             >
                 <Menu>
                     <Menu.Target>
                         <button
-                            className={`flex items-center gap-2 px-2 py-1 rounded text-sm font-medium transition-colors ${
-                                isBound && workspaceColor
-                                    ? `text-${workspaceColor}-700 hover:bg-${workspaceColor}-100`
-                                    : 'text-slate-700 hover:bg-slate-100'
-                            }`}
+                            className={`flex items-center gap-2 px-2 py-1 rounded text-sm font-medium transition-colors ${colorClasses.text700} ${colorClasses.hoverBg100}`}
                         >
                             {currentProject?.title || 'Select Project'}
                             <ChevronDown size={14} />
@@ -105,11 +101,7 @@ export function ProjectPanelContent({ panelId }: ProjectPanelProps) {
                 {/* Bound indicator */}
                 {isBound && (
                     <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full ${
-                            workspaceColor
-                                ? `bg-${workspaceColor}-200 text-${workspaceColor}-700`
-                                : 'bg-slate-200 text-slate-600'
-                        }`}
+                        className={`text-[10px] px-2 py-0.5 rounded-full ${colorClasses.bg200} ${colorClasses.text700}`}
                     >
                         Bound
                     </span>
