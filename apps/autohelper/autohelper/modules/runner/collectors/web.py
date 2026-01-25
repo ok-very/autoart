@@ -40,21 +40,25 @@ logger = logging.getLogger(__name__)
 
 # Lazy imports for optional dependencies
 _bs4: type[BeautifulSoup] | None = None
+_bs4_lock = threading.Lock()
 
 
 def _get_bs4() -> type[BeautifulSoup]:
-    """Lazy import BeautifulSoup."""
+    """Lazy import BeautifulSoup (thread-safe)."""
     global _bs4
     if _bs4 is None:
-        try:
-            from bs4 import BeautifulSoup as BS4Class
+        with _bs4_lock:
+            # Double-check after acquiring lock
+            if _bs4 is None:
+                try:
+                    from bs4 import BeautifulSoup as BS4Class
 
-            _bs4 = BS4Class
-        except ImportError as e:
-            raise ImportError(
-                "beautifulsoup4 is required for web collection. "
-                "Install with: pip install beautifulsoup4 lxml"
-            ) from e
+                    _bs4 = BS4Class
+                except ImportError as e:
+                    raise ImportError(
+                        "beautifulsoup4 is required for web collection. "
+                        "Install with: pip install beautifulsoup4 lxml"
+                    ) from e
     return _bs4
 
 

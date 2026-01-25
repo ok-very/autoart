@@ -202,14 +202,17 @@ def generate_filename(
     Returns:
         Generated filename (without path)
     """
+    # Default to .bin for empty/None extension to ensure files always have an extension
+    if not extension:
+        extension = ".bin"
     # Ensure extension has dot
-    if extension and not extension.startswith("."):
+    elif not extension.startswith("."):
         extension = f".{extension}"
 
-    # Add extension to context for {ext} variable only if not already set
+    # Always use the passed extension for context to avoid conflicts
+    # This ensures {ext} in template matches the actual file extension
     local_context = {**context}
-    if "extension" not in local_context:
-        local_context["extension"] = extension
+    local_context["extension"] = extension
 
     # Parse template and replace variables
     template = config.template
