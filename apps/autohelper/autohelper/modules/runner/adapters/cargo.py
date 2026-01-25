@@ -300,10 +300,11 @@ class CargoAdapter(SiteAdapter):
             return False
 
     def _is_same_domain(self, url: str, base_url: str) -> bool:
-        """Check if URL is on the same domain as base."""
+        """Check if URL is on the same domain as base (ignoring ports, allowing subdomains)."""
         try:
-            url_domain = urlparse(url).netloc.lower()
-            base_domain = urlparse(base_url).netloc.lower()
-            return url_domain == base_domain
+            url_host = urlparse(url).netloc.lower().split(":")[0]
+            base_host = urlparse(base_url).netloc.lower().split(":")[0]
+            # Exact match or subdomain match
+            return url_host == base_host or url_host.endswith("." + base_host)
         except Exception:
             return False

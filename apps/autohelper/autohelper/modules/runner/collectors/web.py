@@ -102,11 +102,31 @@ class WebCollector:
             max_filesize_kb: Maximum file size in KB
         """
         self.timeout = timeout
-        self.max_images = max_images
+        self.max_images = max(1, max_images)
+
+        # Validate and normalize dimension ranges
+        min_width = max(0, min_width)
+        max_width = max(0, max_width)
+        min_height = max(0, min_height)
+        max_height = max(0, max_height)
+
+        # Swap if min > max
+        if min_width > max_width:
+            min_width, max_width = max_width, min_width
+        if min_height > max_height:
+            min_height, max_height = max_height, min_height
+
         self.min_width = min_width
         self.max_width = max_width
         self.min_height = min_height
         self.max_height = max_height
+
+        # Validate and normalize filesize ranges
+        min_filesize_kb = max(0, min_filesize_kb)
+        max_filesize_kb = max(0, max_filesize_kb)
+        if min_filesize_kb > max_filesize_kb:
+            min_filesize_kb, max_filesize_kb = max_filesize_kb, min_filesize_kb
+
         self.min_filesize_bytes = min_filesize_kb * 1024
         self.max_filesize_bytes = max_filesize_kb * 1024
 
@@ -455,6 +475,18 @@ class WebCollector:
             client = SSRFProtectedClient(timeout=self.timeout)
             response = await client.get(url)
             response.raise_for_status()
+
+            # Check Content-Length header before processing (memory protection)
+            content_length = response.headers.get("content-length")
+            if content_length:
+                try:
+                    size = int(content_length)
+                    if size > self.max_filesize_bytes:
+                        logger.debug(f"Skipping image {url}: Content-Length {size} > max {self.max_filesize_bytes}")
+                        return None
+                except ValueError:
+                    pass  # Invalid Content-Length header, continue with download
+
             content = response.content
 
             # Validate content-type
@@ -479,14 +511,14 @@ class WebCollector:
             try:
                 from PIL import Image
                 import io
-                img = Image.open(io.BytesIO(content))
-                width, height = img.size
-                if width < self.min_width or width > self.max_width:
-                    logger.debug(f"Skipping image {url}: width {width} outside [{self.min_width}, {self.max_width}]")
-                    return None
-                if height < self.min_height or height > self.max_height:
-                    logger.debug(f"Skipping image {url}: height {height} outside [{self.min_height}, {self.max_height}]")
-                    return None
+                with Image.open(io.BytesIO(content)) as img:
+                    width, height = img.size
+                    if width < self.min_width or width > self.max_width:
+                        logger.debug(f"Skipping image {url}: width {width} outside [{self.min_width}, {self.max_width}]")
+                        return None
+                    if height < self.min_height or height > self.max_height:
+                        logger.debug(f"Skipping image {url}: height {height} outside [{self.min_height}, {self.max_height}]")
+                        return None
             except Exception as e:
                 logger.warning(f"Could not read image dimensions for {url}: {e}")
                 # Continue anyway - dimension check is best-effort

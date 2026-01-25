@@ -82,6 +82,10 @@ export function useDragHotZones({
             window.clearTimeout(dwellTimerRef.current);
             dwellTimerRef.current = null;
         }
+        if (cooldownTimerRef.current) {
+            window.clearTimeout(cooldownTimerRef.current);
+            cooldownTimerRef.current = null;
+        }
     }, []);
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -138,9 +142,6 @@ export function useDragHotZones({
     useEffect(() => {
         return () => {
             clearTimers();
-            if (cooldownTimerRef.current) {
-                window.clearTimeout(cooldownTimerRef.current);
-            }
         };
     }, [clearTimers]);
 

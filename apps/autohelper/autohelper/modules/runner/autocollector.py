@@ -5,6 +5,7 @@ Orchestrates artifact collection from web URLs and local folders.
 Delegates to specialized collectors for each source type.
 """
 
+import asyncio
 from collections.abc import AsyncIterator
 from pathlib import Path
 
@@ -20,6 +21,16 @@ from .types import NamingConfig, RunnerId, RunnerProgress, RunnerResult
 logger = get_logger(__name__)
 
 DEFAULT_CRAWL_DEPTH = 20
+
+
+def _safe_int(val, default: int) -> int:
+    """Safely coerce a value to int, returning default on failure."""
+    if val is None:
+        return default
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return default
 
 
 class AutoCollectorRunner(BaseRunner):
@@ -43,17 +54,17 @@ class AutoCollectorRunner(BaseRunner):
         self._config_store = ConfigStore()
         self._folder_collector = FolderCollector()
 
-    def _get_web_collector(self) -> WebCollector:
+    async def _get_web_collector(self) -> WebCollector:
         """Create WebCollector with current settings from config."""
-        config = self._config_store.load()
+        config = await asyncio.to_thread(self._config_store.load)
         return WebCollector(
-            max_images=config.get("crawl_depth", DEFAULT_CRAWL_DEPTH),
-            min_width=config.get("min_width", 100),
-            max_width=config.get("max_width", 5000),
-            min_height=config.get("min_height", 100),
-            max_height=config.get("max_height", 5000),
-            min_filesize_kb=config.get("min_filesize_kb", 100),
-            max_filesize_kb=config.get("max_filesize_kb", 12000),
+            max_images=_safe_int(config.get("crawl_depth"), DEFAULT_CRAWL_DEPTH),
+            min_width=_safe_int(config.get("min_width"), 100),
+            max_width=_safe_int(config.get("max_width"), 5000),
+            min_height=_safe_int(config.get("min_height"), 100),
+            max_height=_safe_int(config.get("max_height"), 5000),
+            min_filesize_kb=_safe_int(config.get("min_filesize_kb"), 100),
+            max_filesize_kb=_safe_int(config.get("max_filesize_kb"), 12000),
         )
 
     @property
@@ -97,7 +108,7 @@ class AutoCollectorRunner(BaseRunner):
         source_path = config.get("source_path")
 
         if url:
-            web_collector = self._get_web_collector()
+            web_collector = await self._get_web_collector()
             return await web_collector.collect(url, output_folder, naming_config, context_id)
         elif source_path:
             return await self._folder_collector.collect(
@@ -148,7 +159,7 @@ class AutoCollectorRunner(BaseRunner):
         source_path = config.get("source_path")
 
         if url:
-            web_collector = self._get_web_collector()
+            web_collector = await self._get_web_collector()
             async for progress in web_collector.collect_stream(
                 url, output_folder, naming_config, context_id
             ):
