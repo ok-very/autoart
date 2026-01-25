@@ -951,8 +951,9 @@ def get_tray_class():
             """Restart the application by spawning a new process and quitting."""
             import subprocess
             self.hide()
-            # Start a new instance with the same arguments
-            subprocess.Popen([sys.executable] + sys.argv)
+            # Use static command - tray mode is implied since we're in the tray UI
+            cmd = [sys.executable, "-m", "autohelper.main", "--tray"]
+            subprocess.Popen(cmd)  # noqa: S603
             self.app.quit()
 
         def quit_app(self):
