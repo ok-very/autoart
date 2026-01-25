@@ -9,7 +9,8 @@ import type { DockviewApi } from 'dockview';
 
 import { workspaceThemeRegistry } from './registry';
 import type { WorkspaceThemeModule, WorkspaceThemeId } from './types';
-import { useUIStore } from '../../stores/uiStore';
+// Note: useUIStore import removed - theme state uses localStorage for now
+// TODO: Migrate to uiStore when theme persistence is refactored
 
 // ============================================================================
 // THEME STATE (stored in uiStore)

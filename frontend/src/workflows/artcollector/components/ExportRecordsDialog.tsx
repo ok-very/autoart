@@ -32,7 +32,7 @@ export function ExportRecordsDialog({
 
   // Filter to record-type definitions only
   const recordDefinitions = useMemo(() => {
-    return definitions?.filter((d) => d.definition_kind === 'record') ?? [];
+    return definitions?.filter((d) => (d as { definition_kind?: string }).definition_kind === 'record') ?? [];
   }, [definitions]);
 
   const artworks = exportPayload.artworks ?? [];
@@ -125,17 +125,15 @@ export function ExportRecordsDialog({
                 </div>
               ) : (
                 <Select
-                  value={selectedDefinitionId}
-                  onChange={(e) => setSelectedDefinitionId(e.target.value)}
+                  value={selectedDefinitionId || null}
+                  onChange={(value) => setSelectedDefinitionId(value || '')}
+                  data={recordDefinitions.map((def) => ({
+                    value: def.id,
+                    label: def.name,
+                  }))}
+                  placeholder="Select a definition..."
                   className="w-full"
-                >
-                  <option value="">Select a definition...</option>
-                  {recordDefinitions.map((def) => (
-                    <option key={def.id} value={def.id}>
-                      {def.name}
-                    </option>
-                  ))}
-                </Select>
+                />
               )}
             </div>
 

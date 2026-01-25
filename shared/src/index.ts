@@ -19,7 +19,9 @@ export * from './schemas/index.js';
 
 // ==================== TYPES ====================
 // Pure TypeScript types (projections)
+// Export Types
 export * from './types/index.js';
+export * from './types/gantt.js';
 
 // ==================== DOMAIN ====================
 // Domain logic: field visibility, completeness, reference resolution, etc.
@@ -79,6 +81,16 @@ export * from './formatters/index.js';
 // ==================== UTILITIES ====================
 // Shared utility functions
 export { generateId } from './utils.js';
+
+// Action field extraction helpers
+export {
+    extractFieldValue,
+    extractTitle,
+    extractStartDate,
+    extractDueDate,
+    extractStatus,
+    extractAssignee,
+} from './utils/action-field-helpers.js';
 
 // ==================== INTAKE ====================
 // Form generator utilities and schemas

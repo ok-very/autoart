@@ -16,8 +16,18 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { DataTableFlat } from './DataTableFlat';
 import { DataTableHierarchy, type HierarchyFieldDef } from './DataTableHierarchy';
+import { GanttView } from './GanttView';
 import { ProjectLogView } from './ProjectLogView';
-import { useProjectTree, useRecordDefinitions, useRecords } from '../../api/hooks';
+import { GanttFilters } from '../components/GanttFilters';
+import {
+    mapActionsToGantt,
+    actionToProjectionInput,
+    extractUniqueStatuses,
+    extractUniqueAssignees,
+    extractDateRange,
+    type TimelineFilter,
+} from '../../utils/timeline-mapper';
+import { useProjectTree, useRecordDefinitions, useRecords, useActions } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
 import type { HierarchyNode, DataRecord, RecordDefinition } from '../../types';
@@ -73,8 +83,11 @@ function collectSubprocesses(
 // ==================== PROJECT VIEW ====================
 
 export function ProjectView({ projectId, className }: ProjectViewProps) {
-    // Tab state for switching between Workflow and Log views
-    const [activeTab, setActiveTab] = useState<'workflow' | 'log'>('workflow');
+    // Tab state for switching between Workflow, Gantt, and Log views
+    const [activeTab, setActiveTab] = useState<'workflow' | 'gantt' | 'log'>('workflow');
+
+    // Gantt filter state
+    const [ganttFilter, setGanttFilter] = useState<TimelineFilter>({});
 
     // Subscribe to nodes directly to ensure reactivity when nodes are updated
     const storeNodes = useHierarchyStore((state) => state.nodes);
@@ -190,6 +203,28 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
         return Array.from(groups.values());
     }, [subprocessRecords, definitions]);
 
+    // Fetch actions for the project (for Gantt view)
+    const { data: projectActions = [] } = useActions(projectId, 'project');
+
+    // Convert actions to projection input format for filter helpers
+    const actionInputs = useMemo(() => {
+        return projectActions.map(a => actionToProjectionInput(a));
+    }, [projectActions]);
+
+    // Extract filter options from actions
+    const availableStatuses = useMemo(() => extractUniqueStatuses(actionInputs), [actionInputs]);
+    const availableAssignees = useMemo(() => extractUniqueAssignees(actionInputs), [actionInputs]);
+    const dateRangeBounds = useMemo(() => extractDateRange(actionInputs), [actionInputs]);
+
+    // Memoize the Gantt Projection from Actions
+    const ganttProjection = useMemo(() => {
+        if (!project || activeTab !== 'gantt') return null;
+        if (projectActions.length === 0) return null;
+
+        // Map actions to Gantt projection with filtering
+        return mapActionsToGantt(projectActions, project.id, ganttFilter);
+    }, [project, projectActions, activeTab, ganttFilter]);
+
     // Selected record ID for floating tables
     const selectedRecordId = selection?.type === 'record' ? selection.id : null;
 
@@ -259,15 +294,17 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                     <SegmentedControl
                         size="xs"
                         value={activeTab}
-                        onChange={(value) => setActiveTab(value as 'workflow' | 'log')}
+                        onChange={(value) => setActiveTab(value as any)}
                         data={[
                             { value: 'workflow', label: 'Workflow' },
+                            { value: 'gantt', label: 'Gantt' },
                             { value: 'log', label: 'Log' },
                         ]}
                         className="mt-2"
                     />
                 </div>
 
+                {/* Subprocess Sidebar Content - Only show for Workflow tab */}
                 {activeTab === 'workflow' && (
                     <div className="flex-1 overflow-y-auto p-2 custom-scroll">
                         {subprocesses.length === 0 ? (
@@ -295,6 +332,27 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                                         </button>
                                     );
                                 })}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Gantt Sidebar Content */}
+                {activeTab === 'gantt' && (
+                    <div className="flex-1 overflow-y-auto p-3 custom-scroll">
+                        <p className="text-xs font-semibold text-slate-700 mb-3">Timeline Controls</p>
+                        <GanttFilters
+                            filter={ganttFilter}
+                            onFilterChange={setGanttFilter}
+                            availableStatuses={availableStatuses}
+                            availableAssignees={availableAssignees}
+                            dateRange={dateRangeBounds}
+                        />
+                        {projectActions.length > 0 && (
+                            <div className="mt-4 pt-3 border-t border-slate-200">
+                                <p className="text-[10px] text-slate-400">
+                                    {projectActions.length} action{projectActions.length !== 1 ? 's' : ''} in project
+                                </p>
                             </div>
                         )}
                     </div>
@@ -380,6 +438,19 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                             ))}
                         </div>
                     </div>
+                </main>
+            ) : activeTab === 'gantt' ? (
+                <main className="flex-1 flex flex-col overflow-hidden">
+                    {ganttProjection ? (
+                        <GanttView
+                            projection={ganttProjection}
+                            projectId={projectId}
+                        />
+                    ) : (
+                        <div className="flex-1 flex items-center justify-center text-slate-400">
+                            Loading Gantt...
+                        </div>
+                    )}
                 </main>
             ) : (
                 <ProjectLogView projectId={projectId} />

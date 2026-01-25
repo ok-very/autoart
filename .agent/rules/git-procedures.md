@@ -109,3 +109,84 @@ git clean -f path/to/duplicate-file
 ### Wrong Branch State After Switch
 - **Cause**: Untracked files from previous branch persist
 - **Fix**: `git clean -fd` after switching branches
+
+---
+
+## Branch Hygiene
+
+### Delete Branches Immediately After Merging
+
+Stale branches accumulate and cause confusion. Delete them right away:
+
+```powershell
+# When creating a PR, auto-delete after merge
+gh pr create --delete-branch
+
+# Or configure GitHub repo settings to auto-delete merged branches
+```
+
+### Use Consistent Branch Prefixes
+
+Standard prefixes make auditing easier:
+
+- `fix/` - Bug fixes
+- `feature/` - New features
+- `refactor/` - Code restructuring
+- `chore/` - Maintenance tasks
+
+```powershell
+# Easy to audit by type
+git branch -r | Select-String 'origin/feature/'
+```
+
+### Rebase Feature Branches Regularly
+
+If a feature branch sits for more than a few days, keep it current:
+
+```powershell
+git fetch origin
+git rebase origin/main
+```
+
+This prevents branch drift where parallel implementations supersede your work.
+
+### Periodic Branch Audit
+
+Run weekly (or before starting new work):
+
+```powershell
+# Prune deleted remote branches
+git fetch --prune
+
+# Find local branches whose remote was deleted
+git branch -vv | Select-String ': gone]'
+
+# List branches merged into main (safe to delete)
+git branch --merged main
+```
+
+**Shortcut**: Add this alias to your git config:
+
+```powershell
+git config --global alias.audit "!git fetch --prune && git branch -vv | grep ': gone]' && git branch --merged main"
+```
+
+Then just run `git audit` before starting new work.
+
+### Keep PRs Small
+
+- One logical change per PR
+- Easier to review, less likely to be superseded
+- Shorter-lived branches = fewer merge conflicts
+
+### Checking Branch Status Before Deletion
+
+Before deleting a branch, verify it's fully merged:
+
+```powershell
+# Check if branch has commits not in main
+git log main..origin/branch-name --oneline
+
+# If empty output, safe to delete
+git push origin --delete branch-name
+```

@@ -1,0 +1,17 @@
+/**
+ * UI Components
+ *
+ * Low-level reusable components for the Gantt/Timeline views.
+ */
+
+export { GanttCanvas } from './GanttCanvas';
+export { GanttFilters } from './GanttFilters';
+export {
+    TimelineWrapper,
+    type TimelineMode,
+    type TimelineWrapperProps,
+    ViewMode,
+    type GanttRenderItem,
+    type GanttRenderOutput,
+    type GanttAdapterOptions,
+} from './TimelineWrapper';

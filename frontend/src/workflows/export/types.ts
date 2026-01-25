@@ -82,4 +82,12 @@ export const EXPORT_FORMATS: ExportFormatOption[] = [
         description: 'Export to portable document format',
         extension: '.pdf',
     },
+    // NOTE: Gantt export is triggered directly from TimelineWrapper panel,
+    // not through ExportWorkbench. Re-enable when batch workflow is added.
+    // {
+    //     id: 'gantt',
+    //     label: 'Gantt Chart (PDF)',
+    //     description: 'Visual timeline with drag-and-drop',
+    //     extension: '.pdf',
+    // },
 ];

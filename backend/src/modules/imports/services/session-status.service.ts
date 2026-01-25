@@ -195,7 +195,7 @@ export async function markSessionNeedsReview(
 // ============================================================================
 
 import type { Transaction } from 'kysely';
-import type { DB } from '../../../db/schema.js';
+import type { Database } from '../../../db/schema.js';
 
 /**
  * Update session status within a transaction (for atomic operations).
@@ -209,7 +209,7 @@ import type { DB } from '../../../db/schema.js';
  * @throws InvalidStatusTransitionError if transition is not allowed
  */
 export async function transitionStatusInTransaction(
-    trx: Transaction<DB>,
+    trx: Transaction<Database>,
     sessionId: string,
     currentStatus: ImportSessionStatus,
     newStatus: ImportSessionStatus,
@@ -237,12 +237,36 @@ export async function transitionStatusInTransaction(
         inTransaction: true,
     }, '[session-status] Status transition');
 
-    // Perform the update within transaction
-    await trx
+    // Perform the update within transaction, validating current status atomically
+    const result = await trx
         .updateTable('import_sessions')
         .set({ status: newStatus, updated_at: new Date() })
         .where('id', '=', sessionId)
-        .execute();
+        .where('status', '=', currentStatus)
+        .executeTakeFirst();
+
+    // Check if update was successful (status may have changed since validation)
+    if (result.numUpdatedRows === 0n) {
+        const session = await trx
+            .selectFrom('import_sessions')
+            .select('status')
+            .where('id', '=', sessionId)
+            .executeTakeFirst();
+
+        if (!session) {
+            throw new Error(`Session ${sessionId} not found`);
+        }
+
+        const actualStatus = session.status as ImportSessionStatus;
+        logger.error({
+            sessionId,
+            expectedStatus: currentStatus,
+            actualStatus,
+            toStatus: newStatus,
+        }, '[session-status] Status changed during transaction');
+
+        throw new InvalidStatusTransitionError(sessionId, actualStatus, newStatus);
+    }
 }
 
 /**

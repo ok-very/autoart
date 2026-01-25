@@ -32,7 +32,8 @@ const SessionIdParamSchema = z.object({
 });
 
 const CreateConnectorSessionBodySchema = z.object({
-    connectorType: z.enum(['monday', 'asana', 'notion']),
+    // TODO: Add 'asana', 'notion' when implemented
+    connectorType: z.enum(['monday']),
     boardId: z.string().min(1),
     targetProjectId: z.string().uuid().optional(),
 });

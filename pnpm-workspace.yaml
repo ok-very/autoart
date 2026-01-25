@@ -42,3 +42,6 @@ catalog:
   # UI
   lucide-react: "^0.562.0"
   clsx: "^2.1.1"
+
+  # Gantt
+  gantt-task-react: "^0.3.9"

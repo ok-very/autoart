@@ -5,7 +5,7 @@
  */
 
 import { useState, useMemo, useEffect } from 'react';
-import { Stack, Text, Button, Inline, Badge } from '@autoart/ui';
+import { Text, Button, Inline, Badge } from '@autoart/ui';
 import { ChevronDown, ChevronRight, RefreshCw, AlertTriangle, Check } from 'lucide-react';
 import clsx from 'clsx';
 import type { ArtifactPreview } from '../types';

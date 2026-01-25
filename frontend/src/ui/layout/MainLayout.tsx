@@ -11,13 +11,14 @@
  * Individual panels may use a PanelLayout component for their internal structure.
  */
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, type FunctionComponent } from 'react';
 import {
   DockviewReact,
   type DockviewReadyEvent,
   type DockviewApi,
   type IDockviewPanelProps,
   type IDockviewPanelHeaderProps,
+  type IWatermarkPanelProps,
 } from 'dockview';
 
 import { Plus, MoreHorizontal, Split } from 'lucide-react';
@@ -519,8 +520,8 @@ export function MainLayout() {
           className="dockview-theme-light"
           onReady={onReady}
           components={COMPONENTS}
-          tabComponents={tabComponents}
-          watermarkComponent={watermark}
+          tabComponents={tabComponents as Record<string, FunctionComponent<IDockviewPanelHeaderProps>>}
+          watermarkComponent={watermark as FunctionComponent<IWatermarkPanelProps>}
         />
       </div>
 
