@@ -44,7 +44,7 @@ interface WorkspaceState {
     openPanelIds: PanelId[];
 
     // Parameters passed to panels (e.g., recordId for inspector)
-    panelParams: Map<PanelId, unknown>;
+    panelParams: Map<string, unknown>;
 
     // User-overridden visibility (manual show/hide takes precedence over context)
     userOverrides: Map<PanelId, boolean>;
@@ -59,16 +59,28 @@ interface WorkspaceState {
     // Pending panel positions from workspace presets (consumed by MainLayout)
     pendingPanelPositions: Map<PanelId, PanelPosition>;
 
+    // Bound project state (for multi-project panels)
+    boundProjectId: string | null;          // Workspace's active project
+    boundPanelIds: Set<string>;             // Panel IDs bound to workspace project
+    workspaceModified: boolean;             // True when user modifies panels
+
     // Panel actions
     openPanel: (panelId: PanelId, params?: unknown) => void;
     closePanel: (panelId: PanelId) => void;
-    getPanelParams: <T = unknown>(panelId: PanelId) => T | undefined;
+    getPanelParams: <T = unknown>(panelId: string) => T | undefined;
+    setPanelParam: (panelId: string, params: unknown) => void;
     saveLayout: (layout: SerializedDockviewState) => void;
     setUserOverride: (panelId: PanelId, visible: boolean) => void;
     clearUserOverride: (panelId: PanelId) => void;
     resetLayout: () => void;
     setDockviewApi: (api: DockviewApi | null) => void;
     clearPendingPositions: (panelIds?: PanelId[]) => void;
+
+    // Bound project actions
+    setBoundProject: (projectId: string | null) => void;
+    bindPanelToWorkspace: (panelId: string) => void;
+    unbindPanel: (panelId: string) => void;
+    markWorkspaceModified: () => void;
 
     // Workspace preset actions
     applyWorkspace: (workspaceId: string) => void;
@@ -82,12 +94,15 @@ interface WorkspaceState {
 const initialState = {
     layout: null as SerializedDockviewState | null,
     openPanelIds: [...DEFAULT_OPEN_PANELS] as PanelId[],
-    panelParams: new Map<PanelId, unknown>(),
+    panelParams: new Map<string, unknown>(),
     userOverrides: new Map<PanelId, boolean>(),
     dockviewApi: null as DockviewApi | null,
     activeWorkspaceId: null as string | null,
     customWorkspaces: [] as WorkspacePreset[],
     pendingPanelPositions: new Map<PanelId, PanelPosition>(),
+    boundProjectId: null as string | null,
+    boundPanelIds: new Set<string>(),
+    workspaceModified: false,
 };
 
 export const useWorkspaceStore = create<WorkspaceState>()(
@@ -139,8 +154,15 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 set({ pendingPanelPositions: updated });
             },
 
-            getPanelParams: <T = unknown>(panelId: PanelId): T | undefined => {
+            getPanelParams: <T = unknown>(panelId: string): T | undefined => {
                 return get().panelParams.get(panelId) as T | undefined;
+            },
+
+            setPanelParam: (panelId: string, params: unknown) => {
+                const state = get();
+                const newParams = new Map(state.panelParams);
+                newParams.set(panelId, params);
+                set({ panelParams: newParams });
             },
 
 
@@ -152,6 +174,17 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 }
 
                 const state = get();
+
+                // Close via Dockview API first
+                const api = state.dockviewApi;
+                if (api) {
+                    const panel = api.getPanel(panelId);
+                    if (panel) {
+                        panel.api.close();
+                    }
+                }
+
+                // Then update state
                 set({
                     openPanelIds: state.openPanelIds.filter((id) => id !== panelId),
                 });
@@ -186,7 +219,36 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     panelParams: new Map(),
                     userOverrides: new Map(),
                     activeWorkspaceId: null,
+                    boundProjectId: null,
+                    boundPanelIds: new Set(),
+                    workspaceModified: false,
                 });
+            },
+
+            // =========================================================================
+            // BOUND PROJECT ACTIONS
+            // =========================================================================
+
+            setBoundProject: (projectId: string | null) => {
+                set({ boundProjectId: projectId });
+            },
+
+            bindPanelToWorkspace: (panelId: string) => {
+                const state = get();
+                const newBoundPanelIds = new Set(state.boundPanelIds);
+                newBoundPanelIds.add(panelId);
+                set({ boundPanelIds: newBoundPanelIds });
+            },
+
+            unbindPanel: (panelId: string) => {
+                const state = get();
+                const newBoundPanelIds = new Set(state.boundPanelIds);
+                newBoundPanelIds.delete(panelId);
+                set({ boundPanelIds: newBoundPanelIds });
+            },
+
+            markWorkspaceModified: () => {
+                set({ workspaceModified: true });
             },
 
             // =========================================================================
@@ -203,64 +265,98 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     return;
                 }
 
-                const presetPanelIds = preset.panels.map(p => p.panelId);
-
-                // Close panels not in preset via Dockview API
-                const panelsToClose = state.openPanelIds.filter(
-                    id => !isPermanentPanel(id) && !presetPanelIds.includes(id)
-                );
                 const api = state.dockviewApi;
+
+                // Close ALL non-permanent panels (we'll rebuild with unique IDs)
                 if (api) {
-                    for (const panelId of panelsToClose) {
-                        const panel = api.getPanel(panelId);
-                        if (panel) {
-                            panel.api.close();
-                        }
-                    }
-                }
-
-                // Build new panel list: permanent panels + preset panels
-                const permanentPanels = state.openPanelIds.filter(id => isPermanentPanel(id));
-                const newOpenPanelIds = [...new Set([...permanentPanels, ...presetPanelIds])];
-
-                // Build position hints for panels (non-center positions)
-                const positionMap = new Map<PanelId, PanelPosition>();
-                for (const panel of preset.panels) {
-                    if (panel.position && panel.position !== 'center') {
-                        positionMap.set(panel.panelId, panel.position);
-                    }
-                }
-
-                // Apply the panel configuration with position hints
-                set({
-                    openPanelIds: newOpenPanelIds,
-                    activeWorkspaceId: workspaceId,
-                    pendingPanelPositions: positionMap,
-                });
-
-                // Set view modes for panels that specify them (batched to avoid race conditions)
-                const newParams = new Map(get().panelParams);
-                for (const panel of preset.panels) {
-                    if (panel.viewMode) {
-                        // For center-workspace, coordinate with uiStore's projectViewMode
-                        if (panel.panelId === 'center-workspace') {
-                            const validModes = ['workflow', 'log', 'columns', 'list', 'cards'];
-                            if (validModes.includes(panel.viewMode)) {
-                                useUIStore.getState().setProjectViewMode(panel.viewMode as any);
+                    for (const panelId of state.openPanelIds) {
+                        if (!isPermanentPanel(panelId)) {
+                            const panel = api.getPanel(panelId);
+                            if (panel) {
+                                panel.api.close();
                             }
                         }
-                        // Other panels can store view mode in panelParams
-                        else {
-                            const existing = newParams.get(panel.panelId) as Record<string, unknown> | undefined;
-                            newParams.set(panel.panelId, { ...existing, viewMode: panel.viewMode });
+                    }
+                    // Also close any dynamically created panels (project-panel-*)
+                    api.panels.forEach((panel) => {
+                        const panelId = panel.id;
+                        if (panelId.startsWith('project-panel-') || (!isPermanentPanel(panelId as PanelId) && !state.openPanelIds.includes(panelId as PanelId))) {
+                            panel.api.close();
+                        }
+                    });
+                }
+
+                // Build new panel list with unique IDs for project-panel
+                const permanentPanels = state.openPanelIds.filter(id => isPermanentPanel(id));
+                const newOpenPanelIds: string[] = [...permanentPanels];
+                const newBoundPanelIds = new Set<string>();
+                const positionMap = new Map<string, PanelPosition>();
+                const newParams = new Map<string, unknown>(state.panelParams);
+                let projectPanelCounter = 0;
+
+                for (const panelConfig of preset.panels) {
+                    const baseId = panelConfig.panelId;
+
+                    // Generate unique ID for project-panel, keep original ID for others
+                    let uniqueId: string;
+                    if (baseId === 'project-panel') {
+                        uniqueId = `project-panel-${Date.now()}-${projectPanelCounter++}`;
+                    } else {
+                        uniqueId = baseId;
+                    }
+
+                    // Track bound panels
+                    if (panelConfig.bound) {
+                        newBoundPanelIds.add(uniqueId);
+                    }
+
+                    // Add to open panels list
+                    if (!newOpenPanelIds.includes(uniqueId)) {
+                        newOpenPanelIds.push(uniqueId as PanelId);
+                    }
+
+                    // Set position hint
+                    if (panelConfig.position && panelConfig.position !== 'center') {
+                        positionMap.set(uniqueId as PanelId, panelConfig.position);
+                    }
+
+                    // Set content type for center-workspace
+                    if (baseId === 'center-workspace' && panelConfig.contentType) {
+                        useUIStore.getState().setCenterContentType(panelConfig.contentType);
+                    }
+
+                    // Set view mode
+                    if (panelConfig.viewMode) {
+                        if (baseId === 'center-workspace') {
+                            const validModes = ['workflow', 'log', 'columns', 'list', 'cards'];
+                            if (validModes.includes(panelConfig.viewMode)) {
+                                useUIStore.getState().setProjectViewMode(panelConfig.viewMode as any);
+                            }
+                        } else {
+                            const existing = newParams.get(uniqueId) as Record<string, unknown> | undefined;
+                            newParams.set(uniqueId, { ...existing, viewMode: panelConfig.viewMode });
                         }
                     }
                 }
-                set({ panelParams: newParams });
+
+                // Apply the panel configuration
+                set({
+                    openPanelIds: newOpenPanelIds as PanelId[],
+                    activeWorkspaceId: workspaceId,
+                    pendingPanelPositions: positionMap as Map<PanelId, PanelPosition>,
+                    boundPanelIds: newBoundPanelIds,
+                    workspaceModified: false,
+                    panelParams: newParams,
+                });
 
                 // Focus the first panel in the preset using Dockview API
                 if (api && preset.panels.length > 0) {
-                    const firstPanel = api.getPanel(preset.panels[0].panelId);
+                    // For project-panel, we need to find by generated ID
+                    const firstPanelConfig = preset.panels[0];
+                    const firstPanelId = firstPanelConfig.panelId === 'project-panel'
+                        ? Array.from(newBoundPanelIds)[0] || firstPanelConfig.panelId
+                        : firstPanelConfig.panelId;
+                    const firstPanel = api.getPanel(firstPanelId);
                     if (firstPanel) {
                         firstPanel.api.setActive();
                     }
@@ -352,13 +448,17 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 layoutVersion: LAYOUT_VERSION,
                 layout: state.layout,
                 openPanelIds: state.openPanelIds,
-                // Maps need special serialization
+                // Maps and Sets need special serialization
                 userOverrides: Array.from(state.userOverrides.entries()),
                 panelParams: Array.from(state.panelParams.entries()),
                 // Workspace presets
                 activeWorkspaceId: state.activeWorkspaceId,
                 // Custom workspaces: omit icon (React component functions cannot be JSON serialized), reattach on load
                 customWorkspaces: state.customWorkspaces.map(({ icon: _, ...w }) => w),
+                // Bound project state
+                boundProjectId: state.boundProjectId,
+                boundPanelIds: Array.from(state.boundPanelIds),
+                workspaceModified: state.workspaceModified,
             }),
             merge: (persisted: unknown, current: WorkspaceState) => {
                 const p = persisted as {
@@ -366,9 +466,12 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     layout?: SerializedDockviewState | null;
                     openPanelIds?: PanelId[];
                     userOverrides?: [PanelId, boolean][];
-                    panelParams?: [PanelId, unknown][];
+                    panelParams?: [string, unknown][];
                     activeWorkspaceId?: string | null;
                     customWorkspaces?: PersistedWorkspacePreset[];
+                    boundProjectId?: string | null;
+                    boundPanelIds?: string[];
+                    workspaceModified?: boolean;
                 } | undefined;
 
                 // Handle version mismatch: preserve custom workspaces but reset layout
@@ -403,6 +506,9 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     panelParams: new Map(p?.panelParams ?? []),
                     activeWorkspaceId: p?.activeWorkspaceId ?? current.activeWorkspaceId,
                     customWorkspaces,
+                    boundProjectId: p?.boundProjectId ?? current.boundProjectId,
+                    boundPanelIds: new Set(p?.boundPanelIds ?? []),
+                    workspaceModified: p?.workspaceModified ?? current.workspaceModified,
                 };
             },
         }
@@ -416,3 +522,5 @@ export const useActiveWorkspaceId = () => useWorkspaceStore((s) => s.activeWorks
 export const useCustomWorkspaces = () => useWorkspaceStore((s) => s.customWorkspaces);
 export const useAllWorkspaces = () => useWorkspaceStore((s) => s.getAllWorkspaces());
 export const usePendingPanelPositions = () => useWorkspaceStore((s) => s.pendingPanelPositions);
+export const useBoundProjectId = () => useWorkspaceStore((s) => s.boundProjectId);
+export const useBoundPanelIds = () => useWorkspaceStore((s) => s.boundPanelIds);

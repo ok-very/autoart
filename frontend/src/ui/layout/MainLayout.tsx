@@ -41,6 +41,8 @@ import {
   isPermanentPanel,
   type PanelId,
 } from '../../workspace/panelRegistry';
+import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
+import { getWorkspaceColorClasses } from '../../workspace/workspaceColors';
 import {
   useWorkspaceTheme,
   useThemeBehavior,
@@ -50,7 +52,7 @@ import {
 } from '../../workspace/themes';
 
 // Import all panel components
-import { CentralAreaAdapter } from '../workspace/CentralAreaAdapter';
+import { CenterContentRouter } from '../workspace/CenterContentRouter';
 import { SelectionInspector } from '../composites/SelectionInspector';
 import { ClassificationPanel } from '../../workflows/import/panels/ClassificationPanel';
 import { useImportContextOptional } from '../../workflows/import/context/ImportContextProvider';
@@ -64,6 +66,7 @@ import { ComposerPanel } from '../panels/ComposerPanel';
 import { MailPanel } from '../panels/MailPanel';
 import { IntakePanel } from '../panels/IntakePanel';
 import { ArtCollectorPanel } from '../panels/ArtCollectorPanel';
+import { ProjectPanel } from '../panels/ProjectPanel';
 
 // ============================================================================
 // PANEL SPAWN HANDLE
@@ -153,7 +156,7 @@ function SpawnHandle({ api }: SpawnHandleProps) {
 function CenterWorkspacePanel(props: IDockviewPanelProps) {
   return (
     <div className="h-full overflow-hidden bg-white relative">
-      <CentralAreaAdapter />
+      <CenterContentRouter />
       <SpawnHandle api={props.api} panelId="center-workspace" />
     </div>
   );
@@ -243,6 +246,7 @@ const COMPONENTS: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   'mail-panel': MailPanel,
   'intake-workbench': IntakePanel,
   'artcollector-workbench': ArtCollectorPanel,
+  'project-panel': ProjectPanel,
 };
 
 // ============================================================================
@@ -301,21 +305,55 @@ function WatermarkComponent() {
 
 function IconTab(props: IDockviewPanelHeaderProps) {
   const { api } = props;
-  const def = PANEL_DEFINITIONS[api.id as PanelId];
+  const closePanel = useWorkspaceStore((s) => s.closePanel);
+
+  // Get component type from dynamic panel ID (e.g., "project-panel-123" -> "project-panel")
+  const getComponentType = (panelId: string): PanelId => {
+    if (panelId.startsWith('project-panel-')) {
+      return 'project-panel';
+    }
+    return panelId as PanelId;
+  };
+
+  const componentType = getComponentType(api.id);
+  const def = PANEL_DEFINITIONS[componentType];
   const Icon = def?.icon;
+
+  // Check if this panel is bound to workspace
+  const isBound = useWorkspaceStore((s) => s.boundPanelIds.has(api.id));
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+
+  // Get workspace color for bound styling
+  const workspaceColor = activeWorkspaceId
+    ? BUILT_IN_WORKSPACES.find((w) => w.id === activeWorkspaceId)?.color
+    : null;
+
+  // Get color classes using lookup (ensures Tailwind can detect classes)
+  const colorClasses = getWorkspaceColorClasses(isBound ? workspaceColor : null);
 
   const handleClose = (e: React.MouseEvent) => {
     e.stopPropagation();
-    api.close();
+    // Use store's closePanel to keep Dockview and state in sync
+    closePanel(api.id as PanelId);
   };
 
+  // Build color classes for bound panels
+  const boundColorClasses = isBound ? `border-l-2 ${colorClasses.borderL500}` : '';
+
   return (
-    <div className="flex items-center gap-2 text-current overflow-hidden w-full group">
+    <div className={`flex items-center gap-2 text-current overflow-hidden w-full group ${boundColorClasses}`}>
       <div className="flex items-center gap-2 flex-1 overflow-hidden min-w-0">
         {Icon && <Icon size={14} strokeWidth={2} className="flex-shrink-0" />}
         <span className="truncate">{def?.title || api.title}</span>
+        {isBound && (
+          <span
+            className={`text-[9px] px-1.5 py-0.5 rounded-full ${colorClasses.bg100} ${colorClasses.text600}`}
+          >
+            Bound
+          </span>
+        )}
       </div>
-      {!def?.permanent && (
+      {!isPermanentPanel(componentType) && (
         <div
           onClick={handleClose}
           className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-slate-200 rounded cursor-pointer transition-opacity"
@@ -420,17 +458,28 @@ export function MainLayout() {
 
   // Sync panels when openPanelIds changes
   // Workspace presets provide position hints; single panel opens default to tabs
+  // Handles dynamic panel IDs (e.g., project-panel-1234567890-0)
   useEffect(() => {
     const api = apiRef.current;
     if (!api) return;
 
-    const consumedPositions: PanelId[] = [];
+    const consumedPositions: string[] = [];
+
+    // Helper to extract component type from dynamic panel ID
+    const getComponentType = (panelId: string): PanelId => {
+      // For dynamic IDs like "project-panel-1234567890-0", extract "project-panel"
+      if (panelId.startsWith('project-panel-')) {
+        return 'project-panel';
+      }
+      return panelId as PanelId;
+    };
 
     openPanelIds.forEach((id) => {
       if (!api.getPanel(id)) {
-        const def = PANEL_DEFINITIONS[id];
+        const componentType = getComponentType(id);
+        const def = PANEL_DEFINITIONS[componentType];
         if (!def) {
-          console.warn('[MainLayout] No panel definition found for:', id);
+          console.warn('[MainLayout] No panel definition found for:', id, 'componentType:', componentType);
           return;
         }
 
@@ -440,36 +489,38 @@ export function MainLayout() {
           return;
         }
 
-        // Check for position hint from workspace preset
+        // Check for position hint from workspace preset, fallback to panel's defaultPlacement
         const rawPendingPosition = pendingPanelPositions.get(id as PanelId);
-        // Normalize 'left' to 'right' - Dockview does not support explicit left splits
-        const pendingPosition =
-          rawPendingPosition === 'left' ? 'right' : rawPendingPosition;
+        const defaultArea = def.defaultPlacement?.area;
+        const rawPosition = rawPendingPosition ?? defaultArea;
 
-        if (rawPendingPosition === 'left') {
+        // Normalize 'left' to 'right' - Dockview does not support explicit left splits
+        const effectivePosition = rawPosition === 'left' ? 'right' : rawPosition;
+
+        if (rawPosition === 'left') {
           console.warn(
             '[MainLayout] PanelPosition "left" is not supported by Dockview; using "right" instead for panel:',
             id
           );
         }
 
-        // Track consumed positions for cleanup
-        if (pendingPosition) {
-          consumedPositions.push(id as PanelId);
+        // Track consumed positions for cleanup (only for preset-provided positions)
+        if (rawPendingPosition) {
+          consumedPositions.push(id);
         }
 
-        // Map position hint to dockview direction
+        // Map position to dockview direction
         // 'center' and undefined both default to 'within' (tabs)
         let direction: 'within' | 'right' | 'below' = 'within';
-        if (pendingPosition === 'right') {
+        if (effectivePosition === 'right') {
           direction = 'right';
-        } else if (pendingPosition === 'bottom') {
+        } else if (effectivePosition === 'bottom') {
           direction = 'below';
         }
 
         api.addPanel({
           id,
-          component: id,
+          component: componentType, // Use base component type, not dynamic ID
           title: def.title,
           tabComponent: 'icon-tab',
           position: {
@@ -482,12 +533,15 @@ export function MainLayout() {
 
     // Clear only consumed position hints, preserving hints for panels not yet opened
     if (consumedPositions.length > 0) {
-      clearPendingPositions(consumedPositions);
+      clearPendingPositions(consumedPositions as PanelId[]);
     }
 
+    // Close panels not in openPanelIds (handle both static and dynamic IDs)
     api.panels.forEach((panel) => {
-      const panelId = panel.id as PanelId;
-      if (!openPanelIds.includes(panelId) && !isPermanentPanel(panelId)) {
+      const panelId = panel.id;
+      const isInOpenList = openPanelIds.includes(panelId as PanelId);
+      const componentType = getComponentType(panelId);
+      if (!isInOpenList && !isPermanentPanel(componentType)) {
         panel.api.close();
       }
     });

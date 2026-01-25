@@ -16,6 +16,7 @@ import {
     Truck,
     Folder,
     Image,
+    Monitor,
 } from 'lucide-react';
 import type { WorkspacePreset } from '../types/workspace';
 
@@ -37,7 +38,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         scope: 'global',
         isBuiltIn: true,
         panels: [
-            { panelId: 'artcollector-workbench', position: 'center' },
+            { panelId: 'center-workspace', contentType: 'artcollector', position: 'center' },
             { panelId: 'selection-inspector', position: 'right' },
         ],
     },
@@ -49,7 +50,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         scope: 'global',
         isBuiltIn: true,
         panels: [
-            { panelId: 'intake-workbench', position: 'center' },
+            { panelId: 'center-workspace', contentType: 'intake', position: 'center' },
         ],
     },
     {
@@ -60,7 +61,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         scope: 'project',
         isBuiltIn: true,
         panels: [
-            { panelId: 'center-workspace', viewMode: 'workflow', position: 'center' },
+            { panelId: 'center-workspace', contentType: 'projects', viewMode: 'workflow', position: 'center' },
             { panelId: 'selection-inspector', position: 'right' },
         ],
     },
@@ -72,7 +73,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         scope: 'project',
         isBuiltIn: true,
         panels: [
-            { panelId: 'center-workspace', viewMode: 'workflow', position: 'center' },
+            { panelId: 'center-workspace', contentType: 'projects', viewMode: 'workflow', position: 'center' },
             { panelId: 'selection-inspector', position: 'right' },
             { panelId: 'composer-workbench', position: 'bottom' },
         ],
@@ -85,7 +86,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         scope: 'subprocess',
         isBuiltIn: true,
         panels: [
-            { panelId: 'center-workspace', viewMode: 'log', position: 'center' },
+            { panelId: 'center-workspace', contentType: 'projects', viewMode: 'log', position: 'center' },
             { panelId: 'selection-inspector', position: 'right' },
         ],
     },
@@ -97,7 +98,21 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         scope: 'project',
         isBuiltIn: true,
         panels: [
-            { panelId: 'export-workbench', position: 'center' },
+            { panelId: 'center-workspace', contentType: 'export', position: 'center' },
+        ],
+    },
+    {
+        id: 'desk',
+        label: 'Desk',
+        icon: Monitor,
+        color: 'amber',
+        scope: 'global',
+        isBuiltIn: true,
+        panels: [
+            { panelId: 'project-panel', position: 'center', bound: true },
+            { panelId: 'project-panel', position: 'center', bound: true },
+            { panelId: 'project-panel', position: 'center', bound: true },
+            { panelId: 'mail-panel', position: 'right' },
         ],
     },
 ];

@@ -433,6 +433,41 @@ export function useRecordFieldValue() {
 }
 
 // ============================================================================
+// SCHEDULING OPERATIONS (Calendar/Timeline)
+// ============================================================================
+
+interface RescheduleOptions {
+  actionId: string;
+  startDate?: string;
+  dueDate?: string;
+  durationDays?: number;
+  scheduleMode?: 'explicit' | 'anchor_start' | 'anchor_due';
+}
+
+/**
+ * Reschedule an action (emits FIELD_VALUE_RECORDED events for date fields)
+ * Used by CalendarView and GanttView for drag-and-drop operations.
+ */
+export function useRescheduleAction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ actionId, startDate, dueDate, durationDays, scheduleMode }: RescheduleOptions) =>
+      api.post<{ events: Event[] }>(`/workflow/actions/${actionId}/reschedule`, {
+        startDate,
+        dueDate,
+        durationDays,
+        scheduleMode,
+      }),
+    onSuccess: (_, variables) => {
+      invalidateWorkflowQueries(queryClient, variables.actionId);
+      // Also invalidate timeline-related queries
+      queryClient.invalidateQueries({ queryKey: ['workflow-surface'] });
+      queryClient.invalidateQueries({ queryKey: ['timeline'] });
+    },
+  });
+}
+
+// ============================================================================
 // HELPERS
 // ============================================================================
 

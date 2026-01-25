@@ -7,7 +7,7 @@
 
 import {
   ChevronDown, FolderOpen, Database,
-  TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings, ClipboardList, LayoutGrid
+  TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings, ClipboardList, LayoutGrid, Check
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
@@ -26,17 +26,45 @@ import { useWorkspaceStore, useOpenPanelIds } from '../../stores/workspaceStore'
 import { Button, IconButton, Inline } from '@autoart/ui';
 import { Menu, SegmentedControl } from '@autoart/ui';
 import { WorkspaceDropdown } from './WorkspaceDropdown';
+import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
 
 
 export function Header() {
   const navigate = useNavigate();
-  const { data: _projects } = useProjects();
+  const { data: projects } = useProjects();
   const { getNode: _getNode } = useHierarchyStore();
   const { fieldsViewMode, setFieldsViewMode, openDrawer } = useUIStore();
   const collectionMode = useCollectionModeOptional();
 
-  const { openPanel } = useWorkspaceStore();
+  const { openPanel, setBoundProject } = useWorkspaceStore();
   const openPanelIds = useOpenPanelIds();
+  const boundProjectId = useWorkspaceStore((s) => s.boundProjectId);
+  const boundPanelIds = useWorkspaceStore((s) => s.boundPanelIds);
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+
+  // Get workspace color for bound styling
+  const rawWorkspaceColor = activeWorkspaceId
+    ? BUILT_IN_WORKSPACES.find((w) => w.id === activeWorkspaceId)?.color
+    : null;
+
+  // Map workspace colors to valid Button color props
+  const buttonColorMap: Record<string, 'blue' | 'gray' | 'violet' | 'yellow'> = {
+    blue: 'blue',
+    cyan: 'blue',
+    green: 'blue',
+    purple: 'violet',
+    pink: 'violet',
+    orange: 'yellow',
+    amber: 'yellow',
+    slate: 'gray',
+  };
+  const workspaceColor = rawWorkspaceColor ? buttonColorMap[rawWorkspaceColor] ?? 'gray' : null;
+
+  // Check if there are any bound panels
+  const hasBoundPanels = boundPanelIds.size > 0;
+
+  // Get current bound project
+  const currentBoundProject = projects?.find((p) => p.id === boundProjectId);
 
   // Active state derived from open panels - memoized to prevent re-computation
   const panelStates = useMemo(() => {
@@ -116,6 +144,35 @@ export function Header() {
 
           {/* Workspace Dropdown - primary navigation for workflow stages */}
           <WorkspaceDropdown />
+
+          {/* Workspace Project Selector - only shown when there are bound panels */}
+          {hasBoundPanels && (
+            <Menu>
+              <Menu.Target>
+                <Button
+                  variant="light"
+                  size="sm"
+                  color={workspaceColor || 'gray'}
+                  leftSection={<FolderOpen size={14} />}
+                  rightSection={<ChevronDown size={14} />}
+                >
+                  {currentBoundProject?.title || 'Select Project'}
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Label>Workspace Project</Menu.Label>
+                {projects?.map((p) => (
+                  <Menu.Item
+                    key={p.id}
+                    onClick={() => setBoundProject(p.id)}
+                    leftSection={p.id === boundProjectId ? <Check size={14} /> : null}
+                  >
+                    {p.title}
+                  </Menu.Item>
+                ))}
+              </Menu.Dropdown>
+            </Menu>
+          )}
 
           {/* Navigation Links */}
           <Inline gap="xs" className="ml-2">

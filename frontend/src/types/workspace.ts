@@ -7,6 +7,7 @@
 
 import type { LucideIcon } from 'lucide-react';
 import type { PanelId } from '../workspace/panelRegistry';
+import type { CenterContentType } from '../stores/uiStore';
 
 /**
  * Scope determines when a workspace is available:
@@ -27,6 +28,10 @@ export interface WorkspacePanelConfig {
     viewMode?: string;
     /** Default position hint (actual position determined by Dockview) */
     position?: 'center' | 'left' | 'right' | 'bottom';
+    /** If true, panel follows workspace's bound project */
+    bound?: boolean;
+    /** For center-workspace, specify what content type to display */
+    contentType?: CenterContentType;
 }
 
 /**

@@ -62,6 +62,11 @@ class CargoAdapter(SiteAdapter):
 
         Cargo stores navigation data in script tags with type="text/json".
         """
+        # Offload CPU-bound BeautifulSoup/JSON parsing to thread pool
+        return await asyncio.to_thread(self._extract_pages_sync, soup, base_url)
+
+    def _extract_pages_sync(self, soup: "BeautifulSoup", base_url: str) -> list[str]:
+        """Synchronous page extraction (CPU-bound)."""
         urls: list[str] = []
 
         # Look for JSON data in script tags
@@ -204,8 +209,8 @@ class CargoAdapter(SiteAdapter):
                     value = data[key]
                     if isinstance(value, str) and value:
                         full_url = urljoin(base_url, value)
-                        # Allow same-domain or Cargo host URLs
-                        if self._is_same_domain(full_url, base_url) or self._is_allowed_image_domain(full_url, base_url):
+                        # Only allow same-domain URLs for pages (not CDN/image URLs)
+                        if self._is_same_domain(full_url, base_url) and not self._is_supported_image(full_url):
                             urls.append(full_url)
 
             # Look for projects/pages arrays
@@ -295,10 +300,11 @@ class CargoAdapter(SiteAdapter):
             return False
 
     def _is_same_domain(self, url: str, base_url: str) -> bool:
-        """Check if URL is on the same domain as base."""
+        """Check if URL is on the same domain as base (ignoring ports, allowing subdomains)."""
         try:
-            url_domain = urlparse(url).netloc.lower()
-            base_domain = urlparse(base_url).netloc.lower()
-            return url_domain == base_domain
+            url_host = urlparse(url).netloc.lower().split(":")[0]
+            base_host = urlparse(base_url).netloc.lower().split(":")[0]
+            # Exact match or subdomain match
+            return url_host == base_host or url_host.endswith("." + base_host)
         except Exception:
             return False

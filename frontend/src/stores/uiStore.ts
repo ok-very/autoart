@@ -12,6 +12,18 @@ import {
   FIELDS_VIEW_MODE_LABELS,
 } from '@autoart/shared';
 
+/**
+ * Content type for center-workspace panel.
+ * Determines what content is displayed in the permanent center anchor.
+ */
+export type CenterContentType =
+  | 'projects'      // Project views (workflow, log, columns, list, cards)
+  | 'artcollector'  // Art collection workflow
+  | 'intake'        // Data intake workflow
+  | 'export'        // Export workflow
+  | 'mail'          // Communication
+  | 'calendar';     // Calendar view
+
 import { Selection, UIPanels, InspectorMode, DrawerConfig, InspectorTabId, normalizeInspectorTabId } from '../types/ui';
 import { deriveUIPanels } from '../utils/uiComposition';
 
@@ -41,6 +53,10 @@ interface UIState {
   // Core State
   selection: Selection;
   activeProjectId: string | null;
+
+  // Center workspace content type
+  centerContentType: CenterContentType;
+  setCenterContentType: (type: CenterContentType) => void;
 
   // Namespaced view modes (each panel has its own)
   projectViewMode: ProjectViewMode;
@@ -131,6 +147,10 @@ export const useUIStore = create<UIState>()(
     (set, get) => ({
       selection: null,
       activeProjectId: null,
+
+      // Center workspace content type (default: projects for backward compat)
+      centerContentType: 'projects' as CenterContentType,
+      setCenterContentType: (type) => set({ centerContentType: type }),
 
       // Namespaced view modes
       projectViewMode: 'workflow' as ProjectViewMode,
@@ -242,6 +262,8 @@ export const useUIStore = create<UIState>()(
         sidebarCollapsed: state.sidebarCollapsed,
         inspectorCollapsed: state.inspectorCollapsed,
         drawerCollapsed: state.drawerCollapsed,
+        // Center content type
+        centerContentType: state.centerContentType,
         // Namespaced view modes
         projectViewMode: state.projectViewMode,
         fieldsViewMode: state.fieldsViewMode,
@@ -283,6 +305,9 @@ export const useUIStore = create<UIState>()(
           state.recordsViewMode = state.recordsViewMode || 'list';
           delete state.viewMode;
         }
+
+        // Ensure centerContentType has a default value
+        state.centerContentType = state.centerContentType || 'projects';
 
         return state;
       },

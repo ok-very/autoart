@@ -69,4 +69,11 @@ class ConfigStore:
             "excludes": ["pyc", "__pycache__", ".git", ".idea", "node_modules"],
             "mail_enabled": False,
             "mail_poll_interval": 30,
+            "crawl_depth": 20,
+            "min_width": 100,
+            "max_width": 5000,
+            "min_height": 100,
+            "max_height": 5000,
+            "min_filesize_kb": 100,
+            "max_filesize_kb": 12000,
         }

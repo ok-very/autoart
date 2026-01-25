@@ -275,11 +275,23 @@ export async function moveWorkflowRow(
     throw new Error(`Action not found: ${input.actionId}`);
   }
 
-  // Validate afterActionId if provided
-  if (input.afterActionId) {
+  // Validate afterActionId if provided (null means "first position", any other value must be validated)
+  if (input.afterActionId !== null) {
+    // Reject empty strings and other invalid values
+    if (typeof input.afterActionId !== 'string' || input.afterActionId.trim() === '') {
+      throw new Error(`Invalid afterActionId: must be a valid UUID or null`);
+    }
     const afterAction = await actionsService.getActionById(input.afterActionId);
     if (!afterAction) {
       throw new Error(`After action not found: ${input.afterActionId}`);
+    }
+    // Ensure afterAction belongs to the same context
+    if (afterAction.context_id !== action.context_id) {
+      throw new Error(
+        `Cannot position after action from different context: ` +
+        `${input.afterActionId} (context: ${afterAction.context_id}) vs ` +
+        `${input.actionId} (context: ${action.context_id})`
+      );
     }
   }
 
@@ -295,4 +307,71 @@ export async function moveWorkflowRow(
     },
     actorId: input.actorId,
   });
+}
+
+// ============================================================================
+// SCHEDULING EVENTS (Calendar/Timeline)
+// ============================================================================
+
+export interface RescheduleInput {
+  actionId: string;
+  actorId?: string;
+  startDate?: string;
+  dueDate?: string;
+  durationDays?: number;
+  scheduleMode?: 'explicit' | 'anchor_start' | 'anchor_due';
+  payload?: Record<string, unknown>;
+}
+
+/**
+ * Reschedule an action by emitting FIELD_VALUE_RECORDED events for date fields.
+ * This is a convenience function for calendar/timeline DnD operations.
+ * Returns all emitted events.
+ */
+export async function rescheduleAction(input: RescheduleInput): Promise<Event[]> {
+  const action = await actionsService.getActionById(input.actionId);
+  if (!action) {
+    throw new Error(`Action not found: ${input.actionId}`);
+  }
+
+  const events: Event[] = [];
+  const baseInput = {
+    actionId: input.actionId,
+    actorId: input.actorId,
+    payload: input.payload,
+  };
+
+  if (input.startDate !== undefined) {
+    events.push(await recordFieldValue({
+      ...baseInput,
+      fieldKey: 'startDate',
+      value: input.startDate,
+    }));
+  }
+
+  if (input.dueDate !== undefined) {
+    events.push(await recordFieldValue({
+      ...baseInput,
+      fieldKey: 'dueDate',
+      value: input.dueDate,
+    }));
+  }
+
+  if (input.durationDays !== undefined) {
+    events.push(await recordFieldValue({
+      ...baseInput,
+      fieldKey: 'durationDays',
+      value: input.durationDays,
+    }));
+  }
+
+  if (input.scheduleMode !== undefined) {
+    events.push(await recordFieldValue({
+      ...baseInput,
+      fieldKey: 'scheduleMode',
+      value: input.scheduleMode,
+    }));
+  }
+
+  return events;
 }

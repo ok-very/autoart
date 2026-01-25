@@ -2,6 +2,7 @@
 export { useClickOutside } from './useClickOutside';
 export { useDebounce } from './useDebounce';
 export { useInteractionHandlers } from './useInteractionHandlers';
+export { useDragHotZones, type HotZoneConfig, type UseDragHotZonesOptions } from './useDragHotZones';
 
 // Table hooks
 export { useTableSort, type SortConfig, type SortDirection } from './useTableSort';

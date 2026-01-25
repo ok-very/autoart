@@ -15,6 +15,7 @@ import {
     Layers,
     Search,
     Layout,
+    LayoutGrid,
     Database,
     TableProperties,
     Zap,
@@ -39,7 +40,8 @@ export type CorePanelId = 'center-workspace';
 export type ToolPanelId = 'selection-inspector' | 'classification' | 'search-results' | 'mail-panel';
 export type RegistryPanelId = 'records-list' | 'fields-list' | 'actions-list' | 'events-list';
 export type WorkbenchPanelId = 'import-workbench' | 'export-workbench' | 'composer-workbench' | 'intake-workbench' | 'artcollector-workbench';
-export type PanelId = CorePanelId | ToolPanelId | RegistryPanelId | WorkbenchPanelId;
+export type ProjectPanelId = 'project-panel';
+export type PanelId = CorePanelId | ToolPanelId | RegistryPanelId | WorkbenchPanelId | ProjectPanelId;
 
 // Permanent panels cannot be closed by user
 export const PERMANENT_PANELS: readonly PanelId[] = ['center-workspace'] as const;
@@ -111,10 +113,10 @@ export interface PanelDefinition {
 // ============================================================================
 
 export const PANEL_DEFINITIONS: Record<PanelId, PanelDefinition> = {
-    // Core - always open
+    // Core - always open (agnostic container for any content type)
     'center-workspace': {
         id: 'center-workspace',
-        title: 'Projects',
+        title: 'Workspace',
         icon: Layout,
         permanent: true,
         defaultPlacement: { area: 'center', size: 70 },
@@ -247,6 +249,17 @@ export const PANEL_DEFINITIONS: Record<PanelId, PanelDefinition> = {
         permanent: false,
         defaultPlacement: { area: 'center' },
         shouldShow: () => false, // On-demand
+        canActOn: () => true,
+    },
+
+    // Project Panel - Bound to workspace project
+    'project-panel': {
+        id: 'project-panel',
+        title: 'Project',
+        icon: LayoutGrid,
+        permanent: false,
+        defaultPlacement: { area: 'center' },
+        shouldShow: () => false, // On-demand via workspace presets
         canActOn: () => true,
     },
 };
