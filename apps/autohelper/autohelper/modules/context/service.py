@@ -89,7 +89,7 @@ class ContextService:
 
         # AutoArt client (local server, may not be running)
         # Use session_id from ConfigStore if available, otherwise fall back to settings
-        autoart_url = getattr(self.settings, "autoart_api_url", "http://localhost:3000")
+        autoart_url = getattr(self.settings, "autoart_api_url", "http://localhost:3001")
         autoart_key = getattr(self.settings, "autoart_api_key", None)
         autoart_session_id = config.get("autoart_session_id") or getattr(
             self.settings, "autoart_session_id", ""

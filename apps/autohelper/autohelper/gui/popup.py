@@ -358,7 +358,7 @@ def get_window_class():
             footer_layout = QHBoxLayout(footer_frame)
             footer_layout.setContentsMargins(10, 8, 10, 8)
 
-            self.btn_save = QPushButton("Save & Restart")
+            self.btn_save = QPushButton("Save")
             self.btn_save.setEnabled(False)  # Enable on change
             self.btn_save.clicked.connect(self.save_config)
 
@@ -476,8 +476,8 @@ def get_window_class():
             layout.addStretch()
 
             # Connect change signals to enable save
-            self.chk_mail_enabled.stateChanged.connect(lambda: self.btn_save.setEnabled(True))
-            self.spin_mail_interval.valueChanged.connect(lambda: self.btn_save.setEnabled(True))
+            self.chk_mail_enabled.stateChanged.connect(self.mark_dirty)
+            self.spin_mail_interval.valueChanged.connect(self.mark_dirty)
 
         def setup_link_tab(self):
             layout = QVBoxLayout(self.tab_link)
@@ -548,7 +548,7 @@ def get_window_class():
                     self.lbl_context_status.setText("✓ Connected to AutoArt")
                     self.lbl_context_status.setStyleSheet("color: #4caf50;")
                     self.txt_pairing_code.clear()
-                    self.btn_save.setEnabled(True)  # Enable save to persist session
+                    self.mark_dirty()  # Enable save to persist session
                 else:
                     self.lbl_context_status.setText("✗ Invalid or expired code")
                     self.lbl_context_status.setStyleSheet("color: #d32f2f;")
@@ -676,12 +676,17 @@ def get_window_class():
                 item.setFlags(item.flags() | Qt.ItemIsUserCheckable)
                 item.setCheckState(Qt.Checked)
                 self.list_roots.addItem(item)
-                self.btn_save.setEnabled(True)
+                self.mark_dirty()
 
         def remove_unchecked_roots(self):
             for i in range(self.list_roots.count() - 1, -1, -1):
                 if self.list_roots.item(i).checkState() == Qt.Unchecked:
                     self.list_roots.takeItem(i)
+            self.mark_dirty()
+
+        def mark_dirty(self):
+            """Mark config as having unsaved changes."""
+            self.btn_save.setText("Save")
             self.btn_save.setEnabled(True)
 
         def save_config(self):
@@ -702,9 +707,10 @@ def get_window_class():
             }
             try:
                 self.config_store.save(new_config)
+                self.current_config = new_config  # Update local state
 
                 # Feedback
-                self.btn_save.setText("Saved (Restart Required)")
+                self.btn_save.setText("Saved ✓")
                 self.btn_save.setEnabled(False)
 
                 # We can't easily auto-restart the uvicorn process from here if running as threaded
@@ -891,6 +897,10 @@ def get_tray_class():
 
             self.menu.addSeparator()
 
+            action_restart = QAction("Restart", self)
+            action_restart.triggered.connect(self.restart_app)
+            self.menu.addAction(action_restart)
+
             action_quit = QAction("Quit", self)
             action_quit.triggered.connect(self.quit_app)
             self.menu.addAction(action_quit)
@@ -923,6 +933,14 @@ def get_tray_class():
             else:
                 # Fallback to cursor
                 self.window.move_to_tray_area(None)
+
+        def restart_app(self):
+            """Restart the application by spawning a new process and quitting."""
+            import subprocess
+            self.hide()
+            # Start a new instance with the same arguments
+            subprocess.Popen([sys.executable] + sys.argv)
+            self.app.quit()
 
         def quit_app(self):
             self.hide()
