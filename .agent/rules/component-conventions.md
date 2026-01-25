@@ -9,88 +9,108 @@ description: Frontend component naming and placement conventions
 
 ```
 frontend/src/
+├── api/hooks/        # TanStack Query hooks organized by domain
 ├── components/       # Reusable, feature-specific components
-│   ├── inspector/    # Inspector panel subviews (ActionDetailsPanel, etc.)
-│   ├── drawer/       # Bottom drawer views and registry (deprecated, now uses transient modals - "OverlayRegistry"
-│   ├── layout/       # Page structure (Header, Footer, etc.)
-│   ├── common/       # Truly generic widgets (ResizeHandle, etc.)
-│   └── [feature]/    # Feature-specific (registry/, records/, etc.)
+│   ├── inspector/    # Inspector panel subviews
+│   ├── layout/       # Page structure (Header, Footer)
+│   └── common/       # Generic widgets (ResizeHandle)
+│
+├── hooks/            # Custom React hooks (useDragHotZones, etc.)
 │
 ├── ui/
 │   ├── atoms/        # Pure presentational primitives (Badge, Button)
-│   ├── molecules/    # Composed atoms (FieldRenderer, DataFieldWidget)
-│   └── composites/   # Composite views with API hooks (SelectionInspector)
+│   ├── molecules/    # Composed atoms (FieldRenderer, Menu)
+│   ├── composites/   # Composite views (CalendarView, ProjectView)
+│   ├── layout/       # Layout components (MainLayout, Header)
+│   ├── panels/       # Panel components (ProjectPanel)
+│   └── workspace/    # Workspace system (CenterContentRouter, adapters)
 │
-├── surfaces/         # Context-specific surfaces (import/, workflow/)
-│   └── import/       # Import-specific components prefixed with Import-
-│
-├── pages/            # Route entry points (layout shells)
-└── stores/           # Zustand stores (uiStore, projectionStore)
+├── stores/           # Zustand stores (uiStore, workspaceStore)
+├── workspace/        # Workspace registry and presets
+├── pages/            # Route entry points
+└── styles/           # CSS files (calendar.css, etc.)
 ```
+
+## Workspace System
+
+### Center Content Routing
+The workspace system routes center content based on workspace type:
+
+```typescript
+// CenterContentRouter.tsx dispatches to content adapters
+workspace.type === 'collect' → ArtCollectorContent
+workspace.type === 'plan'    → CalendarContent
+workspace.type === 'mail'    → MailContent
+```
+
+### Content Adapters
+- `ui/workspace/content/*.tsx` - Domain-specific center content
+- `ui/workspace/*Adapter.tsx` - Adapters that transform workspace state
+
+### Panel Registry
+- `workspace/panelRegistry.ts` - Maps panel types to components
+- Panels can be bound to projects via `workspaceStore.bindProjectToPanel()`
 
 ## Naming Conventions
 
 ### Prefixes for Disambiguation
-- **Import-specific**: Prefix with `Import` (e.g., `ImportRecordInspector`, `ImportWorkbench`)
-- **Action-specific**: Prefix with `Action` (e.g., `ActionDetailsPanel`, `ActionEventsPanel`)
-- **Drawer views**: Suffix with `Drawer` or place in drawer/views/
+- **Import-specific**: Prefix with `Import` (e.g., `ImportRecordInspector`)
+- **Action-specific**: Prefix with `Action` (e.g., `ActionDetailsPanel`)
+- **Content adapters**: Suffix with `Content` (e.g., `CalendarContent`)
 
-### Canonical Components
-When one canonical component exists, avoid duplicate names:
-- `SelectionInspector` is THE unified inspector - don't create new `*Inspector` exports
-- Use specific names for specialized versions (e.g., `ImportRecordInspector` not `RecordInspector`)
-
-## Placement Rules
-
-### Where to put new components:
-
+### File Naming
 | Type | Location | Example |
 |------|----------|---------|
-| Inspector subview | `components/inspector/` | ActionDetailsPanel.tsx |
-| Drawer view | `components/drawer/views/` | ComposerDrawer.tsx |
-| Surface-specific | `surfaces/[surface]/` | surfaces/import/ImportRecordInspector.tsx |
-| Generic composite | `ui/composites/` | SelectionInspector.tsx |
+| Content adapter | `ui/workspace/content/` | CalendarContent.tsx |
+| Panel component | `ui/panels/` | ProjectPanel.tsx |
+| Composite view | `ui/composites/` | CalendarView.tsx |
+| Custom hook | `hooks/` | useDragHotZones.ts |
 | Page wrapper | `pages/` | ProjectPage.tsx |
+
+## Placement Rules
 
 ### When to extract vs inline:
 - **Extract** if used in 2+ places or > 100 lines
 - **Inline** if tightly coupled to one parent and < 50 lines
-- When extracting from a surface, prefix with surface name
+- Content adapters always go in `ui/workspace/content/`
 
 ## Import Order
 
 1. React/framework
 2. Third-party (lucide-react, clsx)
-3. Stores (`../stores/`)
-4. API hooks (`../api/hooks`)
+3. Stores (`@/stores/`)
+4. API hooks (`@/api/hooks`)
 5. Components (relative paths)
 6. Types (type-only imports)
 
-## Adding to Zustand Persist
+## Zustand Store Conventions
 
-When adding new persisted UI state:
-1. Add property to `UIState` interface in `uiStore.ts`
+### Adding Persisted State
+1. Add property to state interface
 2. Add setter action
-3. Add initial value in store creator
-4. **Add to `partialize` whitelist** (line ~190)
-5. Increment `version` if removing or renaming existing fields
+3. Add initial value
+4. Add to `partialize` whitelist
+5. Increment `version` if removing/renaming fields
 
-## Deprecation Pattern
+### Workspace Store Pattern
+```typescript
+// workspaceStore.ts manages:
+- activeWorkspace
+- panelParams (dynamic panel configuration)
+- boundPanels (project-panel bindings)
+```
 
-When replacing a component:
-1. Add `@deprecated` JSDoc with migration path
-2. Keep backward-compatible export for 1 release
-3. Update all internal usages to new component
-4. Remove deprecated file after verification
+## UI Component Library
 
-## Sidebar Conventions
+**Do NOT use Mantine.** Use bespoke components:
 
-### Placement Rules
-- **Page-specific sidebars**: Co-locate with their page in `surfaces/{pageName}/`
-  - Example: `surfaces/import/ImportSidebar.tsx`
-- **Reusable sidebars**: Export from `ui/sidebars/index.ts`
-  - Example: `ui/hierarchy/HierarchySidebar.tsx`
+### Atoms (`ui/atoms/`)
+- `Button` - variants: primary, secondary, ghost, danger, light, subtle
+- `Badge` - variants: project, process, task, warning, success, error
+- `Text` - size: xs/sm/md/lg, color: default/muted/error
+- `TextInput`, `Select`, `Checkbox`, `RadioGroup`
+- `Card`, `Stack`, `Inline`, `Spinner`, `Alert`
 
-### Naming
-- All sidebars end with `Sidebar` suffix
-- Name after domain/purpose, not appearance
+### Molecules (`ui/molecules/`)
+- `Menu` - Dropdown with Menu.Target, Menu.Dropdown, Menu.Item
+- `SegmentedControl` - Button group toggle

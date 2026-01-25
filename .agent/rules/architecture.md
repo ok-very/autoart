@@ -32,7 +32,45 @@ const parentIsItem = item.parentTempId && itemsByTempId.has(item.parentTempId);
 - Set `context_id` and `context_type` properly
 - Use base type `'Task'` - projection derives actual type from relationships
 
+## Workspace System Architecture
+
+### Workspace → Panel → Content Flow
+```
+Workspace (type: 'collect' | 'plan' | 'mail' | ...)
+    ↓
+CenterContentRouter (dispatches by workspace.type)
+    ↓
+Content Adapter (CalendarContent, ArtCollectorContent, etc.)
+    ↓
+Composite View (CalendarView, ProjectView, etc.)
+```
+
+### Panel Registry
+- `panelRegistry.ts` maps panel types to React components
+- Panels can be dynamically parameterized via `workspaceStore.panelParams`
+- Projects can be bound to panels via `bindProjectToPanel()`
+
+### Workspace Colors
+- `workspaceColors.ts` provides consistent theming per workspace type
+- Colors propagate to header, panels, and accent elements
+
+## Runner/Collector Architecture (Python)
+
+### Adapter Pattern
+Site-specific extractors use the adapter pattern:
+```python
+# AdapterRegistry.detect(url, html) returns (adapter, match)
+adapter, match = AdapterRegistry.detect(source, html)
+images = await adapter.extract_images(soup, base_url)
+```
+
+### Async Best Practices
+- Use `asyncio.to_thread()` for blocking I/O (file reads, config loads)
+- CPU-bound BeautifulSoup parsing should be offloaded to thread pool
+- Always validate config values with safe coercion helpers
+
 ## Coding Principles
+
 - Enforce schema
 - Enforce semantics
 - Add new UI elements to component library
@@ -47,7 +85,7 @@ When adding new features that require database changes:
 1. Check if migration exists for the table/column
 2. Create new migration if schema change is needed
 3. Add seed data for required default records
-4. Run migrations to verify: `npm run migrate`
+4. Run migrations to verify: `pnpm migrate`
 5. Update `schema.ts` if types change
 
 ## Do NOT Use Mantine
