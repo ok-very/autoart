@@ -18,6 +18,7 @@ import { DataTableFlat } from './DataTableFlat';
 import { DataTableHierarchy, type HierarchyFieldDef } from './DataTableHierarchy';
 import { GanttView } from './GanttView';
 import { ProjectLogView } from './ProjectLogView';
+import { CalendarView } from './CalendarView';
 import { GanttFilters } from '../components/GanttFilters';
 import {
     mapActionsToGantt,
@@ -27,7 +28,8 @@ import {
     extractDateRange,
     type TimelineFilter,
 } from '../../utils/timeline-mapper';
-import { useProjectTree, useRecordDefinitions, useRecords, useActions } from '../../api/hooks';
+import { actionsToCalendarEvents } from '../../utils/calendar-adapter';
+import { useProjectTree, useRecordDefinitions, useRecords, useActions, useRescheduleAction } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
 import type { HierarchyNode, DataRecord, RecordDefinition } from '../../types';
@@ -83,8 +85,8 @@ function collectSubprocesses(
 // ==================== PROJECT VIEW ====================
 
 export function ProjectView({ projectId, className }: ProjectViewProps) {
-    // Tab state for switching between Workflow, Gantt, and Log views
-    const [activeTab, setActiveTab] = useState<'workflow' | 'gantt' | 'log'>('workflow');
+    // Tab state for switching between Workflow, Gantt, Calendar, and Log views
+    const [activeTab, setActiveTab] = useState<'workflow' | 'gantt' | 'calendar' | 'log'>('workflow');
 
     // Gantt filter state
     const [ganttFilter, setGanttFilter] = useState<TimelineFilter>({});
@@ -94,7 +96,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
     const setNodes = useHierarchyStore((state) => state.setNodes);
     const getNode = useHierarchyStore((state) => state.getNode);
     const getChildren = useHierarchyStore((state) => state.getChildren);
-    const { selection, inspectNode, setInspectorMode, openDrawer, inspectRecord } = useUIStore();
+    const { selection, inspectNode, inspectAction, setInspectorMode, openDrawer, inspectRecord } = useUIStore();
 
     // Fetch record definitions to get Task schema
     const { data: definitions } = useRecordDefinitions();
@@ -225,6 +227,15 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
         return mapActionsToGantt(projectActions, project.id, ganttFilter);
     }, [project, projectActions, activeTab, ganttFilter]);
 
+    // Calendar events conversion
+    const calendarEvents = useMemo(() => {
+        if (activeTab !== 'calendar' || projectActions.length === 0) return [];
+        return actionsToCalendarEvents(actionInputs);
+    }, [activeTab, projectActions, actionInputs]);
+
+    // Reschedule mutation for calendar/gantt drag-and-drop
+    const rescheduleAction = useRescheduleAction();
+
     // Selected record ID for floating tables
     const selectedRecordId = selection?.type === 'record' ? selection.id : null;
 
@@ -294,10 +305,16 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                     <SegmentedControl
                         size="xs"
                         value={activeTab}
-                        onChange={(value) => setActiveTab(value as any)}
+                        onChange={(value) => {
+                            const validTabs = ['workflow', 'gantt', 'calendar', 'log'] as const;
+                            if (validTabs.includes(value as typeof validTabs[number])) {
+                                setActiveTab(value as typeof validTabs[number]);
+                            }
+                        }}
                         data={[
                             { value: 'workflow', label: 'Workflow' },
                             { value: 'gantt', label: 'Gantt' },
+                            { value: 'calendar', label: 'Calendar' },
                             { value: 'log', label: 'Log' },
                         ]}
                         className="mt-2"
@@ -352,6 +369,26 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                             <div className="mt-4 pt-3 border-t border-slate-200">
                                 <p className="text-[10px] text-slate-400">
                                     {projectActions.length} action{projectActions.length !== 1 ? 's' : ''} in project
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Calendar Sidebar Content */}
+                {activeTab === 'calendar' && (
+                    <div className="flex-1 overflow-y-auto p-3 custom-scroll">
+                        <p className="text-xs font-semibold text-slate-700 mb-3">Calendar View</p>
+                        <p className="text-xs text-slate-500 mb-4">
+                            Drag events to reschedule. Hover near edges during drag to navigate months.
+                        </p>
+                        {projectActions.length > 0 && (
+                            <div className="pt-3 border-t border-slate-200">
+                                <p className="text-[10px] text-slate-400">
+                                    {calendarEvents.length} scheduled action{calendarEvents.length !== 1 ? 's' : ''}
+                                </p>
+                                <p className="text-[10px] text-slate-400 mt-1">
+                                    {projectActions.length - calendarEvents.length} without dates
                                 </p>
                             </div>
                         )}
@@ -449,6 +486,46 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                     ) : (
                         <div className="flex-1 flex items-center justify-center text-slate-400">
                             Loading Gantt...
+                        </div>
+                    )}
+                </main>
+            ) : activeTab === 'calendar' ? (
+                <main className="flex-1 flex flex-col overflow-hidden p-4">
+                    {calendarEvents.length > 0 ? (
+                        <CalendarView
+                            events={calendarEvents}
+                            onEventDrop={({ event, start, end }) => {
+                                rescheduleAction.mutate({
+                                    actionId: event.actionId,
+                                    startDate: start.toISOString(),
+                                    dueDate: end.toISOString(),
+                                });
+                            }}
+                            onEventResize={({ event, start, end }) => {
+                                rescheduleAction.mutate({
+                                    actionId: event.actionId,
+                                    startDate: start.toISOString(),
+                                    dueDate: end.toISOString(),
+                                });
+                            }}
+                            onSelectEvent={(event) => {
+                                // Check if this action has a corresponding hierarchy node
+                                const node = storeNodes.find(n => n.id === event.actionId);
+                                if (node) {
+                                    setInspectorMode('record');
+                                    inspectNode(event.actionId);
+                                } else {
+                                    // For actions without hierarchy nodes, use action inspector
+                                    inspectAction(event.actionId);
+                                }
+                            }}
+                        />
+                    ) : (
+                        <div className="flex-1 flex items-center justify-center text-slate-400">
+                            <div className="text-center">
+                                <p className="text-lg font-medium">No scheduled actions</p>
+                                <p className="text-sm mt-1">Add dates to actions to see them on the calendar</p>
+                            </div>
                         </div>
                     )}
                 </main>

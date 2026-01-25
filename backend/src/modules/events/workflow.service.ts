@@ -275,11 +275,23 @@ export async function moveWorkflowRow(
     throw new Error(`Action not found: ${input.actionId}`);
   }
 
-  // Validate afterActionId if provided
-  if (input.afterActionId) {
+  // Validate afterActionId if provided (null means "first position", any other value must be validated)
+  if (input.afterActionId !== null) {
+    // Reject empty strings and other invalid values
+    if (typeof input.afterActionId !== 'string' || input.afterActionId.trim() === '') {
+      throw new Error(`Invalid afterActionId: must be a valid UUID or null`);
+    }
     const afterAction = await actionsService.getActionById(input.afterActionId);
     if (!afterAction) {
       throw new Error(`After action not found: ${input.afterActionId}`);
+    }
+    // Ensure afterAction belongs to the same context
+    if (afterAction.context_id !== action.context_id) {
+      throw new Error(
+        `Cannot position after action from different context: ` +
+        `${input.afterActionId} (context: ${afterAction.context_id}) vs ` +
+        `${input.actionId} (context: ${action.context_id})`
+      );
     }
   }
 
@@ -308,6 +320,7 @@ export interface RescheduleInput {
   dueDate?: string;
   durationDays?: number;
   scheduleMode?: 'explicit' | 'anchor_start' | 'anchor_due';
+  payload?: Record<string, unknown>;
 }
 
 /**
@@ -325,6 +338,7 @@ export async function rescheduleAction(input: RescheduleInput): Promise<Event[]>
   const baseInput = {
     actionId: input.actionId,
     actorId: input.actorId,
+    payload: input.payload,
   };
 
   if (input.startDate !== undefined) {
