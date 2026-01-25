@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ..extractors import extract_bio_text, extract_image_urls
+from ..adapters import AdapterRegistry
 from ..naming import (
     IndexCounter,
     compute_content_hash,
@@ -33,7 +33,7 @@ from ..types import (
 from .base import MAX_IMAGES, REQUEST_TIMEOUT
 
 if TYPE_CHECKING:
-    pass
+    from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
@@ -142,8 +142,12 @@ class WebCollector:
             # Parse HTML
             soup = BeautifulSoup(html, _get_html_parser())
 
-            # Extract bio text
-            bio_text = extract_bio_text(soup)
+            # Detect site type and get appropriate adapter
+            adapter, match = AdapterRegistry.detect(source, html)
+            logger.info(f"Detected site type: {adapter.name} (confidence: {match.confidence})")
+
+            # Extract bio text using adapter
+            bio_text = await adapter.extract_bio(soup)
             if bio_text:
                 bio_path = output_folder / "bio.txt"
                 await asyncio.to_thread(bio_path.write_text, bio_text, encoding="utf-8")
@@ -156,8 +160,32 @@ class WebCollector:
                     )
                 )
 
-            # Extract and download images
-            image_urls = extract_image_urls(soup, source)
+            # Extract sub-pages (for multi-page sites like Cargo)
+            all_pages: list[tuple[str, "BeautifulSoup"]] = [(source, soup)]
+            page_urls = await adapter.extract_pages(soup, source)
+
+            for page_url in page_urls[:10]:  # Limit sub-pages
+                try:
+                    is_page_safe, _ = await is_safe_url(page_url)
+                    if not is_page_safe:
+                        continue
+                    page_response = await client.get(page_url)
+                    page_response.raise_for_status()
+                    page_soup = BeautifulSoup(page_response.text, _get_html_parser())
+                    all_pages.append((page_url, page_soup))
+                except Exception as e:
+                    logger.warning(f"Failed to fetch sub-page {page_url}: {e}")
+
+            # Extract images from all pages using adapter
+            image_urls: list[str] = []
+            for page_url, page_soup in all_pages:
+                page_images = await adapter.extract_images(page_soup, page_url)
+                image_urls.extend(page_images)
+
+            # Deduplicate while preserving order
+            image_urls = list(dict.fromkeys(image_urls))
+            logger.info(f"Found {len(image_urls)} images across {len(all_pages)} pages")
+
             for img_url in image_urls[: self.max_images]:
                 result = await self._download_image(
                     img_url,
@@ -227,19 +255,58 @@ class WebCollector:
             response.raise_for_status()
             html = response.text
 
-            yield RunnerProgress(stage="parsing", message="Parsing page content...", percent=20)
+            yield RunnerProgress(stage="parsing", message="Parsing page content...", percent=15)
 
             soup = BeautifulSoup(html, _get_html_parser())
 
-            # Extract bio
-            bio_text = extract_bio_text(soup)
+            # Detect site type and get appropriate adapter
+            adapter, match = AdapterRegistry.detect(source, html)
+            logger.info(f"Detected site type: {adapter.name} (confidence: {match.confidence})")
+
+            yield RunnerProgress(
+                stage="detecting",
+                message=f"Detected site type: {adapter.name}",
+                percent=20,
+            )
+
+            # Extract bio using adapter
+            bio_text = await adapter.extract_bio(soup)
             if bio_text:
                 bio_path = output_folder / "bio.txt"
                 await asyncio.to_thread(bio_path.write_text, bio_text, encoding="utf-8")
-                yield RunnerProgress(stage="bio", message="Extracted bio text", percent=30)
+                yield RunnerProgress(stage="bio", message="Extracted bio text", percent=25)
 
-            # Get image URLs
-            image_urls = extract_image_urls(soup, source)
+            # Extract sub-pages (for multi-page sites)
+            all_pages: list[tuple[str, "BeautifulSoup"]] = [(source, soup)]
+            page_urls = await adapter.extract_pages(soup, source)
+
+            if page_urls:
+                yield RunnerProgress(
+                    stage="pages",
+                    message=f"Found {len(page_urls)} sub-pages to crawl",
+                    percent=28,
+                )
+
+            for page_url in page_urls[:10]:  # Limit sub-pages
+                try:
+                    is_page_safe, _ = await is_safe_url(page_url)
+                    if not is_page_safe:
+                        continue
+                    page_response = await client.get(page_url)
+                    page_response.raise_for_status()
+                    page_soup = BeautifulSoup(page_response.text, _get_html_parser())
+                    all_pages.append((page_url, page_soup))
+                except Exception as e:
+                    logger.warning(f"Failed to fetch sub-page {page_url}: {e}")
+
+            # Extract images from all pages using adapter
+            image_urls: list[str] = []
+            for page_url, page_soup in all_pages:
+                page_images = await adapter.extract_images(page_soup, page_url)
+                image_urls.extend(page_images)
+
+            # Deduplicate while preserving order
+            image_urls = list(dict.fromkeys(image_urls))
             total_images = min(len(image_urls), self.max_images)
 
             yield RunnerProgress(
