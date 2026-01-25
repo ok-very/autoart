@@ -566,10 +566,12 @@ export async function workflowRoutes(fastify: FastifyInstance) {
       dueDate?: string;
       durationDays?: number;
       scheduleMode?: 'explicit' | 'anchor_start' | 'anchor_due';
+      payload?: Record<string, unknown>;
     };
   }>(
     '/actions/:actionId/reschedule',
     {
+      preHandler: [fastify.authenticate],
       schema: {
         params: {
           type: 'object',
@@ -585,6 +587,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
             dueDate: { type: 'string' },
             durationDays: { type: 'number', minimum: 0 },
             scheduleMode: { type: 'string', enum: ['explicit', 'anchor_start', 'anchor_due'] },
+            payload: { type: 'object' },
           },
         },
         response: {
@@ -599,15 +602,16 @@ export async function workflowRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const { actionId } = request.params;
-      const { startDate, dueDate, durationDays, scheduleMode } = request.body || {};
+      const { startDate, dueDate, durationDays, scheduleMode, payload } = request.body || {};
 
       const events = await workflowService.rescheduleAction({
         actionId,
-        actorId: (request as any).user?.id,
+        actorId: request.user?.userId,
         startDate,
         dueDate,
         durationDays,
         scheduleMode,
+        payload,
       });
 
       return reply.status(201).send({ events });

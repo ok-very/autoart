@@ -161,6 +161,7 @@ export {
   useAssignWork,
   useUnassignWork,
   useRecordFieldValue,
+  useRescheduleAction,
   useContainerActions,
   useSubprocesses,
   useChildActions,
