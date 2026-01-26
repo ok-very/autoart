@@ -19,6 +19,8 @@ import {
     AlertTriangle,
     Info,
     Archive,
+    Link2,
+    Target,
 } from 'lucide-react';
 
 import {
@@ -30,6 +32,7 @@ import {
     useMarkInformational
 } from '../../../api/hooks/mail';
 import type { ProcessedEmail, Priority, TriageStatus as TriageStatusType } from '../../../api/types/mail';
+import { LinkedEntityGroup, type LinkedEntity } from '../../mail';
 
 const ITEMS_PER_PAGE = 25;
 
@@ -156,8 +159,13 @@ function formatEmailDate(dateValue: string | null | undefined): string {
     }
 }
 
-function EmailRow({ email, onAction }: { email: ProcessedEmail; onAction?: () => void }) {
+function EmailRow({ email, onAction, onLinkClick }: { email: ProcessedEmail; onAction?: () => void; onLinkClick?: (emailId: string) => void }) {
     const formattedDate = formatEmailDate(email.receivedAt);
+
+    // Extract linked entities from email metadata (if available)
+    const linkedEntities: LinkedEntity[] = [];
+    // In a real implementation, this would come from the email data
+    // For now, we show the link button for unlinked emails
 
     return (
         <tr className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer">
@@ -177,15 +185,37 @@ function EmailRow({ email, onAction }: { email: ProcessedEmail; onAction?: () =>
                     {email.hasAttachments && <Paperclip size={14} className="text-slate-400 flex-shrink-0" />}
                 </div>
                 <div className="text-sm text-slate-500 truncate">{email.bodyPreview}</div>
-                {email.extractedKeywords.length > 0 && (
-                    <div className="flex gap-1 mt-1 flex-wrap">
-                        {email.extractedKeywords.slice(0, 3).map((keyword) => (
-                            <span key={keyword} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded">
-                                {keyword}
-                            </span>
-                        ))}
-                    </div>
-                )}
+                <div className="flex items-center gap-2 mt-1">
+                    {email.extractedKeywords.length > 0 && (
+                        <div className="flex gap-1 flex-wrap">
+                            {email.extractedKeywords.slice(0, 3).map((keyword) => (
+                                <span key={keyword} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded">
+                                    {keyword}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                    {/* Linked entities or link button */}
+                    {linkedEntities.length > 0 ? (
+                        <LinkedEntityGroup
+                            entities={linkedEntities}
+                            maxVisible={1}
+                            size="xs"
+                        />
+                    ) : (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onLinkClick?.(email.id);
+                            }}
+                            className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-blue-500 transition-colors"
+                            title="Link to action"
+                        >
+                            <Link2 size={10} />
+                            Link
+                        </button>
+                    )}
+                </div>
             </td>
             <td className="px-4 py-3 w-20">
                 <PriorityBadge priority={email.priority} />
@@ -343,7 +373,15 @@ export function MailContent() {
                             </thead>
                             <tbody>
                                 {data.emails.map((email) => (
-                                    <EmailRow key={email.id} email={email} onAction={() => refetch()} />
+                                    <EmailRow
+                                        key={email.id}
+                                        email={email}
+                                        onAction={() => refetch()}
+                                        onLinkClick={(emailId) => {
+                                            // TODO: Open link modal or drawer
+                                            console.log('Link email:', emailId);
+                                        }}
+                                    />
                                 ))}
                             </tbody>
                         </table>
