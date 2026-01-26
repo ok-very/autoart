@@ -19,6 +19,8 @@ import { ProjectLibraryOverlay } from '../overlay/views/ProjectLibraryOverlay';
 import { MondayBoardsOverlay } from '../overlay/views/MondayBoardsOverlay';
 import { StartCollectionModal } from '../overlay/views/StartCollectionModal';
 import { ActionInspectorOverlay } from '../overlay/views/ActionInspectorOverlay';
+import { LinkPickerView } from '../overlay/views/LinkPickerView';
+import { ConfirmUnlinkView } from '../overlay/views/ConfirmUnlinkView';
 import { IntegrationsSection } from '../../pages/settings/IntegrationsSection';
 import { ClassificationPanel } from '../../workflows/import/panels/ClassificationPanel';
 import type { ImportPlan } from '../../api/hooks/imports';
@@ -73,6 +75,8 @@ export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
     'start-collection': StartCollectionModal, // Export collection start modal
     'classification': ClassificationOverlayView, // Import classification review panel
     'amend-action': ActionInspectorOverlay, // Action amendment overlay
+    'link-picker': LinkPickerView, // Entity link picker
+    'confirm-unlink': ConfirmUnlinkView, // Confirm unlink dialog
 };
 
 
@@ -95,8 +99,8 @@ export function OverlayRegistry() {
     // Default size can be overridden per type if needed
     let size: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full' = 'md';
     if (['create-record', 'view-definition', 'project-library', 'classification'].includes(type)) size = 'xl';
-    if (['create-node', 'add-field', 'clone-project'].includes(type)) size = 'lg';
-    if (['confirm-delete'].includes(type)) size = 'sm';
+    if (['create-node', 'add-field', 'clone-project', 'link-picker'].includes(type)) size = 'lg';
+    if (['confirm-delete', 'confirm-unlink'].includes(type)) size = 'sm';
 
     // Construct context props expected by Overlay views
     const componentProps = {
