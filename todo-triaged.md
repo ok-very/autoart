@@ -1,6 +1,6 @@
 # AutoArt Todo List - Triaged & Organized
 
-*Last Updated: 2026-01-25*
+*Last Updated: 2026-01-25 (post Narrative Canvas merge)*
 
 ## Operating rules
 
@@ -16,6 +16,10 @@
 
 ### AutoArt (ok-very/autoart)
 
+**Architecture/Planning**
+- #135 QA: Arrangements rename verification checklist
+- #134 Roadmap: Arrangements + projection-first workflow
+
 **AI/Gemini**
 - #118 Gemini AI: drafts, filenames, contacts
 - #117 Gemini Vision: deep crawl fallback
@@ -26,8 +30,8 @@
 
 **Workspace/Surfaces**
 - #68 Surfaces: header → dockable
-- #66 Surface: Mail + mappings
-- #65 Surface: Inspector + mappings
+- #66 Surface: Mail + mappings *(Narrative Canvas Phase 4 added components)*
+- #65 Surface: Inspector + mappings *(Narrative Canvas Phase 3 added MappingsPanel)*
 - #64 Electron SPA shell
 - #62 Multi-window popouts
 
@@ -42,7 +46,7 @@
 - #79 Workflow Interactions
 - #55 Automail Testing
 - #44 Google OAuth (bug)
-- #33 Composer UX
+- ~~#33 Composer UX~~ *(CLOSED - Narrative Canvas Phase 1)*
 
 **Tooling**
 - #8 Docs + Automation
@@ -55,6 +59,26 @@
 - #11 Intake manifest endpoint
 - #10 Snapshot endpoint
 - #9 Fetch endpoints
+
+---
+
+## ✅ RECENTLY COMPLETED
+
+### Narrative Canvas (PRs #142-#146)
+
+Merged 2026-01-25. Addresses #33 (Composer UX), partial progress on #65 and #66.
+
+**Delivered components:**
+- Phase 1: `UnifiedComposerBar`, `EventPreview`, `ContextIndicator`
+- Phase 2: `NarrativeStream`, `NarrativeCard`, `FactFamilyGroup`, `ChronoTimeline`
+- Phase 3: `MappingsPanel`, `NarrativeThreadPanel`, `mappings.ts` hooks
+- Phase 4: `EmailFactCard`, `EmailLinkActions`, `LinkedEntityBadge`
+- Phase 5: `SuggestionPopover`, `suggestions.ts` hooks
+
+**Remaining for full #65/#66 closure:**
+- Wire components into SelectionInspector tabs
+- Wire mail components into MailContent surface
+- Backend endpoints for suggestions API
 
 ---
 
@@ -156,13 +180,15 @@ Notes:
 - Multi-window popouts + IPC context sync (GitHub: [autoart#62](https://github.com/ok-very/autoart/issues/62)).
 - Electron SPA shell (GitHub: [autoart#64](https://github.com/ok-very/autoart/issues/64)).
 - SelectionInspector surface + mappings UI (GitHub: [autoart#65](https://github.com/ok-very/autoart/issues/65)).
+  - *Progress: Narrative Canvas Phase 3 added `MappingsPanel`, `NarrativeThreadPanel`, mappings hooks*
 - Mail surface + email↔record/action mappings (GitHub: [autoart#66](https://github.com/ok-very/autoart/issues/66)).
+  - *Progress: Narrative Canvas Phase 4 added `EmailFactCard`, `EmailLinkActions`, `LinkedEntityBadge`*
 
 ---
 
 ### Product features
 
-- Composer UX reevaluation (GitHub: [autoart#33](https://github.com/ok-very/autoart/issues/33)).
+- ~~Composer UX reevaluation~~ *(CLOSED via Narrative Canvas Phase 1: UnifiedComposerBar, EventPreview, ContextIndicator)*.
 - Global Command Palette (GitHub: [autoart#87](https://github.com/ok-very/autoart/issues/87)).
 - Monday Board Sync Settings (GitHub: [autoart#86](https://github.com/ok-very/autoart/issues/86)).
 
