@@ -86,6 +86,13 @@ interface UIState {
   inspectorComposerExpanded: boolean;
   setInspectorComposerExpanded: (expanded: boolean) => void;
 
+  // Unified Composer Bar state (Narrative Canvas Phase 1)
+  composerBarVisible: boolean;
+  composerBarExpanded: boolean;
+  setComposerBarVisible: (visible: boolean) => void;
+  toggleComposerBar: () => void;
+  setComposerBarExpanded: (expanded: boolean) => void;
+
   // Project Log preferences
   includeSystemEventsInLog: boolean;
   setIncludeSystemEventsInLog: (value: boolean) => void;
@@ -175,6 +182,13 @@ export const useUIStore = create<UIState>()(
 
       inspectorComposerExpanded: false,
       setInspectorComposerExpanded: (expanded) => set({ inspectorComposerExpanded: expanded }),
+
+      // Unified Composer Bar state
+      composerBarVisible: true,
+      composerBarExpanded: false,
+      setComposerBarVisible: (visible) => set({ composerBarVisible: visible }),
+      toggleComposerBar: () => set((state) => ({ composerBarVisible: !state.composerBarVisible })),
+      setComposerBarExpanded: (expanded) => set({ composerBarExpanded: expanded }),
 
       setIncludeSystemEventsInLog: (value) => set({ includeSystemEventsInLog: value }),
 
@@ -277,6 +291,9 @@ export const useUIStore = create<UIState>()(
         registryDefinitionKind: state.registryDefinitionKind,
         registryScope: state.registryScope,
         inspectorComposerExpanded: state.inspectorComposerExpanded,
+        // Unified Composer Bar
+        composerBarVisible: state.composerBarVisible,
+        composerBarExpanded: state.composerBarExpanded,
       }),
       // Migrate persisted state across versions
       migrate: (persistedState, version) => {

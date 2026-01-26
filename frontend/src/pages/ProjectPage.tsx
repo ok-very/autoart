@@ -5,6 +5,9 @@
  * around the ProjectView composite.
  *
  * Layout: Full-width workspace with optional inspector
+ *
+ * Phase 1 Narrative Canvas:
+ * - Includes UnifiedComposerBar at bottom for context-aware action declaration
  */
 
 import { useCallback } from 'react';
@@ -14,9 +17,10 @@ import { ResizeHandle } from '@autoart/ui';
 import { ProjectView } from '../ui/composites/ProjectView';
 import { SelectionInspector } from '../ui/composites/SelectionInspector';
 import { Header } from '../ui/layout/Header';
+import { UnifiedComposerBar } from '../ui/composer';
 
 export function ProjectPage() {
-    const { activeProjectId, inspectorWidth, setInspectorWidth } = useUIStore();
+    const { activeProjectId, inspectorWidth, setInspectorWidth, composerBarVisible } = useUIStore();
     const panels = useUIPanels();
 
     const handleInspectorResize = useCallback(
@@ -32,7 +36,10 @@ export function ProjectPage() {
             <div className="flex flex-1 overflow-hidden">
                 {/* Main workspace - ProjectView composite */}
                 <div className="flex-1 flex flex-col overflow-hidden relative">
-                    <ProjectView projectId={activeProjectId} />
+                    {/* Add bottom padding when composer bar is visible to prevent overlap */}
+                    <div className={composerBarVisible ? 'pb-16' : ''}>
+                        <ProjectView projectId={activeProjectId} />
+                    </div>
                 </div>
 
                 {/* Inspector Slot */}
@@ -43,6 +50,9 @@ export function ProjectPage() {
                     </>
                 )}
             </div>
+
+            {/* Unified Composer Bar - Fixed at bottom */}
+            <UnifiedComposerBar visible={composerBarVisible} />
         </div>
     );
 }
