@@ -35,7 +35,7 @@ export type InspectorMode =
   | { view: 'references'; id: string }
   | null;
 
-export type DrawerConfig = {
+export type OverlayConfig = {
   type: string;
   props: Record<string, unknown>;
 };
@@ -44,5 +44,5 @@ export type UIPanels = {
   sidebar: 'projectTree' | 'recordsNav' | null;
   workspace: 'list' | 'cards' | 'millerColumns' | 'details' | 'projectWorkflow' | 'projectLog' | null;
   inspector: InspectorMode;
-  drawer: DrawerConfig | null;
+  overlay: OverlayConfig | null;
 };

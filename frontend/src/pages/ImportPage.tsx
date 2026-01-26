@@ -28,8 +28,8 @@ export function ImportPage() {
     const {
         inspectorWidth,
         setInspectorWidth,
-        openDrawer,
-        activeDrawer,
+        openOverlay,
+        activeOverlay,
         importSession,
         importPlan,
         setImportSession,
@@ -86,14 +86,14 @@ export function ImportPage() {
 
     // Open classification drawer when unresolved items exist
     useEffect(() => {
-        if (hasUnresolvedClassifications && session && plan && activeDrawer?.type !== 'classification') {
-            openDrawer('classification', {
+        if (hasUnresolvedClassifications && session && plan && activeOverlay?.type !== 'classification') {
+            openOverlay('classification', {
                 sessionId: session.id,
                 plan,
                 onResolutionsSaved: handlePlanUpdated,
             });
         }
-    }, [hasUnresolvedClassifications, session, plan, openDrawer, activeDrawer, handlePlanUpdated]);
+    }, [hasUnresolvedClassifications, session, plan, openOverlay, activeOverlay, handlePlanUpdated]);
 
     // Auto-switch source type based on session connector type
     useEffect(() => {

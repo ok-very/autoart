@@ -91,7 +91,7 @@ export function ProjectWorkflowView() {
     const setNodes = useHierarchyStore((state) => state.setNodes);
     const getNode = useHierarchyStore((state) => state.getNode);
     const getChildren = useHierarchyStore((state) => state.getChildren);
-    const { activeProjectId, selection, inspectNode, setInspectorMode, openDrawer, setActiveProject } = useUIStore();
+    const { activeProjectId, selection, inspectNode, setInspectorMode, openOverlay, setActiveProject } = useUIStore();
 
     // Fetch all projects for the project selector
     const { data: allProjects } = useProjects();
@@ -537,11 +537,11 @@ export function ProjectWorkflowView() {
                                             </button>
                                         </Menu.Target>
                                         <Menu.Dropdown className="min-w-[240px]">
-                                            <Menu.Item leftSection={<Plus size={16} />} onClick={() => openDrawer('create-project', {})}>
+                                            <Menu.Item leftSection={<Plus size={16} />} onClick={() => openOverlay('create-project', {})}>
                                                 New Project
                                             </Menu.Item>
                                             {project && (
-                                                <Menu.Item leftSection={<Copy size={16} />} onClick={() => openDrawer('clone-project', { sourceProjectId: project.id, sourceProjectTitle: project.title })}>
+                                                <Menu.Item leftSection={<Copy size={16} />} onClick={() => openOverlay('clone-project', { sourceProjectId: project.id, sourceProjectTitle: project.title })}>
                                                     Clone Current
                                                 </Menu.Item>
                                             )}
@@ -613,7 +613,7 @@ export function ProjectWorkflowView() {
                                             </DropdownTrigger>
                                             <DropdownContent align="end" className="w-44">
                                                 <DropdownItem
-                                                    onSelect={() => openDrawer('create-node', { parentId: activeSubprocessId, nodeType: 'task' })}
+                                                    onSelect={() => openOverlay('create-node', { parentId: activeSubprocessId, nodeType: 'task' })}
                                                 >
                                                     <span className="w-5 h-5 rounded bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold mr-2">T</span>
                                                     Add Task
@@ -622,9 +622,9 @@ export function ProjectWorkflowView() {
                                                 <DropdownItem
                                                     onSelect={() => {
                                                         if (selectedNode?.type === 'task') {
-                                                            openDrawer('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
+                                                            openOverlay('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
                                                         } else if (selectedNode?.type === 'subtask' && selectedNode.parent_id) {
-                                                            openDrawer('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
+                                                            openOverlay('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
                                                         }
                                                     }}
                                                     disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
@@ -651,7 +651,7 @@ export function ProjectWorkflowView() {
                                                             <DropdownItem
                                                                 key={def.id}
                                                                 onSelect={() =>
-                                                                    openDrawer('create-record', {
+                                                                    openOverlay('create-record', {
                                                                         definitionId: def.id,
                                                                         classificationNodeId: activeSubprocessId,
                                                                     })
@@ -759,12 +759,12 @@ export function ProjectWorkflowView() {
                                             onCellChange={handleCellChange}
                                             onAddNode={
                                                 activeSubprocessId
-                                                    ? () => openDrawer('create-node', { parentId: activeSubprocessId, nodeType: 'task' })
+                                                    ? () => openOverlay('create-node', { parentId: activeSubprocessId, nodeType: 'task' })
                                                     : undefined
                                             }
                                             enableNesting
                                             getChildren={(nodeId) => getChildren(nodeId).filter((n) => n.type === 'subtask')}
-                                            onAddSubtask={(parentId) => openDrawer('create-node', { parentId, nodeType: 'subtask' })}
+                                            onAddSubtask={(parentId) => openOverlay('create-node', { parentId, nodeType: 'subtask' })}
                                             deriveStatus={deriveNodeStatus}
                                             showStatusSummary
                                             statusConfig={statusConfig}
@@ -779,7 +779,7 @@ export function ProjectWorkflowView() {
                                                                 <DropdownLabel>Tasks</DropdownLabel>
                                                                 <DropdownItem
                                                                     onSelect={() =>
-                                                                        openDrawer('create-node', {
+                                                                        openOverlay('create-node', {
                                                                             parentId: activeSubprocessId,
                                                                             nodeType: 'task',
                                                                         })
@@ -791,9 +791,9 @@ export function ProjectWorkflowView() {
                                                                 <DropdownItem
                                                                     onSelect={() => {
                                                                         if (selectedNode?.type === 'task') {
-                                                                            openDrawer('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
+                                                                            openOverlay('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
                                                                         } else if (selectedNode?.type === 'subtask' && selectedNode.parent_id) {
-                                                                            openDrawer('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
+                                                                            openOverlay('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
                                                                         }
                                                                     }}
                                                                     disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
@@ -812,7 +812,7 @@ export function ProjectWorkflowView() {
                                                                                 <DropdownItem
                                                                                     key={def.id}
                                                                                     onSelect={() =>
-                                                                                        openDrawer('create-record', {
+                                                                                        openOverlay('create-record', {
                                                                                             definitionId: def.id,
                                                                                             classificationNodeId: activeSubprocessId,
                                                                                         })
@@ -854,7 +854,7 @@ export function ProjectWorkflowView() {
                                                     onAddRecord={
                                                         activeSubprocessId
                                                             ? () =>
-                                                                openDrawer('create-record', {
+                                                                openOverlay('create-record', {
                                                                     definitionId: definition.id,
                                                                     classificationNodeId: activeSubprocessId,
                                                                 })
@@ -879,7 +879,7 @@ export function ProjectWorkflowView() {
                                                 <DropdownLabel>Tasks</DropdownLabel>
                                                 <DropdownItem
                                                     onSelect={() =>
-                                                        openDrawer('create-node', {
+                                                        openOverlay('create-node', {
                                                             parentId: activeSubprocessId,
                                                             nodeType: 'task',
                                                         })
@@ -891,9 +891,9 @@ export function ProjectWorkflowView() {
                                                 <DropdownItem
                                                     onSelect={() => {
                                                         if (selectedNode?.type === 'task') {
-                                                            openDrawer('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
+                                                            openOverlay('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
                                                         } else if (selectedNode?.type === 'subtask' && selectedNode.parent_id) {
-                                                            openDrawer('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
+                                                            openOverlay('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
                                                         }
                                                     }}
                                                     disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
@@ -912,7 +912,7 @@ export function ProjectWorkflowView() {
                                                                 <DropdownItem
                                                                     key={def.id}
                                                                     onSelect={() =>
-                                                                        openDrawer('create-record', {
+                                                                        openOverlay('create-record', {
                                                                             definitionId: def.id,
                                                                             classificationNodeId: activeSubprocessId,
                                                                         })

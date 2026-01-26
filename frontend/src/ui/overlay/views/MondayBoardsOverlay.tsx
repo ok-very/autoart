@@ -1,8 +1,8 @@
 /**
- * MondayBoardsDrawer
+ * MondayBoardsOverlay
  *
- * Drawer wrapper for MondayBoardSelector.
- * Opens as a right-side drawer for selecting Monday boards to import.
+ * Overlay wrapper for MondayBoardSelector.
+ * Opens as a right-side overlay for selecting Monday boards to import.
  */
 
 import { MondayBoardSelector } from '../../../workflows/import/components/MondayBoardSelector';
@@ -20,7 +20,7 @@ export interface MondayBoardsContext {
 // COMPONENT
 // ============================================================================
 
-export function MondayBoardsDrawer({ onBoardImport, isImporting }: MondayBoardsContext) {
+export function MondayBoardsOverlay({ onBoardImport, isImporting }: MondayBoardsContext) {
     return (
         <div className="h-full">
             <MondayBoardSelector
@@ -31,5 +31,5 @@ export function MondayBoardsDrawer({ onBoardImport, isImporting }: MondayBoardsC
     );
 }
 
-export default MondayBoardsDrawer;
+export default MondayBoardsOverlay;
 

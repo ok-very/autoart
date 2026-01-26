@@ -11,7 +11,7 @@ import { ActionRegistryTable } from '../composites/ActionRegistryTable';
 import type { DerivedStatus } from '@autoart/shared';
 
 export function ActionListView() {
-    const { activeProjectId, setSelection, openDrawer } = useUIStore();
+    const { activeProjectId, setSelection, openOverlay } = useUIStore();
 
     // Fetch all workflow nodes for the project (contextType='project' gets all descendants)
     const { data: nodes = [], isLoading } = useWorkflowSurfaceNodes(activeProjectId, 'project');
@@ -34,7 +34,7 @@ export function ActionListView() {
     };
 
     const handleAddAction = () => {
-        openDrawer('composer', { contextId: activeProjectId });
+        openOverlay('composer', { contextId: activeProjectId });
     };
 
     const handleRowAction = (actionId: string, action: 'view' | 'edit' | 'history' | 'retract') => {
@@ -43,7 +43,7 @@ export function ActionListView() {
                 setSelection({ type: 'action', id: actionId });
                 break;
             case 'edit':
-                openDrawer('amend-action', { actionId });
+                openOverlay('amend-action', { actionId });
                 break;
             case 'retract':
                 // Emit retraction event

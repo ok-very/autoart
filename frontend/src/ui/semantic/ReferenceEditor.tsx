@@ -51,7 +51,7 @@ export function ReferenceEditor({
     const [searchPosition, setSearchPosition] = useState({ top: 0, left: 0 });
     const buttonRef = useRef<HTMLButtonElement>(null);
 
-    const { openDrawer } = useUIStore();
+    const { openOverlay } = useUIStore();
     const createReference = useCreateReference();
     const deleteReference = useDeleteReference();
 
@@ -136,9 +136,9 @@ export function ReferenceEditor({
     const handleOpenRecord = useCallback(() => {
         if (resolved?.sourceRecordId) {
             // Open record in bottom drawer for editing
-            openDrawer('view-record', { recordId: resolved.sourceRecordId });
+            openOverlay('view-record', { recordId: resolved.sourceRecordId });
         }
-    }, [resolved, openDrawer]);
+    }, [resolved, openOverlay]);
 
     // No link yet - show button to add one
     if (!value) {

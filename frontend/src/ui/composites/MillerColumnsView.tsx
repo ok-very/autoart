@@ -36,7 +36,7 @@ interface ColumnSelections {
 
 export function MillerColumnsView({ className }: MillerColumnsViewProps) {
     const { getChildren, getNode } = useHierarchyStore();
-    const { activeProjectId, setSelection, openDrawer } = useUIStore();
+    const { activeProjectId, setSelection, openOverlay } = useUIStore();
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Track selection at each level
@@ -137,11 +137,11 @@ export function MillerColumnsView({ className }: MillerColumnsViewProps) {
     };
 
     // Add handlers for each level
-    const handleAddProject = () => openDrawer('create-project', {});
-    const handleAddProcess = () => selections.project && openDrawer('create-node', { parentId: selections.project, nodeType: 'process' });
-    const handleAddStage = () => selections.process && openDrawer('create-node', { parentId: selections.process, nodeType: 'stage' });
-    const handleAddSubprocess = () => selections.stage && openDrawer('create-node', { parentId: selections.stage, nodeType: 'subprocess' });
-    const handleAddTask = () => selections.subprocess && openDrawer('create-node', { parentId: selections.subprocess, nodeType: 'task' });
+    const handleAddProject = () => openOverlay('create-project', {});
+    const handleAddProcess = () => selections.project && openOverlay('create-node', { parentId: selections.project, nodeType: 'process' });
+    const handleAddStage = () => selections.process && openOverlay('create-node', { parentId: selections.process, nodeType: 'stage' });
+    const handleAddSubprocess = () => selections.stage && openOverlay('create-node', { parentId: selections.stage, nodeType: 'subprocess' });
+    const handleAddTask = () => selections.subprocess && openOverlay('create-node', { parentId: selections.subprocess, nodeType: 'task' });
 
     return (
         <div

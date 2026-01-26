@@ -1,7 +1,7 @@
 /**
  * AddFieldView
  *
- * Drawer view for adding new fields to a definition.
+ * Overlay view for adding new fields to a definition.
  * Shows all field types with visual previews using bespoke components.
  */
 
@@ -14,7 +14,7 @@ import { useState } from 'react';
 import { useUIStore } from '@/stores';
 import type { FieldDef } from '@/types';
 
-import type { DrawerProps, AddFieldContext } from '../../../drawer/types';
+import type { OverlayProps, AddFieldContext } from '../../../overlay/types';
 import { Badge } from '@autoart/ui';
 import { Button } from '@autoart/ui';
 import { Checkbox } from '@autoart/ui';
@@ -194,17 +194,17 @@ function FieldTypePreview({ type }: { type: FieldDef['type'] }) {
 // PROPS
 // ============================================================================
 
-// Legacy props interface (deprecated - use DrawerProps)
+// Legacy props interface (deprecated - use OverlayProps)
 interface LegacyAddFieldViewProps {
   onSubmit: (field: FieldDef) => void;
   isPending?: boolean;
 }
 
 // New contract props
-type AddFieldViewProps = DrawerProps<AddFieldContext & { onFieldSubmit?: (field: FieldDef) => void; isPending?: boolean }, { field: FieldDef }>;
+type AddFieldViewProps = OverlayProps<AddFieldContext & { onFieldSubmit?: (field: FieldDef) => void; isPending?: boolean }, { field: FieldDef }>;
 
 // Type guard to detect legacy vs new props
-function isDrawerProps(props: unknown): props is AddFieldViewProps {
+function isOverlayProps(props: unknown): props is AddFieldViewProps {
   return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props && 'onClose' in props;
 }
 
@@ -214,13 +214,13 @@ function isDrawerProps(props: unknown): props is AddFieldViewProps {
 
 export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps) {
   // Handle both legacy and new contract
-  const isNewContract = isDrawerProps(props);
+  const isNewContract = isOverlayProps(props);
   const legacyOnSubmit = !isNewContract ? props.onSubmit : undefined;
   const isPending = isNewContract ? props.context.isPending : props.isPending;
   const onClose = isNewContract ? props.onClose : undefined;
   const onSubmit = isNewContract ? props.onSubmit : undefined;
 
-  const { closeDrawer } = useUIStore();
+  const { closeOverlay } = useUIStore();
   const [key, setKey] = useState('');
   const [label, setLabel] = useState('');
   const [type, setType] = useState<FieldDef['type']>('text');
@@ -232,7 +232,7 @@ export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps)
     if (onClose) {
       onClose();
     } else {
-      closeDrawer();
+      closeOverlay();
     }
   };
 
@@ -265,7 +265,7 @@ export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps)
     } else if (legacyOnSubmit) {
       // Legacy: call callback and close
       legacyOnSubmit(field);
-      closeDrawer();
+      closeOverlay();
     }
   };
 

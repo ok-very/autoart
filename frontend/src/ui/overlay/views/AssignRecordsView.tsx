@@ -4,7 +4,7 @@
  * Bulk hierarchy assignment UI for records using bespoke components.
  * This assigns records to hierarchy nodes - NOT semantic classification.
  *
- * @deprecated Legacy props are deprecated. Use DrawerProps<ClassifyRecordsContext> instead.
+ * @deprecated Legacy props are deprecated. Use OverlayProps<ClassifyRecordsContext> instead.
  */
 
 import { FolderOpen, ChevronRight } from 'lucide-react';
@@ -14,7 +14,7 @@ import { useProjectTree, useBulkClassifyRecords } from '@/api/hooks';
 import { useUIStore } from '@/stores';
 import type { HierarchyNode } from '@/types';
 
-import type { DrawerProps, ClassifyRecordsContext } from '../../../drawer/types';
+import type { OverlayProps, ClassifyRecordsContext } from '../../../overlay/types';
 import { Alert } from '@autoart/ui';
 import { Button } from '@autoart/ui';
 import { Inline } from '@autoart/ui';
@@ -24,28 +24,28 @@ import { Text } from '@autoart/ui';
 
 
 /**
- * @deprecated Use DrawerProps<ClassifyRecordsContext> instead.
+ * @deprecated Use OverlayProps<ClassifyRecordsContext> instead.
  */
 interface LegacyAssignRecordsViewProps {
     recordIds: string[];
     onSuccess?: () => void;
 }
 
-type AssignRecordsViewProps = DrawerProps<ClassifyRecordsContext, { assigned: boolean; nodeId: string | null }>;
+type AssignRecordsViewProps = OverlayProps<ClassifyRecordsContext, { assigned: boolean; nodeId: string | null }>;
 
-function isDrawerProps(props: unknown): props is AssignRecordsViewProps {
+function isOverlayProps(props: unknown): props is AssignRecordsViewProps {
     return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props && 'onClose' in props;
 }
 
 export function AssignRecordsView(props: AssignRecordsViewProps | LegacyAssignRecordsViewProps) {
-    const isNewContract = isDrawerProps(props);
+    const isNewContract = isOverlayProps(props);
     const recordIds = isNewContract ? props.context.recordIds : props.recordIds;
     const legacyOnSuccess = !isNewContract ? props.onSuccess : undefined;
     const contextOnSuccess = isNewContract ? props.context.onSuccess : undefined;
     const onClose = isNewContract ? props.onClose : undefined;
     const onSubmit = isNewContract ? props.onSubmit : undefined;
 
-    const { closeDrawer, activeProjectId } = useUIStore();
+    const { closeOverlay, activeProjectId } = useUIStore();
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
@@ -56,7 +56,7 @@ export function AssignRecordsView(props: AssignRecordsViewProps | LegacyAssignRe
         if (onClose) {
             onClose();
         } else {
-            closeDrawer();
+            closeOverlay();
         }
     };
 
@@ -100,7 +100,7 @@ export function AssignRecordsView(props: AssignRecordsViewProps | LegacyAssignRe
             } else {
                 legacyOnSuccess?.();
                 contextOnSuccess?.();
-                closeDrawer();
+                closeOverlay();
             }
         } catch (err) {
             console.error('Assignment failed:', err);
@@ -132,7 +132,7 @@ export function AssignRecordsView(props: AssignRecordsViewProps | LegacyAssignRe
             } else {
                 legacyOnSuccess?.();
                 contextOnSuccess?.();
-                closeDrawer();
+                closeOverlay();
             }
         } catch (err) {
             console.error('Remove assignment failed:', err);

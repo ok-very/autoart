@@ -1,7 +1,7 @@
 /**
  * CreateRecordView
  *
- * Drawer view for creating new records. Uses bespoke components.
+ * Overlay view for creating new records. Uses bespoke components.
  */
 
 import { Plus, FolderTree, X, ChevronDown } from 'lucide-react';
@@ -15,7 +15,7 @@ import {
 import { useUIStore } from '@/stores';
 import type { FieldDef, HierarchyNode } from '@/types';
 
-import type { DrawerProps, CreateRecordContext } from '../../../drawer/types';
+import type { OverlayProps, CreateRecordContext } from '../../../overlay/types';
 import { Button } from '@autoart/ui';
 import { Checkbox } from '@autoart/ui';
 import { Inline } from '@autoart/ui';
@@ -26,29 +26,29 @@ import { Text } from '@autoart/ui';
 import { TextInput } from '@autoart/ui';
 import { RichTextInput } from '../../editor/RichTextInput';
 
-// Legacy props interface (deprecated - use DrawerProps)
+// Legacy props interface (deprecated - use OverlayProps)
 interface LegacyCreateRecordViewProps {
   definitionId: string;
   classificationNodeId?: string;
 }
 
 // New contract props
-type CreateRecordViewProps = DrawerProps<CreateRecordContext, { recordId: string }>;
+type CreateRecordViewProps = OverlayProps<CreateRecordContext, { recordId: string }>;
 
 // Type guard to detect legacy vs new props
-function isDrawerProps(props: unknown): props is CreateRecordViewProps {
+function isOverlayProps(props: unknown): props is CreateRecordViewProps {
   return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props;
 }
 
 export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateRecordViewProps) {
   // Handle both legacy and new contract
-  const isNewContract = isDrawerProps(props);
+  const isNewContract = isOverlayProps(props);
   const definitionId = isNewContract ? props.context.definitionId : props.definitionId;
   const initialNodeId = isNewContract ? props.context.classificationNodeId : props.classificationNodeId;
   const onClose = isNewContract ? props.onClose : undefined;
   const onSubmit = isNewContract ? props.onSubmit : undefined;
 
-  const { closeDrawer, activeProjectId, setSelection } = useUIStore();
+  const { closeOverlay, activeProjectId, setSelection } = useUIStore();
   const { data: definition, isLoading } = useRecordDefinition(definitionId);
   const { data: projectNodes } = useProjectTree(activeProjectId);
   const createRecord = useCreateRecord();
@@ -58,7 +58,7 @@ export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateReco
     if (onClose) {
       onClose();
     } else {
-      closeDrawer();
+      closeOverlay();
     }
   };
 
@@ -112,7 +112,7 @@ export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateReco
           });
         } else {
           // Legacy: close and select
-          closeDrawer();
+          closeOverlay();
           setSelection({ type: 'record', id: result.record.id });
         }
       }

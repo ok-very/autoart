@@ -70,14 +70,14 @@ function SourceIcon({ id, icon, label, isActive, isConnected, isDisabled, onClic
 
 export function SourceIconSidebar({ activeSource, onSourceChange }: SourceIconSidebarProps) {
     const { data: connections } = useConnections();
-    const { openDrawer } = useUIStore();
+    const { openOverlay } = useUIStore();
 
     const isMondayConnected = connections?.monday?.connected ?? false;
     // API is "connected" if any API integrations exist (placeholder for future)
     const isApiConnected = false;
 
     const handleAddIntegration = () => {
-        openDrawer('integrations', {});
+        openOverlay('integrations', {});
     };
 
     return (

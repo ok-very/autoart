@@ -21,7 +21,7 @@ import { Header } from '../ui/layout/Header';
 import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../ui/registry';
 
 export function RecordsPage() {
-  const { inspectorWidth, setInspectorWidth, viewMode, setViewMode, openDrawer } = useUIStore();
+  const { inspectorWidth, setInspectorWidth, viewMode, setViewMode, openOverlay } = useUIStore();
   const [sidebarWidth, setSidebarWidth] = useState(260);
   const [selectedDefinitionId, setSelectedDefinitionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<RegistryTab>('instances');
@@ -52,7 +52,7 @@ export function RecordsPage() {
   };
 
   const handleCreateDefinition = () => {
-    openDrawer('create-definition', { definitionKind: 'record' });
+    openOverlay('create-definition', { definitionKind: 'record' });
   };
 
   return (

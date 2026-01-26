@@ -1,7 +1,7 @@
 /**
  * CloneDefinitionView
  *
- * Drawer view for cloning a record definition using bespoke components.
+ * Overlay view for cloning a record definition using bespoke components.
  */
 
 import { Copy } from 'lucide-react';
@@ -9,30 +9,30 @@ import { useState } from 'react';
 
 import { useUIStore } from '@/stores';
 
-import type { DrawerProps, CloneDefinitionContext } from '../../../drawer/types';
+import type { OverlayProps, CloneDefinitionContext } from '../../../overlay/types';
 import { Button } from '@autoart/ui';
 import { Inline } from '@autoart/ui';
 import { Stack } from '@autoart/ui';
 import { Text } from '@autoart/ui';
 import { TextInput } from '@autoart/ui';
 
-// Legacy props interface (deprecated - use DrawerProps)
+// Legacy props interface (deprecated - use OverlayProps)
 interface LegacyCloneDefinitionViewProps {
   definitionName: string;
   onClone: (name: string) => Promise<void>;
 }
 
 // New contract props
-type CloneDefinitionViewProps = DrawerProps<CloneDefinitionContext & { definitionName?: string; onClone?: (name: string) => Promise<void> }, { definitionId: string }>;
+type CloneDefinitionViewProps = OverlayProps<CloneDefinitionContext & { definitionName?: string; onClone?: (name: string) => Promise<void> }, { definitionId: string }>;
 
 // Type guard to detect legacy vs new props
-function isDrawerProps(props: unknown): props is CloneDefinitionViewProps {
+function isOverlayProps(props: unknown): props is CloneDefinitionViewProps {
   return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props && 'onClose' in props;
 }
 
 export function CloneDefinitionView(props: CloneDefinitionViewProps | LegacyCloneDefinitionViewProps) {
   // Handle both legacy and new contract
-  const isNewContract = isDrawerProps(props);
+  const isNewContract = isOverlayProps(props);
   const definitionName = isNewContract
     ? (props.context.definitionName || props.context.definition?.name || 'Definition')
     : props.definitionName;
@@ -40,7 +40,7 @@ export function CloneDefinitionView(props: CloneDefinitionViewProps | LegacyClon
   const onClose = isNewContract ? props.onClose : undefined;
   const onSubmit = isNewContract ? props.onSubmit : undefined;
 
-  const { closeDrawer } = useUIStore();
+  const { closeOverlay } = useUIStore();
   const [cloneName, setCloneName] = useState('');
   const [isCloning, setIsCloning] = useState(false);
 
@@ -49,7 +49,7 @@ export function CloneDefinitionView(props: CloneDefinitionViewProps | LegacyClon
     if (onClose) {
       onClose();
     } else {
-      closeDrawer();
+      closeOverlay();
     }
   };
 
@@ -72,7 +72,7 @@ export function CloneDefinitionView(props: CloneDefinitionViewProps | LegacyClon
       } else {
         // Legacy: close
         setCloneName('');
-        closeDrawer();
+        closeOverlay();
       }
     } catch (err) {
       console.error('Clone failed:', err);

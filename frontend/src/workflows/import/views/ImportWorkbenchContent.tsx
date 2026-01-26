@@ -40,7 +40,7 @@ const OUTCOME_COLORS: Record<string, { bg: string; text: string }> = {
 export function ImportWorkbenchContent() {
     const [previewMode, setPreviewMode] = useState<PreviewMode>('hierarchy');
     const { session, plan, selectedItemId, setSelectedItemId, reset } = useImportWorkbenchStore();
-    const { openDrawer, inspectRecord } = useUIStore();
+    const { openOverlay, inspectRecord } = useUIStore();
 
     // Count classifications by outcome
     const outcomeCounts = useMemo(() => {
@@ -70,7 +70,7 @@ export function ImportWorkbenchContent() {
     // Open classification panel in bottom drawer
     const handleOpenClassifications = () => {
         if (session) {
-            openDrawer('classification', { sessionId: session.id });
+            openOverlay('classification', { sessionId: session.id });
         }
     };
 

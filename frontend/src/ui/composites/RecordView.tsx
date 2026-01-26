@@ -167,7 +167,7 @@ export function RecordView({
     const definitionId = controlledDefinitionId !== undefined ? controlledDefinitionId : internalDefinitionId;
 
     // Hooks
-    const { inspectRecord, openDrawer } = useUIStore();
+    const { inspectRecord, openOverlay } = useUIStore();
     const { data: allDefinitions = [] } = useRecordDefinitions();
     const { data: definition } = useRecordDefinition(definitionId);
     const { data: records = [], isLoading } = useRecords({
@@ -223,17 +223,17 @@ export function RecordView({
 
     const handleCreateRecord = useCallback(() => {
         if (definitionId) {
-            openDrawer('create-record', {
+            openOverlay('create-record', {
                 definitionId,
                 classificationNodeId,
             });
         }
-    }, [definitionId, classificationNodeId, openDrawer]);
+    }, [definitionId, classificationNodeId, openOverlay]);
 
     const handleBulkDelete = useCallback(() => {
         if (selectedIds.size === 0) return;
 
-        openDrawer('confirm-delete', {
+        openOverlay('confirm-delete', {
             title: 'Delete Records',
             message: `Are you sure you want to delete ${selectedIds.size} record${selectedIds.size > 1 ? 's' : ''}? This action cannot be undone.`,
             onConfirm: async () => {
@@ -241,19 +241,19 @@ export function RecordView({
                 setSelectedIds(new Set());
             },
         });
-    }, [selectedIds, bulkDelete, openDrawer]);
+    }, [selectedIds, bulkDelete, openOverlay]);
 
     const handleBulkClassify = useCallback(() => {
         if (selectedIds.size === 0) return;
-        openDrawer('classify-records', {
+        openOverlay('classify-records', {
             recordIds: [...selectedIds],
             onSuccess: () => setSelectedIds(new Set()),
         });
-    }, [selectedIds, openDrawer]);
+    }, [selectedIds, openOverlay]);
 
     const handleOpenIngestion = useCallback(() => {
-        openDrawer('ingestion', {});
-    }, [openDrawer]);
+        openOverlay('ingestion', {});
+    }, [openOverlay]);
 
     // Render footer with bulk actions
     const renderFooter = useCallback(({ totalRecords, page, totalPages, selectedIds: footerSelectedIds }: {

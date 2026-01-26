@@ -1,7 +1,7 @@
 /**
- * Drawer Views Index
+ * Overlay Views Index
  *
- * Re-exports all drawer view components.
+ * Re-exports all overlay view components.
  */
 
 export { CreateRecordView } from './CreateRecordView';
@@ -15,6 +15,8 @@ export { CloneDefinitionView } from './CloneDefinitionView';
 export { CloneProjectView } from './CloneProjectView';
 export { ConfirmDeleteView } from './ConfirmDeleteView';
 
-export { ViewDefinitionDrawer } from './ViewDefinitionDrawer';
-export { ProjectLibraryDrawer } from './ProjectLibraryDrawer';
-export { MondayBoardsDrawer } from './MondayBoardsDrawer';
+export { ViewDefinitionOverlay } from './ViewDefinitionOverlay';
+export { ProjectLibraryOverlay } from './ProjectLibraryOverlay';
+export { MondayBoardsOverlay } from './MondayBoardsOverlay';
+export { ActionInspectorOverlay } from './ActionInspectorOverlay';
+export { StartCollectionModal } from './StartCollectionModal';

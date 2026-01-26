@@ -96,7 +96,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
     const setNodes = useHierarchyStore((state) => state.setNodes);
     const getNode = useHierarchyStore((state) => state.getNode);
     const getChildren = useHierarchyStore((state) => state.getChildren);
-    const { selection, inspectNode, inspectAction, setInspectorMode, openDrawer, inspectRecord } = useUIStore();
+    const { selection, inspectNode, inspectAction, setInspectorMode, openOverlay, inspectRecord } = useUIStore();
 
     // Fetch record definitions to get Task schema
     const { data: definitions } = useRecordDefinitions();
@@ -252,7 +252,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
 
     const handleAddTask = () => {
         if (activeSubprocessId) {
-            openDrawer('create-node', { parentId: activeSubprocessId, nodeType: 'task' });
+            openOverlay('create-node', { parentId: activeSubprocessId, nodeType: 'task' });
         }
     };
 
@@ -262,7 +262,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
     };
 
     const handleAddRecord = (definitionId: string) => {
-        openDrawer('create-record', {
+        openOverlay('create-record', {
             definitionId,
             classificationNodeId: activeSubprocessId,
         });

@@ -27,7 +27,7 @@ export function RecordTypeSidebar({
 }: RecordTypeSidebarProps) {
   const { data: definitions, isLoading } = useRecordDefinitions();
   const { data: stats } = useRecordStats();
-  const { openDrawer } = useUIStore();
+  const { openOverlay } = useUIStore();
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter to show only data definitions (kind='record')
@@ -57,12 +57,12 @@ export function RecordTypeSidebar({
   };
 
   const handleCreateDefinition = () => {
-    openDrawer('create-definition');
+    openOverlay('create-definition');
   };
 
   const handleEditDefinition = (e: React.MouseEvent, definitionId: string) => {
     e.stopPropagation();
-    openDrawer('view-definition', { definitionId });
+    openOverlay('view-definition', { definitionId });
   };
 
   return (
@@ -193,7 +193,7 @@ export function RecordTypeSidebar({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      openDrawer('create-record', { definitionId: def.id });
+                      openOverlay('create-record', { definitionId: def.id });
                     }}
                     className="p-1 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                     title={`Create new ${def.name}`}

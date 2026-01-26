@@ -9,7 +9,7 @@ import { useState } from 'react';
 
 import { useUIStore } from '@/stores';
 
-import type { DrawerProps, ConfirmDeleteContext } from '../../../drawer/types';
+import type { OverlayProps, ConfirmDeleteContext } from '../../../overlay/types';
 import { Alert } from '@autoart/ui';
 import { Button } from '@autoart/ui';
 import { Inline } from '@autoart/ui';
@@ -18,7 +18,7 @@ import { Text } from '@autoart/ui';
 
 
 
-// Legacy props interface (deprecated - use DrawerProps)
+// Legacy props interface (deprecated - use OverlayProps)
 interface LegacyConfirmDeleteViewProps {
   title: string;
   message: string;
@@ -27,16 +27,16 @@ interface LegacyConfirmDeleteViewProps {
 }
 
 // New contract props
-type ConfirmDeleteViewProps = DrawerProps<ConfirmDeleteContext, { deleted: boolean }>;
+type ConfirmDeleteViewProps = OverlayProps<ConfirmDeleteContext, { deleted: boolean }>;
 
 // Type guard to detect legacy vs new props
-function isDrawerProps(props: unknown): props is ConfirmDeleteViewProps {
+function isOverlayProps(props: unknown): props is ConfirmDeleteViewProps {
   return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props;
 }
 
 export function ConfirmDeleteView(props: ConfirmDeleteViewProps | LegacyConfirmDeleteViewProps) {
   // Handle both legacy and new contract
-  const isNewContract = isDrawerProps(props);
+  const isNewContract = isOverlayProps(props);
 
   const title = isNewContract ? props.context.title : props.title;
   const message = isNewContract ? props.context.message : props.message;
@@ -48,7 +48,7 @@ export function ConfirmDeleteView(props: ConfirmDeleteViewProps | LegacyConfirmD
   const onClose = isNewContract ? props.onClose : undefined;
   const onSubmit = isNewContract ? props.onSubmit : undefined;
 
-  const { closeDrawer } = useUIStore();
+  const { closeOverlay } = useUIStore();
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,7 +57,7 @@ export function ConfirmDeleteView(props: ConfirmDeleteViewProps | LegacyConfirmD
     if (onClose) {
       onClose();
     } else {
-      closeDrawer();
+      closeOverlay();
     }
   };
 
@@ -76,7 +76,7 @@ export function ConfirmDeleteView(props: ConfirmDeleteViewProps | LegacyConfirmD
         });
       } else {
         // Legacy: close
-        closeDrawer();
+        closeOverlay();
       }
     } catch (err) {
       console.error('Delete action failed:', err);

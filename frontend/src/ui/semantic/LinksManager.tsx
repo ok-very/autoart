@@ -36,7 +36,7 @@ export function LinksManager({ recordId }: LinksManagerProps) {
     const { data: linksData, isLoading } = useRecordLinks(recordId);
     const { data: linkTypes } = useLinkTypes();
     const deleteLink = useDeleteLink();
-    const { openDrawer } = useUIStore();
+    const { openOverlay } = useUIStore();
 
     if (isLoading) {
         return (
@@ -51,7 +51,7 @@ export function LinksManager({ recordId }: LinksManagerProps) {
     const totalLinks = outgoing.length + incoming.length;
 
     const handleDeleteLink = (link: RecordLink) => {
-        openDrawer('confirm-delete', {
+        openOverlay('confirm-delete', {
             title: 'Delete Link',
             message:
                 'Are you sure you want to delete this link? The relationship between these records will be removed.',
@@ -77,7 +77,7 @@ export function LinksManager({ recordId }: LinksManagerProps) {
                 </p>
 
                 <button
-                    onClick={() => openDrawer('create-link', { sourceRecordId: recordId })}
+                    onClick={() => openOverlay('create-link', { sourceRecordId: recordId })}
                     className="w-full py-2 bg-white border border-purple-200 text-purple-700 rounded text-xs font-bold hover:bg-purple-50 hover:border-purple-300 transition-all flex items-center justify-center gap-2 shadow-sm"
                 >
                     <ExternalLink size={12} />

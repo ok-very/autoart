@@ -56,7 +56,7 @@ export interface SchemaEditorProps {
  * - Pinned toggle for quick create
  */
 export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
-    const { openDrawer, setInspectorMode } = useUIStore();
+    const { openOverlay, setInspectorMode } = useUIStore();
     const [isCreatingDefinition, setIsCreatingDefinition] = useState(false);
     const [isEditingName, setIsEditingName] = useState(false);
     const [editedName, setEditedName] = useState('');
@@ -155,7 +155,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
 
     const confirmDeleteDefinition = () => {
         if (!definition) return;
-        openDrawer('confirm-delete', {
+        openOverlay('confirm-delete', {
             title: 'Delete Definition',
             message: `Are you sure you want to delete the "${definition.name}" definition? This action cannot be undone.`,
             itemName: definition.name,
@@ -187,7 +187,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
     };
 
     const confirmRemoveField = (fieldKey: string) => {
-        openDrawer('confirm-delete', {
+        openOverlay('confirm-delete', {
             title: 'Delete Field',
             message: `Are you sure you want to delete the "${fieldKey}" field? This will remove it from all records of this type.`,
             onConfirm: async () => handleRemoveField(fieldKey),
@@ -223,7 +223,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
 
     const openCloneDrawer = () => {
         if (!definition) return;
-        openDrawer('clone-definition', {
+        openOverlay('clone-definition', {
             definitionName: definition.name,
             onClone: async (name: string) => {
                 await createDefinition.mutateAsync({
@@ -236,7 +236,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
     };
 
     const openAddFieldDrawer = () => {
-        openDrawer('add-field', {
+        openOverlay('add-field', {
             onSubmit: handleAddField,
             isPending: updateDefinition.isPending,
         });

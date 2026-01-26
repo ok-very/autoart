@@ -44,7 +44,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
   const [page, setPage] = useState(0);
   const pageSize = 50;
 
-  const { inspectRecord, openDrawer } = useUIStore();
+  const { inspectRecord, openOverlay } = useUIStore();
   const { data: allDefinitions } = useRecordDefinitions();
   const { data: definition } = useRecordDefinition(definitionId);
   const { data: records, isLoading } = useRecords({
@@ -149,13 +149,13 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
 
   const handleCreateRecord = () => {
     if (definitionId) {
-      openDrawer('create-record', { definitionId });
+      openOverlay('create-record', { definitionId });
     }
   };
 
   const handleDuplicateRecord = (e: React.MouseEvent, record: DataRecord) => {
     e.stopPropagation();
-    openDrawer('create-record', {
+    openOverlay('create-record', {
       definitionId: record.definition_id,
       prefillData: record.data,
       prefillName: `${record.unique_name} (copy)`,
@@ -165,7 +165,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
 
-    openDrawer('confirm-delete', {
+    openOverlay('confirm-delete', {
       title: 'Delete Records',
       message: `Are you sure you want to delete ${selectedIds.size} record${
         selectedIds.size > 1 ? 's' : ''
@@ -179,14 +179,14 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
 
   const handleBulkClassify = () => {
     if (selectedIds.size === 0) return;
-    openDrawer('classify-records', {
+    openOverlay('classify-records', {
       recordIds: [...selectedIds],
       onSuccess: () => setSelectedIds(new Set()),
     });
   };
 
   const handleOpenIngestion = () => {
-    openDrawer('ingestion', {});
+    openOverlay('ingestion', {});
   };
 
   const getCellValue = (record: DataRecord, key: string): string => {
@@ -437,7 +437,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
                         </button>
                         <button
                           onClick={() => {
-                            openDrawer('view-definition', { recordId: record.id });
+                            openOverlay('view-definition', { recordId: record.id });
                           }}
                           className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
                           title="More options"

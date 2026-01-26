@@ -216,7 +216,7 @@ export function UniversalTableView({
     const pageSize = 50;
 
     // Hooks
-    const { inspectRecord, openDrawer } = useUIStore();
+    const { inspectRecord, openOverlay } = useUIStore();
     const { data: allDefinitions = [] } = useRecordDefinitions();
     const { data: definition } = useRecordDefinition(selectedDefinitionId);
     const { data: records = [], isLoading } = useRecords({
@@ -366,12 +366,12 @@ export function UniversalTableView({
 
     const handleCreateRecord = useCallback(() => {
         if (selectedDefinitionId) {
-            openDrawer('create-record', {
+            openOverlay('create-record', {
                 definitionId: selectedDefinitionId,
                 classificationNodeId,
             });
         }
-    }, [selectedDefinitionId, classificationNodeId, openDrawer]);
+    }, [selectedDefinitionId, classificationNodeId, openOverlay]);
 
     const handleBulkDelete = useCallback(() => {
         if (selectedIds.size === 0) return;

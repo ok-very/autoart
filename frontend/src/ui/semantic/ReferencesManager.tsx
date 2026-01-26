@@ -106,7 +106,7 @@ function ReferenceCard({ reference }: ReferenceCardProps) {
     const updateMode = useUpdateReferenceMode();
     const updateSnapshot = useUpdateReferenceSnapshot();
     const deleteReference = useDeleteReference();
-    const { openDrawer } = useUIStore();
+    const { openOverlay } = useUIStore();
 
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState('');
@@ -145,7 +145,7 @@ function ReferenceCard({ reference }: ReferenceCardProps) {
     };
 
     const handleDelete = () => {
-        openDrawer('confirm-delete', {
+        openOverlay('confirm-delete', {
             title: 'Delete Reference',
             message:
                 'Are you sure you want to delete this reference? The link between this task and the source record will be removed.',

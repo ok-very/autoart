@@ -1,7 +1,7 @@
 /**
- * Drawer System
+ * Overlay System
  *
- * @deprecated This drawer system has been replaced by Dockview panels.
+ * @deprecated This overlay system has been replaced by Dockview panels.
  * See `workspaceStore.ts` and `DockviewWorkspace.tsx` for the new panel system.
  *
  * Types are kept for backward compatibility during migration.

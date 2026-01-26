@@ -5,13 +5,13 @@ import { useProjectTemplates, useRemoveFromLibrary, useCreateDefinition } from '
 import { useUIStore } from '@/stores';
 import type { RecordDefinition } from '@/types';
 
-interface ProjectLibraryDrawerProps {
+interface ProjectLibraryOverlayProps {
   projectId?: string;
   projectTitle?: string;
 }
 
-export function ProjectLibraryDrawer({ projectId, projectTitle }: ProjectLibraryDrawerProps) {
-  const { closeDrawer, openDrawer, activeProjectId } = useUIStore();
+export function ProjectLibraryOverlay({ projectId, projectTitle }: ProjectLibraryOverlayProps) {
+  const { closeOverlay, openOverlay, activeProjectId } = useUIStore();
   const effectiveProjectId = projectId || activeProjectId;
 
   const { data: templates, isLoading } = useProjectTemplates(effectiveProjectId || null);
@@ -27,7 +27,7 @@ export function ProjectLibraryDrawer({ projectId, projectTitle }: ProjectLibrary
         schemaConfig: template.schema_config,
         styling: template.styling,
       });
-      closeDrawer();
+      closeOverlay();
     } catch (err) {
       console.error('Failed to create from template:', err);
     }
@@ -42,7 +42,7 @@ export function ProjectLibraryDrawer({ projectId, projectTitle }: ProjectLibrary
   };
 
   const handleViewDefinition = (definitionId: string) => {
-    openDrawer('view-definition', { definitionId });
+    openOverlay('view-definition', { definitionId });
   };
 
   if (isLoading) {
@@ -163,7 +163,7 @@ export function ProjectLibraryDrawer({ projectId, projectTitle }: ProjectLibrary
       {/* Actions */}
       <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-slate-100">
         <button
-          onClick={closeDrawer}
+          onClick={closeOverlay}
           className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
         >
           Close

@@ -25,7 +25,7 @@ import { FieldInstancesReview } from '../ui/semantic/FieldInstancesReview';
 
 
 export function FieldsPage() {
-    const { viewMode, setViewMode, openDrawer } = useUIStore();
+    const { viewMode, setViewMode, openOverlay } = useUIStore();
     const [sidebarWidth, setSidebarWidth] = useState(600);
     const [selectedField, setSelectedField] = useState<FieldDescriptor | null>(null);
     const [activeTab, setActiveTab] = useState<RegistryTab>('definitions');
@@ -38,7 +38,7 @@ export function FieldsPage() {
     }, [viewMode, setViewMode]);
 
     const handleCreateField = () => {
-        openDrawer('add-field', {});
+        openOverlay('add-field', {});
     };
 
     return (
