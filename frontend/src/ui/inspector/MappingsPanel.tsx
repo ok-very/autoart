@@ -24,7 +24,7 @@ import {
     MoreHorizontal,
     Unlink,
 } from 'lucide-react';
-import { useMemo, useState, useRef, useCallback } from 'react';
+import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 
 import { Badge } from '@autoart/ui';
 
@@ -115,9 +115,29 @@ function MappingRow({
     onUnlink?: (entry: MappingEntry) => void;
 }) {
     const [showMenu, setShowMenu] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const menuButtonRef = useRef<HTMLButtonElement>(null);
     const Icon = entityIcons[entry.type] || fallbackIcon;
     const statusInfo = statusConfig[entry.status] || fallbackStatusConfig;
     const StatusIcon = statusInfo.icon;
+
+    // Close menu on Escape and handle focus
+    useEffect(() => {
+        if (!showMenu) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setShowMenu(false);
+                menuButtonRef.current?.focus();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        // Focus the menu when opened
+        menuRef.current?.querySelector('button')?.focus();
+
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [showMenu]);
 
     return (
         <div
@@ -166,10 +186,13 @@ function MappingRow({
             {onUnlink && (
                 <div className="relative">
                     <button
+                        ref={menuButtonRef}
                         onClick={(e) => {
                             e.stopPropagation();
                             setShowMenu(!showMenu);
                         }}
+                        aria-haspopup="menu"
+                        aria-expanded={showMenu}
                         className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
                     >
                         <MoreHorizontal size={14} />
@@ -177,8 +200,14 @@ function MappingRow({
                     {showMenu && (
                         <>
                             <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-                            <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[120px]">
+                            <div
+                                ref={menuRef}
+                                role="menu"
+                                aria-label="Mapping actions"
+                                className="absolute right-0 top-full mt-1 z-20 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[120px]"
+                            >
                                 <button
+                                    role="menuitem"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setShowMenu(false);
