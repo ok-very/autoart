@@ -255,7 +255,7 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: 'ui-storage',
-      version: 3, // v3: Split viewMode into namespaced projectViewMode/fieldsViewMode/recordsViewMode
+      version: 4, // v4: Rename action_recipe to action_arrangement
       partialize: (state) => ({
         sidebarWidth: state.sidebarWidth,
         inspectorWidth: state.inspectorWidth,
@@ -304,6 +304,13 @@ export const useUIStore = create<UIState>()(
           state.fieldsViewMode = state.fieldsViewMode || 'browse';
           state.recordsViewMode = state.recordsViewMode || 'list';
           delete state.viewMode;
+        }
+
+        if (version < 4) {
+          // v4: Rename action_recipe to action_arrangement
+          if (state.registryDefinitionKind === 'action_recipe') {
+            state.registryDefinitionKind = 'action_arrangement';
+          }
         }
 
         // Ensure centerContentType has a default value
