@@ -13,7 +13,7 @@ import { Menu } from '@autoart/ui';
 
 export function HierarchySidebar() {
   const { setNodes, getChildren, getNode } = useHierarchyStore();
-  const { activeProjectId, selection, setSelection, sidebarWidth, openDrawer, setActiveProject } = useUIStore();
+  const { activeProjectId, selection, setSelection, sidebarWidth, openOverlay, setActiveProject } = useUIStore();
   const { data: nodes } = useProjectTree(activeProjectId);
   const { data: projects } = useProjects();
 
@@ -92,15 +92,15 @@ export function HierarchySidebar() {
             </button>
           </Menu.Target>
           <Menu.Dropdown className="min-w-[240px]">
-            <Menu.Item leftSection={<Plus size={16} />} onClick={() => openDrawer('create-project', {})}>
+            <Menu.Item leftSection={<Plus size={16} />} onClick={() => openOverlay('create-project', {})}>
               New Project
             </Menu.Item>
             {project && (
               <>
-                <Menu.Item leftSection={<Copy size={16} />} onClick={() => openDrawer('clone-project', { sourceProjectId: project.id, sourceProjectTitle: project.title })}>
+                <Menu.Item leftSection={<Copy size={16} />} onClick={() => openOverlay('clone-project', { sourceProjectId: project.id, sourceProjectTitle: project.title })}>
                   Clone Current
                 </Menu.Item>
-                <Menu.Item leftSection={<Library size={16} />} onClick={() => openDrawer('project-library', { projectId: project.id, projectTitle: project.title })}>
+                <Menu.Item leftSection={<Library size={16} />} onClick={() => openOverlay('project-library', { projectId: project.id, projectTitle: project.title })}>
                   Template Library
                 </Menu.Item>
                 <Menu.Item component={Link} to="/import" leftSection={<Hammer size={16} />}>
@@ -194,7 +194,7 @@ export function HierarchySidebar() {
         {/* Create New Button */}
         <div className="pt-4 px-2">
           <button
-            onClick={() => createConfig && openDrawer('create-node', createConfig)}
+            onClick={() => createConfig && openOverlay('create-node', createConfig)}
             disabled={!createConfig}
             className="w-full py-2 border border-dashed border-slate-300 rounded text-xs text-slate-500 hover:border-slate-400 hover:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
           >

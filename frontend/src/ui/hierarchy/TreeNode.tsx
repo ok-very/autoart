@@ -13,7 +13,7 @@ interface TreeNodeProps {
 
 export function TreeNode({ node, level }: TreeNodeProps) {
   const { getChildren, expandedIds, toggleExpand } = useHierarchyStore();
-  const { selection, setSelection, openDrawer } = useUIStore();
+  const { selection, setSelection, openOverlay } = useUIStore();
   const deleteNode = useDeleteNode();
   const moveNode = useMoveNode();
   const cloneNode = useCloneNode();
@@ -52,7 +52,7 @@ export function TreeNode({ node, level }: TreeNodeProps) {
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    openDrawer('confirm-delete', {
+    openOverlay('confirm-delete', {
       title: `Delete ${node.type}`,
       message: `Are you sure you want to delete this ${node.type}? ${hasChildren ? 'This will also delete all child items.' : ''}`,
       itemName: node.title,

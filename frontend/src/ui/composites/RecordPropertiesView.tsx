@@ -39,7 +39,7 @@ interface RecordPropertiesViewProps {
  * For nodes: Uses NodeFieldEditor semantic component
  */
 export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewProps) {
-    const { clearInspection, openDrawer } = useUIStore();
+    const { clearInspection, openOverlay } = useUIStore();
     const { data: node } = useNode(isNode ? itemId : null);
     const updateNode = useUpdateNode();
     const deleteRecord = useDeleteRecord();
@@ -153,7 +153,7 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
     };
 
     const confirmDeleteRecord = () => {
-        openDrawer('confirm-delete', {
+        openOverlay('confirm-delete', {
             title: 'Delete Record',
             message:
                 'Are you sure you want to delete this record? This action cannot be undone and will also remove all links to this record.',

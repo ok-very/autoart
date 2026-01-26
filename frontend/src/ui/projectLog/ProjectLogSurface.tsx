@@ -284,14 +284,14 @@ export function ProjectLogSurface() {
                   </p>
                   <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
                     <button
-                      onClick={() => useUIStore.getState().openDrawer('composer', { contextId: selectedSubprocessId })}
+                      onClick={() => useUIStore.getState().openOverlay('composer', { contextId: selectedSubprocessId })}
                       className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:from-violet-600 hover:to-purple-700 shadow-sm transition-all"
                     >
                       <span>✨</span>
                       Create Action
                     </button>
                     <button
-                      onClick={() => useUIStore.getState().openDrawer('template-library')}
+                      onClick={() => useUIStore.getState().openOverlay('template-library')}
                       className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
                     >
                       <span>📚</span>

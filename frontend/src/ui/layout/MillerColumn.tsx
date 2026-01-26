@@ -30,16 +30,16 @@ export function MillerColumn({
   hasChildren,
 }: MillerColumnProps) {
   const { getChildren } = useHierarchyStore();
-  const { openDrawer } = useUIStore();
+  const { openOverlay } = useUIStore();
 
   const items = getChildren(parentId);
   const config = COLUMN_CONFIG[type];
 
   const handleAdd = () => {
     if (parentId) {
-      openDrawer('create-node', { parentId, nodeType: type });
+      openOverlay('create-node', { parentId, nodeType: type });
     } else if (type === 'project') {
-      openDrawer('create-project', {});
+      openOverlay('create-project', {});
     }
   };
 

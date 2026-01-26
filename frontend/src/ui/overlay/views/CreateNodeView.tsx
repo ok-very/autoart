@@ -1,9 +1,9 @@
 /**
  * CreateNodeView
  *
- * Drawer view for creating hierarchy nodes.
+ * Overlay view for creating hierarchy nodes.
  *
- * @deprecated Legacy props are deprecated. Use DrawerProps<CreateNodeContext> instead.
+ * @deprecated Legacy props are deprecated. Use OverlayProps<CreateNodeContext> instead.
  */
 
 import { Plus } from 'lucide-react';
@@ -13,7 +13,7 @@ import { useCreateNode } from '@/api/hooks';
 import { useUIStore } from '@/stores';
 import type { NodeType } from '@/types';
 
-import type { DrawerProps, CreateNodeContext } from '../../../drawer/types';
+import type { OverlayProps, CreateNodeContext } from '../../../overlay/types';
 import { Button } from '@autoart/ui';
 import { Inline } from '@autoart/ui';
 import { Stack } from '@autoart/ui';
@@ -21,7 +21,7 @@ import { Text } from '@autoart/ui';
 import { TextInput } from '@autoart/ui';
 
 /**
- * @deprecated Use DrawerProps<CreateNodeContext> instead.
+ * @deprecated Use OverlayProps<CreateNodeContext> instead.
  */
 interface LegacyCreateNodeViewProps {
   parentId: string;
@@ -29,23 +29,23 @@ interface LegacyCreateNodeViewProps {
 }
 
 // New contract props
-type CreateNodeViewProps = DrawerProps<CreateNodeContext, { nodeId: string }>;
+type CreateNodeViewProps = OverlayProps<CreateNodeContext, { nodeId: string }>;
 
 // Type guard to detect legacy vs new props
-function isDrawerProps(props: unknown): props is CreateNodeViewProps {
+function isOverlayProps(props: unknown): props is CreateNodeViewProps {
   return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props;
 }
 
 export function CreateNodeView(props: CreateNodeViewProps | LegacyCreateNodeViewProps) {
   // Handle both legacy and new contract
-  const isNewContract = isDrawerProps(props);
+  const isNewContract = isOverlayProps(props);
   const parentId = isNewContract ? props.context.parentId : props.parentId;
   const nodeType = isNewContract ? props.context.nodeType : props.nodeType;
   const onClose = isNewContract ? props.onClose : undefined;
   const onSubmit = isNewContract ? props.onSubmit : undefined;
 
   const [title, setTitle] = useState('');
-  const { closeDrawer } = useUIStore();
+  const { closeOverlay } = useUIStore();
   const createNode = useCreateNode();
 
   // Close handler that works with both contracts
@@ -53,7 +53,7 @@ export function CreateNodeView(props: CreateNodeViewProps | LegacyCreateNodeView
     if (onClose) {
       onClose();
     } else {
-      closeDrawer();
+      closeOverlay();
     }
   };
 
@@ -89,7 +89,7 @@ export function CreateNodeView(props: CreateNodeViewProps | LegacyCreateNodeView
       } else {
         // Legacy: close
         setTitle('');
-        closeDrawer();
+        closeOverlay();
       }
     } catch (err) {
       console.error('Failed to create node:', err);

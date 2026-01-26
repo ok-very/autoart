@@ -1,7 +1,7 @@
 /**
  * CreateDefinitionView
  *
- * Drawer view for creating new record or action definitions.
+ * Overlay view for creating new record or action definitions.
  */
 
 import { Plus, Palette } from 'lucide-react';
@@ -10,7 +10,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useCreateDefinition } from '@/api/hooks';
 import { useUIStore } from '@/stores';
 
-import type { DrawerProps, CreateDefinitionContext } from '../../../drawer/types';
+import type { OverlayProps, CreateDefinitionContext } from '../../../overlay/types';
 import { Button } from '@autoart/ui';
 import { Inline } from '@autoart/ui';
 import { Stack } from '@autoart/ui';
@@ -30,23 +30,23 @@ const PRESET_COLORS = [
 
 const PRESET_EMOJIS = ['📋', '📁', '👤', '🏢', '🎨', '📦', '🔧', '📝', '💼', '🏷️', '📊', '🎯'];
 
-// Legacy props interface (deprecated - use DrawerProps)
+// Legacy props interface (deprecated - use OverlayProps)
 interface LegacyCreateDefinitionViewProps {
   copyFromId?: string;
   definitionKind?: 'record' | 'action_arrangement';
 }
 
 // New contract props
-type CreateDefinitionViewProps = DrawerProps<CreateDefinitionContext, { definitionId: string }>;
+type CreateDefinitionViewProps = OverlayProps<CreateDefinitionContext, { definitionId: string }>;
 
 // Type guard to detect legacy vs new props
-function isDrawerProps(props: unknown): props is CreateDefinitionViewProps {
+function isOverlayProps(props: unknown): props is CreateDefinitionViewProps {
   return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props;
 }
 
 export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCreateDefinitionViewProps | Record<string, never> = {}) {
   // Handle both legacy and new contract
-  const isNewContract = isDrawerProps(props);
+  const isNewContract = isOverlayProps(props);
   const onClose = isNewContract ? props.onClose : undefined;
   const onSubmit = isNewContract ? props.onSubmit : undefined;
 
@@ -54,7 +54,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
   const definitionKind = (props as { definitionKind?: string }).definitionKind ?? 'record';
   const isActionArrangement = definitionKind === 'action_arrangement';
 
-  const { closeDrawer } = useUIStore();
+  const { closeOverlay } = useUIStore();
   const createDefinition = useCreateDefinition();
 
   const [name, setName] = useState('');
@@ -82,7 +82,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
     if (onClose) {
       onClose();
     } else {
-      closeDrawer();
+      closeOverlay();
     }
   };
 
@@ -113,7 +113,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
         });
       } else {
         // Legacy: close
-        closeDrawer();
+        closeOverlay();
       }
     } catch (err) {
       console.error('Failed to create definition:', err);

@@ -1,7 +1,7 @@
 /**
  * CreateLinkView
  *
- * Drawer view for creating record links.
+ * Overlay view for creating record links.
  */
 
 import { Link2 } from 'lucide-react';
@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useCreateLink, useLinkTypes, useSearch } from '@/api/hooks';
 import { useUIStore } from '@/stores';
 
-import type { DrawerProps, CreateLinkContext } from '../../../drawer/types';
+import type { OverlayProps, CreateLinkContext } from '../../../overlay/types';
 import { useDebounce } from '../../../hooks/useDebounce';
 import { Button } from '@autoart/ui';
 import { Inline } from '@autoart/ui';
@@ -20,22 +20,22 @@ import { Stack } from '@autoart/ui';
 import { Text } from '@autoart/ui';
 import { TextInput } from '@autoart/ui';
 
-// Legacy props interface (deprecated - use DrawerProps)
+// Legacy props interface (deprecated - use OverlayProps)
 interface LegacyCreateLinkViewProps {
   sourceRecordId: string;
 }
 
 // New contract props
-type CreateLinkViewProps = DrawerProps<CreateLinkContext, { linkId: string }>;
+type CreateLinkViewProps = OverlayProps<CreateLinkContext, { linkId: string }>;
 
 // Type guard to detect legacy vs new props
-function isDrawerProps(props: unknown): props is CreateLinkViewProps {
+function isOverlayProps(props: unknown): props is CreateLinkViewProps {
   return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props;
 }
 
 export function CreateLinkView(props: CreateLinkViewProps | LegacyCreateLinkViewProps) {
   // Handle both legacy and new contract
-  const isNewContract = isDrawerProps(props);
+  const isNewContract = isOverlayProps(props);
   const sourceRecordId = isNewContract ? props.context.sourceRecordId : props.sourceRecordId;
   const onClose = isNewContract ? props.onClose : undefined;
   const onSubmit = isNewContract ? props.onSubmit : undefined;
@@ -45,7 +45,7 @@ export function CreateLinkView(props: CreateLinkViewProps | LegacyCreateLinkView
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
   const [linkType, setLinkType] = useState<string | null>('related_to');
 
-  const { closeDrawer } = useUIStore();
+  const { closeOverlay } = useUIStore();
   const createLink = useCreateLink();
   const { data: linkTypes } = useLinkTypes();
   const { data: searchResults, isLoading: isSearching } = useSearch(debouncedQuery, undefined, !!debouncedQuery && debouncedQuery.length > 1);
@@ -55,7 +55,7 @@ export function CreateLinkView(props: CreateLinkViewProps | LegacyCreateLinkView
     if (onClose) {
       onClose();
     } else {
-      closeDrawer();
+      closeOverlay();
     }
   };
 
@@ -80,7 +80,7 @@ export function CreateLinkView(props: CreateLinkViewProps | LegacyCreateLinkView
         });
       } else {
         // Legacy: close
-        closeDrawer();
+        closeOverlay();
       }
     } catch (err) {
       console.error('Failed to create link:', err);

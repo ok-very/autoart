@@ -7,7 +7,7 @@ import { Stack } from '@autoart/ui';
 import { Text } from '@autoart/ui';
 import { MondayColumnConfig, MondayColumnSemanticRole } from '../../../../api/types/monday';
 
-interface ImportPreviewDrawerProps {
+interface ImportPreviewOverlayProps {
     isOpen: boolean;
     onClose: () => void;
     columns: MondayColumnConfig[];
@@ -23,7 +23,7 @@ export function ImportPreviewDrawer({
     sampleItem,
     itemTitle = "Sample Item Name",
     boardName,
-}: ImportPreviewDrawerProps) {
+}: ImportPreviewOverlayProps) {
     // Filter relevant mapped columns
     const mappedColumns = useMemo(() => {
         return columns.filter(c => c.semanticRole !== 'ignore' && c.semanticRole !== 'custom');

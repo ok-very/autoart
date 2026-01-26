@@ -43,7 +43,7 @@ export function RegistrySidebar({
     // Fact kinds stats
     const { data: factKindStats } = useFactKindStats();
 
-    const { openDrawer } = useUIStore();
+    const { openOverlay } = useUIStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [recordsExpanded, setRecordsExpanded] = useState(true);
     const [actionsExpanded, setActionsExpanded] = useState(true);
@@ -89,12 +89,12 @@ export function RegistrySidebar({
     };
 
     const handleCreateDefinition = () => {
-        openDrawer('create-definition', { definitionKind: 'record' });
+        openOverlay('create-definition', { definitionKind: 'record' });
     };
 
     const handleEditDefinition = (e: React.MouseEvent, definitionId: string) => {
         e.stopPropagation();
-        openDrawer('view-definition', { definitionId });
+        openOverlay('view-definition', { definitionId });
     };
 
     return (
@@ -234,7 +234,7 @@ export function RegistrySidebar({
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                openDrawer('create-record', { definitionId: def.id });
+                                                                openOverlay('create-record', { definitionId: def.id });
                                                             }}
                                                             className="p-1 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                                                             title={`Create ${def.name}`}

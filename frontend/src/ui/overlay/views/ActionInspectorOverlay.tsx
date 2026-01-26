@@ -1,5 +1,5 @@
 /**
- * ActionInspectorDrawer - Bottom drawer view for action inspection
+ * ActionInspectorOverlay - Bottom drawer view for action inspection
  *
  * Detailed view of a single action with:
  * - Declared Intent (field bindings - potentially editable)
@@ -15,12 +15,12 @@ import { useAction, useActionEvents, useRetractAction, useAmendAction } from '@/
 import { useUIStore } from '@/stores';
 import { EventRow } from '@/ui/primitives/EventRow';
 
-interface ActionInspectorDrawerProps {
+interface ActionInspectorOverlayProps {
     actionId: string;
 }
 
-export function ActionInspectorDrawer({ actionId }: ActionInspectorDrawerProps) {
-    const { closeDrawer, inspectAction, includeSystemEventsInLog, setIncludeSystemEventsInLog } = useUIStore();
+export function ActionInspectorOverlay({ actionId }: ActionInspectorOverlayProps) {
+    const { closeOverlay, inspectAction, includeSystemEventsInLog, setIncludeSystemEventsInLog } = useUIStore();
     const { data: action, isLoading: actionLoading } = useAction(actionId);
     const { data: events = [], isLoading: eventsLoading } = useActionEvents(actionId);
 
@@ -54,7 +54,7 @@ export function ActionInspectorDrawer({ actionId }: ActionInspectorDrawerProps) 
     };
 
     const handleOpenInInspector = () => {
-        closeDrawer();
+        closeOverlay();
         inspectAction(actionId);
     };
 
@@ -65,7 +65,7 @@ export function ActionInspectorDrawer({ actionId }: ActionInspectorDrawerProps) 
                 { actionId },
                 {
                     onSuccess: () => {
-                        closeDrawer();
+                        closeOverlay();
                     },
                 }
             );
@@ -235,7 +235,7 @@ export function ActionInspectorDrawer({ actionId }: ActionInspectorDrawerProps) 
             {/* Footer */}
             <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-slate-100">
                 <button
-                    onClick={closeDrawer}
+                    onClick={closeOverlay}
                     className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
                 >
                     Close

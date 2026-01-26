@@ -25,7 +25,7 @@ const TAB_DATA = [
 ];
 
 export function FieldsPanel() {
-    const { setFieldsViewMode, openDrawer } = useUIStore();
+    const { setFieldsViewMode, openOverlay } = useUIStore();
     const collectionMode = useCollectionModeOptional();
     const [sidebarWidth, setSidebarWidth] = useState(300);
     const [selectedField, setSelectedField] = useState<FieldDescriptor | null>(null);
@@ -40,7 +40,7 @@ export function FieldsPanel() {
     }, [activeTab, collectionMode, setFieldsViewMode]);
 
     const handleCreateField = () => {
-        openDrawer('add-field', {});
+        openOverlay('add-field', {});
     };
 
     return (

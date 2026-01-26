@@ -31,7 +31,7 @@ function getTailwindColor(colorName: string, shade: number): string {
   return TAILWIND_COLORS[colorName]?.[shade] ?? '#f1f5f9';
 }
 
-interface ViewDefinitionDrawerProps {
+interface ViewDefinitionOverlayProps {
   recordId?: string;
   definitionId?: string;
 }
@@ -48,8 +48,8 @@ const FIELD_TYPE_COLORS: Record<string, string> = {
   link: 'bg-orange-100 text-orange-700',
 };
 
-export function ViewDefinitionDrawer({ recordId, definitionId }: ViewDefinitionDrawerProps) {
-  const { closeDrawer, inspectRecord } = useUIStore();
+export function ViewDefinitionOverlay({ recordId, definitionId }: ViewDefinitionOverlayProps) {
+  const { closeOverlay, inspectRecord } = useUIStore();
 
   // If recordId provided, first fetch record to get definition_id
   const { data: record, isLoading: recordLoading } = useRecord(recordId || null);
@@ -82,7 +82,7 @@ export function ViewDefinitionDrawer({ recordId, definitionId }: ViewDefinitionD
 
   const handleOpenInInspector = () => {
     if (recordId) {
-      closeDrawer();
+      closeOverlay();
       inspectRecord(recordId);
     }
   };
@@ -220,7 +220,7 @@ export function ViewDefinitionDrawer({ recordId, definitionId }: ViewDefinitionD
       {/* Actions */}
       <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-slate-100">
         <button
-          onClick={closeDrawer}
+          onClick={closeOverlay}
           className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
         >
           Close

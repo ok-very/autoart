@@ -1,7 +1,7 @@
 /**
  * CloneProjectView
  *
- * Drawer view for cloning a project with configurable depth.
+ * Overlay view for cloning a project with configurable depth.
  */
 
 import { Copy, FileText, Database, Layers } from 'lucide-react';
@@ -11,7 +11,7 @@ import { useCloneNode, useCloneStats } from '@/api/hooks';
 import { useUIStore } from '@/stores';
 import { useHierarchyStore } from '@/stores';
 
-import type { DrawerProps, CloneProjectContext } from '../../../drawer/types';
+import type { OverlayProps, CloneProjectContext } from '../../../overlay/types';
 import { Alert } from '@autoart/ui';
 import { Badge } from '@autoart/ui';
 import { Button } from '@autoart/ui';
@@ -22,17 +22,17 @@ import { Stack } from '@autoart/ui';
 import { Text } from '@autoart/ui';
 import { TextInput } from '@autoart/ui';
 
-// Legacy props interface (deprecated - use DrawerProps)
+// Legacy props interface (deprecated - use OverlayProps)
 interface LegacyCloneProjectViewProps {
   sourceProjectId: string;
   sourceProjectTitle: string;
 }
 
 // New contract props
-type CloneProjectViewProps = DrawerProps<CloneProjectContext & { sourceProjectId?: string; sourceProjectTitle?: string }, { projectId: string }>;
+type CloneProjectViewProps = OverlayProps<CloneProjectContext & { sourceProjectId?: string; sourceProjectTitle?: string }, { projectId: string }>;
 
 // Type guard to detect legacy vs new props
-function isDrawerProps(props: unknown): props is CloneProjectViewProps {
+function isOverlayProps(props: unknown): props is CloneProjectViewProps {
   return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props && 'onClose' in props;
 }
 
@@ -47,7 +47,7 @@ const DEPTH_OPTIONS: { value: CloneDepth; label: string; description: string }[]
 
 export function CloneProjectView(props: CloneProjectViewProps | LegacyCloneProjectViewProps) {
   // Handle both legacy and new contract
-  const isNewContract = isDrawerProps(props);
+  const isNewContract = isOverlayProps(props);
   const sourceProjectId = isNewContract
     ? (props.context.sourceProjectId || props.context.projectId)
     : props.sourceProjectId;
@@ -62,7 +62,7 @@ export function CloneProjectView(props: CloneProjectViewProps | LegacyCloneProje
   const [includeDefinitions, setIncludeDefinitions] = useState(true);
   const [includeRecords, setIncludeRecords] = useState(false);
 
-  const { closeDrawer } = useUIStore();
+  const { closeOverlay } = useUIStore();
   const { selectProject } = useHierarchyStore();
   const cloneNode = useCloneNode();
 
@@ -71,7 +71,7 @@ export function CloneProjectView(props: CloneProjectViewProps | LegacyCloneProje
     if (onClose) {
       onClose();
     } else {
-      closeDrawer();
+      closeOverlay();
     }
   };
 
@@ -108,7 +108,7 @@ export function CloneProjectView(props: CloneProjectViewProps | LegacyCloneProje
         if (result.node) {
           selectProject(result.node.id);
         }
-        closeDrawer();
+        closeOverlay();
       }
     } catch (err) {
       console.error('Failed to clone project:', err);

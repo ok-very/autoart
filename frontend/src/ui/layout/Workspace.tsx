@@ -176,7 +176,7 @@ interface SubprocessSectionProps {
 
 function SubprocessSection({ subprocess }: SubprocessSectionProps) {
   const { getChildren } = useHierarchyStore();
-  const { openDrawer } = useUIStore();
+  const { openOverlay } = useUIStore();
   const tasks = getChildren(subprocess.id).filter(node => node.type === 'task');
 
   return (
@@ -184,7 +184,7 @@ function SubprocessSection({ subprocess }: SubprocessSectionProps) {
       <div className="flex items-center justify-between mb-3">
         <h4 className="text-lg font-bold text-slate-700">{subprocess.title}</h4>
         <button
-          onClick={() => openDrawer('create-node', { parentId: subprocess.id, nodeType: 'task' })}
+          onClick={() => openOverlay('create-node', { parentId: subprocess.id, nodeType: 'task' })}
           className="text-xs text-blue-600 hover:underline"
         >
           <Plus size={12} className="inline-block mr-1" /> Add Task
@@ -206,7 +206,7 @@ interface StageSectionProps {
 
 function StageSection({ stage }: StageSectionProps) {
   const { getChildren } = useHierarchyStore();
-  const { openDrawer } = useUIStore();
+  const { openOverlay } = useUIStore();
   const subprocesses = getChildren(stage.id).filter(node => node.type === 'subprocess');
   const [isExpanded, setIsExpanded] = useState(true); // State to manage stage expansion
 
@@ -222,7 +222,7 @@ function StageSection({ stage }: StageSectionProps) {
         <div className="flex items-center gap-2">
           <Badge variant="stage">{stage.type}</Badge>
           <button
-            onClick={() => openDrawer('create-node', { parentId: stage.id, nodeType: 'subprocess' })}
+            onClick={() => openOverlay('create-node', { parentId: stage.id, nodeType: 'subprocess' })}
             className="text-xs text-blue-600 hover:underline"
           >
             <Plus size={12} className="inline-block mr-1" /> Add Subprocess

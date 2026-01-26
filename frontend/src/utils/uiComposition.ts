@@ -1,10 +1,10 @@
 import type { ProjectViewMode } from '@autoart/shared';
-import { Selection, InspectorMode, UIPanels, DrawerConfig } from '../types/ui';
+import { Selection, InspectorMode, UIPanels, OverlayConfig } from '../types/ui';
 
 type CompositionState = {
     selection: Selection;
     projectViewMode: ProjectViewMode;
-    activeDrawer: DrawerConfig | null;
+    activeOverlay: OverlayConfig | null;
     inspectorCollapsed: boolean;
     sidebarCollapsed: boolean;
     inspectorTabMode: string; // 'record', 'schema', etc.
@@ -14,7 +14,7 @@ export function deriveUIPanels(state: CompositionState): UIPanels {
     const {
         selection,
         projectViewMode,
-        activeDrawer,
+        activeOverlay,
         inspectorCollapsed,
         sidebarCollapsed,
         inspectorTabMode
@@ -76,6 +76,6 @@ export function deriveUIPanels(state: CompositionState): UIPanels {
         sidebar,
         workspace,
         inspector,
-        drawer: activeDrawer
+        overlay: activeOverlay
     };
 }

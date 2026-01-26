@@ -1,7 +1,7 @@
 /**
  * CreateProjectView
  *
- * Drawer view for creating new projects.
+ * Overlay view for creating new projects.
  */
 
 import { useState } from 'react';
@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { useCreateNode } from '@/api/hooks';
 import { useUIStore, useHierarchyStore } from '@/stores';
 
-import type { DrawerProps, CreateProjectContext } from '../../../drawer/types';
+import type { OverlayProps, CreateProjectContext } from '../../../overlay/types';
 import { Alert } from '@autoart/ui';
 import { Button } from '@autoart/ui';
 import { Inline } from '@autoart/ui';
@@ -17,28 +17,28 @@ import { Stack } from '@autoart/ui';
 import { Text } from '@autoart/ui';
 import { TextInput } from '@autoart/ui';
 
-// Legacy props interface (deprecated - use DrawerProps)
+// Legacy props interface (deprecated - use OverlayProps)
 interface LegacyCreateProjectViewProps {
   templateId?: string;
 }
 
 // New contract props
-type CreateProjectViewProps = DrawerProps<CreateProjectContext, { projectId: string }>;
+type CreateProjectViewProps = OverlayProps<CreateProjectContext, { projectId: string }>;
 
 // Type guard to detect legacy vs new props
-function isDrawerProps(props: unknown): props is CreateProjectViewProps {
+function isOverlayProps(props: unknown): props is CreateProjectViewProps {
   return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props;
 }
 
 export function CreateProjectView(props: CreateProjectViewProps | LegacyCreateProjectViewProps | Record<string, never> = {}) {
   // Handle both legacy and new contract
-  const isNewContract = isDrawerProps(props);
+  const isNewContract = isOverlayProps(props);
   const onClose = isNewContract ? props.onClose : undefined;
   const onSubmit = isNewContract ? props.onSubmit : undefined;
 
   const [title, setTitle] = useState('');
   const [processName, setProcessName] = useState('Main Process');
-  const { closeDrawer } = useUIStore();
+  const { closeOverlay } = useUIStore();
   const { selectProject } = useHierarchyStore();
   const createNode = useCreateNode();
 
@@ -47,7 +47,7 @@ export function CreateProjectView(props: CreateProjectViewProps | LegacyCreatePr
     if (onClose) {
       onClose();
     } else {
-      closeDrawer();
+      closeOverlay();
     }
   };
 
@@ -87,7 +87,7 @@ export function CreateProjectView(props: CreateProjectViewProps | LegacyCreatePr
           selectProject(projectResult.node.id);
           setTitle('');
           setProcessName('Main Process');
-          closeDrawer();
+          closeOverlay();
         }
       }
     } catch (err) {

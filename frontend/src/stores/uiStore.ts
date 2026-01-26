@@ -24,7 +24,7 @@ export type CenterContentType =
   | 'mail'          // Communication
   | 'calendar';     // Calendar view
 
-import { Selection, UIPanels, InspectorMode, DrawerConfig, InspectorTabId, normalizeInspectorTabId } from '../types/ui';
+import { Selection, UIPanels, InspectorMode, OverlayConfig, InspectorTabId, normalizeInspectorTabId } from '../types/ui';
 import { deriveUIPanels } from '../utils/uiComposition';
 
 // Re-export for compatibility if needed, or prefer importing from types/ui
@@ -73,11 +73,11 @@ interface UIState {
   inspectorWidth: number;
   sidebarCollapsed: boolean;
   inspectorCollapsed: boolean;
-  drawerCollapsed: boolean;
-  drawerHeight: number;
+  overlayCollapsed: boolean;
+  overlayHeight: number;
 
-  // Drawer State
-  activeDrawer: DrawerConfig | null;
+  // Overlay State
+  activeOverlay: OverlayConfig | null;
 
   // Theme
   theme: Theme;
@@ -112,7 +112,7 @@ interface UIState {
 
   toggleSidebar: () => void;
   toggleInspector: () => void;
-  toggleDrawer: () => void;
+  toggleOverlay: () => void;
   setSidebarWidth: (width: number) => void;
   setInspectorWidth: (width: number) => void;
 
@@ -125,10 +125,10 @@ interface UIState {
   setViewMode: (mode: ViewMode) => void;
   setTheme: (theme: Theme) => void;
 
-  // Drawer Actions
-  openDrawer: (type: string, props?: Record<string, unknown>) => void;
-  closeDrawer: () => void;
-  setDrawerHeight: (height: number) => void;
+  // Overlay Actions
+  openOverlay: (type: string, props?: Record<string, unknown>) => void;
+  closeOverlay: () => void;
+  setOverlayHeight: (height: number) => void;
 
   // Legacy compatibility - derived from selection
   readonly inspectedNodeId: string | null;
@@ -174,10 +174,10 @@ export const useUIStore = create<UIState>()(
       inspectorWidth: 380,
       sidebarCollapsed: false,
       inspectorCollapsed: false,
-      drawerCollapsed: false,
-      drawerHeight: 380,
+      overlayCollapsed: false,
+      overlayHeight: 380,
 
-      activeDrawer: null,
+      activeOverlay: null,
       theme: 'light',
 
       inspectorComposerExpanded: false,
@@ -206,7 +206,7 @@ export const useUIStore = create<UIState>()(
 
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       toggleInspector: () => set((state) => ({ inspectorCollapsed: !state.inspectorCollapsed })),
-      toggleDrawer: () => set((state) => ({ drawerCollapsed: !state.drawerCollapsed })),
+      toggleOverlay: () => set((state) => ({ overlayCollapsed: !state.overlayCollapsed })),
       setSidebarWidth: (width) => set({ sidebarWidth: Math.max(200, Math.min(400, width)) }),
       setInspectorWidth: (width) => set({ inspectorWidth: Math.max(300, Math.min(500, width)) }),
 
@@ -233,9 +233,9 @@ export const useUIStore = create<UIState>()(
       },
       setTheme: (theme) => set({ theme }),
 
-      openDrawer: (type, props = {}) => set({ activeDrawer: { type, props } }),
-      closeDrawer: () => set({ activeDrawer: null }),
-      setDrawerHeight: (height) => set({ drawerHeight: Math.max(100, Math.min(1200, height)) }),
+      openOverlay: (type, props = {}) => set({ activeOverlay: { type, props } }),
+      closeOverlay: () => set({ activeOverlay: null }),
+      setOverlayHeight: (height) => set({ overlayHeight: Math.max(100, Math.min(1200, height)) }),
 
       // Legacy compatibility getters - derived from selection
       get inspectedNodeId() {
@@ -269,13 +269,13 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: 'ui-storage',
-      version: 4, // v4: Rename action_recipe to action_arrangement
+      version: 5, // v5: Rename drawer to overlay
       partialize: (state) => ({
         sidebarWidth: state.sidebarWidth,
         inspectorWidth: state.inspectorWidth,
         sidebarCollapsed: state.sidebarCollapsed,
         inspectorCollapsed: state.inspectorCollapsed,
-        drawerCollapsed: state.drawerCollapsed,
+        overlayCollapsed: state.overlayCollapsed,
         // Center content type
         centerContentType: state.centerContentType,
         // Namespaced view modes
@@ -283,7 +283,7 @@ export const useUIStore = create<UIState>()(
         fieldsViewMode: state.fieldsViewMode,
         recordsViewMode: state.recordsViewMode,
         theme: state.theme,
-        drawerHeight: state.drawerHeight,
+        overlayHeight: state.overlayHeight,
         inspectorTabMode: state.inspectorTabMode,
         activeProjectId: state.activeProjectId,
         includeSystemEventsInLog: state.includeSystemEventsInLog,
@@ -330,6 +330,18 @@ export const useUIStore = create<UIState>()(
           }
         }
 
+        if (version < 5) {
+          // v5: Rename drawer to overlay
+          if ('drawerCollapsed' in state) {
+            state.overlayCollapsed = state.drawerCollapsed;
+            delete state.drawerCollapsed;
+          }
+          if ('drawerHeight' in state) {
+            state.overlayHeight = state.drawerHeight;
+            delete state.drawerHeight;
+          }
+        }
+
         // Ensure centerContentType has a default value
         state.centerContentType = state.centerContentType || 'projects';
 
@@ -345,7 +357,7 @@ export const useUIPanels = (): UIPanels => {
   return deriveUIPanels({
     selection: state.selection,
     projectViewMode: state.projectViewMode,
-    activeDrawer: state.activeDrawer,
+    activeOverlay: state.activeOverlay,
     inspectorCollapsed: state.inspectorCollapsed,
     sidebarCollapsed: state.sidebarCollapsed,
     inspectorTabMode: state.inspectorTabMode,

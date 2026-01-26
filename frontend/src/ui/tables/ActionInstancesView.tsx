@@ -39,7 +39,7 @@ export function ActionInstancesView({
     className,
 }: ActionInstancesViewProps) {
     // Hooks
-    const { inspectAction, openDrawer, selection } = useUIStore();
+    const { inspectAction, openOverlay, selection } = useUIStore();
     const { data: definition, isLoading: definitionLoading } = useRecordDefinition(definitionId);
 
     // Fetch actions - use specific definition lookup if ID provided, otherwise all actions
@@ -63,12 +63,12 @@ export function ActionInstancesView({
 
     const handleCreateAction = useCallback(() => {
         if (definitionId) {
-            openDrawer('composer', { recipeId: definitionId });
+            openOverlay('composer', { recipeId: definitionId });
         } else {
             // Navigate to composer without recipe
             window.location.href = '/composer';
         }
-    }, [definitionId, openDrawer]);
+    }, [definitionId, openOverlay]);
 
     // Toolbar header
     const renderHeader = useCallback(() => {

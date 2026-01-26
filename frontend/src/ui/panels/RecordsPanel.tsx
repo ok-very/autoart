@@ -20,7 +20,7 @@ const TAB_DATA = [
 ];
 
 export function RecordsPanel() {
-    const { openDrawer } = useUIStore();
+    const { openOverlay } = useUIStore();
     const [sidebarWidth, setSidebarWidth] = useState(260);
     const [selectedDefinitionId, setSelectedDefinitionId] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<RegistryTab>('instances');
@@ -37,7 +37,7 @@ export function RecordsPanel() {
     };
 
     const handleCreateDefinition = () => {
-        openDrawer('create-definition', { definitionKind: 'record' });
+        openOverlay('create-definition', { definitionKind: 'record' });
     };
 
     return (

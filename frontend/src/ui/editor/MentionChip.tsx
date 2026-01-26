@@ -46,7 +46,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
   const updateMode = useUpdateReferenceMode();
   const updateRecord = useUpdateRecord();
   const deleteReference = useDeleteReference();
-  const { openDrawer } = useUIStore();
+  const { openOverlay } = useUIStore();
 
   // Derived Logic
   const isDirect = !referenceId; // True if using direct recordId/fieldKey without DB reference task
@@ -206,17 +206,17 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
 
   const handleInspectRecord = useCallback(() => {
     if (effectiveSourceId) {
-      openDrawer('view-record', { recordId: effectiveSourceId });
+      openOverlay('view-record', { recordId: effectiveSourceId });
     }
     setShowMenu(false);
-  }, [effectiveSourceId, openDrawer]);
+  }, [effectiveSourceId, openOverlay]);
 
   const handleViewDefinition = useCallback(() => {
     if (effectiveSourceId) {
-      openDrawer('view-definition', { recordId: effectiveSourceId });
+      openOverlay('view-definition', { recordId: effectiveSourceId });
     }
     setShowMenu(false);
-  }, [effectiveSourceId, openDrawer]);
+  }, [effectiveSourceId, openOverlay]);
 
   const handleUnlink = useCallback(async () => {
     if (!editor || typeof getPos !== 'function') {

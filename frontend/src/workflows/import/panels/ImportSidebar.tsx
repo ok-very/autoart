@@ -101,7 +101,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Hooks
-    const { openDrawer } = useUIStore();
+    const { openOverlay } = useUIStore();
 
     // Connections
     const { data: connections } = useConnections();
@@ -236,7 +236,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                 />
                 <div className="w-px h-6 bg-slate-200 mx-1" />
                 <button
-                    onClick={() => openDrawer('integrations', {})}
+                    onClick={() => openOverlay('integrations', {})}
                     title="Add Integration"
                     className="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-lg transition-colors"
                 >

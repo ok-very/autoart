@@ -36,7 +36,7 @@ export function DefinitionListSidebar({
 }: DefinitionListSidebarProps) {
     const { data: definitions, isLoading } = useRecordDefinitions();
     const { data: stats } = useRecordStats();
-    const { openDrawer } = useUIStore();
+    const { openOverlay } = useUIStore();
     const [searchQuery, setSearchQuery] = useState('');
 
     // Legacy hierarchy types to always exclude
@@ -74,7 +74,7 @@ export function DefinitionListSidebar({
 
     const handleCreate = () => {
         if (definitionKind === 'record') {
-            openDrawer('create-definition', { definitionKind: 'record' });
+            openOverlay('create-definition', { definitionKind: 'record' });
         } else {
             // For actions, open composer
             window.location.href = '/composer';
@@ -83,7 +83,7 @@ export function DefinitionListSidebar({
 
     const handleEditDefinition = (e: React.MouseEvent, definitionId: string) => {
         e.stopPropagation();
-        openDrawer('view-definition', { definitionId });
+        openOverlay('view-definition', { definitionId });
     };
 
     const isRecords = definitionKind === 'record';

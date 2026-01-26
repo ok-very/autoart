@@ -33,7 +33,7 @@ export function Header() {
   const navigate = useNavigate();
   const { data: projects } = useProjects();
   const { getNode: _getNode } = useHierarchyStore();
-  const { fieldsViewMode, setFieldsViewMode, openDrawer } = useUIStore();
+  const { fieldsViewMode, setFieldsViewMode, openOverlay } = useUIStore();
   const collectionMode = useCollectionModeOptional();
 
   const { openPanel, setBoundProject } = useWorkspaceStore();
@@ -125,13 +125,13 @@ export function Header() {
         if (hasActiveCollection) {
           collectionMode.startCollecting();
         } else {
-          openDrawer('start-collection', {});
+          openOverlay('start-collection', {});
         }
       } else if (newMode === 'browse') {
         collectionMode.stopCollecting();
       }
     }
-  }, [setFieldsViewMode, collectionMode, openDrawer]);
+  }, [setFieldsViewMode, collectionMode, openOverlay]);
 
   return (
     <header className="h-14 bg-white flex items-center justify-between px-4 shrink-0 shadow-sm z-50 relative border-b border-slate-200">

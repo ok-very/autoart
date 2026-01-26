@@ -1,22 +1,22 @@
 /**
- * Drawer System Types
+ * Overlay System Types
  *
- * This file defines the contract for all drawer components.
+ * This file defines the contract for all overlay components.
  *
- * Rules for Drawers (Appendix B):
- * 1. Drawers may NOT mutate global state directly
- * 2. Drawers may NOT fetch initial data (data comes via context)
- * 3. Drawers may NOT resolve references (resolved data comes via context)
- * 4. Drawers MUST emit a single typed result
- * 5. Drawers MUST declare side effects explicitly
+ * Rules for Overlays (Appendix B):
+ * 1. Overlays may NOT mutate global state directly
+ * 2. Overlays may NOT fetch initial data (data comes via context)
+ * 3. Overlays may NOT resolve references (resolved data comes via context)
+ * 4. Overlays MUST emit a single typed result
+ * 5. Overlays MUST declare side effects explicitly
  */
 
-// ==================== DRAWER SIZE ====================
+// ==================== OVERLAY SIZE ====================
 
-/** Drawer size configuration */
-export type DrawerSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+/** Overlay size configuration */
+export type OverlaySize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 
-export const DRAWER_SIZES: Record<DrawerSize, number> = {
+export const OVERLAY_SIZES: Record<OverlaySize, number> = {
     sm: 320,
     md: 400,
     lg: 520,
@@ -24,13 +24,13 @@ export const DRAWER_SIZES: Record<DrawerSize, number> = {
     full: 800,
 };
 
-// ==================== DRAWER SIDE EFFECTS ====================
+// ==================== OVERLAY SIDE EFFECTS ====================
 
 /**
- * Explicit declaration of what side effects a drawer will trigger.
+ * Explicit declaration of what side effects an overlay will trigger.
  * This prevents hidden state mutations.
  */
-export type DrawerSideEffect =
+export type OverlaySideEffect =
     | { type: 'create'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
     | { type: 'update'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
     | { type: 'delete'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
@@ -41,13 +41,13 @@ export type DrawerSideEffect =
     | { type: 'navigate'; target: string }
     | { type: 'select'; entityType: 'record' | 'node' };
 
-// ==================== DRAWER RESULT ====================
+// ==================== OVERLAY RESULT ====================
 
 /**
- * Result emitted when a drawer action completes.
- * All drawers must emit a result (even if just { success: false }).
+ * Result emitted when an overlay action completes.
+ * All overlays must emit a result (even if just { success: false }).
  */
-export interface DrawerResult<T = unknown> {
+export interface OverlayResult<T = unknown> {
     /** Whether the action succeeded */
     success: boolean;
     /** The created/updated entity (if applicable) */
@@ -55,43 +55,43 @@ export interface DrawerResult<T = unknown> {
     /** Error message (if failed) */
     error?: string;
     /** Which side effects were actually triggered */
-    sideEffects?: DrawerSideEffect[];
+    sideEffects?: OverlaySideEffect[];
 }
 
-// ==================== DRAWER CONTEXT ====================
+// ==================== OVERLAY CONTEXT ====================
 
 /**
  * UI context for traceability.
  * Propagated to API calls for debugging/audit.
  */
-export interface DrawerUIContext {
-    /** ID of the drawer that triggered the action */
-    drawerId: string;
-    /** Optional parent drawer (for nested drawers) */
-    parentDrawerId?: string;
-    /** Timestamp when drawer was opened */
+export interface OverlayUIContext {
+    /** ID of the overlay that triggered the action */
+    overlayId: string;
+    /** Optional parent overlay (for nested overlays) */
+    parentOverlayId?: string;
+    /** Timestamp when overlay was opened */
     openedAt: number;
-    /** User action that triggered drawer */
+    /** User action that triggered overlay */
     trigger?: string;
 }
 
-// ==================== DRAWER DEFINITION ====================
+// ==================== OVERLAY DEFINITION ====================
 
 /**
- * DrawerDefinition - Metadata about a drawer type.
- * Used by DrawerRegistry to validate and render drawers.
+ * OverlayDefinition - Metadata about an overlay type.
+ * Used by OverlayRegistry to validate and render overlays.
  */
- 
-export interface DrawerDefinition<TContext = unknown, _TResult = unknown> {
-    /** Unique drawer type ID */
+
+export interface OverlayDefinition<TContext = unknown, _TResult = unknown> {
+    /** Unique overlay type ID */
     id: string;
     /** Display title */
     title: string;
-    /** Drawer size */
-    size: DrawerSize;
-    /** Declared side effects this drawer may trigger */
-    sideEffects: DrawerSideEffect[];
-    /** Whether drawer can be dismissed by clicking outside */
+    /** Overlay size */
+    size: OverlaySize;
+    /** Declared side effects this overlay may trigger */
+    sideEffects: OverlaySideEffect[];
+    /** Whether overlay can be dismissed by clicking outside */
     dismissible?: boolean;
     /** Whether to show close button */
     showClose?: boolean;
@@ -99,48 +99,48 @@ export interface DrawerDefinition<TContext = unknown, _TResult = unknown> {
     validateContext?: (context: TContext) => boolean;
 }
 
-// ==================== DRAWER PROPS ====================
+// ==================== OVERLAY PROPS ====================
 
 /**
- * DrawerProps - Props passed to drawer view components.
- * This is the contract all drawer views must accept.
+ * OverlayProps - Props passed to overlay view components.
+ * This is the contract all overlay views must accept.
  */
-export interface DrawerProps<TContext = unknown, TResult = unknown> {
-    /** All data needed to render the drawer (no fetching!) */
+export interface OverlayProps<TContext = unknown, TResult = unknown> {
+    /** All data needed to render the overlay (no fetching!) */
     context: TContext;
-    /** Callback to submit result and close drawer */
-    onSubmit: (result: DrawerResult<TResult>) => void;
-    /** Callback to close drawer without submitting */
+    /** Callback to submit result and close overlay */
+    onSubmit: (result: OverlayResult<TResult>) => void;
+    /** Callback to close overlay without submitting */
     onClose: () => void;
     /** UI context for traceability */
-    uiContext: DrawerUIContext;
+    uiContext: OverlayUIContext;
 }
 
-// ==================== DRAWER REGISTRY TYPES ====================
+// ==================== OVERLAY REGISTRY TYPES ====================
 
 /**
- * Map of drawer type IDs to their definitions.
+ * Map of overlay type IDs to their definitions.
  */
-export type DrawerDefinitions = Record<string, DrawerDefinition<unknown, unknown>>;
+export type OverlayDefinitions = Record<string, OverlayDefinition<unknown, unknown>>;
 
 /**
- * Type-safe drawer opening function.
+ * Type-safe overlay opening function.
  */
-export interface OpenDrawerFn {
-    <K extends keyof DrawerContextMap>(
+export interface OpenOverlayFn {
+    <K extends keyof OverlayContextMap>(
         type: K,
-        context: DrawerContextMap[K],
-        uiContext?: Partial<DrawerUIContext>
+        context: OverlayContextMap[K],
+        uiContext?: Partial<OverlayUIContext>
     ): void;
 }
 
-// ==================== DRAWER CONTEXT MAP ====================
+// ==================== OVERLAY CONTEXT MAP ====================
 
 /**
- * Map of drawer IDs to their context types.
- * Extend this as new drawers are added.
+ * Map of overlay IDs to their context types.
+ * Extend this as new overlays are added.
  */
-export interface DrawerContextMap {
+export interface OverlayContextMap {
     'create-record': CreateRecordContext;
     'create-node': CreateNodeContext;
     'create-project': CreateProjectContext;
@@ -291,13 +291,13 @@ export interface IngestionContext {
     targetNodeId?: string;
 }
 
-/** Context for integrations management drawer */
+/** Context for integrations management overlay */
 export interface IntegrationsContext {
     /** Optional: pre-select a specific integration tab */
     activeTab?: 'monday' | 'google' | 'api';
 }
 
-/** Context for Monday boards selection drawer */
+/** Context for Monday boards selection overlay */
 export interface MondayBoardsContext {
     /** Callback when board(s) are selected for import */
     onBoardImport: (boardIds: string[]) => Promise<void>;
@@ -305,7 +305,7 @@ export interface MondayBoardsContext {
     isImporting?: boolean;
 }
 
-/** Context for classification resolution drawer */
+/** Context for classification resolution overlay */
 export interface ClassificationContext {
     /** Import session ID */
     sessionId: string;
@@ -328,11 +328,11 @@ export interface ClassificationContext {
 // ==================== HELPER FUNCTIONS ====================
 
 /**
- * Create a DrawerUIContext for a new drawer.
+ * Create an OverlayUIContext for a new overlay.
  */
-export function createUIContext(drawerId: string, trigger?: string): DrawerUIContext {
+export function createUIContext(overlayId: string, trigger?: string): OverlayUIContext {
     return {
-        drawerId,
+        overlayId,
         openedAt: Date.now(),
         trigger,
     };
@@ -341,20 +341,20 @@ export function createUIContext(drawerId: string, trigger?: string): DrawerUICon
 /**
  * Create a success result.
  */
-export function successResult<T>(data?: T, sideEffects?: DrawerSideEffect[]): DrawerResult<T> {
+export function successResult<T>(data?: T, sideEffects?: OverlaySideEffect[]): OverlayResult<T> {
     return { success: true, data, sideEffects };
 }
 
 /**
  * Create a failure result.
  */
-export function failureResult(error: string): DrawerResult {
+export function failureResult(error: string): OverlayResult {
     return { success: false, error };
 }
 
 /**
  * Create a cancelled result (user closed without action).
  */
-export function cancelledResult(): DrawerResult {
+export function cancelledResult(): OverlayResult {
     return { success: false };
 }

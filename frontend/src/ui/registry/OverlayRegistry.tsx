@@ -1,29 +1,29 @@
 import { useMemo } from 'react';
 import { useUIStore } from '../../stores/uiStore';
 import { Modal } from '@autoart/ui';
-import { createUIContext } from '../../drawer/types';
+import { createUIContext } from '../../overlay/types';
 
 // Import Views
-import { CreateNodeView } from '../drawer/views/CreateNodeView';
-import { CreateRecordView } from '../drawer/views/CreateRecordView';
-import { CreateProjectView } from '../drawer/views/CreateProjectView';
-import { CreateDefinitionView } from '../drawer/views/CreateDefinitionView';
-import { CreateLinkView } from '../drawer/views/CreateLinkView';
-import { AddFieldView } from '../drawer/views/AddFieldView';
-import { AssignRecordsView } from '../drawer/views/AssignRecordsView';
-import { CloneDefinitionView } from '../drawer/views/CloneDefinitionView';
-import { CloneProjectView } from '../drawer/views/CloneProjectView';
-import { ConfirmDeleteView } from '../drawer/views/ConfirmDeleteView';
-import { ViewDefinitionDrawer } from '../drawer/views/ViewDefinitionDrawer';
-import { ProjectLibraryDrawer } from '../drawer/views/ProjectLibraryDrawer';
-import { MondayBoardsDrawer } from '../drawer/views/MondayBoardsDrawer';
-import { StartCollectionModal } from '../drawer/views/StartCollectionModal';
+import { CreateNodeView } from '../overlay/views/CreateNodeView';
+import { CreateRecordView } from '../overlay/views/CreateRecordView';
+import { CreateProjectView } from '../overlay/views/CreateProjectView';
+import { CreateDefinitionView } from '../overlay/views/CreateDefinitionView';
+import { CreateLinkView } from '../overlay/views/CreateLinkView';
+import { AddFieldView } from '../overlay/views/AddFieldView';
+import { AssignRecordsView } from '../overlay/views/AssignRecordsView';
+import { CloneDefinitionView } from '../overlay/views/CloneDefinitionView';
+import { CloneProjectView } from '../overlay/views/CloneProjectView';
+import { ConfirmDeleteView } from '../overlay/views/ConfirmDeleteView';
+import { ViewDefinitionOverlay } from '../overlay/views/ViewDefinitionOverlay';
+import { ProjectLibraryOverlay } from '../overlay/views/ProjectLibraryOverlay';
+import { MondayBoardsOverlay } from '../overlay/views/MondayBoardsOverlay';
+import { StartCollectionModal } from '../overlay/views/StartCollectionModal';
 import { IntegrationsSection } from '../../pages/settings/IntegrationsSection';
 import { ClassificationPanel } from '../../workflows/import/panels/ClassificationPanel';
 import type { ImportPlan } from '../../api/hooks/imports';
 
-// Wrapper to adapt drawer props to ClassificationPanel props
-const ClassificationDrawerView = ({
+// Wrapper to adapt overlay props to ClassificationPanel props
+const ClassificationOverlayView = ({
     sessionId,
     plan,
     onResolutionsSaved,
@@ -64,30 +64,30 @@ export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
     'clone-definition': CloneDefinitionView,
     'clone-project': CloneProjectView,
     'confirm-delete': ConfirmDeleteView,
-    'view-definition': ViewDefinitionDrawer,
-    'project-library': ProjectLibraryDrawer,
-    'monday-boards': MondayBoardsDrawer,
-    'template-library': ProjectLibraryDrawer, // Alias for template library
+    'view-definition': ViewDefinitionOverlay,
+    'project-library': ProjectLibraryOverlay,
+    'monday-boards': MondayBoardsOverlay,
+    'template-library': ProjectLibraryOverlay, // Alias for template library
     'integrations': IntegrationsSection, // Integrations settings modal
     'start-collection': StartCollectionModal, // Export collection start modal
-    'classification': ClassificationDrawerView, // Import classification review panel
+    'classification': ClassificationOverlayView, // Import classification review panel
 };
 
 
 export function OverlayRegistry() {
-    const { activeDrawer, closeDrawer, setActiveProject } = useUIStore();
+    const { activeOverlay, closeOverlay, setActiveProject } = useUIStore();
 
-    // Stabilize uiContext so it doesn't change on every render while drawer is open
-    // Recreate when activeDrawer changes (new drawer session opened, even of same type)
-    // Using activeDrawer reference ensures new sessions get fresh openedAt timestamps
+    // Stabilize uiContext so it doesn't change on every render while overlay is open
+    // Recreate when activeOverlay changes (new overlay session opened, even of same type)
+    // Using activeOverlay reference ensures new sessions get fresh openedAt timestamps
     const uiContext = useMemo(
-        () => activeDrawer ? createUIContext(activeDrawer.type) : null,
-        [activeDrawer]
+        () => activeOverlay ? createUIContext(activeOverlay.type) : null,
+        [activeOverlay]
     );
 
-    if (!activeDrawer || !uiContext) return null;
+    if (!activeOverlay || !uiContext) return null;
 
-    const { type, props } = activeDrawer;
+    const { type, props } = activeOverlay;
     const Component = OVERLAY_VIEWS[type];
 
     // Default size can be overridden per type if needed
@@ -96,27 +96,27 @@ export function OverlayRegistry() {
     if (['create-node', 'add-field', 'clone-project'].includes(type)) size = 'lg';
     if (['confirm-delete'].includes(type)) size = 'sm';
 
-    // Construct context props expected by Drawer views
+    // Construct context props expected by Overlay views
     const componentProps = {
         // legacy support: spread props directly
         ...props,
         // new contract support
         context: props,
-        onClose: closeDrawer,
+        onClose: closeOverlay,
         onSubmit: (result?: any) => {
             // Handle create-project success: set new project as active
             if (type === 'create-project' && result?.success && result?.data?.projectId) {
                 setActiveProject(result.data.projectId);
             }
-            closeDrawer();
+            closeOverlay();
         },
         uiContext,
     };
 
     return (
         <Modal
-            open={!!activeDrawer}
-            onOpenChange={(open) => !open && closeDrawer()}
+            open={!!activeOverlay}
+            onOpenChange={(open) => !open && closeOverlay()}
             size={size}
         >
             {Component ? (
