@@ -1,5 +1,32 @@
 # AutoArt Project Instructions
 
+## ⛔ CRITICAL GIT RULES - STOP AND READ
+
+**These rules are NON-NEGOTIABLE. Violations waste tokens and break the codebase.**
+
+### PR Merging
+```
+✅ CORRECT: gh pr merge <number> --merge --delete-branch
+❌ WRONG:   gh pr merge <number> --squash --delete-branch
+```
+**ALWAYS use `--merge`, NEVER use `--squash`** when merging PRs.
+
+### Stacked PRs
+- Merge bottom-up (parent first, then children)
+- Let GitHub auto-retarget child PRs after parent merges
+- NEVER retarget all PRs to main before merging
+- NEVER amend pushed commits in a stack
+- NEVER force push unless absolutely necessary (rebasing onto main)
+
+### Commits
+- NEVER amend commits that have been pushed
+- Create NEW commits for fixes, not `--amend`
+- Use `git commit -m` with heredoc for multi-line messages
+
+**If you catch yourself about to violate these rules, STOP and reconsider.**
+
+---
+
 This is the AutoArt Process Management System - a monorepo with frontend, backend, shared packages, and Python microservices.
 
 ## Primary Reference

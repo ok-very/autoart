@@ -1,5 +1,15 @@
 # Git Workflow Procedures
 
+## ⛔ MERGE COMMAND - MEMORIZE THIS
+
+```bash
+gh pr merge <number> --merge --delete-branch
+```
+
+**NEVER use `--squash`.** This breaks stacked PRs and causes merge hell.
+
+---
+
 ## Stacked PRs
 
 ### When to Use
