@@ -1,480 +1,130 @@
----
-description: Standard git procedures for branch management, file cleanup, and common operations
----
-
 # Git Workflow Procedures
 
-This workflow defines standard procedures to avoid common pitfalls like orphaned files, stale branches, and incomplete cleanups.
+## Stacked PRs
 
-## CRITICAL: Stacked PRs for Multi-Phase Plans
+### When to Use
+- Multi-phase plans (each phase = one PR)
+- Features requiring incremental review
 
-**When executing a plan with multiple phases or breakpoints, you MUST use stacked PRs.**
-
-This is NOT optional. Each phase/breakpoint in a plan = one stacked PR.
-
-### Why This Matters
-- Enables incremental review at each logical checkpoint
-- Allows reverting individual phases without losing all work
-- Makes progress visible and trackable
-- Prevents monolithic PRs that are hard to review
-
-### Procedure for Plan Execution
-
-1. **At each plan breakpoint/phase completion:**
-   ```bash
-   # Commit current phase work
-   git add <files>
-   git commit -m "phase N: description"
-
-   # Create stacked PR using the wizard
-   pnpm git:stack
-   ```
-
-2. **Continue to next phase** on the new branch created by the wizard
-
-3. **Result:** Each phase has its own PR targeting the previous phase's branch
-
-### Example: 3-Phase Plan
-
+### Creating a Stack
+```bash
+# Complete phase work, commit, then:
+pnpm git:stack  # Creates branch + PR targeting current branch
 ```
-Plan: "Reduce mypy errors from 195 to 50"
-- Phase 1: Fix adapter files (195 → 150)
-- Phase 2: Fix core modules (150 → 100)
-- Phase 3: Fix remaining (100 → 50)
 
-Execution:
+Result:
+```
 main
- └── fix/mypy-phase-1 (PR #100 → main)
-      └── fix/mypy-phase-2 (PR #101 → #100)
-           └── fix/mypy-phase-3 (PR #102 → #101)
+ └── fix/phase-1 (PR #100 → main)
+      └── fix/phase-2 (PR #101 → #100)
+           └── fix/phase-3 (PR #102 → #101)
 ```
 
-### Consequences of NOT Following This
+### Fixing Review Comments
 
-- ❌ Single large PR is hard to review
-- ❌ Can't checkpoint progress
-- ❌ Can't partially merge/revert
-- ❌ Loses logical separation of work
+**DO NOT rebase. DO NOT force push. Just commit and push normally.**
 
-## After Switching Branches
-
-When switching to a new branch or pulling changes that delete/rename files:
-
-// turbo
-1. Check for untracked files that may be stale:
-```powershell
-git status
+```bash
+git checkout branch-for-100
+# make fixes
+git commit -m "fix: address review feedback"
+git push  # normal push
 ```
 
-2. If you see untracked files that should have been deleted:
-```powershell
-# Preview what would be removed (dry run)
-git clean -n
+Do NOT merge fixes into child branches - leave them alone.
 
-# Remove untracked files (be careful!)
-git clean -f
+### Merging a Stack
 
-# Also remove untracked directories
-git clean -fd
+**CRITICAL: Use `--merge`, not `--squash`**
+
+Squash merges break stacked PRs because they replace commit SHAs, causing child branches to have "orphaned" commits that conflict with main.
+
+```bash
+# Merge bottom-up with regular merge
+gh pr merge 100 --merge --delete-branch
+# Wait for GitHub to auto-retarget #101 to main
+gh pr merge 101 --merge --delete-branch
+gh pr merge 102 --merge --delete-branch
 ```
 
-## After Refactoring/Reorganizing Files
-
-When moving or deleting files during a refactor:
-
-// turbo
-1. Stage the deletion explicitly:
-```powershell
-git add -A
+Or use the helper:
+```bash
+pnpm git:merge-stack 100 101 102
 ```
 
-// turbo
-2. Verify the deletions are staged:
-```powershell
-git status
-```
+### If You Must Squash
 
-// turbo
-3. Commit with a clear message:
-```powershell
-git commit -m 'refactor: move DrawerRegistry to src/drawer'
-```
+If squash is required, you must rebase each child after merging its parent:
 
-4. Clean up any build artifacts:
-```powershell
-git clean -fd
-```
+```bash
+gh pr merge 100 --squash --delete-branch
 
-## Before Starting Work on a Branch
-
-// turbo
-1. Fetch latest from remote:
-```powershell
+# Now rebase #101 onto main (its commits are orphaned)
+git checkout branch-for-101
 git fetch origin
+git rebase origin/main  # Skip "already applied" commits
+git push --force-with-lease
+
+# Repeat for each child up the stack
 ```
 
-// turbo
-2. Checkout the branch (if it exists remotely):
-```powershell
-git checkout branch-name
-```
-
-// turbo
-3. Clean up untracked files:
-```powershell
-git clean -fd
-```
-
-## Recovering from Duplicate File Issues
-
-If files keep reappearing after being removed:
-
-// turbo
-1. Check if file is tracked:
-```powershell
-git ls-files | Select-String "FileName"
-```
-
-2. If tracked, remove and commit:
-```powershell
-git rm path/to/duplicate-file
-git commit -m 'chore: remove duplicate file'
-```
-
-3. If untracked, just delete:
-```powershell
-git clean -f path/to/duplicate-file
-```
-
-## Common Gotchas
-
-### File Deletions Not Taking Effect
-- **Cause**: `git add .` was used but didn't stage deletions in parent directories
-- **Fix**: Use `git add -A` which stages all changes including deletions
-
-### Stale Files Reappearing
-- **Cause**: Build artifacts or editor-generated files not in `.gitignore`
-- **Fix**: Add to `.gitignore` and clean: `git clean -fd`
-
-### Wrong Branch State After Switch
-- **Cause**: Untracked files from previous branch persist
-- **Fix**: `git clean -fd` after switching branches
+This is messy - prefer `--merge` for stacks.
 
 ---
 
 ## Branch Hygiene
 
-### Delete Branches Immediately After Merging
-
-Stale branches accumulate and cause confusion. Delete them right away:
-
-```powershell
-# When creating a PR, auto-delete after merge
-gh pr create --delete-branch
-
-# Or configure GitHub repo settings to auto-delete merged branches
-```
-
-### Use Consistent Branch Prefixes
-
-Standard prefixes make auditing easier:
-
+### Naming
 - `fix/` - Bug fixes
 - `feature/` - New features
 - `refactor/` - Code restructuring
-- `chore/` - Maintenance tasks
+- `docs/` - Documentation
 
-```powershell
-# Easy to audit by type
-git branch -r | Select-String 'origin/feature/'
+### After Switching Branches
+```bash
+git status           # Check for stale untracked files
+git clean -fd        # Remove if needed
 ```
 
-### Rebase Feature Branches Regularly
-
-If a feature branch sits for more than a few days, keep it current:
-
-```powershell
-git fetch origin
-git rebase origin/main
-```
-
-This prevents branch drift where parallel implementations supersede your work.
-
-### Periodic Branch Audit
-
-Run weekly (or before starting new work):
-
-```powershell
-# Prune deleted remote branches
-git fetch --prune
-
-# Find local branches whose remote was deleted
-git branch -vv | Select-String ': gone]'
-
-# List branches merged into main (safe to delete)
-git branch --merged main
-```
-
-**Shortcut**: Add this alias to your git config:
-
-```powershell
-git config --global alias.audit "!git fetch --prune && git branch -vv | grep ': gone]' && git branch --merged main"
-```
-
-Then just run `git audit` before starting new work.
-
-### Keep PRs Small
-
-- One logical change per PR
-- Easier to review, less likely to be superseded
-- Shorter-lived branches = fewer merge conflicts
-
-### Checking Branch Status Before Deletion
-
-Before deleting a branch, verify it's fully merged:
-
-```powershell
-# Check if branch has commits not in main
+### Before Deleting a Branch
+```bash
 git log main..origin/branch-name --oneline
-
-# If empty output, safe to delete
-git push origin --delete branch-name
+# If empty, safe to delete
 ```
 
 ---
 
-## CRITICAL: Link PRs to GitHub Issues
+## PR Requirements
 
-**Every PR that addresses work tracked in GitHub issues MUST reference the issue.**
-
-### Why This Matters
-- Creates bidirectional traceability (issue → PR, PR → issue)
-- GitHub auto-updates issue when PR is merged
-- Enables implementation progress tracking
-- Prevents orphaned work
-
-### How to Link
-
-**In PR title (for single issue):**
+### Link to Issues
 ```bash
-gh pr create --title "feat: add command palette (#87)"
+gh pr create --title "feat: add feature" --body "Closes #87"
 ```
 
-**In PR body (preferred, supports multiple):**
+Keywords that auto-close: `Closes`, `Fixes`, `Resolves`
+Keywords that link only: `Refs`, `Part of`, `Addresses`
+
+### Commit Messages
 ```bash
-gh pr create --title "feat: add command palette" --body "$(cat <<'EOF'
-## Summary
-- Implement global command palette with fuzzy search
+git commit -m "$(cat <<'EOF'
+feat: descriptive title
 
-Closes #87
+- Detail one
+- Detail two
 
-## Test plan
-- [x] Cmd+K opens palette
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 EOF
 )"
 ```
 
-### Keywords That Auto-Close Issues
-When PR merges to default branch:
-- `Closes #N` / `Close #N`
-- `Fixes #N` / `Fix #N`
-- `Resolves #N` / `Resolve #N`
-
-### Keywords That Link Without Closing
-- `Refs #N` / `Related to #N`
-- `Part of #N`
-- `Addresses #N`
-
-### Enforcement
-- PRs without issue links for tracked work = rule violation
-- Exception: pure refactors, dependency updates, or doc fixes not tied to issues
-
 ---
 
-## Stacked PRs Workflow
+## Common Mistakes
 
-Stacked PRs allow you to build features incrementally, with each PR targeting the previous one instead of main. This keeps PRs small and reviewable while maintaining a logical progression.
-
-### When to Use Stacked PRs
-
-- Feature requires multiple logical steps
-- You want early review on foundational changes
-- Breaking a large change into reviewable chunks
-
-### Creating a Stacked PR
-
-**Prerequisites:** Requires bash (Git Bash on Windows) and `gh` CLI authenticated.
-
-// turbo
-1. Complete and commit work on your current branch (this becomes the base)
-
-2. Run the stack wizard:
-```bash
-pnpm git:stack
-```
-
-3. The wizard will:
-   - Prompt for new branch name
-   - Create branch from current HEAD
-   - Push to origin
-   - Prompt for PR title and body
-   - Create PR targeting the current branch (not main)
-
-### Example Stack
-
-```
-main
- └── fix/autohelper-adapters (PR #120 → main)
-      └── upgrade/styling-hotzones (PR #119 → #120)
-           └── feature/desk-workspace (PR #122 → #119)
-                └── refactor/center-content (PR #121 → #122)
-```
-
-Each PR only shows its own changes, making review easier.
-
-### CRITICAL: Never Amend Pushed Commits in a Stack
-
-Once a stacked branch is pushed, **always make new commits** for fixes. Amending breaks the stack relationship and causes merge hell.
-
-```bash
-# ❌ WRONG - breaks stack, requires force-push, orphans dependent PRs
-git commit --amend --no-edit
-git push --force-with-lease
-
-# ✅ CORRECT - preserves stack relationship
-git commit -m 'fix: address review feedback'
-git push
-```
-
-**Why this matters:**
-- Force-pushing a base branch invalidates all dependent PRs
-- GitHub may auto-close dependent PRs when base is force-pushed
-- Rebasing dependent branches after force-push causes duplicate commits
-
-### Fixing Review Comments on a Stack
-
-**DO NOT rebase. DO NOT retarget to main. DO NOT force push.**
-
-When PRs in a stack receive review comments:
-
-```bash
-# Stack: main <- PR#100 <- PR#101 <- PR#102
-
-# 1. Fix each branch with normal commits (no rebase!)
-git checkout branch-for-100
-# make fixes
-git add . && git commit -m "fix: address review feedback"
-git push  # normal push, not force
-
-git checkout branch-for-101
-# make fixes
-git add . && git commit -m "fix: address review feedback"
-git push
-
-# 2. Merge bottom-up, letting GitHub auto-retarget
-gh pr merge 100 --squash --delete-branch
-# GitHub auto-retargets PR#101 to main
-gh pr merge 101 --squash --delete-branch
-# GitHub auto-retargets PR#102 to main
-gh pr merge 102 --squash --delete-branch
-```
-
-**Why this works:**
-- No rebasing = no diverged branches = no force push needed
-- GitHub automatically retargets child PRs when parent merges
-- Each merge is clean because the stack relationship is preserved
-
-**What NOT to do (causes merge hell):**
-```bash
-# ❌ WRONG - This breaks everything
-gh pr edit 101 --base main  # Retarget before merging parent
-gh pr edit 102 --base main
-# Now merging causes "already applied" conflicts
-# Requires rebasing, force pushing, token burn
-```
-
-### Merging a Stack (Correct Order)
-
-**Merge from bottom to top. Let GitHub auto-retarget.**
-
-```bash
-# Stack: main <- #100 <- #101 <- #102
-
-# Merge in order - GitHub handles retargeting automatically
-gh pr merge 100 --squash --delete-branch
-# Wait for GitHub to retarget #101 to main
-gh pr merge 101 --squash --delete-branch
-# Wait for GitHub to retarget #102 to main
-gh pr merge 102 --squash --delete-branch
-```
-
-**Using the merge-stack script:**
-```bash
-pnpm git:merge-stack 100 101 102
-```
-
-### Rebasing a Stack onto Updated Main (USE SPARINGLY)
-
-**Only rebase when you NEED changes from main that don't exist in your stack.**
-
-If you're just fixing review comments, DO NOT REBASE. See "Fixing Review Comments" above.
-
-If main receives changes you genuinely need:
-
-1. Rebase the bottom branch onto main:
-```bash
-git checkout fix/autohelper-adapters
-git fetch origin
-git rebase origin/main
-git push --force-with-lease
-```
-
-2. Rebase each subsequent branch onto its parent:
-```bash
-git checkout upgrade/styling-hotzones
-git rebase fix/autohelper-adapters
-git push --force-with-lease
-```
-
-3. Repeat up the stack.
-
-**Warning:** This requires force-pushing every branch in the stack. Only do this if absolutely necessary.
-
-### Collapsing a Stack (Squash All to Main)
-
-If you want to merge all stacked changes as a single commit to main:
-
-// turbo
-1. Ensure the top branch has all changes:
-```bash
-git checkout refactor/center-content
-git rebase origin/main
-```
-
-2. Close superseded PRs:
-```bash
-gh pr close 120 --comment "Superseded by #121"
-gh pr close 119 --comment "Superseded by #121"
-gh pr close 122 --comment "Superseded by #121"
-```
-
-3. Retarget and merge the top PR:
-```bash
-gh pr edit 121 --base main
-gh pr merge 121 --squash --delete-branch
-```
-
-### Common Stack Issues
-
-**Base branch has conflicts after parent merged:**
-- GitHub auto-retargets PRs when their base is merged
-- If conflicts appear, rebase locally and force-push
-
-**Accidentally targeted main instead of parent:**
-```bash
-gh pr edit <number> --base correct-parent-branch
-```
-
-**Need to add commits to middle of stack:**
-- Checkout that branch, commit, push
-- Rebase all child branches onto updated parent
+| Mistake | Why It's Bad | Fix |
+|---------|--------------|-----|
+| `--squash` on stacked PRs | Orphans child branch commits | Use `--merge` |
+| Rebasing to fix review comments | Forces divergence, requires force-push | Just commit + push |
+| Merging parent fixes into children | Unnecessary, creates merge commits | Leave children alone |
+| Force-pushing base of a stack | Invalidates/closes dependent PRs | Don't do it |
+| `git add .` for deletions | May miss deletions in parent dirs | Use `git add -A` |
