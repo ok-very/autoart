@@ -23,16 +23,23 @@ import {
     Wand2,
     X,
     Plus,
+    Lightbulb,
 } from 'lucide-react';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 
 import { Button } from '@autoart/ui';
 
-import { useCompose, useRecordDefinitions } from '../../api/hooks';
+import {
+    useCompose,
+    useRecordDefinitions,
+    generateMockComposerSuggestions,
+    type Suggestion,
+} from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
 
 import { ContextIndicator, useDerivedContext } from './ContextIndicator';
 import { EventPreview, buildPendingEvents } from './EventPreview';
+import { SuggestionChip } from '../suggestions';
 
 export interface UnifiedComposerBarProps {
     /** Additional className */
@@ -57,6 +64,7 @@ export function UnifiedComposerBar({
     const [expanded, setExpanded] = useState(false);
     const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
     const [showEventPreview, setShowEventPreview] = useState(true);
+    const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
 
     // Hooks
     const derivedContext = useDerivedContext();
@@ -95,6 +103,27 @@ export function UnifiedComposerBar({
             description: description.trim() || undefined,
         });
     }, [selectedRecipe, title, description]);
+
+    // Generate suggestions based on title input
+    const suggestions = useMemo(() => {
+        if (!derivedContext.contextId || title.length < 3) return [];
+        const allSuggestions = generateMockComposerSuggestions(title, derivedContext.contextId);
+        // Filter out dismissed suggestions
+        return allSuggestions.filter((s) => !dismissedSuggestions.has(s.id));
+    }, [title, derivedContext.contextId, dismissedSuggestions]);
+
+    // Handle suggestion acceptance
+    const handleAcceptSuggestion = useCallback((suggestion: Suggestion) => {
+        // For link/reference suggestions, we could auto-add the reference
+        // For similar suggestions, we could show a comparison
+        console.log('Accept suggestion:', suggestion);
+        setDismissedSuggestions((prev) => new Set([...prev, suggestion.id]));
+    }, []);
+
+    // Handle suggestion dismissal
+    const handleDismissSuggestion = useCallback((suggestion: Suggestion) => {
+        setDismissedSuggestions((prev) => new Set([...prev, suggestion.id]));
+    }, []);
 
     // Submit handler
     const handleSubmit = useCallback(async (e?: React.FormEvent) => {
@@ -308,6 +337,23 @@ export function UnifiedComposerBar({
                                     >
                                         <X size={12} />
                                     </button>
+                                </div>
+                            )}
+
+                            {/* Suggestions */}
+                            {suggestions.length > 0 && (
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <div className="flex items-center gap-1.5 text-xs text-slate-500 shrink-0">
+                                        <Lightbulb size={12} />
+                                        <span>Suggestions:</span>
+                                    </div>
+                                    {suggestions.slice(0, 3).map((suggestion) => (
+                                        <SuggestionChip
+                                            key={suggestion.id}
+                                            suggestion={suggestion}
+                                            onClick={() => handleAcceptSuggestion(suggestion)}
+                                        />
+                                    ))}
                                 </div>
                             )}
 

@@ -314,6 +314,21 @@ export {
   type MappingEntry,
 } from './mappings';
 
+// Suggestions (Context-aware suggestions)
+export {
+  useComposerSuggestions,
+  useEmailSuggestions,
+  useActionSuggestions,
+  useContextSuggestions,
+  generateMockComposerSuggestions,
+  generateMockEmailSuggestions,
+  type Suggestion,
+  type SuggestionType,
+  type SuggestionsResponse,
+  type ComposerSuggestionsInput,
+  type EmailSuggestionsInput,
+} from './suggestions';
+
 // ============================================================================
 // UTILITIES
 // ============================================================================
