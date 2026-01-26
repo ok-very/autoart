@@ -19,7 +19,7 @@
  */
 
 import { clsx } from 'clsx';
-import { FileText, Link2, ExternalLink, Wrench, Lightbulb, Info, History, Tag, List, Plus } from 'lucide-react';
+import { FileText, Link2, ExternalLink, Wrench, Lightbulb, Info, History, Tag, List, Plus, GitBranch, Map } from 'lucide-react';
 
 import { RecordPropertiesView } from './RecordPropertiesView';
 import { ImportItemDetailsView } from './ImportItemDetailsView';
@@ -29,6 +29,8 @@ import { useNode, useRecord, useInterpretationAvailable } from '../../api/hooks'
 import { useUIStore, type InspectorTabId } from '../../stores/uiStore';
 import { ActionDetailsPanel } from '../inspector/ActionDetailsPanel';
 import { ActionEventsPanel } from '../inspector/ActionEventsPanel';
+import { NarrativeThreadPanel } from '../inspector/NarrativeThreadPanel';
+import { MappingsPanel } from '../inspector/MappingsPanel';
 import { useCollectionModeOptional } from '../../workflows/export/context/CollectionModeProvider';
 import type { ImportPlan } from '../../api/hooks/imports';
 
@@ -44,6 +46,8 @@ interface Tab {
 // Action-specific tabs
 const ACTION_TABS: Tab[] = [
     { id: 'details', label: 'Details', icon: Info },
+    { id: 'narrative_thread', label: 'Thread', icon: GitBranch },
+    { id: 'mappings', label: 'Mappings', icon: Map },
     { id: 'execution_log', label: 'Events', icon: History },
 ];
 
@@ -151,6 +155,10 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
             switch (effectiveTab) {
                 case 'details':
                     return <ActionDetailsPanel actionId={inspectedActionId} />;
+                case 'narrative_thread':
+                    return <NarrativeThreadPanel actionId={inspectedActionId} />;
+                case 'mappings':
+                    return <MappingsPanel actionId={inspectedActionId} />;
                 case 'execution_log':
                     return <ActionEventsPanel actionId={inspectedActionId} />;
                 default:
