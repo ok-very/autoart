@@ -56,7 +56,7 @@ export function ActionsPanel() {
                     width={sidebarWidth}
                     selectedDefinitionId={selectedDefinitionId}
                     onSelectDefinition={handleSelectDefinition}
-                    definitionKind="action_recipe"
+                    definitionKind="action_arrangement"
                 />
                 <ResizeHandle direction="right" onResize={handleSidebarResize} />
 

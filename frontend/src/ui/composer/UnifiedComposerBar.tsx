@@ -74,10 +74,10 @@ export function UnifiedComposerBar({
     // Store
     const { activeProjectId } = useUIStore();
 
-    // Filter to action recipes only
+    // Filter to action arrangements only
     const actionRecipes = useMemo(() => {
         if (!allDefinitions) return [];
-        return allDefinitions.filter((d) => d.kind === 'action_recipe');
+        return allDefinitions.filter((d) => d.kind === 'action_arrangement');
     }, [allDefinitions]);
 
     // Auto-select first recipe (Task by default)

@@ -33,7 +33,7 @@ const PRESET_EMOJIS = ['📋', '📁', '👤', '🏢', '🎨', '📦', '🔧', '
 // Legacy props interface (deprecated - use DrawerProps)
 interface LegacyCreateDefinitionViewProps {
   copyFromId?: string;
-  definitionKind?: 'record' | 'action_recipe';
+  definitionKind?: 'record' | 'action_arrangement';
 }
 
 // New contract props
@@ -52,7 +52,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
 
   // Get definitionKind from props (defaults to 'record')
   const definitionKind = (props as { definitionKind?: string }).definitionKind ?? 'record';
-  const isActionRecipe = definitionKind === 'action_recipe';
+  const isActionArrangement = definitionKind === 'action_arrangement';
 
   const { closeDrawer } = useUIStore();
   const createDefinition = useCreateDefinition();
@@ -143,7 +143,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
             Create New
           </Text>
           <Text size="xl" weight="bold">
-            {isActionRecipe ? 'Action Definition' : 'Record Definition'}
+            {isActionArrangement ? 'Action Definition' : 'Record Definition'}
           </Text>
         </Stack>
       </Inline>
@@ -158,7 +158,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
             onChange={(e) => setName(e.currentTarget.value)}
             required
             autoFocus
-            description={`This will be the display name for this ${isActionRecipe ? 'action' : 'record'} definition`}
+            description={`This will be the display name for this ${isActionArrangement ? 'action' : 'record'} definition`}
           />
 
           {/* Styling Section */}
@@ -257,7 +257,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
               </div>
               <Stack gap="none">
                 <Text size="sm" weight="medium">
-                  {name.trim() || (isActionRecipe ? 'Action Definition Name' : 'Record Definition Name')}
+                  {name.trim() || (isActionArrangement ? 'Action Definition Name' : 'Record Definition Name')}
                 </Text>
                 <Text size="xs" color="muted">0 records</Text>
               </Stack>

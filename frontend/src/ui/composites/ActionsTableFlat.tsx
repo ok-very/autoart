@@ -1,7 +1,7 @@
 /**
  * ActionsTableFlat - Reusable table composite for Action data
  *
- * This is a REUSABLE COMPOSITE for Action[] with RecordDefinition (action_recipe) schemas.
+ * This is a REUSABLE COMPOSITE for Action[] with RecordDefinition (action_arrangement) schemas.
  * It does NOT fetch data - data is passed in as props.
  *
  * Companion to DataTableFlat, but for actions (first-class entities).
