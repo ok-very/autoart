@@ -2,39 +2,6 @@
 
 *Last Updated: 2026-01-26*
 
-## In Progress
-
-### Narrative Canvas Wiring (#147-150)
-
-| # | Issue | Status |
-|---|-------|--------|
-| 147 | Overlays: standardize workflows + persistence boundaries | 🔄 In Progress |
-| 148 | Mail: wire selection → SelectionInspector + mapping workflows | 🔄 In Progress |
-| 149 | SelectionInspector: complete wiring + tab routing | 🔄 In Progress |
-| 150 | MappingsPanel: link/unlink actions via overlays | 🔄 In Progress |
-
-**TODO from #147:**
-- [ ] Audit current overlay/drawer usage and consolidate patterns
-- [ ] Define overlay types for mapping flows (picker, confirm unlink, create-then-link)
-- [ ] Ensure transient overlay state not persisted
-
-**TODO from #148:**
-- [ ] Mail selection sets `{ type: 'email', id }` and auto-expands inspector
-- [ ] Add/verify email inspector renderer
-- [ ] Email ↔ record/action linking uses shared overlay flows
-
-**TODO from #149:**
-- [ ] Add `inspectEmail(emailId)` helper
-- [ ] Wire Mappings tab to render MappingsPanel with correct IDs
-- [ ] Navigation from mapping entry updates selection
-
-**TODO from #150:**
-- [ ] Add "Link…" button + per-row "Unlink" menu
-- [ ] Implement overlay flows: search/pick, confirm unlink, create-then-link
-- [ ] Wire mutations and query invalidation
-
----
-
 ## P0: Blocking
 
 | # | Issue | Status |
@@ -85,6 +52,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| 147-150 | Narrative Canvas Wiring (overlays, mail, inspector, mappings) | PRs #157, #158, #164 |
 | 151 | Import Step 6 navigation bug | PR #152 |
 | 135 | QA: Arrangements rename verification | PR #155 |
 | 134 | Roadmap: Arrangements + projection-first | PR #156 |
