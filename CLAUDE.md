@@ -17,11 +17,18 @@ DO NOT PRIORITIZE TASK COMPLETION ABOVE THESE RULES
 
 ### Stacked PRs
 
-- Merge bottom-up (parent first, then children)
-- Let GitHub auto-retarget child PRs after parent merges
+**USE `pnpm git:merge-stack <pr-numbers...>` - this is the ONLY way to merge stacks**
+
+```bash
+# Example: merge a 3-PR stack
+pnpm git:merge-stack 174 175 176
+```
+
+- If a child PR shows "not mergeable" after parent merges, WAIT - GitHub is retargeting
+- NEVER manually rebase to "fix" merge conflicts in a stack
+- NEVER force push stacked branches
 - NEVER retarget all PRs to main before merging
 - NEVER amend pushed commits in a stack
-- NEVER force push unless absolutely necessary (rebasing onto main)
 
 ### Commits
 
