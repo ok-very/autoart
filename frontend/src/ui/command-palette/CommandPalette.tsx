@@ -224,12 +224,12 @@ export function CommandPalette() {
 
   // Clamp selectedIndex when totalItems changes to prevent out-of-bounds
   useEffect(() => {
-    if (totalItems === 0) {
-      setSelectedIndex(0);
-    } else if (selectedIndex >= totalItems) {
-      setSelectedIndex(totalItems - 1);
-    }
-  }, [totalItems, selectedIndex]);
+    setSelectedIndex((prev) => {
+      if (totalItems === 0) return 0;
+      if (prev >= totalItems) return totalItems - 1;
+      return prev;
+    });
+  }, [totalItems]);
 
   // Reset state when opening
   useEffect(() => {
@@ -276,18 +276,19 @@ export function CommandPalette() {
           e.preventDefault();
           setSelectedIndex((i) => Math.max(i - 1, 0));
           break;
-        case 'Enter':
+        case 'Enter': {
           e.preventDefault();
+          // Clamp index inline to handle race conditions
+          const safeIndex = Math.max(0, Math.min(selectedIndex, totalItems - 1));
           if (mode === 'command') {
-            if (filteredCommands[selectedIndex]) {
-              handleSelectCommand(filteredCommands[selectedIndex]);
-            }
+            const cmd = filteredCommands[safeIndex];
+            if (cmd) handleSelectCommand(cmd);
           } else {
-            if (searchResults[selectedIndex]) {
-              handleSelectSearch(searchResults[selectedIndex]);
-            }
+            const result = searchResults[safeIndex];
+            if (result) handleSelectSearch(result);
           }
           break;
+        }
         case 'Escape':
           e.preventDefault();
           closeCommandPalette();
@@ -389,6 +390,8 @@ export function CommandPalette() {
             ) : (
               groupedResults.map((group) => {
                 const config = CATEGORY_CONFIG[group.category];
+                // Skip unknown categories to prevent runtime errors
+                if (!config) return null;
                 return (
                   <div key={group.category}>
                     {/* Category header */}
