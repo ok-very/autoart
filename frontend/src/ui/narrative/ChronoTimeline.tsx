@@ -92,9 +92,9 @@ export function ChronoTimeline({
 
     // Build theme object based on category colors
     const chronoTheme = useMemo(() => {
-        // Use default category for theming
-        const defaultCategory = items[0]?.category || 'workflow';
-        const colors = categoryColors[defaultCategory];
+        // Use default category for theming with fallback
+        const defaultCategory = items[0]?.category;
+        const colors = (defaultCategory && categoryColors[defaultCategory]) || categoryColors.workflow;
 
         return {
             primary: colors.primary,

@@ -42,7 +42,8 @@ export type FactFamily =
     | 'decisions'
     | 'financial'
     | 'contracts'
-    | 'process';
+    | 'process'
+    | 'uncategorized';
 
 export interface FactEntry {
     id: string;
@@ -137,6 +138,14 @@ const familyConfig: Record<FactFamily, {
         borderClass: 'border-teal-200',
         factKinds: [KnownFactKind.PROCESS_INITIATED, KnownFactKind.PROCESS_COMPLETED],
     },
+    uncategorized: {
+        label: 'Other',
+        icon: FileText,
+        colorClass: 'text-slate-600',
+        bgClass: 'bg-slate-50',
+        borderClass: 'border-slate-200',
+        factKinds: [], // Catch-all for unknown fact kinds
+    },
 };
 
 /**
@@ -153,6 +162,7 @@ export function getFactFamily(factKind: string): FactFamily | null {
 
 /**
  * Group facts by their family
+ * Unknown fact kinds are placed in 'uncategorized' group
  */
 export function groupFactsByFamily(facts: FactEntry[]): Record<FactFamily, FactEntry[]> {
     const groups: Record<FactFamily, FactEntry[]> = {
@@ -163,12 +173,16 @@ export function groupFactsByFamily(facts: FactEntry[]): Record<FactFamily, FactE
         financial: [],
         contracts: [],
         process: [],
+        uncategorized: [],
     };
 
     for (const fact of facts) {
         const family = getFactFamily(fact.factKind);
         if (family) {
             groups[family].push(fact);
+        } else {
+            // Collect unknown fact kinds in uncategorized
+            groups.uncategorized.push(fact);
         }
     }
 

@@ -127,8 +127,20 @@ function EventRow({ event }: { event: NarrativeEvent }) {
 
     const timeAgo = useMemo(() => {
         const date = new Date(event.occurredAt);
+
+        // Guard against invalid dates
+        if (isNaN(date.getTime())) {
+            return 'unknown';
+        }
+
         const now = new Date();
         const diffMs = now.getTime() - date.getTime();
+
+        // Guard against future timestamps
+        if (diffMs < 0) {
+            return 'in the future';
+        }
+
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMins / 60);
         const diffDays = Math.floor(diffHours / 24);
