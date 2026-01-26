@@ -12,7 +12,7 @@ export type InspectorTabId =
   // Node/Record tabs
   | 'record' | 'interpretation' | 'references' | 'links' | 'schema'
   // Action tabs
-  | 'details' | 'execution_log' | 'declare'
+  | 'details' | 'execution_log' | 'declare' | 'narrative_thread' | 'mappings'
   // Import item tabs
   | 'import_details' | 'import_classification' | 'import_fields';
 
@@ -23,7 +23,7 @@ export const DEFAULT_INSPECTOR_TAB: InspectorTabId = 'record';
 export function normalizeInspectorTabId(value: string | undefined): InspectorTabId {
   const validTabs: InspectorTabId[] = [
     'record', 'interpretation', 'references', 'links', 'schema',
-    'details', 'execution_log', 'declare',
+    'details', 'execution_log', 'declare', 'narrative_thread', 'mappings',
     'import_details', 'import_classification', 'import_fields'
   ];
   return validTabs.includes(value as InspectorTabId) ? (value as InspectorTabId) : DEFAULT_INSPECTOR_TAB;

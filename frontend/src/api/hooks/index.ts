@@ -302,6 +302,18 @@ export {
   type InterpretationAvailability,
 } from './interpretation';
 
+// Mappings (Cross-entity relationships)
+export {
+  useActionMappings,
+  useRecordMappings,
+  getMappingStatus,
+  toMappingEntries,
+  type ActionMappings,
+  type RecordMappings,
+  type MappingStatus,
+  type MappingEntry,
+} from './mappings';
+
 // ============================================================================
 // UTILITIES
 // ============================================================================
