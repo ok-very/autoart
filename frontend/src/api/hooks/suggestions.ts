@@ -71,8 +71,18 @@ export interface EmailSuggestionsInput {
  * Fetch suggestions for the composer based on partial input
  */
 export function useComposerSuggestions(input: ComposerSuggestionsInput | null) {
+    // Use stable primitives for queryKey to avoid cache churn
+    const queryKey = [
+        'suggestions',
+        'composer',
+        input?.contextId ?? null,
+        input?.contextType ?? null,
+        input?.title?.slice(0, 50) ?? null, // Truncate title for stability
+        input?.parentActionId ?? null,
+    ];
+
     return useQuery({
-        queryKey: ['suggestions', 'composer', input],
+        queryKey,
         queryFn: async (): Promise<Suggestion[]> => {
             if (!input || !input.contextId) return [];
 

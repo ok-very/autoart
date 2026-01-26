@@ -84,6 +84,16 @@ const typeConfig: Record<SuggestionType, {
 /**
  * Single suggestion item
  */
+/**
+ * Fallback config for unknown suggestion types
+ */
+const fallbackConfig = {
+    icon: Lightbulb,
+    colorClass: 'text-slate-600',
+    bgClass: 'bg-slate-50',
+    label: 'Suggestion',
+};
+
 function SuggestionItem({
     suggestion,
     size = 'sm',
@@ -95,7 +105,7 @@ function SuggestionItem({
     onAccept?: () => void;
     onDismiss?: () => void;
 }) {
-    const config = typeConfig[suggestion.type];
+    const config = typeConfig[suggestion.type] || fallbackConfig;
     const Icon = config.icon;
 
     const confidencePercent = Math.round(suggestion.confidence * 100);
@@ -276,7 +286,7 @@ export function SuggestionChip({
     onClick,
     className,
 }: SuggestionChipProps) {
-    const config = typeConfig[suggestion.type];
+    const config = typeConfig[suggestion.type] || fallbackConfig;
     const Icon = config.icon;
 
     return (
