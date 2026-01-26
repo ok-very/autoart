@@ -17,7 +17,6 @@ import { ConfirmDeleteView } from '../drawer/views/ConfirmDeleteView';
 import { ViewDefinitionDrawer } from '../drawer/views/ViewDefinitionDrawer';
 import { ProjectLibraryDrawer } from '../drawer/views/ProjectLibraryDrawer';
 import { MondayBoardsDrawer } from '../drawer/views/MondayBoardsDrawer';
-import { QuickDeclareModal } from '../drawer/views/QuickDeclareModal';
 import { StartCollectionModal } from '../drawer/views/StartCollectionModal';
 import { IntegrationsSection } from '../../pages/settings/IntegrationsSection';
 import { ClassificationPanel } from '../../workflows/import/panels/ClassificationPanel';
@@ -68,7 +67,6 @@ export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
     'view-definition': ViewDefinitionDrawer,
     'project-library': ProjectLibraryDrawer,
     'monday-boards': MondayBoardsDrawer,
-    'quick-declare': QuickDeclareModal,
     'template-library': ProjectLibraryDrawer, // Alias for template library
     'integrations': IntegrationsSection, // Integrations settings modal
     'start-collection': StartCollectionModal, // Export collection start modal

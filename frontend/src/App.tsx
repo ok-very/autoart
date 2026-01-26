@@ -6,7 +6,6 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { useAuthStore } from './stores/authStore';
-import { useUIStore } from './stores/uiStore';
 import { MainLayout } from './ui/layout/MainLayout';
 import { CollectionModeProvider } from './workflows/export/context/CollectionModeProvider';
 
@@ -14,7 +13,6 @@ import { CollectionModeProvider } from './workflows/export/context/CollectionMod
 function App() {
   const { isLoading, isError, isFetching } = useCurrentUser();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const openDrawer = useUIStore((s) => s.openDrawer);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   // Show timeout message after 5 seconds of loading
@@ -26,18 +24,6 @@ function App() {
       setLoadingTimeout(false);
     }
   }, [isLoading, isFetching]);
-
-  // Global hotkey: Ctrl/Cmd + D for Quick Declare
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'd') {
-        e.preventDefault();
-        openDrawer('quick-declare');
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [openDrawer]);
 
   // Show loading state
   if (isLoading) {

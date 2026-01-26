@@ -15,7 +15,7 @@ import { useState } from 'react';
 import { useRecordDefinitions, useRecordStats } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
 
-type DefinitionKind = 'record' | 'action_recipe';
+type DefinitionKind = 'record' | 'action_arrangement';
 
 interface DefinitionListSidebarProps {
     width: number;
@@ -52,7 +52,7 @@ export function DefinitionListSidebar({
             const name = def.name.toLowerCase();
             return !legacyHierarchyTypes.includes(name) && name !== 'task' && name !== 'subtask';
         } else {
-            if (defKind) return defKind === 'action_recipe';
+            if (defKind) return defKind === 'action_arrangement';
             // Fallback: check known action names
             const name = def.name.toLowerCase();
             return name === 'task' || name === 'subtask';

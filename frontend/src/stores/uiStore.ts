@@ -92,10 +92,10 @@ interface UIState {
 
   // Registry preferences
   registryTab: 'definitions' | 'instances';
-  registryDefinitionKind: 'record' | 'action_recipe' | null;
+  registryDefinitionKind: 'record' | 'action_arrangement' | null;
   registryScope: 'global' | 'project' | 'all';
   setRegistryTab: (tab: 'definitions' | 'instances') => void;
-  setRegistryDefinitionKind: (kind: 'record' | 'action_recipe' | null) => void;
+  setRegistryDefinitionKind: (kind: 'record' | 'action_arrangement' | null) => void;
   setRegistryScope: (scope: 'global' | 'project' | 'all') => void;
 
   // Actions

@@ -14,7 +14,7 @@ export function useRecordDefinitions() {
 }
 
 export interface DefinitionFilterOptions {
-  definitionKind?: 'record' | 'action_recipe' | 'container';
+  definitionKind?: 'record' | 'action_arrangement' | 'container';
   projectId?: string;
   isTemplate?: boolean;
   isSystem?: boolean;
