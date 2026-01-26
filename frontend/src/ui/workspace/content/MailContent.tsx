@@ -31,6 +31,7 @@ import {
     useMarkActionRequired,
     useMarkInformational
 } from '../../../api/hooks/mail';
+import { useUIStore } from '../../../stores/uiStore';
 import type { ProcessedEmail, Priority, TriageStatus as TriageStatusType } from '../../../api/types/mail';
 import { LinkedEntityGroup, type LinkedEntity } from '../../mail';
 
@@ -159,7 +160,19 @@ function formatEmailDate(dateValue: string | null | undefined): string {
     }
 }
 
-function EmailRow({ email, onAction, onLinkClick }: { email: ProcessedEmail; onAction?: () => void; onLinkClick?: (emailId: string) => void }) {
+function EmailRow({
+    email,
+    onAction,
+    onLinkClick,
+    onClick,
+    isSelected,
+}: {
+    email: ProcessedEmail;
+    onAction?: () => void;
+    onLinkClick?: (emailId: string) => void;
+    onClick?: () => void;
+    isSelected?: boolean;
+}) {
     const formattedDate = formatEmailDate(email.receivedAt);
 
     // Extract linked entities from email metadata (if available)
@@ -168,7 +181,10 @@ function EmailRow({ email, onAction, onLinkClick }: { email: ProcessedEmail; onA
     // For now, we show the link button for unlinked emails
 
     return (
-        <tr className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer">
+        <tr
+            onClick={onClick}
+            className={`border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors ${isSelected ? 'bg-blue-50 hover:bg-blue-50' : ''}`}
+        >
             <td className="px-4 py-3 w-12">
                 <TriageStatusIndicator
                     status={email.triage.status}
@@ -255,6 +271,10 @@ function StatusIndicator() {
 export function MailContent() {
     const [offset, setOffset] = useState(0);
     const [useEnrichment, setUseEnrichment] = useState(true);
+    const { selection, inspectEmail } = useUIStore();
+
+    // Get selected email ID from selection
+    const selectedEmailId = selection?.type === 'email' ? selection.id : null;
 
     const basicQuery = useInbox({
         limit: ITEMS_PER_PAGE,
@@ -376,9 +396,11 @@ export function MailContent() {
                                     <EmailRow
                                         key={email.id}
                                         email={email}
+                                        onClick={() => inspectEmail(email.id)}
+                                        isSelected={selectedEmailId === email.id}
                                         onAction={() => refetch()}
                                         onLinkClick={(emailId) => {
-                                            // TODO: Open link modal or drawer
+                                            // TODO: Phase 4 - integrate LinkSearchCombobox
                                             console.log('Link email:', emailId);
                                         }}
                                     />
