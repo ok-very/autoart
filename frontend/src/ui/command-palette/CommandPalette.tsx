@@ -71,6 +71,10 @@ export function CommandPalette() {
   const setProjectViewMode = useUIStore((s) => s.setProjectViewMode);
   const openOverlay = useUIStore((s) => s.openOverlay);
 
+  // Generate unique IDs for ARIA
+  const listboxId = 'command-palette-listbox';
+  const getOptionId = (index: number) => `command-palette-option-${index}`;
+
   const { data: projects = [] } = useProjects();
   const { data: records = [] } = useRecords();
   const { data: actionsData } = useAllActions({ limit: 200 });
@@ -218,6 +222,15 @@ export function CommandPalette() {
   // Total items for navigation
   const totalItems = mode === 'command' ? filteredCommands.length : searchResults.length;
 
+  // Clamp selectedIndex when totalItems changes to prevent out-of-bounds
+  useEffect(() => {
+    if (totalItems === 0) {
+      setSelectedIndex(0);
+    } else if (selectedIndex >= totalItems) {
+      setSelectedIndex(totalItems - 1);
+    }
+  }, [totalItems, selectedIndex]);
+
   // Reset state when opening
   useEffect(() => {
     if (!commandPaletteOpen) return;
@@ -257,7 +270,7 @@ export function CommandPalette() {
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setSelectedIndex((i) => Math.min(i + 1, totalItems - 1));
+          setSelectedIndex((i) => (totalItems > 0 ? Math.min(i + 1, totalItems - 1) : 0));
           break;
         case 'ArrowUp':
           e.preventDefault();
@@ -325,11 +338,16 @@ export function CommandPalette() {
             }}
             placeholder={mode === 'command' ? 'Type a command...' : 'Search or type > for commands...'}
             className="flex-1 outline-none text-sm bg-transparent"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls={listboxId}
+            aria-activedescendant={totalItems > 0 ? getOptionId(selectedIndex) : undefined}
+            aria-autocomplete="list"
           />
         </div>
 
         {/* Results */}
-        <div ref={listRef} className="max-h-80 overflow-y-auto">
+        <div ref={listRef} id={listboxId} role="listbox" className="max-h-80 overflow-y-auto">
           {mode === 'command' ? (
             // Command mode
             filteredCommands.length === 0 ? (
@@ -346,7 +364,10 @@ export function CommandPalette() {
                   return (
                     <button
                       key={command.id}
+                      id={getOptionId(index)}
                       data-index={index}
+                      role="option"
+                      aria-selected={index === selectedIndex}
                       onClick={() => handleSelectCommand(command)}
                       className={`w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-slate-50 ${
                         index === selectedIndex ? 'bg-blue-50' : ''
@@ -381,7 +402,10 @@ export function CommandPalette() {
                       return (
                         <button
                           key={result.id}
+                          id={getOptionId(currentIndex)}
                           data-index={currentIndex}
+                          role="option"
+                          aria-selected={currentIndex === selectedIndex}
                           onClick={() => handleSelectSearch(result)}
                           className={`w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-slate-50 ${
                             currentIndex === selectedIndex ? 'bg-blue-50' : ''

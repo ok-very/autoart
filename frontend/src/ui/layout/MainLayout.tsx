@@ -407,16 +407,31 @@ export function MainLayout() {
 
   // Command palette global hotkey (Cmd+K / Ctrl+K)
   const openCommandPalette = useUIStore((s) => s.openCommandPalette);
+  const closeOverlay = useUIStore((s) => s.closeOverlay);
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        // Guard against focused form elements (except when already in command palette)
+        const activeEl = document.activeElement;
+        const isFormElement = activeEl instanceof HTMLInputElement ||
+          activeEl instanceof HTMLTextAreaElement ||
+          activeEl instanceof HTMLSelectElement ||
+          (activeEl instanceof HTMLElement && activeEl.isContentEditable);
+
+        // Allow if no form element is focused, or if it's the command palette input
+        const isCommandPaletteInput = activeEl?.closest('[role="combobox"]');
+        if (isFormElement && !isCommandPaletteInput) {
+          return;
+        }
+
         e.preventDefault();
+        closeOverlay(); // Close any active overlay before opening palette
         openCommandPalette();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [openCommandPalette]);
+  }, [openCommandPalette, closeOverlay]);
 
   // Build tab components - theme can override
   const tabComponents = theme?.components?.tabComponent
