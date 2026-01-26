@@ -160,7 +160,6 @@ export interface OverlayContextMap {
     'integrations': IntegrationsContext;
     'monday-boards': MondayBoardsContext;
     'classification': ClassificationContext;
-    'link-picker': LinkPickerContext;
     'confirm-unlink': ConfirmUnlinkContext;
 }
 
@@ -325,18 +324,6 @@ export interface ClassificationContext {
     };
     /** Callback when resolutions are saved */
     onResolutionsSaved: (plan: ClassificationContext['plan']) => void;
-}
-
-/** Context for link picker overlay */
-export interface LinkPickerContext {
-    /** Type of entity initiating the link */
-    sourceType: 'action' | 'record' | 'email';
-    /** ID of the source entity */
-    sourceId: string;
-    /** Allowed target entity types */
-    targetTypes: ('action' | 'record')[];
-    /** Callback when a target is selected */
-    onSelect: (targetType: string, targetId: string) => void;
 }
 
 /** Context for confirm unlink overlay */

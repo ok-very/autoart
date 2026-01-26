@@ -4,7 +4,7 @@
  * Thin wrapper for embedding Mail panel as center content.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useCallback, useRef } from 'react';
 import {
     Mail,
     RefreshCw,
@@ -31,6 +31,7 @@ import {
     useMarkActionRequired,
     useMarkInformational
 } from '../../../api/hooks/mail';
+import { useUIStore } from '../../../stores/uiStore';
 import type { ProcessedEmail, Priority, TriageStatus as TriageStatusType } from '../../../api/types/mail';
 import { LinkedEntityGroup, type LinkedEntity } from '../../mail';
 
@@ -74,9 +75,29 @@ function TriageStatusIndicator({ status, confidence }: { status: TriageStatusTyp
 
 function EmailActions({ email, onAction }: { email: ProcessedEmail; onAction?: () => void }) {
     const [showMenu, setShowMenu] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const menuButtonRef = useRef<HTMLButtonElement>(null);
     const archiveMutation = useArchiveEmail();
     const actionRequiredMutation = useMarkActionRequired();
     const informationalMutation = useMarkInformational();
+
+    // Close menu on Escape and handle focus
+    useEffect(() => {
+        if (!showMenu) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setShowMenu(false);
+                menuButtonRef.current?.focus();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        // Focus first menu item when opened
+        menuRef.current?.querySelector('button')?.focus();
+
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [showMenu]);
 
     const handleArchive = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -101,11 +122,14 @@ function EmailActions({ email, onAction }: { email: ProcessedEmail; onAction?: (
     return (
         <div className="relative">
             <button
+                ref={menuButtonRef}
                 onClick={(e) => {
                     e.stopPropagation();
-                    setShowMenu(!showMenu);
+                    setShowMenu(prev => !prev);
                 }}
                 disabled={isPending}
+                aria-haspopup="menu"
+                aria-expanded={showMenu}
                 className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors disabled:opacity-50"
             >
                 {isPending ? <Loader2 size={14} className="animate-spin" /> : <MoreHorizontal size={14} />}
@@ -113,8 +137,14 @@ function EmailActions({ email, onAction }: { email: ProcessedEmail; onAction?: (
             {showMenu && (
                 <>
                     <div className="fixed inset-0 z-50" onClick={() => setShowMenu(false)} />
-                    <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[160px]">
+                    <div
+                        ref={menuRef}
+                        role="menu"
+                        aria-label="Email actions"
+                        className="absolute right-0 top-full mt-1 z-50 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[160px]"
+                    >
                         <button
+                            role="menuitem"
                             onClick={handleMarkActionRequired}
                             className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                         >
@@ -122,6 +152,7 @@ function EmailActions({ email, onAction }: { email: ProcessedEmail; onAction?: (
                             Action Required
                         </button>
                         <button
+                            role="menuitem"
                             onClick={handleMarkInformational}
                             className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                         >
@@ -130,6 +161,7 @@ function EmailActions({ email, onAction }: { email: ProcessedEmail; onAction?: (
                         </button>
                         <hr className="my-1 border-slate-100" />
                         <button
+                            role="menuitem"
                             onClick={handleArchive}
                             className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                         >
@@ -159,7 +191,21 @@ function formatEmailDate(dateValue: string | null | undefined): string {
     }
 }
 
-function EmailRow({ email, onAction, onLinkClick }: { email: ProcessedEmail; onAction?: () => void; onLinkClick?: (emailId: string) => void }) {
+interface EmailRowProps {
+    email: ProcessedEmail;
+    onAction?: () => void;
+    onLinkClick?: (emailId: string) => void;
+    onSelect?: (emailId: string) => void;
+    isSelected?: boolean;
+}
+
+const EmailRow = memo(function EmailRow({
+    email,
+    onAction,
+    onLinkClick,
+    onSelect,
+    isSelected,
+}: EmailRowProps) {
     const formattedDate = formatEmailDate(email.receivedAt);
 
     // Extract linked entities from email metadata (if available)
@@ -167,12 +213,32 @@ function EmailRow({ email, onAction, onLinkClick }: { email: ProcessedEmail; onA
     // In a real implementation, this would come from the email data
     // For now, we show the link button for unlinked emails
 
+    // Click handler that passes email ID
+    const handleClick = useCallback(() => {
+        onSelect?.(email.id);
+    }, [onSelect, email.id]);
+
+    // Keyboard handler for accessibility
+    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTableRowElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onSelect?.(email.id);
+        }
+    }, [onSelect, email.id]);
+
     return (
-        <tr className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer">
+        <tr
+            onClick={handleClick}
+            onKeyDown={handleKeyDown}
+            tabIndex={0}
+            role="button"
+            aria-selected={isSelected}
+            className={`border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset ${isSelected ? 'bg-blue-50 hover:bg-blue-50' : ''}`}
+        >
             <td className="px-4 py-3 w-12">
                 <TriageStatusIndicator
-                    status={email.triage.status}
-                    confidence={email.triage.confidence}
+                    status={email.triage?.status ?? 'pending'}
+                    confidence={email.triage?.confidence}
                 />
             </td>
             <td className="px-4 py-3 w-48">
@@ -186,7 +252,7 @@ function EmailRow({ email, onAction, onLinkClick }: { email: ProcessedEmail; onA
                 </div>
                 <div className="text-sm text-slate-500 truncate">{email.bodyPreview}</div>
                 <div className="flex items-center gap-2 mt-1">
-                    {email.extractedKeywords.length > 0 && (
+                    {email.extractedKeywords?.length > 0 && (
                         <div className="flex gap-1 flex-wrap">
                             {email.extractedKeywords.slice(0, 3).map((keyword) => (
                                 <span key={keyword} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded">
@@ -226,7 +292,7 @@ function EmailRow({ email, onAction, onLinkClick }: { email: ProcessedEmail; onA
             </td>
         </tr>
     );
-}
+});
 
 function StatusIndicator() {
     const { data: status, isLoading, isError } = useMailStatus();
@@ -255,6 +321,10 @@ function StatusIndicator() {
 export function MailContent() {
     const [offset, setOffset] = useState(0);
     const [useEnrichment, setUseEnrichment] = useState(true);
+    const { selection, inspectEmail } = useUIStore();
+
+    // Get selected email ID from selection
+    const selectedEmailId = selection?.type === 'email' ? selection.id : null;
 
     const basicQuery = useInbox({
         limit: ITEMS_PER_PAGE,
@@ -269,6 +339,20 @@ export function MailContent() {
     const { data, isLoading, isError, error, refetch, isFetching } = useEnrichment
         ? enrichedQuery
         : basicQuery;
+
+    // Stabilized handlers for memoized EmailRow (defined after hooks)
+    const handleRowClick = useCallback((emailId: string) => {
+        inspectEmail(emailId);
+    }, [inspectEmail]);
+
+    const handleRefetch = useCallback(() => {
+        refetch();
+    }, [refetch]);
+
+    const handleLinkClick = useCallback((emailId: string) => {
+        // TODO: Phase 4 - integrate LinkSearchCombobox
+        console.log('Link email:', emailId);
+    }, []);
 
     const totalPages = data ? Math.ceil(data.total / ITEMS_PER_PAGE) : 0;
     const currentPage = Math.floor(offset / ITEMS_PER_PAGE) + 1;
@@ -376,11 +460,10 @@ export function MailContent() {
                                     <EmailRow
                                         key={email.id}
                                         email={email}
-                                        onAction={() => refetch()}
-                                        onLinkClick={(emailId) => {
-                                            // TODO: Open link modal or drawer
-                                            console.log('Link email:', emailId);
-                                        }}
+                                        onSelect={handleRowClick}
+                                        isSelected={selectedEmailId === email.id}
+                                        onAction={handleRefetch}
+                                        onLinkClick={handleLinkClick}
                                     />
                                 ))}
                             </tbody>

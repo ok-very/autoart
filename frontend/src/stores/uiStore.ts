@@ -138,6 +138,7 @@ interface UIState {
   inspectRecord: (recordId: string) => void;
   inspectNode: (nodeId: string) => void;
   inspectAction: (actionId: string) => void;
+  inspectEmail: (emailId: string) => void;
   clearSelection: () => void;
   clearInspection: () => void;
 
@@ -229,6 +230,8 @@ export const useUIStore = create<UIState>()(
           get().setFieldsViewMode(mode);
         } else if (isRecordsViewMode(mode)) {
           get().setRecordsViewMode(mode);
+        } else if (process.env.NODE_ENV === 'development') {
+          console.warn(`setViewMode: Unrecognized view mode "${mode}"`);
         }
       },
       setTheme: (theme) => set({ theme }),
@@ -253,6 +256,7 @@ export const useUIStore = create<UIState>()(
       inspectRecord: (recordId) => set({ selection: { type: 'record', id: recordId }, inspectorCollapsed: false }),
       inspectNode: (nodeId) => set({ selection: { type: 'node', id: nodeId }, inspectorCollapsed: false }),
       inspectAction: (actionId) => set({ selection: { type: 'action', id: actionId }, inspectorCollapsed: false }),
+      inspectEmail: (emailId) => set({ selection: { type: 'email', id: emailId }, inspectorCollapsed: false }),
       clearSelection: () => set({ selection: null }),
       clearInspection: () => set({ selection: null }),
 
@@ -297,7 +301,8 @@ export const useUIStore = create<UIState>()(
       }),
       // Migrate persisted state across versions
       migrate: (persistedState, version) => {
-        const state = persistedState as any;
+        // Clone to avoid mutating the original persisted snapshot
+        const state = { ...(persistedState as any) };
 
         if (version < 1) {
           // Normalize any stale inspectorTabMode values
@@ -352,14 +357,16 @@ export const useUIStore = create<UIState>()(
 );
 
 // Helper to get derived panels from the store state
+// Uses a selector to avoid re-renders on unrelated state changes
 export const useUIPanels = (): UIPanels => {
-  const state = useUIStore();
-  return deriveUIPanels({
-    selection: state.selection,
-    projectViewMode: state.projectViewMode,
-    activeOverlay: state.activeOverlay,
-    inspectorCollapsed: state.inspectorCollapsed,
-    sidebarCollapsed: state.sidebarCollapsed,
-    inspectorTabMode: state.inspectorTabMode,
-  });
+  return useUIStore((state) =>
+    deriveUIPanels({
+      selection: state.selection,
+      projectViewMode: state.projectViewMode,
+      activeOverlay: state.activeOverlay,
+      inspectorCollapsed: state.inspectorCollapsed,
+      sidebarCollapsed: state.sidebarCollapsed,
+      inspectorTabMode: state.inspectorTabMode,
+    })
+  );
 };

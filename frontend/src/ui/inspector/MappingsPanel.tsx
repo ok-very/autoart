@@ -20,10 +20,15 @@ import {
     AlertTriangle,
     Check,
     AlertCircle,
+    Plus,
+    MoreHorizontal,
+    Unlink,
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 
 import { Badge } from '@autoart/ui';
+
+import { LinkSearchCombobox } from './LinkSearchCombobox';
 
 import {
     useActionMappings,
@@ -103,13 +108,36 @@ const fallbackIcon = FileText;
 function MappingRow({
     entry,
     onNavigate,
+    onUnlink,
 }: {
     entry: MappingEntry;
     onNavigate?: (entry: MappingEntry) => void;
+    onUnlink?: (entry: MappingEntry) => void;
 }) {
+    const [showMenu, setShowMenu] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const menuButtonRef = useRef<HTMLButtonElement>(null);
     const Icon = entityIcons[entry.type] || fallbackIcon;
     const statusInfo = statusConfig[entry.status] || fallbackStatusConfig;
     const StatusIcon = statusInfo.icon;
+
+    // Close menu on Escape and handle focus
+    useEffect(() => {
+        if (!showMenu) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setShowMenu(false);
+                menuButtonRef.current?.focus();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        // Focus the menu when opened
+        menuRef.current?.querySelector('button')?.focus();
+
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [showMenu]);
 
     return (
         <div
@@ -154,8 +182,50 @@ function MappingRow({
                 <StatusIcon size={12} />
             </div>
 
+            {/* Actions menu */}
+            {onUnlink && (
+                <div className="relative">
+                    <button
+                        ref={menuButtonRef}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowMenu(prev => !prev);
+                        }}
+                        aria-haspopup="menu"
+                        aria-expanded={showMenu}
+                        className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
+                    >
+                        <MoreHorizontal size={14} />
+                    </button>
+                    {showMenu && (
+                        <>
+                            <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+                            <div
+                                ref={menuRef}
+                                role="menu"
+                                aria-label="Mapping actions"
+                                className="absolute right-0 top-full mt-1 z-20 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[120px]"
+                            >
+                                <button
+                                    role="menuitem"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowMenu(false);
+                                        onUnlink(entry);
+                                    }}
+                                    className="w-full px-3 py-1.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                >
+                                    <Unlink size={12} />
+                                    Unlink
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
+
             {/* Navigate arrow */}
-            {onNavigate && (
+            {onNavigate && !onUnlink && (
                 <ExternalLink size={14} className="text-slate-400 shrink-0" />
             )}
         </div>
@@ -197,22 +267,53 @@ function ActionMappingsPanel({
     actionId: string;
     className?: string;
 }) {
-    const { inspectRecord, inspectAction } = useUIStore();
+    const { inspectRecord, inspectAction, openOverlay } = useUIStore();
     const { data: mappings, isLoading, error } = useActionMappings(actionId);
+
+    // Link picker state
+    const [showLinkPicker, setShowLinkPicker] = useState(false);
+    const linkButtonRef = useRef<HTMLButtonElement>(null);
 
     const entries = useMemo(() => {
         if (!mappings) return [];
         return toMappingEntries(mappings);
     }, [mappings]);
 
-    const handleNavigate = (entry: MappingEntry) => {
+    const handleNavigate = useCallback((entry: MappingEntry) => {
         if (entry.type === 'record') {
-            // Navigate to record inspector
             inspectRecord(entry.id);
         } else if (entry.type === 'action') {
             inspectAction(entry.id);
         }
-    };
+    }, [inspectRecord, inspectAction]);
+
+    const handleUnlink = useCallback((entry: MappingEntry) => {
+        openOverlay('confirm-unlink', {
+            sourceType: 'action',
+            sourceId: actionId,
+            targetType: entry.type,
+            targetId: entry.id,
+            targetTitle: entry.title,
+            onConfirm: async () => {
+                // TODO: Wire useDeleteMapping mutation when backend endpoint is ready
+                console.warn('[MappingsPanel] Unlink not yet implemented - mutation hook needed');
+                // For now, just close the overlay without action
+                // When implemented: await deleteMapping({ sourceId: actionId, targetId: entry.id });
+            },
+        });
+    }, [actionId, openOverlay]);
+
+    const handleLinkSelect = useCallback((type: 'action' | 'record', id: string) => {
+        // TODO: Call useCreateMapping mutation
+        console.log('Link:', actionId, type, id);
+        setShowLinkPicker(false);
+    }, [actionId]);
+
+    const getLinkPickerPosition = useCallback(() => {
+        if (!linkButtonRef.current) return null;
+        const rect = linkButtonRef.current.getBoundingClientRect();
+        return { top: rect.bottom + 4, left: rect.left };
+    }, []);
 
     if (isLoading) {
         return (
@@ -239,6 +340,22 @@ function ActionMappingsPanel({
                 <p className="text-xs mt-1">
                     Link records or emails to see them here
                 </p>
+                <button
+                    ref={linkButtonRef}
+                    onClick={() => setShowLinkPicker(true)}
+                    className="mt-3 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-flex items-center gap-1"
+                >
+                    <Plus size={12} />
+                    Link...
+                </button>
+                {showLinkPicker && getLinkPickerPosition() && (
+                    <LinkSearchCombobox
+                        position={getLinkPickerPosition()!}
+                        targetTypes={['action', 'record']}
+                        onSelect={handleLinkSelect}
+                        onClose={() => setShowLinkPicker(false)}
+                    />
+                )}
             </div>
         );
     }
@@ -250,6 +367,26 @@ function ActionMappingsPanel({
 
     return (
         <div className={clsx('space-y-4', className)}>
+            {/* Link button */}
+            <div className="flex justify-end px-3">
+                <button
+                    ref={linkButtonRef}
+                    onClick={() => setShowLinkPicker(true)}
+                    className="px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded transition-colors inline-flex items-center gap-1"
+                >
+                    <Plus size={12} />
+                    Link...
+                </button>
+                {showLinkPicker && getLinkPickerPosition() && (
+                    <LinkSearchCombobox
+                        position={getLinkPickerPosition()!}
+                        targetTypes={['action', 'record']}
+                        onSelect={handleLinkSelect}
+                        onClose={() => setShowLinkPicker(false)}
+                    />
+                )}
+            </div>
+
             {/* Records section */}
             {recordEntries.length > 0 && (
                 <div>
@@ -260,6 +397,7 @@ function ActionMappingsPanel({
                                 key={entry.id}
                                 entry={entry}
                                 onNavigate={handleNavigate}
+                                onUnlink={handleUnlink}
                             />
                         ))}
                     </div>
@@ -276,6 +414,7 @@ function ActionMappingsPanel({
                                 key={entry.id}
                                 entry={entry}
                                 onNavigate={handleNavigate}
+                                onUnlink={handleUnlink}
                             />
                         ))}
                     </div>
@@ -292,6 +431,7 @@ function ActionMappingsPanel({
                                 key={entry.id}
                                 entry={entry}
                                 onNavigate={handleNavigate}
+                                onUnlink={handleUnlink}
                             />
                         ))}
                     </div>
