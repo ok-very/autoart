@@ -16,7 +16,7 @@ import { NotFoundError, ConflictError } from '../../utils/errors.js';
 // ==================== DEFINITIONS ====================
 
 export interface ListDefinitionsQuery {
-  definitionKind?: 'record' | 'action_recipe' | 'container';
+  definitionKind?: 'record' | 'action_arrangement' | 'container';
   projectId?: string;
   isTemplate?: boolean;
   isSystem?: boolean;

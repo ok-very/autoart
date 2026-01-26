@@ -21,7 +21,7 @@ export async function recordsRoutes(app: FastifyInstance) {
 
   // Schema for list definitions query params
   const listDefinitionsQuerySchema = z.object({
-    definitionKind: z.enum(['record', 'action_recipe', 'container']).optional(),
+    definitionKind: z.enum(['record', 'action_arrangement', 'container']).optional(),
     projectId: z.string().uuid().optional(),
     isTemplate: z.enum(['true', 'false']).optional().transform(v => v === 'true' ? true : v === 'false' ? false : undefined),
     isSystem: z.enum(['true', 'false']).optional().transform(v => v === 'true' ? true : v === 'false' ? false : undefined),
