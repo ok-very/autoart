@@ -89,7 +89,12 @@ export function Step6Execute({ onBack, session, plan }: StepProps) {
 
     const handleFinish = () => {
         // Navigate to the imported project, or fallback to projects list
-        const projectId = executionStats?.createdIds?.project;
+        // createdIds is keyed by container tempId, not literal 'project'
+        const projectContainer = plan?.containers.find((c) => c.type === 'project');
+        const projectId =
+            projectContainer &&
+            executionStats?.createdIds &&
+            executionStats.createdIds[projectContainer.tempId];
         const targetUrl = projectId ? `/projects/${projectId}` : '/projects';
         if (typeof window !== 'undefined' && window.location) {
             window.location.href = targetUrl;
