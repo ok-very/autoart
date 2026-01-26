@@ -8,7 +8,7 @@
  * This component is retained for ComposerPage and legacy drawer contexts.
  *
  * Core principles:
- * - Schema-first: Action types come from definitions with kind='action_recipe'
+ * - Schema-first: Action types come from definitions with kind='action_arrangement'
  * - References are first-class inputs with named slots
  * - Events are emitted, not stored directly (immutable facts)
  *
@@ -113,10 +113,10 @@ export function ComposerSurface({
 
     // ==================== DERIVED DATA ====================
 
-    // Filter definitions to only action_recipe kind
+    // Filter definitions to only action_arrangement kind
     const actionRecipes = useMemo(() => {
         if (!allDefinitions) return [];
-        return allDefinitions.filter((d) => d.kind === 'action_recipe');
+        return allDefinitions.filter((d) => d.kind === 'action_arrangement');
     }, [allDefinitions]);
 
     // Get selected recipe

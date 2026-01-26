@@ -54,7 +54,7 @@ export function RegistrySidebar({
     // Legacy hierarchy types to exclude
     const legacyHierarchyTypes = ['project', 'process', 'stage', 'subprocess'];
 
-    // Filter record definitions (exclude action_recipes from old system)
+    // Filter record definitions (exclude action_arrangements from old system)
     const recordDefinitions = (definitions || []).filter((def) => {
         const defKind = (def as { definition_kind?: string }).definition_kind;
         if (defKind) return defKind === 'record';
