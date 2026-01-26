@@ -46,7 +46,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
   const updateMode = useUpdateReferenceMode();
   const updateRecord = useUpdateRecord();
   const deleteReference = useDeleteReference();
-  const { openOverlay } = useUIStore();
+  const { inspectRecord } = useUIStore();
 
   // Derived Logic
   const isDirect = !referenceId; // True if using direct recordId/fieldKey without DB reference task
@@ -206,7 +206,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
 
   const handleInspectRecord = useCallback(() => {
     if (effectiveSourceId) {
-      openOverlay('view-record', { recordId: effectiveSourceId });
+      inspectRecord(effectiveSourceId);
     }
     setShowMenu(false);
   }, [effectiveSourceId, openOverlay]);

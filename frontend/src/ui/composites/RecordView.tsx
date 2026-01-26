@@ -15,7 +15,7 @@
  */
 
 import { clsx } from 'clsx';
-import { Search, Plus, Trash2, FolderOpen, Upload, ChevronDown, Database, Sparkles } from 'lucide-react';
+import { Search, Plus, Trash2, FolderOpen, ChevronDown, Database, Sparkles } from 'lucide-react';
 import { useState, useMemo, useCallback } from 'react';
 
 import { Badge, Card } from '@autoart/ui';
@@ -251,9 +251,6 @@ export function RecordView({
         });
     }, [selectedIds, openOverlay]);
 
-    const handleOpenIngestion = useCallback(() => {
-        openOverlay('ingestion', {});
-    }, [openOverlay]);
 
     // Render footer with bulk actions
     const renderFooter = useCallback(({ totalRecords, page, totalPages, selectedIds: footerSelectedIds }: {
@@ -357,15 +354,6 @@ export function RecordView({
 
                     {/* Actions Group */}
                     <div className="flex items-center gap-2">
-                        <button
-                            onClick={handleOpenIngestion}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm"
-                            title="Import records"
-                        >
-                            <Upload size={15} />
-                            <span>Import</span>
-                        </button>
-
                         {definitionId && (
                             <button
                                 onClick={handleCreateRecord}

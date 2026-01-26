@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Search, Plus, Trash2, FolderOpen, MoreHorizontal, ArrowUpDown, Upload, Copy } from 'lucide-react';
+import { Search, Plus, Trash2, FolderOpen, MoreHorizontal, ArrowUpDown, Copy } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
 import {
@@ -185,9 +185,6 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
     });
   };
 
-  const handleOpenIngestion = () => {
-    openOverlay('ingestion', {});
-  };
 
   const getCellValue = (record: DataRecord, key: string): string => {
     if (key === 'unique_name') {
@@ -262,15 +259,6 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
           <span className="text-sm text-slate-400">
             {processedRecords.length} record{processedRecords.length !== 1 ? 's' : ''}
           </span>
-
-          {/* Import button */}
-          <button
-            onClick={handleOpenIngestion}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-          >
-            <Upload size={16} />
-            Import
-          </button>
 
           {/* Create button */}
           {definitionId && (
