@@ -84,21 +84,32 @@ export function useActionMappings(actionId: string | null) {
                 return { references: [], events: [], linkedEmailIds: [] };
             }
 
-            // Fetch references and events in parallel
-            const [refsResponse, eventsResponse] = await Promise.all([
+            // Fetch references and events in parallel with individual error handling
+            const [refsResult, eventsResult] = await Promise.allSettled([
                 api.get<{ references: ActionReference[] }>(`/actions/${actionId}/references`),
                 api.get<{ events: Event[] }>(`/actions/${actionId}/events`),
             ]);
 
-            // Extract email IDs from email-related events
-            const linkedEmailIds = eventsResponse.events
+            // Extract successful responses or use empty fallbacks
+            const references = refsResult.status === 'fulfilled'
+                ? refsResult.value.references
+                : [];
+            const events = eventsResult.status === 'fulfilled'
+                ? eventsResult.value.events
+                : [];
+
+            // Extract email IDs from email-related events with safe payload access
+            const linkedEmailIds = events
                 .filter((e) => e.type === 'EMAIL_RECEIVED' || e.type === 'EMAIL_SENT')
-                .map((e) => (e.payload as { emailId?: string })?.emailId)
+                .map((e) => {
+                    const payload = e.payload as Record<string, unknown> | null;
+                    return payload && typeof payload.emailId === 'string' ? payload.emailId : null;
+                })
                 .filter((id): id is string => !!id);
 
             return {
-                references: refsResponse.references,
-                events: eventsResponse.events,
+                references,
+                events,
                 linkedEmailIds: [...new Set(linkedEmailIds)],
             };
         },

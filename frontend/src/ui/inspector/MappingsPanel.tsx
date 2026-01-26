@@ -73,6 +73,16 @@ const statusConfig: Record<MappingStatus, {
 };
 
 /**
+ * Fallback status config for unknown statuses
+ */
+const fallbackStatusConfig = {
+    icon: Check,
+    colorClass: 'text-slate-600',
+    bgClass: 'bg-slate-50',
+    label: 'Unknown',
+};
+
+/**
  * Entity type icon mapping
  */
 const entityIcons: Record<MappingEntry['type'], typeof Mail> = {
@@ -85,6 +95,11 @@ const entityIcons: Record<MappingEntry['type'], typeof Mail> = {
 /**
  * Single mapping entry row
  */
+/**
+ * Fallback icon for unknown entity types
+ */
+const fallbackIcon = FileText;
+
 function MappingRow({
     entry,
     onNavigate,
@@ -92,8 +107,8 @@ function MappingRow({
     entry: MappingEntry;
     onNavigate?: (entry: MappingEntry) => void;
 }) {
-    const Icon = entityIcons[entry.type];
-    const statusInfo = statusConfig[entry.status];
+    const Icon = entityIcons[entry.type] || fallbackIcon;
+    const statusInfo = statusConfig[entry.status] || fallbackStatusConfig;
     const StatusIcon = statusInfo.icon;
 
     return (
@@ -192,9 +207,8 @@ function ActionMappingsPanel({
 
     const handleNavigate = (entry: MappingEntry) => {
         if (entry.type === 'record') {
-            // Extract record ID from the mapping - this would need more context
-            // For now, just log the navigation intent
-            console.log('Navigate to record:', entry.id);
+            // Navigate to record inspector
+            inspectRecord(entry.id);
         } else if (entry.type === 'action') {
             inspectAction(entry.id);
         }
