@@ -189,7 +189,7 @@ function MappingRow({
                         ref={menuButtonRef}
                         onClick={(e) => {
                             e.stopPropagation();
-                            setShowMenu(!showMenu);
+                            setShowMenu(prev => !prev);
                         }}
                         aria-haspopup="menu"
                         aria-expanded={showMenu}
@@ -295,8 +295,10 @@ function ActionMappingsPanel({
             targetId: entry.id,
             targetTitle: entry.title,
             onConfirm: async () => {
-                // TODO: Call useDeleteMapping mutation
-                console.log('Unlink:', actionId, entry.id);
+                // TODO: Wire useDeleteMapping mutation when backend endpoint is ready
+                console.warn('[MappingsPanel] Unlink not yet implemented - mutation hook needed');
+                // For now, just close the overlay without action
+                // When implemented: await deleteMapping({ sourceId: actionId, targetId: entry.id });
             },
         });
     }, [actionId, openOverlay]);
@@ -308,7 +310,7 @@ function ActionMappingsPanel({
     }, [actionId]);
 
     const getLinkPickerPosition = useCallback(() => {
-        if (!linkButtonRef.current) return { top: 0, left: 0 };
+        if (!linkButtonRef.current) return null;
         const rect = linkButtonRef.current.getBoundingClientRect();
         return { top: rect.bottom + 4, left: rect.left };
     }, []);
@@ -346,9 +348,9 @@ function ActionMappingsPanel({
                     <Plus size={12} />
                     Link...
                 </button>
-                {showLinkPicker && (
+                {showLinkPicker && getLinkPickerPosition() && (
                     <LinkSearchCombobox
-                        position={getLinkPickerPosition()}
+                        position={getLinkPickerPosition()!}
                         targetTypes={['action', 'record']}
                         onSelect={handleLinkSelect}
                         onClose={() => setShowLinkPicker(false)}
@@ -375,9 +377,9 @@ function ActionMappingsPanel({
                     <Plus size={12} />
                     Link...
                 </button>
-                {showLinkPicker && (
+                {showLinkPicker && getLinkPickerPosition() && (
                     <LinkSearchCombobox
-                        position={getLinkPickerPosition()}
+                        position={getLinkPickerPosition()!}
                         targetTypes={['action', 'record']}
                         onSelect={handleLinkSelect}
                         onClose={() => setShowLinkPicker(false)}
