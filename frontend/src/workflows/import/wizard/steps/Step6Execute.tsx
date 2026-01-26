@@ -88,10 +88,16 @@ export function Step6Execute({ onBack, session, plan }: StepProps) {
     };
 
     const handleFinish = () => {
-        // Navigate to projects or reload to clear state
-        // Using safe check for browser environment
+        // Navigate to the imported project, or fallback to projects list
+        // createdIds is keyed by container tempId, not literal 'project'
+        const projectContainer = plan?.containers.find((c) => c.type === 'project');
+        const projectId =
+            projectContainer &&
+            executionStats?.createdIds &&
+            executionStats.createdIds[projectContainer.tempId];
+        const targetUrl = projectId ? `/projects/${projectId}` : '/projects';
         if (typeof window !== 'undefined' && window.location) {
-            window.location.href = '/projects';
+            window.location.href = targetUrl;
         }
     };
 
