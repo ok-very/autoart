@@ -4,6 +4,7 @@ export type Selection =
   | { type: 'definition'; id: string }
   | { type: 'project'; id: string }
   | { type: 'action'; id: string }
+  | { type: 'email'; id: string }
   | { type: 'import_item'; id: string }
   | null;
 
@@ -13,6 +14,8 @@ export type InspectorTabId =
   | 'record' | 'interpretation' | 'references' | 'links' | 'schema'
   // Action tabs
   | 'details' | 'execution_log' | 'declare' | 'narrative_thread' | 'mappings'
+  // Email tabs
+  | 'email_details' | 'email_mappings'
   // Import item tabs
   | 'import_details' | 'import_classification' | 'import_fields';
 
@@ -24,6 +27,7 @@ export function normalizeInspectorTabId(value: string | undefined): InspectorTab
   const validTabs: InspectorTabId[] = [
     'record', 'interpretation', 'references', 'links', 'schema',
     'details', 'execution_log', 'declare', 'narrative_thread', 'mappings',
+    'email_details', 'email_mappings',
     'import_details', 'import_classification', 'import_fields'
   ];
   return validTabs.includes(value as InspectorTabId) ? (value as InspectorTabId) : DEFAULT_INSPECTOR_TAB;

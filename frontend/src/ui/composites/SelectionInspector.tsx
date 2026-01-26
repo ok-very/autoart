@@ -19,7 +19,7 @@
  */
 
 import { clsx } from 'clsx';
-import { FileText, Link2, ExternalLink, Wrench, Lightbulb, Info, History, Tag, List, Plus, GitBranch, Map } from 'lucide-react';
+import { FileText, Link2, ExternalLink, Wrench, Lightbulb, Info, History, Tag, List, Plus, GitBranch, Map, Mail } from 'lucide-react';
 
 import { RecordPropertiesView } from './RecordPropertiesView';
 import { ImportItemDetailsView } from './ImportItemDetailsView';
@@ -58,6 +58,12 @@ const IMPORT_TABS: Tab[] = [
     { id: 'import_fields', label: 'Fields', icon: List },
 ];
 
+// Email-specific tabs
+const EMAIL_TABS: Tab[] = [
+    { id: 'email_details', label: 'Details', icon: Mail },
+    { id: 'email_mappings', label: 'Mappings', icon: Map },
+];
+
 /**
  * Props for panel-local import context.
  * When provided, the inspector uses this instead of global uiStore.
@@ -85,6 +91,7 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
     const inspectedNodeId = selection?.type === 'node' ? selection.id : null;
     const inspectedRecordId = selection?.type === 'record' ? selection.id : null;
     const inspectedActionId = selection?.type === 'action' ? selection.id : null;
+    const inspectedEmailId = selection?.type === 'email' ? selection.id : null;
     const inspectedImportItemId = selection?.type === 'import_item' ? selection.id : null;
     const inspectorMode = inspectorTabMode;
 
@@ -100,13 +107,14 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
     const isTask = node?.type === 'task';
     const isRecord = !!record;
     const isAction = !!inspectedActionId;
+    const isEmail = !!inspectedEmailId;
     const isImportItem = !!inspectedImportItemId;
 
     // Determine selection type for routing
-    const selectionType = isImportItem ? 'import_item' : isAction ? 'action' : (inspectedItem ? 'node_record' : null);
+    const selectionType = isImportItem ? 'import_item' : isEmail ? 'email' : isAction ? 'action' : (inspectedItem ? 'node_record' : null);
 
     // Empty state
-    if (!inspectedItem && !isAction && !isImportItem) {
+    if (!inspectedItem && !isAction && !isEmail && !isImportItem) {
         return (
             <div className="bg-white flex flex-col h-full overflow-hidden">
                 <div className="h-14 border-b border-slate-100 flex items-center justify-center px-5 bg-slate-50/50">
@@ -127,9 +135,11 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
     // Build available tabs based on selection type
     const tabs: Tab[] = selectionType === 'import_item'
         ? IMPORT_TABS
-        : selectionType === 'action'
-            ? ACTION_TABS
-            : [
+        : selectionType === 'email'
+            ? EMAIL_TABS
+            : selectionType === 'action'
+                ? ACTION_TABS
+                : [
                 { id: 'record', label: 'Record', icon: FileText },
                 ...(hasInterpretation ? [{ id: 'interpretation' as const, label: 'Interpretation', icon: Lightbulb }] : []),
                 ...(isTask ? [{ id: 'references' as const, label: 'References', icon: Link2 }] : []),
@@ -148,6 +158,25 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
         // Import item selection routing
         if (selectionType === 'import_item' && inspectedImportItemId) {
             return <ImportItemDetailsView itemId={inspectedImportItemId} tab={effectiveTab} plan={plan} />;
+        }
+
+        // Email selection routing
+        if (selectionType === 'email' && inspectedEmailId) {
+            switch (effectiveTab) {
+                case 'email_details':
+                    // TODO: Phase 3 - EmailDetailsPanel
+                    return (
+                        <div className="text-center py-8 text-slate-400">
+                            <Mail size={24} className="mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">Email details coming soon</p>
+                            <p className="text-xs mt-1 font-mono">{inspectedEmailId}</p>
+                        </div>
+                    );
+                case 'email_mappings':
+                    return <MappingsPanel className="p-0" />;
+                default:
+                    return null;
+            }
         }
 
         // Action selection routing
