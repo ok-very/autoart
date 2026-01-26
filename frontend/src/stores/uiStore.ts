@@ -138,6 +138,7 @@ interface UIState {
   inspectRecord: (recordId: string) => void;
   inspectNode: (nodeId: string) => void;
   inspectAction: (actionId: string) => void;
+  inspectEmail: (emailId: string) => void;
   clearSelection: () => void;
   clearInspection: () => void;
 
@@ -253,6 +254,7 @@ export const useUIStore = create<UIState>()(
       inspectRecord: (recordId) => set({ selection: { type: 'record', id: recordId }, inspectorCollapsed: false }),
       inspectNode: (nodeId) => set({ selection: { type: 'node', id: nodeId }, inspectorCollapsed: false }),
       inspectAction: (actionId) => set({ selection: { type: 'action', id: actionId }, inspectorCollapsed: false }),
+      inspectEmail: (emailId) => set({ selection: { type: 'email', id: emailId }, inspectorCollapsed: false }),
       clearSelection: () => set({ selection: null }),
       clearInspection: () => set({ selection: null }),
 
