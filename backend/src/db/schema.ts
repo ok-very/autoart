@@ -101,7 +101,7 @@ export interface RecordDefinitionsTable {
   project_id: string | null; // If set, belongs to project's template library
   is_template: Generated<boolean>; // Marks as reusable template
   is_system: Generated<boolean>; // System definitions (Task, Subtask, etc.) - cannot be deleted
-  definition_kind: Generated<string>; // 'record' | 'action_recipe' | 'container' - discriminator for definition types
+  definition_kind: Generated<string>; // 'record' | 'action_arrangement' | 'container' - discriminator for definition types
   parent_definition_id: string | null; // For hierarchical types (e.g., Subtask under Task)
   clone_excluded: Generated<boolean>; // If true, definition is NOT cloned when cloning projects
   pinned: Generated<boolean>; // If true, appears in quick create menu
