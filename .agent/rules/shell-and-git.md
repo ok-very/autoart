@@ -18,9 +18,6 @@ feat: title
 - Detail one
 - Detail two
 
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
-EOF
-)"
 ```
 
 **Prefixes:** `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`
@@ -40,6 +37,7 @@ gh issue view 14
 ```
 
 **PR with body:**
+
 ```bash
 gh pr create --title "feat: name" --body "$(cat <<'EOF'
 ## Summary

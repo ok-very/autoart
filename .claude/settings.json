@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(pnpm *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "Bash(python *)",
+      "Bash(mypy *)",
+      "Bash(ruff *)",
+      "Bash(uv *)",
+      "Bash(ls *)",
+      "Bash(sort *)",
+      "Bash(tee *)",
+      "Bash(curl *)",
+      "Bash(chmod *)",
+      "Bash(echo *)",
+      "Bash(sleep *)",
+      "WebFetch(domain:raw.githubusercontent.com)"
+    ]
+  }
+}
