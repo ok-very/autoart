@@ -14,6 +14,7 @@ import { useMemo } from 'react';
 
 import { Badge } from '@autoart/ui';
 
+import type { ContextType } from '@autoart/shared';
 import { useProjects, useNode, useAction, useSubprocesses } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
 
@@ -22,7 +23,7 @@ export interface DerivedContext {
     projectTitle: string | null;
     contextId: string | null;
     contextTitle: string | null;
-    contextType: 'subprocess' | 'stage' | 'process' | 'project';
+    contextType: ContextType;
     parentActionId?: string | null;
     parentActionTitle?: string | null;
 }
