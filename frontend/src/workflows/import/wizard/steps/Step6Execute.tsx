@@ -88,10 +88,11 @@ export function Step6Execute({ onBack, session, plan }: StepProps) {
     };
 
     const handleFinish = () => {
-        // Navigate to projects or reload to clear state
-        // Using safe check for browser environment
+        // Navigate to the imported project, or fallback to projects list
+        const projectId = executionStats?.createdIds?.project;
+        const targetUrl = projectId ? `/projects/${projectId}` : '/projects';
         if (typeof window !== 'undefined' && window.location) {
-            window.location.href = '/projects';
+            window.location.href = targetUrl;
         }
     };
 
