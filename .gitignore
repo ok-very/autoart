@@ -88,3 +88,4 @@ apps\autohelper\_collected\
 
 # Claude Code local settings (agent-specific, not shared)
 .claude/
+.claude/settings.local.json
