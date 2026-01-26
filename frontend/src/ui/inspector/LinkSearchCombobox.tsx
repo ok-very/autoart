@@ -96,12 +96,16 @@ export function LinkSearchCombobox({
 
     const isLoading = searchLoading || actionsLoading;
 
+    // Stabilize targetTypes to avoid unnecessary recomputation
+    const includesAction = targetTypes.includes('action');
+    const includesRecord = targetTypes.includes('record');
+
     // Transform to LinkItems
     const items: LinkItem[] = useMemo(() => {
         const result: LinkItem[] = [];
 
         // Add actions
-        if (targetTypes.includes('action')) {
+        if (includesAction) {
             const actions = actionsData?.actions || [];
             for (const action of actions.slice(0, 25)) {
                 const title = action.fieldBindings?.find(
@@ -117,11 +121,11 @@ export function LinkSearchCombobox({
         }
 
         // Add records
-        if (targetTypes.includes('record')) {
+        if (includesRecord) {
             for (const r of searchResults.filter((r: SearchResult) => r.type === 'record').slice(0, 25)) {
                 result.push({
                     id: r.id,
-                    label: r.name,
+                    label: r.name || 'Unnamed Record',
                     type: 'record',
                     description: r.definitionName || r.path,
                 });
@@ -129,10 +133,11 @@ export function LinkSearchCombobox({
         }
 
         return result;
-    }, [actionsData, searchResults, targetTypes]);
+    }, [actionsData, searchResults, includesAction, includesRecord]);
 
     // Custom filter that searches label and description
     const filterFn = (item: LinkItem, query: string) => {
+        if (!query) return true;
         const q = query.toLowerCase();
         return (
             item.label.toLowerCase().includes(q) ||
