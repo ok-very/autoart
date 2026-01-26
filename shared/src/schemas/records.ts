@@ -83,7 +83,7 @@ export const RecordDefinitionSchema = z.object({
   project_id: z.string().uuid().nullable(), // If set, belongs to project's template library
   is_template: z.boolean(),
   is_system: z.boolean(), // System definitions (Task, Subtask, etc.) - cannot be deleted
-  kind: z.enum(['record', 'action_recipe', 'container']).default('record'), // Discriminator for definition types
+  kind: z.enum(['record', 'action_arrangement', 'container']).default('record'), // Discriminator for definition types
   parent_definition_id: z.string().uuid().nullable(), // For hierarchical types (e.g., Subtask under Task)
   clone_excluded: z.boolean(),
   pinned: z.boolean(),
