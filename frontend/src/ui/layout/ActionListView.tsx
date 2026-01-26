@@ -11,7 +11,7 @@ import { ActionRegistryTable } from '../composites/ActionRegistryTable';
 import type { DerivedStatus } from '@autoart/shared';
 
 export function ActionListView() {
-    const { activeProjectId, setSelection, openOverlay } = useUIStore();
+    const { activeProjectId, setSelection, openOverlay, toggleComposerBar } = useUIStore();
 
     // Fetch all workflow nodes for the project (contextType='project' gets all descendants)
     const { data: nodes = [], isLoading } = useWorkflowSurfaceNodes(activeProjectId, 'project');
@@ -34,7 +34,8 @@ export function ActionListView() {
     };
 
     const handleAddAction = () => {
-        openOverlay('composer', { contextId: activeProjectId });
+        // TODO: Replace with Command Palette (#87)
+        toggleComposerBar();
     };
 
     const handleRowAction = (actionId: string, action: 'view' | 'edit' | 'history' | 'retract') => {
