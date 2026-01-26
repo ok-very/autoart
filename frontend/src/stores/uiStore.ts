@@ -148,6 +148,11 @@ interface UIState {
   setImportSession: (session: ImportSession | null) => void;
   setImportPlan: (plan: ImportPlan | null) => void;
   selectImportItem: (itemId: string | null) => void;
+
+  // Command palette state
+  commandPaletteOpen: boolean;
+  openCommandPalette: () => void;
+  closeCommandPalette: () => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -270,6 +275,11 @@ export const useUIStore = create<UIState>()(
         inspectorCollapsed: false,
         inspectorTabMode: itemId ? 'import_details' : get().inspectorTabMode,
       }),
+
+      // Command palette state
+      commandPaletteOpen: false,
+      openCommandPalette: () => set({ commandPaletteOpen: true }),
+      closeCommandPalette: () => set({ commandPaletteOpen: false }),
     }),
     {
       name: 'ui-storage',

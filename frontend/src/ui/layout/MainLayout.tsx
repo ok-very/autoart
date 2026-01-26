@@ -33,6 +33,7 @@ import {
 
 import { Header } from './Header';
 import { OverlayRegistry } from '../registry/OverlayRegistry';
+import { CommandPalette } from '../command-palette';
 import { useWorkspaceStore, useOpenPanelIds, useLayout, usePendingPanelPositions } from '../../stores/workspaceStore';
 import { useVisiblePanels } from '../../stores/contextStore';
 import { useUIStore } from '../../stores/uiStore';
@@ -404,6 +405,19 @@ export function MainLayout() {
   useThemeCSS();
   useThemeBehavior(apiRef.current);
 
+  // Command palette global hotkey (Cmd+K / Ctrl+K)
+  const openCommandPalette = useUIStore((s) => s.openCommandPalette);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        openCommandPalette();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [openCommandPalette]);
+
   // Build tab components - theme can override
   const tabComponents = theme?.components?.tabComponent
     ? { ...DEFAULT_TAB_COMPONENTS, 'icon-tab': theme.components.tabComponent }
@@ -581,6 +595,9 @@ export function MainLayout() {
 
       {/* Global Overlays (modals, drawers, etc.) */}
       <OverlayRegistry />
+
+      {/* Global Command Palette (Cmd+K / Ctrl+K) */}
+      <CommandPalette />
     </div>
   );
 }
