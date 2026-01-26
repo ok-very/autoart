@@ -351,35 +351,76 @@ git push
 - GitHub may auto-close dependent PRs when base is force-pushed
 - Rebasing dependent branches after force-push causes duplicate commits
 
-### Merging a Stack
+### Fixing Review Comments on a Stack
 
-**CRITICAL: Retarget all dependent PRs to main BEFORE merging the base.**
+**DO NOT rebase. DO NOT retarget to main. DO NOT force push.**
 
-When the base PR merges and its branch is deleted, GitHub auto-closes any PRs targeting that branch. Prevent this by retargeting first:
+When PRs in a stack receive review comments:
+
+```bash
+# Stack: main <- PR#100 <- PR#101 <- PR#102
+
+# 1. Fix each branch with normal commits (no rebase!)
+git checkout branch-for-100
+# make fixes
+git add . && git commit -m "fix: address review feedback"
+git push  # normal push, not force
+
+git checkout branch-for-101
+# make fixes
+git add . && git commit -m "fix: address review feedback"
+git push
+
+# 2. Merge bottom-up, letting GitHub auto-retarget
+gh pr merge 100 --squash --delete-branch
+# GitHub auto-retargets PR#101 to main
+gh pr merge 101 --squash --delete-branch
+# GitHub auto-retargets PR#102 to main
+gh pr merge 102 --squash --delete-branch
+```
+
+**Why this works:**
+- No rebasing = no diverged branches = no force push needed
+- GitHub automatically retargets child PRs when parent merges
+- Each merge is clean because the stack relationship is preserved
+
+**What NOT to do (causes merge hell):**
+```bash
+# ❌ WRONG - This breaks everything
+gh pr edit 101 --base main  # Retarget before merging parent
+gh pr edit 102 --base main
+# Now merging causes "already applied" conflicts
+# Requires rebasing, force pushing, token burn
+```
+
+### Merging a Stack (Correct Order)
+
+**Merge from bottom to top. Let GitHub auto-retarget.**
 
 ```bash
 # Stack: main <- #100 <- #101 <- #102
 
-# Step 1: Retarget all children to main BEFORE merging base
-gh pr edit 101 --base main
-gh pr edit 102 --base main
-
-# Step 2: Now merge in order (each targets main, no orphaning)
+# Merge in order - GitHub handles retargeting automatically
 gh pr merge 100 --squash --delete-branch
+# Wait for GitHub to retarget #101 to main
 gh pr merge 101 --squash --delete-branch
+# Wait for GitHub to retarget #102 to main
 gh pr merge 102 --squash --delete-branch
 ```
 
-**Alternative using the merge-stack script** (if PRs don't need retargeting):
+**Using the merge-stack script:**
 ```bash
 pnpm git:merge-stack 100 101 102
 ```
 
-### Rebasing a Stack onto Updated Main
+### Rebasing a Stack onto Updated Main (USE SPARINGLY)
 
-If main receives changes you need:
+**Only rebase when you NEED changes from main that don't exist in your stack.**
 
-// turbo
+If you're just fixing review comments, DO NOT REBASE. See "Fixing Review Comments" above.
+
+If main receives changes you genuinely need:
+
 1. Rebase the bottom branch onto main:
 ```bash
 git checkout fix/autohelper-adapters
@@ -396,6 +437,8 @@ git push --force-with-lease
 ```
 
 3. Repeat up the stack.
+
+**Warning:** This requires force-pushing every branch in the stack. Only do this if absolutely necessary.
 
 ### Collapsing a Stack (Squash All to Main)
 
