@@ -48,15 +48,16 @@ const CATEGORY_CONFIG: Record<ResultCategory, { icon: typeof Folder; label: stri
 };
 
 function getActionLabel(action: Action): string {
-  // Try to extract a name from fieldBindings
-  const nameBinding = action.fieldBindings.find(
+  // Try to extract a name from fieldBindings (with null safety)
+  const bindings = action.fieldBindings ?? [];
+  const nameBinding = bindings.find(
     (b) => b.fieldKey === 'name' || b.fieldKey === 'title'
   );
   if (nameBinding?.value && typeof nameBinding.value === 'string') {
     return nameBinding.value;
   }
   // Fall back to action type
-  return action.type;
+  return action.type ?? 'Action';
 }
 
 export function CommandPalette() {
@@ -153,7 +154,7 @@ export function CommandPalette() {
     if (!cleanQuery.trim()) {
       // Show recent/all projects when no query
       projects.slice(0, 10).forEach((p) => {
-        allResults.push({ id: p.id, category: 'project', label: p.title });
+        allResults.push({ id: p.id, category: 'project', label: p.title ?? 'Untitled' });
       });
       return allResults;
     }
@@ -162,21 +163,21 @@ export function CommandPalette() {
     fuzzySearchMultiField(
       cleanQuery,
       projects,
-      [{ key: 'title', extractor: (p: HierarchyNode) => p.title, weight: 1 }]
+      [{ key: 'title', extractor: (p: HierarchyNode) => p.title ?? '', weight: 1 }]
     ).slice(0, 5).forEach((r) => {
-      allResults.push({ id: r.item.id, category: 'project', label: r.item.title });
+      allResults.push({ id: r.item.id, category: 'project', label: r.item.title ?? 'Untitled' });
     });
 
     // Search records
     fuzzySearchMultiField(
       cleanQuery,
       records,
-      [{ key: 'unique_name', extractor: (r: DataRecord) => r.unique_name, weight: 1 }]
+      [{ key: 'unique_name', extractor: (r: DataRecord) => r.unique_name ?? '', weight: 1 }]
     ).slice(0, 5).forEach((r) => {
       allResults.push({
         id: r.item.id,
         category: 'record',
-        label: r.item.unique_name,
+        label: r.item.unique_name ?? 'Unnamed',
       });
     });
 
@@ -185,7 +186,7 @@ export function CommandPalette() {
       cleanQuery,
       actions,
       [
-        { key: 'type', extractor: (a: Action) => a.type, weight: 0.5 },
+        { key: 'type', extractor: (a: Action) => a.type ?? '', weight: 0.5 },
         { key: 'label', extractor: (a: Action) => getActionLabel(a), weight: 1 },
       ]
     ).slice(0, 5).forEach((r) => {
@@ -193,7 +194,7 @@ export function CommandPalette() {
         id: r.item.id,
         category: 'action',
         label: getActionLabel(r.item),
-        sublabel: r.item.type,
+        sublabel: r.item.type ?? 'Action',
       });
     });
 
@@ -219,11 +220,11 @@ export function CommandPalette() {
 
   // Reset state when opening
   useEffect(() => {
-    if (commandPaletteOpen) {
-      setQuery('');
-      setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 0);
-    }
+    if (!commandPaletteOpen) return;
+    setQuery('');
+    setSelectedIndex(0);
+    const timeoutId = setTimeout(() => inputRef.current?.focus(), 0);
+    return () => clearTimeout(timeoutId);
   }, [commandPaletteOpen]);
 
   // Handle result selection
