@@ -125,7 +125,7 @@ function EmailActions({ email, onAction }: { email: ProcessedEmail; onAction?: (
                 ref={menuButtonRef}
                 onClick={(e) => {
                     e.stopPropagation();
-                    setShowMenu(!showMenu);
+                    setShowMenu(prev => !prev);
                 }}
                 disabled={isPending}
                 aria-haspopup="menu"
@@ -237,8 +237,8 @@ const EmailRow = memo(function EmailRow({
         >
             <td className="px-4 py-3 w-12">
                 <TriageStatusIndicator
-                    status={email.triage.status}
-                    confidence={email.triage.confidence}
+                    status={email.triage?.status ?? 'pending'}
+                    confidence={email.triage?.confidence}
                 />
             </td>
             <td className="px-4 py-3 w-48">
@@ -252,7 +252,7 @@ const EmailRow = memo(function EmailRow({
                 </div>
                 <div className="text-sm text-slate-500 truncate">{email.bodyPreview}</div>
                 <div className="flex items-center gap-2 mt-1">
-                    {email.extractedKeywords.length > 0 && (
+                    {email.extractedKeywords?.length > 0 && (
                         <div className="flex gap-1 flex-wrap">
                             {email.extractedKeywords.slice(0, 3).map((keyword) => (
                                 <span key={keyword} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded">
