@@ -14,10 +14,10 @@ interface RecordTypeSidebarProps {
 /**
  * Left sidebar showing available record definition types.
  * Displays each type with emoji icon, name, and record count.
- * 
+ *
  * Filtering logic:
  * - Shows only definitions with kind='record' (data definitions)
- * - Excludes kind='action_recipe' (Task, Subtask, etc.) which belong in Composer
+ * - Excludes kind='action_arrangement' (Task, etc.) which belong in Composer
  * - Also excludes legacy hierarchy node types by name as fallback
  */
 export function RecordTypeSidebar({

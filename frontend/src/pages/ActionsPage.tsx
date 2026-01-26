@@ -4,10 +4,10 @@
  * Registry view for Action Definitions and Action Instances.
  *
  * Structure:
- * - Definitions tab: Action Definitions (definition_kind='action_recipe')
+ * - Definitions tab: Action Definitions (definition_kind='action_arrangement')
  * - Instances tab: Action instances filtered by selected definition
  *
- * Note: + button opens Composer to create new action recipe.
+ * Note: + button opens Composer to create new action arrangement.
  */
 
 import { Zap } from 'lucide-react';
