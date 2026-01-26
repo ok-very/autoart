@@ -284,7 +284,7 @@ export function ProjectLogSurface() {
                   </p>
                   <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
                     <button
-                      onClick={() => useUIStore.getState().openOverlay('composer', { contextId: selectedSubprocessId })}
+                      onClick={() => useUIStore.getState().toggleComposerBar()} // TODO: Replace with Command Palette (#87)
                       className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg text-sm font-medium hover:from-violet-600 hover:to-purple-700 shadow-sm transition-all"
                     >
                       <span>✨</span>

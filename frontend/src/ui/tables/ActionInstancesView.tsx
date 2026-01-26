@@ -39,7 +39,7 @@ export function ActionInstancesView({
     className,
 }: ActionInstancesViewProps) {
     // Hooks
-    const { inspectAction, openOverlay, selection } = useUIStore();
+    const { inspectAction, toggleComposerBar, selection } = useUIStore();
     const { data: definition, isLoading: definitionLoading } = useRecordDefinition(definitionId);
 
     // Fetch actions - use specific definition lookup if ID provided, otherwise all actions
@@ -62,13 +62,9 @@ export function ActionInstancesView({
     }, [inspectAction]);
 
     const handleCreateAction = useCallback(() => {
-        if (definitionId) {
-            openOverlay('composer', { recipeId: definitionId });
-        } else {
-            // Navigate to composer without recipe
-            window.location.href = '/composer';
-        }
-    }, [definitionId, openOverlay]);
+        // TODO: Replace with Command Palette (#87)
+        toggleComposerBar();
+    }, [toggleComposerBar]);
 
     // Toolbar header
     const renderHeader = useCallback(() => {

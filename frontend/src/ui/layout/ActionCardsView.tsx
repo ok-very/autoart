@@ -128,7 +128,7 @@ function ActionCard({ node, onClick }: { node: WorkflowSurfaceNode; onClick: () 
 }
 
 export function ActionCardsView() {
-    const { activeProjectId, setSelection, openOverlay } = useUIStore();
+    const { activeProjectId, setSelection, toggleComposerBar } = useUIStore();
 
     // Fetch all workflow nodes for the project
     const { data: nodes = [], isLoading } = useWorkflowSurfaceNodes(activeProjectId, 'project');
@@ -209,8 +209,9 @@ export function ActionCardsView() {
                     </div>
                 </div>
                 <button
-                    onClick={() => openOverlay('composer', { contextId: activeProjectId })}
+                    onClick={toggleComposerBar}
                     className="h-8 px-3 rounded text-xs font-medium bg-slate-900 text-white hover:opacity-90 flex items-center gap-1.5"
+                    title="TODO: Replace with Command Palette (#87)"
                 >
                     <Plus size={14} /> Declare Action
                 </button>

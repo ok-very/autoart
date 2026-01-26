@@ -18,6 +18,7 @@ import { ViewDefinitionOverlay } from '../overlay/views/ViewDefinitionOverlay';
 import { ProjectLibraryOverlay } from '../overlay/views/ProjectLibraryOverlay';
 import { MondayBoardsOverlay } from '../overlay/views/MondayBoardsOverlay';
 import { StartCollectionModal } from '../overlay/views/StartCollectionModal';
+import { ActionInspectorOverlay } from '../overlay/views/ActionInspectorOverlay';
 import { IntegrationsSection } from '../../pages/settings/IntegrationsSection';
 import { ClassificationPanel } from '../../workflows/import/panels/ClassificationPanel';
 import type { ImportPlan } from '../../api/hooks/imports';
@@ -71,6 +72,7 @@ export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
     'integrations': IntegrationsSection, // Integrations settings modal
     'start-collection': StartCollectionModal, // Export collection start modal
     'classification': ClassificationOverlayView, // Import classification review panel
+    'amend-action': ActionInspectorOverlay, // Action amendment overlay
 };
 
 
