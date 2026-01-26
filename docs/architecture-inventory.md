@@ -11,7 +11,7 @@ The system is transitioning from a direct CRUD model to an **Action-Event** driv
 
 | Module | Location | Purpose | Key Endpoints |
 |---|---|---|---|
-| **Composer** | `backend/src/modules/composer` | Single entry point for creating work items (Tasks, Bugs) via the Action+Event model. | `POST /composer`<br>`POST /composer/quick/task`<br>`POST /composer/quick/bug` |
+| **Composer** | `backend/src/modules/composer` | Single entry point for creating work items via the Action+Event model. See [Composer Guide](./composer/composer-guide.md). | `POST /composer` |
 | **Actions** | `backend/src/modules/actions` | Manages "Intents" or actions that trigger workflows. Actions are immutable. | `POST /actions`<br>`GET /actions/:id` |
 | **Events** | `backend/src/modules/events` | Event stream handling side-effects of Actions. | - |
 | **Drawers** | `frontend/src/components/drawer` | Unified UI for contextual views, replacing Modals. | N/A |
