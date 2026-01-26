@@ -1,24 +1,19 @@
----
-description: Shell environment, git commit formatting, and gh CLI usage rules
----
+# Shell & Git
 
-# Shell Environment & Git Commands
+## Environment
 
-## Shell Environment
+- **Git Bash** for scripts (`scripts/git/*.sh`)
+- Claude Code uses Bash tool (Git Bash on Windows)
 
-This project runs on **Windows** with access to:
-- **Git Bash** - For bash scripts (`scripts/git/*.sh`)
-- **PowerShell** - For Windows-native scripts (`scripts/*.ps1`)
-
-Claude Code uses the `Bash` tool which runs in Git Bash on Windows.
-
-## Git Commit Messages
-
-Use heredoc format for clean multi-line commits:
+## Commit Messages
 
 ```bash
+# Simple
+git commit -m 'feat: add feature'
+
+# Multi-line
 git commit -m "$(cat <<'EOF'
-feat: descriptive title here
+feat: title
 
 - Detail one
 - Detail two
@@ -28,59 +23,38 @@ EOF
 )"
 ```
 
-**For simple commits:**
+**Prefixes:** `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`
+
+## gh CLI
+
 ```bash
-git commit -m 'feat: add new feature'
+# PRs
+gh pr create --base main --title 'feat: description'
+gh pr list
+gh pr view 123
+gh pr merge 123 --merge --delete-branch
+
+# Issues
+gh issue list
+gh issue view 14
 ```
 
-**Conventional commit prefixes:**
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `docs:` - Documentation
-- `refactor:` - Code restructuring
-- `chore:` - Maintenance
-
-## gh CLI Usage
-
-### Creating Pull Requests
-
-**Simple PR:**
+**PR with body:**
 ```bash
-gh pr create --base main --title 'feat: short description'
-```
-
-**Full PR with body:**
-```bash
-gh pr create --title "feat: feature name" --body "$(cat <<'EOF'
+gh pr create --title "feat: name" --body "$(cat <<'EOF'
 ## Summary
-- Change one
-- Change two
+- Change
 
-## Test plan
-- [ ] Verify X works
-
-Generated with Claude Code
+Closes #N
 EOF
 )"
 ```
 
-### Common Commands
-```bash
-gh pr list                    # List open PRs
-gh pr view 123                # View PR details
-gh pr merge 123 --squash      # Squash merge
-gh pr close 123 --comment "Superseded by #124"
-gh issue list                 # List issues
-gh issue view 14              # View issue
-```
-
 ## Stacked PRs
 
-Use the project's stack helpers:
-
 ```bash
-pnpm git:stack                # Create new stacked branch/PR
-pnpm git:merge-stack 1 2 3    # Merge PRs in order
+pnpm git:stack              # Create stacked branch/PR
+pnpm git:merge-stack 1 2 3  # Merge in order
 ```
 
-See `@.agent/rules/git-procedures.md` for full workflow.
+See `git-procedures.md` for full workflow.
