@@ -4,7 +4,7 @@
  */
 import { clsx } from 'clsx';
 import { ChevronUp, ChevronDown, Plus, GripVertical } from 'lucide-react';
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 
 import { EditableCell } from './EditableCell';
 import type { FieldDef } from '../../types';
@@ -401,17 +401,22 @@ export function DataTable<T>({
         });
         return map;
     });
+    const prevColumnKeysRef = useRef(columns.map(c => c.key).join(','));
 
-    // Update column widths when columns prop changes
+    // Update column widths when columns prop changes (add/remove columns)
     useEffect(() => {
-        setColumnWidths((prev) => {
-            const map = new Map<string, number | 'flex'>();
-            columns.forEach((col) => {
-                // Keep existing width if set, otherwise use column default
-                map.set(col.key, prev.get(col.key) ?? col.width ?? 'flex');
+        const currentColumnKeys = columns.map(c => c.key).join(',');
+        if (currentColumnKeys !== prevColumnKeysRef.current) {
+            prevColumnKeysRef.current = currentColumnKeys;
+            setColumnWidths((prev) => {
+                const map = new Map<string, number | 'flex'>();
+                columns.forEach((col) => {
+                    // Keep existing width if set, otherwise use column default
+                    map.set(col.key, prev.get(col.key) ?? col.width ?? 'flex');
+                });
+                return map;
             });
-            return map;
-        });
+        }
     }, [columns]);
 
     // Handle column resize

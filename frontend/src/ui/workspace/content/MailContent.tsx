@@ -360,17 +360,22 @@ export function MailContent() {
 
     const totalPages = data ? Math.ceil(data.total / ITEMS_PER_PAGE) : 0;
     const currentPage = Math.floor(offset / ITEMS_PER_PAGE) + 1;
+    const prevTotalRef = useRef(data?.total);
 
     const handlePrevPage = () => {
         setOffset(Math.max(0, offset - ITEMS_PER_PAGE));
     };
 
-    // Guard against offset drifting out of range
+    // Guard against offset drifting out of range when total changes
     useEffect(() => {
-        if (data && offset > 0 && offset >= data.total) {
-            setOffset(Math.max(0, Math.floor((data.total - 1) / ITEMS_PER_PAGE) * ITEMS_PER_PAGE));
+        const totalChanged = data?.total !== prevTotalRef.current;
+        if (totalChanged) {
+            prevTotalRef.current = data?.total;
+            if (data && offset > 0 && offset >= data.total) {
+                setOffset(Math.max(0, Math.floor((data.total - 1) / ITEMS_PER_PAGE) * ITEMS_PER_PAGE));
+            }
         }
-    }, [data?.total, offset]);
+    }, [data, offset]);
 
     const handleNextPage = () => {
         if (data && offset + ITEMS_PER_PAGE < data.total) {

@@ -15,7 +15,7 @@
 
 import { clsx } from 'clsx';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 
 import type { TableFeature, TableCtx } from './features';
 import { applyColumnDecorators, applyRowDecorators } from './features';
@@ -182,16 +182,21 @@ export function UniversalTableCore({
         });
         return map;
     });
+    const prevColumnIdsRef = useRef(columnsProp.map(c => c.id).join(','));
 
-    // Update column widths when columns prop changes
+    // Update column widths when columns prop changes (add/remove columns)
     useEffect(() => {
-        setColumnWidths((prev) => {
-            const map = new Map<string, number | 'flex'>();
-            columnsProp.forEach((col) => {
-                map.set(col.id, prev.get(col.id) ?? col.width ?? 'flex');
+        const currentColumnIds = columnsProp.map(c => c.id).join(',');
+        if (currentColumnIds !== prevColumnIdsRef.current) {
+            prevColumnIdsRef.current = currentColumnIds;
+            setColumnWidths((prev) => {
+                const map = new Map<string, number | 'flex'>();
+                columnsProp.forEach((col) => {
+                    map.set(col.id, prev.get(col.id) ?? col.width ?? 'flex');
+                });
+                return map;
             });
-            return map;
-        });
+        }
     }, [columnsProp]);
 
     // =========== CONTEXT ===========
