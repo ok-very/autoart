@@ -20,9 +20,10 @@ function App() {
     if (isLoading || isFetching) {
       const timer = setTimeout(() => setLoadingTimeout(true), 5000);
       return () => clearTimeout(timer);
-    } else {
-      setLoadingTimeout(false);
     }
+    // Reset when loading stops
+    setLoadingTimeout(false);
+    return undefined;
   }, [isLoading, isFetching]);
 
   // Show loading state

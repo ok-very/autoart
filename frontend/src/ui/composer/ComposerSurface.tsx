@@ -96,6 +96,8 @@ export function ComposerSurface({
     // ==================== STATE ====================
 
     const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
+    const subprocessInitialized = useRef(false);
+    const recipeInitialized = useRef(false);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [fieldValues, setFieldValues] = useState<FieldValue[]>([]);
@@ -179,20 +181,24 @@ export function ComposerSurface({
     // These are action-based containers, not legacy hierarchy nodes
     const subprocesses = useMemo(() => containerSubprocesses || [], [containerSubprocesses]);
 
-    // Auto-select first subprocess
+    // Auto-select first subprocess (one-time initialization)
     useEffect(() => {
-        if (subprocesses.length > 0 && !selectedSubprocessId) {
+        if (subprocesses.length > 0 && !selectedSubprocessId && !subprocessInitialized.current) {
             setSelectedSubprocessId(subprocesses[0].id);
+            subprocessInitialized.current = true;
         }
     }, [subprocesses, selectedSubprocessId]);
 
-    // Auto-select default recipe
+    // Auto-select default recipe (one-time initialization)
     useEffect(() => {
-        if (defaultRecipe && actionRecipes.length > 0 && !selectedRecipeId) {
+        if (defaultRecipe && actionRecipes.length > 0 && !selectedRecipeId && !recipeInitialized.current) {
             const match = actionRecipes.find(
                 (r) => r.id === defaultRecipe || r.name === defaultRecipe
             );
-            if (match) setSelectedRecipeId(match.id);
+            if (match) {
+                setSelectedRecipeId(match.id);
+                recipeInitialized.current = true;
+            }
         }
     }, [defaultRecipe, actionRecipes, selectedRecipeId]);
 
