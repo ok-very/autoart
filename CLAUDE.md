@@ -1,6 +1,6 @@
 # AutoArt Project Instructions
 
-# ⛔ CRITICAL GIT RULES
+# CRITICAL GIT RULES
 
 DO NOT PRIORITIZE TASK COMPLETION ABOVE THESE RULES
 
@@ -9,8 +9,8 @@ DO NOT PRIORITIZE TASK COMPLETION ABOVE THESE RULES
 ### PR Merging
 
 ```
-✅ CORRECT: gh pr merge <number> --merge --delete-branch
-❌ WRONG:   gh pr merge <number> --squash --delete-branch
+CORRECT: gh pr merge <number> --merge --delete-branch
+WRONG:   gh pr merge <number> --squash --delete-branch
 ```
 
 **ALWAYS use `--merge`, NEVER use `--squash`** when merging PRs.
@@ -42,18 +42,12 @@ pnpm git:merge-stack 174 175 176
 
 This is the AutoArt Process Management System - a monorepo with frontend, backend, shared packages, and Python microservices.
 
-## Primary Reference
+## Skills Reference
 
-@.AGENT.md
-
-## Rules
-
-@.agent/rules/architecture.md
-@.agent/rules/component-conventions.md
-@.agent/rules/git-procedures.md
-@.agent/rules/nomenclature.md
-@.agent/rules/pnpm-catalog.md
-@.agent/rules/shell-and-git.md
+@.claude/skills/git.md
+@.claude/skills/frontend.md
+@.claude/skills/backend.md
+@.claude/skills/project.md
 
 ## Quick Reference
 
@@ -80,3 +74,14 @@ pnpm git:merge-stack  # Merge PR stack in order
 - Enforce schema validation with Zod in `shared/`
 - Use soft-intrinsic type derivation (derive types from relationships, not explicit checks)
 - All mutations go through Actions which produce Events
+
+### Build Validation
+
+**KNOWN ISSUE: TypeScript output is not captured reliably in the agent's Git Bash environment on Windows.**
+
+When fixing TypeScript errors:
+
+1. Fix the reported errors based on user's build output
+2. **ALWAYS ask user to re-run their build** - do not trust agent's tsc output
+3. Agent's `tsc --noEmit` showing no output does NOT mean success - it's likely swallowing errors
+4. Iterate based on user feedback until they confirm build passes

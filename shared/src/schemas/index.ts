@@ -411,3 +411,33 @@ export {
     type ExportSession,
     type ExportResult,
 } from './exports.js';
+
+// ==================== POLLS ====================
+export {
+    PollStatusSchema,
+    TimeSlotGranularitySchema,
+    PollTimeConfigSchema,
+    PollSchema,
+    PollParticipantResponseSchema,
+    SlotAvailabilitySchema,
+    PollResultsSchema,
+    CreatePollInputSchema,
+    SubmitPollResponseInputSchema,
+    PollResponseSchema,
+    PollsResponseSchema,
+    PollResultsResponseSchema,
+    PollParticipantResponsesResponseSchema,
+    type PollStatus,
+    type TimeSlotGranularity,
+    type PollTimeConfig,
+    type Poll,
+    type PollParticipantResponse,
+    type SlotAvailability,
+    type PollResults,
+    type CreatePollInput,
+    type SubmitPollResponseInput,
+    type PollResponse,
+    type PollsResponse,
+    type PollResultsResponse,
+    type PollParticipantResponsesResponse,
+} from './polls.js';

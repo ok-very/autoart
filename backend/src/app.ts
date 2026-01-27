@@ -26,6 +26,7 @@ import { mondayWorkspaceRoutes } from './modules/imports/monday/monday-workspace
 import { definitionsRoutes } from './modules/definitions/index.js';
 import { runnerRoutes } from './modules/runner/runner.routes.js';
 import { intakeRoutes, intakePublicRoutes } from './modules/intake/intake.routes.js';
+import { pollRoutes, pollPublicRoutes } from './modules/polls/index.js';
 import { exportsRoutes } from './modules/exports/exports.routes.js';
 import { gcRoutes } from './modules/gc/gc.routes.js';
 import authPlugin from './plugins/auth.js';
@@ -119,6 +120,10 @@ export async function buildApp(): Promise<FastifyInstance> {
   // Intake forms (admin + public routes)
   await fastify.register(intakeRoutes, { prefix: '/api/intake' });
   await fastify.register(intakePublicRoutes, { prefix: '/public/intake' });
+
+  // Polls (admin + public routes)
+  await fastify.register(pollRoutes, { prefix: '/api/polls' });
+  await fastify.register(pollPublicRoutes, { prefix: '/public/poll' });
 
   // Mail module now handled by AutoHelper service on port 8000
 
