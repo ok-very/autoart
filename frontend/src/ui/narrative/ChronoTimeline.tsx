@@ -75,7 +75,7 @@ export function ChronoTimeline({
     cardLess = false,
     hideControls = true,
     scrollToEnd = false,
-    enableKeyboardNav = true,
+    enableKeyboardNav: _enableKeyboardNav = true,
     theme = 'light',
     className,
     onItemSelected,
@@ -136,7 +136,6 @@ export function ChronoTimeline({
                 enableBreakPoint={mode === 'VERTICAL'}
                 useReadMore={false}
                 activeItemIndex={scrollToEnd && chronoItems.length > 0 ? chronoItems.length - 1 : 0}
-                enableQuickJump={enableKeyboardNav}
                 fontSizes={{
                     cardSubtitle: '0.75rem',
                     cardText: '0.875rem',
