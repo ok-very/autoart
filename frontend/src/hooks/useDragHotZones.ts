@@ -9,7 +9,7 @@
  * cross-month navigation when dragging events near calendar edges.
  */
 
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 
 export interface HotZoneConfig {
     /** Unique identifier for this zone */
@@ -74,8 +74,8 @@ export function useDragHotZones({
 }: UseDragHotZonesOptions): UseDragHotZonesResult {
     const dwellTimerRef = useRef<number | null>(null);
     const cooldownTimerRef = useRef<number | null>(null);
-    const activeZoneRef = useRef<string | null>(null);
-    const inCooldownRef = useRef(false);
+    const [activeZoneId, setActiveZoneId] = useState<string | null>(null);
+    const [inCooldown, setInCooldown] = useState(false);
 
     const clearTimers = useCallback(() => {
         if (dwellTimerRef.current) {
@@ -89,7 +89,7 @@ export function useDragHotZones({
     }, []);
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
-        if (!isDragging || inCooldownRef.current) return;
+        if (!isDragging || inCooldown) return;
 
         // Find if cursor is in any zone
         const currentZone = zones.find(z =>
@@ -99,9 +99,9 @@ export function useDragHotZones({
         const zoneId = currentZone?.id ?? null;
 
         // If zone changed, reset timer
-        if (zoneId !== activeZoneRef.current) {
+        if (zoneId !== activeZoneId) {
             clearTimers();
-            activeZoneRef.current = zoneId;
+            setActiveZoneId(zoneId);
 
             if (currentZone) {
                 // Start dwell timer for new zone
@@ -109,14 +109,14 @@ export function useDragHotZones({
                     currentZone.onTrigger();
 
                     // Enter cooldown
-                    inCooldownRef.current = true;
+                    setInCooldown(true);
                     cooldownTimerRef.current = window.setTimeout(() => {
-                        inCooldownRef.current = false;
+                        setInCooldown(false);
                     }, cooldownTime);
                 }, dwellTime);
             }
         }
-    }, [isDragging, zones, dwellTime, cooldownTime, clearTimers]);
+    }, [isDragging, inCooldown, activeZoneId, zones, dwellTime, cooldownTime, clearTimers]);
 
     // Add/remove mousemove listener based on drag state
     useEffect(() => {
@@ -133,8 +133,8 @@ export function useDragHotZones({
     useEffect(() => {
         if (!isDragging) {
             clearTimers();
-            activeZoneRef.current = null;
-            inCooldownRef.current = false;
+            setActiveZoneId(null);
+            setInCooldown(false);
         }
     }, [isDragging, clearTimers]);
 
@@ -146,8 +146,8 @@ export function useDragHotZones({
     }, [clearTimers]);
 
     return {
-        activeZoneId: activeZoneRef.current,
-        inCooldown: inCooldownRef.current,
+        activeZoneId,
+        inCooldown,
     };
 }
 
