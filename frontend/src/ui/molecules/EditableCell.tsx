@@ -52,10 +52,12 @@ export function EditableCell({
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState<unknown>(value);
     const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(null);
+    const prevValueRef = useRef(value);
 
-    // Sync edit value when external value changes
+    // Sync edit value when external value changes (only when not editing)
     useEffect(() => {
-        if (!isEditing) {
+        if (!isEditing && value !== prevValueRef.current) {
+            prevValueRef.current = value;
             setEditValue(value);
         }
     }, [value, isEditing]);
