@@ -80,13 +80,22 @@ export function ResultsPage() {
                 }
                 const [date, hour, minute] = parts;
                 const dateObj = new Date(date + 'T12:00:00');
+                // Validate date is parseable
+                if (isNaN(dateObj.getTime())) {
+                  return (
+                    <span key={slot} className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800">
+                      {slot}
+                    </span>
+                  );
+                }
                 const dayStr = dateObj.toLocaleDateString('en-US', {
                   weekday: 'short',
                   month: 'short',
                   day: 'numeric',
                 });
                 const hourNum = parseInt(hour, 10);
-                if (isNaN(hourNum)) {
+                const minuteNum = parseInt(minute, 10);
+                if (isNaN(hourNum) || isNaN(minuteNum) || hourNum < 0 || hourNum > 23 || minuteNum < 0 || minuteNum > 59) {
                   return (
                     <span key={slot} className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800">
                       {slot}
@@ -95,7 +104,7 @@ export function ResultsPage() {
                 }
                 const period = hourNum >= 12 ? 'PM' : 'AM';
                 const displayHour = hourNum === 0 ? 12 : hourNum > 12 ? hourNum - 12 : hourNum;
-                const timeStr = `${displayHour}:${minute} ${period}`;
+                const timeStr = `${displayHour}:${minuteNum.toString().padStart(2, '0')} ${period}`;
                 return (
                   <span
                     key={slot}

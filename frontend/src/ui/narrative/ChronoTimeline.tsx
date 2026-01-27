@@ -135,7 +135,6 @@ export function ChronoTimeline({
                 enableOutline={false}
                 enableBreakPoint={mode === 'VERTICAL'}
                 useReadMore={false}
-                allowDynamicUpdate={true}
                 activeItemIndex={scrollToEnd && chronoItems.length > 0 ? chronoItems.length - 1 : 0}
                 enableQuickJump={enableKeyboardNav}
                 fontSizes={{

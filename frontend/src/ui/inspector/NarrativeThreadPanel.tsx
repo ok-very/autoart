@@ -49,6 +49,7 @@ function formatTimeAgo(date: Date): string {
  */
 function EventRow({ event }: { event: Event }) {
     const formatter = getEventFormatter(event.type);
+    if (!formatter) return null;
     const Icon = formatter.icon;
     const summary = formatter.summarize((event.payload || {}) as Record<string, unknown>);
 
@@ -71,7 +72,7 @@ function EventRow({ event }: { event: Event }) {
                 formatter.dotTextClass,
                 formatter.isMajor ? 'w-6 h-6' : 'w-3 h-3'
             )}>
-                {formatter.isMajor && <Icon size={12} />}
+                {formatter.isMajor && Icon && <Icon size={12} />}
             </div>
 
             {/* Event content */}
@@ -130,7 +131,7 @@ export function NarrativeThreadPanel({
         const groups: Record<string, Event[]> = {};
         for (const event of sortedEvents) {
             const formatter = getEventFormatter(event.type);
-            const category = formatter.category ?? 'other';
+            const category = formatter?.category ?? 'other';
             if (!groups[category]) {
                 groups[category] = [];
             }

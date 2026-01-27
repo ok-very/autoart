@@ -7,37 +7,51 @@
 import { useMemo } from 'react';
 import { Loader2 } from 'lucide-react';
 
-import { useActionViews } from '../../../api/hooks';
-import { useUIStore } from '../../../stores/uiStore';
-import { CalendarView, type CalendarEvent } from '../../composites/CalendarView';
+import { useAllActions } from '../../../api/hooks/actions/actions';
+import { CalendarView } from '../../composites/CalendarView';
+import type { CalendarEvent } from '../../../utils/calendar-adapter';
 
 export function CalendarContent() {
-    const { activeProjectId } = useUIStore();
+    // Fetch all actions with scheduling data
+    const { data: actionsData, isLoading } = useAllActions({
+        limit: 200,
+        refetch: true,
+    });
 
-    // Fetch action views for the current project context
-    const { data: actionViews, isLoading } = useActionViews(
-        activeProjectId ?? null,
-        'project'
-    );
-
-    // Transform action views into calendar events
+    // Transform actions into calendar events
     const events: CalendarEvent[] = useMemo(() => {
-        if (!actionViews) return [];
+        const actions = actionsData?.actions;
+        if (!actions) return [];
 
-        return actionViews
-            .filter((view) => view.data.dueDate || view.data.startDate)
-            .map((view) => ({
-                id: view.actionId,
-                title: view.data.title || 'Untitled',
-                start: view.data.startDate
-                    ? new Date(view.data.startDate)
-                    : new Date(view.data.dueDate!),
-                end: view.data.dueDate
-                    ? new Date(view.data.dueDate)
-                    : undefined,
-                allDay: !view.data.startDate,
-            }));
-    }, [actionViews]);
+        return actions
+            .filter((action) => {
+                const bindings = action.fieldBindings || [];
+                const dueDate = bindings.find((b: { fieldKey: string }) => b.fieldKey === 'dueDate')?.value as string | undefined;
+                const startDate = bindings.find((b: { fieldKey: string }) => b.fieldKey === 'startDate')?.value as string | undefined;
+                if (!dueDate && !startDate) return false;
+                // Validate at least one date is valid
+                const startValid = startDate ? !isNaN(new Date(startDate).getTime()) : false;
+                const dueValid = dueDate ? !isNaN(new Date(dueDate).getTime()) : false;
+                return startValid || dueValid;
+            })
+            .map((action) => {
+                const bindings = action.fieldBindings || [];
+                const title = bindings.find((b: { fieldKey: string }) => b.fieldKey === 'title')?.value as string | undefined;
+                const dueDate = bindings.find((b: { fieldKey: string }) => b.fieldKey === 'dueDate')?.value as string | undefined;
+                const startDate = bindings.find((b: { fieldKey: string }) => b.fieldKey === 'startDate')?.value as string | undefined;
+
+                const start = startDate ? new Date(startDate) : new Date(dueDate!);
+                const end = dueDate ? new Date(dueDate) : start;
+
+                return {
+                    actionId: action.id,
+                    title: title || action.type || 'Untitled',
+                    start,
+                    end,
+                    allDay: !startDate,
+                };
+            });
+    }, [actionsData]);
 
     if (isLoading) {
         return (

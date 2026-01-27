@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchPoll, submitResponse, updateResponse, type PublicPoll } from '../api';
+import { fetchPoll, submitResponse, updateResponse } from '../api';
 import { TimeGrid } from './TimeGrid';
 
 const STORAGE_KEY = 'poll_participant_name';

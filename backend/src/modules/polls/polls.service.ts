@@ -60,15 +60,19 @@ export async function createPoll(
         'code' in err &&
         (err as { code: string }).code === '23505';
 
-      if (isUniqueViolation && retries < MAX_UNIQUE_ID_RETRIES - 1) {
-        uniqueId = generateUniqueId(title);
+      if (isUniqueViolation) {
         retries++;
+        if (retries >= MAX_UNIQUE_ID_RETRIES) {
+          throw new ConflictError('Failed to generate unique ID after multiple attempts');
+        }
+        uniqueId = generateUniqueId(title);
       } else {
         throw err;
       }
     }
   }
 
+  // This should never be reached, but provides a safety net
   throw new ConflictError('Failed to generate unique ID after multiple attempts');
 }
 

@@ -13,7 +13,7 @@ export async function pollRoutes(app: FastifyInstance) {
     '/polls',
     { preHandler: [fastify.authenticate] },
     async (request, reply) => {
-      const polls = await pollsService.listPolls(request.user?.id);
+      const polls = await pollsService.listPolls(request.user?.userId);
       return reply.send({ polls });
     }
   );
@@ -51,7 +51,7 @@ export async function pollRoutes(app: FastifyInstance) {
           request.body.title,
           request.body.time_config,
           request.body.project_id,
-          request.user?.id
+          request.user?.userId
         );
         return reply.code(201).send({ poll });
       } catch (err) {
