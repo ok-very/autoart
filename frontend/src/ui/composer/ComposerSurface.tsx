@@ -135,32 +135,37 @@ export function ComposerSurface({
         return actionRecipes.find((r) => r.id === selectedRecipeId || r.name === selectedRecipeId) || null;
     }, [selectedRecipeId, actionRecipes]);
 
+    // Safely extract schema_config as object
+    const schemaConfig = useMemo(() => {
+        const raw = selectedRecipe?.schema_config;
+        if (!raw || typeof raw !== 'object') return null;
+        return raw as SchemaConfig & { referenceSlots?: ReferenceSlot[] };
+    }, [selectedRecipe]);
+
     // Extract schema fields from selected recipe
     const recipeFields = useMemo(() => {
-        if (!selectedRecipe?.schema_config) return [];
-        const config = selectedRecipe.schema_config as SchemaConfig;
+        if (!schemaConfig) return [];
         // Filter out title and description as they're handled separately
-        return (config.fields || []).filter(
+        return (schemaConfig.fields || []).filter(
             (f) => f.key !== 'title' && f.key !== 'description' && f.key !== 'status'
         );
-    }, [selectedRecipe]);
+    }, [schemaConfig]);
 
     // Extract reference slots from selected recipe
     const referenceSlots = useMemo((): ReferenceSlot[] => {
-        if (!selectedRecipe?.schema_config) return [];
-        const config = selectedRecipe.schema_config as SchemaConfig & { referenceSlots?: ReferenceSlot[] };
-        return config.referenceSlots || [];
-    }, [selectedRecipe]);
+        if (!schemaConfig) return [];
+        return schemaConfig.referenceSlots || [];
+    }, [schemaConfig]);
 
-    // Group linked records by slot for display
+    // Group linked records by slot for display, preserving original indices
     const linkedRecordsBySlot = useMemo(() => {
-        const grouped: Record<string, LinkedRecord[]> = {};
-        for (const lr of linkedRecords) {
+        const grouped: Record<string, { lr: LinkedRecord; idx: number }[]> = {};
+        linkedRecords.forEach((lr, idx) => {
             if (!grouped[lr.targetFieldKey]) {
                 grouped[lr.targetFieldKey] = [];
             }
-            grouped[lr.targetFieldKey].push(lr);
-        }
+            grouped[lr.targetFieldKey].push({ lr, idx });
+        });
         return grouped;
     }, [linkedRecords]);
 
@@ -476,33 +481,30 @@ export function ComposerSurface({
                         {/* Linked Records List - grouped by slot */}
                         {linkedRecords.length > 0 && (
                             <div className="space-y-3 mb-4">
-                                {Object.entries(linkedRecordsBySlot).map(([slotKey, records]) => (
+                                {Object.entries(linkedRecordsBySlot).map(([slotKey, items]) => (
                                     <div key={slotKey} className="space-y-2">
                                         <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                                             {getSlotLabel(slotKey)}
                                         </div>
-                                        {records.map((lr) => {
-                                            const idx = linkedRecords.indexOf(lr);
-                                            return (
-                                                <div key={idx} className="composer-record-card">
-                                                    <div className="composer-record-card-icon">
-                                                        <LinkIcon size={14} />
-                                                    </div>
-                                                    <div className="composer-record-card-content">
-                                                        <div className="composer-record-card-name">
-                                                            {lr.record.unique_name}
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveRecord(idx)}
-                                                        className="composer-slot-selector hover:text-red-500"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
+                                        {items.map(({ lr, idx }) => (
+                                            <div key={idx} className="composer-record-card">
+                                                <div className="composer-record-card-icon">
+                                                    <LinkIcon size={14} />
                                                 </div>
-                                            );
-                                        })}
+                                                <div className="composer-record-card-content">
+                                                    <div className="composer-record-card-name">
+                                                        {lr.record.unique_name}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveRecord(idx)}
+                                                    className="composer-slot-selector hover:text-red-500"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
                                     </div>
                                 ))}
                             </div>
