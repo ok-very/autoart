@@ -32,6 +32,11 @@ export async function pollRoutes(app: FastifyInstance) {
       if (!poll) {
         return reply.code(404).send({ error: 'NOT_FOUND', message: 'Poll not found' });
       }
+      if (poll.created_by && request.user?.userId !== poll.created_by) {
+        return reply
+          .code(403)
+          .send({ error: 'FORBIDDEN', message: 'You do not have access to this poll' });
+      }
       return reply.send({ poll });
     }
   );
@@ -74,11 +79,19 @@ export async function pollRoutes(app: FastifyInstance) {
     },
     async (request, reply) => {
       try {
-        const poll = await pollsService.closePoll(request.params.id);
+        const poll = await pollsService.getPollById(request.params.id);
         if (!poll) {
           return reply.code(404).send({ error: 'NOT_FOUND', message: 'Poll not found' });
         }
-        return reply.send({ poll });
+
+        if (poll.created_by && request.user?.userId !== poll.created_by) {
+          return reply
+            .code(403)
+            .send({ error: 'FORBIDDEN', message: 'You do not have access to this poll' });
+        }
+
+        const closedPoll = await pollsService.closePoll(request.params.id);
+        return reply.send({ poll: closedPoll });
       } catch (err) {
         if (err instanceof AppError) {
           return reply.code(err.statusCode).send({ error: err.code, message: err.message });
