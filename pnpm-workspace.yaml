@@ -45,3 +45,6 @@ catalog:
 
   # Gantt
   gantt-task-react: "^0.3.9"
+
+  # Date utilities
+  date-fns: "^4.1.0"

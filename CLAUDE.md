@@ -75,6 +75,25 @@ pnpm git:merge-stack  # Merge PR stack in order
 - Use soft-intrinsic type derivation (derive types from relationships, not explicit checks)
 - All mutations go through Actions which produce Events
 
+### Adding Dependencies
+
+**ALWAYS use pnpm catalog** for shared dependencies:
+
+1. Add version to `pnpm-workspace.yaml` under `catalog:`
+2. Reference in package.json as `"package-name": "catalog:"`
+3. Run `pnpm install`
+
+```yaml
+# pnpm-workspace.yaml
+catalog:
+  date-fns: "^4.1.0"
+```
+
+```json
+// package.json
+"date-fns": "catalog:"
+```
+
 ### Build Validation
 
 **KNOWN ISSUE: TypeScript output is not captured reliably in the agent's Git Bash environment on Windows.**
