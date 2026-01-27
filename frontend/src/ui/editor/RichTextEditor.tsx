@@ -93,12 +93,14 @@ export function RichTextEditor({
   // Use refs to store the latest values without causing extension recreation
   const contextIdRef = useRef(contextId);
   const createReferenceRef = useRef(createReference);
-  contextIdRef.current = contextId;
-  createReferenceRef.current = createReference;
-
-  // Ref to track combobox state for keyboard handling
   const comboboxRef = useRef(combobox);
-  comboboxRef.current = combobox;
+
+  // Sync refs in effect to avoid accessing during render
+  useEffect(() => {
+    contextIdRef.current = contextId;
+    createReferenceRef.current = createReference;
+    comboboxRef.current = combobox;
+  }, [contextId, createReference, combobox]);
 
   // Handle selecting an item from the combobox
   const handleSelect = useCallback(

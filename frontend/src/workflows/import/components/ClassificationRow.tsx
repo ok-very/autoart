@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Check, ChevronRight, FileText, Lightbulb, Clock, Sparkles } from 'lucide-react';
 import type { ItemClassification, ClassificationSuggestion } from '../../../api/hooks/imports';
 import type { PendingResolution } from '../types';
@@ -30,7 +31,10 @@ export function ClassificationRow({
     onCustomFactLabelChange,
     suggestions,
 }: ClassificationRowProps) {
-    const OutcomeIcon = getOutcomeIcon(classification.outcome);
+    const OutcomeIcon = useMemo(
+        () => getOutcomeIcon(classification.outcome),
+        [classification.outcome]
+    );
     const needsResolution = !classification.resolution &&
         (classification.outcome === 'AMBIGUOUS' || classification.outcome === 'UNCLASSIFIED');
 

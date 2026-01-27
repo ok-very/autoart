@@ -51,8 +51,12 @@ export function RichTextInput({
   // Use refs to store latest values for callbacks
   const taskIdRef = useRef(taskId);
   const createReferenceRef = useRef(createReference);
-  taskIdRef.current = taskId;
-  createReferenceRef.current = createReference;
+
+  // Sync refs in effect to avoid accessing during render
+  useEffect(() => {
+    taskIdRef.current = taskId;
+    createReferenceRef.current = createReference;
+  }, [taskId, createReference]);
 
   // Handle selecting an item from the combobox
   const handleSelect = useCallback(
