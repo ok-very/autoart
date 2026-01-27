@@ -28,20 +28,23 @@ export function FixedPanelRegion({
   className = '',
 }: FixedPanelRegionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [shouldRender, setShouldRender] = useState(isVisible);
+  const [delayedHidden, setDelayedHidden] = useState(!isVisible);
 
   // Handle delayed unmount for exit animation
   useEffect(() => {
-    if (isVisible) {
-      setShouldRender(true);
-    } else {
+    if (!isVisible) {
       // Wait for exit animation to complete before unmounting
       const timer = setTimeout(() => {
-        setShouldRender(false);
+        setDelayedHidden(true);
       }, 300); // Match CSS transition duration
       return () => clearTimeout(timer);
+    } else {
+      setDelayedHidden(false);
     }
+    return undefined;
   }, [isVisible]);
+
+  const shouldRender = isVisible || !delayedHidden;
 
   if (!shouldRender) {
     return null;
