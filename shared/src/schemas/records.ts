@@ -52,11 +52,27 @@ export const FieldDefSchema = z.object({
 export type FieldDef = z.infer<typeof FieldDefSchema>;
 
 /**
+ * Reference Slot Schema
+ * Defines a named slot for linking records to an action arrangement
+ */
+export const ReferenceSlotSchema = z.object({
+  key: z.string().min(1), // e.g., 'assignee', 'dependencies'
+  label: z.string().min(1), // e.g., 'Assignee', 'Dependencies'
+  description: z.string().optional(), // Help text
+  required: z.boolean().optional(), // Must be filled before submit
+  multiple: z.boolean().optional(), // Allow multiple records in slot
+  allowedDefinitionIds: z.array(z.string().uuid()).optional(), // Filter by record type
+});
+
+export type ReferenceSlot = z.infer<typeof ReferenceSlotSchema>;
+
+/**
  * Schema Config Schema
- * Container for field definitions
+ * Container for field definitions and reference slots
  */
 export const SchemaConfigSchema = z.object({
   fields: z.array(FieldDefSchema),
+  referenceSlots: z.array(ReferenceSlotSchema).optional(),
 });
 
 export type SchemaConfig = z.infer<typeof SchemaConfigSchema>;

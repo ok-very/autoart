@@ -33,6 +33,16 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 
 import type { DataRecord, SchemaConfig } from '@autoart/shared';
 
+/** Reference slot for linking records to an action arrangement */
+interface ReferenceSlot {
+    key: string;
+    label: string;
+    description?: string;
+    required?: boolean;
+    multiple?: boolean;
+    allowedDefinitionIds?: string[];
+}
+
 import {
     useRecordDefinitions,
     useProjects,
@@ -125,18 +135,45 @@ export function ComposerSurface({
         return actionRecipes.find((r) => r.id === selectedRecipeId || r.name === selectedRecipeId) || null;
     }, [selectedRecipeId, actionRecipes]);
 
-    // Extract schema fields from selected recipe
-    const recipeFields = useMemo(() => {
-        if (!selectedRecipe?.schema_config) return [];
-        const config = selectedRecipe.schema_config as SchemaConfig;
-        // Filter out title and description as they're handled separately
-        return (config.fields || []).filter(
-            (f) => f.key !== 'title' && f.key !== 'description' && f.key !== 'status'
-        );
+    // Safely extract schema_config as object
+    const schemaConfig = useMemo(() => {
+        const raw = selectedRecipe?.schema_config;
+        if (!raw || typeof raw !== 'object') return null;
+        return raw as SchemaConfig & { referenceSlots?: ReferenceSlot[] };
     }, [selectedRecipe]);
 
-    // Note: referenceSlots will be used when recipe.referenceSlots is implemented
-    // For now, the default slot 'related_record' is used in handleAddRecord
+    // Extract schema fields from selected recipe
+    const recipeFields = useMemo(() => {
+        if (!schemaConfig) return [];
+        // Filter out title and description as they're handled separately
+        return (schemaConfig.fields || []).filter(
+            (f) => f.key !== 'title' && f.key !== 'description' && f.key !== 'status'
+        );
+    }, [schemaConfig]);
+
+    // Extract reference slots from selected recipe
+    const referenceSlots = useMemo((): ReferenceSlot[] => {
+        if (!schemaConfig) return [];
+        return schemaConfig.referenceSlots || [];
+    }, [schemaConfig]);
+
+    // Group linked records by slot for display, preserving original indices
+    const linkedRecordsBySlot = useMemo(() => {
+        const grouped: Record<string, { lr: LinkedRecord; idx: number }[]> = {};
+        linkedRecords.forEach((lr, idx) => {
+            if (!grouped[lr.targetFieldKey]) {
+                grouped[lr.targetFieldKey] = [];
+            }
+            grouped[lr.targetFieldKey].push({ lr, idx });
+        });
+        return grouped;
+    }, [linkedRecords]);
+
+    // Get slot label by key
+    const getSlotLabel = useCallback((slotKey: string): string => {
+        const slot = referenceSlots.find((s) => s.key === slotKey);
+        return slot?.label || slotKey;
+    }, [referenceSlots]);
 
     // Get subprocesses from container actions API
     // These are action-based containers, not legacy hierarchy nodes
@@ -441,46 +478,72 @@ export function ComposerSurface({
                             </div>
                         </div>
 
-                        {/* Linked Records List */}
+                        {/* Linked Records List - grouped by slot */}
                         {linkedRecords.length > 0 && (
-                            <div className="space-y-2 mb-4">
-                                {linkedRecords.map((lr, idx) => (
-                                    <div key={idx} className="composer-record-card">
-                                        <div className="composer-record-card-icon">
-                                            <LinkIcon size={14} />
+                            <div className="space-y-3 mb-4">
+                                {Object.entries(linkedRecordsBySlot).map(([slotKey, items]) => (
+                                    <div key={slotKey} className="space-y-2">
+                                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                                            {getSlotLabel(slotKey)}
                                         </div>
-                                        <div className="composer-record-card-content">
-                                            <div className="composer-record-card-name">
-                                                {lr.record.unique_name}
+                                        {items.map(({ lr, idx }) => (
+                                            <div key={idx} className="composer-record-card">
+                                                <div className="composer-record-card-icon">
+                                                    <LinkIcon size={14} />
+                                                </div>
+                                                <div className="composer-record-card-content">
+                                                    <div className="composer-record-card-name">
+                                                        {lr.record.unique_name}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveRecord(idx)}
+                                                    className="composer-slot-selector hover:text-red-500"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
                                             </div>
-                                            <div className="composer-record-card-type">
-                                                Slot: {lr.targetFieldKey}
-                                            </div>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveRecord(idx)}
-                                            className="composer-slot-selector hover:text-red-500"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
+                                        ))}
                                     </div>
                                 ))}
                             </div>
                         )}
 
-                        {/* Add Reference Button */}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setCurrentSlot('related_record');
-                                setShowRecordPicker(true);
-                            }}
-                            className="composer-add-btn"
-                        >
-                            <Plus size={16} />
-                            Link a Record
-                        </button>
+                        {/* Reference Slot Buttons */}
+                        <div className="flex flex-wrap gap-2">
+                            {referenceSlots.length > 0 ? (
+                                referenceSlots.map((slot) => (
+                                    <button
+                                        key={slot.key}
+                                        type="button"
+                                        onClick={() => {
+                                            setCurrentSlot(slot.key);
+                                            setShowRecordPicker(true);
+                                        }}
+                                        className="composer-add-btn"
+                                        title={slot.description}
+                                    >
+                                        <Plus size={16} />
+                                        {slot.label}
+                                        {slot.required && <span className="text-red-500 ml-1">*</span>}
+                                    </button>
+                                ))
+                            ) : (
+                                // Fallback for arrangements without defined slots
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setCurrentSlot('related_record');
+                                        setShowRecordPicker(true);
+                                    }}
+                                    className="composer-add-btn"
+                                >
+                                    <Plus size={16} />
+                                    Link a Record
+                                </button>
+                            )}
+                        </div>
 
                         {/* Record Picker Modal (simplified) */}
                         {showRecordPicker && (

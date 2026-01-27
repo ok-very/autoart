@@ -12,7 +12,7 @@ packages:
 catalog:
   # Core
   typescript: "~5.9.3"
-  zod: "^4.3.5"
+  zod: "^4.3.6"
   fastify-type-provider-zod: "^6.0.0"
   
   # React
@@ -45,3 +45,6 @@ catalog:
 
   # Gantt
   gantt-task-react: "^0.3.9"
+
+  # Date utilities
+  date-fns: "^4.1.0"
