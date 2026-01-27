@@ -315,6 +315,12 @@ function ActionMappingsPanel({
         return { top: rect.bottom + 4, left: rect.left };
     }, []);
 
+    // Pre-compute link picker position to avoid calling ref function in JSX
+    const linkPickerPosition = useMemo(
+        () => (showLinkPicker ? getLinkPickerPosition() : null),
+        [showLinkPicker, getLinkPickerPosition]
+    );
+
     if (isLoading) {
         return (
             <div className={clsx('flex items-center justify-center py-8', className)}>
@@ -348,9 +354,9 @@ function ActionMappingsPanel({
                     <Plus size={12} />
                     Link...
                 </button>
-                {showLinkPicker && getLinkPickerPosition() && (
+                {linkPickerPosition && (
                     <LinkSearchCombobox
-                        position={getLinkPickerPosition()!}
+                        position={linkPickerPosition}
                         targetTypes={['action', 'record']}
                         onSelect={handleLinkSelect}
                         onClose={() => setShowLinkPicker(false)}
@@ -377,9 +383,9 @@ function ActionMappingsPanel({
                     <Plus size={12} />
                     Link...
                 </button>
-                {showLinkPicker && getLinkPickerPosition() && (
+                {linkPickerPosition && (
                     <LinkSearchCombobox
-                        position={getLinkPickerPosition()!}
+                        position={linkPickerPosition}
                         targetTypes={['action', 'record']}
                         onSelect={handleLinkSelect}
                         onClose={() => setShowLinkPicker(false)}
