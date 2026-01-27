@@ -48,8 +48,10 @@ export function PollPage() {
   }, [existingResponse]);
 
   const submitMutation = useMutation({
-    mutationFn: () =>
-      submitResponse(uniqueId!, name, Array.from(selectedSlots), email || undefined),
+    mutationFn: () => {
+      if (!uniqueId) throw new Error('Poll ID is missing');
+      return submitResponse(uniqueId, name, Array.from(selectedSlots), email || undefined);
+    },
     onSuccess: () => {
       localStorage.setItem(STORAGE_KEY, name);
       queryClient.invalidateQueries({ queryKey: ['poll', uniqueId] });
@@ -58,7 +60,10 @@ export function PollPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: () => updateResponse(uniqueId!, name, Array.from(selectedSlots)),
+    mutationFn: () => {
+      if (!uniqueId) throw new Error('Poll ID is missing');
+      return updateResponse(uniqueId, name, Array.from(selectedSlots));
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['poll', uniqueId] });
       setSubmitted(true);

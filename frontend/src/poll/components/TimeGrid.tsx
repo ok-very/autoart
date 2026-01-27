@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { Fragment, useCallback, useRef, useState } from 'react';
 
 interface TimeGridProps {
   dates: string[];
@@ -166,10 +166,9 @@ export function TimeGrid({
 
         {/* Time rows */}
         {timeSlots.map(({ hour, minute }) => (
-          <>
+          <Fragment key={`row-${hour}-${minute}`}>
             {/* Time header */}
             <div
-              key={`time-${hour}-${minute}`}
               className="sticky left-0 z-10 bg-white border-r border-b border-slate-300 px-2 py-0.5 text-xs text-slate-600 whitespace-nowrap"
             >
               {minute === 0 ? formatTimeHeader(hour, minute) : ''}
@@ -203,7 +202,7 @@ export function TimeGrid({
                 />
               );
             })}
-          </>
+          </Fragment>
         ))}
       </div>
     </div>

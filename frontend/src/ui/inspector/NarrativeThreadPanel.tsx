@@ -130,7 +130,7 @@ export function NarrativeThreadPanel({
         const groups: Record<string, Event[]> = {};
         for (const event of sortedEvents) {
             const formatter = getEventFormatter(event.type);
-            const category = formatter.category;
+            const category = formatter.category ?? 'other';
             if (!groups[category]) {
                 groups[category] = [];
             }

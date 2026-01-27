@@ -7,8 +7,8 @@ import type {
   PollUpdate,
   PollResponseUpdate,
 } from '../../db/schema.js';
-import { generateUniqueId } from '@autoart/shared';
-import { NotFoundError, ConflictError } from '../../utils/errors.js';
+import { generateUniqueId, PollTimeConfigSchema } from '@autoart/shared';
+import { NotFoundError, ConflictError, ValidationError } from '../../utils/errors.js';
 
 const MAX_UNIQUE_ID_RETRIES = 5;
 
@@ -29,6 +29,13 @@ export async function createPoll(
   projectId?: string,
   userId?: string
 ): Promise<Poll> {
+  // Validate timeConfig against schema
+  const parseResult = PollTimeConfigSchema.safeParse(timeConfig);
+  if (!parseResult.success) {
+    throw new ValidationError('Invalid time_config: ' + parseResult.error.message);
+  }
+  const validatedTimeConfig = parseResult.data;
+
   let uniqueId = generateUniqueId(title);
   let retries = 0;
 
@@ -39,7 +46,7 @@ export async function createPoll(
         .values({
           unique_id: uniqueId,
           title,
-          time_config: timeConfig,
+          time_config: validatedTimeConfig,
           project_id: projectId ?? null,
           created_by: userId ?? null,
         } satisfies NewPoll)
@@ -108,6 +115,17 @@ export async function listPolls(userId?: string): Promise<Poll[]> {
   return query.execute();
 }
 
+/**
+ * Submit or update a poll response.
+ *
+ * NOTE: Intentional when2meet-style behavior - responses are identified by
+ * (poll_id, participant_name). This allows:
+ * - Users to update their response by re-submitting with the same name
+ * - Trust-based participation without authentication (like when2meet/Doodle)
+ *
+ * This means users sharing the same name on the same poll will overwrite
+ * each other's responses. This is accepted behavior for this use case.
+ */
 export async function submitResponse(
   pollId: string,
   name: string,
@@ -176,9 +194,13 @@ export async function getResults(pollId: string): Promise<PollResults> {
   const slotCounts: Record<string, number> = {};
 
   for (const response of responses) {
-    const slots = response.available_slots as string[];
+    const rawSlots = response.available_slots;
+    // Safely handle null, undefined, or non-array values
+    const slots = Array.isArray(rawSlots) ? rawSlots : [];
     for (const slot of slots) {
-      slotCounts[slot] = (slotCounts[slot] ?? 0) + 1;
+      if (typeof slot === 'string') {
+        slotCounts[slot] = (slotCounts[slot] ?? 0) + 1;
+      }
     }
   }
 

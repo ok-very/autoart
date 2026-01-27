@@ -178,7 +178,12 @@ function formatEmailDate(dateValue: Date | string | null | undefined): string {
     if (!dateValue) return '—';
     try {
         const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
-        if (isNaN(date.getTime())) return '—';
+        if (isNaN(date.getTime())) {
+            if (process.env.NODE_ENV !== 'production') {
+                console.warn('[MailContent] Invalid date value:', dateValue);
+            }
+            return '⚠ Invalid';
+        }
         return new Intl.DateTimeFormat('en-US', {
             month: 'short',
             day: 'numeric',

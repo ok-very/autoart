@@ -70,7 +70,15 @@ export function ResultsPage() {
             <h2 className="mb-2 font-semibold text-emerald-800">Best Times</h2>
             <div className="flex flex-wrap gap-2">
               {results.bestSlots.map((slot) => {
-                const [date, hour, minute] = slot.split(':');
+                const parts = slot.split(':');
+                if (parts.length < 3) {
+                  return (
+                    <span key={slot} className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800">
+                      {slot}
+                    </span>
+                  );
+                }
+                const [date, hour, minute] = parts;
                 const dateObj = new Date(date + 'T12:00:00');
                 const dayStr = dateObj.toLocaleDateString('en-US', {
                   weekday: 'short',
@@ -78,6 +86,13 @@ export function ResultsPage() {
                   day: 'numeric',
                 });
                 const hourNum = parseInt(hour, 10);
+                if (isNaN(hourNum)) {
+                  return (
+                    <span key={slot} className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800">
+                      {slot}
+                    </span>
+                  );
+                }
                 const period = hourNum >= 12 ? 'PM' : 'AM';
                 const displayHour = hourNum === 0 ? 12 : hourNum > 12 ? hourNum - 12 : hourNum;
                 const timeStr = `${displayHour}:${minute} ${period}`;
