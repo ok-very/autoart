@@ -25,7 +25,7 @@ import {
     Plus,
     Lightbulb,
 } from 'lucide-react';
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 
 import { Button } from '@autoart/ui';
 
@@ -65,6 +65,7 @@ export function UnifiedComposerBar({
     const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
     const [showEventPreview, setShowEventPreview] = useState(true);
     const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
+    const recipeInitialized = useRef(false);
 
     // Hooks
     const derivedContext = useDerivedContext();
@@ -80,12 +81,13 @@ export function UnifiedComposerBar({
         return allDefinitions.filter((d) => d.kind === 'action_arrangement');
     }, [allDefinitions]);
 
-    // Auto-select first recipe (Task by default)
+    // Auto-select first recipe (Task by default) - one-time initialization
     useEffect(() => {
-        if (actionRecipes.length > 0 && !selectedRecipeId) {
+        if (actionRecipes.length > 0 && !selectedRecipeId && !recipeInitialized.current) {
             // Prefer "Task" recipe if available
             const taskRecipe = actionRecipes.find((r) => r.name.toLowerCase() === 'task');
             setSelectedRecipeId(taskRecipe?.id || actionRecipes[0].id);
+            recipeInitialized.current = true;
         }
     }, [actionRecipes, selectedRecipeId]);
 
