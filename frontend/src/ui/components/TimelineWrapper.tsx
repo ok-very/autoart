@@ -273,10 +273,14 @@ export function TimelineWrapper({
     const [libraryTasks, setLibraryTasks] = useState<LibraryTask[]>(() =>
         toLibraryFormat(renderOutput.items)
     );
+    const prevRenderItemsRef = useRef(renderOutput.items);
 
-    // Sync library tasks when render output changes
+    // Sync library tasks when render output changes from parent
     useEffect(() => {
-        setLibraryTasks(toLibraryFormat(renderOutput.items));
+        if (renderOutput.items !== prevRenderItemsRef.current) {
+            prevRenderItemsRef.current = renderOutput.items;
+            setLibraryTasks(toLibraryFormat(renderOutput.items));
+        }
     }, [renderOutput.items]);
 
     // View mode: prefer controlled, then internal, then data-suggested
@@ -294,12 +298,16 @@ export function TimelineWrapper({
 
     // Selection sync - use ref to avoid stale closure in handleSelect
     const selectionRef = useRef<GanttSelection | undefined>(selection);
+    const prevSelectionRef = useRef(selection);
     useEffect(() => {
-        selectionRef.current = selection;
-        if (selection?.selectedItemIds?.length) {
-            setSelectedTaskId(selection.selectedItemIds[0]);
-        } else {
-            setSelectedTaskId('');
+        if (selection !== prevSelectionRef.current) {
+            prevSelectionRef.current = selection;
+            selectionRef.current = selection;
+            if (selection?.selectedItemIds?.length) {
+                setSelectedTaskId(selection.selectedItemIds[0]);
+            } else {
+                setSelectedTaskId('');
+            }
         }
     }, [selection]);
 
