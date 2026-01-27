@@ -26,14 +26,15 @@ export function FontSelector({
     const buttonRef = useRef<HTMLButtonElement>(null);
     const listboxRef = useRef<HTMLDivElement>(null);
     const optionsRef = useRef<(HTMLButtonElement | null)[]>([]);
+    const prevIsOpenRef = useRef(isOpen);
 
     const id = useId();
     const labelId = `${id}-label`;
     const selectedFontOption = availableFonts.find((f) => f.family === selectedFont);
 
-    // Initialize/Reset focused index when opening
+    // Initialize/Reset focused index when opening (only on open transition)
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && !prevIsOpenRef.current) {
             const index = availableFonts.findIndex((f) => f.family === selectedFont);
             setFocusedIndex(index >= 0 ? index : 0);
             // Focus active option after render
@@ -41,6 +42,7 @@ export function FontSelector({
                 optionsRef.current[index >= 0 ? index : 0]?.focus();
             });
         }
+        prevIsOpenRef.current = isOpen;
     }, [isOpen, availableFonts, selectedFont]);
 
     // Update focus when index changes

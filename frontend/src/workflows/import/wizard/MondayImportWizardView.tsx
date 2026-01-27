@@ -47,12 +47,14 @@ export function MondayImportWizardView({
 
     // Track if update is internal to prevent circular updates
     const isInternalUpdate = useRef(false);
+    const prevPlanRef = useRef(plan);
 
     const { setImportSession: setContextImportSession } = useContextStore();
 
     // Sync external plan changes to local state (only if not triggered by our own update)
     useEffect(() => {
-        if (!isInternalUpdate.current) {
+        if (!isInternalUpdate.current && plan !== prevPlanRef.current) {
+            prevPlanRef.current = plan;
             setLocalPlan(plan);
         }
         isInternalUpdate.current = false;

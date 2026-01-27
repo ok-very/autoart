@@ -2,7 +2,7 @@
  * FormSettingsPanel - Settings configuration for intake forms
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Save, Check, AlertCircle, ExternalLink, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Button } from '@autoart/ui';
 
@@ -21,11 +21,15 @@ interface FormSettingsPanelProps {
 export function FormSettingsPanel({ settings, onSave, isSaving }: FormSettingsPanelProps) {
     const [localSettings, setLocalSettings] = useState<FormSettings>(settings);
     const [isDirty, setIsDirty] = useState(false);
+    const prevSettingsRef = useRef(settings);
 
-    // Sync with props when they change
+    // Sync with props when they change from parent
     useEffect(() => {
-        setLocalSettings(settings);
-        setIsDirty(false);
+        if (settings !== prevSettingsRef.current) {
+            prevSettingsRef.current = settings;
+            setLocalSettings(settings);
+            setIsDirty(false);
+        }
     }, [settings]);
 
     const handleChange = useCallback(<K extends keyof FormSettings>(key: K, value: FormSettings[K]) => {
