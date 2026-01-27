@@ -1,5 +1,5 @@
 import { Settings, Plus, ChevronDown, FolderOpen, Check, Copy, Library, Hammer } from 'lucide-react';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 // import { IDockviewPanelProps } from 'dockview';
 
@@ -30,11 +30,16 @@ export function ProjectSidebarPanel() {
 
     const project = activeProjectId ? getNode(activeProjectId) : null;
     const processes = useMemo(() => project ? getChildren(project.id) : [], [project, getChildren]);
+    const prevProcessesRef = useRef(processes);
 
-    // Auto-select first process when processes change or none selected
+    // Auto-select first process when processes change or selection becomes invalid
     useEffect(() => {
-        if (processes.length > 0 && (!selectedProcessId || !processes.find(p => p.id === selectedProcessId))) {
-            setSelectedProcessId(processes[0].id);
+        const processesChanged = processes !== prevProcessesRef.current;
+        if (processesChanged) {
+            prevProcessesRef.current = processes;
+            if (processes.length > 0 && (!selectedProcessId || !processes.find(p => p.id === selectedProcessId))) {
+                setSelectedProcessId(processes[0].id);
+            }
         }
     }, [processes, selectedProcessId]);
 

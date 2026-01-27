@@ -2,7 +2,7 @@
  * FormPage - Public form renderer using React Hook Form + Zod
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { FormProvider } from 'react-hook-form';
@@ -28,9 +28,11 @@ export function FormPage() {
 
   // Build config from form data
   const [config, setConfig] = useState<IntakeFormConfig | null>(null);
+  const prevFormIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (form) {
+    if (form && form.id !== prevFormIdRef.current) {
+      prevFormIdRef.current = form.id;
       // Gather all blocks from all pages
       const allBlocks = form.pages
         .sort((a, b) => a.page_index - b.page_index)
