@@ -606,7 +606,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
 
       const events = await workflowService.rescheduleAction({
         actionId,
-        actorId: request.user?.id,
+        actorId: (request as any).user?.id,
         startDate,
         dueDate,
         durationDays,

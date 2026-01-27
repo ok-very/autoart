@@ -111,7 +111,6 @@ export function NarrativeThreadPanel({
     className,
 }: NarrativeThreadPanelProps) {
     const [showAll, setShowAll] = useState(false);
-    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['workflow', 'fact']));
 
     // Fetch events for the action
     const { data: events, isLoading, error } = useActionEvents(actionId);
@@ -139,19 +138,6 @@ export function NarrativeThreadPanel({
         }
         return groups;
     }, [sortedEvents]);
-
-    // Toggle category expansion
-    const toggleCategory = (category: string) => {
-        setExpandedCategories((prev) => {
-            const next = new Set(prev);
-            if (next.has(category)) {
-                next.delete(category);
-            } else {
-                next.add(category);
-            }
-            return next;
-        });
-    };
 
     // Get visible events
     const visibleEvents = showAll

@@ -120,11 +120,6 @@ export function UnifiedComposerBar({
         setDismissedSuggestions((prev) => new Set([...prev, suggestion.id]));
     }, []);
 
-    // Handle suggestion dismissal
-    const handleDismissSuggestion = useCallback((suggestion: Suggestion) => {
-        setDismissedSuggestions((prev) => new Set([...prev, suggestion.id]));
-    }, []);
-
     // Submit handler
     const handleSubmit = useCallback(async (e?: React.FormEvent) => {
         e?.preventDefault();

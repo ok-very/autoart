@@ -212,13 +212,7 @@ export {
 } from './actionReferences';
 
 // Composer (Also exported via ./actions)
-export {
-  useCompose,
-  useQuickTask,
-  useQuickBug,
-  buildTaskInput,
-  buildBugInput,
-} from './composer';
+export { useCompose } from './composer';
 
 // Project Log (Also exported via ./actions)
 export {

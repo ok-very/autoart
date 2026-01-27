@@ -15,10 +15,8 @@ import { clsx } from 'clsx';
 import {
     CheckCircle,
     Circle,
-    Clock,
     AlertTriangle,
     Play,
-    Pause,
     ChevronDown,
     ChevronRight,
     Link2,
@@ -209,7 +207,7 @@ function LinkedEntityBadge({ entity }: { entity: LinkedEntity }) {
  * NarrativeCard Component
  */
 export function NarrativeCard({
-    id,
+    id: _id,
     title,
     type,
     status,

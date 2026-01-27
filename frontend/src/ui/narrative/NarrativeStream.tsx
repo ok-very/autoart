@@ -28,7 +28,7 @@ import type { DerivedStatus, Event, ContextType } from '@autoart/shared';
 import { useActionViews, useContextEvents } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
 
-import { NarrativeCard, type NarrativeEvent, type LinkedEntity } from './NarrativeCard';
+import { NarrativeCard, type NarrativeEvent } from './NarrativeCard';
 import { FactFamilyGroup, groupFactsByFamily, type FactEntry, type FactFamily } from './FactFamilyGroup';
 
 export interface NarrativeStreamProps {
@@ -205,7 +205,7 @@ export function NarrativeStream({
     );
 
     // Fetch events for the context
-    const { data: events, isLoading: eventsLoading } = useContextEvents(contextId);
+    const { data: events, isLoading: eventsLoading } = useContextEvents(contextId ?? null, contextType);
 
     // Build action title map for fact entries
     const actionTitleMap = useMemo(() => {
@@ -235,7 +235,8 @@ export function NarrativeStream({
 
     // Group actions by status
     const groupedActions = useMemo(() => {
-        const groups: Record<'pending' | 'active' | 'recorded', typeof actionViews> = {
+        type ActionViewList = NonNullable<typeof actionViews>;
+        const groups: Record<'pending' | 'active' | 'recorded', ActionViewList> = {
             pending: [],
             active: [],
             recorded: [],

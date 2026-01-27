@@ -9,7 +9,7 @@ import { CalendarView } from '../../composites/CalendarView';
 export function CalendarContent() {
     return (
         <div className="h-full overflow-hidden bg-white">
-            <CalendarView />
+            <CalendarView events={[]} />
         </div>
     );
 }

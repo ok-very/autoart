@@ -12,12 +12,11 @@ import {
     FileText,
     Plus,
     Loader2,
-    ChevronDown,
     Search,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
-import { Button, TextInput, Badge } from '@autoart/ui';
+import { Button, Badge } from '@autoart/ui';
 
 import { useSearch } from '../../api/hooks';
 import type { LinkedEntity, LinkedEntityType } from './LinkedEntityBadge';
@@ -42,7 +41,7 @@ type LinkMode = 'action' | 'record' | null;
  */
 function SearchResultItem({
     type,
-    id,
+    id: _id,
     title,
     subtitle,
     onSelect,
@@ -83,10 +82,10 @@ function SearchResultItem({
  * EmailLinkActions Component
  */
 export function EmailLinkActions({
-    emailId,
+    emailId: _emailId,
     linkedEntities = [],
     onLinkCreated,
-    onLinkRemoved,
+    onLinkRemoved: _onLinkRemoved,
     className,
 }: EmailLinkActionsProps) {
     const [linkMode, setLinkMode] = useState<LinkMode>(null);
@@ -121,7 +120,7 @@ export function EmailLinkActions({
 
     const handleCreateNewAction = () => {
         // This would open the action composer with the email context
-        console.log('Create new action from email:', emailId);
+        console.log('Create new action from email:', _emailId);
     };
 
     // Collapsed state - just show link button
@@ -223,7 +222,7 @@ export function EmailLinkActions({
                             key={result.id}
                             type={linkMode!}
                             id={result.id}
-                            title={result.title || result.id}
+                            title={result.name || result.id}
                             subtitle={result.type}
                             onSelect={() => handleSelectEntity(linkMode!, result.id)}
                         />

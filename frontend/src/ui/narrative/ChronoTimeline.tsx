@@ -74,8 +74,8 @@ export function ChronoTimeline({
     mode = 'VERTICAL',
     cardLess = false,
     hideControls = true,
-    scrollToEnd = false,
-    enableKeyboardNav = true,
+    scrollToEnd: _scrollToEnd = false,
+    enableKeyboardNav: _enableKeyboardNav = true,
     theme = 'light',
     className,
     onItemSelected,
@@ -107,8 +107,8 @@ export function ChronoTimeline({
     }, [items, theme]);
 
     // Handle item selection
-    const handleItemSelected = (data: { index: number }) => {
-        if (onItemSelected && data.index >= 0 && data.index < items.length) {
+    const handleItemSelected = (data: { index: number } | Record<string, unknown>) => {
+        if (onItemSelected && 'index' in data && typeof data.index === 'number' && data.index >= 0 && data.index < items.length) {
             onItemSelected(items[data.index], data.index);
         }
     };

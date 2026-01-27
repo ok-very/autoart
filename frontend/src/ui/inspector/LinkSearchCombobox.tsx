@@ -12,7 +12,7 @@ import { clsx } from 'clsx';
 import { useSearch } from '@/api/hooks';
 import { useAllActions } from '@/api/hooks/actions/actions';
 import { useUIStore } from '@/stores';
-import type { SearchResult, Action } from '@/types';
+import type { SearchResult } from '@/types';
 
 import { SearchCombobox, type SearchComboboxItem } from '@autoart/ui';
 
@@ -109,7 +109,7 @@ export function LinkSearchCombobox({
             const actions = actionsData?.actions || [];
             for (const action of actions.slice(0, 25)) {
                 const title = action.fieldBindings?.find(
-                    (b: { key: string; value: unknown }) => b.key === 'title'
+                    (b: { fieldKey: string; value?: unknown }) => b.fieldKey === 'title'
                 )?.value as string | undefined;
                 result.push({
                     id: action.id,

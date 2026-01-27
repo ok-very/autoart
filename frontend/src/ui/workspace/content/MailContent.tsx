@@ -20,7 +20,6 @@ import {
     Info,
     Archive,
     Link2,
-    Target,
 } from 'lucide-react';
 
 import {
@@ -175,10 +174,10 @@ function EmailActions({ email, onAction }: { email: ProcessedEmail; onAction?: (
     );
 }
 
-function formatEmailDate(dateValue: string | null | undefined): string {
+function formatEmailDate(dateValue: Date | string | null | undefined): string {
     if (!dateValue) return '—';
     try {
-        const date = new Date(dateValue);
+        const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
         if (isNaN(date.getTime())) return '—';
         return new Intl.DateTimeFormat('en-US', {
             month: 'short',

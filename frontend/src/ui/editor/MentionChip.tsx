@@ -46,7 +46,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
   const updateMode = useUpdateReferenceMode();
   const updateRecord = useUpdateRecord();
   const deleteReference = useDeleteReference();
-  const { inspectRecord } = useUIStore();
+  const { inspectRecord, openOverlay } = useUIStore();
 
   // Derived Logic
   const isDirect = !referenceId; // True if using direct recordId/fieldKey without DB reference task

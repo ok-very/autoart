@@ -10,11 +10,7 @@ import { clsx } from 'clsx';
 import {
     Mail,
     Paperclip,
-    Clock,
-    Target,
     Link2,
-    ChevronRight,
-    ExternalLink,
 } from 'lucide-react';
 import { useMemo } from 'react';
 
@@ -101,7 +97,7 @@ const factKindConfig: Record<string, {
  * EmailFactCard Component
  */
 export function EmailFactCard({
-    id,
+    id: _id,
     subject,
     senderName,
     senderEmail,
