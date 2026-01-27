@@ -19,6 +19,7 @@ export function MillerColumnsView() {
   const { getChildren, getNode, setNodes } = useHierarchyStore();
   const { activeProjectId, setSelection, setActiveProject } = useUIStore();
   const containerRef = useRef<HTMLDivElement>(null);
+  const prevProjectIdRef = useRef(activeProjectId);
 
   // Track selection at each level
   const [selections, setSelections] = useState<ColumnSelections>({
@@ -51,7 +52,8 @@ export function MillerColumnsView() {
 
   // Sync with external project selection
   useEffect(() => {
-    if (activeProjectId !== selections.project) {
+    if (activeProjectId !== prevProjectIdRef.current) {
+      prevProjectIdRef.current = activeProjectId;
       setSelections({
         project: activeProjectId,
         process: null,
@@ -60,7 +62,7 @@ export function MillerColumnsView() {
         task: null,
       });
     }
-  }, [activeProjectId, selections.project, setSelections]);
+  }, [activeProjectId]);
 
   // Auto-scroll right when new columns appear
   useEffect(() => {
