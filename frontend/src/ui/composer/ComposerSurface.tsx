@@ -31,7 +31,17 @@ import {
 } from 'lucide-react';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 
-import type { DataRecord, ReferenceSlot, SchemaConfig } from '@autoart/shared';
+import type { DataRecord, SchemaConfig } from '@autoart/shared';
+
+/** Reference slot for linking records to an action arrangement */
+interface ReferenceSlot {
+    key: string;
+    label: string;
+    description?: string;
+    required?: boolean;
+    multiple?: boolean;
+    allowedDefinitionIds?: string[];
+}
 
 import {
     useRecordDefinitions,
@@ -138,7 +148,7 @@ export function ComposerSurface({
     // Extract reference slots from selected recipe
     const referenceSlots = useMemo((): ReferenceSlot[] => {
         if (!selectedRecipe?.schema_config) return [];
-        const config = selectedRecipe.schema_config as SchemaConfig;
+        const config = selectedRecipe.schema_config as SchemaConfig & { referenceSlots?: ReferenceSlot[] };
         return config.referenceSlots || [];
     }, [selectedRecipe]);
 
