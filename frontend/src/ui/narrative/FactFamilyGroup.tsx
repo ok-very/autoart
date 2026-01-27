@@ -264,16 +264,16 @@ export function FactFamilyGroup({
     const config = familyConfig[family];
     const Icon = config.icon;
 
-    if (facts.length === 0) {
-        return null;
-    }
-
     // Sort facts by date (most recent first)
     const sortedFacts = useMemo(() => {
         return [...facts].sort(
             (a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime()
         );
     }, [facts]);
+
+    if (facts.length === 0) {
+        return null;
+    }
 
     return (
         <div className={clsx(
