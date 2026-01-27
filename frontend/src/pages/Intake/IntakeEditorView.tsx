@@ -51,8 +51,8 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     // Editor tabs
     const [activeTab, setActiveTab] = useState<'build' | 'logic' | 'settings'>('build');
 
-    // Track if we've initialized from the API
-    const initialized = useRef(false);
+    // Track form ID to detect when we load a different form
+    const prevFormIdRef = useRef<string | null>(null);
 
     // Debounce timer refs
     const saveBlocksTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -61,9 +61,10 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     // Track last saved blocks to avoid redundant saves
     const lastSavedBlocksRef = useRef<string>('');
 
-    // Initialize state from loaded form
+    // Initialize state from loaded form (when form first loads or changes)
     useEffect(() => {
-        if (form && !initialized.current) {
+        if (form && form.id !== prevFormIdRef.current) {
+            prevFormIdRef.current = form.id;
             setFormTitle(form.title);
             // Load blocks from first page if exists
             const firstPage = form.pages?.[0];
@@ -72,13 +73,12 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                 // Mark initial blocks as "saved" to avoid immediate re-save
                 lastSavedBlocksRef.current = JSON.stringify(firstPage.blocks_config.blocks);
             }
-            initialized.current = true;
         }
     }, [form]);
 
     // Auto-save blocks with debounce
     useEffect(() => {
-        if (!initialized.current) return;
+        if (!prevFormIdRef.current) return; // Don't save until form is loaded
 
         const blocksJson = JSON.stringify(blocks);
         // Skip if blocks haven't changed from last save
