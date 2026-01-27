@@ -208,68 +208,74 @@ export function FiletreeSelector({
         });
     }, []);
 
+    // Recursive filter function for search query
+    const filterBySearch = useMemo(() => {
+        const fn = (nodes: FiletreeNode[], query: string): FiletreeNode[] => {
+            const lowerQuery = query.toLowerCase();
+
+            return nodes.map(node => {
+                const filteredChildren = node.children ? fn(node.children, query) : [];
+                const matchesName = node.name.toLowerCase().includes(lowerQuery);
+                const hasMatchingChildren = filteredChildren.length > 0;
+
+                if (matchesName || hasMatchingChildren) {
+                    return {
+                        ...node,
+                        children: filteredChildren.length > 0 ? filteredChildren : (matchesName ? node.children : [])
+                    };
+                }
+
+                return null;
+            }).filter((n): n is FiletreeNode => n !== null);
+        };
+        return fn;
+    }, []);
+
     /**
      * Filter tree by project context.
      * - If projectContext is provided: only show the matching project folder and its contents
      * - If projectContext is null/undefined: show everything except project folders (files at root level ok)
      */
-    const filterByProjectContext = useCallback((nodes: FiletreeNode[]): FiletreeNode[] => {
-        return nodes.map(node => {
-            if (!node.is_dir) {
-                // Files at any level are always shown (project context only restricts folders)
-                return node;
-            }
-
-            const folderIsProject = isProjectFolder(node.name);
-
-            if (projectContext) {
-                // Project selected: only show matching project folder
-                if (folderIsProject) {
-                    if (matchesProjectContext(node.name, projectContext)) {
-                        // This is the matching project folder - show it and all children
-                        return node;
-                    }
-                    // Different project folder - exclude
-                    return null;
+    const filterByProjectContext = useMemo(() => {
+        const fn = (nodes: FiletreeNode[]): FiletreeNode[] => {
+            return nodes.map(node => {
+                if (!node.is_dir) {
+                    // Files at any level are always shown (project context only restricts folders)
+                    return node;
                 }
-                // Non-project folder: check if any children match
-                const filteredChildren = node.children ? filterByProjectContext(node.children) : [];
-                if (filteredChildren.length > 0) {
+
+                const folderIsProject = isProjectFolder(node.name);
+
+                if (projectContext) {
+                    // Project selected: only show matching project folder
+                    if (folderIsProject) {
+                        if (matchesProjectContext(node.name, projectContext)) {
+                            // This is the matching project folder - show it and all children
+                            return node;
+                        }
+                        // Different project folder - exclude
+                        return null;
+                    }
+                    // Non-project folder: check if any children match
+                    const filteredChildren = node.children ? fn(node.children) : [];
+                    if (filteredChildren.length > 0) {
+                        return { ...node, children: filteredChildren };
+                    }
+                    // Keep non-project directories even if empty (like "Archive", "Templates", etc.)
+                    return node;
+                } else {
+                    // No project selected: exclude all project folders, keep everything else
+                    if (folderIsProject) {
+                        return null;
+                    }
+                    // Keep non-project folders and their children
+                    const filteredChildren = node.children ? fn(node.children) : [];
                     return { ...node, children: filteredChildren };
                 }
-                // Keep non-project directories even if empty (like "Archive", "Templates", etc.)
-                return node;
-            } else {
-                // No project selected: exclude all project folders, keep everything else
-                if (folderIsProject) {
-                    return null;
-                }
-                // Keep non-project folders and their children
-                const filteredChildren = node.children ? filterByProjectContext(node.children) : [];
-                return { ...node, children: filteredChildren };
-            }
-        }).filter((n): n is FiletreeNode => n !== null);
+            }).filter((n): n is FiletreeNode => n !== null);
+        };
+        return fn;
     }, [projectContext]);
-
-    // Recursive filter function for search query
-    const filterBySearch = useCallback((nodes: FiletreeNode[], query: string): FiletreeNode[] => {
-        const lowerQuery = query.toLowerCase();
-
-        return nodes.map(node => {
-            const filteredChildren = node.children ? filterBySearch(node.children, query) : [];
-            const matchesName = node.name.toLowerCase().includes(lowerQuery);
-            const hasMatchingChildren = filteredChildren.length > 0;
-
-            if (matchesName || hasMatchingChildren) {
-                return {
-                    ...node,
-                    children: filteredChildren.length > 0 ? filteredChildren : (matchesName ? node.children : [])
-                };
-            }
-
-            return null;
-        }).filter((n): n is FiletreeNode => n !== null);
-    }, []);
 
     // Apply both filters: project context first, then search
     const filteredRoots = useMemo(() => {
