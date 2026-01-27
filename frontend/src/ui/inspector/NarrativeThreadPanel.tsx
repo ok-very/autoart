@@ -49,6 +49,7 @@ function formatTimeAgo(date: Date): string {
  */
 function EventRow({ event }: { event: Event }) {
     const formatter = getEventFormatter(event.type);
+    if (!formatter) return null;
     const Icon = formatter.icon;
     const summary = formatter.summarize((event.payload || {}) as Record<string, unknown>);
 
@@ -71,7 +72,7 @@ function EventRow({ event }: { event: Event }) {
                 formatter.dotTextClass,
                 formatter.isMajor ? 'w-6 h-6' : 'w-3 h-3'
             )}>
-                {formatter.isMajor && <Icon size={12} />}
+                {formatter.isMajor && Icon && <Icon size={12} />}
             </div>
 
             {/* Event content */}
@@ -111,7 +112,6 @@ export function NarrativeThreadPanel({
     className,
 }: NarrativeThreadPanelProps) {
     const [showAll, setShowAll] = useState(false);
-    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['workflow', 'fact']));
 
     // Fetch events for the action
     const { data: events, isLoading, error } = useActionEvents(actionId);
@@ -131,7 +131,7 @@ export function NarrativeThreadPanel({
         const groups: Record<string, Event[]> = {};
         for (const event of sortedEvents) {
             const formatter = getEventFormatter(event.type);
-            const category = formatter.category;
+            const category = formatter?.category ?? 'other';
             if (!groups[category]) {
                 groups[category] = [];
             }
@@ -139,19 +139,6 @@ export function NarrativeThreadPanel({
         }
         return groups;
     }, [sortedEvents]);
-
-    // Toggle category expansion
-    const toggleCategory = (category: string) => {
-        setExpandedCategories((prev) => {
-            const next = new Set(prev);
-            if (next.has(category)) {
-                next.delete(category);
-            } else {
-                next.add(category);
-            }
-            return next;
-        });
-    };
 
     // Get visible events
     const visibleEvents = showAll

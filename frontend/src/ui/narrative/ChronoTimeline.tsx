@@ -107,8 +107,8 @@ export function ChronoTimeline({
     }, [items, theme]);
 
     // Handle item selection
-    const handleItemSelected = (data: { index: number }) => {
-        if (onItemSelected && data.index >= 0 && data.index < items.length) {
+    const handleItemSelected = (data: { index: number } | Record<string, unknown>) => {
+        if (onItemSelected && 'index' in data && typeof data.index === 'number' && data.index >= 0 && data.index < items.length) {
             onItemSelected(items[data.index], data.index);
         }
     };
@@ -135,6 +135,8 @@ export function ChronoTimeline({
                 enableOutline={false}
                 enableBreakPoint={mode === 'VERTICAL'}
                 useReadMore={false}
+                activeItemIndex={scrollToEnd && chronoItems.length > 0 ? chronoItems.length - 1 : 0}
+                enableQuickJump={enableKeyboardNav}
                 fontSizes={{
                     cardSubtitle: '0.75rem',
                     cardText: '0.875rem',

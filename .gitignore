@@ -84,8 +84,10 @@ __pycache__/
 *$py.class
 .pytest_cache/
 
-apps\autohelper\_collected\
+apps/autohelper/_collected/
 
 # Claude Code local settings (agent-specific, not shared)
 .claude/settings.local.json
 todo.md
+
+crab-meet/

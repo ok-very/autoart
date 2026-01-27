@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pollster</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        :root {
+            --primary: #ff9e78;
+            --primary-hover: #ff8a5d;
+            --bg-page: #ffffff;
+            --text-main: #11181c;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        /* Crab Button (Styled Component Port) */
+        .crab-btn {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 300;
+            font-size: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 12px 24px;
+            transition: 0.15s;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .crab-btn:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        .crab-btn:active {
+            transform: translateY(0);
+        }
+
+        .crab-btn.secondary {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        /* Form Inputs */
+        .crab-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .crab-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* Calendar Grid */
+        .cal-container {
+            display: flex;
+            height: 100%;
+            overflow: auto;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+
+        .time-col {
+            min-width: 80px;
+            border-right: 1px solid #eee;
+            background: #fafafa;
+            position: sticky;
+            left: 0;
+            z-index: 10;
+        }
+
+        .time-slot {
+            height: 30px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .day-col {
+            min-width: 120px;
+            flex: 1;
+            border-right: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .day-header {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 13px;
+            border-bottom: 1px solid #ddd;
+            background: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .grid-cell {
+            height: 30px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            transition: background 0.1s;
+            position: relative;
+        }
+
+        .grid-cell:hover {
+            background-color: #fff0eb;
+        }
+
+        /* Selection State (MouseDown Drag) */
+        .grid-cell.selected {
+            background-color: #ff9e78;
+        }
+
+        .grid-cell.heatmap-1 {
+            background-color: #ffe0d1;
+        }
+
+        /* 1 person */
+        .grid-cell.heatmap-2 {
+            background-color: #ffbca3;
+        }
+
+        /* 2 people */
+        .grid-cell.heatmap-3 {
+            background-color: #ff9e78;
+        }
+
+        /* 3 people */
+
+        /* Layout Utilities */
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="h-16 flex items-center justify-between px-8 border-b border-gray-100 shrink-0">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="router.navigate('home')">
+            <span class="text-2xl">🦀</span>
+            <span class="font-bold text-xl tracking-tight" style="font-family: 'Roboto';">Pollster</span>
+        </div>
+        <div id="nav-actions">
+            <!-- Injected by Router -->
+        </div>
+    </nav>
+
+    <!-- VIEW CONTAINER -->
+    <main id="app-root" class="flex-1 overflow-hidden relative bg-white">
+        <!-- Views injected here -->
+    </main>
+
+    <!-- TEMPLATES -->
+
+    <!-- 1. HOME VIEW -->
+    <template id="tpl-home">
+        <div class="flex flex-col items-center justify-center h-full fade-in">
+            <h1 class="text-4xl font-bold mb-4" style="font-family: 'Roboto';">🦀 Pollster</h1>
+            <div class="w-16 h-1 bg-gray-200 mb-6"></div>
+            <p class="text-xl text-gray-500 font-light mb-8" style="font-family: 'Roboto';">Time flies. Crabs don't.</p>
+            <button class="crab-btn text-lg px-8 py-3" onclick="router.navigate('create')">Make Meeting</button>
+        </div>
+    </template>
+
+    <!-- 2. CREATE MEETING VIEW -->
+    <template id="tpl-create">
+        <div class="h-full overflow-y-auto custom-scroll p-8">
+            <div class="max-w-xl mx-auto fade-in">
+                <h2 class="text-2xl font-bold mb-6">Create Meeting</h2>
+
+                <div class="bg-white p-6 border border-gray-200 rounded-lg shadow-sm">
+                    <label>Meeting Name</label>
+                    <input type="text" id="inp-name" class="crab-input" placeholder="e.g. Weekly Sync">
+
+                    <label>Host Name</label>
+                    <input type="text" id="inp-host" class="crab-input" placeholder="Your Name">
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label>Start Date</label>
+                            <input type="date" id="inp-start-date" class="crab-input">
+                        </div>
+                        <div>
+                            <label>End Date</label>
+                            <input type="date" id="inp-end-date" class="crab-input">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label>Start Time</label>
+                            <select id="inp-start-time" class="crab-input">
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label>End Time</label>
+                            <select id="inp-end-time" class="crab-input">
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <label>Timezone</label>
+                    <select id="inp-tz" class="crab-input">
+                        <option value="PST">Pacific Time (US & Canada)</option>
+                        <option value="EST">Eastern Time (US & Canada)</option>
+                        <option value="UTC">UTC</option>
+                    </select>
+
+                    <div class="mt-4 flex justify-end">
+                        <button class="crab-btn" onclick="app.createMeeting()">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- 3. MEETING VIEW (Calendar) -->
+    <template id="tpl-meeting">
+        <div class="h-full flex flex-col fade-in">
+            <!-- Meeting Header -->
+            <div class="px-8 py-4 border-b border-gray-100 bg-orange-50/30 flex justify-between items-end shrink-0">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800" id="mtg-title">Loading...</h1>
+                    <div class="text-sm text-gray-500 mt-1 flex gap-4">
+                        <span>Host: <b id="mtg-host">...</b></span>
+                        <span class="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded">ID: <span
+                                id="mtg-id"></span></span>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="user-name" class="crab-input mb-0 w-48 py-2" placeholder="Your Name">
+                    <button class="crab-btn py-2" onclick="app.saveAvailability()">Save My Times</button>
+                    <button class="crab-btn secondary py-2" onclick="app.copyLink()">Copy Link</button>
+                </div>
+            </div>
+
+            <!-- Calendar Area -->
+            <div class="flex-1 overflow-hidden relative flex">
+                <div class="flex-1 overflow-auto custom-scroll p-4" id="cal-scroll-area">
+                    <div class="cal-container bg-white shadow-sm" id="cal-grid">
+                        <!-- Grid Generated Here -->
+                    </div>
+                </div>
+
+                <!-- Sidebar: Best Times -->
+                <div class="w-64 border-l border-gray-100 bg-white p-4 shrink-0 overflow-y-auto">
+                    <h3 class="font-bold text-sm text-gray-500 uppercase mb-4">Best Times</h3>
+                    <div id="best-times-list" class="space-y-2">
+                        <div class="text-sm text-gray-400 italic">Select times to see matches...</div>
+                    </div>
+
+                    <h3 class="font-bold text-sm text-gray-500 uppercase mt-8 mb-4">Participants</h3>
+                    <div id="participant-list" class="flex flex-wrap gap-2">
+                        <!-- Chips -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // --- DATA STORE (Client Side Persistence) ---
+        const Store = {
+            meetings: {}, // { id: { name, host, dates:[], times:[], votes: { user: [cells] } } }
+
+            save(meeting) {
+                this.meetings[meeting.id] = meeting;
+                // In real app, this goes to DB. Here we just keep in memory.
+            },
+
+            get(id) {
+                return this.meetings[id];
+            }
+        };
+
+        // --- ROUTER ---
+        const router = {
+            navigate(view, params = {}) {
+                const root = document.getElementById('app-root');
+                const tpl = document.getElementById(`tpl-${view}`);
+                if (!tpl) return;
+
+                root.innerHTML = '';
+                const clone = tpl.content.cloneNode(true);
+                root.appendChild(clone);
+
+                // Initialize View Logic
+                if (view === 'create') app.initCreate();
+                if (view === 'meeting') app.initMeeting(params.id);
+            }
+        };
+
+        // --- APP LOGIC ---
+        const app = {
+            currentMeeting: null,
+            isDragging: false,
+            dragState: false, // true = selecting, false = deselecting
+
+            // --- CREATE VIEW ---
+            initCreate() {
+                // Populate Time Selects (15 min increments)
+                const startSel = document.getElementById('inp-start-time');
+                const endSel = document.getElementById('inp-end-time');
+
+                for (let i = 0; i < 24; i++) {
+                    ['00', '15', '30', '45'].forEach(min => {
+                        const val = `${i}:${min}`;
+                        const label = new Date(`2000-01-01T${i.toString().padStart(2, '0')}:${min}`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                        const opt1 = new Option(label, val);
+                        const opt2 = new Option(label, val);
+                        startSel.add(opt1);
+                        endSel.add(opt2);
+                    });
+                }
+
+                // Defaults
+                startSel.value = "9:00";
+                endSel.value = "17:00";
+
+                // Set default dates to today/tomorrow
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('inp-start-date').value = today;
+                document.getElementById('inp-end-date').value = today;
+            },
+
+            createMeeting() {
+                const name = document.getElementById('inp-name').value || "Untitled Meeting";
+                const host = document.getElementById('inp-host').value || "Anonymous";
+                const sDate = document.getElementById('inp-start-date').value;
+                const eDate = document.getElementById('inp-end-date').value;
+                const sTime = document.getElementById('inp-start-time').value;
+                const eTime = document.getElementById('inp-end-time').value;
+
+                // Validate
+                if (!sDate || !eDate) return alert("Please select dates");
+
+                // Generate ID
+                const id = Math.random().toString(36).substr(2, 6);
+
+                const meeting = {
+                    id, name, host, sDate, eDate, sTime, eTime,
+                    votes: {} // { "Alex": ["Tue-9:00", "Tue-9:15"] }
+                };
+
+                Store.save(meeting);
+                router.navigate('meeting', { id });
+            },
+
+            // --- MEETING VIEW ---
+            initMeeting(id) {
+                const meeting = Store.get(id);
+                if (!meeting) return alert("Meeting not found");
+                this.currentMeeting = meeting;
+
+                // Bind Header
+                document.getElementById('mtg-title').innerText = meeting.name;
+                document.getElementById('mtg-host').innerText = meeting.host;
+                document.getElementById('mtg-id').innerText = meeting.id;
+
+                // Generate Dates
+                const dates = this.getDatesInRange(meeting.sDate, meeting.eDate);
+                const times = this.getTimesInRange(meeting.sTime, meeting.eTime);
+
+                this.renderGrid(dates, times);
+                this.updateHeatmap();
+            },
+
+            getDatesInRange(start, end) {
+                const arr = [];
+                let dt = new Date(start);
+                const endDt = new Date(end);
+                while (dt <= endDt) {
+                    arr.push(new Date(dt));
+                    dt.setDate(dt.getDate() + 1);
+                }
+                return arr;
+            },
+
+            getTimesInRange(start, end) {
+                // Parse "9:00" to minutes
+                const getMins = (t) => parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1]);
+                let current = getMins(start);
+                const finish = getMins(end);
+                const times = [];
+
+                while (current < finish) {
+                    const h = Math.floor(current / 60);
+                    const m = current % 60;
+                    const label = new Date(`2000-01-01T${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                    const id = `${h}:${m}`;
+                    times.push({ id, label });
+                    current += 15; // 15 min increments
+                }
+                return times;
+            },
+
+            renderGrid(dates, times) {
+                const grid = document.getElementById('cal-grid');
+                grid.innerHTML = '';
+
+                // 1. Time Column
+                const timeCol = document.createElement('div');
+                timeCol.className = 'time-col pt-10'; // Offset for header
+                times.forEach(t => {
+                    const div = document.createElement('div');
+                    div.className = 'time-slot';
+                    // Only show label on hour marks for cleaner UI
+                    if (t.label.includes(":00")) div.innerText = t.label;
+                    timeCol.appendChild(div);
+                });
+                grid.appendChild(timeCol);
+
+                // 2. Day Columns
+                dates.forEach(d => {
+                    const col = document.createElement('div');
+                    col.className = 'day-col';
+
+                    // Header
+                    const header = document.createElement('div');
+                    header.className = 'day-header';
+                    const dayName = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                    header.innerText = dayName;
+                    col.appendChild(header);
+
+                    // Slots
+                    times.forEach(t => {
+                        const cellId = `${d.toISOString().split('T')[0]}_${t.id}`;
+                        const cell = document.createElement('div');
+                        cell.className = 'grid-cell';
+                        cell.dataset.id = cellId;
+
+                        // Drag Logic
+                        cell.onmousedown = (e) => {
+                            this.isDragging = true;
+                            // Toggle state based on current state of clicked cell
+                            this.dragState = !cell.classList.contains('selected');
+                            this.setCellState(cell, this.dragState);
+                        };
+                        cell.onmouseenter = (e) => {
+                            if (this.isDragging) this.setCellState(cell, this.dragState);
+                        };
+
+                        col.appendChild(cell);
+                    });
+
+                    grid.appendChild(col);
+                });
+
+                // Global Mouse Up
+                document.addEventListener('mouseup', () => {
+                    if (this.isDragging) {
+                        this.isDragging = false;
+                        // Auto-save logic could go here
+                        this.updateHeatmap();
+                    }
+                });
+            },
+
+            setCellState(cell, state) {
+                if (state) cell.classList.add('selected');
+                else cell.classList.remove('selected');
+            },
+
+            saveAvailability() {
+                const name = document.getElementById('user-name').value;
+                if (!name) return alert("Please enter your name");
+
+                const selectedCells = Array.from(document.querySelectorAll('.grid-cell.selected'))
+                    .map(el => el.dataset.id);
+
+                this.currentMeeting.votes[name] = selectedCells;
+                Store.save(this.currentMeeting);
+
+                this.updateHeatmap();
+                alert(`Saved availability for ${name}!`);
+            },
+
+            updateHeatmap() {
+                const votes = this.currentMeeting.votes;
+                const participants = Object.keys(votes);
+
+                // Update Participant List
+                const pList = document.getElementById('participant-list');
+                pList.innerHTML = participants.map(p =>
+                    `<span class="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs font-bold border border-orange-200">${p}</span>`
+                ).join('');
+
+                if (participants.length === 0) return;
+
+                // Calculate Heatmap
+                // Reset all heatmap classes first (keep 'selected' if it's the current user view)
+                document.querySelectorAll('.grid-cell').forEach(c => {
+                    c.classList.remove('heatmap-1', 'heatmap-2', 'heatmap-3');
+                });
+
+                // Tally
+                const tally = {};
+                participants.forEach(p => {
+                    votes[p].forEach(cellId => {
+                        tally[cellId] = (tally[cellId] || 0) + 1;
+                    });
+                });
+
+                // Apply classes
+                Object.entries(tally).forEach(([cellId, count]) => {
+                    const cell = document.querySelector(`.grid-cell[data-id="${cellId}"]`);
+                    if (cell) {
+                        // In real app, calculate opacity based on count/total
+                        if (count === 1) cell.classList.add('heatmap-1');
+                        if (count === 2) cell.classList.add('heatmap-2');
+                        if (count >= 3) cell.classList.add('heatmap-3');
+                    }
+                });
+
+                // Update "Best Times" List
+                const bestList = document.getElementById('best-times-list');
+                const sortedSlots = Object.entries(tally).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+                if (sortedSlots.length > 0) {
+                    bestList.innerHTML = sortedSlots.map(([id, count]) => {
+                        const [date, time] = id.split('_');
+                        // Format nicely
+                        return `<div class="flex justify-between text-sm border-b border-dashed border-gray-100 pb-1">
+                            <span>${time}</span>
+                            <span class="font-bold text-green-600">${count}/${participants.length}</span>
+                        </div>`;
+                    }).join('');
+                }
+            },
+
+            copyLink() {
+                // Fake link
+                const url = `https://crabmeet.com/meeting/${this.currentMeeting.id}`;
+                prompt("Copy this link to share:", url);
+            }
+        };
+
+        // Init Router
+        window.onload = () => router.navigate('home');
+
+    </script>
+</body>
+
+</html>

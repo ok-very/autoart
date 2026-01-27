@@ -21,7 +21,8 @@ import { useProjects } from '@/api/hooks/hierarchy';
 import { useRecords } from '@/api/hooks/entities/records';
 import { useAllActions } from '@/api/hooks/actions/actions';
 import { fuzzySearchMultiField, fuzzySearch } from '@/utils/fuzzySearch';
-import type { HierarchyNode, DataRecord, ProjectViewMode } from '@/types';
+import type { HierarchyNode, DataRecord } from '@/types';
+import type { ProjectViewMode } from '@autoart/shared';
 import type { Action } from '@autoart/shared';
 
 type ResultCategory = 'project' | 'record' | 'action';

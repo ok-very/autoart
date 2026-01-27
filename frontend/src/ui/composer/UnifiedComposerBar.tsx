@@ -116,12 +116,6 @@ export function UnifiedComposerBar({
     const handleAcceptSuggestion = useCallback((suggestion: Suggestion) => {
         // For link/reference suggestions, we could auto-add the reference
         // For similar suggestions, we could show a comparison
-        console.log('Accept suggestion:', suggestion);
-        setDismissedSuggestions((prev) => new Set([...prev, suggestion.id]));
-    }, []);
-
-    // Handle suggestion dismissal
-    const handleDismissSuggestion = useCallback((suggestion: Suggestion) => {
         setDismissedSuggestions((prev) => new Set([...prev, suggestion.id]));
     }, []);
 

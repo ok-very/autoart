@@ -1,12 +1,13 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-01-26*
+*Last Updated: 2026-01-25*
 
 ## P0: Blocking
 
 | # | Issue | Status |
 |---|-------|--------|
 | 44 | Google OAuth integration is cosmetic | Open |
+| 173 | Epic: Finance Management System | Open |
 
 ---
 
@@ -14,7 +15,6 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| 87 | Global Command Palette | Feature |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 79 | Enhance Workflow View Interactions | Feature |
 
@@ -24,6 +24,12 @@
 
 | # | Issue | Category |
 |---|-------|----------|
+| 181 | Fix workspace preset timing (pendingPanelPositions) | Bug |
+| 180 | Add route/project context to workspace system | Workspace |
+| 179 | Context-driven automatic panel reconciliation | Workspace |
+| 178 | Manual file link support in intake forms | Intake |
+| 177 | Integrate intake forms with records system | Intake |
+| 159 | Contacts quick-export overlay (vCard, recipient formats) | Feature |
 | 83 | Email Ingestion & Comms Tab | Backend + Feature |
 | 84 | Email Notices API | Backend |
 | 85 | Templating Engine | Feature |
@@ -36,6 +42,7 @@
 
 | # | Issue | Category |
 |---|-------|----------|
+| 165-172 | Finance sub-features (invoices, budgets, expenses, etc.) | Finance |
 | 118 | Gemini AI: drafts, filenames, contacts | AI |
 | 117 | Gemini Vision: deep crawl fallback | AI |
 | 74 | Import Workbench: Runner + Gemini | Import |
@@ -52,6 +59,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| 87 | Global Command Palette | PRs #174, #176 |
 | 147-150 | Narrative Canvas Wiring (overlays, mail, inspector, mappings) | PRs #157, #158, #164 |
 | 151 | Import Step 6 navigation bug | PR #152 |
 | 135 | QA: Arrangements rename verification | PR #155 |

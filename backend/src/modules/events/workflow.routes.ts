@@ -53,6 +53,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
   }>(
     '/actions/:actionId/start',
     {
+      preHandler: [fastify.authenticate],
       schema: {
         params: {
           type: 'object',
@@ -96,6 +97,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
   }>(
     '/actions/:actionId/stop',
     {
+      preHandler: [fastify.authenticate],
       schema: {
         params: {
           type: 'object',
@@ -139,6 +141,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
   }>(
     '/actions/:actionId/finish',
     {
+      preHandler: [fastify.authenticate],
       schema: {
         params: {
           type: 'object',
@@ -182,6 +185,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
   }>(
     '/actions/:actionId/block',
     {
+      preHandler: [fastify.authenticate],
       schema: {
         params: {
           type: 'object',
@@ -227,6 +231,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
   }>(
     '/actions/:actionId/unblock',
     {
+      preHandler: [fastify.authenticate],
       schema: {
         params: {
           type: 'object',
@@ -270,6 +275,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
   }>(
     '/actions/:actionId/assign',
     {
+      preHandler: [fastify.authenticate],
       schema: {
         params: {
           type: 'object',
@@ -318,6 +324,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
   }>(
     '/actions/:actionId/unassign',
     {
+      preHandler: [fastify.authenticate],
       schema: {
         params: {
           type: 'object',
@@ -361,6 +368,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
   }>(
     '/actions/:actionId/field',
     {
+      preHandler: [fastify.authenticate],
       schema: {
         params: {
           type: 'object',
@@ -417,6 +425,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
   }>(
     '/actions/:actionId/dependencies/add',
     {
+      preHandler: [fastify.authenticate],
       schema: {
         params: {
           type: 'object',
@@ -463,6 +472,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
   }>(
     '/actions/:actionId/dependencies/remove',
     {
+      preHandler: [fastify.authenticate],
       schema: {
         params: {
           type: 'object',
@@ -512,6 +522,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
   }>(
     '/actions/:actionId/move',
     {
+      preHandler: [fastify.authenticate],
       schema: {
         params: {
           type: 'object',
@@ -606,7 +617,7 @@ export async function workflowRoutes(fastify: FastifyInstance) {
 
       const events = await workflowService.rescheduleAction({
         actionId,
-        actorId: request.user?.id,
+        actorId: (request as any).user?.id,
         startDate,
         dueDate,
         durationDays,

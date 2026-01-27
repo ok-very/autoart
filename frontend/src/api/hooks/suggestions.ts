@@ -189,7 +189,7 @@ export function useContextSuggestions(
  */
 export function generateMockComposerSuggestions(
     title: string,
-    contextId: string
+    _contextId: string
 ): Suggestion[] {
     const suggestions: Suggestion[] = [];
 

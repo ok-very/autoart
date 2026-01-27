@@ -601,6 +601,45 @@ export type IntakeSubmission = Selectable<IntakeSubmissionsTable>;
 export type NewIntakeSubmission = Insertable<IntakeSubmissionsTable>;
 export type IntakeSubmissionUpdate = Updateable<IntakeSubmissionsTable>;
 
+// ============================================
+// POLLS TABLES (Migration 045)
+// Time-slot availability polling
+// ============================================
+
+export type PollStatus = 'active' | 'closed' | 'draft';
+
+export interface PollsTable {
+  id: Generated<string>;
+  unique_id: string;
+  title: string;
+  description: string | null;
+  status: Generated<PollStatus>;
+  time_config: unknown; // JSONB - PollTimeConfig
+  project_id: string | null;
+  created_by: string | null;
+  created_at: Generated<Date>;
+  closed_at: Date | null;
+}
+
+export type Poll = Selectable<PollsTable>;
+export type NewPoll = Insertable<PollsTable>;
+export type PollUpdate = Updateable<PollsTable>;
+
+export interface PollResponsesTable {
+  id: Generated<string>;
+  poll_id: string;
+  participant_name: string;
+  participant_email: string | null;
+  available_slots: Generated<unknown>; // JSONB - string[]
+  user_id: string | null;
+  created_at: Generated<Date>;
+  updated_at: Generated<Date>;
+}
+
+export type PollResponse = Selectable<PollResponsesTable>;
+export type NewPollResponse = Insertable<PollResponsesTable>;
+export type PollResponseUpdate = Updateable<PollResponsesTable>;
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -634,6 +673,8 @@ export interface Database {
   intake_forms: IntakeFormsTable;
   intake_form_pages: IntakeFormPagesTable;
   intake_submissions: IntakeSubmissionsTable;
+  polls: PollsTable;
+  poll_responses: PollResponsesTable;
 }
 
 
