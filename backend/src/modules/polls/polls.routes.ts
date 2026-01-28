@@ -73,6 +73,32 @@ export async function pollRoutes(app: FastifyInstance) {
     }
   );
 
+  // Get engagement summary (owner-only)
+  fastify.get(
+    '/polls/:id/engagements',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        params: z.object({ id: z.string().uuid() }),
+      },
+    },
+    async (request, reply) => {
+      const poll = await pollsService.getPollById(request.params.id);
+      if (!poll) {
+        return reply.code(404).send({ error: 'NOT_FOUND', message: 'Poll not found' });
+      }
+
+      if (poll.created_by && request.user?.userId !== poll.created_by) {
+        return reply
+          .code(403)
+          .send({ error: 'FORBIDDEN', message: 'You do not have access to this poll' });
+      }
+
+      const summary = await pollsService.getEngagementSummary('poll', poll.unique_id);
+      return reply.send({ summary });
+    }
+  );
+
   // Close poll
   fastify.post(
     '/polls/:id/close',

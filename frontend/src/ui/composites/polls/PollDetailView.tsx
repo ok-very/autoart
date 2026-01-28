@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { ArrowLeft, Link2 } from 'lucide-react';
 import { Button, Card, Stack, Inline, Text, Badge, Spinner } from '@autoart/ui';
 import { SegmentedControl } from '@autoart/ui';
-import { usePoll, usePollResults, useClosePoll } from '../../../api/hooks/polls';
+import { usePoll, usePollResults, useClosePoll, usePollEngagements } from '../../../api/hooks/polls';
 import { TimeGrid } from '../../../poll/components/TimeGrid';
 import type { Poll, TimeSlotGranularity } from '@autoart/shared';
 
@@ -32,6 +32,7 @@ export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProp
     const { data: pollData, isLoading: pollLoading } = usePoll(initialPoll.id);
     const { data: results, isLoading: resultsLoading } = usePollResults(initialPoll.unique_id);
     const closeMutation = useClosePoll();
+    const { data: engagements } = usePollEngagements(initialPoll.id);
     const [linkCopied, setLinkCopied] = useState(false);
     const [displayGranularity, setDisplayGranularity] = useState<TimeSlotGranularity>(
         initialPoll.time_config.granularity
@@ -121,6 +122,41 @@ export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProp
                                 </Inline>
                             </Stack>
                         </Card>
+
+                        {/* Engagement */}
+                        {engagements && (
+                            <Card padding="md">
+                                <Stack gap="sm">
+                                    <Text weight="semibold">Engagement</Text>
+                                    <Inline gap="lg">
+                                        <Text size="sm">
+                                            <span style={{ color: 'var(--ws-color-info)' }}>
+                                                {engagements.total_opened}
+                                            </span>
+                                            {' '}opened
+                                        </Text>
+                                        <Text size="sm">
+                                            <span style={{ color: 'var(--ws-color-success)' }}>
+                                                {engagements.total_interacted}
+                                            </span>
+                                            {' '}interacted
+                                        </Text>
+                                        <Text size="sm">
+                                            <span style={{ color: 'var(--ws-color-warning)' }}>
+                                                {engagements.total_deferred}
+                                            </span>
+                                            {' '}left
+                                        </Text>
+                                        <Text size="sm">
+                                            <span style={{ color: 'var(--ws-fg)' }}>
+                                                {engagements.unique_actors}
+                                            </span>
+                                            {' '}unique visitors
+                                        </Text>
+                                    </Inline>
+                                </Stack>
+                            </Card>
+                        )}
 
                         {/* Best Times */}
                         {results && results.bestSlots.length > 0 && (
