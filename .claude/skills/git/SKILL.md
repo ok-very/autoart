@@ -1,3 +1,9 @@
+---
+name: git
+description: Git and PR procedures using stackit workflow for stacked branches. Use when working with commits, branches, PRs, merging, or stack management.
+user-invocable: false
+---
+
 # Git & PR Procedures
 
 ## Stackit (Primary Tool)

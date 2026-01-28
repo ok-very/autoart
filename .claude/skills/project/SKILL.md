@@ -1,3 +1,9 @@
+---
+name: project
+description: AutoArt project overview — monorepo structure, common commands, pnpm catalog usage, Tailwind v4 setup, key coding principles, and multi-phase plan workflow.
+user-invocable: false
+---
+
 # AutoArt Project Reference
 
 ## Monorepo Structure
@@ -24,9 +30,12 @@ pnpm migrate          # Run DB migrations
 pnpm db:rebuild       # Nuke + migrate + seed
 pnpm --filter <pkg>   # Run in specific package
 
-# Git helpers
-pnpm git:stack        # Create stacked PR
-pnpm git:merge-stack  # Merge PR stack in order
+# Stackit (preferred for stacked PRs)
+stackit create -m "feat: description"  # Create stacked branch
+stackit submit                          # Submit PRs to GitHub
+stackit log                             # View stack tree
+stackit sync                            # Sync with main, cleanup merged
+stackit merge next                      # Merge bottom PR
 ```
 
 ---
@@ -106,7 +115,7 @@ plugins: [react(), tailwindcss()]
 
 ```bash
 git commit -m "phase N: description"
-pnpm git:stack  # Creates PR targeting current branch
+stackit create -m "phase N: description"
 ```
 
 Link PRs to issues: `Closes #N` or `Refs #N`
