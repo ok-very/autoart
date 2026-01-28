@@ -62,13 +62,13 @@ function generateTimeSlots(
 // Design system colors for heatmap
 // Moss Green scale: from light (#E8EBE5) to full (#6F7F5C)
 function getHeatmapColor(count: number, maxCount: number): string {
-  if (maxCount === 0) return 'bg-[#F5F2ED]';
+  if (maxCount === 0) return 'bg-heatmap-0';
   const ratio = count / maxCount;
-  if (ratio === 0) return 'bg-[#F5F2ED]';
-  if (ratio <= 0.25) return 'bg-[#E8EBE5]';
-  if (ratio <= 0.5) return 'bg-[#C5CCBC]';
-  if (ratio <= 0.75) return 'bg-[#9AAA8C]';
-  return 'bg-[#6F7F5C]';
+  if (ratio === 0) return 'bg-heatmap-0';
+  if (ratio <= 0.25) return 'bg-heatmap-25';
+  if (ratio <= 0.5) return 'bg-heatmap-50';
+  if (ratio <= 0.75) return 'bg-heatmap-75';
+  return 'bg-heatmap-100';
 }
 
 export function TimeGrid({
@@ -134,7 +134,7 @@ export function TimeGrid({
   }, [selectedSlots, dragState, onSlotsChange]);
 
   const getSlotClassName = (slotKey: string): string => {
-    const baseClasses = 'h-6 border-r border-b border-[#D6D2CB] transition-colors';
+    const baseClasses = 'h-6 border-r border-b border-ws-border transition-colors';
 
     if (heatmapData) {
       const count = heatmapData.get(slotKey) ?? 0;
@@ -145,11 +145,11 @@ export function TimeGrid({
     const isDragTarget = dragState.slots.has(slotKey);
 
     if (isDragTarget) {
-      return `${baseClasses} ${dragState.mode === 'select' ? 'bg-[#9AAA8C]' : 'bg-[#EAE7E2]'}`;
+      return `${baseClasses} ${dragState.mode === 'select' ? 'bg-heatmap-75' : 'bg-[#EAE7E2]'}`;
     }
 
     if (isSelected) {
-      return `${baseClasses} bg-[#6F7F5C]`;
+      return `${baseClasses} bg-heatmap-100`;
     }
 
     return `${baseClasses} bg-white hover:bg-[#EAE7E2]`;
@@ -169,13 +169,13 @@ export function TimeGrid({
         }}
       >
         {/* Empty corner cell */}
-        <div className="sticky left-0 z-20 bg-white border-r border-b border-[#D6D2CB]" />
+        <div className="sticky left-0 z-20 bg-white border-r border-b border-ws-border" />
 
         {/* Date headers */}
         {dates.map((date) => (
           <div
             key={date}
-            className="sticky top-0 z-10 bg-white border-r border-b border-[#D6D2CB] px-2 py-1 text-center text-sm font-medium text-[#2E2E2C]"
+            className="sticky top-0 z-10 bg-white border-r border-b border-ws-border px-2 py-1 text-center text-sm font-medium text-ws-fg"
           >
             {formatDateHeader(date)}
           </div>
@@ -186,7 +186,7 @@ export function TimeGrid({
           <Fragment key={`row-${hour}-${minute}`}>
             {/* Time header */}
             <div
-              className="sticky left-0 z-10 bg-white border-r border-b border-[#D6D2CB] px-2 py-0.5 text-xs text-[#5A5A57] whitespace-nowrap"
+              className="sticky left-0 z-10 bg-white border-r border-b border-ws-border px-2 py-0.5 text-xs text-ws-text-secondary whitespace-nowrap"
             >
               {minute === 0 ? formatTimeHeader(hour, minute) : ''}
             </div>

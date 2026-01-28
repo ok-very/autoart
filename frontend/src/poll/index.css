@@ -1,9 +1,25 @@
 @import "tailwindcss";
+@import "../workspace/themes/variables.css";
+
+@theme {
+  --color-ws-bg: var(--ws-bg);
+  --color-ws-fg: var(--ws-fg);
+  --color-ws-accent: var(--ws-accent);
+  --color-ws-accent-fg: var(--ws-accent-fg);
+  --color-ws-success: var(--ws-color-success);
+  --color-ws-border: #D6D2CB;
+  --color-ws-text-secondary: var(--ws-text-secondary);
+  --color-heatmap-0: #F5F2ED;
+  --color-heatmap-25: #E8EBE5;
+  --color-heatmap-50: #C5CCBC;
+  --color-heatmap-75: #9AAA8C;
+  --color-heatmap-100: #6F7F5C;
+}
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: "Source Serif 4", serif;
+  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
