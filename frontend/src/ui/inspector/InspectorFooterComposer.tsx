@@ -12,7 +12,7 @@
 
 import { clsx } from 'clsx';
 import { Plus, ChevronUp, ChevronDown, Send, Loader2 } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 
 import { useCompose, useRecordDefinitions, useNode, useAction, useSubprocesses } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
@@ -46,10 +46,16 @@ export function InspectorFooterComposer() {
         return allDefinitions.filter((d) => d.kind === 'action_arrangement');
     }, [allDefinitions]);
 
-    // Auto-select first recipe
+    // Track first arrangement ID to prevent cascading setState
+    const prevFirstRecipeIdRef = useRef<string | null>(null);
+
+    // Auto-select first arrangement when list changes
     useEffect(() => {
-        if (actionRecipes.length > 0 && !selectedRecipeId) {
-            setSelectedRecipeId(actionRecipes[0].id);
+        const firstRecipeId = actionRecipes[0]?.id || null;
+
+        if (firstRecipeId && firstRecipeId !== prevFirstRecipeIdRef.current && !selectedRecipeId) {
+            prevFirstRecipeIdRef.current = firstRecipeId;
+            setSelectedRecipeId(firstRecipeId);
         }
     }, [actionRecipes, selectedRecipeId]);
 

@@ -153,9 +153,13 @@ export function NodeFieldEditor({
         latestMetadataRef.current = metadata;
     }, [metadata]);
 
+    // Track previous value to prevent cascading setState
+    const prevValueRef = useRef(viewModel?.value);
+
     // Sync local state with remote data when not dirty
     useEffect(() => {
-        if (!isDirty && viewModel) {
+        if (!isDirty && viewModel && viewModel.value !== prevValueRef.current) {
+            prevValueRef.current = viewModel.value;
             setLocalValue(viewModel.value);
         }
     }, [viewModel, isDirty]);
