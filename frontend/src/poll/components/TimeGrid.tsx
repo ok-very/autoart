@@ -1,4 +1,10 @@
 import { Fragment, useCallback, useRef, useState } from 'react';
+import {
+  formatDateHeader as sharedFormatDateHeader,
+  formatTime as sharedFormatTime,
+  DEFAULT_DATE_CONFIG,
+  type DateFormatConfig,
+} from '@autoart/shared';
 
 interface TimeGridProps {
   dates: string[];
@@ -11,24 +17,11 @@ interface TimeGridProps {
   heatmapData?: Map<string, number>;
   maxCount?: number;
   onInteraction?: () => void;
+  dateFormatConfig?: DateFormatConfig;
 }
 
 function generateSlotKey(date: string, hour: number, minute: number): string {
   return `${date}:${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-}
-
-function formatDateHeader(dateStr: string): string {
-  const date = new Date(dateStr + 'T12:00:00');
-  const day = date.toLocaleDateString('en-US', { weekday: 'short' });
-  const month = date.getMonth() + 1;
-  const dayNum = date.getDate();
-  return `${day} ${month}/${dayNum}`;
-}
-
-function formatTimeHeader(hour: number, minute: number): string {
-  const period = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-  return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`;
 }
 
 function getGranularityMinutes(granularity: '15min' | '30min' | '60min'): number {
@@ -82,7 +75,9 @@ export function TimeGrid({
   heatmapData,
   maxCount = 0,
   onInteraction,
+  dateFormatConfig,
 }: TimeGridProps) {
+  const config = dateFormatConfig ?? DEFAULT_DATE_CONFIG;
   const timeSlots = generateTimeSlots(startHour, endHour, granularity);
   const isDragging = useRef(false);
   const hasCalledInteraction = useRef(false);
@@ -177,7 +172,7 @@ export function TimeGrid({
             key={date}
             className="sticky top-0 z-10 bg-white border-r border-b border-ws-border px-2 py-1 text-center text-sm font-medium text-ws-fg"
           >
-            {formatDateHeader(date)}
+            {sharedFormatDateHeader(date, config)}
           </div>
         ))}
 
@@ -188,7 +183,7 @@ export function TimeGrid({
             <div
               className="sticky left-0 z-10 bg-white border-r border-b border-ws-border px-2 py-0.5 text-xs text-ws-text-secondary whitespace-nowrap"
             >
-              {minute === 0 ? formatTimeHeader(hour, minute) : ''}
+              {minute === 0 ? sharedFormatTime(hour, minute, config) : ''}
             </div>
 
             {/* Slot cells */}
