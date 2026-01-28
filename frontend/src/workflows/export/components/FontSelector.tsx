@@ -36,10 +36,11 @@ export function FontSelector({
     useEffect(() => {
         if (isOpen && !prevIsOpenRef.current) {
             const index = availableFonts.findIndex((f) => f.family === selectedFont);
-            setFocusedIndex(index >= 0 ? index : 0);
-            // Focus active option after render
+            const targetIndex = index >= 0 ? index : 0;
+            // Defer setState and focus to avoid synchronous cascading render
             requestAnimationFrame(() => {
-                optionsRef.current[index >= 0 ? index : 0]?.focus();
+                setFocusedIndex(targetIndex);
+                optionsRef.current[targetIndex]?.focus();
             });
         }
         prevIsOpenRef.current = isOpen;

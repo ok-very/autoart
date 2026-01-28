@@ -239,7 +239,9 @@ export function TimelineWrapper({
 }: TimelineWrapperProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [internalViewMode, setInternalViewMode] = useState<ViewMode>(ViewMode.Day);
-    const [selectedTaskId, setSelectedTaskId] = useState<string>('');
+
+    // Derive selected task ID from selection prop (no sync needed)
+    const selectedTaskId = selection?.selectedItemIds?.[0] ?? '';
 
     // Silence unused state setter - reserved for future view mode selector UI
     void setInternalViewMode;
@@ -269,17 +271,21 @@ export function TimelineWrapper({
         };
     }, [projection, project, children, mergedAdapterOptions]);
 
-    // Internal state: library tasks (quarantined)
+    // Internal state: library tasks (mutable for drag-and-drop)
     const [libraryTasks, setLibraryTasks] = useState<LibraryTask[]>(() =>
         toLibraryFormat(renderOutput.items)
     );
-    const prevRenderItemsRef = useRef(renderOutput.items);
 
-    // Sync library tasks when render output changes from parent
+    // Sync library tasks when source data changes (defer to avoid cascading render)
+    const sourceItemsRef = useRef(renderOutput.items);
     useEffect(() => {
-        if (renderOutput.items !== prevRenderItemsRef.current) {
-            prevRenderItemsRef.current = renderOutput.items;
-            setLibraryTasks(toLibraryFormat(renderOutput.items));
+        if (renderOutput.items !== sourceItemsRef.current) {
+            sourceItemsRef.current = renderOutput.items;
+            // Defer setState to next frame to satisfy React Compiler rules
+            const id = requestAnimationFrame(() => {
+                setLibraryTasks(toLibraryFormat(renderOutput.items));
+            });
+            return () => cancelAnimationFrame(id);
         }
     }, [renderOutput.items]);
 
@@ -296,24 +302,9 @@ export function TimelineWrapper({
     // }, [onViewModeChange]);
     void onViewModeChange; // Silence unused prop warning until view mode UI is added
 
-    // Selection sync - use ref to avoid stale closure in handleSelect
-    const selectionRef = useRef<GanttSelection | undefined>(selection);
-    const prevSelectionRef = useRef(selection);
-    useEffect(() => {
-        if (selection !== prevSelectionRef.current) {
-            prevSelectionRef.current = selection;
-            selectionRef.current = selection;
-            if (selection?.selectedItemIds?.length) {
-                setSelectedTaskId(selection.selectedItemIds[0]);
-            } else {
-                setSelectedTaskId('');
-            }
-        }
-    }, [selection]);
-
     // Library callback wrapper - translates library Task to our domain
     const handleSelect = useCallback((libraryTask: LibraryTask, isSelected: boolean) => {
-        const currentSelection = selectionRef.current?.selectedItemIds ?? [];
+        const currentSelection = selection?.selectedItemIds ?? [];
         let newSelectedIds: string[];
 
         if (isSelected) {
@@ -324,10 +315,9 @@ export function TimelineWrapper({
             newSelectedIds = currentSelection.filter(id => id !== libraryTask.id);
         }
 
-        setSelectedTaskId(newSelectedIds[0] ?? '');
         if (onSelectionChange) {
             onSelectionChange({
-                ...(selectionRef.current ?? {}),
+                ...(selection ?? {}),
                 selectedItemIds: newSelectedIds
             });
         }
@@ -335,7 +325,7 @@ export function TimelineWrapper({
         if (onItemClick) {
             onItemClick(fromLibraryFormat(libraryTask));
         }
-    }, [onSelectionChange, onItemClick]);
+    }, [selection, onSelectionChange, onItemClick]);
 
     // Item mutations - library callbacks translated to our domain
     // Use functional state updaters to avoid stale closure issues with rapid changes

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import { useCurrentUser } from './api/hooks';
@@ -13,25 +13,26 @@ import { CollectionModeProvider } from './workflows/export/context/CollectionMod
 function App() {
   const { isLoading, isError, isFetching } = useCurrentUser();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const [timerExpired, setTimerExpired] = useState(false);
 
   const isCurrentlyLoading = isLoading || isFetching;
 
-  // Start/reset timeout timer when loading state changes
+  // Timer-based timeout message - only shows after 5 seconds of loading
+  const [timerExpired, setTimerExpired] = useState(false);
+
+  // Start 5-second timer when loading begins
   useEffect(() => {
     if (isCurrentlyLoading) {
-      setTimerExpired(false);
       const timer = setTimeout(() => setTimerExpired(true), 5000);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        // Defer reset to avoid synchronous cascading render
+        requestAnimationFrame(() => setTimerExpired(false));
+      };
     }
-    return undefined;
   }, [isCurrentlyLoading]);
 
-  // Derive timeout message visibility
-  const showTimeoutMessage = useMemo(
-    () => isCurrentlyLoading && timerExpired,
-    [isCurrentlyLoading, timerExpired]
-  );
+  // Show timeout message after timer expires while still loading
+  const showTimeoutMessage = isCurrentlyLoading && timerExpired;
 
   // Show loading state
   if (isLoading) {

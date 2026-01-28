@@ -76,13 +76,16 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     useEffect(() => {
         if (form && form.id !== prevFormIdRef.current) {
             prevFormIdRef.current = form.id;
-            setTitleChanges(null);
-            setBlocksChanges(null);
             // Mark initial blocks as "saved" to avoid immediate re-save
             const firstPage = form.pages?.[0];
             if (firstPage?.blocks_config?.blocks) {
                 lastSavedBlocksRef.current = JSON.stringify(firstPage.blocks_config.blocks);
             }
+            // Defer state reset to avoid synchronous cascading render
+            requestAnimationFrame(() => {
+                setTitleChanges(null);
+                setBlocksChanges(null);
+            });
         }
     }, [form]);
 

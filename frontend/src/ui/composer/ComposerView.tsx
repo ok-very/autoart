@@ -129,6 +129,21 @@ export function ComposerView({
         return allDefinitions.filter((d) => d.kind === 'action_arrangement');
     }, [allDefinitions]);
 
+    // Derive default recipe ID (from defaultRecipe prop or first recipe)
+    const defaultRecipeId = useMemo(() => {
+        if (!actionRecipes.length) return null;
+        if (defaultRecipe) {
+            const match = actionRecipes.find(
+                (r) => r.id === defaultRecipe || r.name === defaultRecipe
+            );
+            if (match) return match.id;
+        }
+        return actionRecipes[0].id;
+    }, [actionRecipes, defaultRecipe]);
+
+    // Effective recipe selection (user choice or default)
+    const selectedRecipeId = userRecipeId ?? defaultRecipeId;
+
     // Get selected recipe
     const selectedRecipe = useMemo(() => {
         if (!selectedRecipeId || !actionRecipes.length) return null;
@@ -182,21 +197,8 @@ export function ComposerView({
     // Derive default subprocess ID (first subprocess)
     const defaultSubprocessId = useMemo(() => subprocesses[0]?.id ?? null, [subprocesses]);
 
-    // Derive default recipe ID (from defaultRecipe prop or first recipe)
-    const defaultRecipeId = useMemo(() => {
-        if (!actionRecipes.length) return null;
-        if (defaultRecipe) {
-            const match = actionRecipes.find(
-                (r) => r.id === defaultRecipe || r.name === defaultRecipe
-            );
-            if (match) return match.id;
-        }
-        return actionRecipes[0].id;
-    }, [actionRecipes, defaultRecipe]);
-
-    // Effective selections (user choice or default)
+    // Effective subprocess selection (user choice or default)
     const selectedSubprocessId = userSubprocessId ?? defaultSubprocessId;
-    const selectedRecipeId = userRecipeId ?? defaultRecipeId;
 
     // Get selected subprocess
     const selectedSubprocess = useMemo(() => {

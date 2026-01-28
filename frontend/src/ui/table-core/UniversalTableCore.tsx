@@ -175,29 +175,47 @@ export function UniversalTableCore({
     // =========== STATE ===========
 
     const [sortState, setSortState] = useState<SortState>(null);
-    const [columnWidths, setColumnWidths] = useState<Map<string, number | 'flex'>>(() => {
+
+    // User-resized widths (only stores columns user has manually resized)
+    const [userWidths, setUserWidths] = useState<Map<string, number>>(new Map());
+
+    // Initial widths derived from column props
+    const initialWidths = useMemo(() => {
         const map = new Map<string, number | 'flex'>();
         columnsProp.forEach((col) => {
             map.set(col.id, col.width ?? 'flex');
         });
         return map;
-    });
-    const prevColumnIdsRef = useRef(columnsProp.map(c => c.id).join(','));
-
-    // Update column widths when columns prop changes (add/remove columns)
-    useEffect(() => {
-        const currentColumnIds = columnsProp.map(c => c.id).join(',');
-        if (currentColumnIds !== prevColumnIdsRef.current) {
-            prevColumnIdsRef.current = currentColumnIds;
-            setColumnWidths((prev) => {
-                const map = new Map<string, number | 'flex'>();
-                columnsProp.forEach((col) => {
-                    map.set(col.id, prev.get(col.id) ?? col.width ?? 'flex');
-                });
-                return map;
-            });
-        }
     }, [columnsProp]);
+
+    // Effective widths: user overrides take precedence over initial
+    const columnWidths = useMemo(() => {
+        const map = new Map<string, number | 'flex'>();
+        columnsProp.forEach((col) => {
+            const userWidth = userWidths.get(col.id);
+            map.set(col.id, userWidth ?? initialWidths.get(col.id) ?? 'flex');
+        });
+        return map;
+    }, [columnsProp, userWidths, initialWidths]);
+
+    // Wrapper to update user widths (for resize handler compatibility)
+    const setColumnWidths = useCallback((updater: (prev: Map<string, number | 'flex'>) => Map<string, number | 'flex'>) => {
+        setUserWidths((prev) => {
+            const currentEffective = new Map<string, number | 'flex'>();
+            columnsProp.forEach((col) => {
+                currentEffective.set(col.id, prev.get(col.id) ?? initialWidths.get(col.id) ?? 'flex');
+            });
+            const updated = updater(currentEffective);
+            // Extract only numeric widths (user-set) back to userWidths
+            const newUserWidths = new Map<string, number>();
+            updated.forEach((v, k) => {
+                if (typeof v === 'number') {
+                    newUserWidths.set(k, v);
+                }
+            });
+            return newUserWidths;
+        });
+    }, [columnsProp, initialWidths]);
 
     // =========== CONTEXT ===========
 
@@ -274,7 +292,7 @@ export function UniversalTableCore({
                 return newMap;
             });
         },
-        [decoratedColumns, onColumnResize]
+        [decoratedColumns, onColumnResize, setColumnWidths]
     );
 
     // =========== ROW HEIGHT ===========

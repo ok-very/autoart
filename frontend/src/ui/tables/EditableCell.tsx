@@ -36,17 +36,12 @@ export function EditableCell({
     className,
 }: EditableCellProps) {
     const [isEditing, setIsEditing] = useState(false);
-    const [editValue, setEditValue] = useState<unknown>(value);
+    const [localEditValue, setLocalEditValue] = useState<unknown>(value);
     const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(null);
-    const prevValueRef = useRef(value);
 
-    // Sync edit value when external value changes (only when not editing)
-    useEffect(() => {
-        if (!isEditing && value !== prevValueRef.current) {
-            prevValueRef.current = value;
-            setEditValue(value);
-        }
-    }, [value, isEditing]);
+    // When not editing, show external value; when editing, show local value
+    const editValue = isEditing ? localEditValue : value;
+    const setEditValue = setLocalEditValue;
 
     // Focus input when entering edit mode
     useEffect(() => {

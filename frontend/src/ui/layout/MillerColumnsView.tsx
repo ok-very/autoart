@@ -59,11 +59,14 @@ export function MillerColumnsView() {
   useEffect(() => {
     if (activeProjectId !== prevProjectIdRef.current) {
       prevProjectIdRef.current = activeProjectId;
-      setUserSelections({
-        process: null,
-        stage: null,
-        subprocess: null,
-        task: null,
+      // Defer setState to avoid synchronous cascading render
+      requestAnimationFrame(() => {
+        setUserSelections({
+          process: null,
+          stage: null,
+          subprocess: null,
+          task: null,
+        });
       });
     }
   }, [activeProjectId]);
