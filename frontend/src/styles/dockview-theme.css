@@ -113,7 +113,7 @@
 
 .dockview-theme-light .dv-default-tab-action:hover {
   color: var(--ws-fg);
-  background: var(--ws-tab-close-hover-bg);
+  background-color: var(--ws-tab-close-hover-bg) !important;
   border-radius: 4px;
 }
 

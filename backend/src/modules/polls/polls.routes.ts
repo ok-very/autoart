@@ -230,6 +230,11 @@ export async function pollPublicRoutes(app: FastifyInstance) {
       },
     },
     async (request, reply) => {
+      const poll = await pollsService.getPollByUniqueId(request.params.uniqueId);
+      if (!poll || poll.status !== 'active') {
+        return reply.code(404).send({ error: 'NOT_FOUND', message: 'Poll not found' });
+      }
+
       await pollsService.logEngagement(
         EngagementContextType.POLL,
         request.params.uniqueId,
