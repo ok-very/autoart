@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link2 } from 'lucide-react';
 import { Button, TextInput, Card, Stack, Inline, Text, Alert, Spinner } from '@autoart/ui';
-import { EngagementKind } from '@autoart/shared';
+import { EngagementKind, DEFAULT_DATE_CONFIG, type DateFormatConfig } from '@autoart/shared';
 import { fetchPoll, submitResponse, updateResponse, logEngagement } from '../api';
 import { TimeGrid } from './TimeGrid';
 
@@ -85,6 +85,12 @@ export function PollPage() {
   }, [poll, name]);
 
   const isUpdate = !!existingResponse;
+
+  // Derive date format config from poll's stored timezone
+  const dateConfig: DateFormatConfig = useMemo(() => ({
+    ...DEFAULT_DATE_CONFIG,
+    timezone: poll?.time_config?.timezone ?? DEFAULT_DATE_CONFIG.timezone,
+  }), [poll?.time_config?.timezone]);
 
   // Derive selectedSlots from user selection or existing response
   const selectedSlots = useMemo(() => {
@@ -264,6 +270,7 @@ export function PollPage() {
                 selectedSlots={selectedSlots}
                 onSlotsChange={setSelectedSlots}
                 onInteraction={handleInteraction}
+                dateFormatConfig={dateConfig}
               />
             </Card>
 

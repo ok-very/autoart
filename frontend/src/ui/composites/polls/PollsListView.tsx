@@ -2,18 +2,10 @@ import { useCallback } from 'react';
 import { Plus, ExternalLink } from 'lucide-react';
 import { Button, Text, Badge, Spinner, Stack, Inline } from '@autoart/ui';
 import { usePolls } from '../../../api/hooks/polls';
+import { useDateFormat } from '../../../hooks/useDateFormat';
 import type { Poll } from '@autoart/shared';
 
 const POLL_BASE_URL = import.meta.env.VITE_POLL_BASE_URL || 'https://poll.autoart.work';
-
-function formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return new Intl.DateTimeFormat('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-    }).format(date);
-}
 
 function StatusBadge({ status }: { status: Poll['status'] }) {
     const variant = status === 'active' ? 'success' : status === 'closed' ? 'neutral' : 'warning';
@@ -27,6 +19,7 @@ interface PollsListViewProps {
 
 export function PollsListView({ onCreatePoll, onSelectPoll }: PollsListViewProps) {
     const { data: polls, isLoading, isError, error } = usePolls();
+    const { formatDate } = useDateFormat();
 
     const handleShareLink = useCallback((e: React.MouseEvent, uniqueId: string) => {
         e.stopPropagation();

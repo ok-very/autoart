@@ -4,6 +4,7 @@ import { Button, TextInput, Card, Stack, Inline, Text, Alert } from '@autoart/ui
 import { SegmentedControl } from '@autoart/ui';
 import { Select } from '@autoart/ui';
 import { useCreatePoll } from '../../../api/hooks/polls';
+import { useDateFormat } from '../../../hooks/useDateFormat';
 import type { TimeSlotGranularity } from '@autoart/shared';
 
 interface CreatePollViewProps {
@@ -13,13 +14,6 @@ interface CreatePollViewProps {
 
 function getDaysInMonth(year: number, month: number): number {
     return new Date(year, month + 1, 0).getDate();
-}
-
-function formatMonthYear(year: number, month: number): string {
-    return new Date(year, month).toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
-    });
 }
 
 function formatDateKey(year: number, month: number, day: number): string {
@@ -109,6 +103,7 @@ export function CreatePollView({ onBack, onCreated }: CreatePollViewProps) {
     const [startHour, setStartHour] = useState<string>('9');
     const [endHour, setEndHour] = useState<string>('17');
     const [granularity, setGranularity] = useState<TimeSlotGranularity>('30min');
+    const { formatMonthYear, timezone } = useDateFormat();
 
     const now = new Date();
     const [viewYear, setViewYear] = useState(now.getFullYear());
@@ -170,6 +165,7 @@ export function CreatePollView({ onBack, onCreated }: CreatePollViewProps) {
                     start_hour: Number(startHour),
                     end_hour: Number(endHour),
                     granularity,
+                    timezone,
                 },
             },
             {
@@ -230,6 +226,7 @@ export function CreatePollView({ onBack, onCreated }: CreatePollViewProps) {
                                         &larr;
                                     </button>
                                     <Text weight="medium">{formatMonthYear(viewYear, viewMonth)}</Text>
+
                                     <button
                                         type="button"
                                         onClick={handleNextMonth}
