@@ -6,8 +6,9 @@ import type {
   NewPollResponse,
   PollUpdate,
   PollResponseUpdate,
+  NewEngagement,
 } from '../../db/schema.js';
-import { generateUniqueId, PollTimeConfigSchema } from '@autoart/shared';
+import { generateUniqueId, PollTimeConfigSchema, type EngagementKindType } from '@autoart/shared';
 import { NotFoundError, ConflictError, ValidationError } from '../../utils/errors.js';
 
 const MAX_UNIQUE_ID_RETRIES = 5;
@@ -238,4 +239,24 @@ export async function closePoll(id: string): Promise<Poll> {
   }
 
   return poll;
+}
+
+export async function logEngagement(
+  contextType: string,
+  contextId: string,
+  kind: EngagementKindType,
+  actorName?: string,
+  payload?: Record<string, unknown>
+): Promise<void> {
+  await db
+    .insertInto('engagements')
+    .values({
+      kind,
+      context_type: contextType,
+      context_id: contextId,
+      actor_name: actorName ?? null,
+      payload: payload ?? null,
+      occurred_at: new Date(),
+    } satisfies NewEngagement)
+    .execute();
 }

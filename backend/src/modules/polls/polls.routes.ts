@@ -1,7 +1,12 @@
 import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { CreatePollInputSchema, SubmitPollResponseInputSchema } from '@autoart/shared';
+import {
+  CreatePollInputSchema,
+  SubmitPollResponseInputSchema,
+  LogEngagementInputSchema,
+  EngagementContextType,
+} from '@autoart/shared';
 import * as pollsService from './polls.service.js';
 import { AppError } from '../../utils/errors.js';
 
@@ -212,6 +217,30 @@ export async function pollPublicRoutes(app: FastifyInstance) {
 
       const results = await pollsService.getResults(poll.id);
       return reply.send({ results });
+    }
+  );
+
+  // Log engagement event (public)
+  fastify.post(
+    '/:uniqueId/engagement',
+    {
+      schema: {
+        params: z.object({ uniqueId: z.string().min(1) }),
+        body: LogEngagementInputSchema,
+      },
+    },
+    async (request, reply) => {
+      await pollsService.logEngagement(
+        EngagementContextType.POLL,
+        request.params.uniqueId,
+        request.body.kind,
+        request.body.actorName,
+        {
+          interactionType: request.body.interactionType,
+          progress: request.body.progress,
+        }
+      );
+      return reply.send({ ok: true });
     }
   );
 }

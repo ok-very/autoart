@@ -10,6 +10,7 @@ interface TimeGridProps {
   readOnly?: boolean;
   heatmapData?: Map<string, number>;
   maxCount?: number;
+  onInteraction?: () => void;
 }
 
 function generateSlotKey(date: string, hour: number, minute: number): string {
@@ -58,14 +59,16 @@ function generateTimeSlots(
   return slots;
 }
 
+// Design system colors for heatmap
+// Moss Green scale: from light (#E8EBE5) to full (#6F7F5C)
 function getHeatmapColor(count: number, maxCount: number): string {
-  if (maxCount === 0) return 'bg-slate-100';
+  if (maxCount === 0) return 'bg-[#F5F2ED]';
   const ratio = count / maxCount;
-  if (ratio === 0) return 'bg-slate-100';
-  if (ratio <= 0.25) return 'bg-emerald-200';
-  if (ratio <= 0.5) return 'bg-emerald-300';
-  if (ratio <= 0.75) return 'bg-emerald-400';
-  return 'bg-emerald-500';
+  if (ratio === 0) return 'bg-[#F5F2ED]';
+  if (ratio <= 0.25) return 'bg-[#E8EBE5]';
+  if (ratio <= 0.5) return 'bg-[#C5CCBC]';
+  if (ratio <= 0.75) return 'bg-[#9AAA8C]';
+  return 'bg-[#6F7F5C]';
 }
 
 export function TimeGrid({
@@ -78,9 +81,11 @@ export function TimeGrid({
   readOnly = false,
   heatmapData,
   maxCount = 0,
+  onInteraction,
 }: TimeGridProps) {
   const timeSlots = generateTimeSlots(startHour, endHour, granularity);
   const isDragging = useRef(false);
+  const hasCalledInteraction = useRef(false);
   // Track drag state together - mode and slots
   const [dragState, setDragState] = useState<{
     mode: 'select' | 'deselect';
@@ -90,6 +95,12 @@ export function TimeGrid({
   const handleSlotInteraction = useCallback(
     (slotKey: string, isStart: boolean) => {
       if (readOnly || heatmapData) return;
+
+      // Call onInteraction once on first interaction
+      if (!hasCalledInteraction.current && onInteraction) {
+        hasCalledInteraction.current = true;
+        onInteraction();
+      }
 
       if (isStart) {
         isDragging.current = true;
@@ -102,7 +113,7 @@ export function TimeGrid({
         }));
       }
     },
-    [readOnly, heatmapData, selectedSlots]
+    [readOnly, heatmapData, selectedSlots, onInteraction]
   );
 
   const handleDragEnd = useCallback(() => {
@@ -123,7 +134,7 @@ export function TimeGrid({
   }, [selectedSlots, dragState, onSlotsChange]);
 
   const getSlotClassName = (slotKey: string): string => {
-    const baseClasses = 'h-6 border-r border-b border-slate-300 transition-colors';
+    const baseClasses = 'h-6 border-r border-b border-[#D6D2CB] transition-colors';
 
     if (heatmapData) {
       const count = heatmapData.get(slotKey) ?? 0;
@@ -134,14 +145,14 @@ export function TimeGrid({
     const isDragTarget = dragState.slots.has(slotKey);
 
     if (isDragTarget) {
-      return `${baseClasses} ${dragState.mode === 'select' ? 'bg-emerald-400' : 'bg-slate-200'}`;
+      return `${baseClasses} ${dragState.mode === 'select' ? 'bg-[#9AAA8C]' : 'bg-[#EAE7E2]'}`;
     }
 
     if (isSelected) {
-      return `${baseClasses} bg-emerald-500`;
+      return `${baseClasses} bg-[#6F7F5C]`;
     }
 
-    return `${baseClasses} bg-white hover:bg-slate-100`;
+    return `${baseClasses} bg-white hover:bg-[#EAE7E2]`;
   };
 
   return (
@@ -158,13 +169,13 @@ export function TimeGrid({
         }}
       >
         {/* Empty corner cell */}
-        <div className="sticky left-0 z-20 bg-white border-r border-b border-slate-300" />
+        <div className="sticky left-0 z-20 bg-white border-r border-b border-[#D6D2CB]" />
 
         {/* Date headers */}
         {dates.map((date) => (
           <div
             key={date}
-            className="sticky top-0 z-10 bg-white border-r border-b border-slate-300 px-2 py-1 text-center text-sm font-medium text-slate-700"
+            className="sticky top-0 z-10 bg-white border-r border-b border-[#D6D2CB] px-2 py-1 text-center text-sm font-medium text-[#2E2E2C]"
           >
             {formatDateHeader(date)}
           </div>
@@ -175,7 +186,7 @@ export function TimeGrid({
           <Fragment key={`row-${hour}-${minute}`}>
             {/* Time header */}
             <div
-              className="sticky left-0 z-10 bg-white border-r border-b border-slate-300 px-2 py-0.5 text-xs text-slate-600 whitespace-nowrap"
+              className="sticky left-0 z-10 bg-white border-r border-b border-[#D6D2CB] px-2 py-0.5 text-xs text-[#5A5A57] whitespace-nowrap"
             >
               {minute === 0 ? formatTimeHeader(hour, minute) : ''}
             </div>
