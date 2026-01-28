@@ -124,7 +124,7 @@ export type WorkspaceThemeVariant = z.infer<typeof WorkspaceThemeVariantSchema>;
 /**
  * Built-in workspace theme IDs
  */
-export const WorkspaceThemeIdSchema = z.enum(['default', 'compact', 'floating', 'minimal']);
+export const WorkspaceThemeIdSchema = z.enum(['default', 'compact', 'floating', 'minimal', 'parchment']);
 export type WorkspaceThemeId = z.infer<typeof WorkspaceThemeIdSchema>;
 
 /**
@@ -154,6 +154,7 @@ export const WORKSPACE_THEME_LABELS: Record<WorkspaceThemeId, string> = {
   compact: 'Compact',
   floating: 'Floating',
   minimal: 'Minimal',
+  parchment: 'Parchment',
 };
 
 /**
@@ -164,6 +165,7 @@ export const WORKSPACE_THEME_DESCRIPTIONS: Record<WorkspaceThemeId, string> = {
   compact: 'Dense layout with smaller tabs and reduced spacing',
   floating: 'Elevated panels with shadows and rounded corners',
   minimal: 'Hidden chrome, maximum content area',
+  parchment: 'Warm, archival aesthetic for focused work',
 };
 
 // ============================================================================
