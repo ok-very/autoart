@@ -5,10 +5,9 @@ import {
   CreateIntakeFormInputSchema,
   UpdateIntakeFormInputSchema,
   UpsertIntakeFormPageInputSchema,
-  CreateIntakeSubmissionInputSchema,
 } from '@autoart/shared';
 import * as intakeService from './intake.service.js';
-import { AppError, NotFoundError } from '../../utils/errors.js';
+import { AppError } from '../../utils/errors.js';
 
 export async function intakeRoutes(app: FastifyInstance) {
   const fastify = app.withTypeProvider<ZodTypeProvider>();

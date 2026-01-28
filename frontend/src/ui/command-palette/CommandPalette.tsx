@@ -79,7 +79,7 @@ export function CommandPalette() {
   const { data: projects = [] } = useProjects();
   const { data: records = [] } = useRecords();
   const { data: actionsData } = useAllActions({ limit: 200 });
-  const actions = actionsData?.actions ?? [];
+  const actions = useMemo(() => actionsData?.actions ?? [], [actionsData?.actions]);
 
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);

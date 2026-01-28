@@ -241,7 +241,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
                     console.warn('Monday OAuth callback: CLIENT_ORIGIN had path/query/hash which was stripped');
                 }
                 safeTargetOrigin = originUrl.origin;
-            } catch (err) {
+            } catch (_err) {
                 console.error('Monday OAuth callback: CLIENT_ORIGIN is not a valid URL:', targetOrigin);
                 const errorHtml = `
 <!DOCTYPE html>

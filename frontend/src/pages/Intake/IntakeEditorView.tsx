@@ -165,18 +165,18 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
         };
         setBlocks((prev) => [...prev, newBlock as FormBlock]);
         setActiveBlockId(newBlock.id);
-    }, []);
+    }, [setBlocks, setActiveBlockId]);
 
     const handleDeleteBlock = useCallback((id: string) => {
         setBlocks((prev) => prev.filter((b) => b.id !== id));
         if (activeBlockId === id) setActiveBlockId(null);
-    }, [activeBlockId]);
+    }, [activeBlockId, setBlocks, setActiveBlockId]);
 
     const handleUpdateBlock = useCallback((id: string, updates: Partial<FormBlock>) => {
         setBlocks((prev) =>
             prev.map((b) => (b.id === id ? { ...b, ...updates } as FormBlock : b))
         );
-    }, []);
+    }, [setBlocks]);
 
     const handleDuplicateBlock = useCallback((id: string) => {
         setBlocks((prev) => {
@@ -194,7 +194,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
             newBlocks.splice(index + 1, 0, newBlock);
             return newBlocks;
         });
-    }, []);
+    }, [setBlocks]);
 
     const handlePublish = async () => {
         // Set form status to active

@@ -5,7 +5,7 @@
  * Default role is 'user'. Other roles: 'admin', 'viewer'.
  */
 
-import { Kysely, sql } from 'kysely';
+import { Kysely } from 'kysely';
 
 export async function up(db: Kysely<unknown>): Promise<void> {
     // Add role column with default 'user'

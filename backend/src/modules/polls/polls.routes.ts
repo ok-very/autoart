@@ -3,7 +3,7 @@ import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { CreatePollInputSchema, SubmitPollResponseInputSchema } from '@autoart/shared';
 import * as pollsService from './polls.service.js';
-import { AppError, NotFoundError } from '../../utils/errors.js';
+import { AppError } from '../../utils/errors.js';
 
 export async function pollRoutes(app: FastifyInstance) {
   const fastify = app.withTypeProvider<ZodTypeProvider>();

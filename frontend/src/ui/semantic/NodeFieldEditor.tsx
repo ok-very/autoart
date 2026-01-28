@@ -194,7 +194,7 @@ export function NodeFieldEditor({
                 );
             }, 1000); // 1s debounce
         },
-        [node, nodeId, fieldId, updateNode]
+        [node, nodeId, fieldId, updateNode, setLocalValue]
     );
 
     // 4. Callbacks for Complex Fields

@@ -9,7 +9,7 @@
  * - Includes statusConfig for status field display
  */
 
-import { Kysely, sql } from 'kysely';
+import { Kysely } from 'kysely';
 
 // Status configuration for workflow states
 const WORKFLOW_STATUS_CONFIG = {
@@ -23,8 +23,8 @@ const WORKFLOW_STATUS_CONFIG = {
 
 const WORKFLOW_STATUS_OPTIONS = Object.keys(WORKFLOW_STATUS_CONFIG);
 
-// Complete Task schema with statusConfig
-const TASK_SCHEMA = {
+// Complete Task schema with statusConfig (kept for documentation)
+const _TASK_SCHEMA = {
     fields: [
         { key: 'title', type: 'text', label: 'Task', required: true },
         {
@@ -41,8 +41,8 @@ const TASK_SCHEMA = {
     ],
 };
 
-// Complete Subtask schema with statusConfig
-const SUBTASK_SCHEMA = {
+// Complete Subtask schema with statusConfig (kept for documentation)
+const _SUBTASK_SCHEMA = {
     fields: [
         { key: 'title', type: 'text', label: 'Subtask', required: true },
         {

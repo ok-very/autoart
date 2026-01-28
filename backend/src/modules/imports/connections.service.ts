@@ -10,7 +10,7 @@ import type {
     ConnectionCredential,
     NewConnectionCredential,
 } from '../../db/schema.js';
-import { randomBytes, randomInt, createHmac } from 'crypto';
+import { randomBytes, randomInt } from 'crypto';
 
 export type Provider = 'monday' | 'asana' | 'notion' | 'jira' | 'google' | 'autohelper';
 

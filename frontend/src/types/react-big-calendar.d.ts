@@ -1,5 +1,5 @@
 declare module 'react-big-calendar' {
-    import { ComponentType, ReactNode } from 'react';
+    import { ComponentType } from 'react';
 
     export type View = 'month' | 'week' | 'work_week' | 'day' | 'agenda';
 

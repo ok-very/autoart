@@ -1,4 +1,4 @@
-import { Kysely, sql } from 'kysely';
+import { Kysely } from 'kysely';
 
 /**
  * Migration: Rename radix_tree to blocks_config in intake_form_pages

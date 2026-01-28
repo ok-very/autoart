@@ -63,7 +63,7 @@ export function EditableCell({
     const handleCancel = useCallback(() => {
         setIsEditing(false);
         setEditValue(value);
-    }, [value]);
+    }, [value, setEditValue]);
 
     const handleKeyDown = useCallback(
         (e: React.KeyboardEvent) => {

@@ -35,7 +35,7 @@ export function ExportRecordsDialog({
     return definitions?.filter((d) => (d as { definition_kind?: string }).definition_kind === 'record') ?? [];
   }, [definitions]);
 
-  const artworks = exportPayload.artworks ?? [];
+  const artworks = useMemo(() => exportPayload.artworks ?? [], [exportPayload.artworks]);
   const summary = getExportSummary(exportPayload);
   const hasDuplicateSlugs = useMemo(() => {
     const slugs = artworks.map((a) => a.slug);

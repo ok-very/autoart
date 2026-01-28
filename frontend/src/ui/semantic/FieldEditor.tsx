@@ -94,7 +94,7 @@ export function FieldEditor({
                 );
             }, 1000); // 1s debounce
         },
-        [record, recordId, fieldId, updateRecord]
+        [record, recordId, fieldId, updateRecord, setLocalValue]
     );
 
     // 4. Callbacks for Complex Fields

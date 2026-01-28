@@ -9,7 +9,7 @@
 
 import { type ClassificationOutcome, isInternalWork } from '@autoart/shared';
 
-import { getLatestPlan, getSession } from './import-sessions.service.js';
+import { getSession } from './import-sessions.service.js';
 import { db } from '../../../db/client.js';
 import type { RecordDefinition } from '../../../db/schema.js';
 import { logger } from '../../../utils/logger.js';
