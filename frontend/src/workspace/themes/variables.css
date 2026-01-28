@@ -22,10 +22,10 @@
   --ws-accent-fg: #ffffff;
 
   /* -------------------------------------------------------------------------
-     Text Hierarchy
+     Text Hierarchy (aliases to --ws-fg by default, themes override)
      @see docs/DESIGN.md
      ------------------------------------------------------------------------- */
-  --ws-text-primary: #2e2e2c;
+  --ws-text-primary: var(--ws-fg);
   --ws-text-secondary: #5a5a57;
   --ws-text-disabled: #8c8c88;
 
