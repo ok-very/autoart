@@ -70,12 +70,6 @@ export function formatDateHeader(
     timeZone: config.timezone,
   }).format(date);
 
-  if (config.dateFormat === 'iso') {
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${weekday} ${month}-${day}`;
-  }
-
   if (config.dateFormat === 'long') {
     const monthDay = new Intl.DateTimeFormat(locale, {
       month: 'short',
@@ -85,10 +79,23 @@ export function formatDateHeader(
     return `${weekday} ${monthDay}`;
   }
 
+  // Derive month/day via Intl so they respect the configured timezone
+  const parts = new Intl.DateTimeFormat(locale, {
+    month: 'numeric',
+    day: 'numeric',
+    timeZone: config.timezone,
+  }).formatToParts(date);
+  const monthValue = parts.find((p) => p.type === 'month')?.value ?? '';
+  const dayValue = parts.find((p) => p.type === 'day')?.value ?? '';
+
+  if (config.dateFormat === 'iso') {
+    return `${weekday} ${monthValue.padStart(2, '0')}-${dayValue.padStart(2, '0')}`;
+  }
+
   // us → M/D, eu → D/M
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const datePart = config.dateFormat === 'us' ? `${month}/${day}` : `${day}/${month}`;
+  const datePart = config.dateFormat === 'us'
+    ? `${monthValue}/${dayValue}`
+    : `${dayValue}/${monthValue}`;
   return `${weekday} ${datePart}`;
 }
 
@@ -113,8 +120,13 @@ export function formatDateShort(
   }).format(date);
 
   if (config.dateFormat === 'iso') {
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const parts = new Intl.DateTimeFormat(locale, {
+      month: 'numeric',
+      day: 'numeric',
+      timeZone: config.timezone,
+    }).formatToParts(date);
+    const month = (parts.find((p) => p.type === 'month')?.value ?? '').padStart(2, '0');
+    const day = (parts.find((p) => p.type === 'day')?.value ?? '').padStart(2, '0');
     return `${weekday}, ${month}-${day}`;
   }
 
