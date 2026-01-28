@@ -1,4 +1,4 @@
-import type { PollTimeConfig } from '@autoart/shared';
+import type { PollTimeConfig, EngagementKindType, LogEngagementInput } from '@autoart/shared';
 
 const API_BASE = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/public/poll`
@@ -90,4 +90,24 @@ export async function fetchResults(uniqueId: string): Promise<PollResults> {
   }
   const data = await res.json();
   return data.results;
+}
+
+export async function logEngagement(
+  uniqueId: string,
+  kind: EngagementKindType,
+  actorName?: string,
+  payload?: Omit<LogEngagementInput, 'kind' | 'actorName'>
+): Promise<void> {
+  // Fire and forget - don't block on errors
+  fetch(`${API_BASE}/${uniqueId}/engagement`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      kind,
+      actorName,
+      ...payload,
+    }),
+  }).catch(() => {
+    // Silently ignore engagement tracking failures
+  });
 }

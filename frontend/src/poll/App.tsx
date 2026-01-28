@@ -5,7 +5,7 @@ import { NotFoundPage } from './components/NotFoundPage';
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#F5F2ED]">
       <Routes>
         <Route path="/:uniqueId" element={<PollPage />} />
         <Route path="/:uniqueId/results" element={<ResultsPage />} />
