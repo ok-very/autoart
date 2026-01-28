@@ -62,10 +62,9 @@ export function UnifiedComposerBar({
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [expanded, setExpanded] = useState(false);
-    const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
+    const [userRecipeId, setUserRecipeId] = useState<string | null>(null);
     const [showEventPreview, setShowEventPreview] = useState(true);
     const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
-    const recipeInitialized = useRef(false);
 
     // Hooks
     const derivedContext = useDerivedContext();
@@ -81,15 +80,15 @@ export function UnifiedComposerBar({
         return allDefinitions.filter((d) => d.kind === 'action_arrangement');
     }, [allDefinitions]);
 
-    // Auto-select first recipe (Task by default) - one-time initialization
-    useEffect(() => {
-        if (actionRecipes.length > 0 && !selectedRecipeId && !recipeInitialized.current) {
-            // Prefer "Task" recipe if available
-            const taskRecipe = actionRecipes.find((r) => r.name.toLowerCase() === 'task');
-            setSelectedRecipeId(taskRecipe?.id || actionRecipes[0].id);
-            recipeInitialized.current = true;
-        }
-    }, [actionRecipes, selectedRecipeId]);
+    // Derive default recipe ID (prefer "Task" recipe if available)
+    const defaultRecipeId = useMemo(() => {
+        if (!actionRecipes.length) return null;
+        const taskRecipe = actionRecipes.find((r) => r.name.toLowerCase() === 'task');
+        return taskRecipe?.id || actionRecipes[0].id;
+    }, [actionRecipes]);
+
+    // Effective recipe selection (user choice or default)
+    const selectedRecipeId = userRecipeId ?? defaultRecipeId;
 
     const selectedRecipe = useMemo(() => {
         if (!selectedRecipeId || !actionRecipes.length) return null;
@@ -283,7 +282,7 @@ export function UnifiedComposerBar({
                                             <button
                                                 key={recipe.id}
                                                 type="button"
-                                                onClick={() => setSelectedRecipeId(recipe.id)}
+                                                onClick={() => setUserRecipeId(recipe.id)}
                                                 className={clsx(
                                                     'px-2.5 py-1 text-xs font-medium rounded-full border transition-colors',
                                                     isSelected

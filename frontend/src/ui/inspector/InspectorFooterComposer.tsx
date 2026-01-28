@@ -12,7 +12,7 @@
 
 import { clsx } from 'clsx';
 import { Plus, ChevronUp, ChevronDown, Send, Loader2 } from 'lucide-react';
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo } from 'react';
 
 import { useCompose, useRecordDefinitions, useNode, useAction, useSubprocesses } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
@@ -27,7 +27,7 @@ export function InspectorFooterComposer() {
 
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
+    const [userRecipeId, setUserRecipeId] = useState<string | null>(null);
 
     const compose = useCompose();
     const { data: allDefinitions } = useRecordDefinitions();
@@ -46,18 +46,11 @@ export function InspectorFooterComposer() {
         return allDefinitions.filter((d) => d.kind === 'action_arrangement');
     }, [allDefinitions]);
 
-    // Track first arrangement ID to prevent cascading setState
-    const prevFirstRecipeIdRef = useRef<string | null>(null);
+    // Derive default recipe ID (first arrangement)
+    const defaultRecipeId = useMemo(() => actionRecipes[0]?.id ?? null, [actionRecipes]);
 
-    // Auto-select first arrangement when list changes
-    useEffect(() => {
-        const firstRecipeId = actionRecipes[0]?.id || null;
-
-        if (firstRecipeId && firstRecipeId !== prevFirstRecipeIdRef.current && !selectedRecipeId) {
-            prevFirstRecipeIdRef.current = firstRecipeId;
-            setSelectedRecipeId(firstRecipeId);
-        }
-    }, [actionRecipes, selectedRecipeId]);
+    // Effective recipe selection (user choice or default)
+    const selectedRecipeId = userRecipeId ?? defaultRecipeId;
 
     const selectedRecipe = useMemo(() => {
         if (!selectedRecipeId || !actionRecipes.length) return null;
@@ -211,7 +204,7 @@ export function InspectorFooterComposer() {
                                         <button
                                             key={recipe.id}
                                             type="button"
-                                            onClick={() => setSelectedRecipeId(recipe.id)}
+                                            onClick={() => setUserRecipeId(recipe.id)}
                                             className={clsx(
                                                 'px-2.5 py-1 text-xs font-medium rounded-full border transition-colors',
                                                 isSelected

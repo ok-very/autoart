@@ -2,7 +2,7 @@
  * FormSettingsPanel - Settings configuration for intake forms
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Save, Check, AlertCircle, ExternalLink, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Button } from '@autoart/ui';
 
@@ -19,26 +19,24 @@ interface FormSettingsPanelProps {
 }
 
 export function FormSettingsPanel({ settings, onSave, isSaving }: FormSettingsPanelProps) {
-    const [localSettings, setLocalSettings] = useState<FormSettings>(settings);
+    // Track user changes separately from props
+    const [changes, setChanges] = useState<Partial<FormSettings>>({});
     const [isDirty, setIsDirty] = useState(false);
-    const prevSettingsRef = useRef(settings);
 
-    // Sync with props when they change from parent
-    useEffect(() => {
-        if (settings !== prevSettingsRef.current) {
-            prevSettingsRef.current = settings;
-            setLocalSettings(settings);
-            setIsDirty(false);
-        }
-    }, [settings]);
+    // Derive display settings (merge props with user changes)
+    const localSettings = useMemo<FormSettings>(() => ({
+        ...settings,
+        ...changes,
+    }), [settings, changes]);
 
     const handleChange = useCallback(<K extends keyof FormSettings>(key: K, value: FormSettings[K]) => {
-        setLocalSettings(prev => ({ ...prev, [key]: value }));
+        setChanges(prev => ({ ...prev, [key]: value }));
         setIsDirty(true);
     }, []);
 
     const handleSave = useCallback(() => {
         onSave(localSettings);
+        setChanges({});
         setIsDirty(false);
     }, [localSettings, onSave]);
 

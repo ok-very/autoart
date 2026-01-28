@@ -95,9 +95,7 @@ export function ComposerView({
 }: ComposerViewProps) {
     // ==================== STATE ====================
 
-    const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
-    const subprocessInitialized = useRef(false);
-    const recipeInitialized = useRef(false);
+    const [userRecipeId, setUserRecipeId] = useState<string | null>(null);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [fieldValues, setFieldValues] = useState<FieldValue[]>([]);
@@ -109,7 +107,7 @@ export function ComposerView({
 
     // Context selection
     const { activeProjectId, setActiveProject } = useUIStore();
-    const [selectedSubprocessId, setSelectedSubprocessId] = useState<string | null>(
+    const [userSubprocessId, setUserSubprocessId] = useState<string | null>(
         initialContextId || null
     );
 
@@ -181,26 +179,24 @@ export function ComposerView({
     // These are action-based containers, not legacy hierarchy nodes
     const subprocesses = useMemo(() => containerSubprocesses || [], [containerSubprocesses]);
 
-    // Auto-select first subprocess (one-time initialization)
-    useEffect(() => {
-        if (subprocesses.length > 0 && !selectedSubprocessId && !subprocessInitialized.current) {
-            setSelectedSubprocessId(subprocesses[0].id);
-            subprocessInitialized.current = true;
-        }
-    }, [subprocesses, selectedSubprocessId]);
+    // Derive default subprocess ID (first subprocess)
+    const defaultSubprocessId = useMemo(() => subprocesses[0]?.id ?? null, [subprocesses]);
 
-    // Auto-select default recipe (one-time initialization)
-    useEffect(() => {
-        if (defaultRecipe && actionRecipes.length > 0 && !selectedRecipeId && !recipeInitialized.current) {
+    // Derive default recipe ID (from defaultRecipe prop or first recipe)
+    const defaultRecipeId = useMemo(() => {
+        if (!actionRecipes.length) return null;
+        if (defaultRecipe) {
             const match = actionRecipes.find(
                 (r) => r.id === defaultRecipe || r.name === defaultRecipe
             );
-            if (match) {
-                setSelectedRecipeId(match.id);
-                recipeInitialized.current = true;
-            }
+            if (match) return match.id;
         }
-    }, [defaultRecipe, actionRecipes, selectedRecipeId]);
+        return actionRecipes[0].id;
+    }, [actionRecipes, defaultRecipe]);
+
+    // Effective selections (user choice or default)
+    const selectedSubprocessId = userSubprocessId ?? defaultSubprocessId;
+    const selectedRecipeId = userRecipeId ?? defaultRecipeId;
 
     // Get selected subprocess
     const selectedSubprocess = useMemo(() => {
@@ -372,7 +368,7 @@ export function ComposerView({
                                     value={currentProjectId || ''}
                                     onChange={(e) => {
                                         setActiveProject(e.target.value);
-                                        setSelectedSubprocessId(null);
+                                        setUserSubprocessId(null);
                                     }}
                                     className="composer-select"
                                 >
@@ -388,7 +384,7 @@ export function ComposerView({
                                 <label className="composer-label">Subprocess (Context)</label>
                                 <select
                                     value={selectedSubprocessId || ''}
-                                    onChange={(e) => setSelectedSubprocessId(e.target.value)}
+                                    onChange={(e) => setUserSubprocessId(e.target.value)}
                                     disabled={!currentProjectId}
                                     className="composer-select"
                                 >
@@ -426,7 +422,7 @@ export function ComposerView({
                                     <button
                                         key={recipe.id}
                                         type="button"
-                                        onClick={() => setSelectedRecipeId(recipe.id)}
+                                        onClick={() => setUserRecipeId(recipe.id)}
                                         className={clsx('composer-recipe-card', { selected: isSelected })}
                                     >
                                         <div
