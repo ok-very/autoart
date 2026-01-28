@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import { useCurrentUser } from './api/hooks';
@@ -15,14 +15,23 @@ function App() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
+  // Track previous loading state to prevent cascading setState
+  const prevLoadingRef = useRef(isLoading || isFetching);
+
   // Show timeout message after 5 seconds of loading
   useEffect(() => {
-    if (isLoading || isFetching) {
+    const isCurrentlyLoading = isLoading || isFetching;
+    const wasLoading = prevLoadingRef.current;
+
+    if (isCurrentlyLoading) {
       const timer = setTimeout(() => setLoadingTimeout(true), 5000);
       return () => clearTimeout(timer);
+    } else if (wasLoading && !isCurrentlyLoading) {
+      // Only reset when transitioning from loading to not loading
+      setLoadingTimeout(false);
     }
-    // Reset when loading stops
-    setLoadingTimeout(false);
+
+    prevLoadingRef.current = isCurrentlyLoading;
     return undefined;
   }, [isLoading, isFetching]);
 
