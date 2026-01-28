@@ -1,3 +1,4 @@
+import { sql } from 'kysely';
 import { db } from '../../db/client.js';
 import type {
   Poll,
@@ -239,6 +240,51 @@ export async function closePoll(id: string): Promise<Poll> {
   }
 
   return poll;
+}
+
+export interface EngagementSummary {
+  total_opened: number;
+  total_interacted: number;
+  total_deferred: number;
+  unique_actors: number;
+}
+
+export async function getEngagementSummary(
+  contextType: string,
+  contextId: string
+): Promise<EngagementSummary> {
+  const rows = await db
+    .selectFrom('engagements')
+    .select([
+      'kind',
+      db.fn.count<number>('id').as('count'),
+    ])
+    .where('context_type', '=', contextType)
+    .where('context_id', '=', contextId)
+    .groupBy('kind')
+    .execute();
+
+  const uniqueActorsResult = await db
+    .selectFrom('engagements')
+    .select(
+      sql<number>`count(DISTINCT actor_name)`.as('count')
+    )
+    .where('context_type', '=', contextType)
+    .where('context_id', '=', contextId)
+    .where('actor_name', 'is not', null)
+    .executeTakeFirst();
+
+  const counts: Record<string, number> = {};
+  for (const row of rows) {
+    counts[row.kind] = Number(row.count);
+  }
+
+  return {
+    total_opened: counts['OPENED'] ?? 0,
+    total_interacted: counts['INTERACTED'] ?? 0,
+    total_deferred: counts['DEFERRED'] ?? 0,
+    unique_actors: Number(uniqueActorsResult?.count ?? 0),
+  };
 }
 
 export async function logEngagement(

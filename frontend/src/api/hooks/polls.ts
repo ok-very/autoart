@@ -102,6 +102,30 @@ export function useClosePoll() {
   });
 }
 
+interface EngagementSummary {
+  total_opened: number;
+  total_interacted: number;
+  total_deferred: number;
+  unique_actors: number;
+}
+
+/**
+ * Fetch engagement summary for a poll (owner-only)
+ */
+export function usePollEngagements(pollId: string | null) {
+  return useQuery({
+    queryKey: pollsQueryKeys.engagements(pollId || ''),
+    queryFn: async () => {
+      const data = await api.get<{ summary: EngagementSummary }>(
+        `/polls/${pollId}/engagements`
+      );
+      return data.summary;
+    },
+    enabled: !!pollId,
+    staleTime: 30000,
+  });
+}
+
 /**
  * Fetch aggregated results for a poll by uniqueId (public endpoint)
  */
