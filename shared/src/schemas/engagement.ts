@@ -8,7 +8,7 @@
  * 3 Engagement Kinds:
  *   1. OPENED - User loaded the page/form
  *   2. INTERACTED - User made input (typed, clicked, selected)
- *   3. DEFFER - User left without completing (implicit "maybe")
+ *   3. DEFERRED - User left without completing (implicit "maybe")
  */
 
 import { z } from 'zod';
@@ -20,7 +20,7 @@ import { z } from 'zod';
 export const EngagementKind = {
   OPENED: 'OPENED',
   INTERACTED: 'INTERACTED',
-  DEFFER: 'DEFFER',
+  DEFERRED: 'DEFERRED',
 } as const;
 
 export type EngagementKind = (typeof EngagementKind)[keyof typeof EngagementKind];
@@ -28,7 +28,7 @@ export type EngagementKind = (typeof EngagementKind)[keyof typeof EngagementKind
 export const EngagementKindSchema = z.enum([
   EngagementKind.OPENED,
   EngagementKind.INTERACTED,
-  EngagementKind.DEFFER,
+  EngagementKind.DEFERRED,
 ]);
 
 // ============================================================================
@@ -78,7 +78,7 @@ export const InteractedEngagementSchema = BaseEngagementPayloadSchema.extend({
 export type InteractedEngagement = z.infer<typeof InteractedEngagementSchema>;
 
 export const DefferEngagementSchema = BaseEngagementPayloadSchema.extend({
-  kind: z.literal(EngagementKind.DEFFER),
+  kind: z.literal(EngagementKind.DEFERRED),
   progress: z.record(z.string(), z.unknown()).optional(),
 });
 export type DefferEngagement = z.infer<typeof DefferEngagementSchema>;
@@ -119,7 +119,7 @@ export function renderEngagement(payload: BaseEngagementPayload): string {
       return `${contextType} opened${actor}`;
     case EngagementKind.INTERACTED:
       return `${contextType} interaction${actor}`;
-    case EngagementKind.DEFFER:
+    case EngagementKind.DEFERRED:
       return `${contextType} deferred${actor}`;
     default:
       return `Engagement: ${kind}`;

@@ -648,8 +648,8 @@ export type PollResponseUpdate = Updateable<PollResponsesTable>;
 export interface EngagementsTable {
   id: Generated<string>;
   kind: string;
-  context_type: string;
-  context_id: string;
+  context_type: string; // 'poll', 'form', 'page' - different from ContextType enum
+  context_id: string; // poll unique_id (slug), form id, or page path
   actor_name: string | null;
   payload: unknown | null; // JSONB
   occurred_at: Date | null;
