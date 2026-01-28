@@ -296,6 +296,16 @@ export {
   type InterpretationAvailability,
 } from './interpretation';
 
+// Polls (Availability polling)
+export {
+  usePolls,
+  usePoll,
+  useCreatePoll,
+  useClosePoll,
+  usePollResults,
+  pollsQueryKeys,
+} from './polls';
+
 // Mappings (Cross-entity relationships)
 export {
   useActionMappings,
