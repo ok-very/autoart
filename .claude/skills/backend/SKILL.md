@@ -1,3 +1,9 @@
+---
+name: backend
+description: Backend and database conventions including Action/Event architecture, soft-intrinsic type derivation, DB naming, API conventions, migration workflow, and schema validation.
+user-invocable: false
+---
+
 # Backend & Database
 
 ## Project Structure
