@@ -22,6 +22,38 @@
   --ws-accent-fg: #ffffff;
 
   /* -------------------------------------------------------------------------
+     Text Hierarchy (aliases to --ws-fg by default, themes override)
+     @see docs/DESIGN.md
+     ------------------------------------------------------------------------- */
+  --ws-text-primary: var(--ws-fg);
+  --ws-text-secondary: #5a5a57;
+  --ws-text-disabled: #8c8c88;
+
+  /* -------------------------------------------------------------------------
+     System Feedback Colors (global)
+     @see docs/DESIGN.md
+     ------------------------------------------------------------------------- */
+  --ws-color-success: #6f7f5c; /* Moss Green */
+  --ws-color-warning: #b89b5e; /* Desaturated Amber */
+  --ws-color-error: #8c4a4a; /* Iron Red */
+  --ws-color-info: #3f5c6e; /* Oxide Blue */
+
+  /* Secondary Accent */
+  --ws-accent-secondary: #8a5a3c; /* Burnt Umber */
+
+  /* -------------------------------------------------------------------------
+     Console/Mono Text
+     @see docs/DESIGN.md
+     ------------------------------------------------------------------------- */
+  --ws-mono-fg: #3a3a38;
+  --ws-mono-bg: rgba(63, 92, 110, 0.035);
+
+  /* -------------------------------------------------------------------------
+     Row States
+     ------------------------------------------------------------------------- */
+  --ws-row-expanded-bg: rgba(63, 92, 110, 0.04);
+
+  /* -------------------------------------------------------------------------
      Group / Panel Frame
      ------------------------------------------------------------------------- */
   --ws-group-bg: #ffffff;

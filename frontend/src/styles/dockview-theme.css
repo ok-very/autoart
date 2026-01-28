@@ -3,106 +3,96 @@
  * Dockview Theme
  *
  * Custom styling for Dockview panels to match AutoArt design system.
- * Uses slate colors and blue accents.
- * 
- * Note: Base dockview.css is imported in main.tsx to avoid @import ordering issues.
+ * Uses theme variables from workspace/themes/variables.css
+ *
+ * Design principles:
+ * - Flat tabs with bottom accent (no gradients)
+ * - Clean, minimal borders
+ * - Color through CSS variables, not hardcoded values
+ *
+ * @see docs/DESIGN.md
  */
 
 /* Override Dockview theme variables */
 .dockview-theme-light {
-  --dv-background-color: #f8fafc;
-  /* slate-50 */
-  /* slate-50 */
-  --dv-tabs-and-actions-container-background-color: #f8fafc;
-  /* slate-50 */
-  /* Add food pattern to tab headers */
-  /* Using simplified SVG shapes for food items as background image data uri would be too large to inline here without external assets */
-  /* Instead, we'll use a simple geometric pattern for now, as icons require SVG encoding */
-  --dv-tabs-and-actions-container-background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-  --dv-tabs-and-actions-container-background-size: 20px 20px;
+  --dv-background-color: var(--ws-bg);
+  --dv-tabs-and-actions-container-background-color: var(--ws-tabstrip-bg);
+  --dv-activegroup-visiblepanel-tab-background-color: var(--ws-tab-bg-active);
+  --dv-activegroup-visiblepanel-tab-color: var(--ws-tab-fg-active);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(--ws-tab-bg);
+  --dv-activegroup-hiddenpanel-tab-color: var(--ws-tab-fg);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--ws-tab-bg);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--ws-tab-fg);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--ws-tab-bg);
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--ws-muted-fg);
+  --dv-tab-divider-color: var(--ws-tabstrip-border);
+  --dv-separator-border: var(--ws-panel-border);
+  --dv-drag-over-background-color: var(--ws-drop-target-bg);
+  --dv-drag-over-border-color: var(--ws-accent);
 
-  --dv-activegroup-hiddenpanel-tab-background-color: #f1f5f9;
-  /* slate-100 */
-  --dv-inactivegroup-visiblepanel-tab-background-color: #f1f5f9;
-  --dv-inactivegroup-hiddenpanel-tab-background-color: #e2e8f0;
-  /* slate-200 */
-  --dv-tab-divider-color: #e2e8f0;
-  /* slate-200 */
-  --dv-separator-border: #334155;
-  /* slate-700 - darker divider */
-  --dv-drag-over-background-color: rgba(59, 130, 246, 0.1);
-  /* blue-500/10 */
-  --dv-drag-over-border-color: #3b82f6;
-  /* blue-500 */
-
-  /* Tab text colors - these CSS variables control the actual text color */
-  --dv-activegroup-visiblepanel-tab-color: #0f172a;
-  /* slate-900 - active tab text */
-  --dv-activegroup-hiddenpanel-tab-color: #475569;
-  /* slate-600 - inactive tab text */
-  --dv-inactivegroup-visiblepanel-tab-color: #475569;
-  /* slate-600 */
-  --dv-inactivegroup-hiddenpanel-tab-color: #64748b;
-  /* slate-500 */
-
-  /* Explicit text colors for light theme */
-  color: #0f172a;
-  /* slate-900 */
+  color: var(--ws-fg);
 }
 
-/* Tab styling */
+/* Tab strip container - !important needed to override dockview defaults */
+.dockview-theme-light .dv-tabs-and-actions-container {
+  border-bottom: 1px solid var(--ws-panel-border);
+  z-index: 10;
+  position: relative;
+  background-image: none !important;
+  background-size: auto;
+}
+
+/* Tab styling - flat with bottom accent */
+/* !important needed to override dockview gradient defaults */
 .dockview-theme-light .dv-tab {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  color: #475569;
-  /* slate-600 */
-  padding: 6px 12px;
-  /* Dark grey border for tabs */
-  border: 1px solid #475569;
-  border-bottom: none;
-  transition: all 0.15s ease;
-  border-radius: 6px 6px 0 0;
-  /* Rounded top corners */
-  margin-right: 2px;
-  background: linear-gradient(to bottom, #ffffff, #f1f5f9) !important;
-  /* Anti-aliasing for smooth rounded corners */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  transform: translateZ(0);
-  backface-visibility: hidden;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 0;
+  background: transparent !important;
+  color: var(--ws-tab-fg);
+  transition: color 0.15s ease, background 0.15s ease;
+  margin-right: 0;
 }
 
-/* Ensure child elements are transparent to show tab gradient */
+/* Ensure child elements don't interfere */
 .dockview-theme-light .dv-tab * {
   background-color: transparent !important;
 }
 
 .dockview-theme-light .dv-tab:hover {
-  color: #1e293b;
-  /* slate-800 */
-  background: linear-gradient(to bottom, #f8fafc, #e2e8f0) !important;
+  background: var(--ws-tab-bg-hover) !important;
+  color: var(--ws-tab-fg-hover);
 }
 
-/* Fix for black background on click/focus */
+/* Fix for states on click/focus */
 .dockview-theme-light .dv-tab:focus,
 .dockview-theme-light .dv-tab:active,
 .dockview-theme-light .dv-tab.focused {
-  background: linear-gradient(to bottom, #f8fafc, #e2e8f0) !important;
-  color: #0f172a;
+  background: var(--ws-tab-bg-hover) !important;
+  color: var(--ws-tab-fg-active);
+  outline: none;
 }
 
+/* Active tab - bottom accent indicator */
 .dockview-theme-light .dv-tab.active {
-  color: #0f172a;
-  /* slate-900 */
-  background: #ffffff;
-  /* Connect active tab to panel by hiding bottom border */
-  border-bottom: 1px solid #ffffff;
-  /* We actually need to cover the panel border, usually done by z-index or margin -1px */
-  margin-bottom: -1px;
-  z-index: 10;
-  font-weight: 600;
-  box-shadow: none;
-  /* Borders handle definition now */
+  color: var(--ws-tab-fg-active);
+  background: var(--ws-tab-bg-active) !important;
+  box-shadow: inset 0 -2px 0 var(--ws-accent);
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+}
+
+/* Active tab label */
+.dockview-theme-light .dv-tab.active .dv-tab-label {
+  background-color: transparent;
+  color: var(--ws-tab-fg-active);
+}
+
+.dockview-theme-light .dv-tab:not(.active) .dv-tab-label {
+  padding: 0;
 }
 
 /* Hide close button for permanent Projects tab */
@@ -112,8 +102,7 @@
 
 /* Tab close button */
 .dockview-theme-light .dv-default-tab-action {
-  color: #64748b;
-  /* slate-500 */
+  color: var(--ws-muted-fg);
   opacity: 0;
   transition: opacity 0.15s ease;
 }
@@ -123,94 +112,43 @@
 }
 
 .dockview-theme-light .dv-default-tab-action:hover {
-  color: #0f172a;
-  /* slate-900 */
-  background: rgba(0, 0, 0, 0.05);
+  color: var(--ws-fg);
+  background: var(--ws-tab-close-hover-bg);
   border-radius: 4px;
 }
 
 /* Add tab button */
 .dockview-theme-light .dv-tabs-container .dv-void-container button {
-  color: #94a3b8;
-  /* slate-400 */
+  color: var(--ws-muted-fg);
 }
 
 .dockview-theme-light .dv-tabs-container .dv-void-container button:hover {
-  color: #475569;
-  /* slate-600 */
-  background: #f1f5f9;
-  /* slate-100 */
+  color: var(--ws-fg);
+  background: var(--ws-tab-bg-hover);
 }
 
-/* Panel content area - add border */
+/* Panel content area */
 .dockview-theme-light .dv-groupview-panel {
-  background: #ffffff;
-  border: 1px solid #475569;
-  /* Dark grey border matching tabs */
+  background: var(--ws-panel-bg);
+  border: 1px solid var(--ws-panel-border);
   border-top: none;
-  /* Top border handled by tab container bottom border */
-}
-
-/* Ensure the active tab connects by covering the panel border */
-/* This might require position relative on header */
-.dockview-theme-light .dv-tabs-and-actions-container {
-  border-bottom: 1px solid #475569;
-  /* The line under tabs */
-  /* margin-bottom not needed if panel has no top border */
-  z-index: 10;
-  position: relative;
-}
-
-.dockview-theme-light .dv-tab.active {
-  color: #0f172a;
-  /* slate-900 */
-  background: linear-gradient(to bottom, #ffffff, #f8fafc) !important;
-
-  /* Thicken border when selected as requested */
-  border: 2px solid #0f172a;
-  border-bottom: 2px solid #ffffff !important;
-  /* Connect to panel */
-
-  /* Make it rounder */
-  border-radius: 8px 8px 0 0;
-
-  /* Adjust overlap to account for thicker border */
-  margin-bottom: -2px;
-  z-index: 20;
-  position: relative;
-  font-weight: 700;
-  box-shadow: none;
-}
-
-/* Active tab label - transparent to show gradient */
-.dockview-theme-light .dv-tab.active .dv-tab-label {
-  background-color: transparent;
-  color: #0f172a;
-  /* slate-900 */
-  padding: 2px 10px;
-  transition: all 0.2s ease;
-}
-
-.dockview-theme-light .dv-tab:not(.active) .dv-tab-label {
-  padding: 2px 0;
-  /* Maintain height alignment */
 }
 
 /* Scrollbars */
 .dockview-theme-light ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: var(--ws-scrollbar-width);
+  height: var(--ws-scrollbar-width);
 }
 
 .dockview-theme-light ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--ws-scrollbar-track);
 }
 
 .dockview-theme-light ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--ws-scrollbar-thumb);
   border-radius: 3px;
 }
 
 .dockview-theme-light ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--ws-scrollbar-thumb-hover);
 }
