@@ -30,18 +30,26 @@ export function ProjectSidebar() {
 
     const project = activeProjectId ? getNode(activeProjectId) : null;
     const processes = useMemo(() => project ? getChildren(project.id) : [], [project, getChildren]);
-    const prevProcessesRef = useRef(processes);
 
-    // Auto-select first process when processes change or selection becomes invalid
-    useEffect(() => {
-        const processesChanged = processes !== prevProcessesRef.current;
-        if (processesChanged) {
-            prevProcessesRef.current = processes;
-            if (processes.length > 0 && (!selectedProcessId || !processes.find(p => p.id === selectedProcessId))) {
-                setSelectedProcessId(processes[0].id);
-            }
+    // Derive default process ID (first process or null)
+    const defaultProcessId = useMemo(() => processes[0]?.id ?? null, [processes]);
+
+    // Validate and use selected process or fall back to default
+    const effectiveProcessId = useMemo(() => {
+        if (selectedProcessId && processes.find(p => p.id === selectedProcessId)) {
+            return selectedProcessId;
         }
-    }, [processes, selectedProcessId]);
+        return defaultProcessId;
+    }, [selectedProcessId, processes, defaultProcessId]);
+
+    // Update selected process when effective ID changes
+    const prevEffectiveIdRef = useRef(effectiveProcessId);
+    useEffect(() => {
+        if (effectiveProcessId !== prevEffectiveIdRef.current) {
+            prevEffectiveIdRef.current = effectiveProcessId;
+            setSelectedProcessId(effectiveProcessId);
+        }
+    }, [effectiveProcessId]);
 
     const selectedProcess = selectedProcessId ? getNode(selectedProcessId) : null;
     const stages = selectedProcess ? getChildren(selectedProcess.id) : [];

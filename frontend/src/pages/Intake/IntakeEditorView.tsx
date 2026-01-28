@@ -51,15 +51,13 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     // Editor tabs
     const [activeTab, setActiveTab] = useState<'build' | 'logic' | 'settings'>('build');
 
-    // Track form ID to detect when we load a different form
-    const prevFormIdRef = useRef<string | null>(null);
-
     // Debounce timer refs
     const saveBlocksTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const saveTitleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Track last saved blocks to avoid redundant saves
     const lastSavedBlocksRef = useRef<string>('');
+    const prevFormIdRef = useRef<string | null>(null);
 
     // Initialize state from loaded form (when form first loads or changes)
     useEffect(() => {

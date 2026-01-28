@@ -9,7 +9,7 @@
  * - api: ApiPreviewView (placeholder)
  */
 
-import { useCallback, useState, useMemo, useEffect, useRef } from 'react';
+import { useCallback, useState, useMemo, useEffect } from 'react';
 
 import type { ImportSession, ImportPlan } from '../api/hooks/imports';
 import { useUIStore } from '../stores/uiStore';
@@ -39,13 +39,20 @@ export function ImportPage() {
     } = useUIStore();
     const [sidebarWidth, setSidebarWidth] = useState(280);
 
-    // Source type controls which center view is shown
-    const [sourceType, setSourceType] = useState<ImportSourceType>('file');
-    const prevSessionIdRef = useRef<string | null>(null);
-
     // Use uiStore for session/plan (aliased for compatibility with child components)
     const session = importSession;
     const plan = importPlan;
+
+    // Derive source type from session connector type
+    const sourceType = useMemo<ImportSourceType>(() => {
+        if (!session) return 'file';
+        // Connector sessions use parser_name like 'connector:monday'
+        if (session.parser_name?.startsWith('connector:monday')) {
+            return 'monday';
+        }
+        // File-based session
+        return 'file';
+    }, [session]);
 
     // Check if there are unresolved classifications
     const hasUnresolvedClassifications = useMemo(() => {
@@ -96,20 +103,6 @@ export function ImportPage() {
         }
     }, [hasUnresolvedClassifications, session, plan, openOverlay, activeOverlay, handlePlanUpdated]);
 
-    // Auto-switch source type based on session connector type (only when session changes)
-    useEffect(() => {
-        if (session && session.id !== prevSessionIdRef.current) {
-            prevSessionIdRef.current = session.id;
-            // Connector sessions use parser_name like 'connector:monday'
-            if (session.parser_name?.startsWith('connector:monday')) {
-                setSourceType('monday');
-            } else if (session.parser_name && !session.parser_name.startsWith('connector:')) {
-                // File-based session
-                setSourceType('file');
-            }
-        }
-    }, [session]);
-
     // Render center view based on source type
     const renderCenterView = () => {
         switch (sourceType) {
@@ -144,7 +137,7 @@ export function ImportPage() {
                 <ImportSidebar
                     width={sidebarWidth}
                     sourceType={sourceType}
-                    onSourceChange={setSourceType}
+                    onSourceChange={() => {/* Source type now derived from session */}}
                     session={session}
                     plan={plan}
                     onSessionCreated={handleSessionCreated}
