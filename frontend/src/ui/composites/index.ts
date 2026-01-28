@@ -80,3 +80,6 @@ export { IngestionView } from './IngestionView';
 // Fields View Composites
 export { FieldsMillerColumnsView, type FieldsMillerColumnsViewProps } from './FieldsMillerColumnsView';
 
+// Polls View
+export { PollsView } from './PollsView';
+
