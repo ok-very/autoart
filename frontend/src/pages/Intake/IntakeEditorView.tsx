@@ -93,11 +93,12 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     const setFormTitle = useCallback((value: string) => setTitleChanges(value), []);
     const setBlocks = useCallback((value: FormBlock[] | ((prev: FormBlock[]) => FormBlock[])) => {
         if (typeof value === 'function') {
-            setBlocksChanges(prev => value(prev ?? []));
+            // Use blocks (derived from form) as fallback when no user changes yet
+            setBlocksChanges(prev => value(prev ?? blocks));
         } else {
             setBlocksChanges(value);
         }
-    }, []);
+    }, [blocks]);
 
     // Auto-save blocks with debounce
     useEffect(() => {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchPoll, submitResponse, updateResponse } from '../api';
@@ -43,13 +43,14 @@ export function PollPage() {
   }, [userSelectedSlots, existingResponse]);
 
   // Wrapper to track user selections
-  const setSelectedSlots = (value: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+  const setSelectedSlots = useCallback((value: Set<string> | ((prev: Set<string>) => Set<string>)) => {
     if (typeof value === 'function') {
-      setUserSelectedSlots(prev => value(prev ?? new Set()));
+      // Use selectedSlots (derived from existingResponse) as fallback
+      setUserSelectedSlots(prev => value(prev ?? selectedSlots));
     } else {
       setUserSelectedSlots(value);
     }
-  };
+  }, [selectedSlots]);
 
   const submitMutation = useMutation({
     mutationFn: () => {
