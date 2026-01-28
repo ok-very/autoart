@@ -1,3 +1,4 @@
+import { sql } from 'kysely';
 import { db } from '../../db/client.js';
 import type {
   Poll,
@@ -265,9 +266,9 @@ export async function getEngagementSummary(
 
   const uniqueActorsResult = await db
     .selectFrom('engagements')
-    .select(db.fn.count<number>(
-      db.raw('DISTINCT actor_name') as any
-    ).as('count'))
+    .select(
+      sql<number>`count(DISTINCT actor_name)`.as('count')
+    )
     .where('context_type', '=', contextType)
     .where('context_id', '=', contextId)
     .where('actor_name', 'is not', null)
