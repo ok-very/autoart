@@ -640,6 +640,26 @@ export type PollResponse = Selectable<PollResponsesTable>;
 export type NewPollResponse = Insertable<PollResponsesTable>;
 export type PollResponseUpdate = Updateable<PollResponsesTable>;
 
+// ============================================
+// ENGAGEMENTS TABLE (Migration 046)
+// General-purpose engagement tracking
+// ============================================
+
+export interface EngagementsTable {
+  id: Generated<string>;
+  kind: string;
+  context_type: string;
+  context_id: string;
+  actor_name: string | null;
+  payload: unknown | null; // JSONB
+  occurred_at: Date | null;
+  created_at: Generated<Date>;
+}
+
+export type Engagement = Selectable<EngagementsTable>;
+export type NewEngagement = Insertable<EngagementsTable>;
+export type EngagementUpdate = Updateable<EngagementsTable>;
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -675,6 +695,7 @@ export interface Database {
   intake_submissions: IntakeSubmissionsTable;
   polls: PollsTable;
   poll_responses: PollResponsesTable;
+  engagements: EngagementsTable;
 }
 
 

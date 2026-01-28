@@ -414,6 +414,29 @@ export {
     type ExportResult,
 } from './exports.js';
 
+// ==================== ENGAGEMENT ====================
+export {
+    EngagementKind,
+    EngagementKindSchema,
+    EngagementContextType,
+    EngagementContextTypeSchema,
+    BaseEngagementPayloadSchema,
+    OpenedEngagementSchema,
+    InteractedEngagementSchema,
+    DefferEngagementSchema,
+    EngagementPayloadSchema,
+    LogEngagementInputSchema,
+    renderEngagement,
+    type EngagementKind as EngagementKindType,
+    type EngagementContextType as EngagementContextTypeValue,
+    type BaseEngagementPayload,
+    type OpenedEngagement,
+    type InteractedEngagement,
+    type DefferEngagement,
+    type EngagementPayload,
+    type LogEngagementInput,
+} from './engagement.js';
+
 // ==================== POLLS ====================
 export {
     PollStatusSchema,
