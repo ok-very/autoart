@@ -12,7 +12,7 @@ import { Badge } from '@autoart/ui';
 import { Text } from '@autoart/ui';
 import { Menu } from '@autoart/ui';
 
-export function ProjectSidebarPanel() {
+export function ProjectSidebar() {
     const { setNodes, getChildren, getNode } = useHierarchyStore();
     const { activeProjectId, selection, setSelection, openOverlay, setActiveProject } = useUIStore();
     const { data: nodes } = useProjectTree(activeProjectId);

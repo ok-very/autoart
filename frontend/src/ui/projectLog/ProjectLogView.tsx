@@ -1,5 +1,5 @@
 /**
- * ProjectLogSurface Component
+ * ProjectLogView Component
  *
  * The main Project Log view - displays a chronological event stream for a context.
  * This is the default view for projects.
@@ -52,7 +52,7 @@ function collectSubprocesses(
   return subprocesses;
 }
 
-export function ProjectLogSurface() {
+export function ProjectLogView() {
   const { activeProjectId, includeSystemEventsInLog } = useUIStore();
   const storeNodes = useHierarchyStore((state) => state.nodes);
   const setNodes = useHierarchyStore((state) => state.setNodes);

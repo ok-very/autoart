@@ -5,7 +5,7 @@
  * event stream that explains "what happened" in the project context.
  */
 
-export { ProjectLogSurface } from './ProjectLogSurface';
+export { ProjectLogView } from './ProjectLogView';
 export { ProjectLogEventRow } from './ProjectLogEventRow';
 export { ProjectLogFilterBar } from './ProjectLogFilterBar';
 export {

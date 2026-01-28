@@ -2,18 +2,18 @@
  * ui/sidebars - Reusable sidebar components
  *
  * CONVENTION:
- * - Page-specific sidebars: co-locate with their page in surfaces/{pageName}/
- * - Reusable sidebars: export from this index for discoverability
+ * - Domain-specific sidebars: co-locate with their workflow/feature
+ * - Reusable sidebars: consolidate here for cross-domain use
  *
- * Page-specific (NOT exported here):
- * - surfaces/import/ImportSidebar.tsx
- * - surfaces/import/SourceIconSidebar.tsx
- * - surfaces/export/ExportSidebar.tsx
- * - surfaces/export/ExportWorkbenchSidebar.tsx
+ * Domain-specific sidebars (NOT exported here):
+ * - workflows/import/panels/ImportSidebar.tsx
+ * - workflows/export/panels/ExportSidebar.tsx
+ * - workflows/export/panels/ExportWorkbenchSidebar.tsx
  */
 
 // Reusable sidebar components
-export { HierarchySidebar } from '../hierarchy/HierarchySidebar';
-export { RecordTypeSidebar } from '../records/RecordTypeSidebar';
-export { RegistrySidebar } from '../records/RegistrySidebar';
-export { DefinitionListSidebar } from '../registry/DefinitionListSidebar';
+export { HierarchySidebar } from './HierarchySidebar';
+export { ProjectSidebar } from './ProjectSidebar';
+export { RecordTypeSidebar } from './RecordTypeSidebar';
+export { RegistrySidebar } from './RegistrySidebar';
+export { DefinitionListSidebar } from './DefinitionListSidebar';

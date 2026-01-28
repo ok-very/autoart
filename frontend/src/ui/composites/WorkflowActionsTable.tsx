@@ -1,5 +1,5 @@
 /**
- * WorkflowSurfaceTable - Table for workflow surface nodes (recursive prerequisites)
+ * WorkflowActionsTable - Table for workflow surface nodes (recursive prerequisites)
  *
  * This component renders WorkflowSurfaceNode[] from the materialized projection.
  * It supports recursive nesting where:
@@ -35,7 +35,7 @@ import { UniversalTableCore, type TableColumn as CoreTableColumn, type TableRow,
 
 // ==================== TYPES ====================
 
-export interface WorkflowSurfaceTableProps {
+export interface WorkflowActionsTableProps {
   /** Workflow surface nodes from projection */
   nodes: WorkflowSurfaceNode[];
   /** Currently selected action ID */
@@ -100,7 +100,7 @@ function flattenTree(
 
 // ==================== COMPONENT ====================
 
-export function WorkflowSurfaceTable({
+export function WorkflowActionsTable({
   nodes,
   selectedActionId,
   onRowSelect,
@@ -110,7 +110,7 @@ export function WorkflowSurfaceTable({
   statusConfig = DEFAULT_STATUS_CONFIG,
   emptyMessage = 'No actions found',
   className,
-}: WorkflowSurfaceTableProps) {
+}: WorkflowActionsTableProps) {
   // Track which nodes are expanded (show children)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 

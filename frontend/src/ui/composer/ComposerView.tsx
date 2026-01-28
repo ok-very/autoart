@@ -1,5 +1,5 @@
 /**
- * ComposerSurface Component
+ * ComposerView Component
  *
  * The unified, canonical composer UI for declaring Actions.
  * Used by both ComposerPage (page mode) and drawer contexts (drawer mode).
@@ -55,7 +55,7 @@ import { useUIStore } from '../../stores/uiStore';
 
 // ==================== TYPES ====================
 
-export interface ComposerSurfaceProps {
+export interface ComposerViewProps {
     /** Display mode: page (full-page) or drawer (slide-out panel) */
     mode: 'page' | 'drawer' | 'inline';
     /** Pre-selected context ID */
@@ -84,7 +84,7 @@ interface FieldValue {
 
 // ==================== MAIN COMPONENT ====================
 
-export function ComposerSurface({
+export function ComposerView({
     mode = 'page',
     contextId: initialContextId,
     contextType = 'subprocess',
@@ -92,7 +92,7 @@ export function ComposerSurface({
     onSuccess,
     onClose,
     defaultRecipe,
-}: ComposerSurfaceProps) {
+}: ComposerViewProps) {
     // ==================== STATE ====================
 
     const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
@@ -316,7 +316,7 @@ export function ComposerSurface({
                 if (title.trim() && selectedSubprocessId && selectedRecipe && !isLoading) {
                     e.preventDefault();
                     // Submit form programmatically
-                    const form = document.querySelector('.composer-surface form') as HTMLFormElement;
+                    const form = document.querySelector('.composer-view form') as HTMLFormElement;
                     form?.requestSubmit();
                 }
             }
@@ -327,7 +327,7 @@ export function ComposerSurface({
 
     // ==================== RENDER ====================
 
-    const containerClass = clsx('composer-surface', {
+    const containerClass = clsx('composer-view', {
         'h-full': mode === 'page' || mode === 'drawer',
         'rounded-lg border border-slate-200': mode === 'inline',
     });
@@ -798,7 +798,7 @@ export interface InlineComposerProps {
 
 /**
  * Simplified inline composer for quick task creation.
- * Uses ComposerSurface internally with inline mode.
+ * Uses ComposerView internally with inline mode.
  */
 export function InlineComposer({ contextId, onSuccess, placeholder }: InlineComposerProps) {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -817,7 +817,7 @@ export function InlineComposer({ contextId, onSuccess, placeholder }: InlineComp
 
     return (
         <div className="border border-slate-200 rounded-lg overflow-hidden">
-            <ComposerSurface
+            <ComposerView
                 mode="inline"
                 contextId={contextId}
                 onSuccess={(actionId) => {
@@ -831,4 +831,4 @@ export function InlineComposer({ contextId, onSuccess, placeholder }: InlineComp
     );
 }
 
-export default ComposerSurface;
+export default ComposerView;

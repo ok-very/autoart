@@ -17,7 +17,7 @@ import { ActionListView } from '../layout/ActionListView';
 import { ActionCardsView } from '../layout/ActionCardsView';
 import { MillerColumnsView } from '../layout/MillerColumnsView';
 import { ProjectWorkflowView } from '../layout/ProjectWorkflowView';
-import { ProjectLogSurface } from '../projectLog';
+import { ProjectLogView } from '../projectLog';
 
 // View mode options for the toggle
 const VIEW_MODE_DATA = Object.entries(PROJECT_VIEW_MODE_LABELS).map(([value, label]) => ({
@@ -37,7 +37,7 @@ export function ProjectContentAdapter() {
             case 'projectWorkflow':
                 return <ProjectWorkflowView />;
             case 'projectLog':
-                return <ProjectLogSurface />;
+                return <ProjectLogView />;
             case 'list':
                 return <ActionListView />;
             case 'cards':
