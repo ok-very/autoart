@@ -1,5 +1,5 @@
 import { Settings, Plus, ChevronDown, FolderOpen, Check, Copy, Library, Hammer } from 'lucide-react';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
 import { TreeNode } from './TreeNode';
@@ -41,16 +41,8 @@ export function HierarchySidebar() {
     return defaultProcessId;
   }, [selectedProcessId, processes, defaultProcessId]);
 
-  // Update selected process when effective ID changes
-  const prevEffectiveIdRef = useRef(effectiveProcessId);
-  useEffect(() => {
-    if (effectiveProcessId !== prevEffectiveIdRef.current) {
-      prevEffectiveIdRef.current = effectiveProcessId;
-      setSelectedProcessId(effectiveProcessId);
-    }
-  }, [effectiveProcessId]);
-
-  const selectedProcess = selectedProcessId ? getNode(selectedProcessId) : null;
+  // Use effective ID directly (no sync effect needed)
+  const selectedProcess = effectiveProcessId ? getNode(effectiveProcessId) : null;
   const stages = selectedProcess ? getChildren(selectedProcess.id) : [];
 
   // Determine what type of node to create based on current selection

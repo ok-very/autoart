@@ -46,10 +46,13 @@ export function FieldDefinitionEditor({ field }: FieldDefinitionEditorProps) {
 
             const fieldDef = definition.schema_config.fields.find(f => f.key === field.fieldKey);
             if (fieldDef) {
-                setLabel(fieldDef.label);
-                setRequired(!!fieldDef.required);
-                setOptions(fieldDef.options || []);
-                setStatusConfig(fieldDef.statusConfig || {});
+                // Defer setState to avoid synchronous cascading render
+                requestAnimationFrame(() => {
+                    setLabel(fieldDef.label);
+                    setRequired(!!fieldDef.required);
+                    setOptions(fieldDef.options || []);
+                    setStatusConfig(fieldDef.statusConfig || {});
+                });
             }
         }
     }, [definition, field.fieldKey]);

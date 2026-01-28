@@ -15,7 +15,7 @@
 
 import { clsx } from 'clsx';
 import { ChevronUp, ChevronDown } from 'lucide-react';
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 
 import type { TableFeature, TableCtx } from './features';
 import { applyColumnDecorators, applyRowDecorators } from './features';

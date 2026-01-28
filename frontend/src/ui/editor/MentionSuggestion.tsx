@@ -63,7 +63,8 @@ export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggest
     useEffect(() => {
       if (filteredItems.length !== prevFilteredItemsLengthRef.current) {
         prevFilteredItemsLengthRef.current = filteredItems.length;
-        setSelectedIndex(0);
+        // Defer setState to avoid synchronous cascading render
+        requestAnimationFrame(() => setSelectedIndex(0));
       }
     }, [filteredItems]);
 
@@ -77,8 +78,11 @@ export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggest
         prevSelectedItemRef.current = selectedItem;
 
         if (showFields) {
-          setSelectedIndex(0);
-          setFieldQuery('');
+          // Defer setState to avoid synchronous cascading render
+          requestAnimationFrame(() => {
+            setSelectedIndex(0);
+            setFieldQuery('');
+          });
         }
       }
     }, [showFields, selectedItem]);

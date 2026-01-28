@@ -50,9 +50,12 @@ function TaskCard({ task }: TaskCardProps) {
   useEffect(() => {
     if (task.id !== prevTaskIdRef.current) {
       prevTaskIdRef.current = task.id;
-      setTitle(task.title);
-      setDueDate(taskMeta.dueDate || '');
-      setLocalStatus(currentStatus);
+      // Defer setState to avoid synchronous cascading render
+      requestAnimationFrame(() => {
+        setTitle(task.title);
+        setDueDate(taskMeta.dueDate || '');
+        setLocalStatus(currentStatus);
+      });
     }
   }, [task.id, task.title, currentStatus, taskMeta.dueDate]);
 

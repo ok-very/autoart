@@ -64,21 +64,24 @@ export function ImportPanel() {
         const sessionId = session?.id || null;
         if (sessionId !== prevSessionIdRef.current) {
             prevSessionIdRef.current = sessionId;
-            if (session) {
-                // Connector sessions use parser_name like 'connector:monday'
-                if (session.parser_name?.startsWith('connector:monday')) {
-                    setSourceType('monday');
-                } else if (session.parser_name && !session.parser_name.startsWith('connector:')) {
-                    // File-based session
+            // Defer setState to avoid synchronous cascading render
+            requestAnimationFrame(() => {
+                if (session) {
+                    // Connector sessions use parser_name like 'connector:monday'
+                    if (session.parser_name?.startsWith('connector:monday')) {
+                        setSourceType('monday');
+                    } else if (session.parser_name && !session.parser_name.startsWith('connector:')) {
+                        // File-based session
+                        setSourceType('file');
+                    } else if (session.parser_name?.startsWith('connector:')) {
+                        // Fallback for other connector types
+                        setSourceType('collector');
+                    }
+                } else {
+                    // Reset to default when there is no active session
                     setSourceType('file');
-                } else if (session.parser_name?.startsWith('connector:')) {
-                    // Fallback for other connector types
-                    setSourceType('collector');
                 }
-            } else {
-                // Reset to default when there is no active session
-                setSourceType('file');
-            }
+            });
         }
     }, [session]);
 

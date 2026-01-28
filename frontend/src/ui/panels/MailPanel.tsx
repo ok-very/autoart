@@ -240,7 +240,9 @@ export function MailPanel(_props: IDockviewPanelProps) {
         if (totalChanged) {
             prevTotalRef.current = data?.total;
             if (data && offset > 0 && offset >= data.total) {
-                setOffset(Math.max(0, Math.floor((data.total - 1) / ITEMS_PER_PAGE) * ITEMS_PER_PAGE));
+                // Defer setState to avoid synchronous cascading render
+                const correctedOffset = Math.max(0, Math.floor((data.total - 1) / ITEMS_PER_PAGE) * ITEMS_PER_PAGE);
+                requestAnimationFrame(() => setOffset(correctedOffset));
             }
         }
     }, [data?.total, offset, data]);
