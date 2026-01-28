@@ -1,13 +1,17 @@
+import { Card, Stack, Text } from '@autoart/ui';
+
 export function NotFoundPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="text-center">
-        <h1 className="mb-2 text-4xl font-bold text-slate-900">404</h1>
-        <p className="mb-4 text-slate-600">Poll not found</p>
-        <p className="text-sm text-slate-500">
-          The poll you're looking for doesn't exist or has been closed.
-        </p>
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-[#F5F2ED] p-4">
+      <Card shadow="md" padding="lg">
+        <Stack align="center" gap="md">
+          <Text size="xl" weight="bold">404</Text>
+          <Text color="dimmed">Poll not found</Text>
+          <Text size="sm" color="muted">
+            The poll you're looking for doesn't exist or has been closed.
+          </Text>
+        </Stack>
+      </Card>
     </div>
   );
 }
