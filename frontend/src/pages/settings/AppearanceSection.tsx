@@ -6,7 +6,7 @@
  * - Theme density
  */
 
-import { Palette, Check, Layout, Maximize2, Minimize2 } from 'lucide-react';
+import { Palette, Check, Layout, Maximize2, Minimize2, BookOpen } from 'lucide-react';
 
 import {
   WORKSPACE_THEME_LABELS,
@@ -24,6 +24,7 @@ const THEME_ICONS: Record<WorkspaceThemeId, React.ReactNode> = {
   compact: <Minimize2 className="w-5 h-5" />,
   floating: <Maximize2 className="w-5 h-5" />,
   minimal: <Palette className="w-5 h-5" />,
+  parchment: <BookOpen className="w-5 h-5" />,
 };
 
 const THEME_PREVIEWS: Record<WorkspaceThemeId, string> = {
@@ -31,6 +32,7 @@ const THEME_PREVIEWS: Record<WorkspaceThemeId, string> = {
   compact: 'bg-slate-50 border-slate-300',
   floating: 'bg-slate-100 border-transparent shadow-md rounded-lg',
   minimal: 'bg-white border-transparent',
+  parchment: 'bg-[#F5F2ED] border-[#D6D2CB]',
 };
 
 export function AppearanceSection() {
