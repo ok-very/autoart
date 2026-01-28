@@ -290,7 +290,7 @@ export function FiletreeSelector({
         }
 
         return filtered;
-    }, [data?.roots, searchQuery, filterByProjectContext, filterBySearch]);
+    }, [data, searchQuery, filterByProjectContext, filterBySearch]);
 
     const hasContent = filteredRoots.length > 0;
 

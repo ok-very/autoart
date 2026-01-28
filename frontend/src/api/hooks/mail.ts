@@ -41,7 +41,9 @@ import { useMemo } from 'react';
  * Fetch paginated inbox emails
  */
 export function useInbox(filters?: InboxFilters) {
-  const queryKey = useMemo(() => mailQueryKeys.emails(filters), [JSON.stringify(filters)]);
+  // Extract stringify to variable for deps array
+  const filtersKey = JSON.stringify(filters);
+  const queryKey = useMemo(() => mailQueryKeys.emails(filters), [filtersKey]);
 
   return useQuery({
     queryKey,
@@ -74,7 +76,9 @@ export function useInbox(filters?: InboxFilters) {
  * Fetch paginated inbox emails with AI enrichment (triage analysis)
  */
 export function useEnrichedInbox(filters?: InboxFilters) {
-  const queryKey = useMemo(() => mailQueryKeys.enrichedEmails(filters), [JSON.stringify(filters)]);
+  // Extract stringify to variable for deps array
+  const filtersKey = JSON.stringify(filters);
+  const queryKey = useMemo(() => mailQueryKeys.enrichedEmails(filters), [filtersKey]);
 
   return useQuery({
     queryKey,
