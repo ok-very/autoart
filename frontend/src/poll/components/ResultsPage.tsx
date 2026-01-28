@@ -32,7 +32,7 @@ export function ResultsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F5F2ED]">
+      <div className="flex min-h-screen items-center justify-center bg-ws-bg">
         <Stack align="center" gap="md">
           <Spinner size="lg" />
           <Text color="dimmed">Loading results...</Text>
@@ -43,7 +43,7 @@ export function ResultsPage() {
 
   if (error || !poll || !results) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F5F2ED] p-4">
+      <div className="flex min-h-screen items-center justify-center bg-ws-bg p-4">
         <Card shadow="md" padding="lg">
           <Stack align="center" gap="md">
             <Text size="xl" weight="bold">Poll Not Found</Text>
@@ -59,13 +59,13 @@ export function ResultsPage() {
   const heatmapData = new Map<string, number>(Object.entries(results.slotCounts));
 
   return (
-    <div className="min-h-screen bg-[#F5F2ED] px-4 py-8">
+    <div className="min-h-screen bg-ws-bg px-4 py-8">
       <div className="mx-auto max-w-4xl">
         <Card shadow="sm" padding="lg">
           <Stack gap="lg">
             {/* Header */}
             <div>
-              <Text size="xl" weight="bold" className="block text-[#2E2E2C]">{poll.title}</Text>
+              <Text size="xl" weight="bold" className="block text-ws-fg">{poll.title}</Text>
               {poll.description && (
                 <Text color="dimmed" className="mt-1 block">{poll.description}</Text>
               )}
@@ -76,8 +76,8 @@ export function ResultsPage() {
 
             {/* Best Times */}
             {results.bestSlots.length > 0 && (
-              <div className="rounded-lg bg-[#E8EBE5] p-4">
-                <Text weight="semibold" className="mb-2 block text-[#4A5940]">Best Times</Text>
+              <div className="rounded-lg bg-heatmap-25 p-4">
+                <Text weight="semibold" className="mb-2 block text-heatmap-100">Best Times</Text>
                 <Inline gap="sm">
                   {results.bestSlots.map((slot) => {
                     const parts = slot.split(':');
@@ -126,7 +126,7 @@ export function ResultsPage() {
 
             {/* Availability Heatmap */}
             <div>
-              <Text weight="semibold" className="mb-3 block text-[#2E2E2C]">Availability Heatmap</Text>
+              <Text weight="semibold" className="mb-3 block text-ws-fg">Availability Heatmap</Text>
               <TimeGrid
                 dates={poll.time_config.dates}
                 startHour={poll.time_config.start_hour}
@@ -141,11 +141,11 @@ export function ResultsPage() {
               <Inline gap="md" className="mt-2">
                 <Text size="xs" color="muted">Less available</Text>
                 <Inline gap="xs">
-                  <div className="h-4 w-4 rounded bg-[#F5F2ED]" />
-                  <div className="h-4 w-4 rounded bg-[#E8EBE5]" />
-                  <div className="h-4 w-4 rounded bg-[#C5CCBC]" />
-                  <div className="h-4 w-4 rounded bg-[#9AAA8C]" />
-                  <div className="h-4 w-4 rounded bg-[#6F7F5C]" />
+                  <div className="h-4 w-4 rounded bg-heatmap-0" />
+                  <div className="h-4 w-4 rounded bg-heatmap-25" />
+                  <div className="h-4 w-4 rounded bg-heatmap-50" />
+                  <div className="h-4 w-4 rounded bg-heatmap-75" />
+                  <div className="h-4 w-4 rounded bg-heatmap-100" />
                 </Inline>
                 <Text size="xs" color="muted">More available</Text>
               </Inline>
@@ -154,7 +154,7 @@ export function ResultsPage() {
             {/* Participants */}
             {poll.responses.length > 0 && (
               <div>
-                <Text weight="semibold" className="mb-3 block text-[#2E2E2C]">Participants</Text>
+                <Text weight="semibold" className="mb-3 block text-ws-fg">Participants</Text>
                 <Inline gap="sm">
                   {poll.responses.map((response) => (
                     <Badge key={response.id} variant="neutral" size="md">
@@ -166,10 +166,10 @@ export function ResultsPage() {
             )}
 
             {/* Back Link */}
-            <div className="border-t border-[#D6D2CB] pt-4">
+            <div className="border-t border-ws-border pt-4">
               <Link
                 to={`/${uniqueId}`}
-                className="text-sm text-[#3F5C6E] hover:underline"
+                className="text-sm text-ws-accent hover:underline"
               >
                 &larr; Submit your availability
               </Link>

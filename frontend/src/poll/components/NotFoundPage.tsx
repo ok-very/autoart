@@ -2,7 +2,7 @@ import { Card, Stack, Text } from '@autoart/ui';
 
 export function NotFoundPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F5F2ED] p-4">
+    <div className="flex min-h-screen items-center justify-center bg-ws-bg p-4">
       <Card shadow="md" padding="lg">
         <Stack align="center" gap="md">
           <Text size="xl" weight="bold">404</Text>
