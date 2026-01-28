@@ -35,6 +35,18 @@ export function getOutcomeIcon(outcome: string) {
     }
 }
 
+/** Component that renders the appropriate outcome icon */
+export function OutcomeIcon({ outcome, className }: { outcome: string; className?: string }) {
+    switch (outcome) {
+        case 'AMBIGUOUS': return <AlertTriangle className={className} />;
+        case 'UNCLASSIFIED': return <HelpCircle className={className} />;
+        case 'FACT_EMITTED': return <Check className={className} />;
+        case 'INTERNAL_WORK': return <Lightbulb className={className} />;
+        case 'DERIVED_STATE': return <Play className={className} />;
+        default: return <HelpCircle className={className} />;
+    }
+}
+
 export function getOutputKindBadge(output: InterpretationOutput) {
     switch (output.kind) {
         case 'fact_candidate':
