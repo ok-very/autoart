@@ -1,7 +1,7 @@
 ---
 name: improve
-description: Analyze changes in the current stack and provide actionable improvement suggestions using parallel multi-agent analysis. Reviews bugs, simplification opportunities, performance, test coverage, documentation, security, and UX. Keywords improve, code review, analysis, bugs, performance, security.
-allowed-tools: Bash(git:*), Read, Grep, Glob, Task
+description: Analyze changes in the current stack and provide actionable improvement suggestions using parallel multi-agent analysis. Reviews bugs, simplification opportunities, performance, test coverage, documentation, security, UX, and PR review feedback. Keywords improve, code review, analysis, bugs, performance, security.
+allowed-tools: Bash(git:*), Bash(gh:*), Read, Grep, Glob, Task
 ---
 
 # /improve - Code Improvement Analysis
@@ -11,7 +11,7 @@ Analyze changes in the current stack and provide actionable improvement suggesti
 ## Usage
 
 ```
-/improve [scope] [--agents=<list>]
+/improve [scope] [--agents=<list>] [--pr]
 ```
 
 **Scope options:**
@@ -22,6 +22,11 @@ Analyze changes in the current stack and provide actionable improvement suggesti
 **Agent filter:**
 - `--agents=all` (default) - Run all agents
 - `--agents=bugs,perf` - Run specific agents only
+- `--agents=review` - Run only the PR review feedback agent
+
+**PR review:**
+- `--pr` - Explicitly fetch and analyze PR review comments (auto-detected if PR exists)
+- `--no-pr` - Skip PR review analysis even if a PR exists
 
 ## Execution Steps
 
@@ -53,11 +58,37 @@ Store this information for the agents:
 - `DIFF_CONTENT`: The actual diff
 - `DIFF_STATS`: Summary statistics
 
+### Step 1b: Fetch PR Review Comments (Optional)
+
+If analyzing a branch with an open PR, fetch review comments:
+
+```bash
+# Check if there's a PR for the current branch
+gh pr view --json number,url,reviews,comments 2>/dev/null
+
+# If PR exists, get detailed review comments (inline code comments)
+gh api repos/{owner}/{repo}/pulls/{pr_number}/comments --jq '.[] | {path: .path, line: .line, body: .body, user: .user.login, state: .state, created_at: .created_at}'
+
+# Get PR review threads (conversation threads)
+gh pr view --json reviewDecision,reviews --jq '{decision: .reviewDecision, reviews: [.reviews[] | {author: .author.login, state: .state, body: .body}]}'
+```
+
+Store this information:
+- `PR_NUMBER`: The PR number (if exists)
+- `PR_URL`: The PR URL
+- `REVIEW_COMMENTS`: Inline code review comments with file/line info
+- `REVIEW_THREADS`: General review comments and decisions
+- `HAS_PR`: Boolean indicating if a PR exists for this branch
+
+**Note:** If no PR exists (`gh pr view` returns error), skip the review agent and set `HAS_PR=false`.
+
 ### Step 2: Launch Analysis Agents
 
 Launch ALL of the following agents in PARALLEL using the Task tool. Each agent receives the diff and changed files list.
 
-**IMPORTANT:** You MUST launch all 7 agents simultaneously in a single message with multiple Task tool calls. Do not run them sequentially.
+**IMPORTANT:** You MUST launch all agents simultaneously in a single message with multiple Task tool calls. Do not run them sequentially.
+- If `HAS_PR=true`: Launch all 8 agents (including review feedback agent)
+- If `HAS_PR=false`: Launch 7 agents (skip review feedback agent)
 
 ---
 
@@ -385,6 +416,73 @@ OUTPUT FORMAT (JSON):
 
 ---
 
+#### Agent 8: Review Feedback (`review`) - Only if HAS_PR=true
+
+```
+You are analyzing PR review comments to check if they have been addressed in the current diff.
+
+CHANGES TO ANALYZE:
+- Branch: {CURRENT_BRANCH} vs {TRUNK_BRANCH}
+- PR: {PR_URL} (#{PR_NUMBER})
+- Files: {CHANGED_FILES}
+
+DIFF:
+{DIFF_CONTENT}
+
+PR REVIEW COMMENTS (inline code comments):
+{REVIEW_COMMENTS}
+
+PR REVIEW THREADS (general comments):
+{REVIEW_THREADS}
+
+ANALYZE EACH REVIEW COMMENT AND DETERMINE:
+1. Is this comment addressed by the current diff?
+2. If not addressed, what specific action is needed?
+3. Is the comment still relevant or outdated?
+
+CATEGORIZE EACH COMMENT AS:
+- RESOLVED: The diff addresses this feedback
+- UNRESOLVED: The feedback has NOT been addressed and action is needed
+- OUTDATED: The code has changed significantly, making this comment no longer applicable
+- QUESTION: The reviewer asked a question that needs a response (not code change)
+
+OUTPUT FORMAT (JSON):
+{
+  "agent": "review",
+  "pr_number": 123,
+  "pr_url": "https://github.com/...",
+  "findings": [
+    {
+      "severity": "HIGH|MEDIUM|LOW",
+      "status": "RESOLVED|UNRESOLVED|OUTDATED|QUESTION",
+      "title": "Brief description of the review comment",
+      "file": "path/to/file.ts",
+      "line": 42,
+      "reviewer": "username",
+      "original_comment": "The reviewer's original comment",
+      "description": "Analysis of whether/how this was addressed",
+      "suggestion": "What to do if unresolved",
+      "effort": "LOW|MEDIUM|HIGH"
+    }
+  ],
+  "summary": {
+    "resolved": 5,
+    "unresolved": 2,
+    "outdated": 1,
+    "questions": 1
+  }
+}
+
+SEVERITY GUIDE:
+- HIGH: Blocking feedback (requested changes, security concerns, bugs identified)
+- MEDIUM: Suggestions that should be addressed (code quality, performance)
+- LOW: Minor suggestions, style preferences, optional improvements
+
+Only include comments that are actionable or noteworthy. Skip trivial resolved comments like "LGTM" or acknowledgments.
+```
+
+---
+
 ### Step 3: Collect and Parse Results
 
 Wait for all agents to complete. Parse the JSON output from each agent.
@@ -414,7 +512,20 @@ Produce the final report in this format:
 │
 └──────────────────────────────────────────────────────────────────
 
-[Repeat for: SIMPLIFY, PERF, TESTS, DOCS, SECURITY, UX]
+[Repeat for: SIMPLIFY, PERF, TESTS, DOCS, SECURITY, UX, REVIEW]
+
+[If HAS_PR=true, include special REVIEW section:]
+
+┌─ REVIEW FEEDBACK ({count} findings) ─────────────────────────────
+│  PR #{PR_NUMBER}: {PR_URL}
+│
+│ [{STATUS}] [{SEVERITY}] {title}
+│   {file}:{line} (@{reviewer})
+│   Original: "{original_comment}"
+│   Analysis: {description}
+│   Action: {suggestion}
+│
+└──────────────────────────────────────────────────────────────────
 
 ═══════════════════════════════════════════════════════════════════
  SUMMARY
@@ -439,6 +550,13 @@ Produce the final report in this format:
    Security: {count} ({high} high, {med} medium, {low} low)
    UX:       {count} ({high} high, {med} medium, {low} low)
 
+ [If HAS_PR=true:]
+ PR Review Status (#{PR_NUMBER}):
+   Resolved:   {resolved_count}
+   Unresolved: {unresolved_count} ← address these!
+   Outdated:   {outdated_count}
+   Questions:  {questions_count}
+
  Total: {total} findings
 
 ═══════════════════════════════════════════════════════════════════
@@ -458,3 +576,6 @@ Produce the final report in this format:
 - Provide actionable suggestions, not vague advice
 - When in doubt about severity, be conservative (prefer MEDIUM over HIGH)
 - Empty findings for an agent is fine - don't invent issues
+- The review agent only runs when a PR exists for the current branch
+- Unresolved review comments should be treated as high priority items
+- If `gh` CLI is not authenticated, the review agent will be skipped
