@@ -36,20 +36,22 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
 
     // Debounce timer
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const prevSelectedParserRef = useRef(selectedParser);
 
     // Get current parser config fields
     const currentParser = parsers?.find(p => p.name === selectedParser);
 
-    // Initialize config from parser defaults
+    // Initialize config from parser defaults when parser changes
     useEffect(() => {
-        if (currentParser) {
+        if (currentParser && selectedParser !== prevSelectedParserRef.current) {
+            prevSelectedParserRef.current = selectedParser;
             const defaults: Record<string, unknown> = {};
             currentParser.configFields.forEach(field => {
                 defaults[field.key] = field.defaultValue;
             });
             setParserConfig(defaults);
         }
-    }, [currentParser]);
+    }, [currentParser, selectedParser]);
 
     // Auto-preview on data or config change
     useEffect(() => {
