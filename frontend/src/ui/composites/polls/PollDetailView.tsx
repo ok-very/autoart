@@ -189,7 +189,7 @@ export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProp
                                     maxCount={responseCount}
                                     selectedSlots={new Set()}
                                     onSlotsChange={() => {}}
-                                    dateFormatConfig={{ dateFormat, timezone }}
+                                    dateFormatConfig={{ dateFormat, timezone: poll.time_config.timezone ?? timezone }}
                                 />
                             </Stack>
                         </Card>
