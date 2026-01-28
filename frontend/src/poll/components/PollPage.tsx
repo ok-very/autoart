@@ -23,6 +23,10 @@ export function PollPage() {
   const hasLoggedInteracted = useRef(false);
   const hasSaved = useRef(false);
 
+  // Refs to store latest values for unmount cleanup (avoids stale closure)
+  const latestNameRef = useRef<string | undefined>(name || undefined);
+  const latestSlotsCountRef = useRef<number>(userSelectedSlots?.size ?? 0);
+
   const {
     data: poll,
     isLoading,
@@ -33,6 +37,15 @@ export function PollPage() {
     enabled: !!uniqueId,
   });
 
+  // Keep refs in sync with state
+  useEffect(() => {
+    latestNameRef.current = name || undefined;
+  }, [name]);
+
+  useEffect(() => {
+    latestSlotsCountRef.current = userSelectedSlots?.size ?? 0;
+  }, [userSelectedSlots]);
+
   // Log OPENED on mount
   useEffect(() => {
     if (uniqueId && !hasLoggedOpened.current) {
@@ -41,17 +54,17 @@ export function PollPage() {
     }
   }, [uniqueId]);
 
-  // Log DEFFER on unmount if interacted but not saved
+  // Log DEFERRED on unmount only if interacted but not saved
   useEffect(() => {
     const currentUniqueId = uniqueId;
     return () => {
       if (currentUniqueId && hasLoggedInteracted.current && !hasSaved.current) {
-        logEngagement(currentUniqueId, EngagementKind.DEFFER, name || undefined, {
-          progress: { slots_selected: userSelectedSlots?.size ?? 0 },
+        logEngagement(currentUniqueId, EngagementKind.DEFERRED, latestNameRef.current, {
+          progress: { slots_selected: latestSlotsCountRef.current },
         });
       }
     };
-  }, [uniqueId, name, userSelectedSlots]);
+  }, [uniqueId]);
 
   const handleInteraction = useCallback(() => {
     if (uniqueId && !hasLoggedInteracted.current) {
