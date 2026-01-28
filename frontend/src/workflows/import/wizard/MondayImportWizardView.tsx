@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Stack, Card, Text, ProgressBar, Inline } from '@autoart/ui';
 
 import { useContextStore } from '../../../stores/contextStore';
@@ -41,39 +41,33 @@ export function MondayImportWizardView({
     onSessionCreated,
 }: MondayImportWizardViewProps) {
     const [currentStep, setCurrentStep] = useState(1);
-    const [localPlan, setLocalPlan] = useState<ImportPlan | null>(plan);
+    const [localPlanChanges, setLocalPlanChanges] = useState<ImportPlan | null>(null);
     const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
     const [inspectorTab, setInspectorTab] = useState('import_details');
 
-    // Track if update is internal to prevent circular updates
-    const isInternalUpdate = useRef(false);
-
     const { setImportSession: setContextImportSession } = useContextStore();
 
-    // Sync external plan changes to local state (only if not triggered by our own update)
-    useEffect(() => {
-        if (!isInternalUpdate.current) {
-            setLocalPlan(plan);
-        }
-        isInternalUpdate.current = false;
-    }, [plan]);
+    // Derive effective plan from prop or local changes
+    const localPlan = useMemo(() => {
+        return localPlanChanges ?? plan;
+    }, [localPlanChanges, plan]);
 
     // Sync session to context store for panel visibility predicates
+    const planExists = !!localPlan;
     useEffect(() => {
         setContextImportSession({
             sessionId: session?.id ?? null,
-            planExists: !!localPlan,
+            planExists,
         });
 
         return () => {
             setContextImportSession({ sessionId: null, planExists: false });
         };
-    }, [session?.id, !!localPlan, setContextImportSession]);
+    }, [session?.id, planExists, setContextImportSession]);
 
     // Handle plan updates from child components
     const handlePlanUpdate = useCallback((updatedPlan: ImportPlan) => {
-        isInternalUpdate.current = true;
-        setLocalPlan(updatedPlan);
+        setLocalPlanChanges(updatedPlan);
         if (session) {
             onSessionCreated(session, updatedPlan);
         }

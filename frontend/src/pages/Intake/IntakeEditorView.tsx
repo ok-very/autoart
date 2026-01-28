@@ -9,7 +9,7 @@
  * - Publish with public URL
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { ArrowLeft, Eye, Send, Undo2, Redo2, Check, Loader2, ExternalLink, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -39,10 +39,10 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     const updateForm = useUpdateIntakeForm();
     const upsertPage = useUpsertIntakeFormPage();
 
-    // Form state
-    const [formTitle, setFormTitle] = useState('New Form');
+    // Track user changes separately from prop values
+    const [titleChanges, setTitleChanges] = useState<string | null>(null);
+    const [blocksChanges, setBlocksChanges] = useState<FormBlock[] | null>(null);
     const [formDescription, setFormDescription] = useState('');
-    const [blocks, setBlocks] = useState<FormBlock[]>([]);
     const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
     const [showPublishDialog, setShowPublishDialog] = useState(false);
@@ -51,34 +51,58 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     // Editor tabs
     const [activeTab, setActiveTab] = useState<'build' | 'logic' | 'settings'>('build');
 
-    // Track if we've initialized from the API
-    const initialized = useRef(false);
-
     // Debounce timer refs
     const saveBlocksTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const saveTitleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Track last saved blocks to avoid redundant saves
     const lastSavedBlocksRef = useRef<string>('');
+    const prevFormIdRef = useRef<string | null>(null);
 
-    // Initialize state from loaded form
+    // Derive form title from prop or user changes
+    const formTitle = useMemo(() => {
+        if (titleChanges !== null) return titleChanges;
+        return form?.title ?? 'New Form';
+    }, [form?.title, titleChanges]);
+
+    // Derive blocks from prop or user changes
+    const blocks = useMemo(() => {
+        if (blocksChanges !== null) return blocksChanges;
+        const firstPage = form?.pages?.[0];
+        return firstPage?.blocks_config?.blocks ?? [];
+    }, [form?.pages, blocksChanges]);
+
+    // Reset changes when form ID changes (new form loaded)
     useEffect(() => {
-        if (form && !initialized.current) {
-            setFormTitle(form.title);
-            // Load blocks from first page if exists
+        if (form && form.id !== prevFormIdRef.current) {
+            prevFormIdRef.current = form.id;
+            // Mark initial blocks as "saved" to avoid immediate re-save
             const firstPage = form.pages?.[0];
             if (firstPage?.blocks_config?.blocks) {
-                setBlocks(firstPage.blocks_config.blocks);
-                // Mark initial blocks as "saved" to avoid immediate re-save
                 lastSavedBlocksRef.current = JSON.stringify(firstPage.blocks_config.blocks);
             }
-            initialized.current = true;
+            // Defer state reset to avoid synchronous cascading render
+            requestAnimationFrame(() => {
+                setTitleChanges(null);
+                setBlocksChanges(null);
+            });
         }
     }, [form]);
 
+    // Setters that track user changes
+    const setFormTitle = useCallback((value: string) => setTitleChanges(value), []);
+    const setBlocks = useCallback((value: FormBlock[] | ((prev: FormBlock[]) => FormBlock[])) => {
+        if (typeof value === 'function') {
+            // Use blocks (derived from form) as fallback when no user changes yet
+            setBlocksChanges(prev => value(prev ?? blocks));
+        } else {
+            setBlocksChanges(value);
+        }
+    }, [blocks]);
+
     // Auto-save blocks with debounce
     useEffect(() => {
-        if (!initialized.current) return;
+        if (!prevFormIdRef.current) return; // Don't save until form is loaded
 
         const blocksJson = JSON.stringify(blocks);
         // Skip if blocks haven't changed from last save
@@ -142,18 +166,18 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
         };
         setBlocks((prev) => [...prev, newBlock as FormBlock]);
         setActiveBlockId(newBlock.id);
-    }, []);
+    }, [setBlocks, setActiveBlockId]);
 
     const handleDeleteBlock = useCallback((id: string) => {
         setBlocks((prev) => prev.filter((b) => b.id !== id));
         if (activeBlockId === id) setActiveBlockId(null);
-    }, [activeBlockId]);
+    }, [activeBlockId, setBlocks, setActiveBlockId]);
 
     const handleUpdateBlock = useCallback((id: string, updates: Partial<FormBlock>) => {
         setBlocks((prev) =>
             prev.map((b) => (b.id === id ? { ...b, ...updates } as FormBlock : b))
         );
-    }, []);
+    }, [setBlocks]);
 
     const handleDuplicateBlock = useCallback((id: string) => {
         setBlocks((prev) => {
@@ -171,7 +195,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
             newBlocks.splice(index + 1, 0, newBlock);
             return newBlocks;
         });
-    }, []);
+    }, [setBlocks]);
 
     const handlePublish = async () => {
         // Set form status to active

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 
 import { MillerColumn } from './MillerColumn';
 import { useProjects, useProjectTree } from '../../api/hooks';
@@ -20,14 +20,19 @@ export function MillerColumnsView() {
   const { activeProjectId, setSelection, setActiveProject } = useUIStore();
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Track selection at each level
-  const [selections, setSelections] = useState<ColumnSelections>({
-    project: activeProjectId,
+  // Track user selections (except project which comes from store)
+  const [userSelections, setUserSelections] = useState<Omit<ColumnSelections, 'project'>>({
     process: null,
     stage: null,
     subprocess: null,
     task: null,
   });
+
+  // Derive full selections with project from store
+  const selections = useMemo<ColumnSelections>(() => ({
+    project: activeProjectId,
+    ...userSelections,
+  }), [activeProjectId, userSelections]);
 
   // Load projects list
   const { data: projects } = useProjects();
@@ -49,18 +54,22 @@ export function MillerColumnsView() {
     }
   }, [projectTree, setNodes]);
 
-  // Sync with external project selection
+  // Reset user selections when project changes
+  const prevProjectIdRef = useRef(activeProjectId);
   useEffect(() => {
-    if (activeProjectId !== selections.project) {
-      setSelections({
-        project: activeProjectId,
-        process: null,
-        stage: null,
-        subprocess: null,
-        task: null,
+    if (activeProjectId !== prevProjectIdRef.current) {
+      prevProjectIdRef.current = activeProjectId;
+      // Defer setState to avoid synchronous cascading render
+      requestAnimationFrame(() => {
+        setUserSelections({
+          process: null,
+          stage: null,
+          subprocess: null,
+          task: null,
+        });
       });
     }
-  }, [activeProjectId, selections.project, setSelections]);
+  }, [activeProjectId]);
 
   // Auto-scroll right when new columns appear
   useEffect(() => {
@@ -79,39 +88,38 @@ export function MillerColumnsView() {
     if (!node && level !== 'project') return;
 
     // Clear selections for all levels below this one
-    const newSelections: ColumnSelections = { ...selections };
+    const newUserSelections: Omit<ColumnSelections, 'project'> = { ...userSelections };
 
     switch (level) {
       case 'project':
-        newSelections.project = id;
-        newSelections.process = null;
-        newSelections.stage = null;
-        newSelections.subprocess = null;
-        newSelections.task = null;
+        newUserSelections.process = null;
+        newUserSelections.stage = null;
+        newUserSelections.subprocess = null;
+        newUserSelections.task = null;
         // Also set active project in UI store so other components know
         setActiveProject(id);
         break;
       case 'process':
-        newSelections.process = id;
-        newSelections.stage = null;
-        newSelections.subprocess = null;
-        newSelections.task = null;
+        newUserSelections.process = id;
+        newUserSelections.stage = null;
+        newUserSelections.subprocess = null;
+        newUserSelections.task = null;
         break;
       case 'stage':
-        newSelections.stage = id;
-        newSelections.subprocess = null;
-        newSelections.task = null;
+        newUserSelections.stage = id;
+        newUserSelections.subprocess = null;
+        newUserSelections.task = null;
         break;
       case 'subprocess':
-        newSelections.subprocess = id;
-        newSelections.task = null;
+        newUserSelections.subprocess = id;
+        newUserSelections.task = null;
         break;
       case 'task':
-        newSelections.task = id;
+        newUserSelections.task = id;
         break;
     }
 
-    setSelections(newSelections);
+    setUserSelections(newUserSelections);
 
     // Set global selection
     setSelection({ type: 'node', id });

@@ -18,7 +18,7 @@ import * as mondayWorkspaceService from '../monday/monday-workspace.service.js';
 import { listDefinitions } from '../../records/records.service.js';
 import type { ImportPlan } from '../types.js';
 import { hasUnresolvedClassifications } from '../types.js';
-import { getSession, getLatestPlan, PARSERS } from './import-sessions.service.js';
+import { getSession, PARSERS } from './import-sessions.service.js';
 import { generateClassifications, generateClassificationsForConnectorItems } from './import-classification.service.js';
 import { getPlannedStatus, transitionStatusInTransaction } from './session-status.service.js';
 

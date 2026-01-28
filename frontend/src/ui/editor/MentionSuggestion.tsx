@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { useState, useEffect, useCallback, forwardRef, useImperativeHandle, useMemo } from 'react';
+import { useState, useEffect, useCallback, forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { useSearch } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
@@ -24,6 +24,9 @@ export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggest
     const [selectedItem, setSelectedItem] = useState<SearchResult | null>(null);
     const [showFields, setShowFields] = useState(false);
     const [fieldQuery, setFieldQuery] = useState('');
+    const prevFilteredItemsLengthRef = useRef(0);
+    const prevShowFieldsRef = useRef(showFields);
+    const prevSelectedItemRef = useRef(selectedItem);
 
     // Apply fuzzy filtering on client-side for better UX
     const filteredItems = useMemo(() => {
@@ -58,14 +61,29 @@ export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggest
 
     // Reset selection when results change
     useEffect(() => {
-      setSelectedIndex(0);
+      if (filteredItems.length !== prevFilteredItemsLengthRef.current) {
+        prevFilteredItemsLengthRef.current = filteredItems.length;
+        // Defer setState to avoid synchronous cascading render
+        requestAnimationFrame(() => setSelectedIndex(0));
+      }
     }, [filteredItems]);
 
     // Reset field selection when switching items
     useEffect(() => {
-      if (showFields) {
-        setSelectedIndex(0);
-        setFieldQuery('');
+      const showFieldsChanged = showFields !== prevShowFieldsRef.current;
+      const selectedItemChanged = selectedItem !== prevSelectedItemRef.current;
+
+      if (showFieldsChanged || selectedItemChanged) {
+        prevShowFieldsRef.current = showFields;
+        prevSelectedItemRef.current = selectedItem;
+
+        if (showFields) {
+          // Defer setState to avoid synchronous cascading render
+          requestAnimationFrame(() => {
+            setSelectedIndex(0);
+            setFieldQuery('');
+          });
+        }
       }
     }, [showFields, selectedItem]);
 

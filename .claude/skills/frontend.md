@@ -12,9 +12,11 @@ frontend/src/
 ├── ui/
 │   ├── atoms/     # Primitives (Button, Badge, Text)
 │   ├── molecules/ # Composed (Menu, SegmentedControl)
-│   ├── composites/# Views (CalendarView, ProjectView)
-│   ├── panels/    # Panel components
-│   └── workspace/ # Content routing
+│   ├── composites/# Self-contained views (CalendarView, ProjectView)
+│   ├── sidebars/  # Navigation/filtering sidebars
+│   ├── panels/    # Dockview panel wrappers
+│   └── workspace/ # Workspace coordination and content routing
+├── workspace/     # Panel registry and workspace configuration
 └── styles/        # CSS files
 ```
 
@@ -25,12 +27,18 @@ frontend/src/
 | Pattern | Location | Purpose |
 |---------|----------|---------|
 | `{Domain}Page.tsx` | `/pages/` | Route shell, owns state |
-| `{Domain}View.tsx` | `/ui/composites/` | Center content |
-| `{Domain}Sidebar.tsx` | `/surfaces/` | Left panel |
-| `{Domain}Inspector.tsx` | `/surfaces/` | Right panel |
-| `{Domain}Content.tsx` | `/ui/workspace/content/` | Content adapter |
+| `{Domain}Panel.tsx` | `/ui/panels/` | Dockview panel wrapper (registered in panelRegistry.ts) |
+| `{Domain}View.tsx` | `/ui/composites/` | Self-contained view component |
+| `{Domain}Sidebar.tsx` | `/ui/sidebars/` | Navigation/filtering sidebar |
+| `{Domain}Content.tsx` | `/ui/workspace/content/` | Content adapter for workspace routing |
 
 **State ownership:** Pages own state, pass down via props. Complex global state → Zustand stores.
+
+**Dockview Architecture:**
+- **Panels** (`/ui/panels/`) wrap Dockview containers and are registered in `workspace/panelRegistry.ts`
+- **Composites** (`/ui/composites/`) are reusable, self-contained views
+- **Sidebars** (`/ui/sidebars/`) provide navigation and filtering
+- **Workspaces** coordinate panel visibility and theming across domains
 
 ---
 

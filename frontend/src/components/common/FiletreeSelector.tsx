@@ -277,12 +277,15 @@ export function FiletreeSelector({
         return fn;
     }, [projectContext]);
 
+    // Extract roots for stable dependency reference
+    const roots = data?.roots;
+
     // Apply both filters: project context first, then search
     const filteredRoots = useMemo(() => {
-        if (!data?.roots) return [];
+        if (!roots) return [];
 
         // First apply project context filter
-        let filtered = filterByProjectContext(data.roots);
+        let filtered = filterByProjectContext(roots);
 
         // Then apply search filter if query exists
         if (searchQuery) {
@@ -290,7 +293,7 @@ export function FiletreeSelector({
         }
 
         return filtered;
-    }, [data?.roots, searchQuery, filterByProjectContext, filterBySearch]);
+    }, [roots, searchQuery, filterByProjectContext, filterBySearch]);
 
     const hasContent = filteredRoots.length > 0;
 

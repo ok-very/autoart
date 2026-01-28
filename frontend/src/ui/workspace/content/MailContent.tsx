@@ -359,22 +359,26 @@ export function MailContent() {
     }, []);
 
     const totalPages = data ? Math.ceil(data.total / ITEMS_PER_PAGE) : 0;
-    const currentPage = Math.floor(offset / ITEMS_PER_PAGE) + 1;
+
+    // Derive effective offset - clamp to valid range when total changes
+    const effectiveOffset = useMemo(() => {
+        if (!data || data.total === 0) return 0;
+        if (offset >= data.total) {
+            // Snap to last valid page
+            return Math.max(0, Math.floor((data.total - 1) / ITEMS_PER_PAGE) * ITEMS_PER_PAGE);
+        }
+        return offset;
+    }, [data, offset]);
+
+    const currentPage = Math.floor(effectiveOffset / ITEMS_PER_PAGE) + 1;
 
     const handlePrevPage = () => {
-        setOffset(Math.max(0, offset - ITEMS_PER_PAGE));
+        setOffset(Math.max(0, effectiveOffset - ITEMS_PER_PAGE));
     };
 
-    // Guard against offset drifting out of range
-    useEffect(() => {
-        if (data && offset > 0 && offset >= data.total) {
-            setOffset(Math.max(0, Math.floor((data.total - 1) / ITEMS_PER_PAGE) * ITEMS_PER_PAGE));
-        }
-    }, [data?.total, offset]);
-
     const handleNextPage = () => {
-        if (data && offset + ITEMS_PER_PAGE < data.total) {
-            setOffset(offset + ITEMS_PER_PAGE);
+        if (data && effectiveOffset + ITEMS_PER_PAGE < data.total) {
+            setOffset(effectiveOffset + ITEMS_PER_PAGE);
         }
     };
 

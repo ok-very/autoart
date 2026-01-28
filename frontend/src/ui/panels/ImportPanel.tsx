@@ -5,7 +5,7 @@
  * Layout: ImportSidebar | Center View (swappable)
  */
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 
 import type { ImportSession, ImportPlan } from '../../api/hooks/imports';
 import { useUIStore } from '../../stores/uiStore';
@@ -30,6 +30,7 @@ export function ImportPanel() {
 
     // Source type controls which center view is shown
     const [sourceType, setSourceType] = useState<ImportSourceType>('file');
+    const prevSessionIdRef = useRef<string | null>(null);
 
     // Use uiStore for session/plan (aliased for compatibility with child components)
     const session = importSession;
@@ -58,24 +59,31 @@ export function ImportPanel() {
         clearSelection();
     }, [setImportSession, setImportPlan, clearSelection]);
 
-    // Auto-switch source type based on session connector type
+    // Auto-switch source type based on session connector type (only when session changes)
     useEffect(() => {
-        if (session) {
-            // Connector sessions use parser_name like 'connector:monday'
-            if (session.parser_name?.startsWith('connector:monday')) {
-                setSourceType('monday');
-            } else if (session.parser_name && !session.parser_name.startsWith('connector:')) {
-                // File-based session
-                setSourceType('file');
-            } else if (session.parser_name?.startsWith('connector:')) {
-                // Fallback for other connector types
-                setSourceType('collector');
-            }
-        } else {
-            // Reset to default when there is no active session
-            setSourceType('file');
+        const sessionId = session?.id || null;
+        if (sessionId !== prevSessionIdRef.current) {
+            prevSessionIdRef.current = sessionId;
+            // Defer setState to avoid synchronous cascading render
+            requestAnimationFrame(() => {
+                if (session) {
+                    // Connector sessions use parser_name like 'connector:monday'
+                    if (session.parser_name?.startsWith('connector:monday')) {
+                        setSourceType('monday');
+                    } else if (session.parser_name && !session.parser_name.startsWith('connector:')) {
+                        // File-based session
+                        setSourceType('file');
+                    } else if (session.parser_name?.startsWith('connector:')) {
+                        // Fallback for other connector types
+                        setSourceType('collector');
+                    }
+                } else {
+                    // Reset to default when there is no active session
+                    setSourceType('file');
+                }
+            });
         }
-    }, [session?.parser_name]);
+    }, [session]);
 
     // Render center view based on source type
     const renderCenterView = () => {

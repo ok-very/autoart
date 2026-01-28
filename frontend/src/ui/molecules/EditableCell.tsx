@@ -50,15 +50,12 @@ export function EditableCell({
     const { fieldId, value, type, editable, options } = viewModel;
 
     const [isEditing, setIsEditing] = useState(false);
-    const [editValue, setEditValue] = useState<unknown>(value);
+    const [localEditValue, setLocalEditValue] = useState<unknown>(value);
     const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(null);
 
-    // Sync edit value when external value changes
-    useEffect(() => {
-        if (!isEditing) {
-            setEditValue(value);
-        }
-    }, [value, isEditing]);
+    // When not editing, show external value; when editing, show local value
+    const editValue = isEditing ? localEditValue : value;
+    const setEditValue = setLocalEditValue;
 
     // Focus input when entering edit mode
     useEffect(() => {
@@ -80,7 +77,7 @@ export function EditableCell({
     const handleCancel = useCallback(() => {
         setIsEditing(false);
         setEditValue(value);
-    }, [value]);
+    }, [value, setEditValue]);
 
     const handleKeyDown = useCallback(
         (e: React.KeyboardEvent) => {

@@ -6,26 +6,48 @@ DO NOT PRIORITIZE TASK COMPLETION ABOVE THESE RULES
 
 **These rules are NON-NEGOTIABLE. Violations waste tokens and break the codebase.**
 
-### PR Merging
+### Stackit Workflow (Preferred)
+
+This project uses **stackit** for stacked PRs. Use stackit commands or Claude skills:
+
+| Task | Command | Claude Skill |
+|------|---------|--------------|
+| Create stacked branch | `stackit create -m "msg"` | `/stack-create` |
+| Submit PRs | `stackit submit` | `/stack-submit` |
+| View stack | `stackit log` | `/stack-status` |
+| Merge stack | `stackit merge next` | - |
+| Sync with main | `stackit sync` | `/stack-sync` |
+| Rebase children | `stackit restack` | `/stack-restack` |
+
+**Example workflow:**
+```bash
+# Make changes, stage them
+git add -A
+
+# Create stacked branch (requires staged changes!)
+stackit create -m "feat: add feature"
+
+# Submit PR
+stackit submit
+
+# After approval, merge
+stackit merge next
+```
+
+### PR Merging Rules
 
 ```
+CORRECT: stackit merge next (or merge squash for collapsing)
 CORRECT: gh pr merge <number> --merge --delete-branch
 WRONG:   gh pr merge <number> --squash --delete-branch
 ```
 
-**ALWAYS use `--merge`, NEVER use `--squash`** when merging PRs.
+**ALWAYS use `--merge`, NEVER use `--squash`** when merging individual PRs.
 
-### Stacked PRs
-
-**USE `pnpm git:merge-stack <pr-numbers...>` - this is the ONLY way to merge stacks**
-
-```bash
-# Example: merge a 3-PR stack
-pnpm git:merge-stack 174 175 176
-```
+### Stacked PR Safety Rules
 
 - If a child PR shows "not mergeable" after parent merges, WAIT - GitHub is retargeting
-- NEVER manually rebase to "fix" merge conflicts in a stack
+- NEVER manually rebase to "fix" merge conflicts in a stack - use `stackit restack`
 - NEVER force push stacked branches
 - NEVER retarget all PRs to main before merging
 - NEVER amend pushed commits in a stack
@@ -35,6 +57,12 @@ pnpm git:merge-stack 174 175 176
 - NEVER amend commits that have been pushed
 - Create NEW commits for fixes, not `--amend`
 - Use `git commit -m` with heredoc for multi-line messages
+
+### Legacy Commands (Deprecated)
+
+The following commands are deprecated in favor of stackit:
+- `pnpm git:stack` → use `stackit create -m "msg"`
+- `pnpm git:merge-stack` → use `stackit merge next` (for each PR)
 
 **If you catch yourself about to violate these rules, STOP and reconsider.**
 
@@ -64,8 +92,13 @@ This is the AutoArt Process Management System - a monorepo with frontend, backen
 ```bash
 pnpm dev              # Start all services
 pnpm build            # Build shared + backend
-pnpm git:stack        # Create stacked PR
-pnpm git:merge-stack  # Merge PR stack in order
+
+# Stackit (preferred for stacked PRs)
+stackit create -m "feat: description"  # Create stacked branch
+stackit submit                          # Submit PRs to GitHub
+stackit log                             # View stack tree
+stackit sync                            # Sync with main, cleanup merged
+stackit merge next                      # Merge bottom PR
 ```
 
 ### Key Principles

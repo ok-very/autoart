@@ -1,9 +1,8 @@
-import { useMemo } from 'react';
 import { Check, ChevronRight, FileText, Lightbulb, Clock, Sparkles } from 'lucide-react';
 import type { ItemClassification, ClassificationSuggestion } from '../../../api/hooks/imports';
 import type { PendingResolution } from '../types';
 import { OUTCOME_OPTIONS } from '../constants';
-import { getOutcomeIcon, getOutputKindBadge, formatSuggestionLabel, getConfidenceColor, isSuggestionSelected } from '../utils';
+import { OutcomeIcon, getOutputKindBadge, formatSuggestionLabel, getConfidenceColor, isSuggestionSelected } from '../utils';
 import { toFactKindKey, formatRuleSource, humanizeFactKind } from '../../../utils/formatFactKind';
 
 interface ClassificationRowProps {
@@ -31,10 +30,6 @@ export function ClassificationRow({
     onCustomFactLabelChange,
     suggestions,
 }: ClassificationRowProps) {
-    const OutcomeIcon = useMemo(
-        () => getOutcomeIcon(classification.outcome),
-        [classification.outcome]
-    );
     const needsResolution = !classification.resolution &&
         (classification.outcome === 'AMBIGUOUS' || classification.outcome === 'UNCLASSIFIED');
 
@@ -65,8 +60,10 @@ export function ClassificationRow({
                 className={`flex items-center gap-3 px-6 py-3 ${hasExpandableContent ? 'hover:bg-slate-50 cursor-pointer' : ''}`}
                 onClick={handleRowClick}
             >
-                <OutcomeIcon className={`w-4 h-4 flex-shrink-0 ${needsResolution ? 'text-amber-600' : 'text-slate-400'
-                    }`} />
+                <OutcomeIcon
+                    outcome={classification.outcome}
+                    className={`w-4 h-4 flex-shrink-0 ${needsResolution ? 'text-amber-600' : 'text-slate-400'}`}
+                />
 
                 <div className="flex-1 min-w-0">
                     <p className="font-medium text-slate-800 truncate">{itemTitle}</p>

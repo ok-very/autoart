@@ -393,26 +393,46 @@ export function DataTable<T>({
     const [sortKey, setSortKey] = useState<string | null>(null);
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
-    // Column widths state - initialize from columns
-    const [columnWidths, setColumnWidths] = useState<Map<string, number | 'flex'>>(() => {
+    // User-resized widths (only stores columns user has manually resized)
+    const [userWidths, setUserWidths] = useState<Map<string, number>>(new Map());
+
+    // Initial widths derived from column props
+    const initialWidths = useMemo(() => {
         const map = new Map<string, number | 'flex'>();
         columns.forEach((col) => {
             map.set(col.key, col.width ?? 'flex');
         });
         return map;
-    });
-
-    // Update column widths when columns prop changes
-    useEffect(() => {
-        setColumnWidths((prev) => {
-            const map = new Map<string, number | 'flex'>();
-            columns.forEach((col) => {
-                // Keep existing width if set, otherwise use column default
-                map.set(col.key, prev.get(col.key) ?? col.width ?? 'flex');
-            });
-            return map;
-        });
     }, [columns]);
+
+    // Effective widths: user overrides take precedence over initial
+    const columnWidths = useMemo(() => {
+        const map = new Map<string, number | 'flex'>();
+        columns.forEach((col) => {
+            const userWidth = userWidths.get(col.key);
+            map.set(col.key, userWidth ?? initialWidths.get(col.key) ?? 'flex');
+        });
+        return map;
+    }, [columns, userWidths, initialWidths]);
+
+    // Wrapper to update user widths (for resize handler compatibility)
+    const setColumnWidths = useCallback((updater: (prev: Map<string, number | 'flex'>) => Map<string, number | 'flex'>) => {
+        setUserWidths((prev) => {
+            const currentEffective = new Map<string, number | 'flex'>();
+            columns.forEach((col) => {
+                currentEffective.set(col.key, prev.get(col.key) ?? initialWidths.get(col.key) ?? 'flex');
+            });
+            const updated = updater(currentEffective);
+            // Extract only numeric widths (user-set) back to userWidths
+            const newUserWidths = new Map<string, number>();
+            updated.forEach((v, k) => {
+                if (typeof v === 'number') {
+                    newUserWidths.set(k, v);
+                }
+            });
+            return newUserWidths;
+        });
+    }, [columns, initialWidths]);
 
     // Handle column resize
     const handleColumnResize = useCallback(
@@ -431,7 +451,7 @@ export function DataTable<T>({
                 return newMap;
             });
         },
-        [columns, onColumnResize]
+        [columns, onColumnResize, setColumnWidths]
     );
 
     // Value extractor - works with objects that have a 'data' property or direct properties

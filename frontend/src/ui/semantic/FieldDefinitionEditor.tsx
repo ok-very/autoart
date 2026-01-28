@@ -1,5 +1,5 @@
 import { Save, AlertTriangle, Plus, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import type { FieldDescriptor, FieldDef, StatusConfig } from '@autoart/shared';
 
@@ -32,16 +32,27 @@ export function FieldDefinitionEditor({ field }: FieldDefinitionEditorProps) {
 
     // UI State
     const [optionInput, setOptionInput] = useState('');
+    const prevDefinitionIdRef = useRef<string | null>(null);
+    const prevFieldKeyRef = useRef(field.fieldKey);
 
-    // Initialize form when definition loads
+    // Initialize form when definition loads or field changes
     useEffect(() => {
-        if (definition) {
+        const definitionChanged = definition?.id !== prevDefinitionIdRef.current;
+        const fieldKeyChanged = field.fieldKey !== prevFieldKeyRef.current;
+
+        if (definition && (definitionChanged || fieldKeyChanged)) {
+            prevDefinitionIdRef.current = definition.id;
+            prevFieldKeyRef.current = field.fieldKey;
+
             const fieldDef = definition.schema_config.fields.find(f => f.key === field.fieldKey);
             if (fieldDef) {
-                setLabel(fieldDef.label);
-                setRequired(!!fieldDef.required);
-                setOptions(fieldDef.options || []);
-                setStatusConfig(fieldDef.statusConfig || {});
+                // Defer setState to avoid synchronous cascading render
+                requestAnimationFrame(() => {
+                    setLabel(fieldDef.label);
+                    setRequired(!!fieldDef.required);
+                    setOptions(fieldDef.options || []);
+                    setStatusConfig(fieldDef.statusConfig || {});
+                });
             }
         }
     }, [definition, field.fieldKey]);

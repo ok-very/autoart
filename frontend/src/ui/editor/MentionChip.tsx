@@ -209,7 +209,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
       inspectRecord(effectiveSourceId);
     }
     setShowMenu(false);
-  }, [effectiveSourceId, openOverlay]);
+  }, [effectiveSourceId, inspectRecord]);
 
   const handleViewDefinition = useCallback(() => {
     if (effectiveSourceId) {

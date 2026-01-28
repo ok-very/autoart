@@ -1,0 +1,38 @@
+# Stackit team configuration for AutoArt
+# See: https://github.com/getstackit/stackit
+
+trunk: main
+
+# CRITICAL: Use merge commits, NOT squash
+# Squash breaks stacked PRs by orphaning child commits
+merge:
+  method: merge
+
+# PR navigation display
+navigation:
+  when: multiple        # Only show navigation when stack has multiple PRs
+  marker: "👈"          # Symbol marking current PR
+  location: body        # Navigation appears in PR body
+  showMerged: false     # Don't show merged branches
+
+# Branch naming pattern
+branch:
+  pattern: "{username}/{date}/{message}"
+
+# PR submission settings
+submit:
+  footer: true          # Include stack navigation footer in PRs
+
+# Undo history
+undo:
+  depth: 10
+
+# Worktree settings for parallel stacks
+worktree:
+  basePath: "../autoart-stacks"
+  autoClean: true
+
+# Post-worktree-create hooks
+hooks:
+  post-worktree-create:
+    - "pnpm install"

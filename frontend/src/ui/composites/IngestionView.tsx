@@ -7,7 +7,7 @@
  * @layer composites
  */
 import { Upload, FileText, Play, Check, AlertCircle } from 'lucide-react';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 import { useIngestionParsers, useIngestionPreview, useRunIngestion } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
@@ -27,7 +27,6 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
     // Data state
     const [rawData, setRawData] = useState('');
     const [selectedParser, setSelectedParser] = useState<string>('monday');
-    const [parserConfig, setParserConfig] = useState<Record<string, unknown>>({});
 
     // API hooks
     const { data: parsers, isLoading: parsersLoading } = useIngestionParsers();
@@ -37,18 +36,15 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
     // Debounce timer
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Get current parser config fields
+    // Get current parser and derive default config
     const currentParser = parsers?.find(p => p.name === selectedParser);
-
-    // Initialize config from parser defaults
-    useEffect(() => {
-        if (currentParser) {
-            const defaults: Record<string, unknown> = {};
-            currentParser.configFields.forEach(field => {
-                defaults[field.key] = field.defaultValue;
-            });
-            setParserConfig(defaults);
-        }
+    const parserConfig = useMemo(() => {
+        if (!currentParser) return {};
+        const defaults: Record<string, unknown> = {};
+        currentParser.configFields.forEach(field => {
+            defaults[field.key] = field.defaultValue;
+        });
+        return defaults;
     }, [currentParser]);
 
     // Auto-preview on data or config change
@@ -85,8 +81,9 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
         }
     }, []);
 
-    const handleConfigChange = useCallback((key: string, value: string) => {
-        setParserConfig(prev => ({ ...prev, [key]: value }));
+    const handleConfigChange = useCallback((_key: string, _value: string) => {
+        // Config is now derived from defaults - no user override yet
+        // TODO: Add user config override if needed
     }, []);
 
     const handleImport = useCallback(async () => {

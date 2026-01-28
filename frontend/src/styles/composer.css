@@ -9,7 +9,7 @@
    CSS Variables for Composer
    ============================================ */
 
-.composer-surface {
+.composer-view {
     --composer-bg: #f8fafc;
     --composer-card-bg: #ffffff;
     --composer-border: #e2e8f0;
@@ -31,7 +31,7 @@
    Composer Layout
    ============================================ */
 
-.composer-surface {
+.composer-view {
     display: flex;
     flex-direction: column;
     height: 100%;

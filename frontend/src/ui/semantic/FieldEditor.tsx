@@ -13,7 +13,7 @@
  */
 
 import { clsx } from 'clsx';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 import type { FieldViewModel } from '@autoart/shared/domain';
 
@@ -47,19 +47,16 @@ export function FieldEditor({
     const updateRecord = useUpdateRecord();
 
     // 2. Local State for Optimistic Updates
-    const [localValue, setLocalValue] = useState<unknown>(undefined);
+    const [pendingValue, setPendingValue] = useState<unknown>(undefined);
     const [isDirty, setIsDirty] = useState(false);
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Find the specific field view model
     const viewModel = viewModels.find((vm) => vm.fieldId === fieldId);
 
-    // Sync local state with remote data when not dirty
-    useEffect(() => {
-        if (!isDirty && viewModel) {
-            setLocalValue(viewModel.value);
-        }
-    }, [viewModel, isDirty]);
+    // Derive display value: use pending when dirty, otherwise remote
+    const localValue = isDirty ? pendingValue : viewModel?.value;
+    const setLocalValue = setPendingValue;
 
     // 3. Persistence Logic
     const handleSave = useCallback(
@@ -97,7 +94,7 @@ export function FieldEditor({
                 );
             }, 1000); // 1s debounce
         },
-        [record, recordId, fieldId, updateRecord]
+        [record, recordId, fieldId, updateRecord, setLocalValue]
     );
 
     // 4. Callbacks for Complex Fields

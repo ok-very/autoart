@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchPoll, submitResponse, updateResponse } from '../api';
@@ -10,9 +10,10 @@ export function PollPage() {
   const { uniqueId } = useParams<{ uniqueId: string }>();
   const queryClient = useQueryClient();
 
-  const [name, setName] = useState('');
+  // Use lazy initializer to read from localStorage (runs only on mount)
+  const [name, setName] = useState(() => localStorage.getItem(STORAGE_KEY) || '');
   const [email, setEmail] = useState('');
-  const [selectedSlots, setSelectedSlots] = useState<Set<string>>(new Set());
+  const [userSelectedSlots, setUserSelectedSlots] = useState<Set<string> | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
   const {
@@ -34,18 +35,22 @@ export function PollPage() {
 
   const isUpdate = !!existingResponse;
 
-  useEffect(() => {
-    const storedName = localStorage.getItem(STORAGE_KEY);
-    if (storedName) {
-      setName(storedName);
-    }
-  }, []);
+  // Derive selectedSlots from user selection or existing response
+  const selectedSlots = useMemo(() => {
+    if (userSelectedSlots !== null) return userSelectedSlots;
+    if (existingResponse) return new Set(existingResponse.available_slots);
+    return new Set<string>();
+  }, [userSelectedSlots, existingResponse]);
 
-  useEffect(() => {
-    if (existingResponse) {
-      setSelectedSlots(new Set(existingResponse.available_slots));
+  // Wrapper to track user selections
+  const setSelectedSlots = useCallback((value: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+    if (typeof value === 'function') {
+      // Use selectedSlots (derived from existingResponse) as fallback
+      setUserSelectedSlots(prev => value(prev ?? selectedSlots));
+    } else {
+      setUserSelectedSlots(value);
     }
-  }, [existingResponse]);
+  }, [selectedSlots]);
 
   const submitMutation = useMutation({
     mutationFn: () => {

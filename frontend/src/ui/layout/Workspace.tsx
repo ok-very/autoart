@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 
 import { useUpdateNode } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
@@ -44,13 +44,20 @@ function TaskCard({ task }: TaskCardProps) {
   const [title, setTitle] = useState(task.title);
   const [dueDate, setDueDate] = useState(taskMeta.dueDate || '');
   const [status, setLocalStatus] = useState<StatusKey>(currentStatus);
+  const prevTaskIdRef = useRef(task.id);
 
-  // Update local states if task prop changes
+  // Update local states if task changes (different task loaded)
   useEffect(() => {
-    setTitle(task.title);
-    setDueDate(taskMeta.dueDate || '');
-    setLocalStatus(currentStatus);
-  }, [task, currentStatus, taskMeta.dueDate]);
+    if (task.id !== prevTaskIdRef.current) {
+      prevTaskIdRef.current = task.id;
+      // Defer setState to avoid synchronous cascading render
+      requestAnimationFrame(() => {
+        setTitle(task.title);
+        setDueDate(taskMeta.dueDate || '');
+        setLocalStatus(currentStatus);
+      });
+    }
+  }, [task.id, task.title, currentStatus, taskMeta.dueDate]);
 
   const handleUpdateMetadata = async (key: string, value: unknown) => {
     try {

@@ -81,8 +81,11 @@ export function TimeGrid({
 }: TimeGridProps) {
   const timeSlots = generateTimeSlots(startHour, endHour, granularity);
   const isDragging = useRef(false);
-  const dragMode = useRef<'select' | 'deselect'>('select');
-  const [draggedSlots, setDraggedSlots] = useState<Set<string>>(new Set());
+  // Track drag state together - mode and slots
+  const [dragState, setDragState] = useState<{
+    mode: 'select' | 'deselect';
+    slots: Set<string>;
+  }>({ mode: 'select', slots: new Set() });
 
   const handleSlotInteraction = useCallback(
     (slotKey: string, isStart: boolean) => {
@@ -90,10 +93,13 @@ export function TimeGrid({
 
       if (isStart) {
         isDragging.current = true;
-        dragMode.current = selectedSlots.has(slotKey) ? 'deselect' : 'select';
-        setDraggedSlots(new Set([slotKey]));
+        const mode = selectedSlots.has(slotKey) ? 'deselect' : 'select';
+        setDragState({ mode, slots: new Set([slotKey]) });
       } else if (isDragging.current) {
-        setDraggedSlots((prev) => new Set([...prev, slotKey]));
+        setDragState((prev) => ({
+          ...prev,
+          slots: new Set([...prev.slots, slotKey]),
+        }));
       }
     },
     [readOnly, heatmapData, selectedSlots]
@@ -104,8 +110,8 @@ export function TimeGrid({
     isDragging.current = false;
 
     const newSlots = new Set(selectedSlots);
-    draggedSlots.forEach((slot) => {
-      if (dragMode.current === 'select') {
+    dragState.slots.forEach((slot) => {
+      if (dragState.mode === 'select') {
         newSlots.add(slot);
       } else {
         newSlots.delete(slot);
@@ -113,8 +119,8 @@ export function TimeGrid({
     });
 
     onSlotsChange(newSlots);
-    setDraggedSlots(new Set());
-  }, [selectedSlots, draggedSlots, onSlotsChange]);
+    setDragState({ mode: 'select', slots: new Set() });
+  }, [selectedSlots, dragState, onSlotsChange]);
 
   const getSlotClassName = (slotKey: string): string => {
     const baseClasses = 'h-6 border-r border-b border-slate-300 transition-colors';
@@ -125,10 +131,10 @@ export function TimeGrid({
     }
 
     const isSelected = selectedSlots.has(slotKey);
-    const isDragTarget = draggedSlots.has(slotKey);
+    const isDragTarget = dragState.slots.has(slotKey);
 
     if (isDragTarget) {
-      return `${baseClasses} ${dragMode.current === 'select' ? 'bg-emerald-400' : 'bg-slate-200'}`;
+      return `${baseClasses} ${dragState.mode === 'select' ? 'bg-emerald-400' : 'bg-slate-200'}`;
     }
 
     if (isSelected) {

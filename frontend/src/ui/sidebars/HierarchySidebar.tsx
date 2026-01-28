@@ -30,14 +30,19 @@ export function HierarchySidebar() {
   const project = activeProjectId ? getNode(activeProjectId) : null;
   const processes = useMemo(() => project ? getChildren(project.id) : [], [project, getChildren]);
 
-  // Auto-select first process when processes change or none selected
-  useEffect(() => {
-    if (processes.length > 0 && (!selectedProcessId || !processes.find(p => p.id === selectedProcessId))) {
-      setSelectedProcessId(processes[0].id);
-    }
-  }, [processes, selectedProcessId]);
+  // Derive default process ID (first process or null)
+  const defaultProcessId = useMemo(() => processes[0]?.id ?? null, [processes]);
 
-  const selectedProcess = selectedProcessId ? getNode(selectedProcessId) : null;
+  // Validate and use selected process or fall back to default
+  const effectiveProcessId = useMemo(() => {
+    if (selectedProcessId && processes.find(p => p.id === selectedProcessId)) {
+      return selectedProcessId;
+    }
+    return defaultProcessId;
+  }, [selectedProcessId, processes, defaultProcessId]);
+
+  // Use effective ID directly (no sync effect needed)
+  const selectedProcess = effectiveProcessId ? getNode(effectiveProcessId) : null;
   const stages = selectedProcess ? getChildren(selectedProcess.id) : [];
 
   // Determine what type of node to create based on current selection

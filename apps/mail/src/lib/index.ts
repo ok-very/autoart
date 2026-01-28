@@ -15,7 +15,7 @@ export interface ProcessedEmail {
     bodyPreview: string;
     cc: string | null;
     developer: string;
-    priorityFactors: any[];
+    priorityFactors: unknown[];
     triage?: {
         bucket: string;
         confidence: number;
@@ -40,9 +40,9 @@ export interface ProjectGroup {
 export interface FieldViewModel {
     id: string;
     label: string;
-    value: any;
+    value: unknown;
     type: string;
-    options?: any[];
+    options?: unknown[];
     renderHint?: string;
     placeholder?: string;
     editable?: boolean;
@@ -59,4 +59,4 @@ export interface Attachment {
     url: string;
 }
 
-export const filterEmails = (_emails: ProcessedEmail[], _filter: any) => _emails;
+export const filterEmails = (emails: ProcessedEmail[], filter: unknown) => { void filter; return emails; };

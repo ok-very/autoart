@@ -309,17 +309,18 @@ function ActionMappingsPanel({
         setShowLinkPicker(false);
     }, [actionId]);
 
-    const getLinkPickerPosition = useCallback(() => {
-        if (!linkButtonRef.current) return null;
-        const rect = linkButtonRef.current.getBoundingClientRect();
-        return { top: rect.bottom + 4, left: rect.left };
-    }, []);
+    // Track link picker position in state (updated when picker opens)
+    const [linkPickerPosition, setLinkPickerPosition] = useState<{ top: number; left: number } | null>(null);
 
-    // Pre-compute link picker position to avoid calling ref function in JSX
-    const linkPickerPosition = useMemo(
-        () => (showLinkPicker ? getLinkPickerPosition() : null),
-        [showLinkPicker, getLinkPickerPosition]
-    );
+    // Update position when link picker opens
+    useEffect(() => {
+        if (showLinkPicker && linkButtonRef.current) {
+            const rect = linkButtonRef.current.getBoundingClientRect();
+            setLinkPickerPosition({ top: rect.bottom + 4, left: rect.left });
+        } else if (!showLinkPicker) {
+            setLinkPickerPosition(null);
+        }
+    }, [showLinkPicker]);
 
     if (isLoading) {
         return (

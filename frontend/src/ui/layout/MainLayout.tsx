@@ -203,7 +203,7 @@ function ClassificationPanelAdapter(_props: IDockviewPanelProps) {
         setImportPlan(updatedPlan);
       }
     },
-    [importContext?.updatePlan, setImportPlan]
+    [importContext, setImportPlan]
   );
 
   const sessionId = session?.id ?? null;

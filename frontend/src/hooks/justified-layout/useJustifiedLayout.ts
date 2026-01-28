@@ -51,21 +51,8 @@ export function useJustifiedLayout({
   items,
   config,
 }: UseJustifiedLayoutProps): LayoutGeometry {
-  // Destructure config values for stable dependency tracking
-  const {
-    containerWidth,
-    containerPadding,
-    boxSpacing,
-    targetRowHeight,
-    targetRowHeightTolerance,
-    maxNumRows,
-    forceAspectRatio,
-    showWidows,
-    fullWidthBreakoutRowCadence,
-  } = config;
-
   return useMemo(() => {
-    if (!items.length || !containerWidth) {
+    if (!items.length || !config.containerWidth) {
       return EMPTY_LAYOUT;
     }
 
@@ -82,16 +69,5 @@ export function useJustifiedLayout({
       widowCount: result.widowCount,
       boxes: result.boxes,
     };
-  }, [
-    items,
-    containerWidth,
-    containerPadding,
-    boxSpacing,
-    targetRowHeight,
-    targetRowHeightTolerance,
-    maxNumRows,
-    forceAspectRatio,
-    showWidows,
-    fullWidthBreakoutRowCadence,
-  ]);
+  }, [items, config]);
 }

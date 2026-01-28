@@ -48,11 +48,7 @@ function formatTimeAgo(date: Date): string {
  * Single event row in the timeline
  */
 function EventRow({ event }: { event: Event }) {
-    const formatter = getEventFormatter(event.type);
-    if (!formatter) return null;
-    const Icon = formatter.icon;
-    const summary = formatter.summarize((event.payload || {}) as Record<string, unknown>);
-
+    // All hooks must be called before any conditional returns
     const occurredAt = useMemo(() => {
         const date = event.occurredAt instanceof Date
             ? event.occurredAt
@@ -62,6 +58,11 @@ function EventRow({ event }: { event: Event }) {
             absolute: date.toLocaleString(),
         };
     }, [event.occurredAt]);
+
+    const formatter = getEventFormatter(event.type);
+    if (!formatter) return null;
+    const Icon = formatter.icon;
+    const summary = formatter.summarize((event.payload || {}) as Record<string, unknown>);
 
     return (
         <div className="flex items-start gap-3 py-2">

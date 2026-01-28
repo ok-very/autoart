@@ -83,10 +83,12 @@ export function NodeFieldEditor({
     const updateNode = useUpdateNode();
 
     // 2. Local State for Optimistic Updates
-    const [localValue, setLocalValue] = useState<unknown>(undefined);
+    const [pendingValue, setPendingValue] = useState<unknown>(undefined);
     const [isDirty, setIsDirty] = useState(false);
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const latestMetadataRef = useRef<Record<string, unknown>>({});
+
+    // Alias for derived value pattern (set below after viewModel is computed)
 
     // Build field view model from node metadata
     const { viewModel, metadata } = useMemo(() => {
@@ -153,12 +155,9 @@ export function NodeFieldEditor({
         latestMetadataRef.current = metadata;
     }, [metadata]);
 
-    // Sync local state with remote data when not dirty
-    useEffect(() => {
-        if (!isDirty && viewModel) {
-            setLocalValue(viewModel.value);
-        }
-    }, [viewModel, isDirty]);
+    // Derive display value: use pending when dirty, otherwise remote
+    const localValue = isDirty ? pendingValue : viewModel?.value;
+    const setLocalValue = setPendingValue;
 
     // 3. Persistence Logic
     const handleSave = useCallback(
@@ -195,7 +194,7 @@ export function NodeFieldEditor({
                 );
             }, 1000); // 1s debounce
         },
-        [node, nodeId, fieldId, updateNode]
+        [node, nodeId, fieldId, updateNode, setLocalValue]
     );
 
     // 4. Callbacks for Complex Fields
