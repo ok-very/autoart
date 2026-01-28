@@ -33,23 +33,24 @@
   color: var(--ws-fg);
 }
 
-/* Tab strip container */
+/* Tab strip container - !important needed to override dockview defaults */
 .dockview-theme-light .dv-tabs-and-actions-container {
   border-bottom: 1px solid var(--ws-panel-border);
   z-index: 10;
   position: relative;
-  background-image: none;
+  background-image: none !important;
   background-size: auto;
 }
 
 /* Tab styling - flat with bottom accent */
+/* !important needed to override dockview gradient defaults */
 .dockview-theme-light .dv-tab {
   font-size: 13px;
   font-weight: 500;
   padding: 8px 14px;
   border: none;
   border-radius: 0;
-  background: transparent;
+  background: transparent !important;
   color: var(--ws-tab-fg);
   transition: color 0.15s ease, background 0.15s ease;
   margin-right: 0;
@@ -57,11 +58,11 @@
 
 /* Ensure child elements don't interfere */
 .dockview-theme-light .dv-tab * {
-  background-color: transparent;
+  background-color: transparent !important;
 }
 
 .dockview-theme-light .dv-tab:hover {
-  background: var(--ws-tab-bg-hover);
+  background: var(--ws-tab-bg-hover) !important;
   color: var(--ws-tab-fg-hover);
 }
 
@@ -69,7 +70,7 @@
 .dockview-theme-light .dv-tab:focus,
 .dockview-theme-light .dv-tab:active,
 .dockview-theme-light .dv-tab.focused {
-  background: var(--ws-tab-bg-hover);
+  background: var(--ws-tab-bg-hover) !important;
   color: var(--ws-tab-fg-active);
   outline: none;
 }
@@ -77,7 +78,7 @@
 /* Active tab - bottom accent indicator */
 .dockview-theme-light .dv-tab.active {
   color: var(--ws-tab-fg-active);
-  background: var(--ws-tab-bg-active);
+  background: var(--ws-tab-bg-active) !important;
   box-shadow: inset 0 -2px 0 var(--ws-accent);
   font-weight: 500;
   position: relative;
@@ -96,7 +97,7 @@
 
 /* Hide close button for permanent Projects tab */
 .dockview-theme-light .dv-tab[title="Projects"] .dv-default-tab-action {
-  display: none;
+  display: none !important;
 }
 
 /* Tab close button */
