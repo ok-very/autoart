@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import { useCurrentUser } from './api/hooks';
@@ -13,27 +13,25 @@ import { CollectionModeProvider } from './workflows/export/context/CollectionMod
 function App() {
   const { isLoading, isError, isFetching } = useCurrentUser();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [timerExpired, setTimerExpired] = useState(false);
 
-  // Track previous loading state to prevent cascading setState
-  const prevLoadingRef = useRef(isLoading || isFetching);
+  const isCurrentlyLoading = isLoading || isFetching;
 
-  // Show timeout message after 5 seconds of loading
+  // Start/reset timeout timer when loading state changes
   useEffect(() => {
-    const isCurrentlyLoading = isLoading || isFetching;
-    const wasLoading = prevLoadingRef.current;
-
     if (isCurrentlyLoading) {
-      const timer = setTimeout(() => setLoadingTimeout(true), 5000);
+      setTimerExpired(false);
+      const timer = setTimeout(() => setTimerExpired(true), 5000);
       return () => clearTimeout(timer);
-    } else if (wasLoading && !isCurrentlyLoading) {
-      // Only reset when transitioning from loading to not loading
-      setLoadingTimeout(false);
     }
-
-    prevLoadingRef.current = isCurrentlyLoading;
     return undefined;
-  }, [isLoading, isFetching]);
+  }, [isCurrentlyLoading]);
+
+  // Derive timeout message visibility
+  const showTimeoutMessage = useMemo(
+    () => isCurrentlyLoading && timerExpired,
+    [isCurrentlyLoading, timerExpired]
+  );
 
   // Show loading state
   if (isLoading) {
@@ -44,7 +42,7 @@ function App() {
             A
           </div>
           <p className="text-slate-500">Loading...</p>
-          {loadingTimeout && (
+          {showTimeoutMessage && (
             <p className="text-xs text-slate-400 mt-2">
               Taking longer than expected. Is the backend running?
             </p>

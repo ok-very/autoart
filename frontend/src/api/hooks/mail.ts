@@ -41,9 +41,8 @@ import { useMemo } from 'react';
  * Fetch paginated inbox emails
  */
 export function useInbox(filters?: InboxFilters) {
-  // Extract stringify to variable for deps array
-  const filtersKey = JSON.stringify(filters);
-  const queryKey = useMemo(() => mailQueryKeys.emails(filters), [filtersKey]);
+  // Use filters directly - React Compiler infers the dependency correctly
+  const queryKey = useMemo(() => mailQueryKeys.emails(filters), [filters]);
 
   return useQuery({
     queryKey,
@@ -76,9 +75,8 @@ export function useInbox(filters?: InboxFilters) {
  * Fetch paginated inbox emails with AI enrichment (triage analysis)
  */
 export function useEnrichedInbox(filters?: InboxFilters) {
-  // Extract stringify to variable for deps array
-  const filtersKey = JSON.stringify(filters);
-  const queryKey = useMemo(() => mailQueryKeys.enrichedEmails(filters), [filtersKey]);
+  // Use filters directly - React Compiler infers the dependency correctly
+  const queryKey = useMemo(() => mailQueryKeys.enrichedEmails(filters), [filters]);
 
   return useQuery({
     queryKey,

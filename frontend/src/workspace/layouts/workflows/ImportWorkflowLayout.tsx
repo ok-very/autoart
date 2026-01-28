@@ -20,24 +20,28 @@ interface ImportWorkflowLayoutProps {
 export function ImportWorkflowLayout({ children }: ImportWorkflowLayoutProps) {
   const importContext = useImportContext();
 
+  // Extract values for dependency array (satisfies React Compiler)
+  const sessionStatus = importContext.session?.status;
+  const classifications = importContext.plan?.classifications;
+
   // Determine if classification is needed:
   // - Session status is 'needs_review', OR
   // - Plan has unresolved AMBIGUOUS/UNCLASSIFIED items
   const needsClassification = useMemo(() => {
-    if (importContext.session?.status === 'needs_review') {
+    if (sessionStatus === 'needs_review') {
       return true;
     }
 
     // Check if plan has items needing classification
-    if (importContext.plan?.classifications) {
-      const hasUnresolved = importContext.plan.classifications.some(
+    if (classifications) {
+      const hasUnresolved = classifications.some(
         (c) => !c.resolution && (c.outcome === 'AMBIGUOUS' || c.outcome === 'UNCLASSIFIED')
       );
       return hasUnresolved;
     }
 
     return false;
-  }, [importContext.session?.status, importContext.plan?.classifications]);
+  }, [sessionStatus, classifications]);
 
   // Build workflow context
   const workflowContext = useMemo<WorkflowContext>(

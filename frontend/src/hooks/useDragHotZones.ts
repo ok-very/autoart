@@ -129,13 +129,17 @@ export function useDragHotZones({
         }
     }, [isDragging, handleMouseMove, clearTimers]);
 
-    // Reset state when drag ends
+    // Reset state when drag ends - use cleanup function instead of conditional setState
     useEffect(() => {
-        if (!isDragging) {
-            clearTimers();
-            setActiveZoneId(null);
-            setInCooldown(false);
+        if (isDragging) {
+            // Return cleanup that resets state when isDragging becomes false
+            return () => {
+                clearTimers();
+                setActiveZoneId(null);
+                setInCooldown(false);
+            };
         }
+        return undefined;
     }, [isDragging, clearTimers]);
 
     // Cleanup on unmount

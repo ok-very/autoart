@@ -32,16 +32,16 @@ export function FixedPanelRegion({
 
   // Handle delayed unmount for exit animation
   useEffect(() => {
-    if (!isVisible) {
-      // Wait for exit animation to complete before unmounting
-      const timer = setTimeout(() => {
-        setDelayedHidden(true);
-      }, 300); // Match CSS transition duration
-      return () => clearTimeout(timer);
-    } else {
+    if (isVisible) {
+      // Immediately show when becoming visible
       setDelayedHidden(false);
+      return undefined;
     }
-    return undefined;
+    // Wait for exit animation to complete before hiding
+    const timer = setTimeout(() => {
+      setDelayedHidden(true);
+    }, 300); // Match CSS transition duration
+    return () => clearTimeout(timer);
   }, [isVisible]);
 
   const shouldRender = isVisible || !delayedHidden;

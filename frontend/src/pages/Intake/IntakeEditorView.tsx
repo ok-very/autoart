@@ -9,7 +9,7 @@
  * - Publish with public URL
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { ArrowLeft, Eye, Send, Undo2, Redo2, Check, Loader2, ExternalLink, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -39,10 +39,10 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     const updateForm = useUpdateIntakeForm();
     const upsertPage = useUpsertIntakeFormPage();
 
-    // Form state
-    const [formTitle, setFormTitle] = useState('New Form');
+    // Track user changes separately from prop values
+    const [titleChanges, setTitleChanges] = useState<string | null>(null);
+    const [blocksChanges, setBlocksChanges] = useState<FormBlock[] | null>(null);
     const [formDescription, setFormDescription] = useState('');
-    const [blocks, setBlocks] = useState<FormBlock[]>([]);
     const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
     const [showPublishDialog, setShowPublishDialog] = useState(false);
@@ -59,20 +59,42 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     const lastSavedBlocksRef = useRef<string>('');
     const prevFormIdRef = useRef<string | null>(null);
 
-    // Initialize state from loaded form (when form first loads or changes)
+    // Derive form title from prop or user changes
+    const formTitle = useMemo(() => {
+        if (titleChanges !== null) return titleChanges;
+        return form?.title ?? 'New Form';
+    }, [form?.title, titleChanges]);
+
+    // Derive blocks from prop or user changes
+    const blocks = useMemo(() => {
+        if (blocksChanges !== null) return blocksChanges;
+        const firstPage = form?.pages?.[0];
+        return firstPage?.blocks_config?.blocks ?? [];
+    }, [form?.pages, blocksChanges]);
+
+    // Reset changes when form ID changes (new form loaded)
     useEffect(() => {
         if (form && form.id !== prevFormIdRef.current) {
             prevFormIdRef.current = form.id;
-            setFormTitle(form.title);
-            // Load blocks from first page if exists
+            setTitleChanges(null);
+            setBlocksChanges(null);
+            // Mark initial blocks as "saved" to avoid immediate re-save
             const firstPage = form.pages?.[0];
             if (firstPage?.blocks_config?.blocks) {
-                setBlocks(firstPage.blocks_config.blocks);
-                // Mark initial blocks as "saved" to avoid immediate re-save
                 lastSavedBlocksRef.current = JSON.stringify(firstPage.blocks_config.blocks);
             }
         }
     }, [form]);
+
+    // Setters that track user changes
+    const setFormTitle = useCallback((value: string) => setTitleChanges(value), []);
+    const setBlocks = useCallback((value: FormBlock[] | ((prev: FormBlock[]) => FormBlock[])) => {
+        if (typeof value === 'function') {
+            setBlocksChanges(prev => value(prev ?? []));
+        } else {
+            setBlocksChanges(value);
+        }
+    }, []);
 
     // Auto-save blocks with debounce
     useEffect(() => {
