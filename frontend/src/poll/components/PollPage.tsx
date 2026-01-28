@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link2 } from 'lucide-react';
 import { Button, TextInput, Card, Stack, Inline, Text, Alert, Spinner } from '@autoart/ui';
 import { EngagementKind } from '@autoart/shared';
 import { fetchPoll, submitResponse, updateResponse, logEngagement } from '../api';
@@ -17,6 +18,7 @@ export function PollPage() {
   const [email, setEmail] = useState('');
   const [userSelectedSlots, setUserSelectedSlots] = useState<Set<string> | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Engagement tracking state
   const hasLoggedOpened = useRef(false);
@@ -200,8 +202,24 @@ export function PollPage() {
     <div className="min-h-screen bg-ws-bg p-4">
       <div className="mx-auto max-w-4xl">
         <Card shadow="sm" padding="lg" className="mb-6">
-          <Text size="xl" weight="bold" className="mb-2 block text-ws-fg">{poll.title}</Text>
-          {poll.description && <Text color="dimmed">{poll.description}</Text>}
+          <Inline justify="between" align="start">
+            <div>
+              <Text size="xl" weight="bold" className="mb-2 block text-ws-fg">{poll.title}</Text>
+              {poll.description && <Text color="dimmed">{poll.description}</Text>}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              leftSection={<Link2 size={14} />}
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                setLinkCopied(true);
+                setTimeout(() => setLinkCopied(false), 2000);
+              }}
+            >
+              {linkCopied ? 'Copied!' : 'Copy Link'}
+            </Button>
+          </Inline>
         </Card>
 
         <form onSubmit={handleSubmit}>

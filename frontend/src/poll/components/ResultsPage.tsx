@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Card, Stack, Inline, Text, Badge, Spinner } from '@autoart/ui';
+import { Link2 } from 'lucide-react';
+import { Button, Card, Stack, Inline, Text, Badge, Spinner } from '@autoart/ui';
 import { fetchPoll, fetchResults } from '../api';
 import { TimeGrid } from './TimeGrid';
 
 export function ResultsPage() {
   const { uniqueId } = useParams<{ uniqueId: string }>();
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const {
     data: poll,
@@ -64,15 +67,31 @@ export function ResultsPage() {
         <Card shadow="sm" padding="lg">
           <Stack gap="lg">
             {/* Header */}
-            <div>
-              <Text size="xl" weight="bold" className="block text-ws-fg">{poll.title}</Text>
-              {poll.description && (
-                <Text color="dimmed" className="mt-1 block">{poll.description}</Text>
-              )}
-              <Text size="sm" color="muted" className="mt-2 block">
-                {results.totalResponses} {results.totalResponses === 1 ? 'response' : 'responses'}
-              </Text>
-            </div>
+            <Inline justify="between" align="start">
+              <div>
+                <Text size="xl" weight="bold" className="block text-ws-fg">{poll.title}</Text>
+                {poll.description && (
+                  <Text color="dimmed" className="mt-1 block">{poll.description}</Text>
+                )}
+                <Text size="sm" color="muted" className="mt-2 block">
+                  {results.totalResponses} {results.totalResponses === 1 ? 'response' : 'responses'}
+                </Text>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                leftSection={<Link2 size={14} />}
+                onClick={() => {
+                  // Copy poll URL (without /results suffix)
+                  const pollUrl = window.location.href.replace(/\/results$/, '');
+                  navigator.clipboard.writeText(pollUrl);
+                  setLinkCopied(true);
+                  setTimeout(() => setLinkCopied(false), 2000);
+                }}
+              >
+                {linkCopied ? 'Copied!' : 'Copy Link'}
+              </Button>
+            </Inline>
 
             {/* Best Times */}
             {results.bestSlots.length > 0 && (

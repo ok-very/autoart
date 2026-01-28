@@ -1,11 +1,18 @@
-import { useMemo } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ArrowLeft, Link2 } from 'lucide-react';
 import { Button, Card, Stack, Inline, Text, Badge, Spinner } from '@autoart/ui';
+import { SegmentedControl } from '@autoart/ui';
 import { usePoll, usePollResults, useClosePoll } from '../../../api/hooks/polls';
 import { TimeGrid } from '../../../poll/components/TimeGrid';
-import type { Poll } from '@autoart/shared';
+import type { Poll, TimeSlotGranularity } from '@autoart/shared';
 
 const POLL_BASE_URL = import.meta.env.VITE_POLL_BASE_URL || 'https://poll.autoart.work';
+
+const GRANULARITY_OPTIONS = [
+    { value: '15min', label: '15 min' },
+    { value: '30min', label: '30 min' },
+    { value: '60min', label: '60 min' },
+];
 
 interface PollDetailViewProps {
     poll: Poll;
@@ -25,6 +32,10 @@ export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProp
     const { data: pollData, isLoading: pollLoading } = usePoll(initialPoll.id);
     const { data: results, isLoading: resultsLoading } = usePollResults(initialPoll.unique_id);
     const closeMutation = useClosePoll();
+    const [linkCopied, setLinkCopied] = useState(false);
+    const [displayGranularity, setDisplayGranularity] = useState<TimeSlotGranularity>(
+        initialPoll.time_config.granularity
+    );
 
     const poll = pollData ?? initialPoll;
     const isLoading = pollLoading || resultsLoading;
@@ -35,6 +46,13 @@ export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProp
     }, [results]);
 
     const responseCount = results?.totalResponses ?? 0;
+    const pollUrl = `${POLL_BASE_URL}/${poll.unique_id}`;
+
+    const handleCopyLink = () => {
+        navigator.clipboard.writeText(pollUrl);
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
+    };
 
     return (
         <Stack gap="none" className="h-full">
@@ -57,6 +75,14 @@ export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProp
                         </Badge>
                     </Inline>
                     <Inline gap="sm">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            leftSection={<Link2 size={14} />}
+                            onClick={handleCopyLink}
+                        >
+                            {linkCopied ? 'Copied!' : 'Copy Link'}
+                        </Button>
                         {poll.status === 'active' && (
                             <Button
                                 variant="secondary"
@@ -93,9 +119,6 @@ export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProp
                                         {responseCount} {responseCount === 1 ? 'response' : 'responses'}
                                     </Text>
                                 </Inline>
-                                <Text size="sm" color="dimmed">
-                                    Share: {POLL_BASE_URL}/{poll.unique_id}
-                                </Text>
                             </Stack>
                         </Card>
 
@@ -118,12 +141,20 @@ export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProp
                         {/* Heatmap */}
                         <Card padding="md">
                             <Stack gap="md">
-                                <Text weight="semibold">Availability Heatmap</Text>
+                                <Inline justify="between" align="center">
+                                    <Text weight="semibold">Availability Heatmap</Text>
+                                    <SegmentedControl
+                                        value={displayGranularity}
+                                        onChange={(v) => setDisplayGranularity(v as TimeSlotGranularity)}
+                                        data={GRANULARITY_OPTIONS}
+                                        size="xs"
+                                    />
+                                </Inline>
                                 <TimeGrid
                                     dates={poll.time_config.dates}
                                     startHour={poll.time_config.start_hour}
                                     endHour={poll.time_config.end_hour}
-                                    granularity={poll.time_config.granularity}
+                                    granularity={displayGranularity}
                                     readOnly
                                     heatmapData={heatmapData}
                                     maxCount={responseCount}
