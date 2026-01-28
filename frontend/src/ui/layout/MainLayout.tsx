@@ -346,13 +346,6 @@ function IconTab(props: IDockviewPanelHeaderProps) {
       <div className="flex items-center gap-2 flex-1 overflow-hidden min-w-0">
         {Icon && <Icon size={14} strokeWidth={2} className="flex-shrink-0" />}
         <span className="truncate">{def?.title || api.title}</span>
-        {isBound && (
-          <span
-            className={`text-[9px] px-1.5 py-0.5 rounded-full ${colorClasses.bg100} ${colorClasses.text600}`}
-          >
-            Bound
-          </span>
-        )}
       </div>
       {!isPermanentPanel(componentType) && (
         <div
