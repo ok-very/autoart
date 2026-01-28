@@ -77,6 +77,16 @@ This is the AutoArt Process Management System - a monorepo with frontend, backen
 @.claude/skills/backend.md
 @.claude/skills/project.md
 
+### Design System
+
+@docs/DESIGN.md - Foundational palette and interaction rules
+
+**Key principles:**
+- Parchment (`#F5F2ED`) backgrounds, Charcoal Ink (`#2E2E2C`) text
+- Oxide Blue (`#3F5C6E`) for primary actions
+- Muted feedback colors (no traffic-light saturation)
+- Structure > color > motion
+
 ## Quick Reference
 
 ### Project Structure
