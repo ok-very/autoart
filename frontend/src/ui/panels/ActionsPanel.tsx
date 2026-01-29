@@ -7,16 +7,12 @@
 
 import { Zap } from 'lucide-react';
 import { useCallback, useState } from 'react';
-// import { useNavigate } from 'react-router-dom'; // No navigation
-
 import { ResizeHandle } from '@autoart/ui';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../registry';
 import { ActionInstancesView } from '../tables/ActionInstancesView';
 
 export function ActionsPanel() {
-    // const navigate = useNavigate();
-    // const { openOverlay } = useUIStore(); // We might use drawer or just open Composer panel
-
     // Note: ActionsPage handled inspector resizing globally via uiStore.
     // In Dockview, inspector resizing is handled by Dockview itself.
     // So we only handle local sidebar resizing.
@@ -37,15 +33,7 @@ export function ActionsPanel() {
     };
 
     const handleCreateDefinition = () => {
-        // Open Composer panel instead of navigating
-        // useWorkspaceStore.getState().openPanel('composer') ? Or open drawer?
-        // Current ActionsPage navigated to /composer.
-        // We probably want to open the Composer panel if we migrate it, or use the drawer.
-        // For now, let's assuming opening the Composer "drawer" (surface).
-        // Actually, previous ActionsPage navigated to /composer.
-        // I'll leave a TODO or open a drawer for now, or just notify 'Use Composer Panel'.
-        console.log('TODO: Open Composer Panel');
-        // If we make Composer a panel, we can open it.
+        useWorkspaceStore.getState().openPanel('composer-workbench');
     };
 
     return (
