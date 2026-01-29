@@ -34,7 +34,6 @@ export function ActionListView() {
     };
 
     const handleAddAction = () => {
-        // TODO: Replace with Command Palette (#87)
         toggleComposerBar();
     };
 
