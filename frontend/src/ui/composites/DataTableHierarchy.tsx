@@ -174,7 +174,7 @@ export function DataTableHierarchy({
     enableNesting = false,
     getChildren,
     subtaskFields: _subtaskFields,
-    onAddSubtask: _onAddSubtask, // TODO: Implement add subtask button in expanded section
+    onAddSubtask: _onAddSubtask,
 }: DataTableHierarchyProps) {
     // Track which parent nodes have their children (subtasks) visible
     const [expandedChildrenIds, setExpandedChildrenIds] = useState<Set<string>>(new Set());

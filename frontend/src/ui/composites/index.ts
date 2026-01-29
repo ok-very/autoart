@@ -71,7 +71,6 @@ export { ActionsList, type ActionsListProps } from './ActionsList';
 // Reusable Record/Hierarchy View Composites
 export { RecordView } from './RecordView';
 export { ProjectView, type ProjectViewProps } from './ProjectView';
-export { ProjectLogView } from './ProjectLogView';
 export { MillerColumnsView, type MillerColumnsViewProps } from './MillerColumnsView';
 
 // Ingestion/Import View
