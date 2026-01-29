@@ -26,13 +26,19 @@ export async function projectBfaExportModels(
     projectIds: string[],
     options: ExportOptions
 ): Promise<BfaProjectExportModel[]> {
-    const models: BfaProjectExportModel[] = [];
+    // Process projects in parallel for better performance
+    const modelPromises = projectIds.map((projectId, index) =>
+        projectSingleProject(projectId, index, options)
+    );
 
-    for (let i = 0; i < projectIds.length; i++) {
-        const projectId = projectIds[i];
-        const model = await projectSingleProject(projectId, i, options);
-        if (model) {
-            models.push(model);
+    const results = await Promise.allSettled(modelPromises);
+
+    const models: BfaProjectExportModel[] = [];
+    for (const result of results) {
+        if (result.status === 'fulfilled' && result.value) {
+            models.push(result.value);
+        } else if (result.status === 'rejected') {
+            console.warn('Failed to project BFA model:', result.reason);
         }
     }
 
@@ -136,20 +142,16 @@ async function getProjectContacts(projectId: string) {
 }
 
 async function getBudgetEvents(projectId: string) {
-    // Get BUDGET_ALLOCATED events for this project
-    // events uses 'context_id' not 'classification_node_id', and 'type' not 'event_type'
+    // Get BUDGET_ALLOCATED events for this project with direct filtering
     const events = await db
         .selectFrom('events')
         .selectAll()
         .where('context_id', '=', projectId)
         .where('type', '=', 'FACT_RECORDED')
+        .where(db.fn('json_extract', ['payload', '$.factKind']), '=', 'BUDGET_ALLOCATED')
         .execute();
 
-    // Filter for BUDGET_ALLOCATED fact kinds
-    return events.filter((e) => {
-        const payload = e.payload as Record<string, unknown> | null;
-        return payload?.factKind === 'BUDGET_ALLOCATED';
-    }).map((e) => ({
+    return events.map((e) => ({
         id: e.id,
         payload: e.payload as Record<string, unknown>,
         occurredAt: e.occurred_at,
@@ -189,22 +191,40 @@ async function getSelectionPanels(projectId: string) {
 }
 
 async function getProjectTasks(projectId: string, openOnly: boolean) {
-    // Get task nodes under this project
-    // hierarchy_nodes uses 'type' not 'node_type'
-    const query = db
-        .selectFrom('hierarchy_nodes')
+    // Get all task nodes under this project using recursive CTE
+    // This finds tasks at any level in the hierarchy, not just direct children
+    const tasksQuery = db
+        .withRecursive('task_hierarchy', (qb) =>
+            qb
+                // Base case: start with the project itself
+                .selectFrom('hierarchy_nodes')
+                .select(['id', 'parent_id', 'type', 'title', 'metadata'])
+                .where('id', '=', projectId)
+                .unionAll(
+                    // Recursive case: find children of nodes in the hierarchy
+                    qb
+                        .selectFrom('hierarchy_nodes')
+                        .innerJoin('task_hierarchy', 'hierarchy_nodes.parent_id', 'task_hierarchy.id')
+                        .select(['hierarchy_nodes.id', 'hierarchy_nodes.parent_id', 'hierarchy_nodes.type', 'hierarchy_nodes.title', 'hierarchy_nodes.metadata'])
+                )
+        )
+        .selectFrom('task_hierarchy')
         .selectAll()
-        .where('parent_id', '=', projectId)
-        .where('type', 'in', ['task', 'subprocess']);
+        .where('type', 'in', ['task', 'subprocess'])
+        .where('id', '!=', projectId); // Exclude the project itself
 
-    if (openOnly) {
-        // Filter for non-completed tasks based on metadata status
-        // This is a simplified check - real implementation would check status field
-    }
+    const allTasks = await tasksQuery.execute();
 
-    const tasks = await query.execute();
+    // Filter for open tasks if requested
+    const filteredTasks = openOnly ? allTasks.filter(task => {
+        const status = (task.metadata as Record<string, unknown> | null)?.status as string | undefined;
+        const isDone = status && ['done', 'complete', 'finished', 'cancelled'].some(s =>
+            status.toLowerCase().includes(s)
+        );
+        return !isDone;
+    }) : allTasks;
 
-    return tasks.map((t) => ({
+    return filteredTasks.map((t) => ({
         id: t.id,
         title: t.title,
         metadata: t.metadata as Record<string, unknown> | null,
@@ -212,19 +232,17 @@ async function getProjectTasks(projectId: string, openOnly: boolean) {
 }
 
 async function getStageEvents(projectId: string) {
-    // Get STAGE_ENTERED events for this project
+    // Get STAGE_ENTERED events for this project with direct filtering
     const events = await db
         .selectFrom('events')
         .selectAll()
         .where('context_id', '=', projectId)
         .where('type', '=', 'FACT_RECORDED')
+        .where(db.fn('json_extract', ['payload', '$.factKind']), '=', 'STAGE_ENTERED')
         .orderBy('occurred_at', 'desc')
         .execute();
 
-    return events.filter((e) => {
-        const payload = e.payload as Record<string, unknown> | null;
-        return payload?.factKind === 'STAGE_ENTERED';
-    }).map((e) => ({
+    return events.map((e) => ({
         id: e.id,
         payload: e.payload as Record<string, unknown>,
         occurredAt: e.occurred_at,
@@ -257,13 +275,27 @@ function extractStaffInitials(metadata: Record<string, unknown> | null): string[
 }
 
 function extractClientName(contacts: Array<{ data: Record<string, unknown> | null }>): string {
-    // Find Developer/Client contact
-    const client = contacts.find((c) =>
-        c.data?.contactGroup === 'Developer/Client'
+    // Try multiple contact group labels to find client
+    const clientGroups = ['Developer/Client', 'Developer', 'Client', 'Assignee'];
+
+    for (const groupName of clientGroups) {
+        const client = contacts.find((c) =>
+            c.data?.contactGroup === groupName
+        );
+
+        if (client?.data) {
+            const name = (client.data.name as string) || (client.data.company as string);
+            if (name) return name;
+        }
+    }
+
+    // Fallback: return first contact with a name
+    const firstContact = contacts.find(c =>
+        c.data?.name || c.data?.company
     );
 
-    if (client?.data) {
-        return (client.data.name as string) || (client.data.company as string) || '';
+    if (firstContact?.data) {
+        return (firstContact.data.name as string) || (firstContact.data.company as string) || '';
     }
 
     return '';
