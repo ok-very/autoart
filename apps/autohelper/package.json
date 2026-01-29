@@ -9,6 +9,7 @@
         "lint": "ruff check .",
         "format": "ruff check . --fix"
     },
-    "dependencies": {},
-    "devDependencies": {}
+    "dependencies": {
+        "pip": "^0.0.1"
+    }
 }

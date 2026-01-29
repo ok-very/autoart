@@ -21,6 +21,21 @@ export const StatusConfigSchema = z.record(z.string(), StatusOptionConfigSchema)
 export type StatusConfig = z.infer<typeof StatusConfigSchema>;
 
 /**
+ * Rollup Configuration Schema
+ * Defines how a rollup field aggregates values across linked records.
+ */
+export const RollupConfigSchema = z.object({
+  /** Link type to follow (e.g., 'line_item', 'budget_expense') */
+  linkType: z.string().min(1),
+  /** Field key on the target record to aggregate */
+  targetField: z.string().min(1),
+  /** Aggregation function */
+  aggregation: z.enum(['sum', 'count', 'min', 'max', 'avg']),
+});
+
+export type RollupConfig = z.infer<typeof RollupConfigSchema>;
+
+/**
  * Field Definition Schema
  * Defines a single field in a record definition's schema
  */
@@ -47,6 +62,21 @@ export const FieldDefSchema = z.object({
    * Maps each status value to its label and color class.
    */
   statusConfig: StatusConfigSchema.optional(),
+  /**
+   * Formula expression for computed fields (type: 'computed').
+   * References sibling fields with # syntax: "#qty * #unit_price"
+   */
+  formula: z.string().optional(),
+  /**
+   * Rollup configuration for rollup fields (type: 'rollup').
+   * Aggregates a field across linked records.
+   */
+  rollupConfig: RollupConfigSchema.optional(),
+  /**
+   * Default currency code for currency fields (type: 'currency').
+   * ISO 4217 code, e.g., 'CAD', 'USD', 'EUR'. Defaults to 'CAD'.
+   */
+  currencyDefault: z.string().optional(),
 });
 
 export type FieldDef = z.infer<typeof FieldDefSchema>;
