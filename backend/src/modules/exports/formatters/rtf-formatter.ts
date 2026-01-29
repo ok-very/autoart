@@ -112,15 +112,16 @@ function formatProjectRtf(
     if (options.includeMilestones && project.timelineBlock.milestones.length > 0) {
         parts.push(`{\\fs20\\b Timeline:}\\par`);
         for (const milestone of project.timelineBlock.milestones) {
-            const statusMark = milestone.status === 'completed' ? '✓' : '●';
+            // RTF Unicode: \uN? where N = decimal code point, ? = ASCII fallback
+            const statusMark = milestone.status === 'completed' ? '\\u10003?' : '\\u9679?';
             const dateStr = milestone.dateText || 'TBD';
-            const line = `  ${statusMark} ${milestone.kind}: ${dateStr}`;
+            const labelText = `${milestone.kind}: ${dateStr}`;
 
             // Highlight if date is in current month
             if (isCurrentMonth(milestone.normalizedDate)) {
-                parts.push(`{\\fs20 ${highlight(line)}}\\par`);
+                parts.push(`{\\fs20 {\\highlight3   ${statusMark} ${escapeRtf(labelText)}}}\\par`);
             } else {
-                parts.push(`{\\fs20 ${escapeRtf(line)}}\\par`);
+                parts.push(`{\\fs20   ${statusMark} ${escapeRtf(labelText)}}\\par`);
             }
         }
     }
@@ -151,7 +152,7 @@ function formatProjectRtf(
         if (stepsToShow.length > 0) {
             parts.push(`{\\fs20\\b Next Steps:}\\par`);
             for (const step of stepsToShow) {
-                const bullet = step.completed ? '✓' : '●';
+                const bullet = step.completed ? '\\u10003?' : '\\u9679?';
                 const assigneeSuffix = step.assigneeHint ? ` (${step.assigneeHint})` : '';
                 parts.push(`{\\fs20   ${bullet} ${escapeRtf(step.text)}${escapeRtf(assigneeSuffix)}}\\par`);
             }
