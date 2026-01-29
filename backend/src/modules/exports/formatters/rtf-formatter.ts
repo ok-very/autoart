@@ -21,10 +21,6 @@ function bold(text: string): string {
     return `{\\b ${escapeRtf(text)}}`;
 }
 
-// RTF italic wrapper
-function _italic(text: string): string {
-    return `{\\i ${escapeRtf(text)}}`;
-}
 
 // RTF highlight (yellow background for current month items)
 function highlight(text: string): string {
@@ -42,9 +38,9 @@ export function formatAsRtf(
 
     // RTF header with font table and color table
     rtfParts.push('{\\rtf1\\ansi\\deff0');
-    rtfParts.push('{\\fonttbl{\\f0 Arial;}{\\f1 Courier New;}}');
-    // Color table: 0=auto, 1=black, 2=blue, 3=yellow (highlight)
-    rtfParts.push('{\\colortbl;\\red0\\green0\\blue0;\\red0\\green0\\blue255;\\red255\\green255\\blue0;}');
+    rtfParts.push('{\\fonttbl{\\f0 Calibri;}{\\f1 Calibri;}}');
+    // Expanded color table to match original document: 0=auto, 1=black, 2=blue, 3=yellow (highlight), 4=red, 5=gray, 6=cyan
+    rtfParts.push('{\\colortbl;\\red0\\green0\\blue0;\\red0\\green0\\blue255;\\red255\\green255\\blue0;\\red255\\green0\\blue0;\\red128\\green128\\blue128;\\red0\\green255\\blue255;}');
     rtfParts.push('');
 
     // Document title
@@ -116,15 +112,16 @@ function formatProjectRtf(
     if (options.includeMilestones && project.timelineBlock.milestones.length > 0) {
         parts.push(`{\\fs20\\b Timeline:}\\par`);
         for (const milestone of project.timelineBlock.milestones) {
-            const statusMark = milestone.status === 'completed' ? '[x]' : '[ ]';
+            // RTF Unicode: \uN? where N = decimal code point, ? = ASCII fallback
+            const statusMark = milestone.status === 'completed' ? '\\u10003?' : '\\u9679?';
             const dateStr = milestone.dateText || 'TBD';
-            const line = `  ${statusMark} ${milestone.kind}: ${dateStr}`;
+            const labelText = `${milestone.kind}: ${dateStr}`;
 
             // Highlight if date is in current month
             if (isCurrentMonth(milestone.normalizedDate)) {
-                parts.push(`{\\fs20 ${highlight(line)}}\\par`);
+                parts.push(`{\\fs20 {\\highlight3   ${statusMark} ${escapeRtf(labelText)}}}\\par`);
             } else {
-                parts.push(`{\\fs20 ${escapeRtf(line)}}\\par`);
+                parts.push(`{\\fs20   ${statusMark} ${escapeRtf(labelText)}}\\par`);
             }
         }
     }
@@ -155,7 +152,7 @@ function formatProjectRtf(
         if (stepsToShow.length > 0) {
             parts.push(`{\\fs20\\b Next Steps:}\\par`);
             for (const step of stepsToShow) {
-                const bullet = step.completed ? '[x]' : '[ ]';
+                const bullet = step.completed ? '\\u10003?' : '\\u9679?';
                 const assigneeSuffix = step.assigneeHint ? ` (${step.assigneeHint})` : '';
                 parts.push(`{\\fs20   ${bullet} ${escapeRtf(step.text)}${escapeRtf(assigneeSuffix)}}\\par`);
             }
@@ -187,7 +184,7 @@ function formatHeaderLine(project: BfaProjectExportModel): string {
     }
 
     if (budgetParts.length > 0) {
-        line += ` (${budgetParts.join(', ')})`;
+        line += ` (${budgetParts.join(' | ')})`;
     }
 
     if (project.header.install.dateText) {
