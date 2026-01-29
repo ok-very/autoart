@@ -3,7 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link2 } from 'lucide-react';
 import { Button, TextInput, Card, Stack, Inline, Text, Alert, Spinner } from '@autoart/ui';
-import { EngagementKind, DEFAULT_DATE_CONFIG, type DateFormatConfig } from '@autoart/shared';
+import { EngagementKind, buildPollDateConfig, type DateFormatConfig } from '@autoart/shared';
+import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
 import { fetchPoll, submitResponse, updateResponse, logEngagement } from '../api';
 import { TimeGrid } from './TimeGrid';
 
@@ -18,7 +19,7 @@ export function PollPage() {
   const [email, setEmail] = useState('');
   const [userSelectedSlots, setUserSelectedSlots] = useState<Set<string> | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const [linkCopied, setLinkCopied] = useState(false);
+  const { copied: linkCopied, copyToClipboard } = useCopyToClipboard();
 
   // Engagement tracking state
   const hasLoggedOpened = useRef(false);
@@ -87,10 +88,10 @@ export function PollPage() {
   const isUpdate = !!existingResponse;
 
   // Derive date format config from poll's stored timezone
-  const dateConfig: DateFormatConfig = useMemo(() => ({
-    ...DEFAULT_DATE_CONFIG,
-    timezone: poll?.time_config?.timezone ?? DEFAULT_DATE_CONFIG.timezone,
-  }), [poll?.time_config?.timezone]);
+  const dateConfig: DateFormatConfig = useMemo(
+    () => buildPollDateConfig(poll),
+    [poll?.time_config?.timezone],
+  );
 
   // Derive selectedSlots from user selection or existing response
   const selectedSlots = useMemo(() => {
@@ -136,6 +137,7 @@ export function PollPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitMutation.isPending || updateMutation.isPending) return;
     if (isUpdate) {
       updateMutation.mutate();
     } else {
@@ -217,11 +219,7 @@ export function PollPage() {
               variant="ghost"
               size="sm"
               leftSection={<Link2 size={14} />}
-              onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
-                setLinkCopied(true);
-                setTimeout(() => setLinkCopied(false), 2000);
-              }}
+              onClick={() => copyToClipboard(window.location.href)}
             >
               {linkCopied ? 'Copied!' : 'Copy Link'}
             </Button>

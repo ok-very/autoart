@@ -1,19 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { ArrowLeft, Link2 } from 'lucide-react';
 import { Button, Card, Stack, Inline, Text, Badge, Spinner } from '@autoart/ui';
-import { SegmentedControl } from '@autoart/ui';
 import { usePoll, usePollResults, useClosePoll, usePollEngagements } from '../../../api/hooks/polls';
 import { useDateFormat } from '../../../hooks/useDateFormat';
+import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
+import { formatDateShort, formatTime } from '@autoart/shared';
 import { TimeGrid } from '../../../poll/components/TimeGrid';
-import type { Poll, TimeSlotGranularity } from '@autoart/shared';
-
-const POLL_BASE_URL = import.meta.env.VITE_POLL_BASE_URL || 'https://poll.autoart.work';
-
-const GRANULARITY_OPTIONS = [
-    { value: '15min', label: '15 min' },
-    { value: '30min', label: '30 min' },
-    { value: '60min', label: '60 min' },
-];
+import type { Poll } from '@autoart/shared';
+import { POLL_BASE_URL } from './constants';
 
 interface PollDetailViewProps {
     poll: Poll;
@@ -21,15 +15,12 @@ interface PollDetailViewProps {
 }
 
 export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProps) {
-    const { data: pollData, isLoading: pollLoading } = usePoll(initialPoll.id);
-    const { data: results, isLoading: resultsLoading } = usePollResults(initialPoll.unique_id);
+    const { data: pollData, isLoading: pollLoading, error: pollError } = usePoll(initialPoll.id);
+    const { data: results, isLoading: resultsLoading, error: resultsError } = usePollResults(initialPoll.unique_id);
     const closeMutation = useClosePoll();
     const { data: engagements } = usePollEngagements(initialPoll.id);
     const { formatDate, dateFormat, timezone } = useDateFormat();
-    const [linkCopied, setLinkCopied] = useState(false);
-    const [displayGranularity, setDisplayGranularity] = useState<TimeSlotGranularity>(
-        initialPoll.time_config.granularity
-    );
+    const { copied: linkCopied, copyToClipboard } = useCopyToClipboard();
 
     const poll = pollData ?? initialPoll;
     const isLoading = pollLoading || resultsLoading;
@@ -43,9 +34,7 @@ export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProp
     const pollUrl = `${POLL_BASE_URL}/${poll.unique_id}`;
 
     const handleCopyLink = () => {
-        navigator.clipboard.writeText(pollUrl);
-        setLinkCopied(true);
-        setTimeout(() => setLinkCopied(false), 2000);
+        copyToClipboard(pollUrl);
     };
 
     return (
@@ -81,7 +70,11 @@ export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProp
                             <Button
                                 variant="secondary"
                                 size="sm"
-                                onClick={() => closeMutation.mutate(poll.id)}
+                                onClick={() => {
+                                    if (window.confirm('Are you sure? Participants will no longer be able to respond.')) {
+                                        closeMutation.mutate(poll.id);
+                                    }
+                                }}
                                 disabled={closeMutation.isPending}
                             >
                                 {closeMutation.isPending ? 'Closing...' : 'Close Poll'}
@@ -96,6 +89,26 @@ export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProp
                 {isLoading ? (
                     <div className="flex h-full items-center justify-center">
                         <Spinner size="lg" />
+                    </div>
+                ) : (pollError || resultsError) ? (
+                    <div className="flex h-full items-center justify-center">
+                        <Card padding="lg">
+                            <Stack align="center" gap="md">
+                                <Text weight="semibold" color="error">Failed to load poll data</Text>
+                                <Text size="sm" color="dimmed">
+                                    {(pollError ?? resultsError) instanceof Error
+                                        ? (pollError ?? resultsError)!.message
+                                        : 'An unexpected error occurred'}
+                                </Text>
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => window.location.reload()}
+                                >
+                                    Retry
+                                </Button>
+                            </Stack>
+                        </Card>
                     </div>
                 ) : (
                     <Stack gap="lg" className="max-w-4xl">
@@ -157,11 +170,29 @@ export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProp
                                 <Stack gap="sm">
                                     <Text weight="semibold">Best Times</Text>
                                     <Inline gap="sm" wrap>
-                                        {results.bestSlots.map((slot) => (
-                                            <Badge key={slot} variant="success" size="md">
-                                                {slot}
-                                            </Badge>
-                                        ))}
+                                        {results.bestSlots.map((slot) => {
+                                            const parts = slot.split(':');
+                                            if (parts.length >= 3) {
+                                                const [date, hour, minute] = parts;
+                                                const hourNum = parseInt(hour, 10);
+                                                const minuteNum = parseInt(minute, 10);
+                                                if (!isNaN(hourNum) && !isNaN(minuteNum) && hourNum >= 0 && hourNum <= 23 && minuteNum >= 0 && minuteNum <= 59) {
+                                                    const dateConfig = { dateFormat, timezone: poll.time_config.timezone ?? timezone };
+                                                    const dayStr = formatDateShort(date, dateConfig);
+                                                    const timeStr = formatTime(hourNum, minuteNum, dateConfig);
+                                                    return (
+                                                        <Badge key={slot} variant="success" size="md">
+                                                            {dayStr} @ {timeStr}
+                                                        </Badge>
+                                                    );
+                                                }
+                                            }
+                                            return (
+                                                <Badge key={slot} variant="success" size="md">
+                                                    {slot}
+                                                </Badge>
+                                            );
+                                        })}
                                     </Inline>
                                 </Stack>
                             </Card>
@@ -170,20 +201,12 @@ export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProp
                         {/* Heatmap */}
                         <Card padding="md">
                             <Stack gap="md">
-                                <Inline justify="between" align="center">
-                                    <Text weight="semibold">Availability Heatmap</Text>
-                                    <SegmentedControl
-                                        value={displayGranularity}
-                                        onChange={(v) => setDisplayGranularity(v as TimeSlotGranularity)}
-                                        data={GRANULARITY_OPTIONS}
-                                        size="xs"
-                                    />
-                                </Inline>
+                                <Text weight="semibold">Availability Heatmap</Text>
                                 <TimeGrid
                                     dates={poll.time_config.dates}
                                     startHour={poll.time_config.start_hour}
                                     endHour={poll.time_config.end_hour}
-                                    granularity={displayGranularity}
+                                    granularity={poll.time_config.granularity}
                                     readOnly
                                     heatmapData={heatmapData}
                                     maxCount={responseCount}

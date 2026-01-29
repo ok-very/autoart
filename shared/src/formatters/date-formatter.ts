@@ -1,3 +1,20 @@
+/**
+ * Date formatting utilities with locale-aware presets.
+ *
+ * Each DateFormatPreset maps to a specific Intl locale:
+ *   iso  → sv-SE  (produces YYYY-MM-DD / 24h)
+ *   us   → en-US  (produces MM/DD/YYYY / 12h AM/PM)
+ *   eu   → en-GB  (produces DD/MM/YYYY / 24h)
+ *   long → en-US  (produces "January 28, 2026" / 12h)
+ *
+ * DEFAULT_DATE_CONFIG uses 'us' preset with 'America/Vancouver' timezone,
+ * matching the primary user base. Polls store their own timezone in
+ * time_config so results display in the poll creator's timezone regardless
+ * of viewer locale. Use `buildPollDateConfig()` to derive a config from a poll.
+ *
+ * Intl.DateTimeFormat instances are cached at module level for performance.
+ */
+
 export type DateFormatPreset = 'iso' | 'us' | 'eu' | 'long';
 
 export interface DateFormatConfig {
@@ -24,6 +41,18 @@ const PRESET_LOCALE: Record<DateFormatPreset, string> = {
   long: 'en-US',
 };
 
+const formatterCache = new Map<string, Intl.DateTimeFormat>();
+
+function getFormatter(locale: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const key = `${locale}:${JSON.stringify(options)}`;
+  let formatter = formatterCache.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(locale, options);
+    formatterCache.set(key, formatter);
+  }
+  return formatter;
+}
+
 /**
  * Short date for tables/metadata.
  * iso  → 2026-01-28
@@ -46,7 +75,7 @@ export function formatDate(
       : { year: 'numeric', month: '2-digit', day: '2-digit' }),
   };
 
-  return new Intl.DateTimeFormat(locale, options).format(date);
+  return getFormatter(locale, options).format(date);
 }
 
 /**
@@ -65,13 +94,13 @@ export function formatDateHeader(
 
   const locale = PRESET_LOCALE[config.dateFormat];
 
-  const weekday = new Intl.DateTimeFormat(locale, {
+  const weekday = getFormatter(locale, {
     weekday: 'short',
     timeZone: config.timezone,
   }).format(date);
 
   if (config.dateFormat === 'long') {
-    const monthDay = new Intl.DateTimeFormat(locale, {
+    const monthDay = getFormatter(locale, {
       month: 'short',
       day: 'numeric',
       timeZone: config.timezone,
@@ -80,7 +109,7 @@ export function formatDateHeader(
   }
 
   // Derive month/day via Intl so they respect the configured timezone
-  const parts = new Intl.DateTimeFormat(locale, {
+  const parts = getFormatter(locale, {
     month: 'numeric',
     day: 'numeric',
     timeZone: config.timezone,
@@ -114,13 +143,13 @@ export function formatDateShort(
 
   const locale = PRESET_LOCALE[config.dateFormat];
 
-  const weekday = new Intl.DateTimeFormat(locale, {
+  const weekday = getFormatter(locale, {
     weekday: 'short',
     timeZone: config.timezone,
   }).format(date);
 
   if (config.dateFormat === 'iso') {
-    const parts = new Intl.DateTimeFormat(locale, {
+    const parts = getFormatter(locale, {
       month: 'numeric',
       day: 'numeric',
       timeZone: config.timezone,
@@ -130,7 +159,7 @@ export function formatDateShort(
     return `${weekday}, ${month}-${day}`;
   }
 
-  const monthDay = new Intl.DateTimeFormat(locale, {
+  const monthDay = getFormatter(locale, {
     month: 'short',
     day: 'numeric',
     timeZone: config.timezone,
@@ -155,11 +184,23 @@ export function formatTime(
   const locale = PRESET_LOCALE[config.dateFormat];
   // Use UTC date + UTC timezone to prevent any local-timezone shifting
   const date = new Date(Date.UTC(2000, 0, 1, hour, minute));
-  return new Intl.DateTimeFormat(locale, {
+  return getFormatter(locale, {
     hour: 'numeric',
     minute: '2-digit',
     timeZone: 'UTC',
   }).format(date);
+}
+
+/**
+ * Build a DateFormatConfig from a poll's time_config, falling back to defaults.
+ */
+export function buildPollDateConfig(
+  poll?: { time_config?: { timezone?: string } } | null,
+): DateFormatConfig {
+  return {
+    ...DEFAULT_DATE_CONFIG,
+    timezone: poll?.time_config?.timezone ?? DEFAULT_DATE_CONFIG.timezone,
+  };
 }
 
 /**
@@ -180,7 +221,7 @@ export function formatMonthYear(
     return `${year}-${String(month + 1).padStart(2, '0')}`;
   }
 
-  return new Intl.DateTimeFormat(locale, {
+  return getFormatter(locale, {
     month: 'long',
     year: 'numeric',
   }).format(date);

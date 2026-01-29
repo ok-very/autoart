@@ -6,6 +6,41 @@ import * as oauthService from './oauth.service.js';
 import * as settingsService from './settings.service.js';
 import { AppError } from '../../utils/errors.js';
 
+const VALID_DATE_FORMATS = ['iso', 'us', 'eu', 'long'];
+
+const VALID_TIMEZONES: Set<string> = (() => {
+  try {
+    return new Set((Intl as any).supportedValuesOf('timeZone') as string[]);
+  } catch {
+    return new Set<string>();
+  }
+})();
+
+function validateSettingValue(key: string, value: unknown): string | null {
+  switch (key) {
+    case settingsService.SETTING_KEYS.DATE_FORMAT:
+      if (typeof value !== 'string' || !VALID_DATE_FORMATS.includes(value)) {
+        return `date_format must be one of: ${VALID_DATE_FORMATS.join(', ')}`;
+      }
+      return null;
+    case settingsService.SETTING_KEYS.TIMEZONE:
+      if (typeof value !== 'string') {
+        return 'timezone must be a string';
+      }
+      if (VALID_TIMEZONES.size > 0 && !VALID_TIMEZONES.has(value)) {
+        return `Invalid timezone: ${value}`;
+      }
+      return null;
+    case settingsService.SETTING_KEYS.SHAREPOINT_REQUEST_URL:
+      if (typeof value !== 'string' || value.length > 2000) {
+        return 'sharepoint_request_url must be a string with max length 2000';
+      }
+      return null;
+    default:
+      return null;
+  }
+}
+
 export async function authRoutes(fastify: FastifyInstance) {
   // Register
   fastify.post('/register', async (request: FastifyRequest<{ Body: RegisterInput }>, reply: FastifyReply) => {
@@ -269,6 +304,12 @@ export async function authRoutes(fastify: FastifyInstance) {
     const allowedKeys = Object.values(settingsService.SETTING_KEYS) as string[];
     if (!allowedKeys.includes(key)) {
       return reply.code(400).send({ error: 'Invalid setting key' });
+    }
+
+    // Validate setting values
+    const validationError = validateSettingValue(key, value);
+    if (validationError) {
+      return reply.code(400).send({ error: 'VALIDATION_ERROR', message: validationError });
     }
 
     const setting = await settingsService.setSetting(
