@@ -1,14 +1,15 @@
 import { clsx } from 'clsx';
-import { ArrowLeft, Download, CreditCard } from 'lucide-react';
-import { useCallback, useMemo } from 'react';
+import { ArrowLeft, CreditCard } from 'lucide-react';
+import { useCallback } from 'react';
 
 import { useFinanceRecord, useLinkedRecords } from '../../api/hooks/finance';
 import { useUpdateFinanceRecord } from '../../api/hooks/finance';
 import { useFinanceStore } from '../../stores/financeStore';
 import { useUIStore } from '../../stores/uiStore';
 import { formatCurrency } from '@autoart/shared';
-import { Button, Badge } from '@autoart/ui';
+import { Button } from '@autoart/ui';
 import { LineItemEditor } from './LineItemEditor';
+import { ExportMenu } from './ExportMenu';
 
 const STATUS_COLORS: Record<string, string> = {
   Draft: 'bg-slate-100 text-slate-700',
@@ -116,9 +117,10 @@ export function InvoiceDetailView() {
                 Record Payment
               </Button>
             )}
-            <Button variant="ghost" size="sm" leftSection={<Download size={14} />}>
-              PDF
-            </Button>
+            <ExportMenu
+              invoiceId={selectedInvoiceId}
+              invoiceNumber={(invoiceData?.invoice_number as string) || invoice.unique_name}
+            />
           </div>
         </div>
       </header>
