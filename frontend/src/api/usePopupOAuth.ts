@@ -22,6 +22,8 @@ interface PopupOAuthOptions {
     /** Popup dimensions */
     width?: number;
     height?: number;
+    /** Message type to listen for from postMessage (optional) */
+    messageType?: string;
 }
 
 export class PopupBlockedError extends Error {
@@ -48,6 +50,7 @@ export function usePopupOAuth(onPopupClose?: () => void) {
             timeoutMs = 5 * 60 * 1000, // 5 minutes default
             width = 500,
             height = 600,
+            messageType,
         } = options;
 
         // Center the popup on screen
@@ -66,26 +69,68 @@ export function usePopupOAuth(onPopupClose?: () => void) {
         }
 
         return new Promise((resolve, reject) => {
-            // eslint-disable-next-line prefer-const -- mutual reference between timeoutId and checkInterval
+            // eslint-disable-next-line prefer-const -- mutual reference between timeoutId and other cleanup vars
             let checkInterval: ReturnType<typeof setInterval>;
+            let messageListener: ((event: MessageEvent) => void) | null = null;
 
-            // Timeout after specified duration
-            const timeoutId = setTimeout(() => {
-                clearInterval(checkInterval);
+            const cleanup = () => {
+                if (checkInterval) clearInterval(checkInterval);
+                if (messageListener) {
+                    window.removeEventListener('message', messageListener);
+                }
                 if (!popup.closed) {
                     popup.close();
                 }
+            };
+
+            // Timeout after specified duration
+            const timeoutId = setTimeout(() => {
+                cleanup();
                 reject(new Error('OAuth timeout'));
             }, timeoutMs);
 
-            // Poll for popup close
+            // If messageType is provided, listen for postMessage from popup
+            if (messageType) {
+                messageListener = (event: MessageEvent) => {
+                    // Validate origin - should be same as our backend
+                    const expectedOrigin = window.location.origin.replace(/:\d+/, ':3000'); // Dev: frontend on 3001, backend on 3000
+                    if (event.origin !== expectedOrigin && event.origin !== window.location.origin) {
+                        console.warn('OAuth postMessage from unexpected origin:', event.origin);
+                        return;
+                    }
+
+                    // Check if it's the message type we're waiting for
+                    if (event.data?.type === messageType) {
+                        cleanup();
+                        clearTimeout(timeoutId);
+
+                        onPopupClose?.();
+
+                        if (event.data.success) {
+                            resolve();
+                        } else {
+                            const errorMessage = event.data.message || 'OAuth failed';
+                            reject(new Error(errorMessage));
+                        }
+                    }
+                };
+                window.addEventListener('message', messageListener);
+            }
+
+            // Poll for popup close (fallback for when messageType not provided or postMessage fails)
             checkInterval = setInterval(() => {
                 if (popup.closed) {
-                    clearInterval(checkInterval);
+                    cleanup();
                     clearTimeout(timeoutId);
-                    // Let caller handle any cache invalidation
                     onPopupClose?.();
-                    resolve();
+
+                    // Only resolve if we weren't waiting for a postMessage
+                    if (!messageType) {
+                        resolve();
+                    } else {
+                        // If we were waiting for postMessage but popup closed without it, that's likely an error
+                        reject(new Error('Popup closed without completing OAuth'));
+                    }
                 }
             }, 500);
         });
