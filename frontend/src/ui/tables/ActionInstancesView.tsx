@@ -62,7 +62,6 @@ export function ActionInstancesView({
     }, [inspectAction]);
 
     const handleCreateAction = useCallback(() => {
-        // TODO: Replace with Command Palette (#87)
         toggleComposerBar();
     }, [toggleComposerBar]);
 

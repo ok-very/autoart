@@ -17,7 +17,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { DataTableFlat } from './DataTableFlat';
 import { DataTableHierarchy, type HierarchyFieldDef } from './DataTableHierarchy';
 import { GanttView } from './GanttView';
-import { ProjectLogView } from './ProjectLogView';
+import { ProjectLogView } from '../projectLog';
 import { CalendarView } from './CalendarView';
 import { GanttFilters } from '../components/GanttFilters';
 import {
@@ -530,7 +530,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                     )}
                 </main>
             ) : (
-                <ProjectLogView projectId={projectId} />
+                <ProjectLogView />
             )}
         </div>
     );

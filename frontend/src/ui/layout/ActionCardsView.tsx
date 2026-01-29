@@ -211,7 +211,7 @@ export function ActionCardsView() {
                 <button
                     onClick={toggleComposerBar}
                     className="h-8 px-3 rounded text-xs font-medium bg-slate-900 text-white hover:opacity-90 flex items-center gap-1.5"
-                    title="TODO: Replace with Command Palette (#87)"
+                    title="Declare Action"
                 >
                     <Plus size={14} /> Declare Action
                 </button>
