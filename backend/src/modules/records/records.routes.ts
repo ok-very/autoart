@@ -12,6 +12,7 @@ import {
   listRecordsQuerySchema,
 } from './records.schemas.js';
 import * as recordsService from './records.service.js';
+import { resolveComputedFields } from './computed-fields.service.js';
 import { AppError } from '../../utils/errors.js';
 
 export async function recordsRoutes(app: FastifyInstance) {
@@ -258,6 +259,25 @@ export async function recordsRoutes(app: FastifyInstance) {
     }
   );
 
+  // ==================== CONTACTS ====================
+
+  // Get contacts filtered by group (for finance pickers: client, vendor, etc.)
+  fastify.get(
+    '/contacts/by-group',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        querystring: z.object({
+          group: z.string().optional(),
+        }),
+      },
+    },
+    async (request, reply) => {
+      const contacts = await recordsService.listContactsByGroup(request.query.group);
+      return reply.send({ records: contacts });
+    }
+  );
+
   // ==================== RECORDS ====================
 
   // Get record stats (count per definition type)
@@ -352,13 +372,16 @@ export async function recordsRoutes(app: FastifyInstance) {
     }
   );
 
-  // Get single record
+  // Get single record (with optional ?resolve=true for computed fields)
   fastify.get(
     '/:id',
     {
       preHandler: [fastify.authenticate],
       schema: {
         params: z.object({ id: z.string().uuid() }),
+        querystring: z.object({
+          resolve: z.enum(['true', 'false']).optional().transform(v => v === 'true'),
+        }),
       },
     },
     async (request, reply) => {
@@ -366,6 +389,18 @@ export async function recordsRoutes(app: FastifyInstance) {
       if (!record) {
         return reply.code(404).send({ error: 'NOT_FOUND', message: 'Record not found' });
       }
+
+      if (request.query.resolve) {
+        const def = await recordsService.getDefinitionById(record.definition_id);
+        if (def) {
+          const schemaConfig = typeof def.schema_config === 'string'
+            ? JSON.parse(def.schema_config)
+            : def.schema_config;
+          const resolved = await resolveComputedFields(record.id, record.data as Record<string, unknown>, schemaConfig);
+          return reply.send({ record, _computed: resolved._computed });
+        }
+      }
+
       return reply.send({ record });
     }
   );

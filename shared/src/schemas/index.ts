@@ -79,6 +79,7 @@ export {
 export {
     StatusOptionConfigSchema,
     StatusConfigSchema,
+    RollupConfigSchema,
     FieldDefSchema,
     ReferenceSlotSchema,
     SchemaConfigSchema,
@@ -103,6 +104,7 @@ export {
     getFieldAllowReferences,
     type StatusOptionConfig,
     type StatusConfig,
+    type RollupConfig,
     type FieldDef,
     type ReferenceSlot,
     type SchemaConfig,
@@ -306,6 +308,9 @@ export {
     DecisionRecordedPayloadSchema,
     InvoicePreparedPayloadSchema,
     PaymentRecordedPayloadSchema,
+    BudgetAllocatedPayloadSchema,
+    ExpenseRecordedPayloadSchema,
+    BillReceivedPayloadSchema,
     ContractExecutedPayloadSchema,
     ProcessInitiatedPayloadSchema,
     ProcessCompletedPayloadSchema,
@@ -317,6 +322,9 @@ export {
     type MeetingHeldPayload,
     type DecisionRecordedPayload,
     type ContractExecutedPayload,
+    type BudgetAllocatedPayload,
+    type ExpenseRecordedPayload,
+    type BillReceivedPayload,
 } from './domain-events.js';
 
 // ==================== CLASSIFICATION ====================

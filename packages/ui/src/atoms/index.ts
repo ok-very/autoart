@@ -29,3 +29,4 @@ export * from './PortalSelect';
 export * from './RadixSelect';
 export * from './Popover';
 export * from './Collapsible';
+export * from './CurrencyInput';

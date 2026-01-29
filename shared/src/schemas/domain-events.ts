@@ -70,6 +70,9 @@ export const KnownFactKind = {
     // 5. Financial
     INVOICE_PREPARED: 'INVOICE_PREPARED',
     PAYMENT_RECORDED: 'PAYMENT_RECORDED',
+    BUDGET_ALLOCATED: 'BUDGET_ALLOCATED',
+    EXPENSE_RECORDED: 'EXPENSE_RECORDED',
+    BILL_RECEIVED: 'BILL_RECEIVED',
 
     // 6. Contracts
     CONTRACT_EXECUTED: 'CONTRACT_EXECUTED',
@@ -212,6 +215,42 @@ export const PaymentRecordedPayloadSchema = BaseFactPayloadSchema.extend({
 });
 export type PaymentRecordedPayload = z.infer<typeof PaymentRecordedPayloadSchema>;
 
+/**
+ * BUDGET_ALLOCATED — A budget allocation was created or updated.
+ */
+export const BudgetAllocatedPayloadSchema = BaseFactPayloadSchema.extend({
+    factKind: z.literal(KnownFactKind.BUDGET_ALLOCATED),
+    budgetName: z.string().optional(),
+    allocationType: z.string().optional(),
+    amount: z.number().optional(),
+    currency: z.string().optional(),
+});
+export type BudgetAllocatedPayload = z.infer<typeof BudgetAllocatedPayloadSchema>;
+
+/**
+ * EXPENSE_RECORDED — An expense was recorded against a budget.
+ */
+export const ExpenseRecordedPayloadSchema = BaseFactPayloadSchema.extend({
+    factKind: z.literal(KnownFactKind.EXPENSE_RECORDED),
+    description: z.string().optional(),
+    category: z.string().optional(),
+    amount: z.number().optional(),
+    currency: z.string().optional(),
+});
+export type ExpenseRecordedPayload = z.infer<typeof ExpenseRecordedPayloadSchema>;
+
+/**
+ * BILL_RECEIVED — A vendor bill was received.
+ */
+export const BillReceivedPayloadSchema = BaseFactPayloadSchema.extend({
+    factKind: z.literal(KnownFactKind.BILL_RECEIVED),
+    vendor: z.string().optional(),
+    billNumber: z.string().optional(),
+    amount: z.number().optional(),
+    currency: z.string().optional(),
+});
+export type BillReceivedPayload = z.infer<typeof BillReceivedPayloadSchema>;
+
 // ============================================================================
 // 6. CONTRACT FAMILY
 // ============================================================================
@@ -264,6 +303,9 @@ export const FactPayloadSchemas: Record<string, z.ZodType> = {
     [KnownFactKind.DECISION_RECORDED]: DecisionRecordedPayloadSchema,
     [KnownFactKind.INVOICE_PREPARED]: InvoicePreparedPayloadSchema,
     [KnownFactKind.PAYMENT_RECORDED]: PaymentRecordedPayloadSchema,
+    [KnownFactKind.BUDGET_ALLOCATED]: BudgetAllocatedPayloadSchema,
+    [KnownFactKind.EXPENSE_RECORDED]: ExpenseRecordedPayloadSchema,
+    [KnownFactKind.BILL_RECEIVED]: BillReceivedPayloadSchema,
     [KnownFactKind.CONTRACT_EXECUTED]: ContractExecutedPayloadSchema,
     [KnownFactKind.PROCESS_INITIATED]: ProcessInitiatedPayloadSchema,
     [KnownFactKind.PROCESS_COMPLETED]: ProcessCompletedPayloadSchema,
@@ -348,6 +390,21 @@ export function renderFact(payload: BaseFactPayload): string {
         case KnownFactKind.PAYMENT_RECORDED: {
             const p = rest as { counterparty?: string };
             return p.counterparty ? `Payment recorded from ${p.counterparty}` : 'Payment recorded';
+        }
+        case KnownFactKind.BUDGET_ALLOCATED: {
+            const p = rest as { budgetName?: string; allocationType?: string };
+            const name = p.budgetName || p.allocationType || 'Budget';
+            return `${name} allocated`;
+        }
+        case KnownFactKind.EXPENSE_RECORDED: {
+            const p = rest as { description?: string; category?: string };
+            const desc = p.description || p.category || 'Expense';
+            return `${desc} recorded`;
+        }
+        case KnownFactKind.BILL_RECEIVED: {
+            const p = rest as { vendor?: string; billNumber?: string };
+            const id = p.billNumber ? ` #${p.billNumber}` : '';
+            return p.vendor ? `Bill${id} received from ${p.vendor}` : `Bill${id} received`;
         }
 
         // Contracts
