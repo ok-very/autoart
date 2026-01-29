@@ -303,6 +303,7 @@ export {
   useCreatePoll,
   useClosePoll,
   usePollResults,
+  usePollEngagements,
   pollsQueryKeys,
 } from './polls';
 
