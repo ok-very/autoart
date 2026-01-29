@@ -89,17 +89,22 @@ export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
 // FINANCE EXPORT PRESETS
 // ============================================================================
 
-export type FinanceExportPreset = 'invoice-pdf' | 'budget-csv' | 'invoice-list-csv';
+export type FinanceExportPreset = 'invoice-pdf' | 'invoice-docx' | 'budget-csv' | 'invoice-list-csv';
 
 export const FINANCE_EXPORT_PRESETS: Record<FinanceExportPreset, {
     label: string;
     description: string;
-    format: ExportFormat;
+    format: ExportFormat | 'docx';
 }> = {
     'invoice-pdf': {
         label: 'Invoice PDF',
         description: 'PDF invoice with line items, totals, and payment history',
         format: 'pdf',
+    },
+    'invoice-docx': {
+        label: 'Invoice Word Document',
+        description: 'Word document invoice with line items, totals, and payment history',
+        format: 'docx',
     },
     'budget-csv': {
         label: 'Budget Summary (Boss Sheet v1)',

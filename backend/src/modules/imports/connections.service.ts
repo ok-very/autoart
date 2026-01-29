@@ -14,7 +14,7 @@ import type {
 } from '../../db/schema.js';
 import { randomBytes, randomInt } from 'crypto';
 
-export type Provider = 'monday' | 'asana' | 'notion' | 'jira' | 'google' | 'autohelper';
+export type Provider = 'monday' | 'asana' | 'notion' | 'jira' | 'google' | 'microsoft' | 'autohelper';
 
 // ============================================================================
 // CRUD OPERATIONS
@@ -218,6 +218,86 @@ async function refreshGoogleToken(credential: ConnectionCredential): Promise<str
 }
 
 /**
+ * Get Microsoft OAuth access token with auto-refresh.
+ */
+export async function getMicrosoftToken(userId?: string): Promise<string> {
+    const credential = await getCredential(userId ?? null, 'microsoft');
+
+    if (credential) {
+        // Token still valid
+        if (!credential.expires_at || credential.expires_at >= new Date()) {
+            return credential.access_token;
+        }
+
+        // Token expired — try to refresh
+        if (credential.refresh_token) {
+            return refreshMicrosoftToken(credential);
+        }
+
+        throw new Error(
+            'Microsoft OAuth token expired and no refresh token available. Please reconnect your Microsoft account.'
+        );
+    }
+
+    throw new Error(
+        'No Microsoft OAuth token found. Please connect your Microsoft account.'
+    );
+}
+
+/**
+ * Refresh an expired Microsoft OAuth access token using the stored refresh token.
+ */
+async function refreshMicrosoftToken(credential: ConnectionCredential): Promise<string> {
+    const clientId = process.env.MICROSOFT_CLIENT_ID;
+    const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+        throw new Error(
+            'Microsoft OAuth credentials not configured. Cannot refresh token.'
+        );
+    }
+
+    const response = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            client_id: clientId,
+            client_secret: clientSecret,
+            refresh_token: credential.refresh_token!,
+            grant_type: 'refresh_token',
+            scope: 'Files.ReadWrite.All offline_access User.Read',
+        }),
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+            `Failed to refresh Microsoft OAuth token: ${errorText}. Please reconnect your Microsoft account.`
+        );
+    }
+
+    const data = await response.json() as {
+        access_token: string;
+        refresh_token?: string;
+        expires_in: number;
+    };
+
+    // Update the stored credential
+    await db
+        .updateTable('connection_credentials')
+        .set({
+            access_token: data.access_token,
+            refresh_token: data.refresh_token || credential.refresh_token,
+            expires_at: new Date(Date.now() + data.expires_in * 1000),
+            updated_at: new Date(),
+        })
+        .where('id', '=', credential.id)
+        .execute();
+
+    return data.access_token;
+}
+
+/**
  * Check if a provider is connected for a user.
  */
 export async function isProviderConnected(
@@ -229,15 +309,19 @@ export async function isProviderConnected(
 
     // Check expiry
     if (credential.expires_at && credential.expires_at < new Date()) {
-        // For Google, attempt refresh if we have a refresh token
-        if (provider === 'google' && credential.refresh_token) {
+        // Attempt refresh if we have a refresh token
+        if (credential.refresh_token) {
             try {
-                await refreshGoogleToken(credential);
-                return true;
+                if (provider === 'google') {
+                    await refreshGoogleToken(credential);
+                    return true;
+                }
+                if (provider === 'microsoft') {
+                    await refreshMicrosoftToken(credential);
+                    return true;
+                }
             } catch (err) {
-                // Log unexpected errors for debugging, but still return false
-                // since the connection is effectively unusable
-                console.warn('Google token refresh failed:', (err as Error).message);
+                console.warn(`${provider} token refresh failed:`, (err as Error).message);
                 return false;
             }
         }

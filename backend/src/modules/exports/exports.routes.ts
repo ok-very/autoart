@@ -16,11 +16,12 @@ import { z } from 'zod';
 import * as backfeedingService from './backfeeding.service.js';
 import { GoogleClient } from './connectors/google-client.js';
 import { GoogleDocsConnector } from './connectors/google-docs-connector.js';
+import { OneDriveClient } from './connectors/onedrive-client.js';
 import * as emailDecayService from './email-decay.service.js';
 import * as exportsService from './exports.service.js';
 import * as stalenessService from './staleness.service.js';
 import type { ExportFormat, ExportOptions } from './types.js';
-import { getGoogleToken, isProviderConnected } from '../imports/connections.service.js';
+import { getGoogleToken, getMicrosoftToken, isProviderConnected } from '../imports/connections.service.js';
 
 // ============================================================================
 // SCHEMAS
@@ -699,6 +700,137 @@ export async function exportsRoutes(app: FastifyInstance) {
             const message = error instanceof Error ? error.message : 'Failed to export budget CSV';
             return reply.status(500).send({ error: message });
         }
+    });
+
+    /**
+     * Download invoice as DOCX (Word document)
+     */
+    app.get('/finance/invoice-docx/:invoiceId/download', async (request, reply) => {
+        const { invoiceId } = z.object({ invoiceId: z.string().uuid() }).parse(request.params);
+
+        try {
+            const { projectInvoice } = await import('./projectors/invoice.projector.js');
+            const { generateInvoiceDocx } = await import('@autoart/shared');
+            const { Packer } = await import('docx');
+
+            const model = await projectInvoice(invoiceId);
+            if (!model) {
+                return reply.status(404).send({ error: 'Invoice not found' });
+            }
+
+            const doc = generateInvoiceDocx(model);
+            const buffer = Buffer.from(await Packer.toBuffer(doc));
+
+            return reply
+                .header('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                .header('Content-Disposition', `attachment; filename="invoice-${model.invoiceNumber}.docx"`)
+                .send(buffer);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to export invoice DOCX';
+            return reply.status(500).send({ error: message });
+        }
+    });
+
+    /**
+     * Export invoice DOCX to OneDrive
+     */
+    app.post('/finance/invoice-docx/:invoiceId/export/onedrive', async (request, reply) => {
+        const { invoiceId } = z.object({ invoiceId: z.string().uuid() }).parse(request.params);
+        const userId = (request.user as { id?: string; userId?: string })?.userId ?? (request.user as { id?: string })?.id;
+
+        try {
+            const { projectInvoice } = await import('./projectors/invoice.projector.js');
+            const { generateInvoiceDocx } = await import('@autoart/shared');
+            const { Packer } = await import('docx');
+
+            const model = await projectInvoice(invoiceId);
+            if (!model) {
+                return reply.status(404).send({ error: 'Invoice not found' });
+            }
+
+            const doc = generateInvoiceDocx(model);
+            const buffer = Buffer.from(await Packer.toBuffer(doc));
+
+            const token = await getMicrosoftToken(userId);
+            const client = new OneDriveClient({ accessToken: token });
+            const result = await client.uploadFile(
+                `Invoice-${model.invoiceNumber}.docx`,
+                buffer
+            );
+
+            return reply.send({
+                webUrl: result.webUrl,
+                fileId: result.id,
+                fileName: result.name,
+            });
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to export to OneDrive';
+            if (message.includes('No Microsoft OAuth token') || message.includes('Please connect')) {
+                return reply.status(401).send({ error: 'Microsoft not connected. Please authenticate first.' });
+            }
+            return reply.status(500).send({ error: message });
+        }
+    });
+
+    /**
+     * Export invoice DOCX to Google Drive
+     */
+    app.post('/finance/invoice-docx/:invoiceId/export/google-drive', async (request, reply) => {
+        const { invoiceId } = z.object({ invoiceId: z.string().uuid() }).parse(request.params);
+        const userId = (request.user as { id?: string; userId?: string })?.userId ?? (request.user as { id?: string })?.id;
+
+        try {
+            const { projectInvoice } = await import('./projectors/invoice.projector.js');
+            const { generateInvoiceDocx } = await import('@autoart/shared');
+            const { Packer } = await import('docx');
+
+            const model = await projectInvoice(invoiceId);
+            if (!model) {
+                return reply.status(404).send({ error: 'Invoice not found' });
+            }
+
+            const doc = generateInvoiceDocx(model);
+            const buffer = Buffer.from(await Packer.toBuffer(doc));
+
+            const token = await getGoogleToken(userId);
+            const client = new GoogleClient({ accessToken: token });
+
+            // Find or create AutoArt/Invoices folder
+            const folderId = await client.findOrCreateFolder('AutoArt Invoices');
+
+            const uploaded = await client.uploadFile(
+                `Invoice-${model.invoiceNumber}.docx`,
+                buffer,
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                folderId
+            );
+
+            return reply.send({
+                webViewLink: uploaded.webViewLink,
+                fileId: uploaded.id,
+                fileName: uploaded.name,
+            });
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to export to Google Drive';
+            if (message.includes('No Google OAuth token') || message.includes('Please connect')) {
+                return reply.status(401).send({ error: 'Google not connected. Please authenticate first.' });
+            }
+            return reply.status(500).send({ error: message });
+        }
+    });
+
+    /**
+     * Check cloud connection status for Google and Microsoft
+     */
+    app.get('/finance/cloud-status', async (request, reply) => {
+        const userId = (request.user as { id?: string; userId?: string })?.userId ?? (request.user as { id?: string })?.id ?? null;
+
+        const [google, microsoft] = await Promise.all([
+            isProviderConnected(userId, 'google'),
+            isProviderConnected(userId, 'microsoft'),
+        ]);
+
+        return reply.send({ google, microsoft });
     });
 
     /**

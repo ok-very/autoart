@@ -507,6 +507,90 @@ export class GoogleClient {
         });
     }
 
+    /**
+     * Upload a binary file to Drive using multipart upload.
+     * Returns the created file metadata including webViewLink.
+     */
+    async uploadFile(
+        fileName: string,
+        buffer: Buffer,
+        mimeType: string,
+        folderId?: string
+    ): Promise<DriveFile> {
+        const metadata: Record<string, unknown> = {
+            name: fileName,
+        };
+        if (folderId) {
+            metadata.parents = [folderId];
+        }
+
+        // Build multipart body manually (Node fetch doesn't use browser FormData)
+        const boundary = `----autoart-upload-${Date.now()}`;
+        const metadataJson = JSON.stringify(metadata);
+
+        const parts = [
+            `--${boundary}\r\n`,
+            `Content-Type: application/json; charset=UTF-8\r\n\r\n`,
+            metadataJson,
+            `\r\n--${boundary}\r\n`,
+            `Content-Type: ${mimeType}\r\n`,
+            `Content-Transfer-Encoding: base64\r\n\r\n`,
+            buffer.toString('base64'),
+            `\r\n--${boundary}--`,
+        ].join('');
+
+        const response = await fetch(
+            `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,webViewLink,parents`,
+            {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${this.accessToken}`,
+                    'Content-Type': `multipart/related; boundary=${boundary}`,
+                },
+                body: parts,
+            }
+        );
+
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(`Google Drive upload error (${response.status}): ${error}`);
+        }
+
+        return response.json() as Promise<DriveFile>;
+    }
+
+    /**
+     * Find a folder by name, or create it if it doesn't exist.
+     * Returns the folder's Drive file ID.
+     */
+    async findOrCreateFolder(folderName: string, parentId?: string): Promise<string> {
+        // Search for existing folder
+        const queryParts = [
+            `name='${folderName}'`,
+            `mimeType='application/vnd.google-apps.folder'`,
+            `trashed=false`,
+        ];
+        if (parentId) {
+            queryParts.push(`'${parentId}' in parents`);
+        }
+
+        const params = new URLSearchParams({
+            q: queryParts.join(' and '),
+            fields: 'files(id,name)',
+            pageSize: '1',
+        });
+
+        const result = await this.request<DriveFileList>(`${API_BASES.drive}/files?${params}`);
+
+        if (result.files.length > 0) {
+            return result.files[0].id;
+        }
+
+        // Create folder
+        const folder = await this.createFolder(folderName, parentId);
+        return folder.id;
+    }
+
     // ========================================================================
     // SHEETS OPERATIONS
     // ========================================================================
