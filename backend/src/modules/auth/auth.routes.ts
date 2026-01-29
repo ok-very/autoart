@@ -192,7 +192,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
     // Helper to send HTML that closes the popup
     const sendPopupResponse = (success: boolean, message?: string) => {
-      const safeMessage = message ? escapeHtml(message) : 'Unknown error';
+      const safeMessage = message ? escapeHtml(message) : (success ? '' : 'Unknown error');
       const targetOrigin = process.env.CLIENT_ORIGIN;
 
       // Fail fast if CLIENT_ORIGIN is not configured
