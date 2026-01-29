@@ -27,11 +27,6 @@ import {
   Bug,
   HelpCircle,
   Sparkles,
-  Receipt,
-  Wallet,
-  PiggyBank,
-  FileSpreadsheet,
-  CreditCard,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -362,63 +357,10 @@ export const unknownEventFormatter: EventFormatter = {
 };
 
 /**
- * Finance fact-kind overrides for FACT_RECORDED events.
- * When a FACT_RECORDED event has a financial factKind, these overrides
- * provide finance-specific icon and color treatment.
+ * Get formatter for an event type, with fallback for unknown types
  */
-const FINANCE_FACT_OVERRIDES: Record<string, Partial<EventFormatter>> = {
-  INVOICE_PREPARED: {
-    label: 'Invoice Prepared',
-    icon: Receipt,
-    dotBgClass: 'bg-emerald-100',
-    dotTextClass: 'text-emerald-600',
-    labelClass: 'text-emerald-700',
-  },
-  PAYMENT_RECORDED: {
-    label: 'Payment Recorded',
-    icon: Wallet,
-    dotBgClass: 'bg-green-100',
-    dotTextClass: 'text-green-600',
-    labelClass: 'text-green-700',
-  },
-  BUDGET_ALLOCATED: {
-    label: 'Budget Allocated',
-    icon: PiggyBank,
-    dotBgClass: 'bg-blue-100',
-    dotTextClass: 'text-blue-600',
-    labelClass: 'text-blue-700',
-  },
-  EXPENSE_RECORDED: {
-    label: 'Expense Recorded',
-    icon: CreditCard,
-    dotBgClass: 'bg-orange-100',
-    dotTextClass: 'text-orange-600',
-    labelClass: 'text-orange-700',
-  },
-  BILL_RECEIVED: {
-    label: 'Bill Received',
-    icon: FileSpreadsheet,
-    dotBgClass: 'bg-purple-100',
-    dotTextClass: 'text-purple-600',
-    labelClass: 'text-purple-700',
-  },
-};
-
-/**
- * Get formatter for an event type, with fallback for unknown types.
- * For FACT_RECORDED events, checks the payload's factKind for finance-specific overrides.
- */
-export function getEventFormatter(eventType: string, payload?: Record<string, unknown>): EventFormatter {
-  const base = eventFormatters[eventType];
-
-  if (base && eventType === 'FACT_RECORDED' && payload) {
-    const factKind = payload.factKind as string | undefined;
-    if (factKind && FINANCE_FACT_OVERRIDES[factKind]) {
-      return { ...base, ...FINANCE_FACT_OVERRIDES[factKind] };
-    }
-  }
-
-  return base || {
+export function getEventFormatter(eventType: string): EventFormatter {
+  return eventFormatters[eventType] || {
     ...unknownEventFormatter,
     label: eventType.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()),
   };

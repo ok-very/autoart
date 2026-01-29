@@ -410,8 +410,6 @@ export {
     PDF_PAGE_PRESETS,
     PDF_DEFAULT_MARGINS,
     type PdfPagePreset,
-    FINANCE_EXPORT_PRESETS,
-    type FinanceExportPreset,
     type ExportFormat,
     type ExportSessionStatus,
     type ExportOptions,

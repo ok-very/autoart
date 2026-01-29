@@ -67,7 +67,7 @@ export function ProjectLogEventRow({
   onActionClick,
 }: ProjectLogEventRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const formatter = getEventFormatter(event.type, event.payload);
+  const formatter = getEventFormatter(event.type);
   const Icon = formatter.icon;
   const summary = formatter.summarize(event.payload);
   const hasPayload = Object.keys(event.payload).length > 0;

@@ -8,7 +8,6 @@
 
 import { useFinanceStore } from '../../../stores/financeStore';
 import { SegmentedControl } from '@autoart/ui';
-import { FinanceKPIStrip } from '../../composites/FinanceKPIStrip';
 import { InvoiceListView } from '../../composites/InvoiceListView';
 import { InvoiceDetailView } from '../../composites/InvoiceDetailView';
 import { BudgetView } from '../../composites/BudgetView';
@@ -28,13 +27,6 @@ export function FinanceContent() {
 
   return (
     <div className="h-full flex flex-col bg-white">
-      {/* KPI strip — visible on list views only */}
-      {!selectedInvoiceId && (
-        <div className="shrink-0 border-b border-slate-200">
-          <FinanceKPIStrip />
-        </div>
-      )}
-
       {/* Tab bar */}
       {!selectedInvoiceId && (
         <div className="shrink-0 px-4 py-2 border-b border-slate-200 bg-slate-50">
