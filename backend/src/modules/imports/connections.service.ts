@@ -155,7 +155,13 @@ export async function getGoogleToken(userId?: string): Promise<string> {
             return refreshGoogleToken(credential);
         }
 
-        // Expired with no refresh token — user must reconnect
+        // Expired with no refresh token — fall back to env token if available
+        const envToken = process.env.GOOGLE_ACCESS_TOKEN;
+        if (envToken) {
+            return envToken;
+        }
+
+        // No refresh token and no env token — user must reconnect
         throw new Error(
             'Google OAuth token expired and no refresh token available. Please reconnect your Google account in Settings.'
         );
