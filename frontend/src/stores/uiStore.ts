@@ -22,7 +22,8 @@ export type CenterContentType =
   | 'intake'        // Data intake workflow
   | 'export'        // Export workflow
   | 'mail'          // Communication
-  | 'calendar';     // Calendar view
+  | 'calendar'      // Calendar view
+  | 'finance';      // Finance hub (invoices, budgets, expenses)
 
 import { Selection, UIPanels, InspectorMode, OverlayConfig, InspectorTabId, normalizeInspectorTabId } from '../types/ui';
 import { deriveUIPanels } from '../utils/uiComposition';
