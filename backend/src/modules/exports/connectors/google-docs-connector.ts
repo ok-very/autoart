@@ -287,17 +287,17 @@ export class GoogleDocsConnector {
         const privateCorpProjects = projects.filter(p => p.category === 'private_corporate');
 
         if (publicProjects.length > 0) {
-            sections.push('PUBLIC ART PROJECTS\n');
+            sections.push('PUBLIC ART\n');
             sections.push(...publicProjects.map(p => this.formatSingleProject(p, options)));
         }
 
         if (corporateProjects.length > 0) {
-            sections.push('\nCORPORATE PROJECTS\n');
+            sections.push('\nCORPORATE\n');
             sections.push(...corporateProjects.map(p => this.formatSingleProject(p, options)));
         }
 
         if (privateCorpProjects.length > 0) {
-            sections.push('\nPRIVATE CORPORATE PROJECTS\n');
+            sections.push('\nPRIVATE / CORPORATE\n');
             sections.push(...privateCorpProjects.map(p => this.formatSingleProject(p, options)));
         }
 
@@ -448,8 +448,8 @@ export class GoogleDocsConnector {
             });
         }
 
-        // Find and format section headers (PUBLIC ART PROJECTS, etc.)
-        const sectionHeaders = ['PUBLIC ART PROJECTS', 'CORPORATE PROJECTS', 'PRIVATE CORPORATE PROJECTS'];
+        // Find and format section headers (PUBLIC ART, etc.)
+        const sectionHeaders = ['PUBLIC ART', 'CORPORATE', 'PRIVATE / CORPORATE'];
 
         for (const header of sectionHeaders) {
             const index = text.indexOf(header);
