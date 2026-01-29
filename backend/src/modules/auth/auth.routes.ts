@@ -178,6 +178,18 @@ export async function authRoutes(fastify: FastifyInstance) {
         .replace(/'/g, '&#39;');
     };
 
+    // Helper to render config error HTML (extracted to avoid duplication)
+    const renderConfigErrorHtml = (msg: string) => `
+<!DOCTYPE html>
+<html>
+<head><title>Google OAuth Error</title></head>
+<body>
+<h1>Configuration Error</h1>
+<p>OAuth callback cannot complete: ${escapeHtml(msg)}</p>
+<p>Please contact your administrator.</p>
+</body>
+</html>`;
+
     // Helper to send HTML that closes the popup
     const sendPopupResponse = (success: boolean, message?: string) => {
       const safeMessage = message ? escapeHtml(message) : 'Unknown error';
@@ -186,17 +198,9 @@ export async function authRoutes(fastify: FastifyInstance) {
       // Fail fast if CLIENT_ORIGIN is not configured
       if (!targetOrigin) {
         console.error('Google OAuth callback: CLIENT_ORIGIN environment variable is not set');
-        const errorHtml = `
-<!DOCTYPE html>
-<html>
-<head><title>Google OAuth Error</title></head>
-<body>
-<h1>Configuration Error</h1>
-<p>OAuth callback cannot complete: CLIENT_ORIGIN is not configured on the server.</p>
-<p>Please contact your administrator.</p>
-</body>
-</html>`;
-        return reply.type('text/html').status(500).send(errorHtml);
+        return reply.type('text/html').status(500).send(
+          renderConfigErrorHtml('CLIENT_ORIGIN is not configured on the server.')
+        );
       }
 
       // Validate CLIENT_ORIGIN is a valid URL with appropriate protocol
@@ -218,17 +222,9 @@ export async function authRoutes(fastify: FastifyInstance) {
         safeTargetOrigin = originUrl.origin;
       } catch (_err) {
         console.error('Google OAuth callback: CLIENT_ORIGIN is not a valid URL:', targetOrigin);
-        const errorHtml = `
-<!DOCTYPE html>
-<html>
-<head><title>Google OAuth Error</title></head>
-<body>
-<h1>Configuration Error</h1>
-<p>OAuth callback cannot complete: CLIENT_ORIGIN is misconfigured.</p>
-<p>Please contact your administrator.</p>
-</body>
-</html>`;
-        return reply.type('text/html').status(500).send(errorHtml);
+        return reply.type('text/html').status(500).send(
+          renderConfigErrorHtml('CLIENT_ORIGIN is misconfigured.')
+        );
       }
 
       const html = `
@@ -279,7 +275,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         'Google OAuth is not configured',
         'No access token received from Google',
       ];
-      const isSafeMessage = safeMessages.some(msg => errorMessage.includes(msg));
+      const isSafeMessage = safeMessages.some(msg => msg === errorMessage);
       return sendPopupResponse(false, isSafeMessage ? errorMessage : 'Authorization failed. Please try again.');
     }
   });
