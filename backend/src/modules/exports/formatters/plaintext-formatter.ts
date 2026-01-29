@@ -87,7 +87,7 @@ function formatProjectPlainText(
     if (options.includeMilestones && project.timelineBlock.milestones.length > 0) {
         lines.push('  Timeline:');
         for (const milestone of project.timelineBlock.milestones) {
-            const statusMark = milestone.status === 'completed' ? '[x]' : '[ ]';
+            const statusMark = milestone.status === 'completed' ? '✓' : '●';
             const dateStr = milestone.dateText || 'TBD';
             const highlight = isCurrentMonth(milestone.normalizedDate) ? ' <--' : '';
             lines.push(`    ${statusMark} ${milestone.kind}: ${dateStr}${highlight}`);
@@ -123,7 +123,7 @@ function formatProjectPlainText(
         if (stepsToShow.length > 0) {
             lines.push('  Next Steps:');
             for (const step of stepsToShow) {
-                const bullet = step.completed ? '[x]' : '[ ]';
+                const bullet = step.completed ? '✓' : '●';
                 const assigneeSuffix = step.assigneeHint ? ` (${step.assigneeHint})` : '';
                 lines.push(`    ${bullet} ${step.text}${assigneeSuffix}`);
             }

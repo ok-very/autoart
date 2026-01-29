@@ -100,6 +100,7 @@ async function projectSingleProject(
         statusBlock: {
             stage: currentStage,
             projectStatusText: extractProjectStatus(projectMetadata),
+            bfaProjectStatusText: extractBfaProjectStatus(projectMetadata),
         },
         nextStepsBullets: formatNextSteps(tasks),
         rawBlockText: '', // Will be generated from formatted content
@@ -458,6 +459,10 @@ function deriveCurrentStage(
 
 function extractProjectStatus(metadata: Record<string, unknown> | null): string | undefined {
     return (metadata?.status as string) || (metadata?.project_status as string);
+}
+
+function extractBfaProjectStatus(metadata: Record<string, unknown> | null): string | undefined {
+    return (metadata?.bfa_status as string) || (metadata?.bfa_project_status as string);
 }
 
 function formatNextSteps(
