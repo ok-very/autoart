@@ -1,8 +1,7 @@
 # AutoArt Architecture Documentation
 
-**Branch:** `experiment/foundational-model-refactor`  
-**Status:** Living documentation series  
-**Last Updated:** 2026-01-17
+**Status:** Living documentation series
+**Last Updated:** 2026-01-29
 
 ## Navigation
 
@@ -24,11 +23,20 @@ This documentation series describes AutoArt's architecture across multiple dimen
 - **[Architecture Inventory & Deprecation Plan](./architecture-inventory.md)**  
   Living inventory of active vs deprecated modules, migration status, and cleanup proposals.
 
-- **[Composer Documentation](./Composer-Docs.md)**  
+- **[Composer Documentation](./composer/composer-guide.md)**
   Deep dive into the Composer module (action creation, quick endpoints, event emission).
 
-- **[Execution Log Implementation](./plan-project-log-implementation.md)**  
+- **[Execution Log Implementation](./plan-project-log-implementation.md)**
   Technical plan for context-scoped event log views.
+
+- **Exports Architecture** (`backend/src/modules/exports/`)
+  Export session orchestration with sub-architecture: projectors, targets, formatters, connectors.
+
+- **Interpreter Mappings** (`backend/src/modules/interpreter/mappings/`)
+  11 domain-specific rule files for data interpretation (artwork, budget, communication, etc.).
+
+- **Workspace Themes** (`frontend/src/workspace/themes/`)
+  Theme presets (parchment, default, minimal, compact, floating) and CSS variable contract.
 
 ## Quick Reference
 
@@ -96,7 +104,6 @@ When adding new architectural decisions:
 
 ## Related Issues
 
-- [#63 Dockview workspace layout](https://github.com/ok-very/autoart/issues/63)
-- [#67 OverlayRegistry refactor](https://github.com/ok-very/autoart/issues/67)
-- [#65 SelectionInspector surface](https://github.com/ok-very/autoart/issues/65)
+- [#62 Multi-window popouts + context sync](https://github.com/ok-very/autoart/issues/62)
+- [#64 Electron SPA shell](https://github.com/ok-very/autoart/issues/64)
 - [#66 Mail surface](https://github.com/ok-very/autoart/issues/66)
