@@ -228,7 +228,10 @@ export async function isProviderConnected(
             try {
                 await refreshGoogleToken(credential);
                 return true;
-            } catch {
+            } catch (err) {
+                // Log unexpected errors for debugging, but still return false
+                // since the connection is effectively unusable
+                console.warn('Google token refresh failed:', (err as Error).message);
                 return false;
             }
         }
