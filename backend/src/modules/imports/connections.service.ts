@@ -5,6 +5,8 @@
  * Supports per-user credentials with fallback to environment variables.
  */
 
+import { OAuth2Client } from 'google-auth-library';
+
 import { db } from '../../db/client.js';
 import type {
     ConnectionCredential,
@@ -143,13 +145,20 @@ export async function getGoogleToken(userId?: string): Promise<string> {
     const credential = await getCredential(userId ?? null, 'google');
 
     if (credential) {
-        // Check if token is expired
-        if (credential.expires_at && credential.expires_at < new Date()) {
-            // TODO: Implement OAuth refresh token flow
-            console.warn('Google OAuth token expired, falling back to env var');
-        } else {
+        // Token still valid — return it
+        if (!credential.expires_at || credential.expires_at >= new Date()) {
             return credential.access_token;
         }
+
+        // Token expired — try to refresh
+        if (credential.refresh_token) {
+            return refreshGoogleToken(credential);
+        }
+
+        // Expired with no refresh token — user must reconnect
+        throw new Error(
+            'Google OAuth token expired and no refresh token available. Please reconnect your Google account in Settings.'
+        );
     }
 
     // Fall back to environment variable (for testing/development)
@@ -164,6 +173,45 @@ export async function getGoogleToken(userId?: string): Promise<string> {
 }
 
 /**
+ * Refresh an expired Google OAuth access token using the stored refresh token.
+ * Updates the credential row in DB and returns the new access token.
+ */
+async function refreshGoogleToken(credential: ConnectionCredential): Promise<string> {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+        throw new Error(
+            'Google OAuth credentials not configured. Cannot refresh token.'
+        );
+    }
+
+    const oauth2Client = new OAuth2Client(clientId, clientSecret);
+    oauth2Client.setCredentials({ refresh_token: credential.refresh_token! });
+
+    const { credentials } = await oauth2Client.refreshAccessToken();
+
+    if (!credentials.access_token) {
+        throw new Error(
+            'Failed to refresh Google OAuth token. Please reconnect your Google account in Settings.'
+        );
+    }
+
+    // Update the stored credential with the new access token and expiry
+    await db
+        .updateTable('connection_credentials')
+        .set({
+            access_token: credentials.access_token,
+            expires_at: credentials.expiry_date ? new Date(credentials.expiry_date) : null,
+            updated_at: new Date(),
+        })
+        .where('id', '=', credential.id)
+        .execute();
+
+    return credentials.access_token;
+}
+
+/**
  * Check if a provider is connected for a user.
  */
 export async function isProviderConnected(
@@ -175,6 +223,15 @@ export async function isProviderConnected(
 
     // Check expiry
     if (credential.expires_at && credential.expires_at < new Date()) {
+        // For Google, attempt refresh if we have a refresh token
+        if (provider === 'google' && credential.refresh_token) {
+            try {
+                await refreshGoogleToken(credential);
+                return true;
+            } catch {
+                return false;
+            }
+        }
         return false;
     }
 
