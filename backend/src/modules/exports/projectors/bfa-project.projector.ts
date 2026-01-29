@@ -6,6 +6,8 @@
  * export projection for each selected project.
  */
 
+import { sql } from 'kysely';
+
 import { db } from '@db/client.js';
 
 import type {
@@ -26,19 +28,23 @@ export async function projectBfaExportModels(
     projectIds: string[],
     options: ExportOptions
 ): Promise<BfaProjectExportModel[]> {
-    // Process projects in parallel for better performance
-    const modelPromises = projectIds.map((projectId, index) =>
-        projectSingleProject(projectId, index, options)
-    );
-
-    const results = await Promise.allSettled(modelPromises);
-
+    const BATCH_SIZE = 10;
     const models: BfaProjectExportModel[] = [];
-    for (const result of results) {
-        if (result.status === 'fulfilled' && result.value) {
-            models.push(result.value);
-        } else if (result.status === 'rejected') {
-            console.warn('Failed to project BFA model:', result.reason);
+
+    for (let i = 0; i < projectIds.length; i += BATCH_SIZE) {
+        const batch = projectIds.slice(i, i + BATCH_SIZE);
+        const results = await Promise.allSettled(
+            batch.map((projectId, batchIdx) =>
+                projectSingleProject(projectId, i + batchIdx, options)
+            )
+        );
+        for (let j = 0; j < results.length; j++) {
+            const result = results[j];
+            if (result.status === 'fulfilled' && result.value) {
+                models.push(result.value);
+            } else if (result.status === 'rejected') {
+                console.warn(`Failed to project BFA model for ${batch[j]}:`, result.reason);
+            }
         }
     }
 
@@ -142,20 +148,25 @@ async function getProjectContacts(projectId: string) {
 }
 
 async function getBudgetEvents(projectId: string) {
-    // Get BUDGET_ALLOCATED events for this project with direct filtering
+    // Get FACT_RECORDED events and filter for BUDGET_ALLOCATED in app layer
+    // (PostgreSQL JSONB operators are not used in this codebase — all JSON filtering is app-layer)
     const events = await db
         .selectFrom('events')
         .selectAll()
         .where('context_id', '=', projectId)
         .where('type', '=', 'FACT_RECORDED')
-        .where(db.fn('json_extract', ['payload', '$.factKind']), '=', 'BUDGET_ALLOCATED')
         .execute();
 
-    return events.map((e) => ({
-        id: e.id,
-        payload: e.payload as Record<string, unknown>,
-        occurredAt: e.occurred_at,
-    }));
+    return events
+        .filter((e) => {
+            const payload = e.payload as Record<string, unknown> | null;
+            return payload?.factKind === 'BUDGET_ALLOCATED';
+        })
+        .map((e) => ({
+            id: e.id,
+            payload: e.payload as Record<string, unknown>,
+            occurredAt: e.occurred_at,
+        }));
 }
 
 async function getProjectMilestones(projectId: string) {
@@ -199,6 +210,7 @@ async function getProjectTasks(projectId: string, openOnly: boolean) {
                 // Base case: start with the project itself
                 .selectFrom('hierarchy_nodes')
                 .select(['id', 'parent_id', 'type', 'title', 'metadata'])
+                .select(sql<number>`0`.as('depth'))
                 .where('id', '=', projectId)
                 .unionAll(
                     // Recursive case: find children of nodes in the hierarchy
@@ -206,6 +218,8 @@ async function getProjectTasks(projectId: string, openOnly: boolean) {
                         .selectFrom('hierarchy_nodes')
                         .innerJoin('task_hierarchy', 'hierarchy_nodes.parent_id', 'task_hierarchy.id')
                         .select(['hierarchy_nodes.id', 'hierarchy_nodes.parent_id', 'hierarchy_nodes.type', 'hierarchy_nodes.title', 'hierarchy_nodes.metadata'])
+                        .select(sql<number>`task_hierarchy.depth + 1`.as('depth'))
+                        .where('task_hierarchy.depth', '<', 50)
                 )
         )
         .selectFrom('task_hierarchy')
@@ -232,21 +246,26 @@ async function getProjectTasks(projectId: string, openOnly: boolean) {
 }
 
 async function getStageEvents(projectId: string) {
-    // Get STAGE_ENTERED events for this project with direct filtering
+    // Get FACT_RECORDED events and filter for STAGE_ENTERED in app layer
+    // (PostgreSQL JSONB operators are not used in this codebase — all JSON filtering is app-layer)
     const events = await db
         .selectFrom('events')
         .selectAll()
         .where('context_id', '=', projectId)
         .where('type', '=', 'FACT_RECORDED')
-        .where(db.fn('json_extract', ['payload', '$.factKind']), '=', 'STAGE_ENTERED')
         .orderBy('occurred_at', 'desc')
         .execute();
 
-    return events.map((e) => ({
-        id: e.id,
-        payload: e.payload as Record<string, unknown>,
-        occurredAt: e.occurred_at,
-    }));
+    return events
+        .filter((e) => {
+            const payload = e.payload as Record<string, unknown> | null;
+            return payload?.factKind === 'STAGE_ENTERED';
+        })
+        .map((e) => ({
+            id: e.id,
+            payload: e.payload as Record<string, unknown>,
+            occurredAt: e.occurred_at,
+        }));
 }
 
 // ============================================================================
