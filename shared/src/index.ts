@@ -78,10 +78,6 @@ export type { BuildFieldViewModelOptions } from './domain/index.js';
 // ==================== FORMATTERS ====================
 export * from './formatters/index.js';
 
-// ==================== COMPUTE ====================
-// Formula evaluation, rollup aggregation, currency helpers
-export * from './compute/index.js';
-
 // ==================== UTILITIES ====================
 // Shared utility functions
 export { generateId } from './utils.js';

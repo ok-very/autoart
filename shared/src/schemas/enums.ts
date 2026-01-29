@@ -42,9 +42,6 @@ export const FieldTypeSchema = z.enum([
   'percent',
   'user',
   'tags',
-  'currency',
-  'computed',
-  'rollup',
 ]);
 export type FieldType = z.infer<typeof FieldTypeSchema>;
 

@@ -67,23 +67,6 @@ export function useDeleteRecord() {
   });
 }
 
-// ==================== CONTACTS ====================
-
-/**
- * Fetch Contact records filtered by contactGroup.
- * Used by ContactPicker for invoice/bill linking.
- */
-export function useContactsByGroup(group?: string) {
-  return useQuery({
-    queryKey: ['contacts-by-group', group],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (group) params.set('group', group);
-      return api.get<{ records: DataRecord[] }>(`/records/contacts/by-group?${params}`).then(r => r.records);
-    },
-  });
-}
-
 // ==================== RECORD STATS ====================
 
 interface RecordStat {

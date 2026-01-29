@@ -58,7 +58,6 @@ export const listRecordsQuerySchema = z.object({
   search: z.string().optional(),
   limit: z.string().transform(Number).optional(),
   offset: z.string().transform(Number).optional(),
-  resolve: z.enum(['true', 'false']).optional().transform(v => v === 'true'),
 });
 
 // Type exports

@@ -13,10 +13,6 @@
     "./domain": {
       "types": "./dist/domain/index.d.ts",
       "import": "./dist/domain/index.js"
-    },
-    "./compute": {
-      "types": "./dist/compute/index.d.ts",
-      "import": "./dist/compute/index.js"
     }
   },
   "scripts": {
