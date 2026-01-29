@@ -137,13 +137,3 @@ catalog:
 "date-fns": "catalog:"
 ```
 
-### Build Validation
-
-**KNOWN ISSUE: TypeScript output is not captured reliably in the agent's Git Bash environment on Windows.**
-
-When fixing TypeScript errors:
-
-1. Fix the reported errors based on user's build output
-2. **ALWAYS ask user to re-run their build** - do not trust agent's tsc output
-3. Agent's `tsc --noEmit` showing no output does NOT mean success - it's likely swallowing errors
-4. Iterate based on user feedback until they confirm build passes

@@ -105,13 +105,3 @@ CenterContentRouter → Content Adapter → Composite View
 
 Both share same dependencies.
 
----
-
-## TypeScript Build Validation
-
-**KNOWN ISSUE:** TypeScript output is not captured reliably in Git Bash on Windows.
-
-When fixing TypeScript errors:
-1. Fix errors based on user's build output
-2. **Ask user to re-run their build** - do not trust agent's tsc output
-3. Iterate based on user feedback
