@@ -8,7 +8,7 @@
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { ComposerSurface } from '../ui/composer';
+import { ComposerView } from '../ui/composer';
 import { Header } from '../ui/layout/Header';
 
 export function ComposerPage() {
@@ -29,9 +29,9 @@ export function ComposerPage() {
 
                     {/* ComposerSurface in page mode */}
                     <div className="h-[calc(100%-40px)] bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                        <ComposerSurface
+                        <ComposerView
                             mode="page"
-                            onSuccess={(actionId) => {
+                            onSuccess={(actionId: string) => {
                                 console.log('Action created:', actionId);
                             }}
                         />

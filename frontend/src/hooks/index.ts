@@ -1,4 +1,5 @@
 // Hook exports
+export { useCopyToClipboard } from './useCopyToClipboard';
 export { useClickOutside } from './useClickOutside';
 export { useDebounce } from './useDebounce';
 export { useInteractionHandlers } from './useInteractionHandlers';

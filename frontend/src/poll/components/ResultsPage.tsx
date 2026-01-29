@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Link2 } from 'lucide-react';
@@ -6,15 +6,16 @@ import { Button, Card, Stack, Inline, Text, Badge, Spinner } from '@autoart/ui';
 import {
   formatDateShort,
   formatTime,
-  DEFAULT_DATE_CONFIG,
+  buildPollDateConfig,
   type DateFormatConfig,
 } from '@autoart/shared';
+import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
 import { fetchPoll, fetchResults } from '../api';
 import { TimeGrid } from './TimeGrid';
 
 export function ResultsPage() {
   const { uniqueId } = useParams<{ uniqueId: string }>();
-  const [linkCopied, setLinkCopied] = useState(false);
+  const { copied: linkCopied, copyToClipboard } = useCopyToClipboard();
 
   const {
     data: poll,
@@ -38,6 +39,11 @@ export function ResultsPage() {
 
   const isLoading = pollLoading || resultsLoading;
   const error = pollError || resultsError;
+
+  const dateConfig: DateFormatConfig = useMemo(
+    () => buildPollDateConfig(poll),
+    [poll?.time_config?.timezone],
+  );
 
   if (isLoading) {
     return (
@@ -65,11 +71,6 @@ export function ResultsPage() {
     );
   }
 
-  const dateConfig: DateFormatConfig = useMemo(() => ({
-    ...DEFAULT_DATE_CONFIG,
-    timezone: poll.time_config.timezone ?? DEFAULT_DATE_CONFIG.timezone,
-  }), [poll.time_config.timezone]);
-
   const heatmapData = new Map<string, number>(Object.entries(results.slotCounts));
 
   return (
@@ -93,11 +94,8 @@ export function ResultsPage() {
                 size="sm"
                 leftSection={<Link2 size={14} />}
                 onClick={() => {
-                  // Copy poll URL (without /results suffix)
                   const pollUrl = window.location.href.replace(/\/results$/, '');
-                  navigator.clipboard.writeText(pollUrl);
-                  setLinkCopied(true);
-                  setTimeout(() => setLinkCopied(false), 2000);
+                  copyToClipboard(pollUrl);
                 }}
               >
                 {linkCopied ? 'Copied!' : 'Copy Link'}

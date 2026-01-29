@@ -1,3 +1,9 @@
+---
+name: frontend
+description: Frontend development conventions, directory structure, component patterns, workspace system, Zustand state, and build targets for the React+Vite dashboard.
+user-invocable: false
+---
+
 # Frontend Development
 
 ## Directory Structure

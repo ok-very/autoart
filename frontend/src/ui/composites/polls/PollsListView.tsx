@@ -1,11 +1,10 @@
-import { useCallback } from 'react';
 import { Plus, ExternalLink } from 'lucide-react';
 import { Button, Text, Badge, Spinner, Stack, Inline } from '@autoart/ui';
 import { usePolls } from '../../../api/hooks/polls';
 import { useDateFormat } from '../../../hooks/useDateFormat';
+import { useCopyToClipboard } from '../../../hooks/useCopyToClipboard';
 import type { Poll } from '@autoart/shared';
-
-const POLL_BASE_URL = import.meta.env.VITE_POLL_BASE_URL || 'https://poll.autoart.work';
+import { POLL_BASE_URL } from './constants';
 
 function StatusBadge({ status }: { status: Poll['status'] }) {
     const variant = status === 'active' ? 'success' : status === 'closed' ? 'neutral' : 'warning';
@@ -20,12 +19,13 @@ interface PollsListViewProps {
 export function PollsListView({ onCreatePoll, onSelectPoll }: PollsListViewProps) {
     const { data: polls, isLoading, isError, error } = usePolls();
     const { formatDate } = useDateFormat();
+    const { copied, copyToClipboard } = useCopyToClipboard();
 
-    const handleShareLink = useCallback((e: React.MouseEvent, uniqueId: string) => {
+    const handleShareLink = (e: React.MouseEvent, uniqueId: string) => {
         e.stopPropagation();
         const url = `${POLL_BASE_URL}/${uniqueId}`;
-        navigator.clipboard.writeText(url);
-    }, []);
+        copyToClipboard(url);
+    };
 
     if (isLoading) {
         return (
@@ -91,8 +91,16 @@ export function PollsListView({ onCreatePoll, onSelectPoll }: PollsListViewProps
                             {polls.map((poll) => (
                                 <tr
                                     key={poll.id}
+                                    role="button"
+                                    tabIndex={0}
                                     onClick={() => onSelectPoll(poll)}
-                                    className="border-b border-[var(--ws-group-border)] cursor-pointer hover:bg-[var(--ws-row-expanded-bg)] transition-colors"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            onSelectPoll(poll);
+                                        }
+                                    }}
+                                    className="border-b border-[var(--ws-group-border)] cursor-pointer hover:bg-[var(--ws-row-expanded-bg)] transition-colors focus:outline-none focus:bg-[var(--ws-row-expanded-bg)]"
                                 >
                                     <td className="px-4 py-3">
                                         <Text weight="medium">{poll.title}</Text>
@@ -109,7 +117,11 @@ export function PollsListView({ onCreatePoll, onSelectPoll }: PollsListViewProps
                                             className="p-1.5 text-[var(--ws-text-secondary)] hover:text-[var(--ws-accent)] rounded transition-colors"
                                             title="Copy share link"
                                         >
-                                            <ExternalLink size={14} />
+                                            {copied ? (
+                                                <Text size="xs" color="success">Copied</Text>
+                                            ) : (
+                                                <ExternalLink size={14} />
+                                            )}
                                         </button>
                                     </td>
                                 </tr>
