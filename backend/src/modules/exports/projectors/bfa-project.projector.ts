@@ -6,6 +6,8 @@
  * export projection for each selected project.
  */
 
+import { sql } from 'kysely';
+
 import { db } from '@db/client.js';
 
 import type {
@@ -26,13 +28,23 @@ export async function projectBfaExportModels(
     projectIds: string[],
     options: ExportOptions
 ): Promise<BfaProjectExportModel[]> {
+    const BATCH_SIZE = 10;
     const models: BfaProjectExportModel[] = [];
 
-    for (let i = 0; i < projectIds.length; i++) {
-        const projectId = projectIds[i];
-        const model = await projectSingleProject(projectId, i, options);
-        if (model) {
-            models.push(model);
+    for (let i = 0; i < projectIds.length; i += BATCH_SIZE) {
+        const batch = projectIds.slice(i, i + BATCH_SIZE);
+        const results = await Promise.allSettled(
+            batch.map((projectId, batchIdx) =>
+                projectSingleProject(projectId, i + batchIdx, options)
+            )
+        );
+        for (let j = 0; j < results.length; j++) {
+            const result = results[j];
+            if (result.status === 'fulfilled' && result.value) {
+                models.push(result.value);
+            } else if (result.status === 'rejected') {
+                console.warn(`Failed to project BFA model for ${batch[j]}:`, result.reason);
+            }
         }
     }
 
@@ -136,8 +148,8 @@ async function getProjectContacts(projectId: string) {
 }
 
 async function getBudgetEvents(projectId: string) {
-    // Get BUDGET_ALLOCATED events for this project
-    // events uses 'context_id' not 'classification_node_id', and 'type' not 'event_type'
+    // Get FACT_RECORDED events and filter for BUDGET_ALLOCATED in app layer
+    // (PostgreSQL JSONB operators are not used in this codebase — all JSON filtering is app-layer)
     const events = await db
         .selectFrom('events')
         .selectAll()
@@ -145,15 +157,16 @@ async function getBudgetEvents(projectId: string) {
         .where('type', '=', 'FACT_RECORDED')
         .execute();
 
-    // Filter for BUDGET_ALLOCATED fact kinds
-    return events.filter((e) => {
-        const payload = e.payload as Record<string, unknown> | null;
-        return payload?.factKind === 'BUDGET_ALLOCATED';
-    }).map((e) => ({
-        id: e.id,
-        payload: e.payload as Record<string, unknown>,
-        occurredAt: e.occurred_at,
-    }));
+    return events
+        .filter((e) => {
+            const payload = e.payload as Record<string, unknown> | null;
+            return payload?.factKind === 'BUDGET_ALLOCATED';
+        })
+        .map((e) => ({
+            id: e.id,
+            payload: e.payload as Record<string, unknown>,
+            occurredAt: e.occurred_at,
+        }));
 }
 
 async function getProjectMilestones(projectId: string) {
@@ -189,22 +202,43 @@ async function getSelectionPanels(projectId: string) {
 }
 
 async function getProjectTasks(projectId: string, openOnly: boolean) {
-    // Get task nodes under this project
-    // hierarchy_nodes uses 'type' not 'node_type'
-    const query = db
-        .selectFrom('hierarchy_nodes')
+    // Get all task nodes under this project using recursive CTE
+    // This finds tasks at any level in the hierarchy, not just direct children
+    const tasksQuery = db
+        .withRecursive('task_hierarchy', (qb) =>
+            qb
+                // Base case: start with the project itself
+                .selectFrom('hierarchy_nodes')
+                .select(['id', 'parent_id', 'type', 'title', 'metadata'])
+                .select(sql<number>`0`.as('depth'))
+                .where('id', '=', projectId)
+                .unionAll(
+                    // Recursive case: find children of nodes in the hierarchy
+                    qb
+                        .selectFrom('hierarchy_nodes')
+                        .innerJoin('task_hierarchy', 'hierarchy_nodes.parent_id', 'task_hierarchy.id')
+                        .select(['hierarchy_nodes.id', 'hierarchy_nodes.parent_id', 'hierarchy_nodes.type', 'hierarchy_nodes.title', 'hierarchy_nodes.metadata'])
+                        .select(sql<number>`task_hierarchy.depth + 1`.as('depth'))
+                        .where('task_hierarchy.depth', '<', 50)
+                )
+        )
+        .selectFrom('task_hierarchy')
         .selectAll()
-        .where('parent_id', '=', projectId)
-        .where('type', 'in', ['task', 'subprocess']);
+        .where('type', 'in', ['task', 'subprocess'])
+        .where('id', '!=', projectId); // Exclude the project itself
 
-    if (openOnly) {
-        // Filter for non-completed tasks based on metadata status
-        // This is a simplified check - real implementation would check status field
-    }
+    const allTasks = await tasksQuery.execute();
 
-    const tasks = await query.execute();
+    // Filter for open tasks if requested
+    const filteredTasks = openOnly ? allTasks.filter(task => {
+        const status = (task.metadata as Record<string, unknown> | null)?.status as string | undefined;
+        const isDone = status && ['done', 'complete', 'finished', 'cancelled'].some(s =>
+            status.toLowerCase().includes(s)
+        );
+        return !isDone;
+    }) : allTasks;
 
-    return tasks.map((t) => ({
+    return filteredTasks.map((t) => ({
         id: t.id,
         title: t.title,
         metadata: t.metadata as Record<string, unknown> | null,
@@ -212,7 +246,8 @@ async function getProjectTasks(projectId: string, openOnly: boolean) {
 }
 
 async function getStageEvents(projectId: string) {
-    // Get STAGE_ENTERED events for this project
+    // Get FACT_RECORDED events and filter for STAGE_ENTERED in app layer
+    // (PostgreSQL JSONB operators are not used in this codebase — all JSON filtering is app-layer)
     const events = await db
         .selectFrom('events')
         .selectAll()
@@ -221,14 +256,16 @@ async function getStageEvents(projectId: string) {
         .orderBy('occurred_at', 'desc')
         .execute();
 
-    return events.filter((e) => {
-        const payload = e.payload as Record<string, unknown> | null;
-        return payload?.factKind === 'STAGE_ENTERED';
-    }).map((e) => ({
-        id: e.id,
-        payload: e.payload as Record<string, unknown>,
-        occurredAt: e.occurred_at,
-    }));
+    return events
+        .filter((e) => {
+            const payload = e.payload as Record<string, unknown> | null;
+            return payload?.factKind === 'STAGE_ENTERED';
+        })
+        .map((e) => ({
+            id: e.id,
+            payload: e.payload as Record<string, unknown>,
+            occurredAt: e.occurred_at,
+        }));
 }
 
 // ============================================================================
@@ -257,13 +294,27 @@ function extractStaffInitials(metadata: Record<string, unknown> | null): string[
 }
 
 function extractClientName(contacts: Array<{ data: Record<string, unknown> | null }>): string {
-    // Find Developer/Client contact
-    const client = contacts.find((c) =>
-        c.data?.contactGroup === 'Developer/Client'
+    // Try multiple contact group labels to find client
+    const clientGroups = ['Developer/Client', 'Developer', 'Client', 'Assignee'];
+
+    for (const groupName of clientGroups) {
+        const client = contacts.find((c) =>
+            c.data?.contactGroup === groupName
+        );
+
+        if (client?.data) {
+            const name = (client.data.name as string) || (client.data.company as string);
+            if (name) return name;
+        }
+    }
+
+    // Fallback: return first contact with a name
+    const firstContact = contacts.find(c =>
+        c.data?.name || c.data?.company
     );
 
-    if (client?.data) {
-        return (client.data.name as string) || (client.data.company as string) || '';
+    if (firstContact?.data) {
+        return (firstContact.data.name as string) || (firstContact.data.company as string) || '';
     }
 
     return '';
