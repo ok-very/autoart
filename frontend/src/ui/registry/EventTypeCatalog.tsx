@@ -51,6 +51,17 @@ const EVENT_CATEGORIES: EventCategory[] = [
         ],
     },
     {
+        name: 'Financial Facts',
+        description: 'Finance-specific fact kinds (emitted as FACT_RECORDED)',
+        types: [
+            { type: 'INVOICE_PREPARED', description: 'An invoice was drafted', payloadFields: ['counterparty', 'amount', 'currency'] },
+            { type: 'PAYMENT_RECORDED', description: 'A payment was received or made', payloadFields: ['counterparty', 'amount', 'currency'] },
+            { type: 'BUDGET_ALLOCATED', description: 'A budget allocation was created', payloadFields: ['budgetName', 'allocationType', 'amount'] },
+            { type: 'EXPENSE_RECORDED', description: 'An expense was recorded', payloadFields: ['description', 'category', 'amount'] },
+            { type: 'BILL_RECEIVED', description: 'A vendor bill was received', payloadFields: ['vendor', 'billNumber', 'amount'] },
+        ],
+    },
+    {
         name: 'Assignments',
         description: 'Events for assigning/unassigning work',
         types: [

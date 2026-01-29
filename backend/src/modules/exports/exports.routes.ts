@@ -585,6 +585,195 @@ export async function exportsRoutes(app: FastifyInstance) {
             return reply.status(500).send({ error: message });
         }
     });
+
+    // ========================================================================
+    // FINANCE EXPORT ROUTES
+    // ========================================================================
+
+    /**
+     * Export invoice as PDF
+     */
+    app.post('/finance/invoice-pdf', async (request, reply) => {
+        const body = z.object({
+            invoiceId: z.string().uuid(),
+            pagePreset: z.enum(['letter', 'legal', 'a4']).optional(),
+        }).parse(request.body);
+
+        try {
+            const { projectInvoice } = await import('./projectors/invoice.projector.js');
+            const { generateInvoicePdfHtml } = await import('@autoart/shared');
+            const { env } = await import('@config/env.js');
+
+            const model = await projectInvoice(body.invoiceId);
+            if (!model) {
+                return reply.status(404).send({ error: 'Invoice not found' });
+            }
+
+            const html = generateInvoicePdfHtml(model, {
+                pagePreset: body.pagePreset || 'letter',
+                autoHelperBaseUrl: env.AUTOHELPER_URL,
+            });
+
+            // Render PDF via AutoHelper
+            const pdfResponse = await fetch(`${env.AUTOHELPER_URL}/render/pdf`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    html,
+                    page_preset: body.pagePreset || 'letter',
+                    print_background: true,
+                }),
+            });
+
+            if (!pdfResponse.ok) {
+                const errorText = await pdfResponse.text();
+                return reply.status(502).send({ error: `PDF render failed: ${errorText}` });
+            }
+
+            const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
+
+            return reply
+                .header('Content-Type', 'application/pdf')
+                .header('Content-Disposition', `attachment; filename="invoice-${model.invoiceNumber}.pdf"`)
+                .send(pdfBuffer);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to export invoice PDF';
+            return reply.status(500).send({ error: message });
+        }
+    });
+
+    /**
+     * Export budget summary as CSV ("Boss Sheet v1")
+     */
+    app.post('/finance/budget-csv', async (request, reply) => {
+        const body = z.object({
+            projectId: z.string().uuid(),
+        }).parse(request.body);
+
+        try {
+            const { formatBudgetCsv } = await import('./formatters/csv-formatter.js');
+            const { db } = await import('../../db/client.js');
+
+            // Find Budget definition
+            const budgetDef = await db
+                .selectFrom('record_definitions')
+                .select(['id'])
+                .where('name', '=', 'Budget')
+                .executeTakeFirst();
+
+            if (!budgetDef) {
+                return reply.status(404).send({ error: 'Budget definition not found' });
+            }
+
+            // Get budget records for project
+            const budgets = await db
+                .selectFrom('records')
+                .selectAll()
+                .where('definition_id', '=', budgetDef.id)
+                .where('classification_node_id', '=', body.projectId)
+                .execute();
+
+            const rows = budgets.map((r) => {
+                const data = r.data as Record<string, unknown>;
+                const allocated = extractAmountCents(data, 'allocated_amount');
+                const spent = extractAmountCents(data, 'spent_amount');
+                const remaining = allocated - spent;
+                return {
+                    name: (data.name as string) || r.unique_name,
+                    allocationType: (data.allocation_type as string) || '',
+                    allocated,
+                    spent,
+                    remaining,
+                    utilizationPct: allocated > 0 ? (spent / allocated) * 100 : 0,
+                    currency: 'CAD',
+                };
+            });
+
+            const csv = formatBudgetCsv(rows);
+
+            return reply
+                .header('Content-Type', 'text/csv')
+                .header('Content-Disposition', `attachment; filename="budget-summary.csv"`)
+                .send(csv);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to export budget CSV';
+            return reply.status(500).send({ error: message });
+        }
+    });
+
+    /**
+     * Export invoice list as CSV
+     */
+    app.post('/finance/invoice-list-csv', async (request, reply) => {
+        const body = z.object({
+            projectId: z.string().uuid(),
+        }).parse(request.body);
+
+        try {
+            const { formatInvoiceListCsv } = await import('./formatters/csv-formatter.js');
+            const { db } = await import('../../db/client.js');
+
+            // Find Invoice definition
+            const invoiceDef = await db
+                .selectFrom('record_definitions')
+                .select(['id'])
+                .where('name', '=', 'Invoice')
+                .executeTakeFirst();
+
+            if (!invoiceDef) {
+                return reply.status(404).send({ error: 'Invoice definition not found' });
+            }
+
+            // Get invoice records for project
+            const invoices = await db
+                .selectFrom('records')
+                .selectAll()
+                .where('definition_id', '=', invoiceDef.id)
+                .where('classification_node_id', '=', body.projectId)
+                .execute();
+
+            const rows = invoices.map((r) => {
+                const data = r.data as Record<string, unknown>;
+                const total = extractAmountCents(data, 'total');
+                const subtotal = extractAmountCents(data, 'subtotal');
+                const tax = extractAmountCents(data, 'tax_total');
+                return {
+                    invoiceNumber: (data.invoice_number as string) || r.unique_name,
+                    client: '',
+                    issueDate: (data.issue_date as string) || '',
+                    dueDate: (data.due_date as string) || '',
+                    subtotal,
+                    tax,
+                    total,
+                    status: (data.status as string) || 'Draft',
+                    currency: (data.currency as string) || 'CAD',
+                };
+            });
+
+            const csv = formatInvoiceListCsv(rows);
+
+            return reply
+                .header('Content-Type', 'text/csv')
+                .header('Content-Disposition', `attachment; filename="invoice-list.csv"`)
+                .send(csv);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to export invoice list CSV';
+            return reply.status(500).send({ error: message });
+        }
+    });
+}
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+function extractAmountCents(data: Record<string, unknown>, key: string): number {
+    const val = data[key];
+    if (typeof val === 'number') return val;
+    if (typeof val === 'object' && val !== null && 'amount' in val) {
+        return (val as { amount: number }).amount;
+    }
+    return 0;
 }
 
 export default exportsRoutes;
