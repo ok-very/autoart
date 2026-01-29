@@ -48,3 +48,6 @@ catalog:
 
   # Date utilities
   date-fns: "^4.1.0"
+
+  # Rate limiting
+  "@fastify/rate-limit": "^10.2.1"

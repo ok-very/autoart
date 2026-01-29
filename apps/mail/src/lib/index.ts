@@ -15,7 +15,7 @@ export interface ProcessedEmail {
     bodyPreview: string;
     cc: string | null;
     developer: string;
-    priorityFactors: unknown[];
+    priorityFactors: string[];
     triage?: {
         bucket: string;
         confidence: number;
@@ -42,7 +42,7 @@ export interface FieldViewModel {
     label: string;
     value: unknown;
     type: string;
-    options?: unknown[];
+    options?: string[];
     renderHint?: string;
     placeholder?: string;
     editable?: boolean;

@@ -2,7 +2,7 @@ import { Settings, Plus, ChevronDown, FolderOpen, Check, Copy, Library, Hammer }
 import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
-import { TreeNode } from './TreeNode';
+import { TreeNode } from '../hierarchy/TreeNode';
 import { useProjectTree, useProjects } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';

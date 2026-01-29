@@ -27,6 +27,7 @@ export interface PollResults {
 
 export async function createPoll(
   title: string,
+  description: string | undefined,
   timeConfig: unknown,
   projectId?: string,
   userId?: string
@@ -48,6 +49,7 @@ export async function createPoll(
         .values({
           unique_id: uniqueId,
           title,
+          description: description ?? null,
           time_config: validatedTimeConfig,
           project_id: projectId ?? null,
           created_by: userId ?? null,
@@ -108,17 +110,13 @@ export async function getPollWithResponses(id: string): Promise<PollWithResponse
   return { ...poll, responses };
 }
 
-export async function listPolls(userId?: string): Promise<Poll[]> {
-  let query = db
+export async function listPolls(userId: string): Promise<Poll[]> {
+  return db
     .selectFrom('polls')
     .selectAll()
-    .orderBy('created_at', 'desc');
-
-  if (userId) {
-    query = query.where('created_by', '=', userId);
-  }
-
-  return query.execute();
+    .where('created_by', '=', userId)
+    .orderBy('created_at', 'desc')
+    .execute();
 }
 
 /**
@@ -242,6 +240,10 @@ export async function closePoll(id: string): Promise<Poll> {
   return poll;
 }
 
+/**
+ * Aggregated engagement metrics for a given context (e.g., a poll).
+ * Counts are derived from the `engagements` table, grouped by kind.
+ */
 export interface EngagementSummary {
   total_opened: number;
   total_interacted: number;
@@ -249,41 +251,32 @@ export interface EngagementSummary {
   unique_actors: number;
 }
 
+/**
+ * Get aggregated engagement summary for a context.
+ * Uses a single query with conditional aggregation (PostgreSQL FILTER clause)
+ * to count events by kind and distinct actors.
+ */
 export async function getEngagementSummary(
   contextType: string,
   contextId: string
 ): Promise<EngagementSummary> {
-  const rows = await db
+  const result = await db
     .selectFrom('engagements')
     .select([
-      'kind',
-      db.fn.count<number>('id').as('count'),
+      sql<number>`count(*) filter (where kind = 'OPENED')`.as('total_opened'),
+      sql<number>`count(*) filter (where kind = 'INTERACTED')`.as('total_interacted'),
+      sql<number>`count(*) filter (where kind = 'DEFERRED')`.as('total_deferred'),
+      sql<number>`count(distinct actor_name) filter (where actor_name is not null)`.as('unique_actors'),
     ])
     .where('context_type', '=', contextType)
     .where('context_id', '=', contextId)
-    .groupBy('kind')
-    .execute();
-
-  const uniqueActorsResult = await db
-    .selectFrom('engagements')
-    .select(
-      sql<number>`count(DISTINCT actor_name)`.as('count')
-    )
-    .where('context_type', '=', contextType)
-    .where('context_id', '=', contextId)
-    .where('actor_name', 'is not', null)
     .executeTakeFirst();
 
-  const counts: Record<string, number> = {};
-  for (const row of rows) {
-    counts[row.kind] = Number(row.count);
-  }
-
   return {
-    total_opened: counts['OPENED'] ?? 0,
-    total_interacted: counts['INTERACTED'] ?? 0,
-    total_deferred: counts['DEFERRED'] ?? 0,
-    unique_actors: Number(uniqueActorsResult?.count ?? 0),
+    total_opened: Number(result?.total_opened ?? 0),
+    total_interacted: Number(result?.total_interacted ?? 0),
+    total_deferred: Number(result?.total_deferred ?? 0),
+    unique_actors: Number(result?.unique_actors ?? 0),
   };
 }
 
