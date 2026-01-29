@@ -1,6 +1,8 @@
 {
   "permissions": {
     "allow": [
+      "Bash(stackit *)",
+      "Bash(command stackit *)",
       "Bash(git *)",
       "Bash(gh *)",
       "Bash(pnpm *)",

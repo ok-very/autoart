@@ -14,7 +14,7 @@ import { ResizeHandle } from '@autoart/ui';
 import { RecordView } from '../ui/composites/RecordView';
 import { SelectionInspector } from '../ui/composites/SelectionInspector';
 import { Header } from '../ui/layout/Header';
-import { RecordTypeSidebar } from '../ui/records/RecordTypeSidebar';
+import { RecordTypeSidebar } from '../ui/sidebars/RecordTypeSidebar';
 
 export function RecordPage() {
     const { inspectorWidth, setInspectorWidth } = useUIStore();

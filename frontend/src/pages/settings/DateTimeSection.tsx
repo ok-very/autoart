@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Clock, Globe } from 'lucide-react';
 import { useUserSettings, useSetUserSetting } from '../../api/hooks/auth';
 import {
@@ -28,26 +28,40 @@ export function DateTimeSection() {
   const savedTimezone = (settings?.timezone as string) || DEFAULT_DATE_CONFIG.timezone;
 
   const [timezoneInput, setTimezoneInput] = useState(savedTimezone);
+  const [timezoneError, setTimezoneError] = useState('');
+  const [savedKey, setSavedKey] = useState<string | null>(null);
 
   useEffect(() => {
     setTimezoneInput(savedTimezone);
+    setTimezoneError('');
   }, [savedTimezone]);
 
-  const handleFormatChange = useCallback((value: string) => {
-    setSetting.mutate({ key: 'date_format', value });
-  }, [setSetting]);
+  useEffect(() => {
+    if (setSetting.isSuccess && savedKey) {
+      const timeout = setTimeout(() => setSavedKey(null), 1500);
+      return () => clearTimeout(timeout);
+    }
+  }, [setSetting.isSuccess, savedKey]);
 
-  const handleTimezoneBlur = useCallback(() => {
+  const handleFormatChange = (value: string) => {
+    setSavedKey('date_format');
+    setSetting.mutate({ key: 'date_format', value });
+  };
+
+  const handleTimezoneBlur = () => {
     const trimmed = timezoneInput.trim();
     if (trimmed && TIMEZONE_LIST.includes(trimmed) && trimmed !== savedTimezone) {
+      setTimezoneError('');
+      setSavedKey('timezone');
       setSetting.mutate({ key: 'timezone', value: trimmed });
     } else if (!trimmed || !TIMEZONE_LIST.includes(trimmed)) {
-      // Reset to saved value if invalid
-      setTimezoneInput(savedTimezone);
+      setTimezoneError(`"${trimmed || ''}" is not a valid timezone`);
+    } else {
+      setTimezoneError('');
     }
-  }, [timezoneInput, savedTimezone, setSetting]);
+  };
 
-  const datalistId = useMemo(() => 'tz-list', []);
+  const datalistId = 'tz-list';
 
   return (
     <div className="space-y-6">
@@ -89,6 +103,9 @@ export function DateTimeSection() {
             </button>
           ))}
         </div>
+        {savedKey === 'date_format' && (
+          <p className="mt-2 text-xs text-green-600">Saved</p>
+        )}
       </div>
 
       {/* Timezone */}
@@ -109,11 +126,24 @@ export function DateTimeSection() {
           type="text"
           list={datalistId}
           value={timezoneInput}
-          onChange={(e) => setTimezoneInput(e.target.value)}
+          onChange={(e) => {
+            setTimezoneInput(e.target.value);
+            if (timezoneError) setTimezoneError('');
+          }}
           onBlur={handleTimezoneBlur}
-          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+          className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-1 ${
+            timezoneError
+              ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+              : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500'
+          }`}
           placeholder="e.g. America/Vancouver"
         />
+        {timezoneError && (
+          <p className="mt-1 text-xs text-red-500">{timezoneError}</p>
+        )}
+        {savedKey === 'timezone' && (
+          <p className="mt-1 text-xs text-green-600">Saved</p>
+        )}
         <datalist id={datalistId}>
           {TIMEZONE_LIST.map((tz) => (
             <option key={tz} value={tz} />

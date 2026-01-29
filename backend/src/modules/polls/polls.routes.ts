@@ -18,7 +18,10 @@ export async function pollRoutes(app: FastifyInstance) {
     '/polls',
     { preHandler: [fastify.authenticate] },
     async (request, reply) => {
-      const polls = await pollsService.listPolls(request.user?.userId);
+      if (!request.user?.userId) {
+        return reply.code(401).send({ error: 'UNAUTHORIZED', message: 'Authentication required' });
+      }
+      const polls = await pollsService.listPolls(request.user.userId);
       return reply.send({ polls });
     }
   );
@@ -37,7 +40,7 @@ export async function pollRoutes(app: FastifyInstance) {
       if (!poll) {
         return reply.code(404).send({ error: 'NOT_FOUND', message: 'Poll not found' });
       }
-      if (poll.created_by && request.user?.userId !== poll.created_by) {
+      if (poll.created_by !== request.user?.userId) {
         return reply
           .code(403)
           .send({ error: 'FORBIDDEN', message: 'You do not have access to this poll' });
@@ -59,6 +62,7 @@ export async function pollRoutes(app: FastifyInstance) {
       try {
         const poll = await pollsService.createPoll(
           request.body.title,
+          request.body.description,
           request.body.time_config,
           request.body.project_id,
           request.user?.userId
@@ -73,7 +77,14 @@ export async function pollRoutes(app: FastifyInstance) {
     }
   );
 
-  // Get engagement summary (owner-only)
+  /**
+   * GET /api/polls/:id/engagements
+   *
+   * Returns aggregated engagement metrics for a poll (owner-only).
+   * Requires authentication. Returns 403 if the requesting user is not the poll creator.
+   *
+   * @returns {{ summary: { total_opened: number, total_interacted: number, total_deferred: number, unique_actors: number } }}
+   */
   fastify.get(
     '/polls/:id/engagements',
     {
@@ -88,7 +99,7 @@ export async function pollRoutes(app: FastifyInstance) {
         return reply.code(404).send({ error: 'NOT_FOUND', message: 'Poll not found' });
       }
 
-      if (poll.created_by && request.user?.userId !== poll.created_by) {
+      if (poll.created_by !== request.user?.userId) {
         return reply
           .code(403)
           .send({ error: 'FORBIDDEN', message: 'You do not have access to this poll' });
@@ -115,7 +126,7 @@ export async function pollRoutes(app: FastifyInstance) {
           return reply.code(404).send({ error: 'NOT_FOUND', message: 'Poll not found' });
         }
 
-        if (poll.created_by && request.user?.userId !== poll.created_by) {
+        if (poll.created_by !== request.user?.userId) {
           return reply
             .code(403)
             .send({ error: 'FORBIDDEN', message: 'You do not have access to this poll' });
@@ -152,13 +163,20 @@ export async function pollPublicRoutes(app: FastifyInstance) {
 
       const pollWithResponses = await pollsService.getPollWithResponses(poll.id);
 
+      // Strip PII from public responses — only expose participant_name and available_slots
+      const safeResponses = (pollWithResponses?.responses ?? []).map((r) => ({
+        id: r.id,
+        participant_name: r.participant_name,
+        available_slots: r.available_slots,
+      }));
+
       return reply.send({
         poll: {
           unique_id: poll.unique_id,
           title: poll.title,
           description: poll.description,
           time_config: poll.time_config,
-          responses: pollWithResponses?.responses ?? [],
+          responses: safeResponses,
         },
       });
     }
@@ -168,6 +186,9 @@ export async function pollPublicRoutes(app: FastifyInstance) {
   fastify.post(
     '/:uniqueId/respond',
     {
+      config: {
+        rateLimit: { max: 10, timeWindow: '1 minute' },
+      },
       schema: {
         params: z.object({ uniqueId: z.string().min(1) }),
         body: SubmitPollResponseInputSchema,
@@ -250,6 +271,9 @@ export async function pollPublicRoutes(app: FastifyInstance) {
   fastify.post(
     '/:uniqueId/engagement',
     {
+      config: {
+        rateLimit: { max: 10, timeWindow: '1 minute' },
+      },
       schema: {
         params: z.object({ uniqueId: z.string().min(1) }),
         body: LogEngagementInputSchema,

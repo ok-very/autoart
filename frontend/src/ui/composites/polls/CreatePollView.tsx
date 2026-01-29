@@ -1,10 +1,9 @@
 import { useState, useMemo, useCallback } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { Button, TextInput, Card, Stack, Inline, Text, Alert } from '@autoart/ui';
-import { SegmentedControl } from '@autoart/ui';
-import { Select } from '@autoart/ui';
+import { Button, TextInput, Card, Stack, Inline, Text, Alert, SegmentedControl, Select } from '@autoart/ui';
 import { useCreatePoll } from '../../../api/hooks/polls';
 import { useDateFormat } from '../../../hooks/useDateFormat';
+import { GRANULARITY_OPTIONS } from './constants';
 import type { TimeSlotGranularity } from '@autoart/shared';
 
 interface CreatePollViewProps {
@@ -26,12 +25,6 @@ const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => ({
     value: String(i),
     label: i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`,
 }));
-
-const GRANULARITY_OPTIONS = [
-    { value: '15min', label: '15 min' },
-    { value: '30min', label: '30 min' },
-    { value: '60min', label: '60 min' },
-];
 
 function MonthGrid({
     year,

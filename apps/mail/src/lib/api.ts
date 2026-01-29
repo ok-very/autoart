@@ -29,7 +29,7 @@ export interface Email {
     bodyPreview: string;
     cc: string | null;
     developer: string;
-    priorityFactors: unknown[];
+    priorityFactors: string[];
     triage?: {
         bucket: string;
         confidence: number;
