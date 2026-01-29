@@ -95,6 +95,11 @@ export function usePopupOAuth(onPopupClose?: () => void) {
             // If messageType is provided, listen for postMessage from popup
             if (messageType) {
                 messageListener = (event: MessageEvent) => {
+                    // Ensure the message came from the popup we opened
+                    if (event.source !== popup) {
+                        return;
+                    }
+
                     // Derive expected backend origin from API URL config
                     const apiUrl = import.meta.env.VITE_API_URL;
                     const expectedOrigin = apiUrl
