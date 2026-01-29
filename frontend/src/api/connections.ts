@@ -182,11 +182,18 @@ export function useConnectGoogle() {
         mutationFn: async (): Promise<void> => {
             // Get OAuth URL from backend
             const { url } = await getAuthUrl.mutateAsync();
-            // Use shared popup handler with proper timeout cleanup
-            await openPopup(url, { name: 'google-oauth' });
+            // Use shared popup handler with postMessage support
+            await openPopup(url, {
+                name: 'google-oauth',
+                messageType: 'google-oauth-callback'
+            });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['connections'] });
+        },
+        onError: (error) => {
+            console.error('Google OAuth failed:', error);
+            // Could add toast notification here
         },
     });
 }
