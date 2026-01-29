@@ -3,6 +3,8 @@ import type { UserSetting, NewUserSetting } from '../../db/schema.js';
 
 export const SETTING_KEYS = {
   SHAREPOINT_REQUEST_URL: 'sharepoint_request_url',
+  DATE_FORMAT: 'date_format',
+  TIMEZONE: 'timezone',
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];

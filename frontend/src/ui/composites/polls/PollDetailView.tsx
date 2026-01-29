@@ -3,6 +3,7 @@ import { ArrowLeft, Link2 } from 'lucide-react';
 import { Button, Card, Stack, Inline, Text, Badge, Spinner } from '@autoart/ui';
 import { SegmentedControl } from '@autoart/ui';
 import { usePoll, usePollResults, useClosePoll, usePollEngagements } from '../../../api/hooks/polls';
+import { useDateFormat } from '../../../hooks/useDateFormat';
 import { TimeGrid } from '../../../poll/components/TimeGrid';
 import type { Poll, TimeSlotGranularity } from '@autoart/shared';
 
@@ -19,20 +20,12 @@ interface PollDetailViewProps {
     onBack: () => void;
 }
 
-function formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return new Intl.DateTimeFormat('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-    }).format(date);
-}
-
 export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProps) {
     const { data: pollData, isLoading: pollLoading } = usePoll(initialPoll.id);
     const { data: results, isLoading: resultsLoading } = usePollResults(initialPoll.unique_id);
     const closeMutation = useClosePoll();
     const { data: engagements } = usePollEngagements(initialPoll.id);
+    const { formatDate, dateFormat, timezone } = useDateFormat();
     const [linkCopied, setLinkCopied] = useState(false);
     const [displayGranularity, setDisplayGranularity] = useState<TimeSlotGranularity>(
         initialPoll.time_config.granularity
@@ -196,6 +189,7 @@ export function PollDetailView({ poll: initialPoll, onBack }: PollDetailViewProp
                                     maxCount={responseCount}
                                     selectedSlots={new Set()}
                                     onSlotsChange={() => {}}
+                                    dateFormatConfig={{ dateFormat, timezone: poll.time_config.timezone ?? timezone }}
                                 />
                             </Stack>
                         </Card>

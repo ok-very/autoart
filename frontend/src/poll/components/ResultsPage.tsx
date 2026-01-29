@@ -1,8 +1,14 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Link2 } from 'lucide-react';
 import { Button, Card, Stack, Inline, Text, Badge, Spinner } from '@autoart/ui';
+import {
+  formatDateShort,
+  formatTime,
+  DEFAULT_DATE_CONFIG,
+  type DateFormatConfig,
+} from '@autoart/shared';
 import { fetchPoll, fetchResults } from '../api';
 import { TimeGrid } from './TimeGrid';
 
@@ -59,6 +65,11 @@ export function ResultsPage() {
     );
   }
 
+  const dateConfig: DateFormatConfig = useMemo(() => ({
+    ...DEFAULT_DATE_CONFIG,
+    timezone: poll.time_config.timezone ?? DEFAULT_DATE_CONFIG.timezone,
+  }), [poll.time_config.timezone]);
+
   const heatmapData = new Map<string, number>(Object.entries(results.slotCounts));
 
   return (
@@ -108,19 +119,6 @@ export function ResultsPage() {
                       );
                     }
                     const [date, hour, minute] = parts;
-                    const dateObj = new Date(date + 'T12:00:00');
-                    if (isNaN(dateObj.getTime())) {
-                      return (
-                        <Badge key={slot} variant="success" size="md">
-                          {slot}
-                        </Badge>
-                      );
-                    }
-                    const dayStr = dateObj.toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                    });
                     const hourNum = parseInt(hour, 10);
                     const minuteNum = parseInt(minute, 10);
                     if (isNaN(hourNum) || isNaN(minuteNum) || hourNum < 0 || hourNum > 23 || minuteNum < 0 || minuteNum > 59) {
@@ -130,9 +128,8 @@ export function ResultsPage() {
                         </Badge>
                       );
                     }
-                    const period = hourNum >= 12 ? 'PM' : 'AM';
-                    const displayHour = hourNum === 0 ? 12 : hourNum > 12 ? hourNum - 12 : hourNum;
-                    const timeStr = `${displayHour}:${minuteNum.toString().padStart(2, '0')} ${period}`;
+                    const dayStr = formatDateShort(date, dateConfig);
+                    const timeStr = formatTime(hourNum, minuteNum, dateConfig);
                     return (
                       <Badge key={slot} variant="success" size="md">
                         {dayStr} @ {timeStr}
@@ -156,6 +153,7 @@ export function ResultsPage() {
                 maxCount={results.totalResponses}
                 selectedSlots={new Set()}
                 onSlotsChange={() => {}}
+                dateFormatConfig={dateConfig}
               />
               <Inline gap="md" className="mt-2">
                 <Text size="xs" color="muted">Less available</Text>
