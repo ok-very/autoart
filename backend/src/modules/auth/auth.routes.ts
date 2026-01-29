@@ -168,30 +168,115 @@ export async function authRoutes(fastify: FastifyInstance) {
   fastify.get<GoogleCallbackQuery>('/google/callback', async (request, reply) => {
     const { code, state, error } = request.query;
 
+    // HTML escape helper for XSS protection
+    const escapeHtml = (value: string): string => {
+      return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    };
+
+    // Helper to render config error HTML (extracted to avoid duplication)
+    const renderConfigErrorHtml = (msg: string) => `
+<!DOCTYPE html>
+<html>
+<head><title>Google OAuth Error</title></head>
+<body>
+<h1>Configuration Error</h1>
+<p>OAuth callback cannot complete: ${escapeHtml(msg)}</p>
+<p>Please contact your administrator.</p>
+</body>
+</html>`;
+
+    // Helper to send HTML that closes the popup
+    const sendPopupResponse = (success: boolean, message?: string) => {
+      const safeMessage = message ? escapeHtml(message) : (success ? '' : 'Unknown error');
+      const targetOrigin = process.env.CLIENT_ORIGIN;
+
+      // Fail fast if CLIENT_ORIGIN is not configured
+      if (!targetOrigin) {
+        console.error('Google OAuth callback: CLIENT_ORIGIN environment variable is not set');
+        return reply.type('text/html').status(500).send(
+          renderConfigErrorHtml('CLIENT_ORIGIN is not configured on the server.')
+        );
+      }
+
+      // Validate CLIENT_ORIGIN is a valid URL with appropriate protocol
+      let safeTargetOrigin: string;
+      try {
+        const originUrl = new URL(targetOrigin);
+        const isLocalhost = originUrl.hostname === 'localhost' || originUrl.hostname === '127.0.0.1';
+        // Allow HTTP only for localhost (development), require HTTPS otherwise
+        if (originUrl.protocol === 'http:' && !isLocalhost) {
+          throw new Error('HTTP protocol only allowed for localhost');
+        }
+        if (originUrl.protocol !== 'https:' && originUrl.protocol !== 'http:') {
+          throw new Error('Invalid protocol');
+        }
+        // Strip path/query/fragment - use only the origin for postMessage security
+        if (originUrl.pathname !== '/' || originUrl.search || originUrl.hash) {
+          console.warn('Google OAuth callback: CLIENT_ORIGIN had path/query/hash which was stripped');
+        }
+        safeTargetOrigin = originUrl.origin;
+      } catch (_err) {
+        console.error('Google OAuth callback: CLIENT_ORIGIN is not a valid URL:', targetOrigin);
+        return reply.type('text/html').status(500).send(
+          renderConfigErrorHtml('CLIENT_ORIGIN is misconfigured.')
+        );
+      }
+
+      const html = `
+<!DOCTYPE html>
+<html>
+<head><title>Google OAuth</title></head>
+<body>
+<script>
+    (function() {
+        var targetOrigin = ${JSON.stringify(safeTargetOrigin)};
+        if (window.opener && targetOrigin) {
+            window.opener.postMessage({
+                type: 'google-oauth-callback',
+                success: ${success ? 'true' : 'false'},
+                message: ${JSON.stringify(safeMessage)}
+            }, targetOrigin);
+        }
+        window.close();
+    })();
+</script>
+<p>${success ? 'Connected! This window will close.' : `Error: ${safeMessage}`}</p>
+</body>
+</html>`;
+      return reply.type('text/html').send(html);
+    };
+
     // User denied consent
     if (error) {
-      return reply.code(400).send({ error: 'OAUTH_DENIED', message: 'User denied consent' });
+      return sendPopupResponse(false, 'User denied consent');
     }
 
     if (!code || !state) {
-      return reply.code(400).send({ error: 'BAD_REQUEST', message: 'Missing code or state parameter' });
+      return sendPopupResponse(false, 'Missing parameters');
     }
 
     try {
-      const { user } = await oauthService.handleGoogleCallback(code, state);
-      const refreshToken = await authService.createSession(user.id);
-      const accessToken = fastify.jwt.sign({ userId: user.id, email: user.email });
-
-      return reply.send({
-        user: { id: user.id, email: user.email, name: user.name },
-        accessToken,
-        refreshToken,
-      });
+      // Store Google OAuth tokens in connection_credentials
+      // User session (access/refreshToken) is orthogonal to the Google connection
+      await oauthService.handleGoogleCallback(code, state);
+      return sendPopupResponse(true);
     } catch (err) {
-      if (err instanceof AppError) {
-        return reply.code(err.statusCode).send({ error: err.code, message: err.message });
-      }
-      throw err;
+      console.error('Google OAuth callback error:', err);
+      // Don't expose internal error details to the user
+      const errorMessage = (err as Error).message;
+      const safeMessages = [
+        'Invalid or expired state parameter',
+        'Failed to exchange authorization code',
+        'Google OAuth is not configured',
+        'No access token received from Google',
+      ];
+      const isSafeMessage = safeMessages.some(msg => msg === errorMessage);
+      return sendPopupResponse(false, isSafeMessage ? errorMessage : 'Authorization failed. Please try again.');
     }
   });
 
