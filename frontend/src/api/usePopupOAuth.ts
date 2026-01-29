@@ -72,6 +72,7 @@ export function usePopupOAuth(onPopupClose?: () => void) {
             // eslint-disable-next-line prefer-const -- mutual reference between timeoutId and other cleanup vars
             let checkInterval: ReturnType<typeof setInterval>;
             let messageListener: ((event: MessageEvent) => void) | null = null;
+            let settled = false;
 
             const cleanup = () => {
                 if (checkInterval) clearInterval(checkInterval);
@@ -85,6 +86,8 @@ export function usePopupOAuth(onPopupClose?: () => void) {
 
             // Timeout after specified duration
             const timeoutId = setTimeout(() => {
+                if (settled) return;
+                settled = true;
                 cleanup();
                 reject(new Error('OAuth timeout'));
             }, timeoutMs);
@@ -92,25 +95,28 @@ export function usePopupOAuth(onPopupClose?: () => void) {
             // If messageType is provided, listen for postMessage from popup
             if (messageType) {
                 messageListener = (event: MessageEvent) => {
-                    // Validate origin - should be same as our backend
-                    const expectedOrigin = window.location.origin.replace(/:\d+/, ':3000'); // Dev: frontend on 3001, backend on 3000
-                    if (event.origin !== expectedOrigin && event.origin !== window.location.origin) {
-                        console.warn('OAuth postMessage from unexpected origin:', event.origin);
+                    // Derive expected backend origin from API URL config
+                    const apiUrl = import.meta.env.VITE_API_URL;
+                    const expectedOrigin = apiUrl
+                        ? new URL(apiUrl).origin
+                        : window.location.origin;
+
+                    if (event.origin !== expectedOrigin) {
                         return;
                     }
 
                     // Check if it's the message type we're waiting for
                     if (event.data?.type === messageType) {
+                        if (settled) return;
+                        settled = true;
                         cleanup();
                         clearTimeout(timeoutId);
-
                         onPopupClose?.();
 
                         if (event.data.success) {
                             resolve();
                         } else {
-                            const errorMessage = event.data.message || 'OAuth failed';
-                            reject(new Error(errorMessage));
+                            reject(new Error(event.data.message || 'OAuth failed'));
                         }
                     }
                 };
@@ -120,6 +126,8 @@ export function usePopupOAuth(onPopupClose?: () => void) {
             // Poll for popup close (fallback for when messageType not provided or postMessage fails)
             checkInterval = setInterval(() => {
                 if (popup.closed) {
+                    if (settled) return;
+                    settled = true;
                     cleanup();
                     clearTimeout(timeoutId);
                     onPopupClose?.();
