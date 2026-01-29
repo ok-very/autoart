@@ -1,7 +1,7 @@
 # Backend Architecture
 
 **Part of:** [Architecture Documentation Series](./ARCHITECTURE-00-INDEX.md)  
-**Last Updated:** 2026-01-17
+**Last Updated:** 2026-01-29
 
 ## Module Structure
 
@@ -20,18 +20,30 @@ module/
 
 ```
 backend/src/modules/
-├── actions/         # Action & event management (Intent declarations)
+├── actions/         # Action management (Intent declarations)
 ├── auth/            # Authentication & sessions
 ├── composer/        # Action composition (creates actions + events)
+├── definitions/     # Record definition CRUD
 ├── events/          # Event querying & workflow surfaces (Historical facts)
-├── exports/         # BFA export functionality
+├── exports/         # Export session orchestration
+│   ├── projectors/  #   Data projection (e.g., bfa-project.projector)
+│   ├── targets/     #   Output targets (Google Docs, PDF, RTF)
+│   ├── formatters/  #   Content formatting (markdown, plaintext, RTF)
+│   └── connectors/  #   External service connectors (Google Sheets/Docs/Slides)
+├── gc/              # Garbage collection
 ├── hierarchy/       # Project hierarchy (nodes)
-├── imports/         # CSV/Monday import & classification
+├── imports/         # CSV/Monday import, classification, webhooks
+├── intake/          # Public intake forms
 ├── interpreter/     # Data interpretation & mapping rules
+│   └── mappings/    #   11 domain-specific rule files (artwork, budget, communication,
+│                    #   decision, document, intent-mapping, invoice, meeting, permit,
+│                    #   process, stage)
 ├── links/           # Record-to-record links
+├── polls/           # Scheduling polls
 ├── projections/     # Projection presets & views (Derived state)
-├── records/         # Record definitions & instances (Context containers)
+├── records/         # Records + fact-kinds (Context containers)
 ├── references/      # Action/task references
+├── runner/          # AutoHelper runner connector
 └── search/          # Full-text search
 ```
 
@@ -96,18 +108,27 @@ Configured in `tsconfig.json`:
 ```mermaid
 graph TD
     A[actions] --> S[@autoart/shared]
+    AU[auth] --> S
     C[composer] --> S
     C --> A
+    D[definitions] --> S
     E[events] --> S
     E --> A
+    EX[exports] --> S
+    GC[gc] --> S
+    H[hierarchy] --> S
     I[imports] --> S
     I --> INT[interpreter]
-    EX[exports] --> S
-    H[hierarchy] --> S
-    R[records] --> S
-    REF[references] --> S
+    IN[intake] --> S
+    IN --> D
+    INT --> S
     L[links] --> S
+    PO[polls] --> S
     P[projections] --> S
+    R[records] --> S
+    R --> D
+    REF[references] --> S
+    RU[runner] --> S
     SE[search] --> S
 ```
 
@@ -232,5 +253,5 @@ if (!isValid) {
 ## Next Steps
 
 - Read [Foundational Model](./ARCHITECTURE-02-FOUNDATIONAL-MODEL.md) to understand the four first-class objects
-- Review [Composer Documentation](./Composer-Docs.md) for action creation patterns
+- Review [Composer Documentation](./composer/composer-guide.md) for action creation patterns
 - See [Architecture Inventory](./architecture-inventory.md) for deprecation status

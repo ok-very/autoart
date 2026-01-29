@@ -1,7 +1,7 @@
 # Frontend Workspace & Surfaces
 
 **Part of:** [Architecture Documentation Series](./ARCHITECTURE-00-INDEX.md)  
-**Last Updated:** 2026-01-17
+**Last Updated:** 2026-01-29
 
 ## Overview
 
@@ -80,68 +80,144 @@ overlay.open('create-record', {
 
 ### PanelRegistry (Dockview)
 
-A registry mapping stable panel IDs → lazy-loaded Surface components.
+A registry mapping stable panel IDs → lazy-loaded Surface components. Defined in `frontend/src/workspace/panelRegistry.ts`.
 
-**Structure:**
-```typescript
-const PANEL_REGISTRY = {
-  'workbench': {
-    id: 'workbench',
-    title: 'Workbench',
-    loader: () => import('./surfaces/WorkbenchSurface'),
-    icon: WorkbenchIcon,
-  },
-  'mail.inbox': {
-    id: 'mail.inbox',
-    title: 'Mail',
-    loader: () => import('./surfaces/MailSurface'),
-    icon: MailIcon,
-  },
-  // ...
-};
-```
+**Panel Taxonomy (16 panels):**
+
+| Category | Panel ID | Purpose |
+|---|---|---|
+| **Core** | `center-workspace` | Main workspace container (permanent, always visible) |
+| **Tool** | `selection-inspector` | Details for selected records/definitions/actions/nodes |
+| | `classification` | Classification panel for import sessions |
+| | `search-results` | Global search results display |
+| | `mail-panel` | Mail interface |
+| **Registry** | `records-list` | Database records listing |
+| | `fields-list` | Schema fields listing |
+| | `actions-list` | Actions registry listing |
+| | `events-list` | Events log listing |
+| **Workbench** | `import-workbench` | Import workflow interface |
+| | `export-workbench` | Export workflow interface |
+| | `composer-workbench` | Action/event composition interface |
+| | `intake-workbench` | Intake form processing |
+| | `artcollector-workbench` | Image/asset collection interface |
+| **Project** | `project-panel` | Project management and metadata |
+
+Each panel definition includes metadata for title, icon, default placement area (center/right/bottom/left), a visibility predicate (`shouldShow`), and action capability (`canActOn`).
 
 **Responsibilities:**
 - Lazy-load surface components
-- Provide surface metadata (title, icon)
-- Support surface-level routing/state
+- Provide surface metadata (title, icon, placement)
+- Context-aware visibility via `shouldShow()` predicates
+- Support Zod-validated context schemas per panel
 
 ---
 
-### OverlayRegistry (Refactor of DrawerRegistry)
+### OverlayRegistry
 
-A registry mapping overlay IDs → overlay definitions + view loaders.
+A registry mapping overlay IDs → overlay definitions + view loaders. Defined in `frontend/src/ui/registry/OverlayRegistry.tsx`.
 
-**Overlay definitions should be the single source of truth for:**
+**Registered overlay types (20):**
+
+| Overlay ID | Purpose |
+|---|---|
+| `create-node` | Create hierarchy node |
+| `create-record` | Create new record |
+| `create-project` | Create new project |
+| `create-definition` | Create record definition |
+| `create-link` | Create record link |
+| `add-field` | Add field to definition |
+| `assign-records` | Assign records to a node |
+| `classify-records` | Legacy alias for `assign-records` |
+| `clone-definition` | Clone a definition |
+| `clone-project` | Clone a project |
+| `confirm-delete` | Deletion confirmation |
+| `confirm-unlink` | Unlink confirmation |
+| `view-definition` | View/edit definition |
+| `project-library` | Browse project library |
+| `template-library` | Alias for `project-library` |
+| `monday-boards` | Monday.com board import |
+| `integrations` | External integrations |
+| `start-collection` | Start art collection session |
+| `classification` | Record classification |
+| `amend-action` | Amend an existing action |
+
+**Overlay definitions are the single source of truth for:**
 - title
 - size (sm/md/lg/xl/full)
 - dismissibility / close behavior
 - declared side effects (for auditability)
 - runtime contracts (context schema; optionally result schema)
 
-**Structure:**
-```typescript
-const OVERLAY_REGISTRY = {
-  'create-record': {
-    id: 'create-record',
-    title: 'Create Record',
-    size: 'md',
-    contextSchema: CreateRecordContextSchema,
-    resultSchema: CreateRecordResultSchema,
-    loader: () => import('./overlays/CreateRecordOverlay'),
-    sideEffects: [{ type: 'create', entityType: 'record' }],
-    dismissible: true,
-    showClose: true,
-  },
-  // ...
-};
-```
-
-**Key improvements over legacy DrawerRegistry:**
+**Design properties:**
 - No duplicated switch statement
 - Runtime validation via Zod schemas
 - Unified mapping (definitions + loaders in one place)
 - Type-safe context and result types
+
+---
+
+## Workspace Presets
+
+Defined in `frontend/src/workspace/workspacePresets.ts`. Each preset configures panel layout and content routing for a specific workflow stage.
+
+**7 built-in presets:**
+
+| ID | Label | Scope | Panels | Purpose |
+|---|---|---|---|---|
+| `collect` | 0. Collect | global | center-workspace (artcollector), selection-inspector | Import wizard & classification |
+| `intake` | 1. Intake | global | center-workspace (intake) | Form intake & dashboard |
+| `plan` | 2. Plan | project | center-workspace (projects/workflow), selection-inspector | Hierarchy view for task planning |
+| `act` | 3. Act | project | center-workspace (projects/workflow), selection-inspector, composer-workbench | Registry view with composer execution |
+| `review` | 4. Review | subprocess | center-workspace (projects/log), selection-inspector | Log view for reviewing completed work |
+| `deliver` | 5. Deliver | project | center-workspace (export) | Export workbench for final output |
+| `desk` | Desk | global | project-panel (×3), mail-panel | Multi-project dashboard view |
+
+**Scope types:** `global` (no project context), `project` (single project), `subprocess` (single subprocess within project).
+
+---
+
+## Workspace Theme System
+
+Defined in `frontend/src/workspace/themes/`. Self-registering theme modules that provide CSS variables, inline styles, component overrides, and behavior hooks.
+
+**Theme architecture:**
+- CSS variable contract: `frontend/src/workspace/themes/variables.css` (70+ variables)
+- Registry: `workspaceThemeRegistry` singleton with subscribe support
+- Hook: `useWorkspaceTheme` for component-level theme access
+- Types: `ThemeDensity` (compact | default | comfortable), `ThemeVariant` (solid | floating | minimal | glass)
+
+**5 built-in theme presets** (in `themes/presets/`):
+
+| ID | Density | Variant | Purpose |
+|---|---|---|---|
+| `default` | default | solid | Clean, professional workspace layout |
+| `compact` | compact | solid | Dense layout (smaller tabs, reduced padding) |
+| `floating` | default | floating | Elevated panels with shadows & rounded corners |
+| `minimal` | comfortable | minimal | Hidden chrome, maximum content (hide on hover) |
+| `parchment` | default | solid | Warm archival aesthetic (AutoArt Design System) |
+
+---
+
+## Content Routing
+
+Defined in `frontend/src/ui/workspace/CenterContentRouter.tsx` + `content/` adapters.
+
+**Pattern:** `CenterContentRouter` → Content Adapter → Composite View
+
+The `CenterContentRouter` is the permanent component inside `center-workspace`. It reads `useUIStore((s) => s.centerContentType)` and dispatches to the appropriate content adapter.
+
+**6 content types:**
+
+| Type | Adapter | Source View |
+|---|---|---|
+| `projects` | `ProjectContentAdapter` | Projects domain |
+| `artcollector` | `ArtCollectorContent` | ArtCollectorWizardView |
+| `intake` | `IntakeContent` | IntakeDashboard / IntakeEditorView |
+| `export` | `ExportContent` | Export workflow |
+| `mail` | `MailContent` | Mail workflow |
+| `calendar` | `CalendarContent` | Calendar view |
+
+Content adapters are thin wrappers (`ui/workspace/content/`) that embed existing composite views as center content, maintaining internal state as needed (e.g., `IntakeContent` tracks `editingFormId`).
 
 ---
 
@@ -400,11 +476,8 @@ const handleLinkEmail = (emailId: string) => {
 ## Related Issues
 
 - [#62 Multi-window popouts + context sync](https://github.com/ok-very/autoart/issues/62)
-- [#63 Dockview workspace layout](https://github.com/ok-very/autoart/issues/63)
 - [#64 Electron SPA shell](https://github.com/ok-very/autoart/issues/64)
-- [#65 SelectionInspector surface](https://github.com/ok-very/autoart/issues/65)
 - [#66 Mail surface](https://github.com/ok-very/autoart/issues/66)
-- [#67 OverlayRegistry refactor](https://github.com/ok-very/autoart/issues/67)
 
 ---
 
