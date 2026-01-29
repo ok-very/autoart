@@ -16,6 +16,7 @@ import {
     ExportContent,
     MailContent,
     CalendarContent,
+    FinanceContent,
 } from './content';
 
 export function CenterContentRouter() {
@@ -34,6 +35,8 @@ export function CenterContentRouter() {
             return <MailContent />;
         case 'calendar':
             return <CalendarContent />;
+        case 'finance':
+            return <FinanceContent />;
         default:
             // Fallback to projects (default behavior)
             return <ProjectContentAdapter />;

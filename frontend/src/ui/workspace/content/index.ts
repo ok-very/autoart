@@ -10,3 +10,4 @@ export { IntakeContent } from './IntakeContent';
 export { ExportContent } from './ExportContent';
 export { MailContent } from './MailContent';
 export { CalendarContent } from './CalendarContent';
+export { FinanceContent } from './FinanceContent';
