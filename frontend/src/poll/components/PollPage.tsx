@@ -140,7 +140,7 @@ export function PollPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F5F2ED]">
+      <div className="flex min-h-screen items-center justify-center bg-ws-bg">
         <Stack align="center" gap="md">
           <Spinner size="lg" />
           <Text color="dimmed">Loading poll...</Text>
@@ -151,7 +151,7 @@ export function PollPage() {
 
   if (error || !poll) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F5F2ED] p-4">
+      <div className="flex min-h-screen items-center justify-center bg-ws-bg p-4">
         <Card shadow="md" padding="lg">
           <Stack align="center" gap="md">
             <Text size="xl" weight="bold">Poll Not Found</Text>
@@ -166,10 +166,10 @@ export function PollPage() {
 
   if (submitted) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F5F2ED] p-4">
+      <div className="flex min-h-screen items-center justify-center bg-ws-bg p-4">
         <Card shadow="md" padding="lg" className="max-w-md text-center">
           <Stack align="center" gap="md">
-            <div className="text-4xl text-[#6F7F5C]">&#10003;</div>
+            <div className="text-4xl text-ws-success">&#10003;</div>
             <Text size="xl" weight="bold">
               {isUpdate ? 'Response Updated!' : 'Response Submitted!'}
             </Text>
@@ -197,17 +197,17 @@ export function PollPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F2ED] p-4">
+    <div className="min-h-screen bg-ws-bg p-4">
       <div className="mx-auto max-w-4xl">
         <Card shadow="sm" padding="lg" className="mb-6">
-          <Text size="xl" weight="bold" className="mb-2 block text-[#2E2E2C]">{poll.title}</Text>
+          <Text size="xl" weight="bold" className="mb-2 block text-ws-fg">{poll.title}</Text>
           {poll.description && <Text color="dimmed">{poll.description}</Text>}
         </Card>
 
         <form onSubmit={handleSubmit}>
           <Stack gap="lg">
             <Card shadow="sm" padding="lg">
-              <Text size="lg" weight="semibold" className="mb-4 block text-[#2E2E2C]">Your Info</Text>
+              <Text size="lg" weight="semibold" className="mb-4 block text-ws-fg">Your Info</Text>
               <div className="grid gap-4 sm:grid-cols-2">
                 <TextInput
                   label="Name"
@@ -234,7 +234,7 @@ export function PollPage() {
             </Card>
 
             <Card shadow="sm" padding="lg">
-              <Text size="lg" weight="semibold" className="mb-4 block text-[#2E2E2C]">Your Availability</Text>
+              <Text size="lg" weight="semibold" className="mb-4 block text-ws-fg">Your Availability</Text>
               <Text size="sm" color="dimmed" className="mb-4 block">
                 Click and drag to select times when you're available.
               </Text>
@@ -271,7 +271,7 @@ export function PollPage() {
         </form>
 
         <div className="mt-6 text-center">
-          <Link to={`/${uniqueId}/results`} className="text-sm text-[#3F5C6E] hover:underline">
+          <Link to={`/${uniqueId}/results`} className="text-sm text-ws-accent hover:underline">
             View current results &rarr;
           </Link>
         </div>
