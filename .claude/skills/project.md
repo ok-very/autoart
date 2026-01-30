@@ -23,10 +23,6 @@ pnpm build            # Build shared + backend
 pnpm migrate          # Run DB migrations
 pnpm db:rebuild       # Nuke + migrate + seed
 pnpm --filter <pkg>   # Run in specific package
-
-# Git helpers
-pnpm git:stack        # Create stacked PR
-pnpm git:merge-stack  # Merge PR stack in order
 ```
 
 ---
@@ -105,8 +101,9 @@ plugins: [react(), tailwindcss()]
 **Require stacked PRs.** Each phase = one PR.
 
 ```bash
-git commit -m "phase N: description"
-pnpm git:stack  # Creates PR targeting current branch
+git add -A
+stackit create -m "phase N: description"
+stackit submit
 ```
 
 Link PRs to issues: `Closes #N` or `Refs #N`
