@@ -2,7 +2,7 @@ import { clsx } from 'clsx';
 import { Plus } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 
-import { useFinanceRecords, useLinkedRecords } from '../../api/hooks/finance';
+import { useFinanceRecords } from '../../api/hooks/finance';
 import { useRecordDefinitions } from '../../api/hooks/definitions';
 import { useUIStore } from '../../stores/uiStore';
 import { formatCurrency } from '@autoart/shared';

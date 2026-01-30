@@ -1,6 +1,6 @@
 import { Plus, ChevronDown, Wand2, PanelLeftClose, PanelLeftOpen, Layers, FolderOpen, Check, Copy, FileText, FileMinus, Database } from 'lucide-react';
 import { useEffect, useMemo, useCallback, useState } from 'react';
-import { ProjectSidebarPanel } from '../panels/ProjectSidebarPanel';
+import { ProjectSidebar } from '../sidebars/ProjectSidebar';
 import { ResizeHandle } from '@autoart/ui';
 import type { DerivedStatus } from '@autoart/shared';
 
@@ -26,7 +26,7 @@ import { DataTableFlat } from '../../ui/composites/DataTableFlat';
 import { DataTableHierarchy, type HierarchyFieldDef } from '../../ui/composites/DataTableHierarchy';
 import { ActionRegistryTable } from '../../ui/composites/ActionRegistryTable';
 import { deriveTaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
-import { ComposerSurface } from '../composer';
+import { ComposerView } from '../composer';
 import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownSeparator, DropdownLabel, Menu, Text } from '@autoart/ui';
 
 /**
@@ -477,7 +477,7 @@ export function ProjectWorkflowView() {
                 style={{ width: isSidebarCollapsed ? 0 : sidebarWidth }}
             >
                 <div className="flex-1 overflow-hidden relative">
-                    <ProjectSidebarPanel />
+                    <ProjectSidebar />
 
                     {/* Collapse Button inside sidebar */}
                     <button
@@ -683,7 +683,7 @@ export function ProjectWorkflowView() {
                                 <>
                                     <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setIsComposerOpen(false)} />
                                     <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[80vh] bg-white rounded-xl shadow-2xl overflow-hidden">
-                                        <ComposerSurface
+                                        <ComposerView
                                             mode="drawer"
                                             contextId={activeSubprocessId}
                                             onSuccess={() => setIsComposerOpen(false)}

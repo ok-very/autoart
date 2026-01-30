@@ -4,7 +4,7 @@
  * Thin wrapper for embedding Mail panel as center content.
  */
 
-import { useState, useEffect, memo, useCallback, useRef } from 'react';
+import { useState, useEffect, memo, useCallback, useRef, useMemo } from 'react';
 import {
     Mail,
     RefreshCw,

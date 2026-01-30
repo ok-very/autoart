@@ -11,7 +11,7 @@
  */
 
 import { useEditor, EditorContent } from '@tiptap/react';
-import { useRef, useMemo, useState, useCallback } from 'react';
+import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
 
 import type { ContextType } from '@autoart/shared';
 

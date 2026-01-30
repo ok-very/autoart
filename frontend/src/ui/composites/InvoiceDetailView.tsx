@@ -103,7 +103,7 @@ export function InvoiceDetailView() {
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
               Issued {(invoiceData?.issue_date as string) || '\u2014'}
-              {invoiceData?.due_date && ` \u00B7 Due ${invoiceData.due_date as string}`}
+              {invoiceData?.due_date ? ` \u00B7 Due ${invoiceData.due_date as string}` : null}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -195,14 +195,14 @@ export function InvoiceDetailView() {
         )}
 
         {/* Notes */}
-        {invoiceData?.notes && (
+        {invoiceData?.notes ? (
           <section>
             <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
               Notes
             </h3>
             <p className="text-sm text-slate-600">{invoiceData.notes as string}</p>
           </section>
-        )}
+        ) : null}
       </div>
     </div>
   );
