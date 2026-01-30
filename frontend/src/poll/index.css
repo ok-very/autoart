@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "../styles/base.css";
 @import "../workspace/themes/variables.css";
 
 @theme {
@@ -14,12 +14,4 @@
   --color-heatmap-50: #C5CCBC;
   --color-heatmap-75: #9AAA8C;
   --color-heatmap-100: #6F7F5C;
-}
-
-body {
-  margin: 0;
-  font-family: "Source Serif 4", serif;
-  font-optical-sizing: auto;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
