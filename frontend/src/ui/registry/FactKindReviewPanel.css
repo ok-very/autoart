@@ -168,7 +168,7 @@
 }
 
 .fkrp-row-meta .fact-kind {
-    font-family: monospace;
+    font-family: var(--font-mono);
     background: var(--bg-secondary, #1a1a2e);
     padding: 0.15rem 0.4rem;
     border-radius: 3px;
