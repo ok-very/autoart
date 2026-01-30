@@ -1,12 +1,10 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-01-29*
+*Last Updated: 2026-01-30*
 
 ## P0: Blocking
 
-| # | Issue | Status |
-|---|-------|--------|
-| 173 | Epic: Finance Management System | Open |
+*None currently blocking.*
 
 ---
 
@@ -17,6 +15,8 @@
 | 218 | Phase 6: Remove task_references system + hierarchy nodes | Refactor |
 | 217 | Expose interpretation HTTP routes for frontend hooks | Backend |
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
+| 235 | Add Context Breadcrumb to Events | Frontend |
+| 237 | Performance Optimization & Caching | Backend + Frontend |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 79 | Enhance Workflow View Interactions | Feature |
 
@@ -47,7 +47,6 @@
 | # | Issue | Category |
 |---|-------|----------|
 | 184 | Q1 2026 Roadmap: Workspace System & Client Reports | Roadmap |
-| 165-172 | Finance sub-features (invoices, budgets, expenses, etc.) | Finance |
 | 118 | Gemini AI: drafts, filenames, contacts | AI |
 | 117 | Gemini Vision: deep crawl fallback | AI |
 | 74 | Import Workbench: Runner + Gemini | Import |
@@ -60,11 +59,24 @@
 
 ---
 
+## In-Flight (Awaiting Review)
+
+| PR | Description |
+|----|-------------|
+| #250 | fix: resolve all frontend and mail type errors |
+| #251 | feat: email draft creation via Graph API with Outlook COM fallback |
+| #252 | fix: resolve all 92 backend ESLint errors |
+| #253 | fix: autohelper platform detection, venv paths, WSL2 tray gating |
+
+---
+
 ## Recently Closed
 
 | # | Issue | Closed By |
 |---|-------|-----------|
-| 44 | Google OAuth integration is cosmetic | PRs #221, #222, #223 |
+| 238 | Epic: Invoicerr Integration (invoice management system) | PRs #239-243 |
+| 227-234 | Events Module + Project Log (Phases 1-4) | PRs #227-234 |
+| 44 | Google OAuth integration is cosmetic | PRs #221-223 |
 | 185 | Fork and modernize crab-meet scheduling polls | PRs #186, #206-213 |
 | 193 | Polls UI: migrate to @autoart/ui primitives | PR #207 |
 | 111-113 | Time/calendar features (duration sidechain, working-days, hot zones) | Closed 2026-01-25 |
@@ -74,9 +86,6 @@
 | 135 | QA: Arrangements rename verification | PR #155 |
 | 134 | Roadmap: Arrangements + projection-first | PR #156 |
 | 126-133 | Arrangements refactor | PRs #136-141 |
-| 68 | Surfaces: header → dockable | panelRegistry complete |
-| 65 | SelectionInspector surface | Split into #147-150 |
-| 33 | Composer UX | Narrative Canvas #142-146 |
 
 ---
 
@@ -84,6 +93,8 @@
 
 | PRs | Description |
 |-----|-------------|
+| #244-249 | Finance: computed fields, UI views, Composer integration, export, DOCX, cloud connectors |
+| #236 | Architecture docs update (Jan 2026) |
 | #224-226 | BFA projector deep query + RTF formatter fidelity + section alignment |
 | #220 | Wire ActionsPanel to open ComposerPanel |
 | #219 | Remove stale TODOs and dead ProjectLogView |
@@ -94,16 +105,3 @@
 | #198, #201 | Design system docs (palette, typography, layout) |
 | #189-195 | React Compiler fixes (Tier 1-3) |
 | #188 | Add referenceSlots to action arrangements |
-
----
-
-## AutoHelper (ok-very/autohelper)
-
-| # | Issue | Priority |
-|---|-------|----------|
-| 26 | Runner + toasts + Gemini | P3 |
-| 25 | PDF import + ref | P3 |
-| 12 | Report endpoint | P4 |
-| 11 | Intake manifest endpoint | P4 |
-| 10 | Snapshot endpoint | P4 |
-| 9 | Fetch endpoints | P4 |
