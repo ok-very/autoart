@@ -241,6 +241,37 @@ class AutoArtClient:
             logger.error(f"Credential fetch failed: {e}")
             return None
 
+    def get_microsoft_token(self, session_id: str) -> str | None:
+        """
+        Fetch Microsoft Graph token from AutoArt using session credentials.
+
+        Args:
+            session_id: Valid session ID from pairing
+
+        Returns:
+            Microsoft Graph access token on success, None on failure
+        """
+        try:
+            response = requests.get(
+                f"{self.api_url}/api/connections/autohelper/credentials",
+                headers={"X-AutoHelper-Session": session_id, "Content-Type": "application/json"},
+                timeout=10,
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                token = result.get("microsoft_graph_token")
+                if token:
+                    logger.debug("Retrieved Microsoft Graph token from AutoArt")
+                    return token
+
+            logger.warning(f"Failed to get Microsoft token: {response.status_code}")
+            return None
+
+        except requests.RequestException as e:
+            logger.error(f"Microsoft credential fetch failed: {e}")
+            return None
+
     def verify_session(self, session_id: str) -> bool:
         """
         Verify that a session ID is still valid.

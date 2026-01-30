@@ -26,9 +26,10 @@ const MICROSOFT_AUTH_URL = 'https://login.microsoftonline.com/common/oauth2/v2.0
 const MICROSOFT_TOKEN_URL = 'https://login.microsoftonline.com/common/oauth2/v2.0/token';
 const MICROSOFT_USERINFO_URL = 'https://graph.microsoft.com/v1.0/me';
 
-// Scopes for OneDrive file access
+// Scopes for OneDrive file access + Mail draft creation
 const SCOPES = [
     'Files.ReadWrite.All',
+    'Mail.ReadWrite',
     'offline_access',
     'User.Read',
 ].join(' ');

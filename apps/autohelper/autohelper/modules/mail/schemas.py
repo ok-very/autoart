@@ -85,3 +85,28 @@ class IngestResponse(BaseModel):
     success: bool
     count: int | None = None
     error: str | None = None
+
+
+# =============================================================================
+# DRAFTS
+# =============================================================================
+
+
+class CreateDraftRequest(BaseModel):
+    """Request to create an email draft in Outlook."""
+
+    to: str = Field(..., description="Recipient email address")
+    subject: str = Field(..., description="Email subject line")
+    body: str = Field(..., description="Email body content")
+    cc: str | None = Field(None, description="CC recipient(s), comma-separated")
+    body_type: str = Field("Text", description="Body content type: Text or HTML")
+
+
+class CreateDraftResponse(BaseModel):
+    """Response from draft creation."""
+
+    success: bool
+    method: str | None = Field(None, description="Strategy used: graph or outlook_com")
+    subject: str | None = None
+    message_id: str | None = None
+    error: str | None = None

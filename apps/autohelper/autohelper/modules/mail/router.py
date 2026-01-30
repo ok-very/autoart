@@ -3,12 +3,20 @@ Mail module API routes.
 """
 
 import json
+import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
 from autohelper.config import get_settings
 from autohelper.db import get_db
+from autohelper.modules.mail.draft import (
+    DraftCreationError,
+    create_draft_via_com,
+    create_draft_via_graph,
+)
 from autohelper.modules.mail.schemas import (
+    CreateDraftRequest,
+    CreateDraftResponse,
     IngestionLogEntry,
     IngestionLogList,
     IngestRequest,
@@ -18,6 +26,8 @@ from autohelper.modules.mail.schemas import (
     TransientEmailList,
 )
 from autohelper.modules.mail.service import MailService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/mail", tags=["mail"])
 
@@ -214,4 +224,83 @@ async def ingest_pst(request: IngestRequest) -> IngestResponse:
         success=result.get("success", False),
         count=result.get("count"),
         error=result.get("error"),
+    )
+
+
+@router.post("/draft", response_model=CreateDraftResponse)
+async def create_draft(request: CreateDraftRequest) -> CreateDraftResponse:
+    """
+    Create an email draft in Outlook.
+
+    Strategy:
+    1. Try Microsoft Graph API using proxied Entra token from AutoArt backend
+    2. Fall back to Outlook COM automation on Windows
+    3. Return 502 if both strategies fail
+    """
+    from autohelper.modules.context.autoart import AutoArtClient
+
+    settings = get_settings()
+    graph_error: str | None = None
+    com_error: str | None = None
+
+    # Strategy 1: Microsoft Graph API
+    if settings.autoart_session_id:
+        client = AutoArtClient(
+            api_url=settings.autoart_api_url,
+            api_key=settings.autoart_api_key,
+            session_id=settings.autoart_session_id,
+        )
+        token = client.get_microsoft_token(settings.autoart_session_id)
+
+        if token:
+            try:
+                result = await create_draft_via_graph(
+                    token=token,
+                    to=request.to,
+                    subject=request.subject,
+                    body=request.body,
+                    cc=request.cc,
+                    body_type=request.body_type,
+                )
+                return CreateDraftResponse(
+                    success=True,
+                    method="graph",
+                    subject=result.get("subject"),
+                    message_id=result.get("id"),
+                )
+            except DraftCreationError as e:
+                graph_error = str(e)
+                logger.warning(f"Graph API draft failed, trying COM fallback: {e}")
+        else:
+            graph_error = "No Microsoft Graph token available"
+            logger.info("No Microsoft Graph token, trying COM fallback")
+    else:
+        graph_error = "No AutoArt session configured"
+        logger.info("No AutoArt session, trying COM fallback")
+
+    # Strategy 2: Outlook COM (Windows only)
+    try:
+        result = create_draft_via_com(
+            to=request.to,
+            subject=request.subject,
+            body=request.body,
+            cc=request.cc,
+        )
+        return CreateDraftResponse(
+            success=True,
+            method="outlook_com",
+            subject=result.get("subject"),
+        )
+    except DraftCreationError as e:
+        com_error = str(e)
+        logger.warning(f"Outlook COM draft also failed: {e}")
+
+    # Both strategies failed
+    raise HTTPException(
+        status_code=502,
+        detail={
+            "error": "Draft creation failed",
+            "graph_error": graph_error,
+            "com_error": com_error,
+        },
     )

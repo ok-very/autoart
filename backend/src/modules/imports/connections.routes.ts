@@ -509,7 +509,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
 
     /**
      * Get proxied credentials for trusted AutoHelper session
-     * Returns Monday API token (single source of truth)
+     * Returns available tokens (Monday API, Microsoft Graph)
      */
     app.get('/connections/autohelper/credentials', async (request, reply) => {
         const sessionId = (request.headers['x-autohelper-session'] as string) || '';
@@ -518,17 +518,24 @@ export async function connectionsRoutes(app: FastifyInstance) {
             return reply.status(401).send({ error: 'Session ID required in X-AutoHelper-Session header' });
         }
 
-        const mondayToken = await connectionsService.getProxiedMondayToken(sessionId);
+        const [mondayResult, microsoftResult] = await Promise.allSettled([
+            connectionsService.getProxiedMondayToken(sessionId),
+            connectionsService.getProxiedMicrosoftToken(sessionId),
+        ]);
 
-        if (!mondayToken) {
+        const mondayToken = mondayResult.status === 'fulfilled' ? mondayResult.value : null;
+        const microsoftToken = microsoftResult.status === 'fulfilled' ? microsoftResult.value : null;
+
+        if (!mondayToken && !microsoftToken) {
             return reply.status(401).send({
-                error: 'Invalid session or no Monday token configured',
-                message: 'Re-pair with AutoArt or ensure Monday is connected'
+                error: 'Invalid session or no tokens configured',
+                message: 'Re-pair with AutoArt or ensure at least one provider is connected'
             });
         }
 
         return reply.send({
-            monday_api_token: mondayToken,
+            monday_api_token: mondayToken ?? undefined,
+            microsoft_graph_token: microsoftToken ?? undefined,
         });
     });
 

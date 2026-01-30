@@ -129,7 +129,7 @@ export function DetailView({ email }: DetailViewProps) {
         if (!email || !generatedDraft) return;
 
         try {
-            const response = await fetch(`${API_BASE}/mail/api/draft/send-to-outlook`, {
+            const response = await fetch(`${API_BASE}/mail/draft`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

@@ -265,7 +265,7 @@ async function refreshMicrosoftToken(credential: ConnectionCredential): Promise<
             client_secret: clientSecret,
             refresh_token: credential.refresh_token!,
             grant_type: 'refresh_token',
-            scope: 'Files.ReadWrite.All offline_access User.Read',
+            scope: 'Files.ReadWrite.All Mail.ReadWrite offline_access User.Read',
         }),
     });
 
@@ -473,6 +473,21 @@ export async function getProxiedMondayToken(sessionId: string): Promise<string |
 
     try {
         return await getMondayToken(userId);
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Get Microsoft Graph token for a trusted AutoHelper session.
+ * This proxies credentials without exposing them to the client.
+ */
+export async function getProxiedMicrosoftToken(sessionId: string): Promise<string | null> {
+    const userId = validateSession(sessionId);
+    if (!userId) return null;
+
+    try {
+        return await getMicrosoftToken(userId);
     } catch {
         return null;
     }
