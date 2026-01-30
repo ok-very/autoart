@@ -3,10 +3,11 @@ from pathlib import Path
 from typing import Any, cast
 
 from autohelper.shared.logging import get_logger
+from autohelper.shared.paths import data_dir
 
 logger = get_logger(__name__)
 
-CONFIG_PATH = Path("./data/config.json")
+CONFIG_PATH = data_dir() / "config.json"
 
 
 class ConfigStore:

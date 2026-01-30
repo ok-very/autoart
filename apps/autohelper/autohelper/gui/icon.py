@@ -1,123 +1,166 @@
+"""
+System tray icon for AutoHelper using pystray + Pillow.
+
+The smiley wears a cowboy hat when a job is running.
+
+Menu:
+  - Open Settings  → opens browser to /settings (AutoHelper tab)
+  - Status: Running / Working... (disabled label)
+  - ---
+  - Exit
+"""
+
+import json
+import threading
+import urllib.request
 from collections.abc import Callable
 
 import pystray
 from PIL import Image, ImageDraw
 from pystray import MenuItem as item
 
-# Placeholder for Kivy app launch
-from autohelper.gui.popup import launch_config_popup
+from autohelper.gui.popup import open_settings_in_browser
 
+# ── Colours ──────────────────────────────────────────────────────────
+_BG = (43, 85, 128)        # AutoHelper Blue
+_FACE = (255, 204, 0)      # Smiley Yellow
+_BLACK = (0, 0, 0)
+_HAT = (160, 100, 40)      # Warm brown
+_BAND = (90, 55, 25)       # Dark brown band
+
+
+def _draw_smiley(dc: ImageDraw.ImageDraw, w: int, h: int) -> None:
+    """Draw the base smiley face."""
+    padding = 8
+    dc.ellipse([padding, padding, w - padding, h - padding], fill=_FACE)
+
+    # Eyes
+    er = 4   # eye radius
+    ey = 24  # eye center y
+    ex = 16  # eye offset from center x
+
+    dc.ellipse([32 - ex - er, ey - er, 32 - ex + er, ey + er], fill=_BLACK)
+    dc.ellipse([32 + ex - er, ey - er, 32 + ex + er, ey + er], fill=_BLACK)
+
+    # Smile
+    dc.arc([20, 24, 44, 48], start=0, end=180, fill=_BLACK, width=3)
+
+
+def _draw_cowboy_hat(dc: ImageDraw.ImageDraw) -> None:
+    """Draw a cowboy hat on the smiley's head."""
+    # Brim — wide ellipse sitting on top of the head
+    dc.ellipse([0, 5, 64, 21], fill=_HAT)
+    # Crown — tall rounded rectangle
+    dc.rounded_rectangle([17, 0, 47, 14], radius=3, fill=_HAT)
+    # Band
+    dc.rectangle([17, 11, 47, 14], fill=_BAND)
+
+
+def _make_icon(wearing_hat: bool = False) -> Image.Image:
+    """Render the 64×64 tray icon."""
+    size = 64
+    image = Image.new("RGB", (size, size), _BG)
+    dc = ImageDraw.Draw(image)
+
+    _draw_smiley(dc, size, size)
+
+    if wearing_hat:
+        _draw_cowboy_hat(dc)
+
+    return image
+
+
+# ── Tray class ───────────────────────────────────────────────────────
 
 class AutoHelperIcon:
-    """
-    System tray icon for AutoHelper.
-    """
+    """Lightweight system tray icon — pystray only, no Qt."""
 
-    def __init__(
-        self, stop_callback: Callable[[], None], config_callback: Callable[[], None] | None = None
-    ):
+    def __init__(self, stop_callback: Callable[[], None]):
         self.stop_callback = stop_callback
-        self.config_callback = config_callback
         self.icon: pystray.Icon | None = None
+        self._hat_on = False
+        self._stop_polling = threading.Event()
         self._setup_icon()
 
-    def _create_image(self):
-        """Create a smiley face icon."""
-        width = 64
-        height = 64
-        bg_color = (43, 85, 128)  # AutoHelper Blue
-        face_color = (255, 204, 0)  # Smiley Yellow
-        black = (0, 0, 0)
+    # ── Icon setup ───────────────────────────────────────────────────
 
-        image = Image.new("RGB", (width, height), bg_color)
-        dc = ImageDraw.Draw(image)
-
-        # Draw face circle
-        padding = 8
-        dc.ellipse([padding, padding, width - padding, height - padding], fill=face_color)
-
-        # Draw eyes
-        eye_radius = 4
-        eye_y = 24
-        eye_x_offset = 16
-
-        # Left eye
-        dc.ellipse(
-            [
-                32 - eye_x_offset - eye_radius,
-                eye_y - eye_radius,
-                32 - eye_x_offset + eye_radius,
-                eye_y + eye_radius,
-            ],
-            fill=black,
-        )
-        # Right eye
-        dc.ellipse(
-            [
-                32 + eye_x_offset - eye_radius,
-                eye_y - eye_radius,
-                32 + eye_x_offset + eye_radius,
-                eye_y + eye_radius,
-            ],
-            fill=black,
-        )
-
-        # Draw smile (arc)
-        # Bounding box for the arc
-        smile_bbox = [20, 24, 44, 48]
-        dc.arc(smile_bbox, start=0, end=180, fill=black, width=3)
-
-        return image
-
-    def _setup_icon(self):
-        """Configure the pystray icon."""
-        image = self._create_image()
+    def _setup_icon(self) -> None:
+        image = _make_icon(wearing_hat=False)
         menu = (
-            item("AutoHelper Service", lambda: None, enabled=False),
-            item("Status: Running", lambda: None, enabled=False),
+            item("AutoHelper Service", lambda *_: None, enabled=False),
+            item(
+                lambda _: "Status: Working..." if self._hat_on else "Status: Idle",
+                lambda *_: None,
+                enabled=False,
+            ),
             pystray.Menu.SEPARATOR,
-            item("Configure...", self.on_configure),
+            item("Open Settings", self._on_open_settings),
             pystray.Menu.SEPARATOR,
-            item("Exit", self.on_exit),
+            item("Exit", self._on_exit),
         )
-
         self.icon = pystray.Icon("AutoHelper", image, "AutoHelper Service", menu)
 
-    def on_configure(self, icon, item):
-        """Launch the configuration popup.
+    # ── Menu actions ─────────────────────────────────────────────────
 
-        Prefer using an injected non-blocking callback over directly
-        starting a Qt event loop from the pystray callback.
-        """
-        # If the icon has been configured with a dedicated configuration
-        # callback, use that instead of directly invoking the Qt popup.
-        if self.config_callback:
-            self.config_callback()
-            return
+    def _on_open_settings(self, icon: pystray.Icon, menu_item: pystray.MenuItem) -> None:
+        open_settings_in_browser()
 
-        # Fallback for backward compatibility. This may start a Qt event loop
-        # and should be avoided when an external event loop (e.g. Qt) is
-        # already running; callers are encouraged to provide `config_callback`.
-        try:
-            launch_config_popup()
-        except RuntimeError as exc:
-            # Avoid crashing the tray callback if launching the popup
-            # from this context is unsafe.
-            print(f"Configuration popup could not be launched from tray callback: {exc}")
-
-    def on_exit(self, icon, item):
-        """Stop the application."""
+    def _on_exit(self, icon: pystray.Icon, menu_item: pystray.MenuItem) -> None:
         print("Stopping AutoHelper...")
+        self._stop_polling.set()
         icon.stop()
         if self.stop_callback:
             self.stop_callback()
 
-    def run(self):
-        """Run the icon (blocking)."""
-        if self.icon:
-            self.icon.run()
+    # ── Job polling ──────────────────────────────────────────────────
 
-    def run_detached(self):
-        """Run the icon in a separate thread (if needed, but usually pystray runs in main)."""
-        if self.icon:
-            self.icon.run_detached()
+    def _poll_loop(self) -> None:
+        """Check every 3 s whether a job is active; swap hat on/off."""
+        while not self._stop_polling.wait(3):
+            try:
+                active = self._is_job_active()
+            except Exception:
+                active = False
+
+            if active != self._hat_on:
+                self._hat_on = active
+                if self.icon:
+                    self.icon.icon = _make_icon(wearing_hat=active)
+                    self.icon.update_menu()
+
+    def _is_job_active(self) -> bool:
+        """Hit localhost to see if runner or indexer is busy."""
+        from autohelper.config import get_settings
+
+        settings = get_settings()
+        base = f"http://{settings.host}:{settings.port}"
+
+        # Runner
+        with urllib.request.urlopen(f"{base}/runner/status", timeout=2) as resp:
+            if json.loads(resp.read()).get("active"):
+                return True
+
+        # Indexer
+        with urllib.request.urlopen(f"{base}/index/status", timeout=2) as resp:
+            if json.loads(resp.read()).get("status") == "running":
+                return True
+
+        return False
+
+    # ── Run ──────────────────────────────────────────────────────────
+
+    def run(self) -> None:
+        """Run the icon (blocking — call from main thread)."""
+        if not self.icon:
+            return
+        poller = threading.Thread(target=self._poll_loop, daemon=True)
+        poller.start()
+        self.icon.run()
+
+    def run_detached(self) -> None:
+        """Run the icon in a background thread."""
+        if not self.icon:
+            return
+        poller = threading.Thread(target=self._poll_loop, daemon=True)
+        poller.start()
+        self.icon.run_detached()

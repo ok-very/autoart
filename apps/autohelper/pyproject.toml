@@ -15,8 +15,6 @@ dependencies = [
     "aiosqlite>=0.19.0",
     "pystray>=0.19.0",
     "Pillow>=10.0.0",
-    "PySide6>=6.6.0",
-    "qt-material>=2.14",
     # Web scraping (for autocollector runner)
     "httpx>=0.26.0",
     "beautifulsoup4>=4.12.0",
@@ -54,11 +52,6 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 python_version = "3.11"
 strict = true
 warn_return_any = true
-
-# Relax strictness for GUI modules (Qt lazy imports cause many false positives)
-[[tool.mypy.overrides]]
-module = "autohelper.gui.*"
-ignore_errors = true
 
 # Relax strictness for test files
 [[tool.mypy.overrides]]
