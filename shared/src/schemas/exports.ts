@@ -86,6 +86,39 @@ export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
 };
 
 // ============================================================================
+// FINANCE EXPORT PRESETS
+// ============================================================================
+
+export type FinanceExportPreset = 'invoice-pdf' | 'invoice-docx' | 'budget-csv' | 'invoice-list-csv';
+
+export const FINANCE_EXPORT_PRESETS: Record<FinanceExportPreset, {
+    label: string;
+    description: string;
+    format: ExportFormat | 'docx';
+}> = {
+    'invoice-pdf': {
+        label: 'Invoice PDF',
+        description: 'PDF invoice with line items, totals, and payment history',
+        format: 'pdf',
+    },
+    'invoice-docx': {
+        label: 'Invoice Word Document',
+        description: 'Word document invoice with line items, totals, and payment history',
+        format: 'docx',
+    },
+    'budget-csv': {
+        label: 'Budget Summary (Boss Sheet v1)',
+        description: 'CSV with allocated/spent/remaining per budget, stable column layout',
+        format: 'csv',
+    },
+    'invoice-list-csv': {
+        label: 'Invoice List CSV',
+        description: 'CSV listing all invoices with dates, totals, and status',
+        format: 'csv',
+    },
+};
+
+// ============================================================================
 // BFA PROJECT EXPORT MODEL
 // ============================================================================
 

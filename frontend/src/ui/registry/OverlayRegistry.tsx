@@ -20,6 +20,8 @@ import { MondayBoardsOverlay } from '../overlay/views/MondayBoardsOverlay';
 import { StartCollectionModal } from '../overlay/views/StartCollectionModal';
 import { ActionInspectorOverlay } from '../overlay/views/ActionInspectorOverlay';
 import { ConfirmUnlinkView } from '../overlay/views/ConfirmUnlinkView';
+import { CreateInvoiceView } from '../overlay/views/CreateInvoiceView';
+import { RecordPaymentView } from '../overlay/views/RecordPaymentView';
 import { IntegrationsSection } from '../../pages/settings/IntegrationsSection';
 import { ClassificationPanel } from '../../workflows/import/panels/ClassificationPanel';
 import type { ImportPlan } from '../../api/hooks/imports';
@@ -75,6 +77,8 @@ export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
     'classification': ClassificationOverlayView, // Import classification review panel
     'amend-action': ActionInspectorOverlay, // Action amendment overlay
     'confirm-unlink': ConfirmUnlinkView, // Confirm unlink dialog
+    'create-invoice': CreateInvoiceView, // Finance: create invoice
+    'record-payment': RecordPaymentView, // Finance: record payment
 };
 
 
@@ -99,6 +103,8 @@ export function OverlayRegistry() {
     if (['create-record', 'view-definition', 'project-library', 'classification'].includes(type)) size = 'xl';
     if (['create-node', 'add-field', 'clone-project'].includes(type)) size = 'lg';
     if (['confirm-delete', 'confirm-unlink'].includes(type)) size = 'sm';
+    if (['create-invoice'].includes(type)) size = 'lg';
+    if (['record-payment'].includes(type)) size = 'md';
 
     // Construct context props expected by Overlay views
     const componentProps = {

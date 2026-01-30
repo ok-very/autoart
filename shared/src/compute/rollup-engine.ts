@@ -74,8 +74,9 @@ export function computeRollup(
   }
 
   if (values.length === 0) {
+    const zeroAggs = new Set<AggregationType>(['sum', 'avg']);
     return {
-      value: null,
+      value: zeroAggs.has(aggregation) ? 0 : null,
       count: 0,
       aggregation,
     };
