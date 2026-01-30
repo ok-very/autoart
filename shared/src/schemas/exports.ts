@@ -113,7 +113,7 @@ export const FINANCE_EXPORT_PRESETS: Record<FinanceExportPreset, {
     },
     'invoice-list-csv': {
         label: 'Invoice List CSV',
-        description: 'CSV listing all invoices with client, dates, totals, and status',
+        description: 'CSV listing all invoices with dates, totals, and status',
         format: 'csv',
     },
 };

@@ -30,7 +30,11 @@ interface InvoiceCsvRow {
 }
 
 function escapeCsvField(value: string): string {
-  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+  // Neutralize formula injection: prefix =, +, -, @, tab, CR with apostrophe
+  if (/^[=+\-@\t\r]/.test(value)) {
+    value = "'" + value;
+  }
+  if (value.includes(',') || value.includes('"') || value.includes('\n') || value.includes("'")) {
     return `"${value.replace(/"/g, '""')}"`;
   }
   return value;
@@ -112,8 +116,8 @@ export function formatInvoiceListCsv(rows: InvoiceCsvRow[]): string {
     formatCents(r.subtotal),
     formatCents(r.tax),
     formatCents(r.total),
-    r.status,
-    r.currency,
+    escapeCsvField(r.status),
+    escapeCsvField(r.currency),
   ].join(','));
 
   return [headers.join(','), ...csvRows].join('\n');

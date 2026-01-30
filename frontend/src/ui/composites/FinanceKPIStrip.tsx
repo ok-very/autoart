@@ -36,7 +36,7 @@ export function FinanceKPIStrip() {
       0,
     );
     const totalSpent = budgets.reduce(
-      (sum, r) => sum + ((r.data as Record<string, unknown>).spent_amount as number ?? 0),
+      (sum, r) => sum + extractCents(r.data as Record<string, unknown>, 'spent_amount'),
       0,
     );
 
@@ -46,7 +46,7 @@ export function FinanceKPIStrip() {
         const status = (r.data as Record<string, unknown>).status as string;
         return status === 'Sent' || status === 'Overdue';
       })
-      .reduce((sum, r) => sum + ((r.data as Record<string, unknown>).total as number ?? 0), 0);
+      .reduce((sum, r) => sum + extractCents(r.data as Record<string, unknown>, 'total'), 0);
 
     // Outstanding A/P: bills with status Received or Approved
     const outstandingAP = bills

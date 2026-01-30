@@ -84,8 +84,9 @@ export class OneDriveClient {
             return await this.request<OneDriveFile>(
                 `${GRAPH_BASE}/me/drive/root:/${encodeURIComponent(path)}`
             );
-        } catch {
-            return null;
+        } catch (err) {
+            if (err instanceof Error && err.message.includes('(404)')) return null;
+            throw err;
         }
     }
 
@@ -123,7 +124,7 @@ export class OneDriveClient {
                     body: JSON.stringify({
                         name: part,
                         folder: {},
-                        '@microsoft.graph.conflictBehavior': 'fail',
+                        '@microsoft.graph.conflictBehavior': 'replace',
                     }),
                 });
             } else if (!checkResponse.ok) {

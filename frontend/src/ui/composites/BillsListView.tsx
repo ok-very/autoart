@@ -27,8 +27,8 @@ function parseBillRow(record: { id: string; unique_name: string; data: Record<st
     id: record.id,
     billNumber: (data.bill_number as string) || record.unique_name,
     vendor: '',
-    amount: typeof amt === 'object' ? amt.amount : (amt as number) ?? 0,
-    currency: typeof amt === 'object' ? amt.currency : 'CAD',
+    amount: typeof amt === 'object' && amt !== null ? amt.amount : (amt as number) ?? 0,
+    currency: typeof amt === 'object' && amt !== null ? amt.currency : 'CAD',
     status: (data.status as string) || 'Received',
     dueDate: (data.due_date as string) || '',
     category: (data.category as string) || '',
@@ -69,7 +69,7 @@ export function BillsListView() {
           <h2 className="text-sm font-semibold text-slate-700">Vendor Bills</h2>
           <span className="text-xs text-slate-400">{bills.length}</span>
         </div>
-        <Button variant="primary" size="sm" leftSection={<Plus size={14} />}>
+        <Button variant="primary" size="sm" leftSection={<Plus size={14} />} onClick={() => openOverlay('create-bill', {})}>
           New Bill
         </Button>
       </header>
