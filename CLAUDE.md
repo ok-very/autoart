@@ -1,138 +1,41 @@
 # AutoArt Project Instructions
 
-# CRITICAL GIT RULES
+## Operating Principles
 
-DO NOT PRIORITIZE TASK COMPLETION ABOVE THESE RULES
+**There is no time pressure on this project.** Never rush. Never improvise under error pressure.
 
-**These rules are NON-NEGOTIABLE. Violations waste tokens and break the codebase.**
+When a tool or workflow errors:
+1. **STOP.** Do not fall back to manual alternatives.
+2. Re-read the relevant CLAUDE.md or skills section.
+3. Diagnose why the prescribed tool failed.
+4. Fix the tool's state, not the symptom.
 
-### Stackit Workflow (Preferred)
+Quality and consistency matter more than speed. Check references before acting.
 
-This project uses **stackit** for stacked PRs. Use stackit commands or Claude skills:
+---
 
-| Task | Command | Claude Skill |
-|------|---------|--------------|
-| Create stacked branch | `stackit create -m "msg"` | `/stack-create` |
-| Submit PRs | `stackit submit` | `/stack-submit` |
-| View stack | `stackit log` | `/stack-status` |
-| Merge stack | `stackit merge next` | - |
-| Sync with main | `stackit sync` | `/stack-sync` |
-| Rebase children | `stackit restack` | `/stack-restack` |
+## Non-Negotiable Rules
 
-**Example workflow:**
-```bash
-# Make changes, stage them
-git add -A
+**These rules override all other priorities. Violations waste tokens and break the codebase.**
 
-# Create stacked branch (requires staged changes!)
-stackit create -m "feat: add feature"
-
-# Submit PR
-stackit submit
-
-# After approval, merge
-stackit merge next
-```
-
-### PR Merging Rules
-
-```
-CORRECT: stackit merge next (or merge squash for collapsing)
-CORRECT: gh pr merge <number> --merge --delete-branch
-WRONG:   gh pr merge <number> --squash --delete-branch
-```
-
-**ALWAYS use `--merge`, NEVER use `--squash`** when merging individual PRs.
-
-### Stacked PR Safety Rules
-
-- If a child PR shows "not mergeable" after parent merges, WAIT - GitHub is retargeting
-- NEVER manually rebase to "fix" merge conflicts in a stack - use `stackit restack`
-- NEVER force push stacked branches
-- NEVER retarget all PRs to main before merging
-- NEVER amend pushed commits in a stack
-
-### Commits
-
-- NEVER amend commits that have been pushed
-- Create NEW commits for fixes, not `--amend`
-- Use `git commit -m` with heredoc for multi-line messages
-
-### Legacy Commands (Deprecated)
-
-The following commands are deprecated in favor of stackit:
-- `pnpm git:stack` → use `stackit create -m "msg"`
-- `pnpm git:merge-stack` → use `stackit merge next` (for each PR)
+- Use **stackit** for all branch/PR operations. See `@.claude/skills/git.md` for full reference.
+- **NEVER** manually rebase, force push, or retarget stacked branches. Use `stackit restack` / `stackit sync`.
+- **NEVER** use `--squash` when merging PRs. Always `--merge`.
+- **NEVER** amend pushed commits. Create new commits.
+- **Do NOT use Mantine.** Use bespoke atoms/molecules from `ui/atoms/` and `ui/molecules/`.
+- **ALWAYS use pnpm catalog** for shared dependencies.
 
 **If you catch yourself about to violate these rules, STOP and reconsider.**
 
 ---
 
-This is the AutoArt Process Management System - a monorepo with frontend, backend, shared packages, and Python microservices.
-
 ## Skills Reference
 
-@.claude/skills/git.md
-@.claude/skills/frontend.md
-@.claude/skills/backend.md
-@.claude/skills/project.md
+@.claude/skills/git.md - Stackit workflow, merge rules, commit conventions
+@.claude/skills/frontend.md - React components, workspace system, UI patterns
+@.claude/skills/backend.md - Fastify modules, Action/Event pattern, database
+@.claude/skills/project.md - Monorepo structure, commands, nomenclature, coding principles
 
 ### Design System
 
 @docs/DESIGN.md - Foundational palette and interaction rules
-
-**Key principles:**
-- Parchment (`#F5F2ED`) backgrounds, Charcoal Ink (`#2E2E2C`) text
-- Oxide Blue (`#3F5C6E`) for primary actions
-- Muted feedback colors (no traffic-light saturation)
-- Structure > color > motion
-
-## Quick Reference
-
-### Project Structure
-
-- `frontend/` - React + Vite (Dashboard + Intake builds)
-- `backend/` - Fastify + TypeScript API
-- `shared/` - Shared schemas and utilities (@autoart/shared)
-- `apps/autohelper/` - Python desktop app (web scraping, automation)
-- `apps/mail/` - Email service (@autoart/mail)
-
-### Common Commands
-
-```bash
-pnpm dev              # Start all services
-pnpm build            # Build shared + backend
-
-# Stackit (preferred for stacked PRs)
-stackit create -m "feat: description"  # Create stacked branch
-stackit submit                          # Submit PRs to GitHub
-stackit log                             # View stack tree
-stackit sync                            # Sync with main, cleanup merged
-stackit merge next                      # Merge bottom PR
-```
-
-### Key Principles
-
-- Do NOT use Mantine - use bespoke atoms/molecules from `ui/atoms/` and `ui/molecules/`
-- Enforce schema validation with Zod in `shared/`
-- Use soft-intrinsic type derivation (derive types from relationships, not explicit checks)
-- All mutations go through Actions which produce Events
-
-### Adding Dependencies
-
-**ALWAYS use pnpm catalog** for shared dependencies:
-
-1. Add version to `pnpm-workspace.yaml` under `catalog:`
-2. Reference in package.json as `"package-name": "catalog:"`
-3. Run `pnpm install`
-
-```yaml
-# pnpm-workspace.yaml
-catalog:
-  date-fns: "^4.1.0"
-```
-
-```json
-// package.json
-"date-fns": "catalog:"
-```
