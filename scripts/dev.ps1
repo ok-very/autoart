@@ -79,7 +79,7 @@ if (Test-Path "$ProjectDir\apps\autohelper\package.json") {
     $autohelperJob = Start-Job -Name "AutoArt-AutoHelper" -ScriptBlock {
         param($dir)
         Set-Location "$dir\apps\autohelper"
-        pnpm dev 2>&1
+        pnpm dev:win 2>&1
     } -ArgumentList $ProjectDir
     Start-Sleep -Seconds 2
 }

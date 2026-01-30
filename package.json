@@ -8,6 +8,7 @@
     "build:shared": "pnpm --filter @autoart/shared build",
     "build": "pnpm build:shared && pnpm build:backend",
     "dev": "bash scripts/dev.sh",
+    "dev:win": "powershell -ExecutionPolicy Bypass -File scripts/dev.ps1",
     "dev:kill": "bash scripts/kill-dev.sh",
     "backup": "bash scripts/backup.sh",
     "db:verify": "bash scripts/db-verify.sh",
