@@ -17,7 +17,6 @@
 import crypto from 'crypto';
 
 import { MondayClient } from './connectors/monday-client.js';
-
 import { env } from '../../config/env.js';
 import { db } from '../../db/client.js';
 import { AppError } from '../../utils/errors.js';

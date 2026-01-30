@@ -5,6 +5,7 @@
  */
 
 import type { FastifyPluginAsync } from 'fastify';
+
 import * as definitionsService from './definitions.service.js';
 
 export const definitionsRoutes: FastifyPluginAsync = async (fastify) => {

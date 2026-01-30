@@ -9,10 +9,11 @@
 
 import { type ClassificationOutcome, isInternalWork } from '@autoart/shared';
 
+import { db } from '@db/client.js';
+import type { RecordDefinition } from '@db/schema.js';
+import { logger } from '@utils/logger.js';
+
 import { getSession } from './import-sessions.service.js';
-import { db } from '../../../db/client.js';
-import type { RecordDefinition } from '../../../db/schema.js';
-import { logger } from '../../../utils/logger.js';
 import { type InterpretationOutput, interpretCsvRowPlan } from '../../interpreter/interpreter.service.js';
 import { matchSchema } from '../schema-matcher.js';
 import type { ImportPlan, ImportPlanItem, ItemClassification } from '../types.js';

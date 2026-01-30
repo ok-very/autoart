@@ -9,13 +9,15 @@
 import { sql } from 'kysely';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 
-import { db } from '../../../db/client.js';
+import { db } from '@db/client.js';
+
 import {
   cleanupTestData,
   generateTestPrefix,
   createTestProject,
   createTestRecord,
-} from '../../../test/setup.js';
+} from '@/test/setup.js';
+
 import * as hierarchyService from '../hierarchy.service.js';
 
 describe('hierarchy.service', () => {

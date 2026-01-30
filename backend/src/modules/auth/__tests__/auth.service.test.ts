@@ -9,11 +9,13 @@
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 
-import { db } from '../../../db/client.js';
+import { db } from '@db/client.js';
+
 import {
   cleanupTestData,
   generateTestPrefix,
-} from '../../../test/setup.js';
+} from '@/test/setup.js';
+
 import * as authService from '../auth.service.js';
 
 describe('auth.service', () => {

@@ -168,31 +168,27 @@ export async function exportsRoutes(app: FastifyInstance) {
             targetConfig: z.record(z.string(), z.unknown()).optional(),
         }).parse(request.body);
 
-        try {
-            // Get current session
-            const session = await exportsService.getExportSession(id);
-            if (!session) {
-                return reply.status(404).send({ error: 'Session not found' });
-            }
-
-            // Update session in database
-            const { db } = await import('../../db/client.js');
-            await db
-                .updateTable('export_sessions')
-                .set({
-                    options: body.options ? JSON.stringify(body.options) : undefined,
-                    project_ids: body.projectIds ? JSON.stringify(body.projectIds) : undefined,
-                    target_config: body.targetConfig ? JSON.stringify(body.targetConfig) : undefined,
-                    updated_at: new Date(),
-                })
-                .where('id', '=', id)
-                .execute();
-
-            const updated = await exportsService.getExportSession(id);
-            return reply.send(updated);
-        } catch (err) {
-            throw err;
+        // Get current session
+        const session = await exportsService.getExportSession(id);
+        if (!session) {
+            return reply.status(404).send({ error: 'Session not found' });
         }
+
+        // Update session in database
+        const { db } = await import('../../db/client.js');
+        await db
+            .updateTable('export_sessions')
+            .set({
+                options: body.options ? JSON.stringify(body.options) : undefined,
+                project_ids: body.projectIds ? JSON.stringify(body.projectIds) : undefined,
+                target_config: body.targetConfig ? JSON.stringify(body.targetConfig) : undefined,
+                updated_at: new Date(),
+            })
+            .where('id', '=', id)
+            .execute();
+
+        const updated = await exportsService.getExportSession(id);
+        return reply.send(updated);
     });
 
     /**

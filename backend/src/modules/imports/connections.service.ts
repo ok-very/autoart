@@ -5,6 +5,7 @@
  * Supports per-user credentials with fallback to environment variables.
  */
 
+import { randomBytes, randomInt } from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 
 import { db } from '../../db/client.js';
@@ -12,7 +13,6 @@ import type {
     ConnectionCredential,
     NewConnectionCredential,
 } from '../../db/schema.js';
-import { randomBytes, randomInt } from 'crypto';
 
 export type Provider = 'monday' | 'asana' | 'notion' | 'jira' | 'google' | 'microsoft' | 'autohelper';
 

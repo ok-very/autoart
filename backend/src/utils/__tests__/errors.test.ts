@@ -7,6 +7,7 @@
 import { describe, it, expect } from 'vitest';
 
 import { ErrorCodes } from '@autoart/shared';
+
 import {
   AppError,
   NotFoundError,

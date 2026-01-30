@@ -9,11 +9,10 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
 import { getMondayToken } from '../connections.service.js';
-import { MondayConnector } from '../connectors/monday-connector.js';
-
 import { inferBoardConfig } from './monday-domain-interpreter.js';
-import * as workspaceService from './monday-workspace.service.js';
 import { mondaySyncService } from './monday-sync.service.js';
+import * as workspaceService from './monday-workspace.service.js';
+import { MondayConnector } from '../connectors/monday-connector.js';
 
 // ============================================================================
 // SCHEMAS

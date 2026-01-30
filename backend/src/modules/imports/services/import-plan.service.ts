@@ -8,19 +8,20 @@
 
 import { randomUUID } from 'node:crypto';
 
-import { db } from '../../../db/client.js';
-import { logger } from '../../../utils/logger.js';
+import { db } from '@db/client.js';
+import { logger } from '@utils/logger.js';
+
+import { generateClassifications, generateClassificationsForConnectorItems } from './import-classification.service.js';
+import { getSession, PARSERS } from './import-sessions.service.js';
+import { getPlannedStatus, transitionStatusInTransaction } from './session-status.service.js';
+import { listDefinitions } from '../../records/records.service.js';
 import { getMondayToken } from '../connections.service.js';
 import { MondayConnector } from '../connectors/monday-connector.js';
-import { interpretMondayData, inferBoardConfig } from '../monday/monday-domain-interpreter.js';
 import type { MondayWorkspaceConfig } from '../monday/monday-config.types.js';
+import { interpretMondayData, inferBoardConfig } from '../monday/monday-domain-interpreter.js';
 import * as mondayWorkspaceService from '../monday/monday-workspace.service.js';
-import { listDefinitions } from '../../records/records.service.js';
 import type { ImportPlan } from '../types.js';
 import { hasUnresolvedClassifications } from '../types.js';
-import { getSession, PARSERS } from './import-sessions.service.js';
-import { generateClassifications, generateClassificationsForConnectorItems } from './import-classification.service.js';
-import { getPlannedStatus, transitionStatusInTransaction } from './session-status.service.js';
 
 // Re-export getLatestPlan for convenience
 export { getLatestPlan } from './import-sessions.service.js';

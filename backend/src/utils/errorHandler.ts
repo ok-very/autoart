@@ -1,8 +1,10 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
+
+import { ErrorCodes } from '@autoart/shared';
+
 import { isAppError } from './errors.js';
 import { logger } from './logger.js';
 import { env } from '../config/env.js';
-import { ErrorCodes } from '@autoart/shared';
 
 const isDev = env.NODE_ENV === 'development';
 

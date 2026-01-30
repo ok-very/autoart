@@ -1,9 +1,11 @@
 import { randomUUID } from 'crypto';
+
 import { db } from '@db/client.js';
+
 import { getMondayToken } from '../connections.service.js';
-import { MondayConnector } from '../connectors/monday-connector.js';
 import { interpretMondayData } from './monday-domain-interpreter.js';
 import * as mondayWorkspaceService from './monday-workspace.service.js';
+import { MondayConnector } from '../connectors/monday-connector.js';
 
 
 interface SyncResult {
