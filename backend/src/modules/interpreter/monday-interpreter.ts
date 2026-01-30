@@ -8,6 +8,8 @@
  * 3. Auto-inference from column types/names
  */
 
+import { type RenderHint } from '@autoart/shared';
+
 import {
     getLearningsFor,
     applyLearnings,
@@ -16,7 +18,6 @@ import {
 import type { MondayDataNode, MondayColumnValue } from '../imports/connectors/monday-connector.js';
 import type { ImportPlanItem } from '../imports/types.js';
 import { listDefinitions } from '../records/records.service.js';
-import { type RenderHint } from '@autoart/shared';
 
 // ============================================================================
 // TYPES

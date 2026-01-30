@@ -2,6 +2,8 @@ import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 
+import { resolveComputedFields } from './computed-fields.service.js';
+import { detectOverdueInvoices } from './overdue-detection.service.js';
 import {
   createDefinitionSchema,
   updateDefinitionSchema,
@@ -12,8 +14,6 @@ import {
   listRecordsQuerySchema,
 } from './records.schemas.js';
 import * as recordsService from './records.service.js';
-import { resolveComputedFields } from './computed-fields.service.js';
-import { detectOverdueInvoices } from './overdue-detection.service.js';
 import { AppError } from '../../utils/errors.js';
 
 export async function recordsRoutes(app: FastifyInstance) {

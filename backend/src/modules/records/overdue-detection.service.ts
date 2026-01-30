@@ -9,8 +9,8 @@
 
 import { sql } from 'kysely';
 
-import { db } from '../../db/client.js';
 import { emitFinanceFact } from './finance-events.service.js';
+import { db } from '../../db/client.js';
 
 interface OverdueResult {
   checked: number;

@@ -250,7 +250,7 @@ function extractStaffInitials(metadata: Record<string, unknown> | null): string[
 
     if (Array.isArray(staff)) return staff as string[];
     if (typeof staff === 'string') {
-        return staff.split(/[,\/]/).map((s: string) => s.trim()).filter(Boolean);
+        return staff.split(/[,/]/).map((s: string) => s.trim()).filter(Boolean);
     }
     return [];
 }

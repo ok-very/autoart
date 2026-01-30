@@ -11,8 +11,9 @@
 
 import { sql } from 'kysely';
 
-import { db } from '../../db/client.js';
 import type { ContextType } from '@autoart/shared';
+
+import { db } from '../../db/client.js';
 
 interface EmitFactOptions {
   contextId: string;

@@ -1,3 +1,5 @@
+import { generateUniqueId } from '@autoart/shared';
+
 import { db } from '../../db/client.js';
 import type {
   IntakeForm,
@@ -8,7 +10,6 @@ import type {
   NewIntakeSubmission,
   IntakeFormUpdate,
 } from '../../db/schema.js';
-import { generateUniqueId } from '@autoart/shared';
 import { NotFoundError, ConflictError } from '../../utils/errors.js';
 
 const MAX_UNIQUE_ID_RETRIES = 5;

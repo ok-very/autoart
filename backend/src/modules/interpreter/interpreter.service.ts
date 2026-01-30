@@ -16,10 +16,9 @@
  * - WORK_FINISHED (any)          → status: 'finished'
  */
 
-import type { Action, Event } from '../../db/schema.js';
-import type { ContextType } from '../../db/schema.js';
-import * as actionsService from '../actions/actions.service.js';
-import * as eventsService from '../events/events.service.js';
+import type { Action, ContextType, Event } from '@db/schema.js';
+import * as actionsService from '@modules/actions/actions.service.js';
+import * as eventsService from '@modules/events/events.service.js';
 
 // ============================================================================
 // TYPES

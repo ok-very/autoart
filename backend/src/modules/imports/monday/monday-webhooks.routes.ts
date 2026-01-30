@@ -1,4 +1,5 @@
 import { FastifyPluginAsync } from 'fastify';
+
 import { mondaySyncService } from './monday-sync.service.js';
 
 // Define types locally for now

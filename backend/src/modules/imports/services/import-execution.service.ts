@@ -10,16 +10,10 @@
  * projection refresh and central validation guarantees.
  */
 
-import { db } from '../../../db/client.js';
-import type { ContextType } from '../../../db/schema.js';
-import { emitEvent } from '../../events/events.service.js';
-import { interpretCsvRowPlan } from '../../interpreter/interpreter.service.js';
-import { ensureFactKindDefinition } from '../../records/fact-kinds.service.js';
-import { bulkCreateRecords } from '../../records/records.service.js';
-import { logger } from '../../../utils/logger.js';
-import { createMapping } from '../sync.service.js';
-import type { ImportPlan, ImportPlanItem, ItemClassification } from '../types.js';
-import { hasUnresolvedClassifications, countUnresolved } from '../types.js';
+import { db } from '@db/client.js';
+import type { ContextType } from '@db/schema.js';
+import { logger } from '@utils/logger.js';
+
 import { getSession, getLatestPlanWithId } from './import-sessions.service.js';
 import {
     markSessionNeedsReview,
@@ -27,6 +21,13 @@ import {
     markSessionCompleted,
     markSessionFailed,
 } from './session-status.service.js';
+import { emitEvent } from '../../events/events.service.js';
+import { interpretCsvRowPlan } from '../../interpreter/interpreter.service.js';
+import { ensureFactKindDefinition } from '../../records/fact-kinds.service.js';
+import { bulkCreateRecords } from '../../records/records.service.js';
+import { createMapping } from '../sync.service.js';
+import type { ImportPlan, ImportPlanItem, ItemClassification } from '../types.js';
+import { hasUnresolvedClassifications, countUnresolved } from '../types.js';
 
 // ============================================================================
 // IMPORT EXECUTION

@@ -2,8 +2,8 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
 import { registerSchema, loginSchema, RegisterInput, LoginInput, RefreshInput } from './auth.schemas.js';
 import * as authService from './auth.service.js';
-import * as oauthService from './oauth.service.js';
 import * as microsoftOAuthService from './microsoft-oauth.service.js';
+import * as oauthService from './oauth.service.js';
 import * as settingsService from './settings.service.js';
 import { AppError } from '../../utils/errors.js';
 
