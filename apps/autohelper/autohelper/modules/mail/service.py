@@ -7,7 +7,6 @@ Note: Outlook integration requires Windows with pywin32 installed.
 import json
 import os
 import re
-import sys
 import threading
 import time
 from datetime import datetime, timedelta
@@ -22,11 +21,13 @@ logger = get_logger(__name__)
 
 # Windows-specific imports for Outlook COM automation
 # Guarded to allow module import on non-Windows platforms
+from autohelper.shared.platform import can_use_outlook, platform_label
+
 _HAS_WIN32 = False
 pythoncom: Any = None
 win32com_client: Any = None
 
-if sys.platform == "win32":
+if can_use_outlook():
     try:
         import pythoncom as _pythoncom
         import win32com.client as _win32com_client
@@ -179,7 +180,10 @@ class MailService:
     def start(self) -> None:
         """Start the background polling thread if enabled."""
         if not _HAS_WIN32:
-            logger.warning("Mail Service: Cannot start - pywin32 not available (Windows only)")
+            logger.info(
+                "Mail Service: Skipped — requires Windows with Outlook (running on %s)",
+                platform_label(),
+            )
             return
 
         if not self.settings.mail_enabled:

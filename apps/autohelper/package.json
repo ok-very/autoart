@@ -3,13 +3,10 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": ".venv/bin/python -m autohelper.main --tray",
-        "start": ".venv/bin/python -m autohelper.main --tray",
-        "install:deps": ".venv/bin/pip install -e .[dev]",
-        "lint": "ruff check .",
-        "format": "ruff check . --fix"
-    },
-    "dependencies": {
-        "pip": "^0.0.1"
+        "dev": "AUTOHELPER_DATA_DIR=./data .venv/bin/python3 -m autohelper.main --tray",
+        "start": ".venv/bin/python3 -m autohelper.main --tray",
+        "install:deps": ".venv/bin/python3 -m pip install -e .[dev]",
+        "lint": ".venv/bin/ruff check .",
+        "format": ".venv/bin/ruff check . --fix"
     }
 }

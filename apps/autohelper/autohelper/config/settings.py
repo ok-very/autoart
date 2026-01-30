@@ -9,6 +9,8 @@ from typing import Literal
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from autohelper.shared.paths import data_dir
+
 # =============================================================================
 # Metadata Backend Types
 # =============================================================================
@@ -32,7 +34,7 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # Database
-    db_path: Path = Field(default=Path("./data/autohelper.db"))
+    db_path: Path = Field(default_factory=lambda: data_dir() / "autohelper.db")
 
     # Filesystem roots (comma-separated paths)
     allowed_roots: list[str] = Field(default_factory=list)
@@ -56,7 +58,7 @@ class Settings(BaseSettings):
         default_factory=lambda: Path(Path.home() / "OneDrive" / "Emails")
     )
     mail_ingest_path: Path = Field(
-        default_factory=lambda: Path(Path.home() / "Documents" / "AutoHelper" / "Ingest")
+        default_factory=lambda: data_dir() / "ingest"
     )
 
     # Context Layer / External Data Sources

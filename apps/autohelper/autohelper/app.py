@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse
 from autohelper.config import Settings, get_settings
 from autohelper.db import get_db, init_db
 from autohelper.db.migrate import run_migrations
+from autohelper.modules.config.router import router as config_router
 from autohelper.modules.export.router import router as export_router
 from autohelper.modules.filetree.router import router as filetree_router
 from autohelper.modules.gc.router import router as gc_router
@@ -47,7 +48,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Setup logging
     setup_logging(settings.log_level)
-    logger.info("Starting AutoHelper...")
+
+    from autohelper.shared.platform import platform_label
+    logger.info("Starting AutoHelper on %s...", platform_label())
 
     # Initialize database
     db = init_db(settings.db_path)
@@ -156,6 +159,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(export_router)
     app.include_router(runner_router)
     app.include_router(gc_router)
+    app.include_router(config_router)
 
     # Root endpoint
     @app.get("/")
