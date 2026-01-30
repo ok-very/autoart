@@ -49,13 +49,73 @@ stackit submit           # Submit current branch
 stackit submit --stack   # Submit entire stack (alias: ss)
 ```
 
-### Merging a Stack
+### Merging a Stack — Step by Step
+
+**Always merge from the bottom up, one PR at a time.**
+
+#### Pre-merge checklist
 
 ```bash
-stackit merge next       # Merge bottom unmerged PR, then restack
+stackit sync                 # Pull main, cleanup any already-merged branches
+stackit log                  # Confirm stack order and PR numbers
+```
+
+Verify all PRs are approved and CI is passing before starting.
+
+#### The merge loop
+
+```bash
+# 1. Merge the bottom-most unmerged PR
+stackit merge next --no-interactive
+
+# 2. Sync to pull the merge, cleanup the merged branch, restack remaining
+stackit sync --no-interactive
+
+# 3. Check what remains
+stackit log --no-interactive
+
+# 4. Repeat steps 1-3 until all PRs are merged
+```
+
+#### When `stackit merge next` errors
+
+If stackit errors (e.g., "Pull request is in clean status", automerge failures):
+
+1. **STOP.** Do not manually rebase, force push, or recreate PRs.
+2. Try with `--force` flag: `stackit merge next --force --no-interactive`
+3. If that still fails, merge that single PR manually:
+   ```bash
+   gh pr merge <PR-NUMBER> --merge --delete-branch
+   ```
+4. **Immediately return to stackit** for cleanup and remaining merges:
+   ```bash
+   stackit sync --no-interactive     # Let stackit clean up and restack
+   stackit merge next --no-interactive  # Continue with next PR
+   ```
+
+**NEVER** do any of the following as "recovery":
+- `git rebase --onto` to manually rebase branches
+- `git push --force` or `--force-with-lease` on stacked branches
+- `gh pr edit --base` to retarget PRs to main
+- Close and recreate PRs
+
+These destroy stackit's internal tracking and cascade into more breakage.
+
+#### Other merge modes
+
+```bash
 stackit merge squash     # Consolidate stack into single PR and merge
 stackit merge            # Interactive wizard
 ```
+
+#### Useful flags
+
+| Flag | Purpose |
+|------|---------|
+| `--dry-run` | Show merge plan without executing |
+| `--force` | Skip validation (draft PRs, failing CI) |
+| `--wait` | Wait for merge to complete (vs fire-and-forget) |
+| `--no-interactive` | Non-interactive mode (required for Claude) |
 
 ### Syncing and Restacking
 
@@ -70,23 +130,24 @@ stackit restack          # Rebase all branches in stack
 
 ```bash
 # Via stackit (preferred)
-stackit merge next
+stackit merge next --no-interactive
 
-# Manual (if needed)
+# Manual fallback for a SINGLE PR only (then immediately `stackit sync`)
 gh pr merge <number> --merge --delete-branch
 ```
 
-**NEVER use `--squash`** - it breaks stacked PRs and orphans child branch commits.
+**NEVER use `--squash`** — it breaks stacked PRs and orphans child branch commits.
 
 ---
 
 ## Stack Safety Rules
 
-- If child PR shows "not mergeable" after parent merges, WAIT - GitHub is retargeting
-- NEVER manually rebase to "fix" merge conflicts - use `stackit restack`
+- If child PR shows "not mergeable" after parent merges, WAIT — GitHub is retargeting
+- NEVER manually rebase to "fix" merge conflicts — use `stackit restack`
 - NEVER force push stacked branches
-- NEVER retarget all PRs to main before merging
+- NEVER retarget PRs to main before merging
 - NEVER amend pushed commits in a stack
+- NEVER close and recreate PRs to "fix" stack state — use `stackit sync`
 
 ### Fixing Review Comments
 
