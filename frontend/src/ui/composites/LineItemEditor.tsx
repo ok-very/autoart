@@ -33,7 +33,7 @@ function parseLineItem(record: DataRecord): LineItemRow {
     description: (data.description as string) || '',
     itemType: (data.item_type as string) || 'Service',
     qty: (data.qty as number) || 0,
-    unitPrice: typeof unitPrice === 'object' ? unitPrice.amount : (unitPrice as number) ?? 0,
+    unitPrice: typeof unitPrice === 'object' && unitPrice !== null ? unitPrice.amount : (unitPrice as number) ?? 0,
     vatRate: (data.vat_rate as number) || 0,
     lineTotal: (data.line_total as number) ?? null,
     lineTax: (data.line_tax as number) ?? null,
@@ -149,7 +149,8 @@ export function LineItemEditor({ invoiceId, lineItems, currency }: LineItemEdito
                     type="text"
                     value={(item.unitPrice / 100).toFixed(2)}
                     onChange={(e) => {
-                      const cents = Math.round(parseFloat(e.target.value || '0') * 100);
+                      const parsed = parseFloat(e.target.value || '0');
+                      const cents = Number.isNaN(parsed) ? 0 : Math.round(parsed * 100);
                       handleFieldChange(item.id, 'unit_price', { amount: cents, currency });
                     }}
                     className="w-full bg-transparent text-sm font-mono text-slate-700 text-right outline-none focus:bg-slate-50 px-1 py-0.5 rounded"

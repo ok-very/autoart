@@ -309,7 +309,7 @@ export function extractReferences(expression: string): string[] {
  */
 export function isFormula(value: unknown): boolean {
   if (typeof value !== 'string') return false;
-  return value.includes('#') || /[+\-*/()]/.test(value);
+  return value.includes('#') || /\d\s*[+\-*/]\s*\d/.test(value);
 }
 
 /**
@@ -349,7 +349,9 @@ export function createRecordResolver(
     // Currency field: extract amount from { amount, currency } structure
     if (typeof value === 'object' && value !== null && 'amount' in value) {
       const amt = (value as { amount: unknown }).amount;
-      return typeof amt === 'number' ? amt : null;
+      if (typeof amt === 'number') return amt;
+      if (typeof amt === 'string') { const n = Number(amt); return isNaN(n) ? null : n; }
+      return null;
     }
 
     if (typeof value === 'number') return value;

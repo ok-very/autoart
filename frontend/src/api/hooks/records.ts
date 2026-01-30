@@ -39,6 +39,7 @@ export function useCreateRecord() {
       api.post<{ record: DataRecord }>('/records', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['records'] });
+      queryClient.invalidateQueries({ queryKey: ['contacts-by-group'] });
     },
   });
 }
@@ -51,6 +52,7 @@ export function useUpdateRecord() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['records'] });
       queryClient.invalidateQueries({ queryKey: ['record'] });
+      queryClient.invalidateQueries({ queryKey: ['contacts-by-group'] });
     },
   });
 }
@@ -63,6 +65,7 @@ export function useDeleteRecord() {
       queryClient.invalidateQueries({ queryKey: ['records'] });
       queryClient.invalidateQueries({ queryKey: ['record'] });
       queryClient.invalidateQueries({ queryKey: ['links'] });
+      queryClient.invalidateQueries({ queryKey: ['contacts-by-group'] });
     },
   });
 }

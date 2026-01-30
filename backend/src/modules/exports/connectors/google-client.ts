@@ -524,20 +524,20 @@ export class GoogleClient {
             metadata.parents = [folderId];
         }
 
-        // Build multipart body manually (Node fetch doesn't use browser FormData)
+        // Build multipart body using binary Buffer.concat for correct file content
         const boundary = `----autoart-upload-${Date.now()}`;
         const metadataJson = JSON.stringify(metadata);
 
-        const parts = [
-            `--${boundary}\r\n`,
-            `Content-Type: application/json; charset=UTF-8\r\n\r\n`,
-            metadataJson,
-            `\r\n--${boundary}\r\n`,
-            `Content-Type: ${mimeType}\r\n`,
-            `Content-Transfer-Encoding: base64\r\n\r\n`,
-            buffer.toString('base64'),
-            `\r\n--${boundary}--`,
-        ].join('');
+        const preamble = Buffer.from(
+            `--${boundary}\r\n` +
+            `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+            metadataJson +
+            `\r\n--${boundary}\r\n` +
+            `Content-Type: ${mimeType}\r\n\r\n`,
+            'utf-8'
+        );
+        const epilogue = Buffer.from(`\r\n--${boundary}--`, 'utf-8');
+        const body = Buffer.concat([preamble, buffer, epilogue]);
 
         const response = await fetch(
             `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,mimeType,webViewLink,parents`,
@@ -547,7 +547,7 @@ export class GoogleClient {
                     Authorization: `Bearer ${this.accessToken}`,
                     'Content-Type': `multipart/related; boundary=${boundary}`,
                 },
-                body: parts,
+                body,
             }
         );
 
