@@ -25,6 +25,7 @@
     "watch": "tsc --watch"
   },
   "dependencies": {
+    "docx": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

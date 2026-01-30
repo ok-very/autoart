@@ -45,13 +45,17 @@ export async function resolveComputedFields(
     (f) => f.type === 'rollup' && f.rollupConfig,
   );
 
+  // Cache linked data by linkType so duplicate linkTypes reuse the same query
+  const linkedDataCache = new Map<string, Array<Record<string, unknown>>>();
+
   for (const field of rollupFields) {
     const config = field.rollupConfig!;
     try {
-      const linkedData = await fetchLinkedRecordData(
-        recordId,
-        config.linkType,
-      );
+      let linkedData = linkedDataCache.get(config.linkType);
+      if (!linkedData) {
+        linkedData = await fetchLinkedRecordData(recordId, config.linkType);
+        linkedDataCache.set(config.linkType, linkedData);
+      }
       const result = computeRollup(
         linkedData,
         config.targetField,
@@ -97,7 +101,7 @@ export async function resolveComputedFields(
       const depField = computedFields.find((f) => f.key === dep);
       if (depField && !resolved.has(dep)) {
         resolveField(depField);
-        resolvedData[dep] = computed[dep] ?? resolvedData[dep];
+        resolvedData[dep] = (dep in computed) ? computed[dep] : resolvedData[dep];
       }
     }
 

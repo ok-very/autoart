@@ -13,6 +13,7 @@ import {
 } from './records.schemas.js';
 import * as recordsService from './records.service.js';
 import { resolveComputedFields } from './computed-fields.service.js';
+import { detectOverdueInvoices } from './overdue-detection.service.js';
 import { AppError } from '../../utils/errors.js';
 
 export async function recordsRoutes(app: FastifyInstance) {
@@ -493,6 +494,16 @@ export async function recordsRoutes(app: FastifyInstance) {
         }
         throw err;
       }
+    }
+  );
+
+  // Trigger overdue invoice detection
+  fastify.post(
+    '/finance/detect-overdue',
+    { preHandler: [fastify.authenticate] },
+    async (_request, reply) => {
+      const result = await detectOverdueInvoices();
+      return reply.send(result);
     }
   );
 

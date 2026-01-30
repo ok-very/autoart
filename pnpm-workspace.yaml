@@ -48,3 +48,6 @@ catalog:
 
   # Date utilities
   date-fns: "^4.1.0"
+
+  # Document generation
+  docx: "^9.4.1"

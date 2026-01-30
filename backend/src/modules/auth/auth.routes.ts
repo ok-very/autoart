@@ -3,6 +3,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { registerSchema, loginSchema, RegisterInput, LoginInput, RefreshInput } from './auth.schemas.js';
 import * as authService from './auth.service.js';
 import * as oauthService from './oauth.service.js';
+import * as microsoftOAuthService from './microsoft-oauth.service.js';
 import * as settingsService from './settings.service.js';
 import { AppError } from '../../utils/errors.js';
 
@@ -179,6 +180,69 @@ export async function authRoutes(fastify: FastifyInstance) {
 
     try {
       const { user } = await oauthService.handleGoogleCallback(code, state);
+      const refreshToken = await authService.createSession(user.id);
+      const accessToken = fastify.jwt.sign({ userId: user.id, email: user.email });
+
+      return reply.send({
+        user: { id: user.id, email: user.email, name: user.name },
+        accessToken,
+        refreshToken,
+      });
+    } catch (err) {
+      if (err instanceof AppError) {
+        return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+      }
+      throw err;
+    }
+  });
+
+  // ============================================================================
+  // MICROSOFT OAUTH ENDPOINTS
+  // ============================================================================
+
+  // Initiate Microsoft OAuth flow
+  fastify.get('/microsoft', async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      // If the user is authenticated, pass their userId so tokens get linked
+      const userId = (request.user as { userId?: string })?.userId;
+      const { url, state } = microsoftOAuthService.getMicrosoftAuthUrl(userId);
+      return reply.send({ url, state });
+    } catch (err) {
+      if (err instanceof AppError) {
+        return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+      }
+      throw err;
+    }
+  });
+
+  // Handle Microsoft OAuth callback
+  interface MicrosoftCallbackQuery {
+    Querystring: { code?: string; state?: string; error?: string; error_description?: string };
+  }
+  fastify.get<MicrosoftCallbackQuery>('/microsoft/callback', async (request, reply) => {
+    const { code, state, error, error_description } = request.query;
+
+    if (error) {
+      return reply.code(400).send({
+        error: 'OAUTH_DENIED',
+        message: error_description || 'User denied consent',
+      });
+    }
+
+    if (!code || !state) {
+      return reply.code(400).send({ error: 'BAD_REQUEST', message: 'Missing code or state parameter' });
+    }
+
+    try {
+      const { userId } = await microsoftOAuthService.handleMicrosoftCallback(code, state);
+
+      // If the user already had a session (connecting account), return success
+      // Otherwise create a session for the new/found user
+      const user = await authService.getUserById(userId);
+      if (!user) {
+        return reply.code(404).send({ error: 'NOT_FOUND', message: 'User not found after OAuth' });
+      }
+
       const refreshToken = await authService.createSession(user.id);
       const accessToken = fastify.jwt.sign({ userId: user.id, email: user.email });
 

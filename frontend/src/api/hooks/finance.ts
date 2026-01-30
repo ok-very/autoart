@@ -24,6 +24,7 @@ export function useFinanceRecords(filters?: FinanceRecordFilters) {
     queryFn: () => {
       const params = new URLSearchParams();
       if (filters?.definitionId) params.set('definitionId', filters.definitionId);
+      if (filters?.status) params.set('status', filters.status);
       if (filters?.search) params.set('search', filters.search);
       if (filters?.resolve) params.set('resolve', 'true');
       return api.get<{ records: DataRecord[] }>(`/records?${params}`).then(r => r.records);
