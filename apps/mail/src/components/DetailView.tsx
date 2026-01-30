@@ -324,7 +324,7 @@ export function DetailView({ email }: DetailViewProps) {
                                     <div className="flex flex-wrap gap-1">
                                         {email.priorityFactors.map((f, i) => (
                                             <span key={i} className="text-[10px] bg-white text-blue-800 px-1.5 py-0.5 rounded border border-blue-100">
-                                                {f}
+                                                {String(f)}
                                             </span>
                                         ))}
                                     </div>

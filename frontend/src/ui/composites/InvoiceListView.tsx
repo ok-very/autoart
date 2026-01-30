@@ -6,8 +6,8 @@ import { useFinanceRecords } from '../../api/hooks/finance';
 import { useRecordDefinitions } from '../../api/hooks/definitions';
 import { useFinanceStore } from '../../stores/financeStore';
 import { useUIStore } from '../../stores/uiStore';
-import { formatCurrency, type CurrencyValue } from '@autoart/shared';
-import { Badge, Button } from '@autoart/ui';
+import { formatCurrency } from '@autoart/shared';
+import { Button } from '@autoart/ui';
 
 interface InvoiceRow {
   id: string;

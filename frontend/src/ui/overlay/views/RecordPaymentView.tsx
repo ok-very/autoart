@@ -8,7 +8,7 @@
 import { useState, useMemo, useCallback } from 'react';
 
 import { useRecordDefinitions } from '../../../api/hooks/definitions';
-import { useCreateFinanceRecord, useCreateFinanceLink, useUpdateFinanceRecord } from '../../../api/hooks/finance';
+import { useCreateFinanceRecord, useCreateFinanceLink } from '../../../api/hooks/finance';
 import { useUIStore } from '../../../stores/uiStore';
 import { useFinanceStore } from '../../../stores/financeStore';
 import { Button, Stack, TextInput, Select } from '@autoart/ui';
@@ -31,7 +31,6 @@ export function RecordPaymentView({
 
   const createRecord = useCreateFinanceRecord();
   const createLink = useCreateFinanceLink();
-  const updateInvoice = useUpdateFinanceRecord();
 
   const invoiceId = context?.invoiceId;
   const currency = context?.currency || 'CAD';

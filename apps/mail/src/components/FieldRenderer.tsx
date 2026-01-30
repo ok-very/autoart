@@ -272,8 +272,8 @@ export function FieldRenderer({
             >
                 <option value="">Select...</option>
                 {options.map((opt) => (
-                    <option key={opt} value={opt}>
-                        {opt}
+                    <option key={String(opt)} value={String(opt)}>
+                        {String(opt)}
                     </option>
                 ))}
             </select>
