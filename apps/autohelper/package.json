@@ -4,9 +4,14 @@
     "private": true,
     "scripts": {
         "dev": "AUTOHELPER_DATA_DIR=./data .venv/bin/python3 -m autohelper.main --tray",
+        "dev:win": "set AUTOHELPER_DATA_DIR=./data && .venv\\Scripts\\python -m autohelper.main --tray",
         "start": ".venv/bin/python3 -m autohelper.main --tray",
+        "start:win": ".venv\\Scripts\\python -m autohelper.main --tray",
         "install:deps": ".venv/bin/python3 -m pip install -e .[dev]",
+        "install:deps:win": ".venv\\Scripts\\python -m pip install -e .[dev]",
         "lint": ".venv/bin/ruff check .",
-        "format": ".venv/bin/ruff check . --fix"
+        "lint:win": ".venv\\Scripts\\ruff check .",
+        "format": ".venv/bin/ruff check . --fix",
+        "format:win": ".venv\\Scripts\\ruff check . --fix"
     }
 }
