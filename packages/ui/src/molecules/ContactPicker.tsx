@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import { User, X, ChevronDown } from 'lucide-react';
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 
 import { useClickOutside } from '../hooks/useClickOutside';
 
@@ -57,6 +57,8 @@ export function ContactPicker({
     const inputRef = useRef<HTMLInputElement>(null);
 
     useClickOutside([containerRef], () => setIsOpen(false));
+
+    useEffect(() => { if (disabled) setIsOpen(false); }, [disabled]);
 
     const selectedContact = useMemo(
         () => contacts.find((c) => c.id === value) ?? null,

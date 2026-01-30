@@ -189,9 +189,9 @@ export async function projectInvoice(invoiceId: string): Promise<InvoiceExportMo
   }
 
   // 6. Build export model
-  const subtotal = (resolved.subtotal as number) || lineItems.reduce((s, li) => s + li.lineTotal, 0);
-  const taxTotal = (resolved.tax_total as number) || lineItems.reduce((s, li) => s + li.lineTax, 0);
-  const total = (resolved.total as number) || subtotal + taxTotal;
+  const subtotal = (resolved.subtotal as number) ?? lineItems.reduce((s, li) => s + li.lineTotal, 0);
+  const taxTotal = (resolved.tax_total as number) ?? lineItems.reduce((s, li) => s + li.lineTax, 0);
+  const total = (resolved.total as number) ?? subtotal + taxTotal;
 
   return {
     invoiceNumber: (invoiceData.invoice_number as string) || invoice.unique_name,

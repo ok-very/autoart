@@ -33,7 +33,7 @@ export function CreateInvoiceView({
   const { data: clients = [] } = useContactsByGroup('Developer/Client');
 
   const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [issueDate, setIssueDate] = useState(new Date().toISOString().split('T')[0]);
+  const [issueDate, setIssueDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [dueDate, setDueDate] = useState('');
   const [currency, setCurrency] = useState('CAD');
   const [clientId, setClientId] = useState<string | null>(null);
@@ -67,12 +67,13 @@ export function CreateInvoiceView({
         currency,
         status: 'Draft',
         notes: notes || null,
+        client_id: clientId,
       },
     });
 
     setSelectedInvoiceId(result.record.id);
     handleClose();
-  }, [invoiceDef, invoiceNumber, issueDate, dueDate, currency, notes, createRecord, setSelectedInvoiceId, handleClose]);
+  }, [invoiceDef, invoiceNumber, issueDate, dueDate, currency, clientId, notes, createRecord, setSelectedInvoiceId, handleClose]);
 
   return (
     <div className="p-6">
@@ -110,7 +111,7 @@ export function CreateInvoiceView({
         <Select
           label="Currency"
           value={currency}
-          onChange={(e) => setCurrency(e.target.value)}
+          onChange={(val) => setCurrency(val || 'CAD')}
           data={[
             { label: 'CAD', value: 'CAD' },
             { label: 'USD', value: 'USD' },

@@ -23,8 +23,8 @@ function parseExpenseRow(record: { id: string; unique_name: string; data: Record
     id: record.id,
     description: (data.description as string) || record.unique_name,
     date: (data.expense_date as string) || '',
-    amount: typeof amt === 'object' ? amt.amount : (amt as number) ?? 0,
-    currency: typeof amt === 'object' ? amt.currency : 'CAD',
+    amount: typeof amt === 'object' && amt !== null ? amt.amount : (amt as number) ?? 0,
+    currency: typeof amt === 'object' && amt !== null ? amt.currency : 'CAD',
     category: (data.category as string) || '',
     receiptUrl: (data.receipt_url as string) || null,
   };
