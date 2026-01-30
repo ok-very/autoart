@@ -41,10 +41,16 @@ async def put_config(body: dict[str, Any]) -> dict[str, Any]:
 
         svc = MailService()
         svc.stop()
-        # Re-read settings so the singleton picks up new config
+        # Re-read settings and apply persisted config values
         from autohelper.config import get_settings
 
-        svc.settings = get_settings()
+        settings = get_settings()
+        if "mail_enabled" in current:
+            settings.mail_enabled = bool(current["mail_enabled"])
+        if "mail_poll_interval" in current:
+            settings.mail_poll_interval = int(current["mail_poll_interval"])
+
+        svc.settings = settings
         svc.start()
     except Exception as exc:
         logger.warning("Failed to reinit mail service after config change: %s", exc)

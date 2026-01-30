@@ -133,7 +133,10 @@ class AutoHelperIcon:
         from autohelper.config import get_settings
 
         settings = get_settings()
-        base = f"http://{settings.host}:{settings.port}"
+        host = settings.host
+        if host in ("0.0.0.0", "::"):
+            host = "127.0.0.1"
+        base = f"http://{host}:{settings.port}"
 
         # Runner
         with urllib.request.urlopen(f"{base}/runner/status", timeout=2) as resp:
