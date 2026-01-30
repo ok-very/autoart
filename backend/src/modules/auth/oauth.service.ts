@@ -4,8 +4,8 @@
  * Handles Google OAuth 2.0 authentication flow.
  */
 
-import { OAuth2Client } from 'google-auth-library';
 import crypto from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
 import { sql } from 'kysely';
 
 import { db } from '../../db/client.js';

@@ -1,11 +1,13 @@
 import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+
 import {
   CreateIntakeFormInputSchema,
   UpdateIntakeFormInputSchema,
   UpsertIntakeFormPageInputSchema,
 } from '@autoart/shared';
+
 import * as intakeService from './intake.service.js';
 import { AppError } from '../../utils/errors.js';
 

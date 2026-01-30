@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+
 import { generateId } from '@autoart/shared';
 
 import type { RegisterInput, LoginInput } from './auth.schemas.js';

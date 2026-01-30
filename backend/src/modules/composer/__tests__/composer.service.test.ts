@@ -13,13 +13,15 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from
 
 import type { Event } from '@autoart/shared';
 
-import { db } from '../../../db/client.js';
+import { db } from '@db/client.js';
+
 import {
     cleanupTestData,
     generateTestPrefix,
     createTestProject,
     createTestRecord,
-} from '../../../test/setup.js';
+} from '@/test/setup.js';
+
 import * as composerService from '../composer.service.js';
 
 describe('composer.service', () => {

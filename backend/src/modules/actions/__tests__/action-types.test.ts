@@ -4,8 +4,10 @@
  * Tests CRUD operations for action type definitions.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { db } from '../../../db/client.js';
+import { describe, it, expect, afterAll } from 'vitest';
+
+import { db } from '@db/client.js';
+
 import * as actionTypesService from '../action-types.service.js';
 
 describe('Action Types Service', () => {

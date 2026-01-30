@@ -5,12 +5,13 @@
  * Sessions track import state and configuration.
  */
 
-import { db } from '../../../db/client.js';
-import { logger } from '../../../utils/logger.js';
-import { MondayCSVParser } from '../parsers/monday-csv-parser.js';
-import { GenericCSVParser } from '../parsers/generic-csv-parser.js';
-import type { ImportPlanContainer, ImportPlanItem } from '../types.js';
+import { db } from '@db/client.js';
+import { logger } from '@utils/logger.js';
+
 import { VALID_SESSION_STATUSES } from './session-status.service.js';
+import { GenericCSVParser } from '../parsers/generic-csv-parser.js';
+import { MondayCSVParser } from '../parsers/monday-csv-parser.js';
+import type { ImportPlanContainer, ImportPlanItem } from '../types.js';
 
 // Maximum allowed size for config JSON (100KB) - applies to both parser config and connector config
 const MAX_CONFIG_SIZE = 100 * 1024;

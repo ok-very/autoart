@@ -1,12 +1,14 @@
 import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+
 import {
   CreatePollInputSchema,
   SubmitPollResponseInputSchema,
   LogEngagementInputSchema,
   EngagementContextType,
 } from '@autoart/shared';
+
 import * as pollsService from './polls.service.js';
 import { AppError } from '../../utils/errors.js';
 

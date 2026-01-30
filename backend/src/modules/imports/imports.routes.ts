@@ -13,8 +13,8 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
 import { suggestClassificationsForPlan, type ClassificationSuggestion } from './classification-suggester.js';
-import * as importsService from './services/index.js';
 import mondayWebhookRoutes from './monday/monday-webhooks.routes.js'; // Added import
+import * as importsService from './services/index.js';
 
 // ============================================================================
 // SCHEMAS

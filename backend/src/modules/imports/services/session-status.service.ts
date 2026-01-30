@@ -5,8 +5,12 @@
  * Ensures only valid status transitions occur and provides consistent logging.
  */
 
-import { db } from '../../../db/client.js';
-import { logger } from '../../../utils/logger.js';
+import type { Transaction } from 'kysely';
+
+import { db } from '@db/client.js';
+import type { Database } from '@db/schema.js';
+import { logger } from '@utils/logger.js';
+
 import type { ImportSessionStatus } from '../types.js';
 
 // ============================================================================
@@ -193,9 +197,6 @@ export async function markSessionNeedsReview(
 // ============================================================================
 // TRANSACTION SUPPORT
 // ============================================================================
-
-import type { Transaction } from 'kysely';
-import type { Database } from '../../../db/schema.js';
 
 /**
  * Update session status within a transaction (for atomic operations).

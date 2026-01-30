@@ -13,13 +13,15 @@
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 
-import { db } from '../../../db/client.js';
+import { db } from '@db/client.js';
+
 import {
   cleanupTestData,
   generateTestPrefix,
   createTestProject,
   createTestRecord,
-} from '../../../test/setup.js';
+} from '@/test/setup.js';
+
 import * as referencesService from '../references.service.js';
 
 describe('references.service', () => {

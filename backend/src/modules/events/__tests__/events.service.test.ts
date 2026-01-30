@@ -11,12 +11,14 @@
 
 import { describe, it, expect, beforeAll, afterEach } from 'vitest';
 
-import { db } from '../../../db/client.js';
+import { db } from '@db/client.js';
+
 import {
   cleanupTestData,
   generateTestPrefix,
   createTestProject,
-} from '../../../test/setup.js';
+} from '@/test/setup.js';
+
 import * as eventsService from '../events.service.js';
 
 describe('events.service', () => {
