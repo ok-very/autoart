@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { forwardRef, InputHTMLAttributes, useCallback, useState } from 'react';
+import { forwardRef, InputHTMLAttributes, useCallback, useRef, useState } from 'react';
 
 interface CurrencyInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size' | 'value' | 'onChange'> {
     label?: string;
@@ -31,10 +31,11 @@ export const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
         };
 
         const [displayValue, setDisplayValue] = useState(toDisplay(value));
+        const isFocusedRef = useRef(false);
 
         // Sync external value changes
         const externalDisplay = toDisplay(value);
-        if (value !== undefined && displayValue !== externalDisplay && document.activeElement !== document.getElementById(inputId ?? '')) {
+        if (value !== undefined && displayValue !== externalDisplay && !isFocusedRef.current) {
             setDisplayValue(externalDisplay);
         }
 
@@ -46,7 +47,12 @@ export const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
             }
         }, []);
 
+        const handleFocus = useCallback(() => {
+            isFocusedRef.current = true;
+        }, []);
+
         const handleBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
+            isFocusedRef.current = false;
             const cleaned = displayValue.replace(/[^0-9.\-]/g, '');
             const parsed = parseFloat(cleaned);
             if (!isNaN(parsed)) {
@@ -94,6 +100,7 @@ export const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
                         inputMode="decimal"
                         value={displayValue}
                         onChange={handleChange}
+                        onFocus={handleFocus}
                         onBlur={handleBlur}
                         className={clsx(
                             'w-full rounded-lg border transition-colors font-mono',

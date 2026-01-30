@@ -99,7 +99,7 @@ export function RecordPaymentView({
         <Select
           label="Method"
           value={method}
-          onChange={(e) => setMethod(e.target.value)}
+          onChange={(val) => setMethod(val || 'Bank Transfer')}
           data={[
             { label: 'Bank Transfer', value: 'Bank Transfer' },
             { label: 'Cheque', value: 'Cheque' },
@@ -111,7 +111,7 @@ export function RecordPaymentView({
         <Select
           label="Direction"
           value={direction}
-          onChange={(e) => setDirection(e.target.value)}
+          onChange={(val) => setDirection(val || 'Incoming')}
           data={[
             { label: 'Incoming', value: 'Incoming' },
             { label: 'Outgoing', value: 'Outgoing' },

@@ -8,6 +8,7 @@
 
 import { FileText, FileType, Cloud, ChevronDown, Loader2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import {
     useCloudConnectionStatus,
@@ -32,7 +33,9 @@ export function ExportMenu({ invoiceId, invoiceNumber }: ExportMenuProps) {
     const getMicrosoftAuthUrl = useGetMicrosoftAuthUrl();
     const openPopup = usePopupOAuth();
 
+    const queryClient = useQueryClient();
     const [pending, setPending] = useState<string | null>(null);
+    const [exportError, setExportError] = useState<string | null>(null);
 
     const googleConnected = cloudStatus?.google ?? false;
     const microsoftConnected = cloudStatus?.microsoft ?? false;
@@ -40,10 +43,7 @@ export function ExportMenu({ invoiceId, invoiceNumber }: ExportMenuProps) {
     // ── Handlers ──────────────────────────────────────────────────────
 
     const handlePdfDownload = useCallback(() => {
-        // Trigger browser download via hidden link
-        const link = document.createElement('a');
-        link.href = `/api/exports/finance/invoice-pdf`;
-        link.download = `invoice-${invoiceNumber}.pdf`;
+        setExportError(null);
         // Use POST via form for PDF (existing endpoint expects POST with invoiceId)
         const form = document.createElement('form');
         form.method = 'POST';
@@ -60,18 +60,20 @@ export function ExportMenu({ invoiceId, invoiceNumber }: ExportMenuProps) {
     }, [invoiceId, invoiceNumber]);
 
     const handleDocxDownload = useCallback(() => {
-        window.open(`/api/exports/finance/invoice-docx/${invoiceId}/download`, '_blank');
+        setExportError(null);
+        window.open(`/api/exports/finance/invoice-docx/${invoiceId}/download`, '_blank', 'noopener,noreferrer');
     }, [invoiceId]);
 
     const handleOneDrive = useCallback(async () => {
+        setExportError(null);
         if (!microsoftConnected) {
-            // Trigger OAuth flow, then retry
             try {
                 const { url } = await getMicrosoftAuthUrl.mutateAsync();
                 await openPopup(url, { name: 'microsoft-oauth' });
-                // After popup closes, the connection should be established
-                // Retry export
-            } catch {
+                queryClient.invalidateQueries({ queryKey: ['cloud-connection-status'] });
+            } catch (err) {
+                console.error('Microsoft OAuth failed:', err);
+                setExportError('Microsoft authentication failed');
                 return;
             }
         }
@@ -80,21 +82,26 @@ export function ExportMenu({ invoiceId, invoiceNumber }: ExportMenuProps) {
         try {
             const result = await exportOneDrive.mutateAsync(invoiceId);
             if (result.webUrl) {
-                window.open(result.webUrl, '_blank');
+                window.open(result.webUrl, '_blank', 'noopener,noreferrer');
             }
-        } catch {
-            // Error handled by mutation state
+        } catch (err) {
+            console.error('OneDrive export failed:', err);
+            setExportError('OneDrive export failed');
         } finally {
             setPending(null);
         }
-    }, [invoiceId, microsoftConnected, getMicrosoftAuthUrl, openPopup, exportOneDrive]);
+    }, [invoiceId, microsoftConnected, getMicrosoftAuthUrl, openPopup, exportOneDrive, queryClient]);
 
     const handleGoogleDrive = useCallback(async () => {
+        setExportError(null);
         if (!googleConnected) {
             try {
                 const { url } = await getGoogleAuthUrl.mutateAsync();
                 await openPopup(url, { name: 'google-oauth' });
-            } catch {
+                queryClient.invalidateQueries({ queryKey: ['cloud-connection-status'] });
+            } catch (err) {
+                console.error('Google OAuth failed:', err);
+                setExportError('Google authentication failed');
                 return;
             }
         }
@@ -103,14 +110,15 @@ export function ExportMenu({ invoiceId, invoiceNumber }: ExportMenuProps) {
         try {
             const result = await exportGoogleDrive.mutateAsync(invoiceId);
             if (result.webViewLink) {
-                window.open(result.webViewLink, '_blank');
+                window.open(result.webViewLink, '_blank', 'noopener,noreferrer');
             }
-        } catch {
-            // Error handled by mutation state
+        } catch (err) {
+            console.error('Google Drive export failed:', err);
+            setExportError('Google Drive export failed');
         } finally {
             setPending(null);
         }
-    }, [invoiceId, googleConnected, getGoogleAuthUrl, openPopup, exportGoogleDrive]);
+    }, [invoiceId, googleConnected, getGoogleAuthUrl, openPopup, exportGoogleDrive, queryClient]);
 
     // ── Render ────────────────────────────────────────────────────────
 
@@ -151,7 +159,7 @@ export function ExportMenu({ invoiceId, invoiceNumber }: ExportMenuProps) {
                         pending === 'onedrive'
                             ? <Loader2 size={12} className="animate-spin" />
                             : !microsoftConnected
-                                ? <span className="text-xs text-slate-400">Not connected</span>
+                                ? <span className="text-xs text-[var(--ws-text-disabled)]">Not connected</span>
                                 : undefined
                     }
                     onClick={handleOneDrive}
@@ -165,7 +173,7 @@ export function ExportMenu({ invoiceId, invoiceNumber }: ExportMenuProps) {
                         pending === 'google-drive'
                             ? <Loader2 size={12} className="animate-spin" />
                             : !googleConnected
-                                ? <span className="text-xs text-slate-400">Not connected</span>
+                                ? <span className="text-xs text-[var(--ws-text-disabled)]">Not connected</span>
                                 : undefined
                     }
                     onClick={handleGoogleDrive}
@@ -173,6 +181,9 @@ export function ExportMenu({ invoiceId, invoiceNumber }: ExportMenuProps) {
                 >
                     Google Drive
                 </Menu.Item>
+                {exportError && (
+                    <div className="px-3 py-1.5 text-xs text-[var(--ws-color-error)]">{exportError}</div>
+                )}
             </Menu.Dropdown>
         </Menu>
     );

@@ -271,9 +271,8 @@ async function refreshMicrosoftToken(credential: ConnectionCredential): Promise<
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(
-            `Failed to refresh Microsoft OAuth token: ${errorText}. Please reconnect your Microsoft account.`
-        );
+        console.error('Microsoft token refresh failed:', errorText);
+        throw new Error('Failed to refresh Microsoft OAuth token. Please reconnect your Microsoft account.');
     }
 
     const data = await response.json() as {

@@ -173,7 +173,7 @@ export function InvoiceDetailView() {
               {payments.map((payment) => {
                 const pd = payment.data as Record<string, unknown>;
                 const amt = pd.amount as { amount: number; currency: string } | number;
-                const amountCents = typeof amt === 'object' ? amt.amount : (amt as number) ?? 0;
+                const amountCents = typeof amt === 'object' && amt !== null ? amt.amount : (amt as number) ?? 0;
                 return (
                   <div key={payment.id} className="flex items-center justify-between px-4 py-2.5 border-b border-slate-50 last:border-0 text-sm">
                     <div>

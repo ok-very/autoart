@@ -70,7 +70,7 @@ export async function detectOverdueInvoices(): Promise<OverdueResult> {
         factKind: 'INVOICE_PREPARED',
         payload: {
           counterparty: data.client_name as string | undefined,
-          amount: (data.total as number) || undefined,
+          amount: (data.total as number) ?? undefined,
           currency: (data.currency as string) || 'CAD',
           notes: `Invoice #${data.invoice_number || record.unique_name} is overdue (due ${data.due_date})`,
         },

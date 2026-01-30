@@ -686,7 +686,7 @@ export async function exportsRoutes(app: FastifyInstance) {
                     spent,
                     remaining,
                     utilizationPct: allocated > 0 ? (spent / allocated) * 100 : 0,
-                    currency: 'CAD',
+                    currency: (data.currency as string) || 'CAD',
                 };
             });
 
@@ -765,7 +765,7 @@ export async function exportsRoutes(app: FastifyInstance) {
             });
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to export to OneDrive';
-            if (message.includes('No Microsoft OAuth token') || message.includes('Please connect')) {
+            if (message.includes('OAuth token') || message.includes('connect') || message.includes('not configured')) {
                 return reply.status(401).send({ error: 'Microsoft not connected. Please authenticate first.' });
             }
             return reply.status(500).send({ error: message });
@@ -812,7 +812,7 @@ export async function exportsRoutes(app: FastifyInstance) {
             });
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to export to Google Drive';
-            if (message.includes('No Google OAuth token') || message.includes('Please connect')) {
+            if (message.includes('OAuth token') || message.includes('connect') || message.includes('not configured')) {
                 return reply.status(401).send({ error: 'Google not connected. Please authenticate first.' });
             }
             return reply.status(500).send({ error: message });
