@@ -3,7 +3,7 @@
  * Connects to the AutoHelper backend for mail operations
  */
 
-const AUTOHELPER_BASE = import.meta.env.VITE_AUTOHELPER_URL || 'http://localhost:8000';
+const AUTOHELPER_BASE = import.meta.env.VITE_AUTOHELPER_URL || 'http://localhost:8100';
 
 interface FetchOptions extends RequestInit {
   timeout?: number;
@@ -103,6 +103,14 @@ class AutoHelperClient {
     return this.request<T>(endpoint, {
       ...options,
       method: 'POST',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  }
+
+  put<T>(endpoint: string, body?: unknown, options?: FetchOptions): Promise<T> {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'PUT',
       body: body ? JSON.stringify(body) : undefined,
     });
   }

@@ -7,11 +7,11 @@
  * - Integrations: External service connections (Monday, Google, AutoHelper)
  */
 
-import { Settings, User, Plug, Palette, Loader2 } from 'lucide-react';
+import { Settings, User, Plug, Palette, Server, Loader2 } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { AccountSection, AppearanceSection, IntegrationsSection } from './settings';
+import { AccountSection, AppearanceSection, AutoHelperSection, IntegrationsSection } from './settings';
 import { useConnections, useConnectMonday, useDisconnectMonday, useGeneratePairingCode, useConnectGoogle, useDisconnectGoogle, useConnectMicrosoft, useDisconnectMicrosoft, useMondayOAuthStatus, useConnectMondayOAuth } from '../api/connections';
 import { useCurrentUser } from '../api/hooks';
 
@@ -19,7 +19,7 @@ import { useCurrentUser } from '../api/hooks';
 // TYPES
 // ============================================================================
 
-type SettingsTab = 'account' | 'appearance' | 'integrations';
+type SettingsTab = 'account' | 'appearance' | 'integrations' | 'autohelper';
 
 interface NavItem {
     id: SettingsTab;
@@ -31,6 +31,7 @@ const NAV_ITEMS: NavItem[] = [
     { id: 'account', label: 'Account', icon: <User className="w-4 h-4" /> },
     { id: 'appearance', label: 'Appearance', icon: <Palette className="w-4 h-4" /> },
     { id: 'integrations', label: 'Integrations', icon: <Plug className="w-4 h-4" /> },
+    { id: 'autohelper', label: 'AutoHelper', icon: <Server className="w-4 h-4" /> },
 ];
 
 // ============================================================================
@@ -161,6 +162,8 @@ export function SettingsPage() {
                             <AccountSection />
                         ) : activeTab === 'appearance' ? (
                             <AppearanceSection />
+                        ) : activeTab === 'autohelper' ? (
+                            <AutoHelperSection />
                         ) : activeTab === 'integrations' ? (
                             <IntegrationsSection
                                 microsoftStatus={{ connected: (connections as any)?.microsoft?.connected ?? false }}
