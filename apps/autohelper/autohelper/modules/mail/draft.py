@@ -80,16 +80,23 @@ async def create_draft_via_graph(
             if addr.strip()
         ]
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            f"{GRAPH_API_BASE}/me/messages",
-            json=message,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json",
-            },
-            timeout=15,
-        )
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{GRAPH_API_BASE}/me/messages",
+                json=message,
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json",
+                },
+                timeout=15,
+            )
+    except httpx.RequestError as e:
+        logger.error(f"Graph API draft creation request failed: {e}")
+        raise DraftCreationError(
+            f"Graph API request failed: {e}",
+            strategy="graph",
+        ) from e
 
     if response.status_code not in (200, 201):
         error_text = response.text

@@ -17,7 +17,7 @@ def _settings_url() -> str:
     from autohelper.config import get_settings
 
     api_url = get_settings().autoart_api_url  # e.g. "http://localhost:3001"
-    return f"{api_url.rstrip('/')}/settings"
+    return f"{api_url.rstrip('/')}/settings#autohelper"
 
 
 def open_settings_in_browser() -> None:

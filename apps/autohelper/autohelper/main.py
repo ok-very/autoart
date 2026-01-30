@@ -43,7 +43,7 @@ def _run_with_tray(server: uvicorn.Server) -> None:
         print(f"Tray icon failed: {e}")
         print("Falling back to console mode.")
         server.should_exit = True
-        server_thread.join(timeout=2)
+        server_thread.join()
         # Rebuild and run on main thread
         settings = get_settings()
         fallback_config = uvicorn.Config(
