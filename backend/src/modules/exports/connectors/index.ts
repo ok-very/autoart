@@ -77,3 +77,10 @@ export type {
     SlidesExportOptions,
     WritePresentationResult,
 } from './google-slides-connector.js';
+
+// OneDrive Client
+export { OneDriveClient } from './onedrive-client.js';
+export type {
+    OneDriveClientConfig,
+    OneDriveFile,
+} from './onedrive-client.js';

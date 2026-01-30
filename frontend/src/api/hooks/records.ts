@@ -39,6 +39,7 @@ export function useCreateRecord() {
       api.post<{ record: DataRecord }>('/records', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['records'] });
+      queryClient.invalidateQueries({ queryKey: ['contacts-by-group'] });
     },
   });
 }
@@ -51,6 +52,7 @@ export function useUpdateRecord() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['records'] });
       queryClient.invalidateQueries({ queryKey: ['record'] });
+      queryClient.invalidateQueries({ queryKey: ['contacts-by-group'] });
     },
   });
 }
@@ -63,6 +65,24 @@ export function useDeleteRecord() {
       queryClient.invalidateQueries({ queryKey: ['records'] });
       queryClient.invalidateQueries({ queryKey: ['record'] });
       queryClient.invalidateQueries({ queryKey: ['links'] });
+      queryClient.invalidateQueries({ queryKey: ['contacts-by-group'] });
+    },
+  });
+}
+
+// ==================== CONTACTS ====================
+
+/**
+ * Fetch Contact records filtered by contactGroup.
+ * Used by ContactPicker for invoice/bill linking.
+ */
+export function useContactsByGroup(group?: string) {
+  return useQuery({
+    queryKey: ['contacts-by-group', group],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (group) params.set('group', group);
+      return api.get<{ records: DataRecord[] }>(`/records/contacts/by-group?${params}`).then(r => r.records);
     },
   });
 }

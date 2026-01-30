@@ -35,6 +35,11 @@ const envSchema = z.object({
   MONDAY_CLIENT_SECRET: z.string().optional(),
   MONDAY_REDIRECT_URI: z.string().optional(),
 
+  // Microsoft OAuth (OneDrive)
+  MICROSOFT_CLIENT_ID: z.string().optional(),
+  MICROSOFT_CLIENT_SECRET: z.string().optional(),
+  MICROSOFT_REDIRECT_URI: z.string().optional(),
+
   // Azure Entra ID (for production database auth)
   AZURE_AD_USER: z.string().optional(), // e.g. user@yourfirm.com
 

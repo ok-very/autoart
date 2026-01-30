@@ -185,6 +185,73 @@ export function useDeleteExportSession() {
 }
 
 // ============================================================================
+// CLOUD EXPORT HOOKS
+// ============================================================================
+
+interface CloudConnectionStatus {
+    google: boolean;
+    microsoft: boolean;
+}
+
+/**
+ * Check cloud connection status for Google and Microsoft.
+ */
+export function useCloudConnectionStatus() {
+    return useQuery({
+        queryKey: ['cloud-connection-status'],
+        queryFn: async () => {
+            return api.get<CloudConnectionStatus>('/exports/finance/cloud-status');
+        },
+        staleTime: 30000, // 30 seconds
+    });
+}
+
+interface CloudExportResult {
+    webUrl?: string;
+    webViewLink?: string;
+    fileId: string;
+    fileName: string;
+}
+
+/**
+ * Export invoice DOCX to OneDrive.
+ */
+export function useExportInvoiceToOneDrive() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (invoiceId: string) => {
+            return api.post<CloudExportResult>(
+                `/exports/finance/invoice-docx/${invoiceId}/export/onedrive`,
+                {}
+            );
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['cloud-connection-status'] });
+        },
+    });
+}
+
+/**
+ * Export invoice DOCX to Google Drive.
+ */
+export function useExportInvoiceToGoogleDrive() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (invoiceId: string) => {
+            return api.post<CloudExportResult>(
+                `/exports/finance/invoice-docx/${invoiceId}/export/google-drive`,
+                {}
+            );
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['cloud-connection-status'] });
+        },
+    });
+}
+
+// ============================================================================
 // HELPER HOOKS
 // ============================================================================
 

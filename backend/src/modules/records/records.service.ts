@@ -332,6 +332,36 @@ export async function getCloneableDefinitionsCount(projectId: string): Promise<{
   };
 }
 
+// ==================== CONTACTS ====================
+
+/**
+ * List Contact records, optionally filtered by contactGroup status field.
+ * Used by finance pickers to show Client or Vendor contacts.
+ */
+export async function listContactsByGroup(group?: string): Promise<DataRecord[]> {
+  // Find the Contact definition
+  const contactDef = await db
+    .selectFrom('record_definitions')
+    .select('id')
+    .where('name', '=', 'Contact')
+    .executeTakeFirst();
+
+  if (!contactDef) return [];
+
+  let q = db
+    .selectFrom('records')
+    .selectAll()
+    .where('definition_id', '=', contactDef.id)
+    .orderBy('unique_name');
+
+  if (group) {
+    // Filter by contactGroup field in JSONB data
+    q = q.where(sql`data->>'contactGroup'`, '=', group);
+  }
+
+  return q.execute();
+}
+
 // ==================== RECORDS ====================
 
 export async function listRecords(query: ListRecordsQuery): Promise<DataRecord[]> {
