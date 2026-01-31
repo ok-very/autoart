@@ -22,6 +22,11 @@
   --color-ws-success: var(--ws-color-success);
   --color-ws-warning: var(--ws-color-warning);
   --color-ws-error: var(--ws-color-error);
+  --color-ws-text-secondary: var(--ws-text-secondary);
+  --color-ws-text-disabled: var(--ws-text-disabled);
+  --color-ws-info: var(--ws-color-info);
+  --color-ws-accent-secondary: var(--ws-accent-secondary);
+  --color-ws-border: var(--ws-border, #D6D2CB);
 }
 
 body {
