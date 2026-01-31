@@ -9,7 +9,7 @@
 
 import { Settings, User, Plug, Palette, Server, Loader2 } from 'lucide-react';
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import { AccountSection, AppearanceSection, AutoHelperSection, IntegrationsSection } from './settings';
 import { useConnections, useConnectMonday, useDisconnectMonday, useGeneratePairingCode, useConnectGoogle, useDisconnectGoogle, useConnectMicrosoft, useDisconnectMicrosoft, useMondayOAuthStatus, useConnectMondayOAuth } from '../api/connections';
@@ -40,8 +40,11 @@ const NAV_ITEMS: NavItem[] = [
 
 export function SettingsPage() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { isLoading } = useCurrentUser();
-    const [activeTab, setActiveTab] = useState<SettingsTab>('account');
+    const hashTab = location.hash.replace('#', '') as SettingsTab;
+    const validTab = NAV_ITEMS.some(n => n.id === hashTab) ? hashTab : 'account';
+    const [activeTab, setActiveTab] = useState<SettingsTab>(validTab);
 
     // Fetch connection status from backend
     const { data: connections } = useConnections();

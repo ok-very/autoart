@@ -2,6 +2,16 @@
 
 *Last Updated: 2026-01-31*
 
+## Bug List
+
+- AutoHelper Settings doesn't link correctly to frontend menu
+- Landing page still not receiving typography/styling tokens
+- Remove TNR as fallback font
+- Cymatic loader should go seamless pattern/squaretile, slightly heavier line (0.5pt)
+- Login fails with demo account credentials - can't test
+
+---
+
 ## P0: Blocking
 
 *(none)*
@@ -12,7 +22,6 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| 275 | Epic: Export Workbench — preview-first outputs + finance templates via sessions | Epic |
 | — | Autohelper: add auth key handshake between frontend settings and backend | Security |
 | 217 | Expose interpretation HTTP routes for frontend hooks | Backend |
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
@@ -41,6 +50,7 @@
 | 85 | Templating Engine | Feature |
 | 86 | Monday.com Board Sync Settings | Integration |
 | 82 | User Account Management | Feature |
+| 291 | Schema editor / Composer relationship-math builder | Feature |
 
 ---
 
@@ -71,6 +81,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| 275 | Epic: Export Workbench — preview-first outputs + finance via sessions | PRs #286-290, #292 |
 | 218 | Phase 6: Remove task_references system + hierarchy nodes | PRs #282-285 |
 | — | Polls editor/management surface in dashboard | PRs #271-273 |
 | — | Style token infrastructure + formatter consumption | PRs #279-280 |
