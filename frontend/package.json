@@ -53,6 +53,7 @@
     "react-big-calendar": "^1.19.4",
     "react-chrono": "^2.7.4",
     "react-dom": "catalog:",
+    "react-pdf": "catalog:",
     "react-hook-form": "^7.71.1",
     "react-router-dom": "^6.30.3",
     "tailwind-merge": "catalog:",
