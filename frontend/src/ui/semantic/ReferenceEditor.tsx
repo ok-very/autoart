@@ -60,16 +60,17 @@ export function ReferenceEditor({
     const { data: targetRecord, isLoading } = useRecord(value || null);
 
     // Unified resolved data
-    const resolved = useMemo(() =>
-        targetRecord
-            ? {
-                value: targetRecord.unique_name,
-                label: targetRecord.unique_name,
-                sourceRecordId: targetRecord.id,
-                status: 'dynamic' as const,
-                drift: false,
-            }
-            : null, [targetRecord]);
+    const resolved = useMemo(() => {
+        if (!targetRecord) return null;
+        const hasSource = targetRecord.id != null;
+        return {
+            value: targetRecord.unique_name,
+            label: targetRecord.unique_name,
+            sourceRecordId: targetRecord.id,
+            status: hasSource ? 'dynamic' as const : 'unresolved' as const,
+            drift: false,
+        };
+    }, [targetRecord]);
 
     const handleOpenSearch = useCallback(() => {
         if (readOnly) return;

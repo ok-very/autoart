@@ -377,7 +377,6 @@ function createSubitemFromNode(
         ? ctx.itemTempIds.get(node.metadata.parentItemId)
         : undefined;
 
-    const treatAs = boardConfig.settings?.treatSubitemsAs ?? 'child_actions';
     const entityType: ImportPlanItem['entityType'] = 'action';
 
     const { fieldRecordings, pendingLinks } = convertColumnValues(

@@ -45,7 +45,7 @@ const hasParent = item.parentTempId && itemsByTempId.has(item.parentTempId);
 
 ## Database Naming
 
-- **Tables:** snake_case plural (`hierarchy_nodes`, `task_references`)
+- **Tables:** snake_case plural (`hierarchy_nodes`, `action_references`)
 - **Columns:** snake_case (`parent_id`, `source_record_id`)
 - **Types/Enums:** snake_case (`node_type`, `ref_mode`)
 - **UUIDs:** All primary keys use `gen_random_uuid()`

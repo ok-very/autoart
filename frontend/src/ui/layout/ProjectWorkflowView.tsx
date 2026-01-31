@@ -722,11 +722,7 @@ export function ProjectWorkflowView() {
                                                 inspectNode(nodeId);
                                             }}
                                             onCellChange={handleCellChange}
-                                            onAddNode={
-                                                activeSubprocessId
-                                                    ? () => openOverlay('create-node', { parentId: activeSubprocessId, nodeType: 'subprocess' })
-                                                    : undefined
-                                            }
+                                            onAddNode={undefined}
                                             deriveStatus={deriveNodeStatus}
                                             showStatusSummary
                                             statusConfig={statusConfig}

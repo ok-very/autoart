@@ -187,23 +187,29 @@ async function getSelectionPanels(projectId: string) {
     }));
 }
 
-async function getProjectTasks(projectId: string, openOnly: boolean) {
-    // Get task nodes under this project
-    // hierarchy_nodes uses 'type' not 'node_type'
-    const query = db
-        .selectFrom('hierarchy_nodes')
+async function getProjectTasks(projectId: string, _openOnly: boolean) {
+    // Get leaf-level subprocess nodes under this project.
+    // Hierarchy: project → process → stage → subprocess
+    // We traverse using a CTE to find all descendants, then filter to subprocesses.
+    const subprocesses = await db
+        .withRecursive('descendants', (qb) =>
+            qb
+                .selectFrom('hierarchy_nodes')
+                .select(['id', 'parent_id', 'title', 'type', 'metadata'])
+                .where('parent_id', '=', projectId)
+                .unionAll(
+                    qb
+                        .selectFrom('hierarchy_nodes as hn')
+                        .innerJoin('descendants as d', 'd.id', 'hn.parent_id')
+                        .select(['hn.id', 'hn.parent_id', 'hn.title', 'hn.type', 'hn.metadata'])
+                )
+        )
+        .selectFrom('descendants')
         .selectAll()
-        .where('parent_id', '=', projectId)
-        .where('type', 'in', ['subprocess']);
+        .where('type', '=', 'subprocess')
+        .execute();
 
-    if (openOnly) {
-        // Filter for non-completed tasks based on metadata status
-        // This is a simplified check - real implementation would check status field
-    }
-
-    const tasks = await query.execute();
-
-    return tasks.map((t) => ({
+    return subprocesses.map((t) => ({
         id: t.id,
         title: t.title,
         metadata: t.metadata as Record<string, unknown> | null,

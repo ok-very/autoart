@@ -113,7 +113,7 @@ export interface StageProjectionOutput {
 export interface HierarchyProjectionOutput {
     nodes: Array<{
         id: string;
-        type: 'project' | 'process' | 'subprocess' | 'task' | 'subtask';
+        type: 'project' | 'process' | 'subprocess';
         title: string;
         parentId: string | null;
         children: string[];
