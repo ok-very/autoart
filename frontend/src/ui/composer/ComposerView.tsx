@@ -808,7 +808,7 @@ export function InlineComposer({ contextId, onSuccess, placeholder }: InlineComp
                 className="w-full p-3 text-left text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg border border-dashed border-slate-200 transition-all"
             >
                 <Plus size={14} className="inline mr-2" />
-                {placeholder || 'Add action...'}
+                {placeholder || 'Add an action...'}
             </button>
         );
     }
