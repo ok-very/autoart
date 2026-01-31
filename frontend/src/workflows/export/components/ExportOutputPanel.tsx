@@ -3,15 +3,17 @@
  *
  * Renders after export completes. Handles:
  * - Binary formats (pdf, docx, rtf): Download button
- * - PDF: Optional inline preview via iframe
+ * - PDF: Inline preview via react-pdf (lazy loaded)
  * - Text formats (markdown, plaintext, csv): Inline <pre> with copy
  * - Cloud formats (google-*): "Open" link
  * - Error state: Iron Red text, no banners
  */
 
 import { clsx } from 'clsx';
-import { Download, ExternalLink, Copy, Check, ArrowLeft, AlertCircle } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import { Download, ExternalLink, Copy, Check, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
+import { useState, useCallback, lazy, Suspense } from 'react';
+
+const PdfPreview = lazy(() => import('./PdfPreview'));
 
 import { useExportSession } from '../../../api/hooks/exports';
 import { useDownloadExportOutput } from '../../../api/hooks/exports';
@@ -171,20 +173,31 @@ function BinaryOutput({
     onDownload: () => void;
     isDownloading: boolean;
 }) {
-    const showPreview = format === 'pdf';
+    const outputUrl = `/api/exports/sessions/${sessionId}/output?disposition=inline`;
 
     return (
         <div className="flex flex-col items-center gap-6">
-            {showPreview && (
-                <iframe
-                    src={`/api/exports/sessions/${sessionId}/output?disposition=inline`}
-                    className="w-full max-w-3xl border rounded"
-                    style={{
-                        height: '70vh',
-                        borderColor: 'var(--ws-text-disabled, #D6D2CB)',
-                    }}
-                    title="PDF preview"
-                />
+            {format === 'pdf' && (
+                <Suspense
+                    fallback={
+                        <div
+                            className="w-full max-w-3xl flex items-center justify-center border rounded"
+                            style={{
+                                height: '70vh',
+                                borderColor: 'var(--ws-text-disabled, #D6D2CB)',
+                                background: 'var(--ws-bg, #F5F2ED)',
+                            }}
+                        >
+                            <Loader2
+                                size={24}
+                                className="animate-spin"
+                                style={{ color: 'var(--ws-text-disabled, #8C8C88)' }}
+                            />
+                        </div>
+                    }
+                >
+                    <PdfPreview url={outputUrl} />
+                </Suspense>
             )}
 
             <button
