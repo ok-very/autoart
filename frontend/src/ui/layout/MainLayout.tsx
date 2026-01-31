@@ -591,7 +591,7 @@ export function MainLayout() {
       <Header />
 
       {/* Main Dockview Area - fills remaining space */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden h-full">
         <DockviewReact
           className="dockview-theme-light"
           onReady={onReady}
