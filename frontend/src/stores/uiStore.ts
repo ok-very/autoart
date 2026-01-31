@@ -23,7 +23,8 @@ export type CenterContentType =
   | 'export'        // Export workflow
   | 'mail'          // Communication
   | 'calendar'      // Calendar view
-  | 'finance';      // Finance hub (invoices, budgets, expenses)
+  | 'finance'       // Finance hub (invoices, budgets, expenses)
+  | 'polls';        // Availability polls
 
 import { Selection, UIPanels, InspectorMode, OverlayConfig, InspectorTabId, normalizeInspectorTabId } from '../types/ui';
 import { deriveUIPanels } from '../utils/uiComposition';
