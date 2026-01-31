@@ -18,85 +18,42 @@ import {
     AlignmentType,
     BorderStyle,
     WidthType,
-    HeadingLevel,
     TableLayoutType,
     ShadingType,
-    convertInchesToTwip,
 } from 'docx';
 
 import type { InvoiceExportModel } from './invoice-pdf-formatter.js';
+import { compileDocxStyles } from './compile-docx-styles.js';
+import { PARCHMENT_TOKENS } from './style-tokens.js';
+import { formatCents } from './format-utils.js';
 
 // ============================================================================
-// DESIGN TOKENS
+// COMPILED TOKENS
 // ============================================================================
 
-const FONTS = {
-    serif: 'Source Serif 4',
-    serifFallback: 'Georgia',
-    mono: 'IBM Plex Mono',
-    monoFallback: 'Courier New',
-};
-
-const COLORS = {
-    charcoalInk: '2E2E2C',
-    secondary: '5A5A57',
-    ashTaupe: 'D6D2CB',
-    oxideBlue: '3F5C6E',
-    burntUmber: '8A5A3C',
-    mossGreen: '6F7F5C',
-    ironRed: '8C4A4A',
-    parchment: 'F5F2ED',
-};
-
-const BORDER_THIN = {
-    style: BorderStyle.SINGLE,
-    size: 1,
-    color: COLORS.ashTaupe,
-};
-
-const BORDER_NONE = {
-    style: BorderStyle.NONE,
-    size: 0,
-    color: 'FFFFFF',
-};
-
-const BORDER_THICK = {
-    style: BorderStyle.SINGLE,
-    size: 2,
-    color: COLORS.charcoalInk,
-};
+const S = compileDocxStyles(PARCHMENT_TOKENS);
 
 // ============================================================================
 // HELPERS
 // ============================================================================
 
-function formatCents(cents: number, currency: string): string {
-    const dollars = cents / 100;
-    return dollars.toLocaleString('en-CA', {
-        style: 'currency',
-        currency,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
-}
-
 function monoRun(text: string, options?: { bold?: boolean; size?: number; color?: string }): TextRun {
     return new TextRun({
         text,
-        font: { name: FONTS.mono, hint: undefined },
-        size: options?.size ?? 24, // 12pt
+        font: { name: S.fonts.mono, hint: undefined },
+        size: options?.size ?? S.sizes.mono,
         bold: options?.bold,
-        color: options?.color ?? COLORS.charcoalInk,
+        color: options?.color ?? S.colors.text,
     });
 }
 
 function serifRun(text: string, options?: { bold?: boolean; size?: number; color?: string; allCaps?: boolean }): TextRun {
     return new TextRun({
         text,
-        font: { name: FONTS.serif, hint: undefined },
-        size: options?.size ?? 28, // 14pt
+        font: { name: S.fonts.primary, hint: undefined },
+        size: options?.size ?? S.sizes.body,
         bold: options?.bold,
-        color: options?.color ?? COLORS.charcoalInk,
+        color: options?.color ?? S.colors.text,
         allCaps: options?.allCaps,
     });
 }
@@ -104,9 +61,9 @@ function serifRun(text: string, options?: { bold?: boolean; size?: number; color
 function labelRun(text: string): TextRun {
     return new TextRun({
         text,
-        font: { name: FONTS.serif, hint: undefined },
-        size: 20, // 10pt
-        color: COLORS.burntUmber,
+        font: { name: S.fonts.primary, hint: undefined },
+        size: S.sizes.meta,
+        color: S.colors.accentSecondary,
         allCaps: true,
     });
 }
@@ -115,10 +72,10 @@ function noBorderCell(children: Paragraph[], options?: { width?: number }): Tabl
     return new TableCell({
         children,
         borders: {
-            top: BORDER_NONE,
-            bottom: BORDER_NONE,
-            left: BORDER_NONE,
-            right: BORDER_NONE,
+            top: S.borders.none,
+            bottom: S.borders.none,
+            left: S.borders.none,
+            right: S.borders.none,
         },
         width: options?.width ? { size: options.width, type: WidthType.PERCENTAGE } : undefined,
     });
@@ -135,14 +92,8 @@ export function generateInvoiceDocx(invoice: InvoiceExportModel): Document {
         styles: {
             default: {
                 document: {
-                    run: {
-                        font: FONTS.serif,
-                        size: 28, // 14pt
-                        color: COLORS.charcoalInk,
-                    },
-                    paragraph: {
-                        spacing: { line: 276 }, // 1.5 line height
-                    },
+                    run: S.defaultRun,
+                    paragraph: S.defaultParagraph,
                 },
             },
         },
@@ -151,10 +102,10 @@ export function generateInvoiceDocx(invoice: InvoiceExportModel): Document {
                 properties: {
                     page: {
                         margin: {
-                            top: convertInchesToTwip(0.75),
-                            right: convertInchesToTwip(0.75),
-                            bottom: convertInchesToTwip(0.75),
-                            left: convertInchesToTwip(0.75),
+                            top: S.pageMarginTwip,
+                            right: S.pageMarginTwip,
+                            bottom: S.pageMarginTwip,
+                            left: S.pageMarginTwip,
                         },
                     },
                 },
@@ -198,7 +149,7 @@ function buildHeader(invoice: InvoiceExportModel): Paragraph[] {
         // Divider line
         new Paragraph({
             border: {
-                bottom: { style: BorderStyle.SINGLE, size: 3, color: COLORS.charcoalInk },
+                bottom: { style: BorderStyle.SINGLE, size: 3, color: S.colors.text },
             },
             spacing: { before: 100, after: 300 },
         }),
@@ -215,14 +166,14 @@ function buildHeaderTable(invoice: InvoiceExportModel, statusText: string): Para
                     noBorderCell([
                         new Paragraph({
                             children: [
-                                serifRun('INVOICE', { bold: true, size: 40 }), // 20pt
+                                serifRun('INVOICE', { bold: true, size: S.sizes.h1 }),
                             ],
                             spacing: { after: 80 },
                         }),
                         new Paragraph({
                             children: [
                                 serifRun(statusText, {
-                                    size: 22,
+                                    size: S.sizes.micro,
                                     bold: true,
                                     color: statusColor(invoice.status),
                                     allCaps: true,
@@ -290,17 +241,17 @@ function buildClientBlock(invoice: InvoiceExportModel): Paragraph[] {
     }
     if (invoice.client.address) {
         parts.push(new Paragraph({
-            children: [serifRun(invoice.client.address, { color: COLORS.secondary })],
+            children: [serifRun(invoice.client.address, { color: S.colors.textSecondary })],
         }));
     }
     if (invoice.client.email) {
         parts.push(new Paragraph({
-            children: [serifRun(invoice.client.email, { color: COLORS.secondary })],
+            children: [serifRun(invoice.client.email, { color: S.colors.textSecondary })],
         }));
     }
     if (invoice.client.phone) {
         parts.push(new Paragraph({
-            children: [serifRun(invoice.client.phone, { color: COLORS.secondary })],
+            children: [serifRun(invoice.client.phone, { color: S.colors.textSecondary })],
         }));
     }
 
@@ -333,10 +284,10 @@ function buildLineItemsTable(invoice: InvoiceExportModel, currency: string): Par
                             children: [serifRun(li.description)],
                         }),
                         ...(li.itemType ? [new Paragraph({
-                            children: [serifRun(li.itemType, { size: 22, color: COLORS.secondary })],
+                            children: [serifRun(li.itemType, { size: S.sizes.micro, color: S.colors.textSecondary })],
                         })] : []),
                     ],
-                    borders: { top: BORDER_NONE, bottom: BORDER_THIN, left: BORDER_NONE, right: BORDER_NONE },
+                    borders: { top: S.borders.none, bottom: S.borders.thin, left: S.borders.none, right: S.borders.none },
                     width: { size: 40, type: WidthType.PERCENTAGE },
                 }),
                 // Qty
@@ -369,7 +320,7 @@ function buildTotals(invoice: InvoiceExportModel, currency: string): Paragraph[]
 
     if (invoice.amountPaid > 0) {
         rows.push(
-            totalsRow('Paid', `-${formatCents(invoice.amountPaid, currency)}`, COLORS.mossGreen),
+            totalsRow('Paid', `-${formatCents(invoice.amountPaid, currency)}`, S.colors.success),
             totalsSummaryRow('Balance Due', formatCents(invoice.balanceDue, currency)),
         );
     }
@@ -396,7 +347,7 @@ function buildPaymentHistory(invoice: InvoiceExportModel, currency: string): Par
     const parts: Paragraph[] = [
         new Paragraph({
             border: {
-                top: { style: BorderStyle.SINGLE, size: 1, color: COLORS.ashTaupe },
+                top: { style: BorderStyle.SINGLE, size: 1, color: S.colors.border },
             },
             spacing: { before: 400, after: 200 },
         }),
@@ -443,15 +394,15 @@ function buildNotes(invoice: InvoiceExportModel): Paragraph[] {
     return [
         new Paragraph({ spacing: { before: 300 } }),
         new Paragraph({
-            children: [serifRun(invoice.notes, { size: 26, color: COLORS.secondary })],
+            children: [serifRun(invoice.notes, { size: 26, color: S.colors.textSecondary })],
             shading: {
                 type: ShadingType.CLEAR,
                 color: 'auto',
-                fill: COLORS.parchment,
+                fill: S.colors.background,
             },
-            indent: { left: convertInchesToTwip(0.15) },
+            indent: { left: 216 }, // ~0.15 inches in twips
             border: {
-                left: { style: BorderStyle.SINGLE, size: 3, color: COLORS.oxideBlue },
+                left: { style: BorderStyle.SINGLE, size: 3, color: S.colors.accent },
             },
             spacing: { before: 200, after: 200 },
         }),
@@ -469,20 +420,20 @@ function headerCell(text: string, alignment: (typeof AlignmentType)[keyof typeof
                 children: [
                     new TextRun({
                         text: text.toUpperCase(),
-                        font: { name: FONTS.serif, hint: undefined },
-                        size: 20, // 10pt
+                        font: { name: S.fonts.primary, hint: undefined },
+                        size: S.sizes.meta,
                         bold: true,
-                        color: COLORS.secondary,
+                        color: S.colors.textSecondary,
                     }),
                 ],
                 alignment,
             }),
         ],
         borders: {
-            top: BORDER_NONE,
-            bottom: BORDER_THICK,
-            left: BORDER_NONE,
-            right: BORDER_NONE,
+            top: S.borders.none,
+            bottom: S.borders.thick,
+            left: S.borders.none,
+            right: S.borders.none,
         },
         width: { size: widthPct, type: WidthType.PERCENTAGE },
     });
@@ -497,10 +448,10 @@ function dataCell(text: string, alignment: (typeof AlignmentType)[keyof typeof A
             }),
         ],
         borders: {
-            top: BORDER_NONE,
-            bottom: BORDER_THIN,
-            left: BORDER_NONE,
-            right: BORDER_NONE,
+            top: S.borders.none,
+            bottom: S.borders.thin,
+            left: S.borders.none,
+            right: S.borders.none,
         },
         width: { size: widthPct, type: WidthType.PERCENTAGE },
     });
@@ -511,7 +462,7 @@ function totalsRow(label: string, amount: string, amountColor?: string): TableRo
         children: [
             noBorderCell([
                 new Paragraph({
-                    children: [serifRun(label, { size: 28 })],
+                    children: [serifRun(label, { size: S.sizes.body })],
                 }),
             ], { width: 60 }),
             noBorderCell([
@@ -530,29 +481,29 @@ function totalsSummaryRow(label: string, amount: string): TableRow {
             new TableCell({
                 children: [
                     new Paragraph({
-                        children: [serifRun(label, { bold: true, size: 32 })],
+                        children: [serifRun(label, { bold: true, size: S.sizes.h2 })],
                     }),
                 ],
                 borders: {
-                    top: BORDER_THICK,
-                    bottom: BORDER_NONE,
-                    left: BORDER_NONE,
-                    right: BORDER_NONE,
+                    top: S.borders.thick,
+                    bottom: S.borders.none,
+                    left: S.borders.none,
+                    right: S.borders.none,
                 },
                 width: { size: 60, type: WidthType.PERCENTAGE },
             }),
             new TableCell({
                 children: [
                     new Paragraph({
-                        children: [monoRun(amount, { bold: true, size: 32 })],
+                        children: [monoRun(amount, { bold: true, size: S.sizes.h2 })],
                         alignment: AlignmentType.RIGHT,
                     }),
                 ],
                 borders: {
-                    top: BORDER_THICK,
-                    bottom: BORDER_NONE,
-                    left: BORDER_NONE,
-                    right: BORDER_NONE,
+                    top: S.borders.thick,
+                    bottom: S.borders.none,
+                    left: S.borders.none,
+                    right: S.borders.none,
                 },
                 width: { size: 40, type: WidthType.PERCENTAGE },
             }),
@@ -566,11 +517,11 @@ function totalsSummaryRow(label: string, amount: string): TableRow {
 
 function statusColor(status: string): string {
     switch (status.toLowerCase()) {
-        case 'draft': return COLORS.secondary;
-        case 'sent': return COLORS.oxideBlue;
-        case 'paid': return COLORS.mossGreen;
-        case 'overdue': return COLORS.ironRed;
-        case 'void': return COLORS.secondary;
-        default: return COLORS.charcoalInk;
+        case 'draft': return S.colors.textSecondary;
+        case 'sent': return S.colors.accent;
+        case 'paid': return S.colors.success;
+        case 'overdue': return S.colors.error;
+        case 'void': return S.colors.textSecondary;
+        default: return S.colors.text;
     }
 }

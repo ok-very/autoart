@@ -1,23 +1,16 @@
 /**
  * Gantt Formatter
- * 
+ *
  * Generates HTML/SVG for Gantt chart export.
  * Consumed by both PDF export (Backend) and Print Preview (Frontend).
  */
 
 import { GanttProjectionOutput } from '../types/gantt.js';
+import { compilePdfStyles } from './compile-pdf-styles.js';
+import { BFA_TOKENS } from './style-tokens.js';
+import { escapeHtml } from './format-utils.js';
 
-/**
- * Escape HTML special characters to prevent XSS
- */
-function escapeHtml(str: string): string {
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
+const B = compilePdfStyles(BFA_TOKENS);
 
 /**
  * Generate standalone HTML for Gantt chart.
@@ -33,16 +26,16 @@ export function generateGanttHtml(
 
     // CSS for the chart
     const styles = `
-        body { font-family: 'Carlito', 'Calibri', sans-serif; margin: 0; padding: 20px; }
-        .gantt-container { position: relative; border: 1px solid #ccc; overflow: hidden; }
+        body { font-family: ${B.fonts.primaryStack}; margin: 0; padding: 20px; }
+        .gantt-container { position: relative; border: 1px solid ${B.colors.border}; overflow: hidden; }
         .gantt-header { height: 40px; border-bottom: 1px solid #eee; background: #f8f9fa; }
         .gantt-body { position: relative; }
         .lane { border-bottom: 1px solid #f0f0f0; box-sizing: border-box; position: absolute; width: 100%; }
         .lane-label { font-size: 12px; padding: 4px 8px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .tick { position: absolute; top: 0; bottom: 0; border-left: 1px solid #eee; }
-        .tick.major { border-left: 1px solid #ccc; }
-        .tick-label { position: absolute; top: 0; font-size: 10px; color: #666; padding: 4px; }
-        .item { position: absolute; border-radius: 4px; box-sizing: border-box; font-size: 11px; color: white; padding: 2px 4px; overflow: hidden; white-space: nowrap; }
+        .tick.major { border-left: 1px solid ${B.colors.border}; }
+        .tick-label { position: absolute; top: 0; font-size: ${B.sizes.meta}; color: ${B.colors.textSecondary}; padding: 4px; }
+        .item { position: absolute; border-radius: 4px; box-sizing: border-box; font-size: ${B.sizes.micro}; color: white; padding: 2px 4px; overflow: hidden; white-space: nowrap; }
         h1 { font-size: 24px; margin-bottom: 20px; }
     `;
 
@@ -66,7 +59,7 @@ export function generateGanttHtml(
                 top: ${item.y}px;
                 width: ${item.width}px;
                 height: ${item.height}px;
-                background-color: ${escapeHtml(item.color || '#3b82f6')};
+                background-color: ${escapeHtml(item.color || B.colors.accent)};
             ">
                 ${escapeHtml(item.label)}
             </div>
