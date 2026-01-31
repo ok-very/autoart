@@ -105,7 +105,7 @@ If stackit errors (e.g., "Pull request is in clean status", automerge failures):
 - `git rebase --onto` to manually rebase branches
 - `git push --force` or `--force-with-lease` on stacked branches
 - `gh pr edit --base` to retarget PRs to main
-- `gh pr merge` with `--delete-branch` (let GitHub's auto-delete handle it)
+- `gh pr merge --delete-branch` — forces early branch deletion, races against retarget
 - Close and recreate PRs
 
 These destroy stackit's internal tracking and cascade into more breakage.
