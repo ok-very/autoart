@@ -468,6 +468,157 @@ async function exportToGoogleSlides(
 }
 
 // ============================================================================
+// FINANCE EXPORT (session-routed)
+// ============================================================================
+
+/**
+ * Execute a finance export preset through the session lifecycle.
+ * Handles projection + formatting + output storage in one pass.
+ */
+export async function executeFinanceExport(
+    sessionId: string,
+    preset: string,
+): Promise<ExportResult> {
+    const session = await getExportSession(sessionId);
+    if (!session) throw new Error(`Export session not found: ${sessionId}`);
+
+    await updateSessionStatus(sessionId, 'executing');
+
+    try {
+        let result: ExportResult;
+
+        switch (preset) {
+            case 'invoice-pdf':
+                result = await executeInvoicePdf(session);
+                break;
+            case 'invoice-docx':
+                result = await executeInvoiceDocx(session);
+                break;
+            case 'budget-csv':
+                result = await executeBudgetCsv(session);
+                break;
+            case 'invoice-list-csv':
+                result = await executeInvoiceListCsv(session);
+                break;
+            default:
+                throw new Error(`Unknown finance preset: ${preset}`);
+        }
+
+        await updateSessionStatus(sessionId, 'completed');
+        return result;
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        await updateSessionStatus(sessionId, 'failed', errorMessage);
+        return { success: false, format: session.format, error: errorMessage };
+    }
+}
+
+async function executeInvoicePdf(session: ExportSession): Promise<ExportResult> {
+    const invoiceId = session.targetConfig?.invoiceId as string;
+    if (!invoiceId) throw new Error('invoiceId required for invoice-pdf preset');
+
+    const { projectInvoice } = await import('./projectors/invoice.projector.js');
+    const { generateInvoicePdfHtml } = await import('@autoart/shared');
+    const { env } = await import('../../config/env.js');
+
+    const model = await projectInvoice(invoiceId);
+    if (!model) throw new Error('Invoice not found');
+
+    const html = generateInvoicePdfHtml(model, {
+        pagePreset: 'letter',
+        autoHelperBaseUrl: env.AUTOHELPER_URL,
+    });
+
+    const pdfResponse = await fetch(`${env.AUTOHELPER_URL}/render/pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html, page_preset: 'letter', print_background: true }),
+    });
+
+    if (!pdfResponse.ok) {
+        const errorText = await pdfResponse.text();
+        throw new Error(`PDF render failed: ${errorText}`);
+    }
+
+    const buffer = Buffer.from(await pdfResponse.arrayBuffer());
+    await storeSessionOutput(session.id, buffer, 'application/pdf', '.pdf');
+
+    return {
+        success: true,
+        format: 'pdf',
+        downloadUrl: `/api/exports/sessions/${session.id}/output`,
+    };
+}
+
+async function executeInvoiceDocx(session: ExportSession): Promise<ExportResult> {
+    const invoiceId = session.targetConfig?.invoiceId as string;
+    if (!invoiceId) throw new Error('invoiceId required for invoice-docx preset');
+
+    const { projectInvoice } = await import('./projectors/invoice.projector.js');
+    const { generateInvoiceDocx } = await import('@autoart/shared');
+    const { Packer } = await import('docx');
+
+    const model = await projectInvoice(invoiceId);
+    if (!model) throw new Error('Invoice not found');
+
+    const doc = generateInvoiceDocx(model);
+    const buffer = Buffer.from(await Packer.toBuffer(doc));
+
+    await storeSessionOutput(
+        session.id,
+        buffer,
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        '.docx',
+    );
+
+    return {
+        success: true,
+        format: 'docx',
+        downloadUrl: `/api/exports/sessions/${session.id}/output`,
+    };
+}
+
+async function executeBudgetCsv(session: ExportSession): Promise<ExportResult> {
+    const projectId = session.targetConfig?.projectId as string;
+    if (!projectId) throw new Error('projectId required for budget-csv preset');
+
+    const { projectBudgets } = await import('./projectors/budget.projector.js');
+    const { formatBudgetCsv } = await import('./formatters/csv-formatter.js');
+
+    const rows = await projectBudgets(projectId);
+    const csv = formatBudgetCsv(rows);
+    const buffer = Buffer.from(csv, 'utf-8');
+
+    await storeSessionOutput(session.id, buffer, 'text/csv', '.csv');
+
+    return {
+        success: true,
+        format: 'csv',
+        downloadUrl: `/api/exports/sessions/${session.id}/output`,
+    };
+}
+
+async function executeInvoiceListCsv(session: ExportSession): Promise<ExportResult> {
+    const projectId = session.targetConfig?.projectId as string;
+    if (!projectId) throw new Error('projectId required for invoice-list-csv preset');
+
+    const { projectInvoiceList } = await import('./projectors/invoice-list.projector.js');
+    const { formatInvoiceListCsv } = await import('./formatters/csv-formatter.js');
+
+    const rows = await projectInvoiceList(projectId);
+    const csv = formatInvoiceListCsv(rows);
+    const buffer = Buffer.from(csv, 'utf-8');
+
+    await storeSessionOutput(session.id, buffer, 'text/csv', '.csv');
+
+    return {
+        success: true,
+        format: 'csv',
+        downloadUrl: `/api/exports/sessions/${session.id}/output`,
+    };
+}
+
+// ============================================================================
 // PDF EXPORT
 // ============================================================================
 

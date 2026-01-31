@@ -185,6 +185,32 @@ export function useDeleteExportSession() {
 }
 
 // ============================================================================
+// FINANCE SESSION EXPORT
+// ============================================================================
+
+type FinanceExportPreset = 'invoice-pdf' | 'invoice-docx' | 'budget-csv' | 'invoice-list-csv';
+
+/**
+ * Create a finance export routed through the session lifecycle.
+ */
+export function useCreateFinanceExport() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: {
+            preset: FinanceExportPreset;
+            invoiceId?: string;
+            projectId?: string;
+        }) => {
+            return api.post<ExportResult>('/exports/finance', data);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['export-sessions'] });
+        },
+    });
+}
+
+// ============================================================================
 // CLOUD EXPORT HOOKS
 // ============================================================================
 
