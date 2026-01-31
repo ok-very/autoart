@@ -390,7 +390,7 @@
     background: #0f172a;
     border-radius: var(--composer-radius);
     padding: 16px;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
     line-height: 1.6;
     overflow-x: auto;

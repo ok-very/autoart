@@ -4,7 +4,10 @@
 
 ## P0: Blocking
 
-*None currently blocking.*
+| # | Issue | Category |
+|---|-------|----------|
+| — | Dockview panels not rendering — black bar below header, missing panel frames | Bug (critical) |
+| — | Composer/Action Creator still defaults to "Task" type — regression from arrangements refactor | Bug (regression) |
 
 ---
 
@@ -12,6 +15,12 @@
 
 | # | Issue | Category |
 |---|-------|----------|
+| — | Intake: redundant Create Form / New Form button | Bug |
+| — | Intake: "relation intake_forms doesn't exist" DB error | Bug |
+| — | Header: "Project" button non-functional, should sit left of workspaces | Bug |
+| — | Header: settings icon missing | Bug |
+| — | Restructure workspace menu: Collect → Intake; add Applications dropdown (Polls, Forms, Mail, Finances) | UX |
+| — | Autohelper: add auth key handshake between frontend settings and backend | Security |
 | 218 | Phase 6: Remove task_references system + hierarchy nodes | Refactor |
 | 217 | Expose interpretation HTTP routes for frontend hooks | Backend |
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
@@ -63,10 +72,8 @@
 
 | PR | Description |
 |----|-------------|
-| #250 | fix: resolve all frontend and mail type errors |
-| #251 | feat: email draft creation via Graph API with Outlook COM fallback |
-| #252 | fix: resolve all 92 backend ESLint errors |
-| #253 | fix: autohelper platform detection, venv paths, WSL2 tray gating |
+| #261 | refactor: replace hardcoded font-family with CSS variables |
+| #260 | refactor: extract shared font base.css for all three builds |
 
 ---
 
@@ -74,18 +81,21 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
-| 238 | Epic: Invoicerr Integration (invoice management system) | PRs #239-243 |
+| — | Restore Windows venv scripts | PR #259 |
+| — | Streamline CLAUDE.md | PR #257 |
+| — | Autohelper platform detection + review fixes | PRs #255, #256 |
+| — | Resolve all frontend and mail type errors | PR #250 |
+| — | Resolve all 92 backend ESLint errors | PR #252 |
+| 238 | Epic: Invoicerr Integration (invoice management system) | PRs #239-249 |
+| — | Architecture docs update (Jan 2026) | PR #236 |
+| — | BFA projector deep query + RTF formatter fidelity + section alignment | PRs #224-226 |
+| — | Wire ActionsPanel to open ComposerPanel | PR #220 |
 | 227-234 | Events Module + Project Log (Phases 1-4) | PRs #227-234 |
 | 44 | Google OAuth integration is cosmetic | PRs #221-223 |
 | 185 | Fork and modernize crab-meet scheduling polls | PRs #186, #206-213 |
 | 193 | Polls UI: migrate to @autoart/ui primitives | PR #207 |
 | 111-113 | Time/calendar features (duration sidechain, working-days, hot zones) | Closed 2026-01-25 |
 | 87 | Global Command Palette | PRs #174, #176 |
-| 147-150 | Narrative Canvas Wiring (overlays, mail, inspector, mappings) | PRs #157, #158, #164 |
-| 151 | Import Step 6 navigation bug | PR #152 |
-| 135 | QA: Arrangements rename verification | PR #155 |
-| 134 | Roadmap: Arrangements + projection-first | PR #156 |
-| 126-133 | Arrangements refactor | PRs #136-141 |
 
 ---
 
@@ -93,11 +103,6 @@
 
 | PRs | Description |
 |-----|-------------|
-| #244-249 | Finance: computed fields, UI views, Composer integration, export, DOCX, cloud connectors |
-| #236 | Architecture docs update (Jan 2026) |
-| #224-226 | BFA projector deep query + RTF formatter fidelity + section alignment |
-| #220 | Wire ActionsPanel to open ComposerPanel |
-| #219 | Remove stale TODOs and dead ProjectLogView |
 | #214 | Date format + timezone user settings |
 | #215 | Restructure .claude/ for Claude Code best practices |
 | #205 | Wire theme variables to global styles |
