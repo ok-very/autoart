@@ -21,6 +21,7 @@ import { useHierarchyStore } from '../../stores/hierarchyStore';
 import {
   useUIStore,
   FIELDS_VIEW_MODE_LABELS,
+  type CenterContentType,
 } from '../../stores/uiStore';
 import { useCollectionStore } from '../../stores';
 import { useCollectionModeOptional } from '../../workflows/export/context/CollectionModeProvider';
@@ -112,6 +113,12 @@ export function Header() {
     navigate('/');
     openPanel(panelId);
   }, [navigate, openPanel]);
+
+  // Helper to open an Application via center content routing
+  const handleOpenApp = useCallback((contentType: CenterContentType) => {
+    navigate('/');
+    setCenterContentType(contentType);
+  }, [navigate, setCenterContentType]);
 
   // Fields view mode data for toggle (Browse/Aggregate for collection mode)
   const fieldsViewModeData = Object.entries(FIELDS_VIEW_MODE_LABELS).map(([value, label]) => ({ value, label }));
@@ -254,37 +261,37 @@ export function Header() {
 
               <Menu.Dropdown>
                 <Menu.Item
-                  onClick={() => { navigate('/'); setCenterContentType('intake'); }}
+                  onClick={() => handleOpenApp('intake')}
                   leftSection={<FileText size={16} />}
                 >
                   Forms
                 </Menu.Item>
                 <Menu.Item
-                  onClick={() => { navigate('/'); setCenterContentType('artcollector'); }}
+                  onClick={() => handleOpenApp('artcollector')}
                   leftSection={<Image size={16} />}
                 >
                   Collect
                 </Menu.Item>
                 <Menu.Item
-                  onClick={() => { navigate('/'); setCenterContentType('mail'); }}
+                  onClick={() => handleOpenApp('mail')}
                   leftSection={<Mail size={16} />}
                 >
                   Mail
                 </Menu.Item>
                 <Menu.Item
-                  onClick={() => { navigate('/'); setCenterContentType('finance'); }}
+                  onClick={() => handleOpenApp('finance')}
                   leftSection={<DollarSign size={16} />}
                 >
                   Finances
                 </Menu.Item>
                 <Menu.Item
-                  onClick={() => { navigate('/'); setCenterContentType('calendar'); }}
+                  onClick={() => handleOpenApp('calendar')}
                   leftSection={<Calendar size={16} />}
                 >
                   Calendar
                 </Menu.Item>
                 <Menu.Item
-                  onClick={() => { navigate('/'); setCenterContentType('polls'); }}
+                  onClick={() => handleOpenApp('polls')}
                   leftSection={<BarChart3 size={16} />}
                 >
                   Polls
