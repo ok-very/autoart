@@ -623,12 +623,6 @@ export async function bulkDeleteRecords(recordIds: string[]): Promise<number> {
       )
       .execute();
 
-    // Then delete task references pointing to these records
-    await trx
-      .deleteFrom('task_references')
-      .where('source_record_id', 'in', recordIds)
-      .execute();
-
     // Finally delete the records
     const result = await trx
       .deleteFrom('records')

@@ -79,7 +79,6 @@ async function status() {
       'record_definitions',
       'hierarchy_nodes',
       'records',
-      'task_references',
       'record_links',
     ];
 

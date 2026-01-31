@@ -6,9 +6,6 @@ import type { HierarchyNode, NodeType } from '../../db/schema.js';
 import { NotFoundError, ValidationError } from '../../utils/errors.js';
 import * as recordsService from '../records/records.service.js';
 
-// TODO: DEPRECATED - deepCloneNode uses task_references table which is being phased out.
-// The clone operation at lines 446-467 should be updated when task_references is removed.
-
 // Validate hierarchy rules
 // Templates are hierarchy-agnostic (null parent) - they float outside normal structure
 const VALID_PARENTS: Record<NodeType, NodeType | null> = {
@@ -445,29 +442,6 @@ export async function deepCloneNode(input: CloneNodeInput, userId?: string): Pro
       .insertInto('hierarchy_nodes')
       .values(insertValues)
       .execute();
-
-    // Clone task references for all cloned nodes (only tasks)
-    const sourceNodeIds = Array.from(idMap.keys());
-    const refs = await trx
-      .selectFrom('task_references')
-      .selectAll()
-      .where('task_id', 'in', sourceNodeIds)
-      .execute();
-
-    if (refs.length > 0) {
-      const refInserts = refs.map(ref => ({
-        task_id: idMap.get(ref.task_id)!,
-        source_record_id: ref.source_record_id,
-        target_field_key: ref.target_field_key,
-        mode: ref.mode,
-        snapshot_value: ref.snapshot_value,
-      }));
-
-      await trx
-        .insertInto('task_references')
-        .values(refInserts)
-        .execute();
-    }
 
     // If cloning a project, update root_project_id for all cloned nodes
     if (sourceNode.type === 'project') {

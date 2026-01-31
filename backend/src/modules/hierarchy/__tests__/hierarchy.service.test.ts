@@ -15,7 +15,6 @@ import {
   cleanupTestData,
   generateTestPrefix,
   createTestProject,
-  createTestRecord,
 } from '@/test/setup.js';
 
 import * as hierarchyService from '../hierarchy.service.js';
@@ -120,51 +119,6 @@ describe('hierarchy.service', () => {
       // Cleanup
       await cleanupTestData(db, `${testPrefix}_src`);
       await cleanupTestData(db, `${testPrefix}_tgt`);
-    });
-
-    it('should clone task references along with tasks', async () => {
-      // Arrange: Create hierarchy with task and reference
-      const fixtures = await createTestProject(db, testPrefix, { withChildren: true });
-      const { recordId } = await createTestRecord(db, testPrefix);
-
-      // Create a reference from task to record
-      await db
-        .insertInto('task_references')
-        .values({
-          task_id: fixtures.leafId!,
-          source_record_id: recordId,
-          target_field_key: 'field1',
-          mode: 'dynamic',
-        })
-        .execute();
-
-      // Act: Clone the project
-      const clonedProject = await hierarchyService.deepCloneNode({
-        sourceNodeId: fixtures.projectId,
-      });
-
-      // Get cloned task
-      const clonedTree = await hierarchyService.getProjectTree(clonedProject.id);
-      const subprocessNodes = clonedTree.filter((n) => n.type === 'subprocess');
-      expect(subprocessNodes).toHaveLength(2); // subprocess and leaf subprocess
-      const clonedLeaf = subprocessNodes[1]; // Get the leaf
-      expect(clonedLeaf).toBeDefined();
-
-      // Assert: Reference was cloned
-      const clonedRefs = await db
-        .selectFrom('task_references')
-        .selectAll()
-        .where('task_id', '=', clonedLeaf!.id)
-        .execute();
-
-      expect(clonedRefs.length).toBe(1);
-      expect(clonedRefs[0].source_record_id).toBe(recordId);
-      expect(clonedRefs[0].target_field_key).toBe('field1');
-      expect(clonedRefs[0].mode).toBe('dynamic');
-
-      // Cleanup
-      await db.deleteFrom('hierarchy_nodes').where('id', '=', clonedProject.id).execute();
-      await cleanupTestData(db, testPrefix);
     });
 
     it('should support depth filtering', async () => {
