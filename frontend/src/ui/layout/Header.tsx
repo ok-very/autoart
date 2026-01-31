@@ -284,7 +284,7 @@ export function Header() {
                   Calendar
                 </Menu.Item>
                 <Menu.Item
-                  disabled
+                  onClick={() => { navigate('/'); setCenterContentType('polls'); }}
                   leftSection={<BarChart3 size={16} />}
                 >
                   Polls
