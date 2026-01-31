@@ -2,9 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Poll, CreatePollInput } from '@autoart/shared';
 import { api } from '../client';
 
+export const POLLS_QUERY_KEY = ['polls'] as const;
+
 export function usePolls() {
   return useQuery({
-    queryKey: ['polls'],
+    queryKey: POLLS_QUERY_KEY,
     queryFn: () =>
       api.get<{ polls: Poll[] }>('/polls').then((r) => r.polls),
   });
@@ -16,7 +18,7 @@ export function useCreatePoll() {
     mutationFn: (data: CreatePollInput) =>
       api.post<{ poll: Poll }>('/polls', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['polls'] });
+      queryClient.invalidateQueries({ queryKey: POLLS_QUERY_KEY });
     },
   });
 }
@@ -27,7 +29,7 @@ export function useClosePoll() {
     mutationFn: (id: string) =>
       api.post<{ poll: Poll }>(`/polls/${id}/close`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['polls'] });
+      queryClient.invalidateQueries({ queryKey: POLLS_QUERY_KEY });
     },
   });
 }
