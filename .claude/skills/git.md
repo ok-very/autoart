@@ -4,6 +4,19 @@
 
 This project uses **stackit** for stacked PR management. Always prefer stackit commands.
 
+### Forbidden Commands
+
+**NEVER use raw git commands for branch/commit operations.** Use stackit equivalents:
+
+| Never Use | Use Instead |
+|-----------|-------------|
+| `git commit -m "..."` (new branch) | `stackit create -m "..."` |
+| `git checkout -b` | `stackit create -m "..."` |
+| `gh pr create` | `stackit submit` |
+| `git rebase` | `stackit restack` |
+
+**Exception:** `git commit` is allowed when adding commits to an **existing** stacked branch.
+
 ### Quick Reference
 
 | Task | Command |
@@ -15,6 +28,23 @@ This project uses **stackit** for stacked PR management. Always prefer stackit c
 | Rebase children | `stackit restack` |
 | Merge bottom PR | `stackit merge next` |
 | Navigate up/down | `stackit up` / `stackit down` |
+| Switch to branch | `stackit checkout <branch>` |
+| Absorb fixes into correct commits | `stackit absorb` |
+
+### Skills (Preferred)
+
+Use skills instead of manual commands when available:
+
+| Skill | Purpose |
+|-------|---------|
+| `/stack-create` | Create stacked branch (handles staging + create) |
+| `/stack-submit` | Submit PRs for the stack |
+| `/stack-status` | Check stack health |
+| `/stack-fix` | Diagnose and fix issues |
+| `/stack-sync` | Sync with trunk, cleanup merged branches |
+| `/stack-restack` | Rebase all branches in stack |
+| `/stack-absorb` | Route working changes to correct commits |
+| `/stack-merge` | Merge PRs from bottom up |
 
 ### Creating a Stack
 
@@ -32,6 +62,8 @@ stackit create -m "feat: add tests"
 # View the stack
 stackit log
 ```
+
+**Critical:** `stackit create` requires staged changes. Without them, an empty branch is created.
 
 Result:
 ```
@@ -221,6 +253,71 @@ These are deprecated in favor of stackit:
 |------------|-------------|
 | `pnpm git:stack` | `stackit create -m "msg"` |
 | `pnpm git:merge-stack 100 101` | `stackit merge next` (repeat for each) |
+
+---
+
+## Worktrees
+
+Work on multiple stacks in parallel, each in its own directory.
+
+### Quick Reference
+
+| Command | Purpose |
+|---------|---------|
+| `stackit wt create <name>` | New worktree with fresh anchor branch |
+| `stackit wt attach <branch>` | Move existing stack to a worktree |
+| `stackit wt list` | List all managed worktrees |
+| `stackit wt open <name>` | Navigate to a worktree |
+| `stackit wt remove <name>` | Remove worktree and delete branches |
+| `stackit wt detach <name>` | Remove worktree but keep branches |
+| `stackit wt prune` | Clean up empty/stale worktrees |
+
+`wt` is a short alias for `worktree`.
+
+### When to Use
+
+- **`wt create`** — Starting new work you want isolated from current checkout
+- **`wt attach`** — Moving an in-progress stack out of the main repo
+
+```bash
+# Start isolated work
+stackit wt create payments
+stackit create -m "feat: payment API"
+stackit create -m "feat: checkout UI"
+stackit submit
+
+# Move existing stack to worktree
+stackit wt attach auth-refactor
+
+# Finish: remove worktree, keep branches
+stackit wt detach payments
+
+# Finish: remove worktree AND branches
+stackit wt remove payments
+```
+
+Worktrees are created in `../{repo}-stacks/` by default. Configure with:
+```yaml
+# .stackit.yaml
+worktree:
+  basePath: "../my-stacks"
+  autoClean: true  # Auto-remove merged worktrees during sync
+```
+
+---
+
+## Common Pitfalls
+
+| Mistake | Fix |
+|---------|-----|
+| Forgetting to stage before `create` | Always `git add -A` before `stackit create` |
+| Empty branch created | You forgot to stage — delete branch and retry |
+| Using `git commit` for new branch | Use `stackit create` — it creates branch + commit together |
+| Using `git checkout -b` | Use `stackit create` — branch name auto-generated |
+| Manual rebase broke stack | Use `stackit restack` to safely rebase all children |
+| Using `gh pr create` | Use `stackit submit` — it handles stacked PR dependencies |
+| Amending wrong commit | Use `stackit absorb` to auto-route changes to correct commits |
+| Stack out of sync after merge | Run `stackit sync` to cleanup and update trunk |
 
 ---
 
