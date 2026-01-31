@@ -25,7 +25,7 @@ Quality and consistency matter more than speed. Check references before acting.
 - **Do NOT use Mantine.** Use bespoke atoms/molecules from `ui/atoms/` and `ui/molecules/`.
 - **ALWAYS use pnpm catalog** for shared dependencies.
 
-**If you catch yourself about to violate these rules, STOP and reconsider.**
+- **NEVER use `git stash`** to work around dirty trees. Commit the changes (even to unrelated files like `todo.md` or build artifacts) so branch switching works cleanly. Stash/pop loops waste tokens and risk data loss.
 
 ---
 
