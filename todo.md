@@ -4,10 +4,7 @@
 
 ## P0: Blocking
 
-| # | Issue | Category |
-|---|-------|----------|
-| — | Dockview panels not rendering — black bar below header, missing panel frames | Bug (critical) |
-| — | Composer/Action Creator still defaults to "Task" type — regression from arrangements refactor | Bug (regression) |
+*(none)*
 
 ---
 
@@ -15,11 +12,7 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| — | Intake: redundant Create Form / New Form button | Bug |
-| — | Intake: "relation intake_forms doesn't exist" DB error | Bug |
-| — | Header: "Project" button non-functional, should sit left of workspaces | Bug |
-| — | Header: settings icon missing | Bug |
-| — | Restructure workspace menu: Collect → Intake; add Applications dropdown (Polls, Forms, Mail, Finances) | UX |
+| — | Polls: no editor/management surface in dashboard — only public response UI exists | Feature |
 | — | Autohelper: add auth key handshake between frontend settings and backend | Security |
 | 218 | Phase 6: Remove task_references system + hierarchy nodes | Refactor |
 | 217 | Expose interpretation HTTP routes for frontend hooks | Backend |
@@ -72,6 +65,7 @@
 
 | PR | Description |
 |----|-------------|
+| #266 | docs: add no-sync-between-manual-merges rule to git.md |
 | #261 | refactor: replace hardcoded font-family with CSS variables |
 | #260 | refactor: extract shared font base.css for all three builds |
 
@@ -81,6 +75,8 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | Dockview panels not rendering + Composer defaults to "Task" | PRs #263-265 |
+| — | Header reorder, Applications dropdown, Intake cleanup | PRs #267-269 |
 | — | Restore Windows venv scripts | PR #259 |
 | — | Streamline CLAUDE.md | PR #257 |
 | — | Autohelper platform detection + review fixes | PRs #255, #256 |
