@@ -142,6 +142,17 @@ export function Header() {
             A
           </Link>
 
+          {/* Projects - primary navigation home */}
+          <Button
+            variant={!isRegistryActive && !isComposerActive && !isWorkbenchActive ? 'light' : 'subtle'}
+            color="gray"
+            size="sm"
+            leftSection={<LayoutGrid size={14} />}
+            onClick={() => navigate('/')}
+          >
+            Projects
+          </Button>
+
           {/* Workspace Dropdown - primary navigation for workflow stages */}
           <WorkspaceDropdown />
 
@@ -272,16 +283,6 @@ export function Header() {
               </Menu.Dropdown>
             </Menu>
 
-            {/* Projects */}
-            <Button
-              variant={!isRegistryActive && !isComposerActive && !isWorkbenchActive ? 'light' : 'subtle'}
-              color="gray"
-              size="sm"
-              leftSection={<LayoutGrid size={14} />}
-              onClick={() => navigate('/')}
-            >
-              Projects
-            </Button>
           </Inline>
         </div>
 
