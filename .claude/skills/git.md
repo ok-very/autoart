@@ -85,8 +85,11 @@ If stackit errors (e.g., "Pull request is in clean status", automerge failures):
 2. Try with `--force` flag: `stackit merge next --force --no-interactive`
 3. If that still fails, merge that single PR manually:
    ```bash
-   gh pr merge <PR-NUMBER> --merge --delete-branch
+   gh pr merge <PR-NUMBER> --merge
    ```
+   **Do NOT pass `--delete-branch`.** The repo has "Automatically delete head branches"
+   enabled — GitHub deletes the branch itself after retargeting child PRs. Passing
+   `--delete-branch` races against retargeting and can cascade-close child PRs.
 4. **Immediately return to stackit** for cleanup and remaining merges:
    ```bash
    stackit sync --no-interactive     # Let stackit clean up and restack
@@ -97,6 +100,7 @@ If stackit errors (e.g., "Pull request is in clean status", automerge failures):
 - `git rebase --onto` to manually rebase branches
 - `git push --force` or `--force-with-lease` on stacked branches
 - `gh pr edit --base` to retarget PRs to main
+- `gh pr merge` with `--delete-branch` (let GitHub's auto-delete handle it)
 - Close and recreate PRs
 
 These destroy stackit's internal tracking and cascade into more breakage.
@@ -133,7 +137,7 @@ stackit restack          # Rebase all branches in stack
 stackit merge next --no-interactive
 
 # Manual fallback for a SINGLE PR only (then immediately `stackit sync`)
-gh pr merge <number> --merge --delete-branch
+gh pr merge <number> --merge
 ```
 
 **NEVER use `--squash`** — it breaks stacked PRs and orphans child branch commits.
