@@ -48,9 +48,12 @@
     const c = color.trim();
     if (c.startsWith('#')) {
       let hex = c.slice(1);
-      if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-      const n = parseInt(hex, 16);
-      if (!isNaN(n)) return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+      if (hex.length === 3 || hex.length === 4) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+      else if (hex.length === 8) hex = hex.slice(0, 6);
+      if (hex.length === 6) {
+        const n = parseInt(hex, 16);
+        if (!isNaN(n)) return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+      }
     }
     const m = c.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
     if (m) return [+m[1], +m[2], +m[3]];
