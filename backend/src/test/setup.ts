@@ -93,18 +93,6 @@ export async function cleanupTestData(db: Kysely<Database>, testPrefix: string):
   }
 
   try {
-    await db.deleteFrom('task_references')
-      .where('task_id', 'in',
-        db.selectFrom('hierarchy_nodes')
-          .select('id')
-          .where('title', 'like', `${testPrefix}%`)
-      )
-      .execute();
-  } catch {
-    // Table may not exist
-  }
-
-  try {
     await db.deleteFrom('record_links')
       .where('source_record_id', 'in',
         db.selectFrom('records')

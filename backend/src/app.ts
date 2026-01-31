@@ -26,7 +26,6 @@ import { pollRoutes, pollPublicRoutes } from './modules/polls/index.js';
 import { workflowSurfaceRoutes } from './modules/projections/workflow-surface.routes.js';
 import { factKindsRoutes } from './modules/records/fact-kinds.routes.js';
 import { recordsRoutes } from './modules/records/records.routes.js';
-import { referencesRoutes } from './modules/references/references.routes.js';
 import { runnerRoutes } from './modules/runner/runner.routes.js';
 import { searchRoutes } from './modules/search/search.routes.js';
 import authPlugin from './plugins/auth.js';
@@ -74,7 +73,6 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(authRoutes, { prefix: '/api/auth' });
   await fastify.register(hierarchyRoutes, { prefix: '/api/hierarchy' });
   await fastify.register(recordsRoutes, { prefix: '/api/records' });
-  await fastify.register(referencesRoutes, { prefix: '/api/references' });
   await fastify.register(searchRoutes, { prefix: '/api/search' });
   await fastify.register(linksRoutes, { prefix: '/api/links' });
   // ingestion routes deprecated - use /api/imports instead
