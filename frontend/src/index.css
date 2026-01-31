@@ -1,14 +1,9 @@
-@import "tailwindcss";
+@import "./styles/base.css";
 
 /* Include @autoart/ui package to ensure its Tailwind classes aren't purged */
 @source "../packages/ui/src";
 
 @theme {
-  /* Custom fonts - @see docs/DESIGN.md */
-  --font-serif: "Source Serif 4", serif;
-  --font-sans: "Source Sans 3", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
-
   /* Custom colors for record types */
   --color-record-project-bg: #eff6ff;
   --color-record-project-text: #1e40af;
@@ -30,8 +25,6 @@
 }
 
 body {
-  font-family: "Source Serif 4", serif;
-  font-optical-sizing: auto;
   background-color: var(--ws-bg);
   color: var(--ws-fg);
   height: 100vh;
@@ -41,11 +34,6 @@ body {
 #root {
   height: 100%;
   width: 100%;
-}
-
-.mono {
-  font-family: "IBM Plex Mono", monospace;
-  font-feature-settings: "liga" 0;
 }
 
 /* Custom Scrollbar - uses theme variables */
