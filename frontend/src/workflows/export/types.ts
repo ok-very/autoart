@@ -79,8 +79,14 @@ export const EXPORT_FORMATS: ExportFormatOption[] = [
     {
         id: 'pdf',
         label: 'PDF Document',
-        description: 'Export to portable document format',
+        description: 'PDF document (via AutoHelper)',
         extension: '.pdf',
+    },
+    {
+        id: 'docx',
+        label: 'Word Document',
+        description: 'Word .docx document',
+        extension: '.docx',
     },
     // NOTE: Gantt export is triggered directly from TimelineWrapper panel,
     // not through ExportWorkbench. Re-enable when batch workflow is added.
