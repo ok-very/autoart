@@ -60,7 +60,7 @@ export function IntakeDashboard({ onOpenForm }: IntakeDashboardProps) {
                 <Button
                     onClick={handleCreateForm}
                     disabled={createForm.isPending}
-                    className="flex items-center gap-2"
+                    className="hidden md:flex items-center gap-2"
                 >
                     {createForm.isPending ? (
                         <Loader2 className="w-4 h-4 animate-spin" />

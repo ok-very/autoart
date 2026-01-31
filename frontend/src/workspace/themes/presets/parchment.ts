@@ -24,8 +24,8 @@ export const parchmentTheme: WorkspaceThemeModule = {
       '--ws-fg': '#2E2E2C', // Charcoal Ink
       '--ws-muted-fg': '#6B6560', // Derived muted
 
-      // Structural Accent
-      '--ws-accent': '#3F5C6E', // Oxide Blue
+      // Structural Accent (darkened Oxide Blue — deeper, more saturated)
+      '--ws-accent': '#2F4F65',
       '--ws-accent-fg': '#FFFFFF',
 
       // Panel Groups
@@ -44,8 +44,8 @@ export const parchmentTheme: WorkspaceThemeModule = {
       '--ws-tab-bg': 'transparent',
       '--ws-tab-bg-hover': '#D6D2CB',
       '--ws-tab-bg-active': '#FDFCFA',
-      '--ws-tab-border-active': '#3F5C6E',
-      '--ws-tab-indicator-color': '#3F5C6E',
+      '--ws-tab-border-active': '#2F4F65',
+      '--ws-tab-indicator-color': '#2F4F65',
 
       // Tab Close Button
       '--ws-tab-close-hover-bg': '#C4BFB8',
@@ -62,12 +62,12 @@ export const parchmentTheme: WorkspaceThemeModule = {
       '--ws-scrollbar-thumb-hover': '#A39E96',
 
       // Splitters
-      '--ws-sash-bg-hover': '#3F5C6E',
-      '--ws-sash-bg-active': '#3F5C6E',
+      '--ws-sash-bg-hover': '#2F4F65',
+      '--ws-sash-bg-active': '#2F4F65',
 
       // Drop Target
-      '--ws-drop-target-bg': 'rgba(63, 92, 110, 0.1)',
-      '--ws-drop-target-border': '#3F5C6E',
+      '--ws-drop-target-bg': 'rgba(47, 79, 101, 0.1)',
+      '--ws-drop-target-border': '#2F4F65',
 
       // Watermark
       '--ws-watermark-bg': '#F5F2ED',
@@ -77,7 +77,7 @@ export const parchmentTheme: WorkspaceThemeModule = {
     text: `
       /* Parchment theme - warm backgrounds */
       [data-workspace-theme="parchment"] {
-        --focus-ring-color: #3F5C6E;
+        --focus-ring-color: #2F4F65;
       }
 
       /* Softer borders for the archival feel */

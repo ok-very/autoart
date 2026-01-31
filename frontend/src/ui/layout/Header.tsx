@@ -7,9 +7,11 @@
 
 import {
   ChevronDown, FolderOpen, Database,
-  TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings, ClipboardList, LayoutGrid, Check
+  TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings, ClipboardList, LayoutGrid, Check,
+  AppWindow, FileText, Image, Mail, DollarSign, BarChart3
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { clsx } from 'clsx';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
 
 import type { FieldsViewMode } from '@autoart/shared';
@@ -31,9 +33,10 @@ import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
 
 export function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { data: projects } = useProjects();
   const { getNode: _getNode } = useHierarchyStore();
-  const { fieldsViewMode, setFieldsViewMode, openOverlay } = useUIStore();
+  const { fieldsViewMode, setFieldsViewMode, openOverlay, setCenterContentType } = useUIStore();
   const collectionMode = useCollectionModeOptional();
 
   const { openPanel, setBoundProject } = useWorkspaceStore();
@@ -142,16 +145,25 @@ export function Header() {
             A
           </Link>
 
-          {/* Projects - primary navigation home */}
-          <Button
-            variant={!isRegistryActive && !isComposerActive && !isWorkbenchActive ? 'light' : 'subtle'}
-            color="gray"
-            size="sm"
-            leftSection={<LayoutGrid size={14} />}
-            onClick={() => navigate('/')}
+          {/* Projects - primary navigation home (Link for proper anchor semantics) */}
+          <Link
+            to="/"
+            className={clsx(
+              'inline-flex items-center justify-center gap-1.5 font-medium rounded-lg transition-colors px-2 py-1 text-xs',
+              location.pathname !== '/' && 'hover:bg-black/5',
+            )}
+            style={
+              location.pathname === '/'
+                ? {
+                    color: 'var(--ws-accent)',
+                    backgroundColor: 'color-mix(in srgb, var(--ws-accent) 12%, transparent)',
+                  }
+                : { color: 'var(--ws-muted-fg)' }
+            }
           >
+            <LayoutGrid size={14} />
             Projects
-          </Button>
+          </Link>
 
           {/* Workspace Dropdown - primary navigation for workflow stages */}
           <WorkspaceDropdown />
@@ -222,6 +234,54 @@ export function Header() {
                   className={isIntakeActive ? 'bg-amber-50' : ''}
                 >
                   Intake
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+
+            {/* Applications Dropdown */}
+            <Menu>
+              <Menu.Target>
+                <Button
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  rightSection={<ChevronDown size={14} />}
+                  leftSection={<AppWindow size={14} />}
+                >
+                  Applications
+                </Button>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Item
+                  onClick={() => { navigate('/'); setCenterContentType('intake'); }}
+                  leftSection={<FileText size={16} />}
+                >
+                  Forms
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => { navigate('/'); setCenterContentType('artcollector'); }}
+                  leftSection={<Image size={16} />}
+                >
+                  Collect
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => { navigate('/'); setCenterContentType('mail'); }}
+                  leftSection={<Mail size={16} />}
+                >
+                  Mail
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => { navigate('/'); setCenterContentType('finance'); }}
+                  leftSection={<DollarSign size={16} />}
+                >
+                  Finances
+                </Menu.Item>
+                <Menu.Item
+                  disabled
+                  leftSection={<BarChart3 size={16} />}
+                >
+                  Polls
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
