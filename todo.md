@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-01-30*
+*Last Updated: 2026-01-31*
 
 ## P0: Blocking
 
@@ -65,6 +65,7 @@
 
 | PR | Description |
 |----|-------------|
+| #270 | docs: drop --delete-branch from manual merge fallback in git.md |
 | #266 | docs: add no-sync-between-manual-merges rule to git.md |
 | #261 | refactor: replace hardcoded font-family with CSS variables |
 | #260 | refactor: extract shared font base.css for all three builds |
@@ -76,7 +77,7 @@
 | # | Issue | Closed By |
 |---|-------|-----------|
 | — | Dockview panels not rendering + Composer defaults to "Task" | PRs #263-265 |
-| — | Header reorder, Applications dropdown, Intake cleanup | PRs #267-269 |
+| — | Header reorder, Applications dropdown, Intake cleanup, parchment accent darkened | PRs #267, #269 |
 | — | Restore Windows venv scripts | PR #259 |
 | — | Streamline CLAUDE.md | PR #257 |
 | — | Autohelper platform detection + review fixes | PRs #255, #256 |

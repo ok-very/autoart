@@ -85,23 +85,27 @@ If stackit errors (e.g., "Pull request is in clean status", automerge failures):
 2. Try with `--force` flag: `stackit merge next --force --no-interactive`
 3. If that still fails, merge that single PR manually:
    ```bash
-   gh pr merge <PR-NUMBER> --merge --delete-branch
+   gh pr merge <PR-NUMBER> --merge
    ```
-4. **Do NOT run `stackit sync` between manual merges.** GitHub retargets child PRs automatically when a base branch is merged+deleted. Running sync races with GitHub's retargeting and can cascade-close child PRs.
-5. Wait ~5s for GitHub to retarget, then merge the next PR the same way:
+   **Never pass `--delete-branch`** — the repo's "Automatically delete head branches"
+   setting handles cleanup after child PRs are retargeted. Forcing early deletion
+   races against retargeting and can cascade-close child PRs.
+
+> **Do NOT run `stackit sync` between sequential manual merges.**
+> GitHub retargets child PRs automatically after a base branch merges.
+> Wait until the next PR's base branch has updated, then merge it the same way.
+> Run `stackit sync` once after all PRs are merged.
+
+4. **After all PRs are merged, return to stackit** for cleanup:
    ```bash
-   sleep 5
-   gh pr merge <NEXT-PR-NUMBER> --merge --delete-branch
-   ```
-6. After **all** PRs are merged, run `stackit sync` once to clean up local branches:
-   ```bash
-   stackit sync --no-interactive
+   stackit sync --no-interactive     # Pull main, cleanup merged branches
    ```
 
 **NEVER** do any of the following as "recovery":
 - `git rebase --onto` to manually rebase branches
 - `git push --force` or `--force-with-lease` on stacked branches
 - `gh pr edit --base` to retarget PRs to main
+- `gh pr merge --delete-branch` — forces early branch deletion, races against retarget
 - Close and recreate PRs
 
 These destroy stackit's internal tracking and cascade into more breakage.
@@ -138,7 +142,7 @@ stackit restack          # Rebase all branches in stack
 stackit merge next --no-interactive
 
 # Manual fallback for a SINGLE PR only (then immediately `stackit sync`)
-gh pr merge <number> --merge --delete-branch
+gh pr merge <number> --merge
 ```
 
 **NEVER use `--squash`** — it breaks stacked PRs and orphans child branch commits.
