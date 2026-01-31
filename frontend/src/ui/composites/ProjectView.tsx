@@ -155,7 +155,6 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
     const activeSubprocessId = useMemo(() => {
         if (!selectedNode) return subprocesses[0]?.id || null;
         if (selectedNode.type === 'subprocess') return selectedNode.id;
-        if (selectedNode.type === 'task') return selectedNode.parent_id;
         return subprocesses[0]?.id || null;
     }, [selectedNode, subprocesses]);
 
@@ -176,7 +175,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
 
     const tasks = useMemo(() => {
         if (!activeSubprocessId) return [];
-        return getChildren(activeSubprocessId).filter((n) => n.type === 'task');
+        return getChildren(activeSubprocessId);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSubprocessId, getChildren, storeNodes]);
 

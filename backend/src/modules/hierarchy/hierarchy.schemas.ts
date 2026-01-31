@@ -8,13 +8,7 @@ import { z } from 'zod';
  * Primary node type schema (stage removed from new creations).
  * Stage is demoted to projection-only - see projections module.
  */
-export const nodeTypeSchema = z.enum(['project', 'process', 'subprocess', 'task', 'subtask']);
-
-/**
- * Legacy node type schema (includes stage for read compatibility).
- * @deprecated Only use for reading existing data or migrations.
- */
-export const legacyNodeTypeSchema = z.enum(['project', 'process', 'stage', 'subprocess', 'task', 'subtask']);
+export const nodeTypeSchema = z.enum(['project', 'process', 'subprocess']);
 
 // ============================================================================
 // CREATE/UPDATE SCHEMAS
@@ -59,7 +53,6 @@ export const cloneNodeSchema = z.object({
 // ============================================================================
 
 export type NodeType = z.infer<typeof nodeTypeSchema>;
-export type LegacyNodeType = z.infer<typeof legacyNodeTypeSchema>;
 export type CreateNodeInput = z.infer<typeof createNodeSchema>;
 export type UpdateNodeInput = z.infer<typeof updateNodeSchema>;
 export type MoveNodeInput = z.infer<typeof moveNodeSchema>;

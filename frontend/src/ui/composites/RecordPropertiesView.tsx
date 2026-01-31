@@ -83,8 +83,6 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
         const metadata: Record<string, unknown> =
             typeof rawMetadata === 'string' ? JSON.parse(rawMetadata) : rawMetadata;
 
-        const nodeType = node.type;
-
         // Find the definition for this node type
         const nodeTypeName = node.type.charAt(0).toUpperCase() + node.type.slice(1);
         const definition = definitions?.find((d) => {
@@ -94,22 +92,7 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
             return d.name === nodeTypeName;
         });
 
-        // Special handling for tasks
-        if (nodeType === 'task') {
-            const taskDef = definitions?.find((d) => d.name === 'Task');
-            const taskFieldKeys = taskDef?.schema_config?.fields
-                ?.filter((f) => f.key !== 'title' && f.key !== 'description')
-                ?.map((f) => f.key) || [];
-
-            // Add any extra metadata keys that aren't in the definition
-            const extraKeys = Object.keys(metadata).filter(
-                (key) => key !== 'percentComplete' && !taskFieldKeys.includes(key)
-            );
-
-            return [...taskFieldKeys, ...extraKeys];
-        }
-
-        // For other node types with definition
+        // For node types with definition
         if (definition?.schema_config?.fields) {
             return definition.schema_config.fields.map((f) => f.key);
         }

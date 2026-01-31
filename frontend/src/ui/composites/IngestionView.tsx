@@ -373,7 +373,6 @@ function getNodeIndent(type: string): number {
         case 'process': return 0;
         case 'stage': return 16;
         case 'subprocess': return 32;
-        case 'task': return 48;
         default: return 0;
     }
 }

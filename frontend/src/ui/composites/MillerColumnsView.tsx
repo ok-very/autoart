@@ -29,7 +29,6 @@ interface ColumnSelections {
     process: string | null;
     stage: string | null;
     subprocess: string | null;
-    task: string | null;
 }
 
 // ==================== MILLER COLUMNS VIEW ====================
@@ -44,7 +43,6 @@ export function MillerColumnsView({ className }: MillerColumnsViewProps) {
         process: null,
         stage: null,
         subprocess: null,
-        task: null,
     });
 
     // Derive full selections with project from store
@@ -64,7 +62,6 @@ export function MillerColumnsView({ className }: MillerColumnsViewProps) {
                     process: null,
                     stage: null,
                     subprocess: null,
-                    task: null,
                 });
             });
         }
@@ -94,10 +91,6 @@ export function MillerColumnsView({ className }: MillerColumnsViewProps) {
         () => (selections.stage ? getChildren(selections.stage) : []),
         [selections.stage, getChildren]
     );
-    const tasks = useMemo(
-        () => (selections.subprocess ? getChildren(selections.subprocess) : []),
-        [selections.subprocess, getChildren]
-    );
 
     const handleSelect = (level: NodeType, id: string) => {
         const node = getNode(id);
@@ -112,25 +105,18 @@ export function MillerColumnsView({ className }: MillerColumnsViewProps) {
                 newUserSelections.process = null;
                 newUserSelections.stage = null;
                 newUserSelections.subprocess = null;
-                newUserSelections.task = null;
                 break;
             case 'process':
                 newUserSelections.process = id;
                 newUserSelections.stage = null;
                 newUserSelections.subprocess = null;
-                newUserSelections.task = null;
                 break;
             case 'stage':
                 newUserSelections.stage = id;
                 newUserSelections.subprocess = null;
-                newUserSelections.task = null;
                 break;
             case 'subprocess':
                 newUserSelections.subprocess = id;
-                newUserSelections.task = null;
-                break;
-            case 'task':
-                newUserSelections.task = id;
                 break;
         }
 
@@ -150,7 +136,6 @@ export function MillerColumnsView({ className }: MillerColumnsViewProps) {
     const handleAddProcess = () => selections.project && openOverlay('create-node', { parentId: selections.project, nodeType: 'process' });
     const handleAddStage = () => selections.process && openOverlay('create-node', { parentId: selections.process, nodeType: 'stage' });
     const handleAddSubprocess = () => selections.stage && openOverlay('create-node', { parentId: selections.stage, nodeType: 'subprocess' });
-    const handleAddTask = () => selections.subprocess && openOverlay('create-node', { parentId: selections.subprocess, nodeType: 'task' });
 
     return (
         <div
@@ -209,17 +194,6 @@ export function MillerColumnsView({ className }: MillerColumnsViewProps) {
                     />
                 )}
 
-                {/* Column 5: Tasks (if subprocess selected) */}
-                {selections.subprocess && (
-                    <MillerColumn
-                        type="task"
-                        items={tasks}
-                        selectedId={selections.task}
-                        onSelect={(id) => handleSelect('task', id)}
-                        onAdd={handleAddTask}
-                        hasChildren={() => false}
-                    />
-                )}
             </div>
         </div>
     );

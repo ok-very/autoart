@@ -204,7 +204,6 @@ export async function compose(
                 mode: ref.mode,
                 snapshotValue: ref.snapshot_value,
                 createdAt: ref.created_at,
-                legacyTaskReferenceId: ref.legacy_task_reference_id,
             }));
         }
 

@@ -73,7 +73,7 @@ function buildImportTree(plan: ImportPlan): ImportPlanNode[] {
         const mondayMeta = item.metadata?.monday as { type?: string } | undefined;
         const entityType = (item as { entityType?: string }).entityType
             ?? mondayMeta?.type
-            ?? 'task';
+            ?? 'action';
 
         nodeMap.set(item.tempId, {
             id: item.tempId,
@@ -176,7 +176,7 @@ export function getImportPlanMeta(row: TableRow): ImportPlanRowMeta {
         hasChildren: (meta.hasChildren as boolean) ?? false,
         isExpanded: (meta.isExpanded as boolean) ?? false,
         nodeType: (meta.nodeType as 'container' | 'item') ?? 'item',
-        entityType: (meta.entityType as string) ?? 'task',
+        entityType: (meta.entityType as string) ?? 'action',
         classification: meta.classification as ItemClassification | undefined,
     };
 }

@@ -59,7 +59,7 @@ export function RegistrySidebar({
         const defKind = (def as { definition_kind?: string }).definition_kind;
         if (defKind) return defKind === 'record';
         const name = def.name.toLowerCase();
-        return !legacyHierarchyTypes.includes(name) && name !== 'task' && name !== 'subtask';
+        return !legacyHierarchyTypes.includes(name);
     });
 
     // Apply search filter

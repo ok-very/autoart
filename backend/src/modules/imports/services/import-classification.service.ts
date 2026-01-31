@@ -216,9 +216,7 @@ export function generateClassificationsForConnectorItems(
                 return baseClassification;
 
             case 'action':
-            case 'task':
-            case 'subtask':
-                // Work items (actions, tasks, subtasks) are created as actions in the actions table
+                // Work items (actions) are created as actions in the actions table
                 baseClassification = {
                     itemTempId: item.tempId,
                     outcome: 'INTERNAL_WORK' as ClassificationOutcome,

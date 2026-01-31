@@ -107,17 +107,15 @@ function getTitleFromAction(action: ActionProjectionInput): string {
  */
 function deriveNodeType(
     action: ActionProjectionInput
-): 'task' | 'subtask' | 'project' | 'process' | 'subprocess' {
+): 'project' | 'process' | 'subprocess' {
     const type = action.type.toLowerCase();
 
-    if (type === 'subtask') return 'subtask';
-    if (type === 'task') return 'task';
     if (type === 'subprocess') return 'subprocess';
     if (type === 'process') return 'process';
     if (type === 'project') return 'project';
 
-    // Default to task for unknown action types
-    return 'task';
+    // Default to subprocess for unknown action types
+    return 'subprocess';
 }
 
 // ============================================================================

@@ -156,7 +156,7 @@ export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateReco
     : null;
 
   const classifiableNodes = projectNodes?.filter((n) =>
-    ['project', 'subprocess', 'task'].includes(n.type)
+    ['project', 'subprocess'].includes(n.type)
   ) || [];
 
   const icon = definition.styling?.icon;

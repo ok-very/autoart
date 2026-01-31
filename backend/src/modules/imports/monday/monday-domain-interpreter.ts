@@ -378,8 +378,7 @@ function createSubitemFromNode(
         : undefined;
 
     const treatAs = boardConfig.settings?.treatSubitemsAs ?? 'child_actions';
-    const entityType: ImportPlanItem['entityType'] =
-        treatAs === 'subtasks' ? 'subtask' : 'action';
+    const entityType: ImportPlanItem['entityType'] = 'action';
 
     const { fieldRecordings, pendingLinks } = convertColumnValues(
         node.columnValues,

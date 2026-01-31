@@ -98,8 +98,6 @@ const COLUMN_CONFIG: Record<NodeType, { label: string; badge: string; bgColor: s
     process: { label: 'Methodology', badge: 'M', bgColor: 'bg-purple-100', textColor: 'text-purple-600' },
     stage: { label: 'Stages', badge: 'F', bgColor: 'bg-yellow-100', textColor: 'text-yellow-600' },
     subprocess: { label: 'Subprocesses', badge: 'S', bgColor: 'bg-orange-100', textColor: 'text-orange-600' },
-    task: { label: 'Tasks', badge: 'T', bgColor: 'bg-slate-200', textColor: 'text-slate-600' },
-    subtask: { label: 'Subtasks', badge: 'ST', bgColor: 'bg-teal-100', textColor: 'text-teal-600' },
     template: { label: 'Templates', badge: 'TP', bgColor: 'bg-pink-100', textColor: 'text-pink-600' },
 };
 
@@ -172,7 +170,7 @@ function HierarchyColumn({
                             item={item}
                             isSelected={item.id === selectedId}
                             onClick={() => onSelect(item.id)}
-                            showArrow={hasChildren ? hasChildren(item.id) : type !== 'task'}
+                            showArrow={hasChildren ? hasChildren(item.id) : true}
                         />
                     ))
                 )}
