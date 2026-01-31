@@ -80,12 +80,8 @@ export function UnifiedComposerBar({
         return allDefinitions.filter((d) => d.kind === 'action_arrangement');
     }, [allDefinitions]);
 
-    // Derive default recipe ID (prefer "Task" recipe if available)
-    const defaultRecipeId = useMemo(() => {
-        if (!actionRecipes.length) return null;
-        const taskRecipe = actionRecipes.find((r) => r.name.toLowerCase() === 'task');
-        return taskRecipe?.id || actionRecipes[0].id;
-    }, [actionRecipes]);
+    // Derive default recipe ID (first available arrangement)
+    const defaultRecipeId = useMemo(() => actionRecipes[0]?.id ?? null, [actionRecipes]);
 
     // Effective recipe selection (user choice or default)
     const selectedRecipeId = userRecipeId ?? defaultRecipeId;
@@ -228,7 +224,7 @@ export function UnifiedComposerBar({
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                placeholder={`New ${selectedRecipe?.name || 'Task'}...`}
+                                placeholder={`New ${selectedRecipe?.name || 'action'}...`}
                                 className={clsx(
                                     'w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg',
                                     'focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100',

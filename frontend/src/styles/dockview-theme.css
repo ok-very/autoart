@@ -85,7 +85,7 @@
   color: var(--ws-tab-fg-active);
   background: var(--ws-tab-bg-active) !important;
   border-color: var(--ws-panel-border);
-  border-bottom: 1px solid var(--ws-tab-bg-active);
+  border-bottom: 1px solid var(--ws-panel-bg);
   margin-bottom: -1px;
   z-index: 2;
   font-weight: 500;
