@@ -12,9 +12,8 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| — | Polls: no editor/management surface in dashboard — only public response UI exists | Feature |
+| 275 | Epic: Export Workbench — preview-first outputs + finance templates via sessions | Epic |
 | — | Autohelper: add auth key handshake between frontend settings and backend | Security |
-| 218 | Phase 6: Remove task_references system + hierarchy nodes | Refactor |
 | 217 | Expose interpretation HTTP routes for frontend hooks | Backend |
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
 | 235 | Add Context Breadcrumb to Events | Frontend |
@@ -28,6 +27,7 @@
 
 | # | Issue | Category |
 |---|-------|----------|
+| 173 | Epic: Finance Management System (Invoices + Budgets + Vendor Bills + Reconciliation) | Epic |
 | 181 | Fix workspace preset timing (pendingPanelPositions) | Bug |
 | 182 | Workspace modification tracking and save workflow | Workspace |
 | 180 | Add route/project context to workspace system | Workspace |
@@ -63,12 +63,7 @@
 
 ## In-Flight (Awaiting Review)
 
-| PR | Description |
-|----|-------------|
-| #270 | docs: drop --delete-branch from manual merge fallback in git.md |
-| #266 | docs: add no-sync-between-manual-merges rule to git.md |
-| #261 | refactor: replace hardcoded font-family with CSS variables |
-| #260 | refactor: extract shared font base.css for all three builds |
+*(none)*
 
 ---
 
@@ -76,22 +71,18 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| 218 | Phase 6: Remove task_references system + hierarchy nodes | PRs #282-285 |
+| — | Polls editor/management surface in dashboard | PRs #271-273 |
+| — | Style token infrastructure + formatter consumption | PRs #279-280 |
+| — | Chladni-pattern cymatic loading screen | PR #281 |
+| — | In-flight doc PRs (git.md merge rules) | PRs #266, #270 |
+| — | Font refactor: shared base.css + CSS variable font-family | PRs #260, #262 |
 | — | Dockview panels not rendering + Composer defaults to "Task" | PRs #263-265 |
-| — | Header reorder, Applications dropdown, Intake cleanup, parchment accent darkened | PRs #267, #269 |
+| — | Header reorder, Applications dropdown, Intake cleanup | PRs #267, #269 |
 | — | Restore Windows venv scripts | PR #259 |
-| — | Streamline CLAUDE.md | PR #257 |
-| — | Autohelper platform detection + review fixes | PRs #255, #256 |
-| — | Resolve all frontend and mail type errors | PR #250 |
-| — | Resolve all 92 backend ESLint errors | PR #252 |
 | 238 | Epic: Invoicerr Integration (invoice management system) | PRs #239-249 |
-| — | Architecture docs update (Jan 2026) | PR #236 |
-| — | BFA projector deep query + RTF formatter fidelity + section alignment | PRs #224-226 |
-| — | Wire ActionsPanel to open ComposerPanel | PR #220 |
 | 227-234 | Events Module + Project Log (Phases 1-4) | PRs #227-234 |
-| 44 | Google OAuth integration is cosmetic | PRs #221-223 |
 | 185 | Fork and modernize crab-meet scheduling polls | PRs #186, #206-213 |
-| 193 | Polls UI: migrate to @autoart/ui primitives | PR #207 |
-| 111-113 | Time/calendar features (duration sidechain, working-days, hot zones) | Closed 2026-01-25 |
 | 87 | Global Command Palette | PRs #174, #176 |
 
 ---

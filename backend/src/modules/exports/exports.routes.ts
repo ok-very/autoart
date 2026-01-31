@@ -27,7 +27,7 @@ import { getGoogleToken, getMicrosoftToken, isProviderConnected } from '../impor
 // SCHEMAS
 // ============================================================================
 
-const ExportFormatSchema = z.enum(['rtf', 'markdown', 'plaintext', 'csv', 'google-doc', 'google-sheets', 'google-slides']);
+const ExportFormatSchema = z.enum(['rtf', 'markdown', 'plaintext', 'csv', 'google-doc', 'google-sheets', 'google-slides', 'pdf', 'docx']);
 
 const ExportOptionsSchema = z.object({
     includeContacts: z.boolean().optional(),
@@ -142,6 +142,34 @@ export async function exportsRoutes(app: FastifyInstance) {
             }
             throw err;
         }
+    });
+
+    /**
+     * Download session output artifact
+     */
+    app.get('/sessions/:id/output', async (request, reply) => {
+        const { id } = SessionIdParamSchema.parse(request.params);
+        const query = request.query as { disposition?: string };
+        const disposition = query.disposition === 'inline' ? 'inline' : 'attachment';
+
+        const session = await exportsService.getExportSession(id);
+        if (!session) {
+            return reply.status(404).send({ error: 'Session not found' });
+        }
+        if (session.status !== 'completed') {
+            return reply.status(400).send({ error: 'Session has not completed' });
+        }
+
+        const { getSessionOutput } = await import('./output-store.js');
+        const output = await getSessionOutput(id);
+        if (!output) {
+            return reply.status(404).send({ error: 'No output file found' });
+        }
+
+        return reply
+            .header('Content-Type', output.mimeType)
+            .header('Content-Disposition', `${disposition}; filename="${output.filename}"`)
+            .send(output.buffer);
     });
 
     /**

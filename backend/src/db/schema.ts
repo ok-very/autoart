@@ -407,6 +407,8 @@ export interface ExportSessionsTable {
   target_config: Generated<unknown>; // JSONB
   projection_cache: unknown | null; // JSONB
   output_url: string | null;
+  output_path: string | null;
+  output_mime_type: string | null;
   error: string | null;
   created_by: string | null;
   created_at: Generated<Date>;

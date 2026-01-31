@@ -479,6 +479,8 @@ function mapDbToSession(row: {
     target_config: unknown | null;
     status: string;
     projection_cache: unknown | null;
+    output_path: string | null;
+    output_mime_type: string | null;
     error: string | null;
     created_by: string | null;
     created_at: Date;
@@ -498,6 +500,8 @@ function mapDbToSession(row: {
         targetConfig: row.target_config ? parseJsonb<Record<string, unknown>>(row.target_config) : undefined,
         status: row.status as ExportSessionStatus,
         projectionCache: row.projection_cache ? parseJsonb<BfaProjectExportModel[]>(row.projection_cache) : undefined,
+        outputPath: row.output_path ?? undefined,
+        outputMimeType: row.output_mime_type ?? undefined,
         error: row.error ?? undefined,
         createdBy: row.created_by ?? undefined,
         createdAt: row.created_at.toISOString(),
