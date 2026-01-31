@@ -24,24 +24,30 @@ export async function storeSessionOutput(
     mimeType: string,
     extension: string,
 ): Promise<string> {
+    const ext = extension.startsWith('.') ? extension : `.${extension}`;
     const dir = path.join(EXPORT_OUTPUT_DIR, 'exports');
     await fs.mkdir(dir, { recursive: true });
 
-    const filename = `${sessionId}${extension}`;
+    const filename = `${sessionId}${ext}`;
     const filePath = path.join(dir, filename);
 
     await fs.writeFile(filePath, buffer);
 
     // Persist path and MIME type on the session row
-    await db
-        .updateTable('export_sessions')
-        .set({
-            output_path: filePath,
-            output_mime_type: mimeType,
-            updated_at: new Date(),
-        })
-        .where('id', '=', sessionId)
-        .execute();
+    try {
+        await db
+            .updateTable('export_sessions')
+            .set({
+                output_path: filePath,
+                output_mime_type: mimeType,
+                updated_at: new Date(),
+            })
+            .where('id', '=', sessionId)
+            .execute();
+    } catch (err) {
+        await fs.unlink(filePath).catch(() => {});
+        throw err;
+    }
 
     return filePath;
 }
@@ -88,23 +94,25 @@ export async function cleanupExpiredOutputs(maxAgeMs: number): Promise<number> {
         .selectFrom('export_sessions')
         .select(['id', 'output_path'])
         .where('output_path', 'is not', null)
-        .where('created_at', '<', cutoff)
+        .where('updated_at', '<', cutoff)
         .execute();
 
-    let cleaned = 0;
+    const deletedIds: string[] = [];
     for (const row of expired) {
         if (!row.output_path) continue;
         try {
             await fs.unlink(row.output_path);
-            cleaned++;
-        } catch {
-            // File already gone — ignore
+            deletedIds.push(row.id);
+        } catch (err) {
+            // ENOENT means file already gone — treat as success
+            if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+                deletedIds.push(row.id);
+            }
         }
     }
 
-    // Clear the path references
-    if (expired.length > 0) {
-        const ids = expired.map((r) => r.id);
+    // Clear the path references only for successfully deleted files
+    if (deletedIds.length > 0) {
         await db
             .updateTable('export_sessions')
             .set({
@@ -112,9 +120,9 @@ export async function cleanupExpiredOutputs(maxAgeMs: number): Promise<number> {
                 output_mime_type: null,
                 updated_at: new Date(),
             })
-            .where('id', 'in', ids)
+            .where('id', 'in', deletedIds)
             .execute();
     }
 
-    return cleaned;
+    return deletedIds.length;
 }

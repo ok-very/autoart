@@ -6,6 +6,7 @@
  */
 
 import { db } from '@db/client.js';
+import { extractAmountCents } from '../utils/extract-amount.js';
 
 // ============================================================================
 // EXPORT MODEL
@@ -53,7 +54,7 @@ export async function projectInvoiceList(projectId: string): Promise<InvoiceList
         const tax = extractAmountCents(data, 'tax_total');
         return {
             invoiceNumber: (data.invoice_number as string) || r.unique_name,
-            client: '',
+            client: (data.client_name as string) || '',
             issueDate: (data.issue_date as string) || '',
             dueDate: (data.due_date as string) || '',
             subtotal,
@@ -65,15 +66,3 @@ export async function projectInvoiceList(projectId: string): Promise<InvoiceList
     });
 }
 
-// ============================================================================
-// HELPERS
-// ============================================================================
-
-function extractAmountCents(data: Record<string, unknown>, key: string): number {
-    const val = data[key];
-    if (typeof val === 'number') return val;
-    if (typeof val === 'object' && val !== null && 'amount' in val) {
-        return (val as { amount: number }).amount;
-    }
-    return 0;
-}

@@ -14,7 +14,7 @@ import type {
     ExportResult,
     BfaProjectExportModel,
 } from '../../workflows/export/types';
-import { api } from '../client';
+import { api, API_BASE } from '../client';
 
 // Re-export types for consumers
 export type { ExportFormat, ExportSessionStatus, ExportSession, ExportResult };
@@ -195,7 +195,7 @@ export function useDeleteExportSession() {
 export function useDownloadExportOutput() {
     return useMutation({
         mutationFn: async (sessionId: string) => {
-            const response = await fetch(`/api/exports/sessions/${sessionId}/output?disposition=attachment`);
+            const response = await fetch(`${API_BASE}/exports/sessions/${sessionId}/output?disposition=attachment`);
 
             if (!response.ok) {
                 throw new Error(`Download failed: ${response.statusText}`);

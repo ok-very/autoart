@@ -6,6 +6,7 @@
  */
 
 import { db } from '@db/client.js';
+import { extractAmountCents } from '../utils/extract-amount.js';
 
 // ============================================================================
 // EXPORT MODEL
@@ -35,7 +36,7 @@ export async function projectBudgets(projectId: string): Promise<BudgetExportRow
         .where('name', '=', 'Budget')
         .executeTakeFirst();
 
-    if (!budgetDef) return [];
+    if (!budgetDef) throw new Error('Budget record definition not found');
 
     const budgets = await db
         .selectFrom('records')
@@ -61,15 +62,3 @@ export async function projectBudgets(projectId: string): Promise<BudgetExportRow
     });
 }
 
-// ============================================================================
-// HELPERS
-// ============================================================================
-
-function extractAmountCents(data: Record<string, unknown>, key: string): number {
-    const val = data[key];
-    if (typeof val === 'number') return val;
-    if (typeof val === 'object' && val !== null && 'amount' in val) {
-        return (val as { amount: number }).amount;
-    }
-    return 0;
-}

@@ -17,6 +17,8 @@ const PdfPreview = lazy(() => import('./PdfPreview'));
 
 import { useExportSession } from '../../../api/hooks/exports';
 import { useDownloadExportOutput } from '../../../api/hooks/exports';
+import { API_BASE } from '../../../api/client';
+import type { ExportResult } from '../types';
 
 // ============================================================================
 // TYPES
@@ -24,6 +26,7 @@ import { useDownloadExportOutput } from '../../../api/hooks/exports';
 
 interface ExportOutputPanelProps {
     sessionId: string;
+    exportResult?: ExportResult;
     onBack: () => void;
 }
 
@@ -38,15 +41,19 @@ const CLOUD_FORMATS = new Set(['google-doc', 'google-sheets', 'google-slides']);
 // COMPONENT
 // ============================================================================
 
-export function ExportOutputPanel({ sessionId, onBack }: ExportOutputPanelProps) {
+export function ExportOutputPanel({ sessionId, exportResult, onBack }: ExportOutputPanelProps) {
     const { data: session } = useExportSession(sessionId);
     const download = useDownloadExportOutput();
     const [copied, setCopied] = useState(false);
 
     const handleCopy = useCallback(async (text: string) => {
-        await navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // Clipboard API may be unavailable in insecure contexts
+        }
     }, []);
 
     if (!session) {
@@ -61,6 +68,7 @@ export function ExportOutputPanel({ sessionId, onBack }: ExportOutputPanelProps)
 
     const isError = session.status === 'failed';
     const isCompleted = session.status === 'completed';
+    const isPending = !isError && !isCompleted;
 
     return (
         <div className="flex-1 flex flex-col overflow-hidden" style={{ background: 'var(--ws-bg, #F5F2ED)' }}>
@@ -108,6 +116,22 @@ export function ExportOutputPanel({ sessionId, onBack }: ExportOutputPanelProps)
 
             {/* Content */}
             <div className="flex-1 overflow-auto p-6">
+                {isPending && (
+                    <div className="flex flex-col items-center justify-center h-full gap-3">
+                        <Loader2
+                            size={24}
+                            className="animate-spin"
+                            style={{ color: 'var(--ws-text-disabled, #8C8C88)' }}
+                        />
+                        <span
+                            className="text-sm"
+                            style={{ color: 'var(--ws-text-secondary, #5A5A57)' }}
+                        >
+                            {session.status === 'executing' ? 'Generating export...' : 'Preparing...'}
+                        </span>
+                    </div>
+                )}
+
                 {isError && (
                     <div className="max-w-lg mx-auto mt-12 text-center">
                         <AlertCircle
@@ -144,14 +168,17 @@ export function ExportOutputPanel({ sessionId, onBack }: ExportOutputPanelProps)
 
                 {isCompleted && TEXT_FORMATS.has(session.format) && (
                     <TextOutput
-                        sessionId={sessionId}
+                        content={exportResult?.content}
                         onCopy={handleCopy}
                         copied={copied}
                     />
                 )}
 
                 {isCompleted && CLOUD_FORMATS.has(session.format) && (
-                    <CloudOutput session={session} />
+                    <CloudOutput
+                        format={session.format}
+                        externalUrl={exportResult?.externalUrl}
+                    />
                 )}
             </div>
         </div>
@@ -173,29 +200,12 @@ function BinaryOutput({
     onDownload: () => void;
     isDownloading: boolean;
 }) {
-    const outputUrl = `/api/exports/sessions/${sessionId}/output?disposition=inline`;
+    const outputUrl = `${API_BASE}/exports/sessions/${sessionId}/output?disposition=inline`;
 
     return (
         <div className="flex flex-col items-center gap-6">
             {format === 'pdf' && (
-                <Suspense
-                    fallback={
-                        <div
-                            className="w-full max-w-3xl flex items-center justify-center border rounded"
-                            style={{
-                                height: '70vh',
-                                borderColor: 'var(--ws-text-disabled, #D6D2CB)',
-                                background: 'var(--ws-bg, #F5F2ED)',
-                            }}
-                        >
-                            <Loader2
-                                size={24}
-                                className="animate-spin"
-                                style={{ color: 'var(--ws-text-disabled, #8C8C88)' }}
-                            />
-                        </div>
-                    }
-                >
+                <Suspense fallback={null}>
                     <PdfPreview url={outputUrl} />
                 </Suspense>
             )}
@@ -220,21 +230,14 @@ function BinaryOutput({
 }
 
 function TextOutput({
-    sessionId,
+    content,
     onCopy,
     copied,
 }: {
-    sessionId: string;
+    content?: string;
     onCopy: (text: string) => void;
     copied: boolean;
 }) {
-    const { data: session } = useExportSession(sessionId);
-
-    // Text content is returned in the ExportResult.content field, but we get it
-    // from the session's projection or re-fetch. For now, use session error/format
-    // as a proxy — the actual content would come from the execute response.
-    // We'll render what we have from the session query.
-    const content = (session as { content?: string } | undefined)?.content;
 
     return (
         <div className="max-w-4xl mx-auto">
@@ -265,14 +268,13 @@ function TextOutput({
     );
 }
 
-function CloudOutput({ session }: { session: { format: string; targetConfig?: Record<string, unknown> } }) {
-    const externalUrl = session.targetConfig?.externalUrl as string | undefined;
+function CloudOutput({ format, externalUrl }: { format: string; externalUrl?: string }) {
     const labelMap: Record<string, string> = {
         'google-doc': 'Open in Google Docs',
         'google-sheets': 'Open in Google Sheets',
         'google-slides': 'Open in Google Slides',
     };
-    const label = labelMap[session.format] || 'Open';
+    const label = labelMap[format] || 'Open';
 
     return (
         <div className="flex flex-col items-center gap-4 mt-12">

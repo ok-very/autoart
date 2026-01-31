@@ -10,11 +10,13 @@
 
 import { clsx } from 'clsx';
 import { Eye, FileText, Download, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 import { ExportOutputPanel } from '../components/ExportOutputPanel';
 import { ExportPreview } from '../components/ExportPreview';
 import { ExportStepIndicator } from '../components/ExportStepIndicator';
 import { EXPORT_FORMATS } from '../types';
+import type { ExportResult } from '../types';
 import {
     useCreateExportSession,
     useGenerateExportProjection,
@@ -43,6 +45,8 @@ export function ExportWorkbenchContent() {
     const generateProjection = useGenerateExportProjection();
     const executeExport = useExecuteExport();
 
+    const [exportResult, setExportResult] = useState<ExportResult>();
+
     const isExporting = createSession.isPending || generateProjection.isPending || executeExport.isPending;
     const selectedCount = selectedProjectIds.size;
 
@@ -59,6 +63,7 @@ export function ExportWorkbenchContent() {
             await generateProjection.mutateAsync(session.id);
 
             const result = await executeExport.mutateAsync(session.id);
+            setExportResult(result);
 
             // Transition to output step
             setActiveSession(session.id);
@@ -80,7 +85,7 @@ export function ExportWorkbenchContent() {
 
     // ── Output step ──────────────────────────────────────────────────
     if (step === 'output' && activeSessionId) {
-        return <ExportOutputPanel sessionId={activeSessionId} onBack={handleBack} />;
+        return <ExportOutputPanel sessionId={activeSessionId} exportResult={exportResult} onBack={handleBack} />;
     }
 
     // ── Configure step ───────────────────────────────────────────────
