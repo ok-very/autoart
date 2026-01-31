@@ -8,7 +8,7 @@
 import { GanttProjectionOutput } from '../types/gantt.js';
 import { compilePdfStyles } from './compile-pdf-styles.js';
 import { BFA_TOKENS } from './style-tokens.js';
-import { escapeHtml } from './format-utils.js';
+import { escapeHtml, sanitizeCssColor } from './format-utils.js';
 
 const B = compilePdfStyles(BFA_TOKENS);
 
@@ -59,7 +59,7 @@ export function generateGanttHtml(
                 top: ${item.y}px;
                 width: ${item.width}px;
                 height: ${item.height}px;
-                background-color: ${escapeHtml(item.color || B.colors.accent)};
+                background-color: ${sanitizeCssColor(item.color || B.colors.accent, B.colors.accent)};
             ">
                 ${escapeHtml(item.label)}
             </div>
@@ -82,7 +82,11 @@ export function generateGanttHtml(
         <html>
         <head>
             <title>${safeTitle}</title>
-            <style>${styles}</style>
+            <style>
+                ${B.fontCss}
+                ${B.cssText}
+                ${styles}
+            </style>
         </head>
         <body>
             ${options.title ? `<h1>${safeTitle}</h1>` : ''}

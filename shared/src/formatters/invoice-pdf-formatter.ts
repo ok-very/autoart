@@ -9,7 +9,7 @@
 import { PDF_PAGE_PRESETS, type PdfPagePreset } from '../schemas/exports.js';
 import { compilePdfStyles } from './compile-pdf-styles.js';
 import { PARCHMENT_TOKENS } from './style-tokens.js';
-import { escapeHtml, formatCents } from './format-utils.js';
+import { escapeHtml, formatCents, sanitizeClassName } from './format-utils.js';
 
 // ============================================================================
 // INVOICE EXPORT MODEL (duplicated here for shared access)
@@ -241,7 +241,7 @@ export function generateInvoicePdfHtml(
       <div>
         <div class="invoice-title">INVOICE</div>
         <div style="margin-top: 4px;">
-          <span class="status-badge status-${invoice.status.toLowerCase()}">${escapeHtml(invoice.status)}</span>
+          <span class="status-badge status-${sanitizeClassName(invoice.status.toLowerCase())}">${escapeHtml(invoice.status)}</span>
         </div>
       </div>
       <div class="invoice-meta">

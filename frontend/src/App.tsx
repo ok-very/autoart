@@ -16,13 +16,13 @@ function App() {
 
   const isCurrentlyLoading = isLoading || isFetching;
 
-  // Timer-based timeout message - only shows after 5 seconds of loading
+  // Timer-based timeout message - only shows after 12 seconds of loading
   const [timerExpired, setTimerExpired] = useState(false);
 
-  // Start 5-second timer when loading begins
+  // Start 12-second timer when loading begins
   useEffect(() => {
     if (isCurrentlyLoading) {
-      const timer = setTimeout(() => setTimerExpired(true), 5000);
+      const timer = setTimeout(() => setTimerExpired(true), 12000);
       return () => {
         clearTimeout(timer);
         // Defer reset to avoid synchronous cascading render
@@ -33,6 +33,13 @@ function App() {
 
   // Show timeout message after timer expires while still loading
   const showTimeoutMessage = isCurrentlyLoading && timerExpired;
+
+  // Destroy the cymatic loader canvas once the app is ready or timeout fires
+  useEffect(() => {
+    if (!isLoading || timerExpired) {
+      window.__destroyLoader?.();
+    }
+  }, [isLoading, timerExpired]);
 
   // Show loading state
   if (isLoading) {
