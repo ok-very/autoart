@@ -260,6 +260,13 @@ export {
   useIntakeSubmissions,
 } from './intake';
 
+// Polls
+export {
+  usePolls,
+  useCreatePoll,
+  useClosePoll,
+} from './polls';
+
 // Mail (AutoHelper integration)
 export {
   useInbox,
