@@ -150,10 +150,16 @@ export function Header() {
             to="/"
             className={clsx(
               'inline-flex items-center justify-center gap-1.5 font-medium rounded-lg transition-colors px-2 py-1 text-xs',
-              location.pathname === '/'
-                ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                : 'text-slate-600 hover:bg-slate-100'
+              location.pathname !== '/' && 'hover:bg-black/5',
             )}
+            style={
+              location.pathname === '/'
+                ? {
+                    color: 'var(--ws-accent)',
+                    backgroundColor: 'color-mix(in srgb, var(--ws-accent) 12%, transparent)',
+                  }
+                : { color: 'var(--ws-muted-fg)' }
+            }
           >
             <LayoutGrid size={14} />
             Projects
