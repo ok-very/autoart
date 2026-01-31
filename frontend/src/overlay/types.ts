@@ -179,7 +179,7 @@ export interface CreateRecordContext {
 
 export interface CreateNodeContext {
     parentId: string;
-    nodeType: 'process' | 'stage' | 'subprocess' | 'task';
+    nodeType: 'process' | 'stage' | 'subprocess';
     /** Pre-resolved parent info */
     parent?: {
         id: string;

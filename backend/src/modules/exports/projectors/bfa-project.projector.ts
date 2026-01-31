@@ -194,7 +194,7 @@ async function getProjectTasks(projectId: string, openOnly: boolean) {
         .selectFrom('hierarchy_nodes')
         .selectAll()
         .where('parent_id', '=', projectId)
-        .where('type', 'in', ['task', 'subprocess']);
+        .where('type', 'in', ['subprocess']);
 
     if (openOnly) {
         // Filter for non-completed tasks based on metadata status

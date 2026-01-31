@@ -227,13 +227,13 @@ function inferEntityType(
                 return 'process' as ImportPlanItem['entityType'];
             }
 
-            // All other items are tasks
-            return 'task';
+            // All other items are actions
+            return 'action';
         }
 
         case 'subitem':
-            // Subitems are always tasks (the actual work)
-            return 'task';
+            // Subitems are always actions (the actual work)
+            return 'action';
 
         default:
             return 'record';

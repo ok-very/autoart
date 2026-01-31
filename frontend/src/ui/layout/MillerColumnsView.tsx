@@ -12,7 +12,6 @@ interface ColumnSelections {
   process: string | null;
   stage: string | null;
   subprocess: string | null;
-  task: string | null;
 }
 
 export function MillerColumnsView() {
@@ -25,7 +24,6 @@ export function MillerColumnsView() {
     process: null,
     stage: null,
     subprocess: null,
-    task: null,
   });
 
   // Derive full selections with project from store
@@ -65,7 +63,6 @@ export function MillerColumnsView() {
           process: null,
           stage: null,
           subprocess: null,
-          task: null,
         });
       });
     }
@@ -95,7 +92,6 @@ export function MillerColumnsView() {
         newUserSelections.process = null;
         newUserSelections.stage = null;
         newUserSelections.subprocess = null;
-        newUserSelections.task = null;
         // Also set active project in UI store so other components know
         setActiveProject(id);
         break;
@@ -103,19 +99,13 @@ export function MillerColumnsView() {
         newUserSelections.process = id;
         newUserSelections.stage = null;
         newUserSelections.subprocess = null;
-        newUserSelections.task = null;
         break;
       case 'stage':
         newUserSelections.stage = id;
         newUserSelections.subprocess = null;
-        newUserSelections.task = null;
         break;
       case 'subprocess':
         newUserSelections.subprocess = id;
-        newUserSelections.task = null;
-        break;
-      case 'task':
-        newUserSelections.task = id;
         break;
     }
 
@@ -180,16 +170,6 @@ export function MillerColumnsView() {
           />
         )}
 
-        {/* Column 5: Tasks (if subprocess selected) */}
-        {selections.subprocess && (
-          <MillerColumn
-            type="task"
-            parentId={selections.subprocess}
-            selectedId={selections.task}
-            onSelect={(id) => handleSelect('task', id)}
-            hasChildren={() => false}
-          />
-        )}
       </div>
     </div>
   );

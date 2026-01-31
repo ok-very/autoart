@@ -5,7 +5,7 @@ import { z } from 'zod';
  * Includes the 5-level project hierarchy plus subtask for nested tasks
  * and template for hierarchy-agnostic singleton records
  */
-export const NodeTypeSchema = z.enum(['project', 'process', 'stage', 'subprocess', 'task', 'subtask', 'template']);
+export const NodeTypeSchema = z.enum(['project', 'process', 'stage', 'subprocess', 'template']);
 export type NodeType = z.infer<typeof NodeTypeSchema>;
 
 /**

@@ -13,8 +13,6 @@ const VALID_PARENTS: Record<NodeType, NodeType | null> = {
   process: 'project',
   stage: 'process',
   subprocess: 'stage',
-  task: 'subprocess',
-  subtask: 'task',
   template: null, // Templates are hierarchy-agnostic singletons
 };
 
@@ -142,23 +140,6 @@ export async function updateNode(nodeId: string, input: UpdateNodeInput): Promis
     throw new NotFoundError('Node', nodeId);
   }
 
-  // GUARDRAIL: Task/subtask nodes are read-only after migration 022.
-  // They exist only as positional coordinates, not state-bearing entities.
-  // All task state is derived from Actions + Events.
-  // TODO: Remove task/subtask nodes entirely in Phase 6 cleanup.
-  if (existing.type === 'task' || existing.type === 'subtask') {
-    const metadata = (typeof existing.metadata === 'string'
-      ? JSON.parse(existing.metadata)
-      : existing.metadata) as Record<string, unknown> | null;
-
-    if (metadata?.legacy_migrated) {
-      throw new ValidationError(
-        `Cannot update ${existing.type} node: task/subtask nodes are read-only after migration. ` +
-        `Use Actions and Events instead.`
-      );
-    }
-  }
-
   const updates: Record<string, unknown> = { updated_at: new Date() };
 
   if (input.title !== undefined) updates.title = input.title;
@@ -180,21 +161,6 @@ export async function deleteNode(nodeId: string): Promise<void> {
   const existing = await getNodeById(nodeId);
   if (!existing) {
     throw new NotFoundError('Node', nodeId);
-  }
-
-  // GUARDRAIL: Task/subtask nodes are read-only after migration 022.
-  // They can only be removed in the final Phase 6 cleanup migration.
-  if (existing.type === 'task' || existing.type === 'subtask') {
-    const metadata = (typeof existing.metadata === 'string'
-      ? JSON.parse(existing.metadata)
-      : existing.metadata) as Record<string, unknown> | null;
-
-    if (metadata?.legacy_migrated) {
-      throw new ValidationError(
-        `Cannot delete ${existing.type} node: task/subtask nodes are read-only after migration. ` +
-        `They will be removed in the final cleanup migration.`
-      );
-    }
   }
 
   // CASCADE will handle children
@@ -328,7 +294,7 @@ async function _updateDescendantsRootProject(nodeId: string, newRootProjectId: s
 // Depth limits for clone filtering
 // Templates are excluded from cloning - they're singletons
 const DEPTH_LIMITS: Record<string, NodeType[]> = {
-  all: ['project', 'process', 'stage', 'subprocess', 'task'],
+  all: ['project', 'process', 'stage', 'subprocess'],
   process: ['project', 'process'],
   stage: ['project', 'process', 'stage'],
   subprocess: ['project', 'process', 'stage', 'subprocess'],

@@ -183,22 +183,15 @@ interface SubprocessSectionProps {
 
 function SubprocessSection({ subprocess }: SubprocessSectionProps) {
   const { getChildren } = useHierarchyStore();
-  const { openOverlay } = useUIStore();
-  const tasks = getChildren(subprocess.id).filter(node => node.type === 'task');
+  const children = getChildren(subprocess.id);
 
   return (
     <div className="pl-4 border-l border-slate-200 ml-2 mt-4">
       <div className="flex items-center justify-between mb-3">
         <h4 className="text-lg font-bold text-slate-700">{subprocess.title}</h4>
-        <button
-          onClick={() => openOverlay('create-node', { parentId: subprocess.id, nodeType: 'task' })}
-          className="text-xs text-blue-600 hover:underline"
-        >
-          <Plus size={12} className="inline-block mr-1" /> Add Task
-        </button>
       </div>
       <div className="space-y-3">
-        {tasks.map((task) => (
+        {children.map((task) => (
           <TaskCard key={task.id} task={task} />
         ))}
       </div>
@@ -271,7 +264,7 @@ export function Workspace() {
     stages.forEach(stage => {
       const subprocesses = getChildren(stage.id).filter(node => node.type === 'subprocess');
       subprocesses.forEach(subprocess => {
-        tasks = tasks.concat(getChildren(subprocess.id).filter(node => node.type === 'task'));
+        tasks = tasks.concat(getChildren(subprocess.id));
       });
     });
     return tasks;

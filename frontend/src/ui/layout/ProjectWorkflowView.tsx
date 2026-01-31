@@ -1,4 +1,4 @@
-import { Plus, ChevronDown, Wand2, PanelLeftClose, PanelLeftOpen, Layers, FolderOpen, Check, Copy, FileText, FileMinus, Database } from 'lucide-react';
+import { Plus, ChevronDown, Wand2, PanelLeftClose, PanelLeftOpen, Layers, FolderOpen, Check, Copy, Database } from 'lucide-react';
 import { useEffect, useMemo, useCallback, useState } from 'react';
 import { ProjectSidebar } from '../sidebars/ProjectSidebar';
 import { ResizeHandle } from '@autoart/ui';
@@ -291,12 +291,6 @@ export function ProjectWorkflowView() {
         // Otherwise derive from selected node
         if (!selectedNode) return subprocesses[0]?.id || null;
         if (selectedNode.type === 'subprocess') return selectedNode.id;
-        if (selectedNode.type === 'task') return selectedNode.parent_id;
-        if (selectedNode.type === 'subtask') {
-            // For subtasks, find the parent task's parent (subprocess)
-            const parentTask = selectedNode.parent_id ? getNode(selectedNode.parent_id) : null;
-            return parentTask?.parent_id || subprocesses[0]?.id || null;
-        }
         return subprocesses[0]?.id || null;
     }, [localSubprocessId, selectedNode, subprocesses, getNode]);
 
@@ -324,7 +318,7 @@ export function ProjectWorkflowView() {
 
     const tasks = useMemo(() => {
         if (!activeSubprocessId) return [];
-        return getChildren(activeSubprocessId).filter((n) => n.type === 'task');
+        return getChildren(activeSubprocessId);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSubprocessId, getChildren, storeNodes]);
 
@@ -440,8 +434,7 @@ export function ProjectWorkflowView() {
             const defId = record.definition_id;
             const def = definitions?.find((d) => d.id === defId);
 
-            // Skip if no definition found or if it's a Task definition (tasks are rendered as nodes)
-            if (!def || def.name === 'Task') continue;
+            if (!def) continue;
 
             if (!groups.has(defId)) {
                 groups.set(defId, { definition: def, records: [] });
@@ -612,41 +605,13 @@ export function ProjectWorkflowView() {
                                                 <ChevronDown size={12} className="text-slate-400" />
                                             </DropdownTrigger>
                                             <DropdownContent align="end" className="w-44">
-                                                <DropdownItem
-                                                    onSelect={() => openOverlay('create-node', { parentId: activeSubprocessId, nodeType: 'task' })}
-                                                >
-                                                    <span className="w-5 h-5 rounded bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold mr-2">T</span>
-                                                    Add Task
-                                                </DropdownItem>
-
-                                                <DropdownItem
-                                                    onSelect={() => {
-                                                        if (selectedNode?.type === 'task') {
-                                                            openOverlay('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
-                                                        } else if (selectedNode?.type === 'subtask' && selectedNode.parent_id) {
-                                                            openOverlay('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
-                                                        }
-                                                    }}
-                                                    disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
-                                                >
-                                                    <span
-                                                        className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold mr-2 ${selectedNode && (selectedNode.type === 'task' || selectedNode.type === 'subtask')
-                                                            ? 'bg-teal-100 text-teal-600'
-                                                            : 'bg-slate-100 text-slate-400'
-                                                            }`}
-                                                    >
-                                                        ST
-                                                    </span>
-                                                    Add Subtask
-                                                </DropdownItem>
-
-                                                {definitions && definitions.filter((d) => !d.is_system && d.name !== 'Task').length > 0 && (
+                                                {definitions && definitions.filter((d) => !d.is_system).length > 0 && (
                                                     <DropdownSeparator />
                                                 )}
 
                                                 {definitions &&
                                                     definitions
-                                                        .filter((d) => !d.is_system && d.name !== 'Task')
+                                                        .filter((d) => !d.is_system)
                                                         .map((def) => (
                                                             <DropdownItem
                                                                 key={def.id}
@@ -759,12 +724,9 @@ export function ProjectWorkflowView() {
                                             onCellChange={handleCellChange}
                                             onAddNode={
                                                 activeSubprocessId
-                                                    ? () => openOverlay('create-node', { parentId: activeSubprocessId, nodeType: 'task' })
+                                                    ? () => openOverlay('create-node', { parentId: activeSubprocessId, nodeType: 'subprocess' })
                                                     : undefined
                                             }
-                                            enableNesting
-                                            getChildren={(nodeId) => getChildren(nodeId).filter((n) => n.type === 'subtask')}
-                                            onAddSubtask={(parentId) => openOverlay('create-node', { parentId, nodeType: 'subtask' })}
                                             deriveStatus={deriveNodeStatus}
                                             showStatusSummary
                                             statusConfig={statusConfig}
@@ -776,38 +738,12 @@ export function ProjectWorkflowView() {
                                                                 <Plus size={24} />
                                                             </DropdownTrigger>
                                                             <DropdownContent className="w-56">
-                                                                <DropdownLabel>Tasks</DropdownLabel>
-                                                                <DropdownItem
-                                                                    onSelect={() =>
-                                                                        openOverlay('create-node', {
-                                                                            parentId: activeSubprocessId,
-                                                                            nodeType: 'task',
-                                                                        })
-                                                                    }
-                                                                >
-                                                                    <FileText size={14} className="mr-2" />
-                                                                    Add Task
-                                                                </DropdownItem>
-                                                                <DropdownItem
-                                                                    onSelect={() => {
-                                                                        if (selectedNode?.type === 'task') {
-                                                                            openOverlay('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
-                                                                        } else if (selectedNode?.type === 'subtask' && selectedNode.parent_id) {
-                                                                            openOverlay('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
-                                                                        }
-                                                                    }}
-                                                                    disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
-                                                                >
-                                                                    <FileMinus size={14} className="mr-2" />
-                                                                    Add Subtask
-                                                                </DropdownItem>
-
-                                                                {definitions && definitions.filter((d) => !d.is_system && d.name !== 'Task').length > 0 && (
+                                                                {definitions && definitions.filter((d) => !d.is_system).length > 0 && (
                                                                     <>
                                                                         <DropdownSeparator />
                                                                         <DropdownLabel>Records</DropdownLabel>
                                                                         {definitions
-                                                                            .filter((d) => !d.is_system && d.name !== 'Task')
+                                                                            .filter((d) => !d.is_system)
                                                                             .map((def) => (
                                                                                 <DropdownItem
                                                                                     key={def.id}
@@ -876,38 +812,11 @@ export function ProjectWorkflowView() {
                                                 <Plus size={20} />
                                             </DropdownTrigger>
                                             <DropdownContent className="w-56">
-                                                <DropdownLabel>Tasks</DropdownLabel>
-                                                <DropdownItem
-                                                    onSelect={() =>
-                                                        openOverlay('create-node', {
-                                                            parentId: activeSubprocessId,
-                                                            nodeType: 'task',
-                                                        })
-                                                    }
-                                                >
-                                                    <FileText size={14} className="mr-2" />
-                                                    Add Task
-                                                </DropdownItem>
-                                                <DropdownItem
-                                                    onSelect={() => {
-                                                        if (selectedNode?.type === 'task') {
-                                                            openOverlay('create-node', { parentId: selectedNode.id, nodeType: 'subtask' });
-                                                        } else if (selectedNode?.type === 'subtask' && selectedNode.parent_id) {
-                                                            openOverlay('create-node', { parentId: selectedNode.parent_id, nodeType: 'subtask' });
-                                                        }
-                                                    }}
-                                                    disabled={!selectedNode || (selectedNode.type !== 'task' && selectedNode.type !== 'subtask')}
-                                                >
-                                                    <FileMinus size={14} className="mr-2" />
-                                                    Add Subtask
-                                                </DropdownItem>
-
-                                                {definitions && definitions.filter((d) => !d.is_system && d.name !== 'Task').length > 0 && (
+                                                {definitions && definitions.filter((d) => !d.is_system).length > 0 && (
                                                     <>
-                                                        <DropdownSeparator />
                                                         <DropdownLabel>Records</DropdownLabel>
                                                         {definitions
-                                                            .filter((d) => !d.is_system && d.name !== 'Task')
+                                                            .filter((d) => !d.is_system)
                                                             .map((def) => (
                                                                 <DropdownItem
                                                                     key={def.id}

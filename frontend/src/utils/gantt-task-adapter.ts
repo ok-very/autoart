@@ -137,14 +137,14 @@ export function renderHierarchy(
 
     // Group by type for hierarchy
     const subprocesses = children.filter(n => n.type === 'subprocess');
-    const taskNodes = children.filter(n => n.type === 'task');
-    const tasksBySubprocess = new Map<string, HierarchyNode[]>();
+    const nonSubprocessNodes = children.filter(n => n.type !== 'subprocess' && n.type !== 'process' && n.type !== 'stage' && n.type !== 'project');
+    const nodesBySubprocess = new Map<string, HierarchyNode[]>();
 
-    taskNodes.forEach(t => {
+    nonSubprocessNodes.forEach(t => {
         if (t.parent_id) {
-            const list = tasksBySubprocess.get(t.parent_id) || [];
+            const list = nodesBySubprocess.get(t.parent_id) || [];
             list.push(t);
-            tasksBySubprocess.set(t.parent_id, list);
+            nodesBySubprocess.set(t.parent_id, list);
         }
     });
 
@@ -169,7 +169,7 @@ export function renderHierarchy(
         start: projectDates.start,
         end: projectDates.end,
         type: 'lane',
-        progress: calculateProgress(taskNodes),
+        progress: calculateProgress(nonSubprocessNodes),
         hideChildren: false,
         sourceType: 'node',
         styles: {
@@ -182,7 +182,7 @@ export function renderHierarchy(
 
     // Add subprocesses as lane groups
     subprocesses.forEach(sp => {
-        const spItems = tasksBySubprocess.get(sp.id) || [];
+        const spItems = nodesBySubprocess.get(sp.id) || [];
         const spDates = extractDates(sp.metadata, spItems);
         trackDates(spDates);
 

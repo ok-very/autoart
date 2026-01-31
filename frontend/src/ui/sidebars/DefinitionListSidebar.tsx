@@ -50,12 +50,11 @@ export function DefinitionListSidebar({
             if (defKind) return defKind === 'record';
             // Fallback for missing kind: exclude hierarchy and known actions
             const name = def.name.toLowerCase();
-            return !legacyHierarchyTypes.includes(name) && name !== 'task' && name !== 'subtask';
+            return !legacyHierarchyTypes.includes(name);
         } else {
             if (defKind) return defKind === 'action_arrangement';
-            // Fallback: check known action names
-            const name = def.name.toLowerCase();
-            return name === 'task' || name === 'subtask';
+            // No fallback heuristic - require explicit kind
+            return false;
         }
     });
 

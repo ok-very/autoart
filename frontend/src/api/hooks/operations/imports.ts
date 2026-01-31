@@ -27,7 +27,7 @@ export interface ImportPlanItem {
     title: string;
     parentTempId?: string;
     metadata: Record<string, unknown>;
-    entityType?: 'project' | 'stage' | 'action' | 'task' | 'subtask' | 'record' | 'template';
+    entityType?: 'project' | 'stage' | 'action' | 'record' | 'template';
     plannedAction?: {
         type: string;
         payload: Record<string, unknown>;

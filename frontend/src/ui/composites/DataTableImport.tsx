@@ -594,7 +594,7 @@ function NestedLevel({
 
                             {/* Type cell */}
                             <div className="w-16 px-2 py-2 text-center">
-                                <EntityTypeBadge entityType={item.entityType || 'task'} />
+                                <EntityTypeBadge entityType={item.entityType || 'action'} />
                             </div>
 
                             {/* Field cells */}
