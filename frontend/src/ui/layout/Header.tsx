@@ -7,7 +7,8 @@
 
 import {
   ChevronDown, FolderOpen, Database,
-  TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings, ClipboardList, LayoutGrid, Check
+  TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings, ClipboardList, LayoutGrid, Check,
+  AppWindow, FileText, Image, Mail, DollarSign, BarChart3
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
@@ -33,7 +34,7 @@ export function Header() {
   const navigate = useNavigate();
   const { data: projects } = useProjects();
   const { getNode: _getNode } = useHierarchyStore();
-  const { fieldsViewMode, setFieldsViewMode, openOverlay } = useUIStore();
+  const { fieldsViewMode, setFieldsViewMode, openOverlay, setCenterContentType } = useUIStore();
   const collectionMode = useCollectionModeOptional();
 
   const { openPanel, setBoundProject } = useWorkspaceStore();
@@ -222,6 +223,54 @@ export function Header() {
                   className={isIntakeActive ? 'bg-amber-50' : ''}
                 >
                   Intake
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+
+            {/* Applications Dropdown */}
+            <Menu>
+              <Menu.Target>
+                <Button
+                  variant="subtle"
+                  color="gray"
+                  size="sm"
+                  rightSection={<ChevronDown size={14} />}
+                  leftSection={<AppWindow size={14} />}
+                >
+                  Applications
+                </Button>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Item
+                  onClick={() => setCenterContentType('intake')}
+                  leftSection={<FileText size={16} />}
+                >
+                  Forms
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => setCenterContentType('artcollector')}
+                  leftSection={<Image size={16} />}
+                >
+                  Collect
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => setCenterContentType('mail')}
+                  leftSection={<Mail size={16} />}
+                >
+                  Mail
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => setCenterContentType('finance')}
+                  leftSection={<DollarSign size={16} />}
+                >
+                  Finances
+                </Menu.Item>
+                <Menu.Item
+                  disabled
+                  leftSection={<BarChart3 size={16} />}
+                >
+                  Polls
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
