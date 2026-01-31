@@ -6,7 +6,10 @@
  * following the AutoArt design system parchment aesthetic.
  */
 
-import { PDF_PAGE_PRESETS, PDF_DEFAULT_MARGINS, type PdfPagePreset } from '../schemas/exports.js';
+import { PDF_PAGE_PRESETS, type PdfPagePreset } from '../schemas/exports.js';
+import { compilePdfStyles } from './compile-pdf-styles.js';
+import { PARCHMENT_TOKENS } from './style-tokens.js';
+import { escapeHtml, formatCents } from './format-utils.js';
 
 // ============================================================================
 // INVOICE EXPORT MODEL (duplicated here for shared access)
@@ -51,26 +54,14 @@ export interface InvoiceExportModel {
 }
 
 // ============================================================================
-// HTML GENERATION
+// COMPILED TOKENS
 // ============================================================================
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+const P = compilePdfStyles(PARCHMENT_TOKENS);
 
-function formatCents(cents: number, currency: string): string {
-  const dollars = cents / 100;
-  return dollars.toLocaleString('en-CA', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
+// ============================================================================
+// HTML GENERATION
+// ============================================================================
 
 /**
  * Generate invoice HTML for PDF rendering via AutoHelper.
@@ -88,14 +79,14 @@ export function generateInvoicePdfHtml(
 
   const lineItemRows = invoice.lineItems.map((li) => `
     <tr>
-      <td style="padding: 8px 12px; border-bottom: 1px solid #D6D2CB;">
+      <td style="padding: 8px 12px; border-bottom: 1px solid ${P.colors.border};">
         <div>${escapeHtml(li.description)}</div>
-        <div style="font-size: 11px; color: #5A5A57;">${escapeHtml(li.itemType)}</div>
+        <div style="font-size: ${P.sizes.micro}; color: ${P.colors.textSecondary};">${escapeHtml(li.itemType)}</div>
       </td>
-      <td style="padding: 8px 12px; border-bottom: 1px solid #D6D2CB; text-align: right; font-family: 'IBM Plex Mono', monospace;">${li.qty}</td>
-      <td style="padding: 8px 12px; border-bottom: 1px solid #D6D2CB; text-align: right; font-family: 'IBM Plex Mono', monospace;">${formatCents(li.unitPrice, currency)}</td>
-      <td style="padding: 8px 12px; border-bottom: 1px solid #D6D2CB; text-align: right; font-family: 'IBM Plex Mono', monospace;">${li.vatRate}%</td>
-      <td style="padding: 8px 12px; border-bottom: 1px solid #D6D2CB; text-align: right; font-family: 'IBM Plex Mono', monospace; font-weight: 600;">${formatCents(li.lineTotal, currency)}</td>
+      <td style="padding: 8px 12px; border-bottom: 1px solid ${P.colors.border}; text-align: right; font-family: ${P.fonts.monoStack};">${li.qty}</td>
+      <td style="padding: 8px 12px; border-bottom: 1px solid ${P.colors.border}; text-align: right; font-family: ${P.fonts.monoStack};">${formatCents(li.unitPrice, currency)}</td>
+      <td style="padding: 8px 12px; border-bottom: 1px solid ${P.colors.border}; text-align: right; font-family: ${P.fonts.monoStack};">${li.vatRate}%</td>
+      <td style="padding: 8px 12px; border-bottom: 1px solid ${P.colors.border}; text-align: right; font-family: ${P.fonts.monoStack}; font-weight: 600;">${formatCents(li.lineTotal, currency)}</td>
     </tr>
   `).join('');
 
@@ -104,7 +95,7 @@ export function generateInvoicePdfHtml(
       <td style="padding: 4px 0; font-size: 12px;">${escapeHtml(p.date)}</td>
       <td style="padding: 4px 0; font-size: 12px;">${escapeHtml(p.method)}</td>
       <td style="padding: 4px 0; font-size: 12px;">${escapeHtml(p.reference)}</td>
-      <td style="padding: 4px 0; font-size: 12px; text-align: right; font-family: 'IBM Plex Mono', monospace;">${formatCents(p.amount, currency)}</td>
+      <td style="padding: 4px 0; font-size: 12px; text-align: right; font-family: ${P.fonts.monoStack};">${formatCents(p.amount, currency)}</td>
     </tr>
   `).join('') : '';
 
@@ -114,17 +105,9 @@ export function generateInvoicePdfHtml(
   <meta charset="UTF-8">
   <title>Invoice ${escapeHtml(invoice.invoiceNumber)}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600&family=IBM+Plex+Mono:wght@400&display=swap');
+    ${P.fontCss}
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Source Serif 4', serif;
-      font-size: 14px;
-      line-height: 1.5;
-      color: #2E2E2C;
-      background: #F5F2ED;
-    }
+    ${P.cssText}
 
     .page {
       width: ${pageConfig.width}px;
@@ -139,11 +122,11 @@ export function generateInvoicePdfHtml(
       justify-content: space-between;
       margin-bottom: 40px;
       padding-bottom: 20px;
-      border-bottom: 2px solid #2E2E2C;
+      border-bottom: 2px solid ${P.colors.text};
     }
 
     .invoice-title {
-      font-size: 20px;
+      font-size: ${P.sizes.h1};
       font-weight: 600;
       letter-spacing: 0.02em;
     }
@@ -153,14 +136,14 @@ export function generateInvoicePdfHtml(
     }
 
     .meta-label {
-      font-size: 10px;
+      font-size: ${P.sizes.meta};
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #5A5A57;
+      color: ${P.colors.textSecondary};
     }
 
     .meta-value {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: ${P.fonts.monoStack};
       font-size: 13px;
     }
 
@@ -169,10 +152,10 @@ export function generateInvoicePdfHtml(
     }
 
     .section-label {
-      font-size: 10px;
+      font-size: ${P.sizes.meta};
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #8A5A3C;
+      color: ${P.colors.accentSecondary};
       margin-bottom: 4px;
     }
 
@@ -184,11 +167,11 @@ export function generateInvoicePdfHtml(
     th {
       padding: 8px 12px;
       text-align: left;
-      font-size: 10px;
+      font-size: ${P.sizes.meta};
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: #5A5A57;
-      border-bottom: 2px solid #D6D2CB;
+      color: ${P.colors.textSecondary};
+      border-bottom: 2px solid ${P.colors.border};
       font-weight: 600;
     }
 
@@ -210,20 +193,20 @@ export function generateInvoicePdfHtml(
 
     .totals-table .total-row td {
       padding-top: 8px;
-      border-top: 2px solid #2E2E2C;
+      border-top: 2px solid ${P.colors.text};
       font-weight: 600;
-      font-size: 16px;
+      font-size: ${P.sizes.h2};
     }
 
     .totals-table .amount {
       text-align: right;
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: ${P.fonts.monoStack};
     }
 
     .payments-section {
       margin-top: 32px;
       padding-top: 16px;
-      border-top: 1px solid #D6D2CB;
+      border-top: 1px solid ${P.colors.border};
     }
 
     .notes-section {
@@ -232,23 +215,23 @@ export function generateInvoicePdfHtml(
       background: rgba(63, 92, 110, 0.04);
       border-left: 2px solid rgba(63, 92, 110, 0.2);
       font-size: 13px;
-      color: #5A5A57;
+      color: ${P.colors.textSecondary};
     }
 
     .status-badge {
       display: inline-block;
       padding: 2px 8px;
       border-radius: 4px;
-      font-size: 11px;
+      font-size: ${P.sizes.micro};
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
 
-    .status-draft { background: #D6D2CB; color: #2E2E2C; }
-    .status-sent { background: #3F5C6E; color: white; }
-    .status-paid { background: #6F7F5C; color: white; }
-    .status-overdue { background: #8C4A4A; color: white; }
+    .status-draft { background: ${P.colors.border}; color: ${P.colors.text}; }
+    .status-sent { background: ${P.colors.accent}; color: white; }
+    .status-paid { background: ${P.colors.success}; color: white; }
+    .status-overdue { background: ${P.colors.error}; color: white; }
     .status-void { background: #8C8C88; color: white; }
   </style>
 </head>
@@ -281,8 +264,8 @@ export function generateInvoicePdfHtml(
       <div class="section-label">Bill To</div>
       ${invoice.client.name ? `<div style="font-weight: 600;">${escapeHtml(invoice.client.name)}</div>` : ''}
       ${invoice.client.company ? `<div>${escapeHtml(invoice.client.company)}</div>` : ''}
-      ${invoice.client.address ? `<div style="color: #5A5A57;">${escapeHtml(invoice.client.address)}</div>` : ''}
-      ${invoice.client.email ? `<div style="color: #5A5A57;">${escapeHtml(invoice.client.email)}</div>` : ''}
+      ${invoice.client.address ? `<div style="color: ${P.colors.textSecondary};">${escapeHtml(invoice.client.address)}</div>` : ''}
+      ${invoice.client.email ? `<div style="color: ${P.colors.textSecondary};">${escapeHtml(invoice.client.email)}</div>` : ''}
     </div>
 
     <table>
@@ -317,7 +300,7 @@ export function generateInvoicePdfHtml(
         ${invoice.amountPaid > 0 ? `
         <tr>
           <td>Paid</td>
-          <td class="amount" style="color: #6F7F5C;">-${formatCents(invoice.amountPaid, currency)}</td>
+          <td class="amount" style="color: ${P.colors.success};">-${formatCents(invoice.amountPaid, currency)}</td>
         </tr>
         <tr style="font-weight: 600;">
           <td>Balance Due</td>

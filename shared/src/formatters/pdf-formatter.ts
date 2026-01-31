@@ -12,16 +12,9 @@ import {
     type BfaProjectExportModel,
     type ExportOptions,
 } from '../schemas/exports.js';
-
-// HTML escape helper
-function escapeHtml(text: string): string {
-    return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
+import { compilePdfStyles } from './compile-pdf-styles.js';
+import { BFA_TOKENS, buildCarlitoFontFace } from './style-tokens.js';
+import { escapeHtml } from './format-utils.js';
 
 // Check if date is in current month (for highlighting)
 function isCurrentMonth(dateStr: string | undefined): boolean {
@@ -47,6 +40,14 @@ export function generatePdfHtml(
     const margins = PDF_DEFAULT_MARGINS;
     const { autoHelperBaseUrl } = config;
 
+    const B = compilePdfStyles({
+        ...BFA_TOKENS,
+        fonts: {
+            ...BFA_TOKENS.fonts,
+            fontFaceDeclarations: buildCarlitoFontFace(autoHelperBaseUrl),
+        },
+    });
+
     const htmlParts: string[] = [];
 
     // Document head with Carlito font and print styles
@@ -56,101 +57,84 @@ export function generatePdfHtml(
     <meta charset="UTF-8">
     <title>BFA To-Do List</title>
     <style>
-        @font-face {
-            font-family: 'Carlito';
-            src: url('${autoHelperBaseUrl}/fonts/Carlito/regular.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-        @font-face {
-            font-family: 'Carlito';
-            src: url('${autoHelperBaseUrl}/fonts/Carlito/bold.ttf') format('truetype');
-            font-weight: bold;
-            font-style: normal;
-        }
-        @font-face {
-            font-family: 'Carlito';
-            src: url('${autoHelperBaseUrl}/fonts/Carlito/italic.ttf') format('truetype');
-            font-weight: normal;
-            font-style: italic;
-        }
-        
+        ${B.fontCss}
+
         @page {
             size: ${pageConfig.width}px ${pageConfig.height}px;
             margin: ${margins.top} ${margins.right} ${margins.bottom} ${margins.left};
         }
-        
+
         * {
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Carlito', 'Calibri', sans-serif;
-            font-size: 11pt;
-            line-height: 1.4;
-            color: #000;
+            font-family: ${B.fonts.primaryStack};
+            font-size: ${B.sizes.body};
+            line-height: ${B.sizes.lineHeight};
+            color: ${B.colors.text};
             max-width: ${pageConfig.width - 96}px;
             margin: 0 auto;
         }
-        
+
         h1 {
-            font-size: 14pt;
+            font-size: ${B.sizes.h1};
             font-weight: bold;
             margin: 0 0 4px 0;
         }
-        
+
         h2 {
-            font-size: 12pt;
+            font-size: ${B.sizes.h2};
             font-weight: bold;
             margin: 16px 0 8px 0;
         }
-        
+
         .date {
-            font-size: 10pt;
-            color: #666;
+            font-size: ${B.sizes.meta};
+            color: ${B.colors.textSecondary};
             margin-bottom: 16px;
         }
-        
+
         .category-header {
             font-size: 13pt;
             font-weight: bold;
             margin: 24px 0 12px 0;
             padding-bottom: 4px;
-            border-bottom: 1px solid #ccc;
+            border-bottom: 1px solid ${B.colors.border};
         }
-        
+
         .project {
             margin-bottom: 16px;
             page-break-inside: avoid;
         }
-        
+
         .project-header {
-            font-size: 11pt;
+            font-size: ${B.sizes.body};
             font-weight: bold;
             margin-bottom: 4px;
         }
-        
+
         .section-label {
-            font-size: 10pt;
+            font-size: ${B.sizes.meta};
             font-weight: bold;
             margin: 8px 0 4px 0;
         }
-        
+
         .contact-line, .step-line, .milestone-line {
-            font-size: 10pt;
+            font-size: ${B.sizes.meta};
             margin: 2px 0;
             padding-left: 12px;
         }
-        
+
         .highlight {
             background-color: #ffff00;
         }
-        
+
         .completed {
             text-decoration: line-through;
-            color: #666;
+            color: ${B.colors.textSecondary};
         }
-        
+
         .page-break {
             page-break-before: always;
         }
