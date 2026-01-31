@@ -1,6 +1,6 @@
 // In production, set VITE_API_URL to the backend URL (e.g., https://backend-xxx.onrender.com/api)
 // In development, Vite proxies /api to localhost:3001
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+export const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 interface FetchOptions extends RequestInit {
   skipAuth?: boolean;

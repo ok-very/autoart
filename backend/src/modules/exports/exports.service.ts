@@ -533,6 +533,7 @@ async function executeInvoicePdf(session: ExportSession): Promise<ExportResult> 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ html, page_preset: 'letter', print_background: true }),
+        signal: AbortSignal.timeout(30_000),
     });
 
     if (!pdfResponse.ok) {
@@ -562,7 +563,7 @@ async function executeInvoiceDocx(session: ExportSession): Promise<ExportResult>
     if (!model) throw new Error('Invoice not found');
 
     const doc = generateInvoiceDocx(model);
-    const buffer = Buffer.from(await Packer.toBuffer(doc));
+    const buffer = await Packer.toBuffer(doc);
 
     await storeSessionOutput(
         session.id,
@@ -629,7 +630,9 @@ async function exportAsPdf(
     const { generatePdfHtml } = await import('@autoart/shared');
     const { env } = await import('../../config/env.js');
 
-    const pagePreset = (session.targetConfig?.pagePreset as string) || 'letter';
+    const ALLOWED_PAGE_PRESETS = new Set(['letter', 'legal', 'tabloid', 'tearsheet', 'a4']);
+    const rawPreset = (session.targetConfig?.pagePreset as string) || 'letter';
+    const pagePreset = ALLOWED_PAGE_PRESETS.has(rawPreset) ? rawPreset : 'letter';
     const html = generatePdfHtml(projection, session.options, {
         pagePreset: pagePreset as 'letter' | 'legal' | 'tabloid' | 'tearsheet' | 'a4',
         autoHelperBaseUrl: env.AUTOHELPER_URL,
@@ -643,6 +646,7 @@ async function exportAsPdf(
             page_preset: pagePreset,
             print_background: true,
         }),
+        signal: AbortSignal.timeout(30_000),
     });
 
     if (!pdfResponse.ok) {
@@ -672,7 +676,7 @@ async function exportAsDocx(
     const { Packer } = await import('docx');
 
     const doc = generateBfaDocx(projection, session.options);
-    const buffer = Buffer.from(await Packer.toBuffer(doc));
+    const buffer = await Packer.toBuffer(doc);
 
     await storeSessionOutput(
         session.id,

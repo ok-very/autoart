@@ -42,6 +42,11 @@ export async function down(db: Kysely<unknown>): Promise<void> {
         DROP COLUMN IF EXISTS output_mime_type;
     `.execute(db);
 
+    // Remove sessions with formats that the narrower constraint won't allow
+    await sql`
+        DELETE FROM export_sessions WHERE format IN ('pdf', 'docx');
+    `.execute(db);
+
     // Restore previous constraint (7 formats, no pdf/docx)
     await sql`
         ALTER TABLE export_sessions

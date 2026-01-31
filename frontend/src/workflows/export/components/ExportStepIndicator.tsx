@@ -1,7 +1,7 @@
 /**
  * ExportStepIndicator
  *
- * Minimal step bar: Configure → Execute → Output.
+ * Minimal step bar: Configure → Output.
  * Derives position from the current step in the store.
  */
 

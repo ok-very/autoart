@@ -156,6 +156,12 @@ export async function exportsRoutes(app: FastifyInstance) {
         if (!session) {
             return reply.status(404).send({ error: 'Session not found' });
         }
+        if (session.createdBy) {
+            const userId = (request.user as { userId?: string })?.userId;
+            if (userId && userId !== session.createdBy) {
+                return reply.status(403).send({ error: 'Access denied' });
+            }
+        }
         if (session.status !== 'completed') {
             return reply.status(400).send({ error: 'Session has not completed' });
         }
@@ -625,7 +631,14 @@ export async function exportsRoutes(app: FastifyInstance) {
             preset: z.enum(['invoice-pdf', 'invoice-docx', 'budget-csv', 'invoice-list-csv']),
             invoiceId: z.string().uuid().optional(),
             projectId: z.string().uuid().optional(),
-        }).parse(request.body);
+        }).refine(
+            (d) => {
+                if (d.preset === 'invoice-pdf' || d.preset === 'invoice-docx') return !!d.invoiceId;
+                if (d.preset === 'budget-csv' || d.preset === 'invoice-list-csv') return !!d.projectId;
+                return true;
+            },
+            { message: 'invoiceId required for invoice presets; projectId required for CSV presets' },
+        ).parse(request.body);
 
         const userId = (request.user as { id?: string })?.id;
 

@@ -35,7 +35,7 @@ const S = compileDocxStyles(PARCHMENT_TOKENS);
 function serifRun(text: string, options?: { bold?: boolean; size?: number; color?: string }): TextRun {
     return new TextRun({
         text,
-        font: { name: S.fonts.primary, hint: undefined },
+        font: S.fonts.primary,
         size: options?.size ?? S.sizes.body,
         bold: options?.bold,
         color: options?.color ?? S.colors.text,
@@ -45,7 +45,7 @@ function serifRun(text: string, options?: { bold?: boolean; size?: number; color
 function monoRun(text: string, options?: { size?: number; color?: string }): TextRun {
     return new TextRun({
         text,
-        font: { name: S.fonts.mono, hint: undefined },
+        font: S.fonts.mono,
         size: options?.size ?? S.sizes.mono,
         color: options?.color ?? S.colors.textSecondary,
     });
@@ -54,7 +54,7 @@ function monoRun(text: string, options?: { size?: number; color?: string }): Tex
 function labelRun(text: string): TextRun {
     return new TextRun({
         text,
-        font: { name: S.fonts.primary, hint: undefined },
+        font: S.fonts.primary,
         size: S.sizes.meta,
         color: S.colors.accentSecondary,
         allCaps: true,
@@ -228,6 +228,24 @@ function formatProject(project: BfaProjectExportModel, options: ExportOptions): 
                 indent: { left: 216 },
             }));
         }
+        if (project.selectionPanelBlock.members.length > 0) {
+            parts.push(new Paragraph({
+                children: [
+                    serifRun('Members: ', { size: S.sizes.meta, color: S.colors.textSecondary }),
+                    serifRun(project.selectionPanelBlock.members.join(', '), { size: S.sizes.meta }),
+                ],
+                indent: { left: 216 },
+            }));
+        }
+        if (project.selectionPanelBlock.alternates.length > 0) {
+            parts.push(new Paragraph({
+                children: [
+                    serifRun('Alternates: ', { size: S.sizes.meta, color: S.colors.textSecondary }),
+                    serifRun(project.selectionPanelBlock.alternates.join(', '), { size: S.sizes.meta }),
+                ],
+                indent: { left: 216 },
+            }));
+        }
     }
 
     // Status
@@ -280,7 +298,7 @@ function formatProject(project: BfaProjectExportModel, options: ExportOptions): 
 
 function hasSelectionPanelContent(project: BfaProjectExportModel): boolean {
     const sp = project.selectionPanelBlock;
-    return !!(sp.selectedArtist || sp.artworkTitle || sp.shortlist.length > 0 || sp.members.length > 0);
+    return !!(sp.selectedArtist || sp.artworkTitle || sp.shortlist.length > 0 || sp.members.length > 0 || sp.alternates.length > 0);
 }
 
 function formatHeaderLine(project: BfaProjectExportModel): string {

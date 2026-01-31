@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Loader2 } from 'lucide-react';
 
@@ -18,6 +18,12 @@ export function PdfPreview({ url }: PdfPreviewProps) {
     const [numPages, setNumPages] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        setNumPages(null);
+        setError(null);
+        setLoading(true);
+    }, [url]);
 
     return (
         <div
