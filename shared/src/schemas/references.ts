@@ -36,42 +36,6 @@ export const CreateActionReferenceInputSchema = z.object({
 export type CreateActionReferenceInput = z.infer<typeof CreateActionReferenceInputSchema>;
 
 // ============================================================================
-// TASK REFERENCES (DEPRECATED)
-// Read-only after migration 022. Use ActionReference instead.
-// ============================================================================
-
-/**
- * Task Reference Schema
- * @deprecated Use ActionReferenceSchema instead. TaskReferences are read-only after migration 022.
- */
-export const TaskReferenceSchema = z.object({
-  id: z.string().uuid(),
-  task_id: z.string().uuid(),
-  source_record_id: z.string().uuid().nullable(),
-  target_field_key: z.string().nullable(),
-  mode: RefModeSchema,
-  snapshot_value: z.unknown().nullable(),
-  created_at: z.string().datetime(),
-});
-
-/** @deprecated Use ActionReference instead */
-export type TaskReference = z.infer<typeof TaskReferenceSchema>;
-
-/**
- * Create Reference Input Schema
- * @deprecated Use CreateActionReferenceInputSchema instead
- */
-export const CreateReferenceInputSchema = z.object({
-  taskId: z.string().uuid(),
-  sourceRecordId: z.string().uuid(),
-  targetFieldKey: z.string(),
-  mode: RefModeSchema.optional().default('dynamic'),
-});
-
-/** @deprecated Use CreateActionReferenceInput instead */
-export type CreateReferenceInput = z.infer<typeof CreateReferenceInputSchema>;
-
-// ============================================================================
 // SHARED RESOLUTION TYPES
 // ============================================================================
 
@@ -143,16 +107,6 @@ export const ActionReferenceResponseSchema = z.object({
 
 export const ActionReferencesResponseSchema = z.object({
   references: z.array(ActionReferenceSchema),
-});
-
-/** @deprecated Use ActionReferenceResponseSchema */
-export const ReferenceResponseSchema = z.object({
-  reference: TaskReferenceSchema,
-});
-
-/** @deprecated Use ActionReferencesResponseSchema */
-export const ReferencesResponseSchema = z.object({
-  references: z.array(TaskReferenceSchema),
 });
 
 export const ResolvedReferenceResponseSchema = z.object({

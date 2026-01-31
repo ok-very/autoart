@@ -2,10 +2,9 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { clsx } from 'clsx';
-import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
 
 import { createMentionExtension, MentionAttributes } from './MentionExtension';
-import { useCreateReference } from '../../api/hooks';
 import type { SearchResult } from '../../types';
 import { RecordSearchCombobox } from './RecordSearchCombobox';
 
@@ -14,7 +13,6 @@ interface RichTextInputProps {
   value: unknown; // string or JSON
   onChange: (value: unknown) => void;
   multiline?: boolean;
-  taskId?: string; // Optional: if provided, creates DB references
   placeholder?: string;
   readOnly?: boolean;
   className?: string;
@@ -33,13 +31,11 @@ export function RichTextInput({
   value,
   onChange,
   multiline = false,
-  taskId,
   placeholder,
   readOnly = false,
   className,
   currentRecordId
 }: RichTextInputProps) {
-  const createReference = useCreateReference();
   const [combobox, setCombobox] = useState<ComboboxState>({
     isOpen: false,
     triggerChar: '#',
@@ -48,59 +44,24 @@ export function RichTextInput({
     command: null,
   });
 
-  // Use refs to store latest values for callbacks
-  const taskIdRef = useRef(taskId);
-  const createReferenceRef = useRef(createReference);
-
-  // Sync refs in effect to avoid accessing during render
-  useEffect(() => {
-    taskIdRef.current = taskId;
-    createReferenceRef.current = createReference;
-  }, [taskId, createReference]);
-
   // Handle selecting an item from the combobox
   const handleSelect = useCallback(
-    async (item: SearchResult, fieldKey?: string) => {
+    (item: SearchResult, fieldKey?: string) => {
       const command = combobox.command;
       if (!command) return;
 
-      let attrs: MentionAttributes;
+      const label = fieldKey
+        ? `${combobox.triggerChar}${item.name}:${fieldKey}`
+        : `${combobox.triggerChar}${item.name}`;
 
-      // If we have a taskId, we can create a robust database reference
-      if (taskIdRef.current && item.type === 'record' && fieldKey) {
-        try {
-          const result = await createReferenceRef.current.mutateAsync({
-            taskId: taskIdRef.current,
-            sourceRecordId: item.id,
-            targetFieldKey: fieldKey,
-            mode: 'dynamic',
-          });
-
-          attrs = {
-            referenceId: result.reference.id,
-            label: `${combobox.triggerChar}${item.name}:${fieldKey}`,
-            mode: 'dynamic',
-            recordId: item.id,
-            fieldKey,
-            triggerChar: combobox.triggerChar,
-          };
-        } catch (err) {
-          console.error('Failed to create reference:', err);
-          setCombobox((prev) => ({ ...prev, isOpen: false, command: null }));
-          return;
-        }
-      } else {
-        // Direct reference (embedded in document, no DB reference record)
-        // Used for fields in records that reference other records directly
-        attrs = {
-          referenceId: null,
-          label: `${combobox.triggerChar}${item.name}${fieldKey ? `:${fieldKey}` : ''}`,
-          mode: 'dynamic', // Default to dynamic fetch
-          recordId: item.id,
-          fieldKey: fieldKey || null,
-          triggerChar: combobox.triggerChar,
-        };
-      }
+      const attrs: MentionAttributes = {
+        referenceId: null,
+        label,
+        mode: 'dynamic',
+        recordId: item.id,
+        fieldKey: fieldKey || null,
+        triggerChar: combobox.triggerChar,
+      };
 
       command(attrs);
       setCombobox((prev) => ({ ...prev, isOpen: false, command: null }));

@@ -9,7 +9,7 @@
  * - hierarchy.ts: useProjects, useProjectTree, useNode, CRUD, useMoveNode, useCloneNode
  * - records.ts: useRecords, useRecord, CRUD, useRecordStats, bulk operations
  * - definitions.ts: useRecordDefinitions, CRUD, template library operations
- * - references.ts: useTaskReferences, mode/snapshot updates, resolution
+ * - references.ts: (removed — use actionReferences.ts instead)
  * - links.ts: useRecordLinks, CRUD, useLinkTypes
  *
  * **Actions** (Action/Event architecture):
@@ -104,18 +104,6 @@ export {
   useBulkDeleteRecords,
   useRecordHistory,
 } from './records';
-
-// References (Also exported via ./entities)
-export {
-  useTaskReferences,
-  useCreateReference,
-  useDeleteReference,
-  useUpdateReferenceMode,
-  useUpdateReferenceSnapshot,
-  useResolveReference,
-  useCheckDrift,
-  useResolveReferences,
-} from './references';
 
 // Links (Also exported via ./entities)
 export {

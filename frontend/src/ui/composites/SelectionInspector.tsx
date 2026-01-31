@@ -104,7 +104,6 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
 
     const inspectedItem = node || record;
     const isNode = !!node;
-    const isTask = node?.type === 'task';
     const isRecord = !!record;
     const isAction = !!inspectedActionId;
     const isEmail = !!inspectedEmailId;
@@ -142,7 +141,7 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
                 : [
                 { id: 'record', label: 'Record', icon: FileText },
                 ...(hasInterpretation ? [{ id: 'interpretation' as const, label: 'Interpretation', icon: Lightbulb }] : []),
-                ...(isTask ? [{ id: 'references' as const, label: 'References', icon: Link2 }] : []),
+                ...(isAction ? [{ id: 'references' as const, label: 'References', icon: Link2 }] : []),
                 ...(isRecord ? [{ id: 'links' as const, label: 'Links', icon: ExternalLink }] : []),
                 { id: 'schema', label: 'Schema', icon: Wrench },
             ];
@@ -217,8 +216,8 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
                 }
                 return null;
             case 'references':
-                if (isTask && inspectedItem) {
-                    return <ReferencesManager taskId={inspectedItem.id} />;
+                if (isAction && inspectedActionId) {
+                    return <ReferencesManager actionId={inspectedActionId} />;
                 }
                 // Fallback to record view
                 if (inspectedItem) {

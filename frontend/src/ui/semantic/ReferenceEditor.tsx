@@ -12,9 +12,10 @@ import { Link2, X, ExternalLink, RefreshCw } from 'lucide-react';
 import { useState, useRef, useCallback, useMemo } from 'react';
 
 import {
-    useResolveReference,
-    useCreateReference,
-    useDeleteReference,
+    useAddActionReference,
+    useRemoveActionReference,
+} from '../../api/hooks/actionReferences';
+import {
     useRecord,
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
@@ -22,15 +23,15 @@ import type { SearchResult } from '../../types';
 import { RecordSearchCombobox } from '../editor/RecordSearchCombobox';
 
 export interface ReferenceEditorProps {
-    /** The reference ID if a link exists, or empty string if not */
+    /** The reference value — a record ID for direct links */
     value: string;
     /** The field key for this link field */
     fieldKey: string;
-    /** The task ID this field belongs to (Required for References) */
-    taskId?: string;
-    /** The Record ID this field belongs to (Required for Direct Links) */
+    /** The Action ID this field belongs to (for action references) */
+    actionId?: string;
+    /** The Record ID this field belongs to (for direct links) */
     currentRecordId?: string;
-    /** Callback when the field value changes (reference ID or empty) */
+    /** Callback when the field value changes (record ID or empty) */
     onChange: (value: string) => void;
     /** Whether the field is read-only */
     readOnly?: boolean;
@@ -41,8 +42,8 @@ export interface ReferenceEditorProps {
 export function ReferenceEditor({
     value,
     fieldKey,
-    taskId,
-    currentRecordId: _currentRecordId, // Reserved for excluding current record from search
+    actionId,
+    currentRecordId: _currentRecordId,
     onChange,
     readOnly = false,
     targetDefinitionId,
@@ -52,26 +53,15 @@ export function ReferenceEditor({
     const buttonRef = useRef<HTMLButtonElement>(null);
 
     const { inspectRecord } = useUIStore();
-    const createReference = useCreateReference();
-    const deleteReference = useDeleteReference();
+    const addActionRef = useAddActionReference();
+    const removeActionRef = useRemoveActionReference();
 
-    // Determine mode
-    const isReferenceMode = !!taskId;
-
-    // Reference Mode: Resolve the reference ID
-    const { data: resolvedRef, isLoading: isLoadingRef } = useResolveReference(
-        isReferenceMode && value ? value : null
-    );
-
-    // Direct Link Mode: Resolve the target record ID directly
-    const { data: targetRecord, isLoading: isLoadingRecord } = useRecord(
-        !isReferenceMode && value ? value : null
-    );
+    // Resolve the target record directly
+    const { data: targetRecord, isLoading } = useRecord(value || null);
 
     // Unified resolved data
-    const resolved = useMemo(() => isReferenceMode
-        ? resolvedRef
-        : targetRecord
+    const resolved = useMemo(() =>
+        targetRecord
             ? {
                 value: targetRecord.unique_name,
                 label: targetRecord.unique_name,
@@ -79,9 +69,7 @@ export function ReferenceEditor({
                 status: 'dynamic' as const,
                 drift: false,
             }
-            : null, [isReferenceMode, resolvedRef, targetRecord]);
-
-    const isLoading = isReferenceMode ? isLoadingRef : isLoadingRecord;
+            : null, [targetRecord]);
 
     const handleOpenSearch = useCallback(() => {
         if (readOnly) return;
@@ -100,42 +88,46 @@ export function ReferenceEditor({
             setShowSearch(false);
 
             try {
-                if (isReferenceMode && taskId) {
-                    // Create a reference to this record (Task -> Record)
-                    const result = await createReference.mutateAsync({
-                        taskId,
-                        sourceRecordId: item.id,
-                        targetFieldKey: selectedFieldKey || fieldKey,
-                        mode: 'dynamic',
+                if (actionId) {
+                    // Create via action references API
+                    await addActionRef.mutateAsync({
+                        actionId,
+                        input: {
+                            sourceRecordId: item.id,
+                            targetFieldKey: selectedFieldKey || fieldKey,
+                        },
                     });
-                    onChange(result.reference.id);
-                } else {
-                    // Direct Link (Record -> Record) - just store the ID
-                    onChange(item.id);
                 }
+                // Store the record ID as the value
+                onChange(item.id);
             } catch (err) {
                 console.error('Failed to create link:', err);
             }
         },
-        [taskId, fieldKey, onChange, createReference, isReferenceMode]
+        [actionId, fieldKey, onChange, addActionRef]
     );
 
     const handleClear = useCallback(async () => {
         if (!value) return;
 
         try {
-            if (isReferenceMode) {
-                await deleteReference.mutateAsync(value);
+            if (actionId) {
+                await removeActionRef.mutateAsync({
+                    actionId,
+                    input: {
+                        sourceRecordId: value,
+                        targetFieldKey: fieldKey,
+                    },
+                });
             }
             onChange('');
         } catch (err) {
             console.error('Failed to remove link:', err);
         }
-    }, [value, onChange, deleteReference, isReferenceMode]);
+    }, [value, onChange, actionId, fieldKey, removeActionRef]);
 
     const handleOpenRecord = useCallback(() => {
         if (resolved?.sourceRecordId) {
-            // Open record in inspector panel
             inspectRecord(resolved.sourceRecordId);
         }
     }, [resolved, inspectRecord]);
@@ -189,9 +181,7 @@ export function ReferenceEditor({
         <div
             className={clsx(
                 'group flex items-center gap-2 px-3 py-2 text-sm border rounded-md transition-colors',
-                resolved?.drift
-                    ? 'border-amber-300 bg-amber-50'
-                    : 'border-blue-200 bg-blue-50'
+                'border-blue-200 bg-blue-50'
             )}
         >
             <Link2 size={14} className="text-blue-500 shrink-0" />
@@ -209,28 +199,9 @@ export function ReferenceEditor({
             </button>
 
             {/* Mode indicator */}
-            <span
-                className={clsx(
-                    'text-[10px] font-medium uppercase px-1.5 py-0.5 rounded shrink-0',
-                    resolved?.status === 'static'
-                        ? 'bg-amber-100 text-amber-700'
-                        : resolved?.status === 'broken'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-green-100 text-green-700'
-                )}
-            >
-                {resolved?.status || 'dynamic'}
+            <span className="text-[10px] font-medium uppercase px-1.5 py-0.5 rounded shrink-0 bg-green-100 text-green-700">
+                dynamic
             </span>
-
-            {/* Drift indicator */}
-            {resolved?.drift && (
-                <span
-                    className="text-[10px] font-medium uppercase px-1.5 py-0.5 rounded bg-amber-200 text-amber-800 shrink-0"
-                    title="Value has changed from snapshot"
-                >
-                    Drift
-                </span>
-            )}
 
             {/* Actions */}
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
@@ -247,7 +218,7 @@ export function ReferenceEditor({
                     <button
                         type="button"
                         onClick={handleClear}
-                        disabled={deleteReference.isPending}
+                        disabled={removeActionRef.isPending}
                         className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
                         title="Remove link"
                     >
