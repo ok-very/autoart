@@ -6,7 +6,8 @@
  * Uses theme variables from workspace/themes/variables.css
  *
  * Design principles:
- * - Flat tabs with bottom accent (no gradients)
+ * - Chrome-style tabs with rounded top corners
+ * - Active tab connects to panel (no gap)
  * - Clean, minimal borders
  * - Color through CSS variables, not hardcoded values
  *
@@ -40,20 +41,24 @@
   position: relative;
   background-image: none !important;
   background-size: auto;
+  padding: 0 4px;
 }
 
-/* Tab styling - flat with bottom accent */
+/* Tab — chrome style with rounded top corners */
 /* !important needed to override dockview gradient defaults */
 .dockview-theme-light .dv-tab {
   font-size: 13px;
   font-weight: 500;
-  padding: 8px 14px;
-  border: none;
-  border-radius: 0;
+  padding: var(--ws-tab-padding-y) var(--ws-tab-padding-x);
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--ws-tab-radius) var(--ws-tab-radius) 0 0;
   background: transparent !important;
   color: var(--ws-tab-fg);
-  transition: color 0.15s ease, background 0.15s ease;
-  margin-right: 0;
+  transition: color var(--ws-motion-duration-fast) var(--ws-motion-ease),
+              background var(--ws-motion-duration-fast) var(--ws-motion-ease);
+  margin: 2px 1px 0 1px;
+  position: relative;
 }
 
 /* Ensure child elements don't interfere */
@@ -75,14 +80,15 @@
   outline: none;
 }
 
-/* Active tab - bottom accent indicator */
+/* Active tab — elevated, connects to panel */
 .dockview-theme-light .dv-tab.active {
   color: var(--ws-tab-fg-active);
   background: var(--ws-tab-bg-active) !important;
-  box-shadow: inset 0 -2px 0 var(--ws-accent);
+  border-color: var(--ws-panel-border);
+  border-bottom: 1px solid var(--ws-tab-bg-active);
+  margin-bottom: -1px;
+  z-index: 2;
   font-weight: 500;
-  position: relative;
-  z-index: 1;
 }
 
 /* Active tab label */
