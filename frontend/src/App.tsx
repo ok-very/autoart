@@ -34,6 +34,13 @@ function App() {
   // Show timeout message after timer expires while still loading
   const showTimeoutMessage = isCurrentlyLoading && timerExpired;
 
+  // Destroy the cymatic loader canvas once the app is ready
+  useEffect(() => {
+    if (!isLoading) {
+      window.__destroyLoader?.();
+    }
+  }, [isLoading]);
+
   // Show loading state
   if (isLoading) {
     return (
