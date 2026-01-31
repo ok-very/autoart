@@ -8,7 +8,7 @@
 import {
   ChevronDown, FolderOpen, Database,
   TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings, ClipboardList, LayoutGrid, Check,
-  AppWindow, FileText, Image, Mail, DollarSign, BarChart3
+  AppWindow, FileText, Image, Mail, DollarSign, BarChart3, Calendar
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -276,6 +276,12 @@ export function Header() {
                   leftSection={<DollarSign size={16} />}
                 >
                   Finances
+                </Menu.Item>
+                <Menu.Item
+                  onClick={() => { navigate('/'); setCenterContentType('calendar'); }}
+                  leftSection={<Calendar size={16} />}
+                >
+                  Calendar
                 </Menu.Item>
                 <Menu.Item
                   disabled
