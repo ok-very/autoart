@@ -45,9 +45,7 @@ export {
   type RecordStat,
 
   // References
-  type TaskReference,
   type ResolvedReference,
-  type CreateReferenceInput,
   type UpdateReferenceModeInput,
   type UpdateReferenceSnapshotInput,
   type BulkResolveInput,
@@ -96,10 +94,7 @@ export {
   BulkOperationResponseSchema,
 
   // References response schemas
-  TaskReferenceSchema,
   ResolvedReferenceSchema,
-  ReferenceResponseSchema,
-  ReferencesResponseSchema,
   ResolvedReferenceResponseSchema,
   DriftCheckResponseSchema,
 

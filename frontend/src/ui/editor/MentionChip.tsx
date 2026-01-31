@@ -12,10 +12,7 @@ import {
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 import {
-  useResolveReference,
-  useUpdateReferenceMode,
   useUpdateRecord,
-  useDeleteReference,
   useRecord,
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
@@ -35,45 +32,28 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
   // Refs
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Hooks
-  // 1. Resolve via DB Reference if referenceId exists
-  const { data: resolvedRef, refetch: refetchRef } = useResolveReference(referenceId);
+  // Hooks - always resolve via direct Record ID
+  const { data: sourceRecord } = useRecord(recordId || null);
 
-  // 2. Resolve via Direct Record ID if no referenceId
-  const effectiveSourceId = resolvedRef?.sourceRecordId || recordId;
-  const { data: sourceRecord } = useRecord(effectiveSourceId || null);
-
-  const updateMode = useUpdateReferenceMode();
   const updateRecord = useUpdateRecord();
-  const deleteReference = useDeleteReference();
   const { inspectRecord, openOverlay } = useUIStore();
 
-  // Derived Logic
-  const isDirect = !referenceId; // True if using direct recordId/fieldKey without DB reference task
-  const currentMode = isDirect ? mode : (resolvedRef?.status ?? mode ?? 'dynamic');
+  // All references are now direct (embedded in document)
+  const currentMode = mode ?? 'dynamic';
 
   // Resolve Value
   const resolvedValue = useMemo(() => {
-    if (isDirect) {
-      if (currentMode === 'static') return snapshot;
-      if (sourceRecord && fieldKey) return sourceRecord.data?.[fieldKey];
-      return undefined;
-    } else {
-      return resolvedRef?.value;
-    }
-  }, [isDirect, currentMode, snapshot, sourceRecord, fieldKey, resolvedRef]);
+    if (currentMode === 'static') return snapshot;
+    if (sourceRecord && fieldKey) return sourceRecord.data?.[fieldKey];
+    return undefined;
+  }, [currentMode, snapshot, sourceRecord, fieldKey]);
 
   // Drift Detection
   const hasDrift = useMemo(() => {
-    if (isDirect) {
-      if (currentMode !== 'static') return false;
-      const liveValue = sourceRecord?.data?.[fieldKey];
-      // Simple equality check (convert to string for safety)
-      return JSON.stringify(liveValue) !== JSON.stringify(snapshot);
-    } else {
-      return resolvedRef?.drift ?? false;
-    }
-  }, [isDirect, currentMode, snapshot, sourceRecord, fieldKey, resolvedRef]);
+    if (currentMode !== 'static') return false;
+    const liveValue = sourceRecord?.data?.[fieldKey];
+    return JSON.stringify(liveValue) !== JSON.stringify(snapshot);
+  }, [currentMode, snapshot, sourceRecord, fieldKey]);
 
   const trigger = triggerChar || '#';
 
@@ -119,7 +99,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
   const handleDoubleClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!effectiveSourceId) return;
+    if (!recordId) return;
 
     const val = resolvedValue;
     setEditValue(
@@ -129,13 +109,11 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
     );
     setIsEditing(true);
     setShowMenu(false);
-  }, [effectiveSourceId, resolvedValue]);
+  }, [recordId, resolvedValue]);
 
   // Save edited value to source record
   const handleSaveEdit = useCallback(async () => {
-    const targetKey = isDirect ? fieldKey : resolvedRef?.targetFieldKey;
-
-    if (!effectiveSourceId || !targetKey) {
+    if (!recordId || !fieldKey) {
       setIsEditing(false);
       return;
     }
@@ -144,17 +122,16 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
       if (sourceRecord) {
         const currentData = sourceRecord.data || {};
         await updateRecord.mutateAsync({
-          id: effectiveSourceId,
-          data: { ...currentData, [targetKey]: editValue },
+          id: recordId,
+          data: { ...currentData, [fieldKey]: editValue },
         });
-        if (!isDirect) await refetchRef();
       }
     } catch (err) {
       console.error('Failed to update source record:', err);
     }
 
     setIsEditing(false);
-  }, [effectiveSourceId, fieldKey, resolvedRef, isDirect, sourceRecord, editValue, updateRecord, refetchRef]);
+  }, [recordId, fieldKey, sourceRecord, editValue, updateRecord]);
 
   // Cancel editing
   const handleCancelEdit = useCallback(() => {
@@ -163,62 +140,38 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
   }, []);
 
   // Context menu actions
-  const handleToggleMode = async () => {
+  const handleToggleMode = () => {
     const newMode = currentMode === 'static' ? 'dynamic' : 'static';
-
-    if (isDirect) {
-      // Direct mode: update attributes
-      const attrs: any = { mode: newMode };
-      if (newMode === 'static') {
-        // Snapshot current value
-        attrs.snapshot = sourceRecord?.data?.[fieldKey];
-      }
-      updateAttributes(attrs);
-    } else if (referenceId) {
-      // DB mode: call API
-      try {
-        await updateMode.mutateAsync({ id: referenceId, mode: newMode });
-        updateAttributes({ mode: newMode });
-        refetchRef();
-      } catch (err) {
-        console.error('Failed to update reference mode:', err);
-      }
+    const attrs: Record<string, unknown> = { mode: newMode };
+    if (newMode === 'static') {
+      attrs.snapshot = sourceRecord?.data?.[fieldKey];
     }
+    updateAttributes(attrs);
     setShowMenu(false);
   };
 
-  const handleSyncToLive = async () => {
-    if (isDirect) {
-      if (hasDrift) {
-        updateAttributes({ snapshot: sourceRecord?.data?.[fieldKey] });
-      }
-    } else if (referenceId && hasDrift) {
-      try {
-        await updateMode.mutateAsync({ id: referenceId, mode: 'dynamic' });
-        updateAttributes({ mode: 'dynamic' });
-        refetchRef();
-      } catch (err) {
-        console.error('Failed to sync reference:', err);
-      }
+  const handleSyncToLive = () => {
+    if (hasDrift) {
+      updateAttributes({ snapshot: sourceRecord?.data?.[fieldKey] });
     }
     setShowMenu(false);
   };
 
   const handleInspectRecord = useCallback(() => {
-    if (effectiveSourceId) {
-      inspectRecord(effectiveSourceId);
+    if (recordId) {
+      inspectRecord(recordId);
     }
     setShowMenu(false);
-  }, [effectiveSourceId, inspectRecord]);
+  }, [recordId, inspectRecord]);
 
   const handleViewDefinition = useCallback(() => {
-    if (effectiveSourceId) {
-      openOverlay('view-definition', { recordId: effectiveSourceId });
+    if (recordId) {
+      openOverlay('view-definition', { recordId });
     }
     setShowMenu(false);
-  }, [effectiveSourceId, openOverlay]);
+  }, [recordId, openOverlay]);
 
-  const handleUnlink = useCallback(async () => {
+  const handleUnlink = useCallback(() => {
     if (!editor || typeof getPos !== 'function') {
       setShowMenu(false);
       return;
@@ -231,27 +184,20 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
         return;
       }
 
-      // Get the display text to replace with
       const displayText = getDisplayText();
 
-      // Delete the mention node and insert plain text
       editor
         .chain()
         .focus()
         .deleteRange({ from: pos, to: pos + node.nodeSize })
         .insertContentAt(pos, displayText)
         .run();
-
-      // Delete the reference from database only if it exists
-      if (referenceId) {
-        await deleteReference.mutateAsync(referenceId);
-      }
     } catch (err) {
       console.error('Failed to unlink value:', err);
     }
 
     setShowMenu(false);
-  }, [editor, getPos, node, referenceId, deleteReference, getDisplayText]);
+  }, [editor, getPos, node, getDisplayText]);
 
   // Focus input when editing starts
   useEffect(() => {
@@ -381,8 +327,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
           {/* Unlink Value */}
           <button
             onClick={handleUnlink}
-            disabled={!isDirect && deleteReference.isPending}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 disabled:opacity-50"
+            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
           >
             <Type size={14} className="text-orange-500" />
             <span>Unlink Value</span>
@@ -394,8 +339,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
           {/* Mode Toggle */}
           <button
             onClick={handleToggleMode}
-            disabled={!isDirect && updateMode.isPending}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 disabled:opacity-50"
+            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
           >
             {currentMode === 'static' ? (
               <>
@@ -414,8 +358,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
           {hasDrift && (
             <button
               onClick={handleSyncToLive}
-              disabled={!isDirect && updateMode.isPending}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 disabled:opacity-50 text-amber-600"
+              className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-amber-600"
             >
               <RefreshCw size={14} />
               <span>Sync to Live Value</span>

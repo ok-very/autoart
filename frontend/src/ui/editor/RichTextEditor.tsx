@@ -18,10 +18,8 @@ import type { ContextType } from '@autoart/shared';
 import {
   type RichTextEditorConfig,
   mergeEditorConfig,
-  DEFAULT_EDITOR_CONFIG
 } from './EditorConfig';
 import { createConfiguredExtensions, MentionAttributes } from './MentionExtension';
-import { useCreateReference } from '../../api/hooks';
 import type { SearchResult } from '../../types';
 import { RecordSearchCombobox } from './RecordSearchCombobox';
 
@@ -46,15 +44,6 @@ export interface RichTextEditorProps {
   config?: Partial<RichTextEditorConfig>;
 }
 
-/** @deprecated Use RichTextEditorProps with contextId/contextType instead */
-export interface LegacyRichTextEditorProps {
-  content: unknown;
-  /** @deprecated Use contextId instead */
-  taskId: string;
-  editable?: boolean;
-  onChange?: (content: unknown) => void;
-}
-
 interface ComboboxState {
   isOpen: boolean;
   triggerChar: '#' | '@';
@@ -69,8 +58,8 @@ interface ComboboxState {
 
 export function RichTextEditor({
   content,
-  contextId,
-  contextType: _contextType, // Reserved for scoped reference creation
+  contextId: _contextId,
+  contextType: _contextType,
   editable = true,
   onChange,
   config: configOverride,
@@ -81,7 +70,6 @@ export function RichTextEditor({
     [configOverride]
   );
 
-  const createReference = useCreateReference();
   const [combobox, setCombobox] = useState<ComboboxState>({
     isOpen: false,
     triggerChar: '#',
@@ -91,58 +79,31 @@ export function RichTextEditor({
   });
 
   // Use refs to store the latest values without causing extension recreation
-  const contextIdRef = useRef(contextId);
-  const createReferenceRef = useRef(createReference);
   const comboboxRef = useRef(combobox);
 
   // Sync refs in effect to avoid accessing during render
   useEffect(() => {
-    contextIdRef.current = contextId;
-    createReferenceRef.current = createReference;
     comboboxRef.current = combobox;
-  }, [contextId, createReference, combobox]);
+  }, [combobox]);
 
   // Handle selecting an item from the combobox
   const handleSelect = useCallback(
-    async (item: SearchResult, fieldKey?: string) => {
+    (item: SearchResult, fieldKey?: string) => {
       const currentCombobox = comboboxRef.current;
       if (!currentCombobox.command) return;
 
-      let attrs: MentionAttributes;
+      const label = fieldKey
+        ? `${currentCombobox.triggerChar}${item.name}:${fieldKey}`
+        : `${currentCombobox.triggerChar}${item.name}`;
 
-      if (item.type === 'record' && fieldKey) {
-        try {
-          // Create reference using contextId (backward compat: still uses taskId param name)
-          const result = await createReferenceRef.current.mutateAsync({
-            taskId: contextIdRef.current,
-            sourceRecordId: item.id,
-            targetFieldKey: fieldKey,
-            mode: 'dynamic',
-          });
-
-          attrs = {
-            referenceId: result.reference.id,
-            label: `${currentCombobox.triggerChar}${item.name}:${fieldKey}`,
-            mode: 'dynamic',
-            recordId: item.id,
-            fieldKey,
-            triggerChar: currentCombobox.triggerChar,
-          };
-        } catch (err) {
-          console.error('Failed to create reference:', err);
-          setCombobox((prev) => ({ ...prev, isOpen: false, command: null }));
-          return;
-        }
-      } else {
-        attrs = {
-          referenceId: null,
-          label: `${currentCombobox.triggerChar}${item.name}${fieldKey ? `:${fieldKey}` : ''}`,
-          mode: 'dynamic',
-          recordId: item.id,
-          fieldKey: fieldKey || null,
-          triggerChar: currentCombobox.triggerChar,
-        };
-      }
+      const attrs: MentionAttributes = {
+        referenceId: null,
+        label,
+        mode: 'dynamic',
+        recordId: item.id,
+        fieldKey: fieldKey || null,
+        triggerChar: currentCombobox.triggerChar,
+      };
 
       currentCombobox.command(attrs);
       setCombobox((prev) => ({ ...prev, isOpen: false, command: null }));
@@ -265,27 +226,3 @@ export function RichTextEditor({
   );
 }
 
-// ============================================================================
-// LEGACY COMPATIBILITY
-// ============================================================================
-
-/**
- * @deprecated Use RichTextEditor with contextId/contextType props
- */
-export function LegacyRichTextEditor({
-  content,
-  taskId,
-  editable,
-  onChange
-}: LegacyRichTextEditorProps) {
-  return (
-    <RichTextEditor
-      content={content}
-      contextId={taskId}
-      contextType="subprocess"
-      editable={editable}
-      onChange={onChange}
-      config={DEFAULT_EDITOR_CONFIG}
-    />
-  );
-}

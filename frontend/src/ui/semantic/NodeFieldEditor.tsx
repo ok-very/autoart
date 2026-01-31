@@ -203,7 +203,7 @@ export function NodeFieldEditor({
             <ReferenceEditor
                 value={vm.value as string}
                 fieldKey={vm.fieldId}
-                taskId={nodeId}
+                currentRecordId={nodeId}
                 onChange={onChange}
                 readOnly={!vm.editable}
             />
