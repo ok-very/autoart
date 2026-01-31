@@ -17,7 +17,7 @@ export async function pollRoutes(app: FastifyInstance) {
 
   // List user's polls
   fastify.get(
-    '/polls',
+    '/',
     { preHandler: [fastify.authenticate] },
     async (request, reply) => {
       const polls = await pollsService.listPolls(request.user?.userId);
@@ -27,7 +27,7 @@ export async function pollRoutes(app: FastifyInstance) {
 
   // Get poll by ID with responses
   fastify.get(
-    '/polls/:id',
+    '/:id',
     {
       preHandler: [fastify.authenticate],
       schema: {
@@ -50,7 +50,7 @@ export async function pollRoutes(app: FastifyInstance) {
 
   // Create poll
   fastify.post(
-    '/polls',
+    '/',
     {
       preHandler: [fastify.authenticate],
       schema: {
@@ -77,7 +77,7 @@ export async function pollRoutes(app: FastifyInstance) {
 
   // Close poll
   fastify.post(
-    '/polls/:id/close',
+    '/:id/close',
     {
       preHandler: [fastify.authenticate],
       schema: {
