@@ -185,6 +185,41 @@ export function useDeleteExportSession() {
 }
 
 // ============================================================================
+// OUTPUT DOWNLOAD
+// ============================================================================
+
+/**
+ * Download export output as a file.
+ * Fetches the binary response and triggers a browser download.
+ */
+export function useDownloadExportOutput() {
+    return useMutation({
+        mutationFn: async (sessionId: string) => {
+            const response = await fetch(`/api/exports/sessions/${sessionId}/output?disposition=attachment`);
+
+            if (!response.ok) {
+                throw new Error(`Download failed: ${response.statusText}`);
+            }
+
+            // Extract filename from Content-Disposition header
+            const disposition = response.headers.get('Content-Disposition') || '';
+            const filenameMatch = disposition.match(/filename="?([^";\n]+)"?/);
+            const filename = filenameMatch?.[1] || `export-${sessionId.slice(0, 8)}`;
+
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        },
+    });
+}
+
+// ============================================================================
 // FINANCE SESSION EXPORT
 // ============================================================================
 
