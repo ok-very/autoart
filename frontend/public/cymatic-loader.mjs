@@ -18,15 +18,43 @@
   const MAX_ALPHA  = 0.72;  // peak line opacity
   const DURATION   = 3.0;   // loop period (seconds)
 
+  // --- marching-squares lookup table (hoisted — constant) ---------------
+  const SEGS = [
+    [],           // 0
+    [[2, 3]],     // 1
+    [[1, 2]],     // 2
+    [[1, 3]],     // 3
+    [[0, 1]],     // 4
+    [[0, 1], [2, 3]], // 5 (saddle)
+    [[0, 2]],     // 6
+    [[0, 3]],     // 7
+    [[0, 3]],     // 8
+    [[0, 2]],     // 9
+    [[0, 3], [1, 2]], // 10 (saddle)
+    [[0, 1]],     // 11
+    [[1, 3]],     // 12
+    [[1, 2]],     // 13
+    [[2, 3]],     // 14
+    [],           // 15
+  ];
+
   // --- colour -----------------------------------------------------------
   function resolveColor(prop, fallback) {
     const v = getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
     return v || fallback;
   }
 
-  function hexToRgb(hex) {
-    const n = parseInt(hex.replace('#', ''), 16);
-    return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+  function parseColorToRgb(color) {
+    const c = color.trim();
+    if (c.startsWith('#')) {
+      let hex = c.slice(1);
+      if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+      const n = parseInt(hex, 16);
+      if (!isNaN(n)) return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
+    }
+    const m = c.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+    if (m) return [+m[1], +m[2], +m[3]];
+    return [0x3F, 0x5C, 0x6E]; // Oxide Blue fallback
   }
 
   let ink, bg;
@@ -39,6 +67,7 @@
 
   // --- sizing -----------------------------------------------------------
   let W, H, dpr, cx, cy, rInner, rOuter;
+  let cachedRingClip = null;
 
   function resize() {
     dpr = devicePixelRatio || 1;
@@ -51,11 +80,17 @@
     const half = Math.min(W, H) * dpr * 0.5;
     rInner = half * INNER_R;
     rOuter = half * OUTER_R;
+    cachedRingClip = null; // invalidate; rebuilt lazily in ringClip()
   }
   resize();
 
-  const ro = new ResizeObserver(resize);
-  ro.observe(canvas);
+  let ro;
+  if (typeof ResizeObserver !== 'undefined') {
+    ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+  } else {
+    ro = { disconnect() {} };
+  }
 
   // --- Chladni field ----------------------------------------------------
   const PI = Math.PI;
@@ -135,26 +170,6 @@
           iy + lerp(v00, v01), // left   edge
         ];
 
-        // Segment table: pairs of edge indices per cell config
-        const SEGS = [
-          [],           // 0
-          [[2, 3]],     // 1
-          [[1, 2]],     // 2
-          [[1, 3]],     // 3
-          [[0, 1]],     // 4
-          [[0, 1], [2, 3]], // 5 (saddle)
-          [[0, 2]],     // 6
-          [[0, 3]],     // 7
-          [[0, 3]],     // 8
-          [[0, 2]],     // 9
-          [[0, 3], [1, 2]], // 10 (saddle)
-          [[0, 1]],     // 11
-          [[1, 3]],     // 12
-          [[1, 2]],     // 13
-          [[2, 3]],     // 14
-          [],           // 15
-        ];
-
         const pairs = SEGS[idx];
         for (let p = 0; p < pairs.length; p++) {
           const a = pairs[p][0];
@@ -181,17 +196,29 @@
     return p;
   }
 
-  // --- ring clip path ---------------------------------------------------
-  function ringClip() {
+  // --- ring clip path (cached, rebuilt on resize) -----------------------
+  function updateRingClip() {
     const p = new Path2D();
     p.arc(cx, cy, rOuter, 0, 2 * PI);       // outer CW
     p.arc(cx, cy, rInner, 0, 2 * PI, true);  // inner CCW (hole)
-    return p;
+    cachedRingClip = p;
+  }
+
+  function ringClip() {
+    if (!cachedRingClip) updateRingClip();
+    return cachedRingClip;
   }
 
   // --- conic gradient for arc sweep -------------------------------------
+  const hasConicGradient = typeof ctx.createConicGradient === 'function';
+
   function arcGradient(t01) {
-    const [r, g, b] = hexToRgb(ink);
+    const [r, g, b] = parseColorToRgb(ink);
+
+    if (!hasConicGradient) {
+      return `rgba(${r},${g},${b},${MAX_ALPHA})`;
+    }
+
     // Sweep start angle: rotates with time
     const startAngle = t01 * 2 * PI - PI * 0.5;
     const grad = ctx.createConicGradient(startAngle, cx, cy);
