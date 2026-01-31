@@ -14,6 +14,7 @@ import { GoogleSlidesConnector, type SlidesExportOptions } from './connectors/go
 import { formatAsMarkdown } from './formatters/markdown-formatter.js';
 import { formatAsPlainText } from './formatters/plaintext-formatter.js';
 import { formatAsRtf } from './formatters/rtf-formatter.js';
+import { storeSessionOutput } from './output-store.js';
 import { projectBfaExportModels } from './projectors/bfa-project.projector.js';
 import { DEFAULT_EXPORT_OPTIONS } from './types.js';
 import type {
@@ -214,6 +215,12 @@ export async function executeExport(sessionId: string): Promise<ExportResult> {
                 break;
             case 'google-slides':
                 result = await exportToGoogleSlides(projection, session);
+                break;
+            case 'pdf':
+                result = await exportAsPdf(projection, session);
+                break;
+            case 'docx':
+                result = await exportAsDocx(projection, session);
                 break;
             default:
                 throw new Error(`Unsupported export format: ${session.format}`);
@@ -458,6 +465,76 @@ async function exportToGoogleSlides(
             error: errorMessage,
         };
     }
+}
+
+// ============================================================================
+// PDF EXPORT
+// ============================================================================
+
+async function exportAsPdf(
+    projection: BfaProjectExportModel[],
+    session: ExportSession
+): Promise<ExportResult> {
+    const { generatePdfHtml } = await import('@autoart/shared');
+    const { env } = await import('../../config/env.js');
+
+    const pagePreset = (session.targetConfig?.pagePreset as string) || 'letter';
+    const html = generatePdfHtml(projection, session.options, {
+        pagePreset: pagePreset as 'letter' | 'legal' | 'tabloid' | 'tearsheet' | 'a4',
+        autoHelperBaseUrl: env.AUTOHELPER_URL,
+    });
+
+    const pdfResponse = await fetch(`${env.AUTOHELPER_URL}/render/pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            html,
+            page_preset: pagePreset,
+            print_background: true,
+        }),
+    });
+
+    if (!pdfResponse.ok) {
+        const errorText = await pdfResponse.text();
+        throw new Error(`PDF render failed: ${errorText}`);
+    }
+
+    const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
+    await storeSessionOutput(session.id, pdfBuffer, 'application/pdf', '.pdf');
+
+    return {
+        success: true,
+        format: 'pdf',
+        downloadUrl: `/api/exports/sessions/${session.id}/output`,
+    };
+}
+
+// ============================================================================
+// DOCX EXPORT
+// ============================================================================
+
+async function exportAsDocx(
+    projection: BfaProjectExportModel[],
+    session: ExportSession
+): Promise<ExportResult> {
+    const { generateBfaDocx } = await import('@autoart/shared');
+    const { Packer } = await import('docx');
+
+    const doc = generateBfaDocx(projection, session.options);
+    const buffer = Buffer.from(await Packer.toBuffer(doc));
+
+    await storeSessionOutput(
+        session.id,
+        buffer,
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        '.docx',
+    );
+
+    return {
+        success: true,
+        format: 'docx',
+        downloadUrl: `/api/exports/sessions/${session.id}/output`,
+    };
 }
 
 // ============================================================================
