@@ -160,7 +160,7 @@ export function generateClassifications(items: ImportPlanItem[], definitions: Re
  * connector imports classify based on entityType:
  * - 'record' → DERIVED_STATE (needs schema matching)
  * - 'template' → DERIVED_STATE (auto-commit, no schema match needed)
- * - 'action'/'task'/'subtask' → INTERNAL_WORK (create as action)
+ * - 'action' → INTERNAL_WORK (create as action)
  * - others → UNCLASSIFIED
  */
 export function generateClassificationsForConnectorItems(

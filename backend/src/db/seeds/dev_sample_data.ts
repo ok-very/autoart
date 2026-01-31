@@ -13,8 +13,8 @@
  *   are created as Actions with ACTION_DECLARED events
  * - parent_action_id maintains the hierarchy within the Action tree
  *
- * DO NOT create hierarchy_nodes with type: 'process', 'stage', 'subprocess',
- * 'task', or 'subtask'. These types are DEPRECATED and should use Actions.
+ * DO NOT create hierarchy_nodes with type: 'process', 'stage', or 'subprocess'
+ * directly. Use the Action system for work items.
  */
 
 import bcrypt from 'bcryptjs';

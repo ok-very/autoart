@@ -6,7 +6,7 @@
  *
  * Architecture:
  * - Config-driven: Extensions built from EditorConfig
- * - Context-aware: Uses contextId + contextType for references (not taskId)
+ * - Context-aware: Accepts contextId + contextType for future reference creation
  * - Extensible: Add custom extensions via config.extensions
  */
 

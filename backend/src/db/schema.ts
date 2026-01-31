@@ -131,7 +131,7 @@ export type NewDataRecord = Insertable<RecordsTable>;
 export type DataRecordUpdate = Updateable<RecordsTable>;
 
 // Action References Table (Foundational Model)
-// Links Actions to Records - replaces TaskReferences
+// Links Actions to Records
 export interface ActionReferencesTable {
   id: Generated<string>;
   action_id: string;

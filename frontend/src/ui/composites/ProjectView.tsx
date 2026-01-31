@@ -4,7 +4,7 @@
  * This is a REUSABLE COMPOSITE for project hierarchy display.
  * It handles:
  * - Subprocess navigation sidebar
- * - Task table (via DataTableHierarchy)
+ * - Action registry (via ActionRegistryTable)
  * - Classified record tables (via DataTableFlat)
  * - Selection and drawer interactions
  *
@@ -15,7 +15,6 @@ import { Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { DataTableFlat } from './DataTableFlat';
-import { DataTableHierarchy, type HierarchyFieldDef } from './DataTableHierarchy';
 import { GanttView } from './GanttView';
 import { ProjectLogView } from './ProjectLogView';
 import { CalendarView } from './CalendarView';
@@ -33,7 +32,6 @@ import { useProjectTree, useRecordDefinitions, useRecords, useActions, useResche
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
 import type { HierarchyNode, DataRecord, RecordDefinition } from '../../types';
-import type { DataFieldKind } from '../../ui/molecules/DataFieldWidget';
 import { SegmentedControl } from '@autoart/ui';
 
 // ==================== TYPES ====================
@@ -46,21 +44,6 @@ export interface ProjectViewProps {
 }
 
 // ==================== HELPERS ====================
-
-/**
- * Extract metadata from a node, parsing JSON string if needed
- */
-function getNodeMetadata(node: HierarchyNode): Record<string, unknown> {
-    if (typeof node.metadata === 'string') {
-        try {
-            const parsed = JSON.parse(node.metadata);
-            return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {};
-        } catch {
-            return {};
-        }
-    }
-    return (node.metadata as Record<string, unknown>) || {};
-}
 
 /**
  * Collect subprocesses from a project hierarchy
@@ -98,42 +81,8 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
     const getChildren = useHierarchyStore((state) => state.getChildren);
     const { selection, inspectNode, inspectAction, setInspectorMode, openOverlay, inspectRecord } = useUIStore();
 
-    // Fetch record definitions to get Task schema
+    // Fetch record definitions
     const { data: definitions } = useRecordDefinitions();
-
-    // Get Task definition fields directly from the database
-    const taskFields = useMemo<HierarchyFieldDef[]>(() => {
-        const taskDef = definitions?.find((d) => d.name === 'Task');
-        if (!taskDef?.schema_config?.fields) {
-            return [];
-        }
-
-        // Convert definition fields to HierarchyFieldDef format
-        return taskDef.schema_config.fields.map((field): HierarchyFieldDef => {
-            // Check collapsed by field key - include both 'owner' and 'assignee' for compatibility
-            // (field key is 'owner' in schema, but label displays as 'Assignee')
-            const isCollapsedField = ['title', 'status', 'owner', 'assignee', 'dueDate'].includes(field.key);
-            const width = field.key === 'title' ? 360 :
-                field.type === 'status' ? 128 :
-                    field.type === 'user' ? 96 :
-                        field.type === 'date' ? 160 : 'flex';
-
-            return {
-                key: field.key,
-                label: field.label,
-                type: field.type,
-                options: field.options,
-                renderAs: (field.type === 'status' ? 'status' :
-                    field.type === 'user' ? 'user' :
-                        field.type === 'date' ? 'date' :
-                            field.type === 'tags' ? 'tags' :
-                                field.type === 'textarea' ? 'description' : 'text') as DataFieldKind,
-                showInCollapsed: isCollapsedField,
-                showInExpanded: field.key !== 'title', // All except title show in expanded
-                width,
-            };
-        });
-    }, [definitions]);
 
     // Ensure we still load the hierarchy even when the outer sidebar is hidden
     const { data: queryNodes } = useProjectTree(projectId);
@@ -160,26 +109,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
 
     const activeSubprocess = activeSubprocessId ? getNode(activeSubprocessId) : null;
 
-    const activeSubprocessMeta = useMemo(() => {
-        if (!activeSubprocess) return null;
-        return getNodeMetadata(activeSubprocess);
-    }, [activeSubprocess]);
-
-    // Fallbacks for subprocess-level defaults - include both owner and assignee keys
-    // (field key is 'owner' in schema, but we support 'assignee' for forward compatibility)
-    const fallbacks = useMemo(() => ({
-        owner: activeSubprocessMeta && typeof activeSubprocessMeta.lead === 'string' ? activeSubprocessMeta.lead : undefined,
-        assignee: activeSubprocessMeta && typeof activeSubprocessMeta.lead === 'string' ? activeSubprocessMeta.lead : undefined,
-        dueDate: activeSubprocessMeta && typeof activeSubprocessMeta.dueDate === 'string' ? activeSubprocessMeta.dueDate : undefined,
-    }), [activeSubprocessMeta]);
-
-    const tasks = useMemo(() => {
-        if (!activeSubprocessId) return [];
-        return getChildren(activeSubprocessId);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeSubprocessId, getChildren, storeNodes]);
-
-    // Fetch records classified under this subprocess (excluding tasks which are nodes)
+    // Fetch records classified under this subprocess
     const { data: subprocessRecords = [] } = useRecords(
         activeSubprocessId ? { classificationNodeId: activeSubprocessId } : undefined
     );
@@ -192,8 +122,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
             const defId = record.definition_id;
             const def = definitions?.find((d) => d.id === defId);
 
-            // Skip if no definition found or if it's a Task definition (tasks are rendered as nodes)
-            if (!def || def.name === 'Task') continue;
+            if (!def) continue;
 
             if (!groups.has(defId)) {
                 groups.set(defId, { definition: def, records: [] });
@@ -242,17 +171,6 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
     const handleSelectSubprocess = (subprocessId: string) => {
         setInspectorMode('record');
         inspectNode(subprocessId);
-    };
-
-    const handleSelectTask = (taskId: string) => {
-        setInspectorMode('record');
-        inspectNode(taskId);
-    };
-
-    const handleAddTask = () => {
-        if (activeSubprocessId) {
-            openOverlay('create-node', { parentId: activeSubprocessId, nodeType: 'task' });
-        }
     };
 
     const handleSelectRecord = (recordId: string) => {
@@ -412,35 +330,11 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                                 {activeSubprocess?.title || 'Select a subprocess'}
                             </div>
                         </div>
-                        {activeSubprocessId && (
-                            <button
-                                onClick={handleAddTask}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                data-aa-component="ProjectView"
-                                data-aa-id="add-task"
-                                data-aa-action="create"
-                            >
-                                <Plus size={16} />
-                                Add Task
-                            </button>
-                        )}
                     </div>
 
                     <div className="flex-1 overflow-auto custom-scroll p-4">
                         <div className="min-w-[900px] space-y-6">
-                            {/* Task Table - using DataTableHierarchy */}
-                            <DataTableHierarchy
-                                nodes={tasks}
-                                fields={taskFields}
-                                fallbacks={fallbacks}
-                                selectedNodeId={selectedNodeId}
-                                onRowSelect={handleSelectTask}
-                                onAddNode={handleAddTask}
-                                showStatusSummary
-                                emptyMessage="No tasks in this subprocess"
-                            />
-
-                            {/* Floating Record Tables - per definition */}
+                            {/* Record Tables - per definition */}
                             {recordsByDefinition.map(({ definition, records }) => (
                                 <div key={definition.id} className="mt-6">
                                     <div className="flex items-center justify-between mb-2">

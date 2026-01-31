@@ -101,7 +101,10 @@ function ReferenceCard({ reference, actionId }: ReferenceCardProps) {
         ? `#${reference.source_record_id}:${reference.target_field_key}`
         : '#unknown:unknown';
 
+    const canDelete = reference.source_record_id != null && reference.target_field_key != null;
+
     const handleDelete = () => {
+        if (!canDelete) return;
         openOverlay('confirm-delete', {
             title: 'Delete Reference',
             message:
@@ -136,8 +139,9 @@ function ReferenceCard({ reference, actionId }: ReferenceCardProps) {
                     </span>
                     <button
                         onClick={handleDelete}
-                        className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1 rounded hover:bg-red-50"
-                        title="Delete reference"
+                        disabled={!canDelete}
+                        className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1 rounded hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title={canDelete ? 'Delete reference' : 'Cannot delete: missing source or target'}
                     >
                         <Trash2 size={12} />
                     </button>

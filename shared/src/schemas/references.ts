@@ -18,7 +18,6 @@ export const ActionReferenceSchema = z.object({
   mode: RefModeSchema,
   snapshotValue: z.unknown().nullable(),
   createdAt: z.coerce.date(),
-  legacyTaskReferenceId: z.string().uuid().nullable().optional(),
 });
 
 export type ActionReference = z.infer<typeof ActionReferenceSchema>;

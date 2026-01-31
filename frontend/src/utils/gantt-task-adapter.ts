@@ -5,9 +5,13 @@
  *
  * NOMENCLATURE BOUNDARY:
  * The gantt-task-react library uses "Task" as its core type, which conflicts
- * with our hierarchy nomenclature (project → process → stage → subprocess → task).
+ * with our hierarchy nomenclature (project → process → stage → subprocess).
  * This adapter quarantines that terminology - the library's "Task" type is used
  * ONLY internally. Our codebase sees GanttRenderItem and GanttRenderOutput.
+ *
+ * NOTE: The primary Gantt view uses mapActionsToGantt (timeline-mapper.ts),
+ * not this hierarchy adapter. renderHierarchy provides structural lanes only —
+ * work items come from the action system, not hierarchy nodes.
  */
 
 import type { Task as LibraryTask } from 'gantt-task-react';
