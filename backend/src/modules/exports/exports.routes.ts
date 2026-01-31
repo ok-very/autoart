@@ -612,7 +612,57 @@ export async function exportsRoutes(app: FastifyInstance) {
     });
 
     // ========================================================================
-    // FINANCE EXPORT ROUTES
+    // UNIFIED FINANCE EXPORT ROUTE
+    // ========================================================================
+
+    /**
+     * Create a finance export through the session lifecycle.
+     * Routes finance presets (invoice-pdf, invoice-docx, budget-csv, invoice-list-csv)
+     * through session creation → projection → execution → output storage.
+     */
+    app.post('/finance', async (request, reply) => {
+        const body = z.object({
+            preset: z.enum(['invoice-pdf', 'invoice-docx', 'budget-csv', 'invoice-list-csv']),
+            invoiceId: z.string().uuid().optional(),
+            projectId: z.string().uuid().optional(),
+        }).parse(request.body);
+
+        const userId = (request.user as { id?: string })?.id;
+
+        // Derive format from preset
+        const formatMap: Record<string, ExportFormat> = {
+            'invoice-pdf': 'pdf',
+            'invoice-docx': 'docx',
+            'budget-csv': 'csv',
+            'invoice-list-csv': 'csv',
+        };
+        const format = formatMap[body.preset];
+
+        try {
+            // Create a session for audit trail
+            const session = await exportsService.createExportSession({
+                format,
+                projectIds: body.projectId ? [body.projectId] : [],
+                targetConfig: {
+                    preset: body.preset,
+                    invoiceId: body.invoiceId,
+                    projectId: body.projectId,
+                },
+                userId,
+            });
+
+            // Execute finance-specific export
+            const result = await exportsService.executeFinanceExport(session.id, body.preset);
+
+            return reply.send(result);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Finance export failed';
+            return reply.status(500).send({ error: message });
+        }
+    });
+
+    // ========================================================================
+    // FINANCE EXPORT ROUTES (legacy direct routes, kept for backwards compat)
     // ========================================================================
 
     /**
