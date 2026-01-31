@@ -26,6 +26,7 @@ Quality and consistency matter more than speed. Check references before acting.
 - **ALWAYS use pnpm catalog** for shared dependencies.
 
 - **NEVER use `git stash`** to work around dirty trees. Commit the changes (even to unrelated files like `todo.md` or build artifacts) so branch switching works cleanly. Stash/pop loops waste tokens and risk data loss.
+- **NEVER navigate between stack branches to apply fixes.** If a review comment targets a parent branch, apply the fix on the current (top) branch — it lands in the same merge. Switching branches mid-merge causes dirty-tree errors, restacking, and cascading failures.
 
 ---
 
