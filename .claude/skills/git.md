@@ -87,13 +87,18 @@ If stackit errors (e.g., "Pull request is in clean status", automerge failures):
    ```bash
    gh pr merge <PR-NUMBER> --merge
    ```
-   **Do NOT pass `--delete-branch`.** The repo has "Automatically delete head branches"
-   enabled — GitHub deletes the branch itself after retargeting child PRs. Passing
-   `--delete-branch` races against retargeting and can cascade-close child PRs.
-4. **Immediately return to stackit** for cleanup and remaining merges:
+   **Never pass `--delete-branch`** — the repo's "Automatically delete head branches"
+   setting handles cleanup after child PRs are retargeted. Forcing early deletion
+   races against retargeting and can cascade-close child PRs.
+
+> **Do NOT run `stackit sync` between sequential manual merges.**
+> GitHub retargets child PRs automatically after a base branch merges.
+> Wait until the next PR's base branch has updated, then merge it the same way.
+> Run `stackit sync` once after all PRs are merged.
+
+4. **After all PRs are merged, return to stackit** for cleanup:
    ```bash
-   stackit sync --no-interactive     # Let stackit clean up and restack
-   stackit merge next --no-interactive  # Continue with next PR
+   stackit sync --no-interactive     # Pull main, cleanup merged branches
    ```
 
 **NEVER** do any of the following as "recovery":
