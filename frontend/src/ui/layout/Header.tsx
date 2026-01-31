@@ -248,25 +248,25 @@ export function Header() {
 
               <Menu.Dropdown>
                 <Menu.Item
-                  onClick={() => setCenterContentType('intake')}
+                  onClick={() => { navigate('/'); setCenterContentType('intake'); }}
                   leftSection={<FileText size={16} />}
                 >
                   Forms
                 </Menu.Item>
                 <Menu.Item
-                  onClick={() => setCenterContentType('artcollector')}
+                  onClick={() => { navigate('/'); setCenterContentType('artcollector'); }}
                   leftSection={<Image size={16} />}
                 >
                   Collect
                 </Menu.Item>
                 <Menu.Item
-                  onClick={() => setCenterContentType('mail')}
+                  onClick={() => { navigate('/'); setCenterContentType('mail'); }}
                   leftSection={<Mail size={16} />}
                 >
                   Mail
                 </Menu.Item>
                 <Menu.Item
-                  onClick={() => setCenterContentType('finance')}
+                  onClick={() => { navigate('/'); setCenterContentType('finance'); }}
                   leftSection={<DollarSign size={16} />}
                 >
                   Finances

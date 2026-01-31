@@ -5,6 +5,7 @@
 import { Plus, FileText, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import { Button } from '@autoart/ui';
 import { useIntakeForms, useCreateIntakeForm } from '../../api/hooks/intake';
 
 interface IntakeDashboardProps {
@@ -49,11 +50,25 @@ export function IntakeDashboard({ onOpenForm }: IntakeDashboardProps) {
     return (
         <div className="p-8">
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-slate-800">Intake Forms</h1>
-                <p className="text-sm text-slate-500 mt-1">
-                    Create and manage intake forms for collecting submissions
-                </p>
+            <div className="flex items-center justify-between mb-8">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-800">Intake Forms</h1>
+                    <p className="text-sm text-slate-500 mt-1">
+                        Create and manage intake forms for collecting submissions
+                    </p>
+                </div>
+                <Button
+                    onClick={handleCreateForm}
+                    disabled={createForm.isPending}
+                    className="hidden md:flex items-center gap-2"
+                >
+                    {createForm.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                        <Plus className="w-4 h-4" />
+                    )}
+                    Create Form
+                </Button>
             </div>
 
             {/* Form Cards Grid */}
