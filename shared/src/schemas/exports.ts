@@ -12,7 +12,7 @@ import { z } from 'zod';
 // EXPORT FORMATS
 // ============================================================================
 
-/** Must match database CHECK constraint in migration 033/034/035 */
+/** Must match database CHECK constraint in migration 033/034/048 */
 export const ExportFormatSchema = z.enum([
     'rtf',
     'plaintext',
@@ -22,6 +22,7 @@ export const ExportFormatSchema = z.enum([
     'google-sheets',
     'google-slides',
     'pdf',
+    'docx',
     // Note: Gantt is not an export format - it's a projection type that uses PDF format
 ]);
 export type ExportFormat = z.infer<typeof ExportFormatSchema>;
@@ -94,7 +95,7 @@ export type FinanceExportPreset = 'invoice-pdf' | 'invoice-docx' | 'budget-csv' 
 export const FINANCE_EXPORT_PRESETS: Record<FinanceExportPreset, {
     label: string;
     description: string;
-    format: ExportFormat | 'docx';
+    format: ExportFormat;
 }> = {
     'invoice-pdf': {
         label: 'Invoice PDF',
@@ -215,6 +216,8 @@ export const ExportSessionSchema = z.object({
     options: ExportOptionsSchema,
     status: ExportSessionStatusSchema,
     projectionCache: z.array(BfaProjectExportModelSchema).optional(),
+    outputPath: z.string().optional(),
+    outputMimeType: z.string().optional(),
     error: z.string().optional(),
     createdBy: z.string().optional(),
     createdAt: z.string(),
