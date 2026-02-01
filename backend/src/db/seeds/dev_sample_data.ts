@@ -64,10 +64,10 @@ function statusToWorkEvent(status: string | null | undefined): string | null {
 }
 
 // ============================================================================
-// HELPER: Create action + ACTION_DECLARED event
+// HELPER: Insert action row (event batched separately)
 // ============================================================================
 
-async function createAction(
+async function insertAction(
   db: Kysely<Database>,
   opts: {
     contextId: string;
@@ -75,7 +75,6 @@ async function createAction(
     parentActionId: string | null;
     type: string;
     fieldBindings: Array<{ fieldKey: string; value: unknown }>;
-    actorId: string;
   },
 ): Promise<string> {
   const [action] = await db
@@ -90,47 +89,29 @@ async function createAction(
     .returning('id')
     .execute();
 
-  await db
-    .insertInto('events')
-    .values({
-      context_id: opts.contextId,
-      context_type: opts.contextType,
-      action_id: action.id,
-      type: 'ACTION_DECLARED',
-      payload: JSON.stringify({
-        actionType: opts.type,
-        fieldBindings: opts.fieldBindings,
-      }),
-      actor_id: opts.actorId,
-    })
-    .execute();
-
   return action.id;
 }
 
+/** Pending event row for batch insert */
+interface PendingEvent {
+  context_id: string;
+  context_type: 'project';
+  action_id: string;
+  type: string;
+  payload: string;
+  actor_id: string;
+}
+
 /**
- * Emit a work lifecycle event for an action.
+ * Flush pending events in batches (Postgres has a ~65k parameter limit).
+ * 6 columns per event → batches of 1000 rows = 6000 params, well within limits.
  */
-async function emitWorkEvent(
-  db: Kysely<Database>,
-  opts: {
-    contextId: string;
-    actionId: string;
-    eventType: string;
-    actorId: string;
-  },
-): Promise<void> {
-  await db
-    .insertInto('events')
-    .values({
-      context_id: opts.contextId,
-      context_type: 'project' as const,
-      action_id: opts.actionId,
-      type: opts.eventType,
-      payload: JSON.stringify({}),
-      actor_id: opts.actorId,
-    })
-    .execute();
+async function flushEvents(db: Kysely<Database>, events: PendingEvent[]): Promise<void> {
+  const BATCH_SIZE = 1000;
+  for (let i = 0; i < events.length; i += BATCH_SIZE) {
+    const batch = events.slice(i, i + BATCH_SIZE);
+    await db.insertInto('events').values(batch).execute();
+  }
 }
 
 /**
@@ -294,7 +275,8 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
   // 6. Create container actions from parsed containers
   // =========================================================================
 
-  // Map tempId → action ID for parent lookups
+  // Collect all events for batch insert at the end
+  const pendingEvents: PendingEvent[] = [];
   const containerActionMap = new Map<string, string>();
   const userId = demoUser.id;
 
@@ -319,16 +301,24 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
 
     const fieldBindings = [{ fieldKey: 'title', value: container.title }];
 
-    const actionId = await createAction(db, {
+    const actionId = await insertAction(db, {
       contextId: project.id,
       contextType: 'project',
       parentActionId,
       type: actionType,
       fieldBindings,
-      actorId: userId,
     });
 
     containerActionMap.set(container.tempId, actionId);
+
+    pendingEvents.push({
+      context_id: project.id,
+      context_type: 'project',
+      action_id: actionId,
+      type: 'ACTION_DECLARED',
+      payload: JSON.stringify({ actionType, fieldBindings }),
+      actor_id: userId,
+    });
   }
 
   console.log(`  ✓ Created ${containers.length} container actions (Process → Stage)`);
@@ -337,32 +327,29 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
   // 7. Create task/subtask actions from parsed items
   // =========================================================================
 
-  // Map item tempId → action ID for subtask parent lookups
   const itemActionMap = new Map<string, string>();
   let taskCount = 0;
   let subtaskCount = 0;
   let workEventCount = 0;
 
-  for (const item of items) {
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
     const isSubtask = item.metadata?.isSubtask === true;
     const fieldBindings = buildFieldBindings(item);
 
     let parentActionId: string | null;
 
     if (isSubtask) {
-      // Subtask: parent is the task action
       const parentTaskTempId = item.metadata?.parentTaskTempId as string | undefined;
       parentActionId = parentTaskTempId
         ? itemActionMap.get(parentTaskTempId) ?? null
         : null;
       if (!parentActionId) {
-        // Fallback to container if task not found
         parentActionId = item.parentTempId
           ? containerActionMap.get(item.parentTempId) ?? null
           : null;
       }
     } else {
-      // Task: parent is the container (stage)
       parentActionId = item.parentTempId
         ? containerActionMap.get(item.parentTempId) ?? null
         : null;
@@ -370,13 +357,12 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
 
     const actionType = isSubtask ? 'Subtask' : 'Task';
 
-    const actionId = await createAction(db, {
+    const actionId = await insertAction(db, {
       contextId: project.id,
       contextType: 'project',
       parentActionId,
       type: actionType,
       fieldBindings,
-      actorId: userId,
     });
 
     itemActionMap.set(item.tempId, actionId);
@@ -387,15 +373,27 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
       taskCount++;
     }
 
-    // Emit work lifecycle events based on status
+    // Queue ACTION_DECLARED event
+    pendingEvents.push({
+      context_id: project.id,
+      context_type: 'project',
+      action_id: actionId,
+      type: 'ACTION_DECLARED',
+      payload: JSON.stringify({ actionType, fieldBindings }),
+      actor_id: userId,
+    });
+
+    // Queue work lifecycle event based on status
     const status = (item.metadata?.status as string) ?? null;
     const workEvent = statusToWorkEvent(status);
     if (workEvent) {
-      await emitWorkEvent(db, {
-        contextId: project.id,
-        actionId,
-        eventType: workEvent,
-        actorId: userId,
+      pendingEvents.push({
+        context_id: project.id,
+        context_type: 'project',
+        action_id: actionId,
+        type: workEvent,
+        payload: JSON.stringify({}),
+        actor_id: userId,
       });
       workEventCount++;
     }
@@ -404,26 +402,31 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
     if (status?.trim().toUpperCase() === 'MILESTONE') {
       const notes = item.metadata?.notes as string | undefined;
       if (notes) {
-        await db
-          .insertInto('events')
-          .values({
-            context_id: project.id,
-            context_type: 'project' as const,
-            action_id: actionId,
-            type: 'FIELD_VALUE_RECORDED',
-            payload: JSON.stringify({
-              fieldKey: 'milestone',
-              value: notes,
-            }),
-            actor_id: userId,
-          })
-          .execute();
+        pendingEvents.push({
+          context_id: project.id,
+          context_type: 'project',
+          action_id: actionId,
+          type: 'FIELD_VALUE_RECORDED',
+          payload: JSON.stringify({ fieldKey: 'milestone', value: notes }),
+          actor_id: userId,
+        });
       }
+    }
+
+    // Progress every 50 items
+    if ((i + 1) % 50 === 0) {
+      console.log(`    ... ${i + 1}/${items.length} items`);
     }
   }
 
   console.log(`  ✓ Created ${taskCount} task actions, ${subtaskCount} subtask actions`);
-  console.log(`  ✓ Emitted ${workEventCount} work lifecycle events`);
+
+  // =========================================================================
+  // 7b. Batch-insert all events
+  // =========================================================================
+
+  await flushEvents(db, pendingEvents);
+  console.log(`  ✓ Flushed ${pendingEvents.length} events (${workEventCount} work lifecycle)`);
 
   // =========================================================================
   // 8. Create sample records
