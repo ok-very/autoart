@@ -15,7 +15,7 @@
   const FIELD_SC   = 2.0;   // field scale — domain [-1,1] for proper plate modes
   const MAX_ALPHA  = 0.65;  // peak line opacity
   const DURATION   = 8.0;   // loop period (seconds)
-  const SIZE_FRAC  = 0.38;  // pattern size as fraction of min(W,H)
+  const SIZE_FRAC  = 0.82;  // pattern fills most of the tile
 
   // --- DESIGN.md muted palette ------------------------------------------
   const PALETTE = [
@@ -244,10 +244,12 @@
     ro.disconnect();
     document.removeEventListener('visibilitychange', onVisibility);
 
-    canvas.style.transition = 'opacity 300ms ease-out';
-    canvas.style.opacity = '0';
+    const backdrop = document.getElementById('cymatic-loader-backdrop');
+    const target = backdrop || canvas;
+    target.style.transition = 'opacity 300ms ease-out';
+    target.style.opacity = '0';
     setTimeout(() => {
-      canvas.remove();
+      target.remove();
       delete window.__destroyLoader;
     }, 320);
   };

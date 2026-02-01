@@ -1,12 +1,10 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-01-31*
+*Last Updated: 2026-02-01*
 
 ## Bug List
 
 - AutoHelper Settings doesn't link correctly to frontend menu
-- Landing page still not receiving typography/styling tokens
-- Remove TNR as fallback font
 - Cymatic loader should go seamless pattern/squaretile, slightly heavier line (0.5pt)
 - Login fails with demo account credentials - can't test
 
@@ -79,7 +77,9 @@
 
 ## In-Flight (Awaiting Review)
 
-*(none)*
+| # | Issue | PR |
+|---|-------|----|
+| — | Fix: Methodology→Process, fieldBindings crash, Bound→Linked, LoginPage design tokens | #312 |
 
 ---
 
@@ -87,6 +87,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | Dockview v4 theme, swoopy tab corners, unified ThemedTab, tab strip + button | PRs #307-311 |
 | 275 | Epic: Export Workbench — preview-first outputs + finance via sessions | PRs #286-290, #292 |
 | 218 | Phase 6: Remove task_references system + hierarchy nodes | PRs #282-285 |
 | — | Polls editor/management surface in dashboard | PRs #271-273 |
@@ -111,7 +112,7 @@
 | #214 | Date format + timezone user settings |
 | #215 | Restructure .claude/ for Claude Code best practices |
 | #205 | Wire theme variables to global styles |
-| #204 | Modernize tabs, remove Bound labels |
+| #204 | Modernize tabs, remove Bound labels (superseded by PRs #307-311) |
 | #198, #201 | Design system docs (palette, typography, layout) |
 | #189-195 | React Compiler fixes (Tier 1-3) |
 | #188 | Add referenceSlots to action arrangements |

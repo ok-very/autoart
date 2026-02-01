@@ -100,7 +100,7 @@ export function actionToProjectionInput(
         context_type: action.contextType,
         context_id: action.contextId,
         parent_action_id: action.parentActionId,
-        field_bindings: action.fieldBindings.map(fb => ({
+        field_bindings: (action.fieldBindings ?? []).map(fb => ({
             fieldKey: fb.fieldKey,
             value: fb.value,
         })),
