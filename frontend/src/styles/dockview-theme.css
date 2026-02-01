@@ -57,6 +57,10 @@
   overflow: visible !important;
 }
 
+.dockview-theme-light .dv-react-part {
+  overflow: visible;
+}
+
 /* === Tab base (inverse-radius swoopy tabs) === */
 
 .dockview-theme-light .dv-tab {
