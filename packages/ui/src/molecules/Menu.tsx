@@ -113,7 +113,7 @@ function MenuItem<C extends ElementType = 'button'>({
             <Component
                 {...rest}
                 className={clsx(
-                    'w-full flex items-center gap-2 px-3 py-2 text-sm font-sans text-left transition-colors outline-none',
+                    'w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors outline-none',
                     'focus:bg-slate-100 cursor-pointer',
                     'data-[disabled]:text-slate-400 data-[disabled]:cursor-not-allowed data-[disabled]:pointer-events-none',
                     !disabled && 'text-slate-700',
@@ -137,7 +137,7 @@ function MenuLabel({ children, className }: MenuLabelProps) {
     return (
         <DropdownMenu.Label
             className={clsx(
-                'px-3 py-1.5 text-xs font-sans font-medium text-slate-500 uppercase tracking-wider',
+                'px-3 py-1.5 text-xs font-medium text-slate-500 uppercase tracking-wider',
                 className
             )}
         >
@@ -184,7 +184,7 @@ function MenuSubTrigger({ children, leftSection, className, disabled }: MenuSubT
         <DropdownMenu.SubTrigger
             disabled={disabled}
             className={clsx(
-                'w-full flex items-center gap-2 px-3 py-2 text-sm font-sans text-left transition-colors outline-none',
+                'w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors outline-none',
                 'focus:bg-slate-100 cursor-pointer',
                 'data-[state=open]:bg-slate-100',
                 'data-[disabled]:text-slate-400 data-[disabled]:cursor-not-allowed data-[disabled]:pointer-events-none',

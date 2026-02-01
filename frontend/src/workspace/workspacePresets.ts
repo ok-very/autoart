@@ -171,8 +171,6 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         isBuiltIn: true,
         panels: [
             { panelId: 'project-panel', position: 'center', bound: true },
-            { panelId: 'project-panel', position: 'center', bound: true },
-            { panelId: 'project-panel', position: 'center', bound: true },
             { panelId: 'mail-panel', position: 'right' },
         ],
         subviews: [
@@ -180,8 +178,6 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
                 id: 'dashboard',
                 label: 'Dashboard',
                 panels: [
-                    { panelId: 'project-panel', position: 'center', bound: true },
-                    { panelId: 'project-panel', position: 'center', bound: true },
                     { panelId: 'project-panel', position: 'center', bound: true },
                     { panelId: 'mail-panel', position: 'right' },
                 ],

@@ -14,6 +14,12 @@ import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
 import { WORKSPACE_COLORS, BASIC_COLOR_NAMES, ALL_COLOR_NAMES, type WorkspaceColorName } from '../../workspace/workspaceColors';
 
+function toValidColor(value: string | undefined): WorkspaceColorName {
+    return (ALL_COLOR_NAMES as readonly string[]).includes(value ?? '')
+        ? (value as WorkspaceColorName)
+        : 'slate';
+}
+
 interface AddWorkspaceDialogProps {
     open: boolean;
     onClose: () => void;
@@ -23,7 +29,7 @@ interface AddWorkspaceDialogProps {
 
 export function AddWorkspaceDialog({ open, onClose, parentWorkspaceId, defaultColor }: AddWorkspaceDialogProps) {
     const [name, setName] = useState('');
-    const [color, setColor] = useState<WorkspaceColorName>((defaultColor as WorkspaceColorName) ?? 'slate');
+    const [color, setColor] = useState<WorkspaceColorName>(toValidColor(defaultColor));
     const [error, setError] = useState<string | null>(null);
     const [showAllColors, setShowAllColors] = useState(false);
     const visibleColors = showAllColors ? ALL_COLOR_NAMES : BASIC_COLOR_NAMES;
@@ -68,7 +74,7 @@ export function AddWorkspaceDialog({ open, onClose, parentWorkspaceId, defaultCo
             });
             // Reset and close only on success
             setName('');
-            setColor((defaultColor as WorkspaceColorName) ?? 'slate');
+            setColor(toValidColor(defaultColor));
             setError(null);
             setShowAllColors(false);
             onClose();
@@ -79,7 +85,7 @@ export function AddWorkspaceDialog({ open, onClose, parentWorkspaceId, defaultCo
 
     const handleClose = useCallback(() => {
         setName('');
-        setColor((defaultColor as WorkspaceColorName) ?? 'slate');
+        setColor(toValidColor(defaultColor));
         setError(null);
         setShowAllColors(false);
         onClose();

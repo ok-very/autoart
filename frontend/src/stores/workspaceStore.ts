@@ -591,7 +591,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 export const useOpenPanelIds = () => useWorkspaceStore((s) => s.openPanelIds);
 export const useLayout = () => useWorkspaceStore((s) => s.layout);
 export const useActiveWorkspaceId = () => useWorkspaceStore((s) => s.activeWorkspaceId);
-export const useActiveSubviewId = () => useWorkspaceStore((s) => s.activeSubviewId);
+export const useActiveSubviewId = () => useWorkspaceStore((s) => s.activeWorkspaceId ? s.activeSubviewId : null);
 export const useCustomWorkspaces = () => useWorkspaceStore((s) => s.customWorkspaces);
 export const useAllWorkspaces = () => useWorkspaceStore((s) => s.getAllWorkspaces());
 export const usePendingPanelPositions = () => useWorkspaceStore((s) => s.pendingPanelPositions);
