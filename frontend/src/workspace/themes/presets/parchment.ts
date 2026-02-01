@@ -68,6 +68,10 @@ export const parchmentTheme: WorkspaceThemeModule = {
       // Drop Target
       '--ws-drop-target-bg': 'rgba(47, 79, 101, 0.1)',
       '--ws-drop-target-border': '#2F4F65',
+      '--ws-drop-target-shadow': `
+        inset 0 0 12px rgba(47, 79, 101, 0.14),
+        inset 0 0 4px rgba(47, 79, 101, 0.10),
+        0 0 8px rgba(47, 79, 101, 0.07)`,
 
       // Watermark
       '--ws-watermark-bg': '#F5F2ED',

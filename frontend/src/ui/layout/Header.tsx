@@ -151,16 +151,15 @@ export function Header() {
           <ChladniBadge />
 
           {/* Projects - primary navigation home */}
-          <Link to="/">
-            <Button
-              variant={location.pathname === '/' ? 'light' : 'subtle'}
-              color="gray"
-              size="sm"
-              leftSection={<LayoutGrid size={14} />}
-            >
-              Projects
-            </Button>
-          </Link>
+          <Button
+            variant={location.pathname === '/' ? 'light' : 'subtle'}
+            color="gray"
+            size="sm"
+            leftSection={<LayoutGrid size={14} />}
+            onClick={() => { navigate('/'); setCenterContentType('projects'); }}
+          >
+            Projects
+          </Button>
 
           {/* Workspace Dropdown - primary navigation for workflow stages */}
           <WorkspaceDropdown />

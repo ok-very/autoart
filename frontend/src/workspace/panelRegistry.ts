@@ -93,7 +93,8 @@ export const DEFAULT_CONTEXT: AppContext = {
 
 export type DefaultPlacement = {
     area: 'center' | 'right' | 'bottom' | 'left';
-    size?: number; // percentage or pixels depending on area
+    /** Size hint. Values ≤ 100 = percentage of container. Values > 100 = absolute pixels. */
+    size?: number;
 };
 
 export interface PanelDefinition {
@@ -132,7 +133,7 @@ export const PANEL_DEFINITIONS: Record<PanelId, PanelDefinition> = {
         title: 'Inspector',
         icon: Eye,
         permanent: false,
-        defaultPlacement: { area: 'right', size: 30 },
+        defaultPlacement: { area: 'right', size: 25 },
         shouldShow: () => true, // Always show (renders empty state if nothing selected)
         canActOn: (ctx) => ctx.selection.type !== null,
     },
