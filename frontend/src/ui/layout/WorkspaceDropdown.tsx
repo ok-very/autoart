@@ -10,7 +10,7 @@
 import { ChevronDown, Copy, Dna, Folder, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-import { Button } from '@autoart/ui';
+import { Button, type ButtonColor } from '@autoart/ui';
 import { Menu } from '@autoart/ui';
 import { useWorkspaceStore, useActiveWorkspaceId, useActiveSubviewId, useCustomWorkspaces } from '../../stores/workspaceStore';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
@@ -51,29 +51,28 @@ const WORKSPACE_COLOR_CONFIG: Record<string, { icon: string; active: string }> =
 const DEFAULT_COLOR = 'slate';
 
 /**
- * Maps workspace colors to Button component's supported colors.
- * Button only supports: 'gray' | 'blue' | 'violet' | 'yellow'
- * Amber and orange both map to yellow — closest available match.
+ * Maps workspace colors to Button component colors.
+ * Each workspace color maps to the closest available button color.
  */
-const BUTTON_COLOR_MAP: Record<string, 'gray' | 'blue' | 'violet' | 'yellow'> = {
+const BUTTON_COLOR_MAP: Record<string, ButtonColor> = {
     // Chromatic — warm to cool
-    red: 'violet',
-    orange: 'yellow',
+    red: 'red',
+    orange: 'orange',
     amber: 'yellow',
     yellow: 'yellow',
-    lime: 'blue',
-    green: 'blue',
-    emerald: 'blue',
-    teal: 'blue',
-    cyan: 'blue',
-    sky: 'blue',
+    lime: 'green',
+    green: 'green',
+    emerald: 'teal',
+    teal: 'teal',
+    cyan: 'cyan',
+    sky: 'cyan',
     blue: 'blue',
-    indigo: 'violet',
+    indigo: 'indigo',
     violet: 'violet',
     purple: 'violet',
-    fuchsia: 'violet',
-    pink: 'violet',
-    rose: 'violet',
+    fuchsia: 'pink',
+    pink: 'pink',
+    rose: 'rose',
     // Neutrals
     slate: 'gray',
     gray: 'gray',
@@ -82,7 +81,7 @@ const BUTTON_COLOR_MAP: Record<string, 'gray' | 'blue' | 'violet' | 'yellow'> = 
     stone: 'gray',
 };
 
-function getButtonColor(workspaceColor: string): 'gray' | 'blue' | 'violet' | 'yellow' {
+function getButtonColor(workspaceColor: string): ButtonColor {
     return BUTTON_COLOR_MAP[workspaceColor] ?? 'gray';
 }
 

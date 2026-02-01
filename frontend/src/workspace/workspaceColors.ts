@@ -248,6 +248,18 @@ export const WORKSPACE_COLORS: Record<WorkspaceColorName, WorkspaceColorClasses>
     },
 };
 
+/** 8 curated defaults shown by default in pickers */
+export const BASIC_COLOR_NAMES: WorkspaceColorName[] = [
+    'red', 'orange', 'amber', 'green', 'cyan', 'blue', 'purple', 'pink',
+];
+
+/** Full ordered palette (warm → cool → neutral) */
+export const ALL_COLOR_NAMES: WorkspaceColorName[] = [
+    'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan',
+    'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose',
+    'slate', 'gray', 'zinc', 'neutral', 'stone',
+];
+
 /** Get color classes for a workspace color, with slate fallback */
 export function getWorkspaceColorClasses(color: string | null | undefined): WorkspaceColorClasses {
     if (color && color in WORKSPACE_COLORS) {

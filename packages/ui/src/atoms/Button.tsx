@@ -1,10 +1,12 @@
 import { clsx } from 'clsx';
 import { forwardRef, ButtonHTMLAttributes } from 'react';
 
+export type ButtonColor = 'gray' | 'red' | 'orange' | 'yellow' | 'green' | 'teal' | 'cyan' | 'blue' | 'indigo' | 'violet' | 'pink' | 'rose';
+
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'light' | 'subtle';
     size?: 'xs' | 'sm' | 'md' | 'lg';
-    color?: 'gray' | 'blue' | 'violet' | 'yellow';
+    color?: ButtonColor;
     leftSection?: React.ReactNode;
     rightSection?: React.ReactNode;
 }
@@ -14,17 +16,49 @@ const colorStyles = {
         light: 'bg-slate-100 text-slate-700 hover:bg-slate-200',
         subtle: 'text-slate-600 hover:bg-slate-100',
     },
+    red: {
+        light: 'bg-red-50 text-red-700 hover:bg-red-100',
+        subtle: 'text-red-600 hover:bg-red-50',
+    },
+    orange: {
+        light: 'bg-orange-50 text-orange-700 hover:bg-orange-100',
+        subtle: 'text-orange-600 hover:bg-orange-50',
+    },
+    yellow: {
+        light: 'bg-amber-50 text-amber-700 hover:bg-amber-100',
+        subtle: 'text-amber-600 hover:bg-amber-50',
+    },
+    green: {
+        light: 'bg-green-50 text-green-700 hover:bg-green-100',
+        subtle: 'text-green-600 hover:bg-green-50',
+    },
+    teal: {
+        light: 'bg-teal-50 text-teal-700 hover:bg-teal-100',
+        subtle: 'text-teal-600 hover:bg-teal-50',
+    },
+    cyan: {
+        light: 'bg-cyan-50 text-cyan-700 hover:bg-cyan-100',
+        subtle: 'text-cyan-600 hover:bg-cyan-50',
+    },
     blue: {
         light: 'bg-blue-50 text-blue-700 hover:bg-blue-100',
         subtle: 'text-blue-600 hover:bg-blue-50',
+    },
+    indigo: {
+        light: 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100',
+        subtle: 'text-indigo-600 hover:bg-indigo-50',
     },
     violet: {
         light: 'bg-violet-50 text-violet-700 hover:bg-violet-100',
         subtle: 'text-violet-600 hover:bg-violet-50',
     },
-    yellow: {
-        light: 'bg-amber-50 text-amber-700 hover:bg-amber-100',
-        subtle: 'text-amber-600 hover:bg-amber-50',
+    pink: {
+        light: 'bg-pink-50 text-pink-700 hover:bg-pink-100',
+        subtle: 'text-pink-600 hover:bg-pink-50',
+    },
+    rose: {
+        light: 'bg-rose-50 text-rose-700 hover:bg-rose-100',
+        subtle: 'text-rose-600 hover:bg-rose-50',
     },
 };
 
