@@ -8,7 +8,7 @@
  */
 
 import dotenv from 'dotenv';
-import { Kysely, PostgresDialect } from 'kysely';
+import { Kysely, PostgresDialect, sql } from 'kysely';
 import path from 'path';
 import { Pool } from 'pg';
 import { fileURLToPath } from 'url';
@@ -73,10 +73,12 @@ async function main() {
     if (resetFirst) {
       console.log('[!] Resetting database data...');
       // Delete in reverse dependency order
+      // Events table has an immutable trigger that blocks DELETE —
+      // TRUNCATE bypasses row-level triggers
       await db.deleteFrom('import_executions').execute();
       await db.deleteFrom('import_plans').execute();
       await db.deleteFrom('import_sessions').execute();
-      await db.deleteFrom('events').execute();
+      await sql`TRUNCATE events CASCADE`.execute(db);
       await db.deleteFrom('workflow_surface_nodes').execute();
       await db.deleteFrom('action_references').execute();
       await db.deleteFrom('actions').execute();
