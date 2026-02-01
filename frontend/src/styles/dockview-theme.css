@@ -41,27 +41,9 @@
   position: relative;
   background-image: none !important;
   background-size: auto;
-  padding: 0 var(--ws-tab-radius);
 }
 
-/* Overflow stack fix — swoopy pseudo-elements extend ~8px beyond the tab.
-   All three inner layers (tabs-container, dv-scrollable, tabs-and-actions-container)
-   must be overflow:visible so nothing clips the ::before/::after concave corners.
-   The outermost clip boundary is .dv-groupview (overflow:hidden, set by dockview),
-   which is large enough that the pseudo-elements stay well within its bounds. */
-.dockview-theme-light .dv-scrollable {
-  overflow: visible !important;
-}
-
-.dockview-theme-light .dv-tabs-container {
-  overflow: visible !important;
-}
-
-.dockview-theme-light .dv-react-part {
-  overflow: visible;
-}
-
-/* === Tab base (inverse-radius swoopy tabs) === */
+/* === Tab base (lifted tabs) === */
 
 .dockview-theme-light .dv-tab {
   font-family: var(--font-sans);
@@ -113,38 +95,8 @@
 }
 
 /* Suppress dockview's native ::before divider on the active tab */
-.dockview-theme-light .dv-tab.dv-active-tab::before {
+.dockview-theme-light .dv-tabs-container.dv-horizontal .dv-tab.dv-active-tab::before {
   content: none !important;
-}
-
-/* Suppress dockview's native ::after focus outline on the active tab */
-.dockview-theme-light .dv-tab.dv-active-tab::after {
-  content: none !important;
-}
-
-/* Swoopy concave corners — real DOM elements to bypass dockview styleInject conflicts */
-.ws-tab-corner {
-  display: none;
-  position: absolute;
-  bottom: -1px;
-  width: var(--ws-tab-radius);
-  height: var(--ws-tab-radius);
-  pointer-events: none;
-  z-index: 2;
-}
-
-.dockview-theme-light .dv-active-tab .ws-tab-corner {
-  display: block;
-}
-
-.ws-tab-corner-left {
-  left: calc(-1 * var(--ws-tab-radius));
-  background: radial-gradient(circle at 100% 0, transparent var(--ws-tab-radius), var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px));
-}
-
-.ws-tab-corner-right {
-  right: calc(-1 * var(--ws-tab-radius));
-  background: radial-gradient(circle at 0 0, transparent var(--ws-tab-radius), var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px));
 }
 
 .dockview-theme-light .dv-tab.dv-active-tab:hover {

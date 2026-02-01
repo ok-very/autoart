@@ -325,44 +325,9 @@ function WatermarkComponent() {
 // TAB COMPONENT
 // ============================================================================
 
-/**
- * Inject swoopy corner spans directly onto the `.dv-tab` ancestor via DOM API.
- * Dockview wraps React tab content in `.dv-react-part` (100% width/height),
- * which traps absolutely-positioned children. By appending corners as siblings
- * of `.dv-react-part` they become direct children of `.dv-tab` (position: relative),
- * letting the existing CSS position them correctly.
- */
-function useSwoopyCorners(innerRef: React.RefObject<HTMLElement | null>) {
-  useEffect(() => {
-    const el = innerRef.current;
-    if (!el) return;
-
-    const tab = el.closest('.dv-tab');
-    if (!tab) return;
-
-    const left = document.createElement('span');
-    left.className = 'ws-tab-corner ws-tab-corner-left';
-    left.setAttribute('aria-hidden', 'true');
-
-    const right = document.createElement('span');
-    right.className = 'ws-tab-corner ws-tab-corner-right';
-    right.setAttribute('aria-hidden', 'true');
-
-    tab.appendChild(left);
-    tab.appendChild(right);
-
-    return () => {
-      left.remove();
-      right.remove();
-    };
-  }, []);
-}
-
 function IconTab(props: IDockviewPanelHeaderProps) {
   const { api } = props;
   const closePanel = useWorkspaceStore((s) => s.closePanel);
-  const tabContentRef = useRef<HTMLDivElement>(null);
-  useSwoopyCorners(tabContentRef);
 
   // Get component type from dynamic panel ID (e.g., "project-panel-123" -> "project-panel")
   const getComponentType = (panelId: string): PanelId => {
@@ -399,7 +364,6 @@ function IconTab(props: IDockviewPanelHeaderProps) {
 
   return (
     <div
-      ref={tabContentRef}
       className={`flex items-center gap-2 text-current overflow-hidden w-full group ${boundColorClasses}`}
     >
       <div className="flex items-center gap-2 flex-1 overflow-hidden min-w-0">
