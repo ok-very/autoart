@@ -149,6 +149,33 @@
   background: var(--ws-tab-bg-hover);
 }
 
+/* === Tab strip add-panel button === */
+
+.dockview-theme-light .dv-right-actions-container .tab-strip-add-button {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.dockview-theme-light .dv-right-actions-container .tab-strip-add-trigger {
+  color: var(--ws-muted-fg);
+  background: none;
+  border: none;
+  border-radius: 4px;
+  padding: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--ws-motion-duration-fast) var(--ws-motion-ease),
+              background-color var(--ws-motion-duration-fast) var(--ws-motion-ease);
+}
+
+.dockview-theme-light .dv-right-actions-container .tab-strip-add-trigger:hover {
+  color: var(--ws-fg);
+  background: var(--ws-tab-bg-hover);
+}
+
 /* === Panel content area === */
 
 .dockview-theme-light .dv-groupview > .dv-content-container {
