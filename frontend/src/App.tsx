@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import { useCurrentUser } from './api/hooks';
 import { LoginPage } from './pages/LoginPage';
@@ -9,6 +9,15 @@ import { useAuthStore } from './stores/authStore';
 import { MainLayout } from './ui/layout/MainLayout';
 import { CollectionModeProvider } from './workflows/export/context/CollectionModeProvider';
 
+
+function NavigateToLogin() {
+  const location = useLocation();
+  const intended = location.pathname + location.hash;
+  const to = intended && intended !== '/login'
+    ? `/login?redirect=${encodeURIComponent(intended)}`
+    : '/login';
+  return <Navigate to={to} replace />;
+}
 
 function App() {
   const { isLoading, isError, isFetching } = useCurrentUser();
@@ -66,7 +75,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<NavigateToLogin />} />
       </Routes>
     );
   }

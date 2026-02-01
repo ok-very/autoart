@@ -13,7 +13,7 @@ export interface FontOption {
 export const COMMON_FONTS: FontOption[] = [
     { family: 'Arial', category: 'sans-serif' },
     { family: 'Calibri', category: 'sans-serif' },
-    { family: 'Times New Roman', category: 'serif' },
+    { family: 'Source Serif 4', category: 'serif' },
     { family: 'Georgia', category: 'serif' },
     { family: 'Verdana', category: 'sans-serif' },
     { family: 'Courier New', category: 'monospace' },

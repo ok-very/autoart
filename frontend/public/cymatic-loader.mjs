@@ -1,4 +1,4 @@
-// Cymatic loading screen — Chladni nodal-line contours in a swept ring
+// Cymatic loading screen — Chladni nodal-line contours, seamless tiling
 // Pure ES module, zero dependencies. Reads --ws-accent / --ws-bg from :root.
 
 (function boot() {
@@ -10,11 +10,9 @@
 
   // --- tunables ---------------------------------------------------------
   const GRID       = 150;   // field sample resolution
-  const LINE_W     = 1.5;   // CSS-px stroke width
-  const INNER_R    = 0.34;  // ring inner radius (fraction of half-min-dim)
-  const OUTER_R    = 0.49;  // ring outer radius
+  const LINE_W     = 2.5;   // CSS-px stroke width (~0.5pt at 2x DPR)
   const ARC_LEN    = 0.22;  // sweep length in turns (0-1)
-  const FIELD_SC   = 1.22;  // zoom into field space
+  const FIELD_SC   = 0.5;   // field scale — lower = more repetitions
   const MAX_ALPHA  = 0.72;  // peak line opacity
   const DURATION   = 3.0;   // loop period (seconds)
 
@@ -69,8 +67,7 @@
   refreshColors();
 
   // --- sizing -----------------------------------------------------------
-  let W, H, dpr, cx, cy, rInner, rOuter;
-  let cachedRingClip = null;
+  let W, H, dpr, cx, cy;
 
   function resize() {
     dpr = devicePixelRatio || 1;
@@ -80,10 +77,6 @@
     canvas.height = H * dpr;
     cx = W * dpr * 0.5;
     cy = H * dpr * 0.5;
-    const half = Math.min(W, H) * dpr * 0.5;
-    rInner = half * INNER_R;
-    rOuter = half * OUTER_R;
-    cachedRingClip = null; // invalidate; rebuilt lazily in ringClip()
   }
   resize();
 
@@ -134,10 +127,9 @@
   function marchContours(field) {
     const segs = [];
     const cols = GRID + 1;
-    // Map grid coords → canvas coords (centred in ring region)
-    const scale = (rOuter * 2) / GRID;
-    const ox = cx - rOuter;
-    const oy = cy - rOuter;
+    // Map grid coords → full canvas
+    const scaleX = canvas.width / GRID;
+    const scaleY = canvas.height / GRID;
 
     for (let iy = 0; iy < GRID; iy++) {
       for (let ix = 0; ix < GRID; ix++) {
@@ -178,10 +170,10 @@
           const a = pairs[p][0];
           const b = pairs[p][1];
           segs.push(
-            ox + ex[a] * scale,
-            oy + ey[a] * scale,
-            ox + ex[b] * scale,
-            oy + ey[b] * scale,
+            ex[a] * scaleX,
+            ey[a] * scaleY,
+            ex[b] * scaleX,
+            ey[b] * scaleY,
           );
         }
       }
@@ -199,20 +191,7 @@
     return p;
   }
 
-  // --- ring clip path (cached, rebuilt on resize) -----------------------
-  function updateRingClip() {
-    const p = new Path2D();
-    p.arc(cx, cy, rOuter, 0, 2 * PI);       // outer CW
-    p.arc(cx, cy, rInner, 0, 2 * PI, true);  // inner CCW (hole)
-    cachedRingClip = p;
-  }
-
-  function ringClip() {
-    if (!cachedRingClip) updateRingClip();
-    return cachedRingClip;
-  }
-
-  // --- conic gradient for arc sweep -------------------------------------
+  // --- conic gradient for sweep animation --------------------------------
   const hasConicGradient = typeof ctx.createConicGradient === 'function';
 
   function arcGradient(t01) {
@@ -254,18 +233,14 @@
     const field = evalField(t01);
     const segs = marchContours(field);
     const contourPath = buildPath(segs);
-    const clip = ringClip();
     const grad = arcGradient(t01);
 
-    // Draw
+    // Draw — full canvas, no ring clip
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-    ctx.clip(clip, 'evenodd');
     ctx.strokeStyle = grad;
     ctx.lineWidth = LINE_W * dpr;
     ctx.lineCap = 'round';
     ctx.stroke(contourPath);
-    ctx.restore();
 
     rafId = requestAnimationFrame(frame);
   }

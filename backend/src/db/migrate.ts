@@ -11,13 +11,42 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.join(__dirname, '..', '..', '..', '.env');
 dotenv.config({ path: envPath });
 
+async function createPool(): Promise<Pool> {
+  const connectionString = process.env.DATABASE_URL;
+  const azureAdUser = process.env.AZURE_AD_USER;
+
+  if (azureAdUser) {
+    // Entra ID token auth — same approach as client.ts
+    const { DefaultAzureCredential } = await import('@azure/identity');
+    const credential = new DefaultAzureCredential();
+    const tokenResponse = await credential.getToken('https://ossrdbms-aad.database.windows.net');
+    if (!tokenResponse) {
+      throw new Error('Failed to acquire Azure AD token for database');
+    }
+    return new Pool({
+      host: 'autoart.postgres.database.azure.com',
+      database: 'postgres',
+      port: 5432,
+      user: azureAdUser,
+      password: tokenResponse.token,
+      ssl: { rejectUnauthorized: false },
+    });
+  }
+
+  // Password-based connection string
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is required when AZURE_AD_USER is not set');
+  }
+  return new Pool({
+    connectionString,
+    ssl: connectionString.includes('azure') ? { rejectUnauthorized: false } : undefined,
+  });
+}
+
 async function migrate() {
+  const pool = await createPool();
   const db = new Kysely({
-    dialect: new PostgresDialect({
-      pool: new Pool({
-        connectionString: process.env.DATABASE_URL,
-      }),
-    }),
+    dialect: new PostgresDialect({ pool }),
   });
 
   const migrationFolder = path.join(__dirname, 'migrations');

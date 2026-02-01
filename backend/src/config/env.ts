@@ -16,7 +16,8 @@ const envSchema = z.object({
   HOST: z.string().default('0.0.0.0'),
 
   // Database
-  DATABASE_URL: z.string().min(1),
+  // DATABASE_URL is required for password auth, optional when AZURE_AD_USER is set
+  DATABASE_URL: z.string().optional(),
   DATABASE_POOL_SIZE: z.string().default('10').transform(Number),
 
   // JWT
@@ -45,7 +46,10 @@ const envSchema = z.object({
 
   // Logging
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).optional(),
-});
+}).refine(
+  (data) => data.DATABASE_URL || data.AZURE_AD_USER,
+  { message: 'Either DATABASE_URL or AZURE_AD_USER must be set', path: ['DATABASE_URL'] },
+);
 
 const parsed = envSchema.safeParse(process.env);
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 
 import { useLogin, useRegister } from '../api/hooks';
 import { useAuthStore } from '../stores/authStore';
@@ -12,6 +12,8 @@ interface LoginPageProps {
 
 export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/';
   const login = useLogin();
   const register = useRegister();
   const setUser = useAuthStore((s) => s.setUser);
@@ -34,7 +36,7 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
         const result = await register.mutateAsync({ email, password, name });
         setUser(result.user);
       }
-      navigate('/');
+      navigate(redirectTo);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
     }
