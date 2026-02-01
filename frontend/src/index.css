@@ -1,4 +1,5 @@
 @import "./styles/base.css";
+@import "./workspace/themes/variables.css";
 
 /* Include @autoart/ui package to ensure its Tailwind classes aren't purged */
 @source "../packages/ui/src";
