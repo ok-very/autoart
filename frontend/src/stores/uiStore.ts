@@ -137,10 +137,10 @@ interface UIState {
   readonly inspectedRecordId: string | null;
   readonly inspectorMode: InspectorTabId;
   setInspectorMode: (mode: InspectorTabId) => void;
-  inspectRecord: (recordId: string) => void;
-  inspectNode: (nodeId: string) => void;
-  inspectAction: (actionId: string) => void;
-  inspectEmail: (emailId: string) => void;
+  inspectRecord: (recordId: string, origin?: string) => void;
+  inspectNode: (nodeId: string, origin?: string) => void;
+  inspectAction: (actionId: string, origin?: string) => void;
+  inspectEmail: (emailId: string, origin?: string) => void;
   clearSelection: () => void;
   clearInspection: () => void;
 
@@ -149,7 +149,7 @@ interface UIState {
   importPlan: ImportPlan | null;
   setImportSession: (session: ImportSession | null) => void;
   setImportPlan: (plan: ImportPlan | null) => void;
-  selectImportItem: (itemId: string | null) => void;
+  selectImportItem: (itemId: string | null, origin?: string) => void;
 
   // Command palette state
   commandPaletteOpen: boolean;
@@ -260,10 +260,10 @@ export const useUIStore = create<UIState>()(
         return get().inspectorTabMode;
       },
       setInspectorMode: (mode) => set({ inspectorTabMode: mode }),
-      inspectRecord: (recordId) => set({ selection: { type: 'record', id: recordId }, inspectorCollapsed: false }),
-      inspectNode: (nodeId) => set({ selection: { type: 'node', id: nodeId }, inspectorCollapsed: false }),
-      inspectAction: (actionId) => set({ selection: { type: 'action', id: actionId }, inspectorCollapsed: false }),
-      inspectEmail: (emailId) => set({ selection: { type: 'email', id: emailId }, inspectorCollapsed: false }),
+      inspectRecord: (recordId, origin) => set({ selection: { type: 'record', id: recordId, origin }, inspectorCollapsed: false }),
+      inspectNode: (nodeId, origin) => set({ selection: { type: 'node', id: nodeId, origin }, inspectorCollapsed: false }),
+      inspectAction: (actionId, origin) => set({ selection: { type: 'action', id: actionId, origin }, inspectorCollapsed: false }),
+      inspectEmail: (emailId, origin) => set({ selection: { type: 'email', id: emailId, origin }, inspectorCollapsed: false }),
       clearSelection: () => set({ selection: null }),
       clearInspection: () => set({ selection: null }),
 
@@ -272,8 +272,8 @@ export const useUIStore = create<UIState>()(
       importPlan: null,
       setImportSession: (session) => set({ importSession: session }),
       setImportPlan: (plan) => set({ importPlan: plan }),
-      selectImportItem: (itemId) => set({
-        selection: itemId ? { type: 'import_item', id: itemId } : null,
+      selectImportItem: (itemId, origin) => set({
+        selection: itemId ? { type: 'import_item', id: itemId, origin } : null,
         inspectorCollapsed: false,
         inspectorTabMode: itemId ? 'import_details' : get().inspectorTabMode,
       }),

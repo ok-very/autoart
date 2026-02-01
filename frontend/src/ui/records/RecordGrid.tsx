@@ -144,7 +144,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
   };
 
   const handleRowClick = (record: DataRecord) => {
-    inspectRecord(record.id);
+    inspectRecord(record.id, 'center-workspace');
   };
 
   const handleCreateRecord = () => {

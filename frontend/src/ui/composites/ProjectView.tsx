@@ -170,11 +170,11 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
     // Handlers
     const handleSelectSubprocess = (subprocessId: string) => {
         setInspectorMode('record');
-        inspectNode(subprocessId);
+        inspectNode(subprocessId, 'center-workspace');
     };
 
     const handleSelectRecord = (recordId: string) => {
-        inspectRecord(recordId);
+        inspectRecord(recordId, 'center-workspace');
         setInspectorMode('record');
     };
 
@@ -406,10 +406,10 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                                 const node = storeNodes[event.actionId];
                                 if (node) {
                                     setInspectorMode('record');
-                                    inspectNode(event.actionId);
+                                    inspectNode(event.actionId, 'center-workspace');
                                 } else {
                                     // For actions without hierarchy nodes, use action inspector
-                                    inspectAction(event.actionId);
+                                    inspectAction(event.actionId, 'center-workspace');
                                 }
                             }}
                         />

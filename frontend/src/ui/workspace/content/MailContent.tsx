@@ -346,7 +346,7 @@ export function MailContent() {
 
     // Stabilized handlers for memoized EmailRow (defined after hooks)
     const handleRowClick = useCallback((emailId: string) => {
-        inspectEmail(emailId);
+        inspectEmail(emailId, 'center-workspace');
     }, [inspectEmail]);
 
     const handleRefetch = useCallback(() => {

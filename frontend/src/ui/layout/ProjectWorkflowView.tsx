@@ -299,7 +299,7 @@ export function ProjectWorkflowView() {
         (subprocessId: string) => {
             setLocalSubprocessId(subprocessId);
             setInspectorMode('record');
-            inspectNode(subprocessId);
+            inspectNode(subprocessId, 'center-workspace');
         },
         [setInspectorMode, inspectNode]
     );
@@ -398,7 +398,7 @@ export function ProjectWorkflowView() {
             });
 
             if (matchingTask) {
-                inspectNode(matchingTask.id);
+                inspectNode(matchingTask.id, 'center-workspace');
             }
         },
         [tasks, setInspectorMode, inspectNode]
@@ -719,7 +719,7 @@ export function ProjectWorkflowView() {
                                             onRowSelect={(nodeId) => {
                                                 setFocusedTableId('tasks');
                                                 setInspectorMode('record');
-                                                inspectNode(nodeId);
+                                                inspectNode(nodeId, 'center-workspace');
                                             }}
                                             onCellChange={handleCellChange}
                                             onAddNode={undefined}
@@ -779,7 +779,7 @@ export function ProjectWorkflowView() {
                                                     selectedRecordId={selectedRecordId}
                                                     onRowSelect={(id) => {
                                                         setFocusedTableId(definition.id);
-                                                        useUIStore.getState().inspectRecord(id);
+                                                        useUIStore.getState().inspectRecord(id, 'center-workspace');
                                                         setInspectorMode('record');
                                                     }}
                                                     onCellChange={handleRecordCellChange}

@@ -281,9 +281,9 @@ function ActionMappingsPanel({
 
     const handleNavigate = useCallback((entry: MappingEntry) => {
         if (entry.type === 'record') {
-            inspectRecord(entry.id);
+            inspectRecord(entry.id, 'selection-inspector');
         } else if (entry.type === 'action') {
-            inspectAction(entry.id);
+            inspectAction(entry.id, 'selection-inspector');
         }
     }, [inspectRecord, inspectAction]);
 
@@ -530,7 +530,7 @@ function RecordMappingsPanel({
                                     status: 'synced',
                                     mode: ref.mode,
                                 }}
-                                onNavigate={() => inspectAction(ref.actionId)}
+                                onNavigate={() => inspectAction(ref.actionId, 'selection-inspector')}
                             />
                         ))}
                     </div>

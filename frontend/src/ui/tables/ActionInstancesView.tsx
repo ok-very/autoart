@@ -58,7 +58,7 @@ export function ActionInstancesView({
 
     // Handlers
     const handleSelectAction = useCallback((actionId: string) => {
-        inspectAction(actionId);
+        inspectAction(actionId, 'center-workspace');
     }, [inspectAction]);
 
     const handleCreateAction = useCallback(() => {

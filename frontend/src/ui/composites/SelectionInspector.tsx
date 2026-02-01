@@ -18,6 +18,7 @@
  * - Falls back to global uiStore when not in import context
  */
 
+import { useMemo } from 'react';
 import { clsx } from 'clsx';
 import { FileText, Link2, ExternalLink, Wrench, Lightbulb, Info, History, Tag, List, Plus, GitBranch, Map, Mail } from 'lucide-react';
 
@@ -27,11 +28,15 @@ import { SchemaEditor, ReferencesManager, LinksManager } from '../semantic';
 import { InterpretationInspectorView } from './interpretation/InterpretationInspectorView';
 import { useNode, useRecord, useInterpretationAvailable } from '../../api/hooks';
 import { useUIStore, type InspectorTabId } from '../../stores/uiStore';
+import { useBoundPanelIds, useActiveWorkspaceId } from '../../stores/workspaceStore';
+import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
+import { getWorkspaceColorClasses } from '../../workspace/workspaceColors';
 import { ActionDetailsPanel } from '../inspector/ActionDetailsPanel';
 import { ActionEventsPanel } from '../inspector/ActionEventsPanel';
 import { NarrativeThreadPanel } from '../inspector/NarrativeThreadPanel';
 import { MappingsPanel } from '../inspector/MappingsPanel';
 import { useCollectionModeOptional } from '../../workflows/export/context/CollectionModeProvider';
+import type { Selection } from '../../types/ui';
 import type { ImportPlan } from '../../api/hooks/imports';
 
 // Re-export from canonical location for backward compatibility
@@ -76,14 +81,45 @@ export interface SelectionInspectorProps {
     };
 }
 
+/**
+ * Determines whether a selection should be accepted by a bound inspector.
+ * When bound, the inspector only shows selections from workspace-scoped origins.
+ */
+function shouldAcceptSelection(selection: Selection, boundPanelIds: Set<string>): boolean {
+    if (!selection) return true;
+    const origin = selection.origin;
+    // No origin = global (command palette, keyboard shortcut) — always accept
+    if (!origin) return true;
+    // center-workspace is always workspace-relevant
+    if (origin === 'center-workspace') return true;
+    // Accept if origin panel is also bound to this workspace
+    if (boundPanelIds.has(origin)) return true;
+    // Reject: origin is from a panel outside the workspace scope
+    return false;
+}
+
 export function SelectionInspector({ importContext }: SelectionInspectorProps = {}) {
     const { selection: globalSelection, inspectorTabMode, setInspectorMode, importPlan: globalPlan } = useUIStore();
     const collectionMode = useCollectionModeOptional();
+    const boundPanelIds = useBoundPanelIds();
+    const activeWorkspaceId = useActiveWorkspaceId();
+
+    const isBound = boundPanelIds.has('selection-inspector');
+    const activeWorkspace = useMemo(
+        () => activeWorkspaceId ? BUILT_IN_WORKSPACES.find((w) => w.id === activeWorkspaceId) : null,
+        [activeWorkspaceId],
+    );
+    const colorClasses = getWorkspaceColorClasses(isBound ? activeWorkspace?.color : null);
 
     // Use import context if provided, otherwise fall back to global store
-    const selection = importContext?.selectedItemId
+    const rawSelection = importContext?.selectedItemId
         ? { type: 'import_item' as const, id: importContext.selectedItemId }
         : globalSelection;
+
+    // When bound, filter selections to workspace-scoped origins only
+    const selection = isBound && rawSelection && !shouldAcceptSelection(rawSelection, boundPanelIds)
+        ? null
+        : rawSelection;
 
     const plan = importContext?.plan ?? globalPlan;
 
@@ -116,12 +152,21 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
     if (!inspectedItem && !isAction && !isEmail && !isImportItem) {
         return (
             <div className="bg-white flex flex-col h-full overflow-hidden">
-                <div className="h-14 border-b border-slate-100 flex items-center justify-center px-5 bg-slate-50/50">
+                <div className="h-14 border-b border-slate-100 flex items-center justify-between px-5 bg-slate-50/50">
                     <span className="text-xs text-slate-400">Select an item to inspect</span>
+                    {isBound && activeWorkspace && (
+                        <span className={clsx('text-[10px] font-medium px-1.5 py-0.5 rounded', colorClasses.bg100, colorClasses.text700)}>
+                            {activeWorkspace.label}
+                        </span>
+                    )}
                 </div>
                 <div className="flex-1 flex items-center justify-center text-xs text-slate-400 p-4 text-center">
                     <div>
-                        <p className="mb-2">No selection</p>
+                        <p className="mb-2">
+                            {isBound && activeWorkspace
+                                ? `No selection in ${activeWorkspace.label}`
+                                : 'No selection'}
+                        </p>
                         <p className="text-slate-300">
                             Press <kbd className="px-1 py-0.5 bg-slate-100 rounded text-slate-500">Ctrl+D</kbd> to quick declare
                         </p>
@@ -250,6 +295,11 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
         >
             {/* Tab Selector Header */}
             <div className="h-12 border-b border-slate-100 flex items-center bg-slate-50/50 px-1 shrink-0">
+                {isBound && activeWorkspace && (
+                    <span className={clsx('text-[10px] font-medium px-1.5 py-0.5 rounded ml-1 mr-1 shrink-0', colorClasses.bg100, colorClasses.text700)}>
+                        {activeWorkspace.label}
+                    </span>
+                )}
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = effectiveTab === tab.id;

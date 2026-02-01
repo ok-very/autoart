@@ -1,11 +1,11 @@
 export type Selection =
-  | { type: 'node'; id: string }
-  | { type: 'record'; id: string }
-  | { type: 'definition'; id: string }
-  | { type: 'project'; id: string }
-  | { type: 'action'; id: string }
-  | { type: 'email'; id: string }
-  | { type: 'import_item'; id: string }
+  | { type: 'node'; id: string; origin?: string }
+  | { type: 'record'; id: string; origin?: string }
+  | { type: 'definition'; id: string; origin?: string }
+  | { type: 'project'; id: string; origin?: string }
+  | { type: 'action'; id: string; origin?: string }
+  | { type: 'email'; id: string; origin?: string }
+  | { type: 'import_item'; id: string; origin?: string }
   | null;
 
 /** Valid inspector tab IDs */
