@@ -35,6 +35,17 @@ export interface WorkspacePanelConfig {
 }
 
 /**
+ * A named sub-configuration within a workspace.
+ * Single-subview workspaces render as flat menu items;
+ * multi-subview workspaces render as nested submenus.
+ */
+export interface WorkspaceSubview {
+    id: string;
+    label: string;
+    panels: WorkspacePanelConfig[];
+}
+
+/**
  * Workspace Preset
  *
  * A saved configuration that opens specific panels and primes their views.
@@ -54,8 +65,10 @@ export interface WorkspacePreset {
     scope: WorkspaceScope;
     /** Whether this is a built-in workspace (vs user-created) */
     isBuiltIn: boolean;
-    /** Panels to open and configure */
+    /** @deprecated Use subviews instead. Kept for backward compat with custom workspaces. */
     panels: WorkspacePanelConfig[];
+    /** Named sub-configurations. Built-in workspaces should use this. */
+    subviews?: WorkspaceSubview[];
 }
 
 /**
