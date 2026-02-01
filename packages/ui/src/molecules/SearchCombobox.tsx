@@ -259,7 +259,7 @@ export function SearchCombobox<T extends SearchComboboxItem>({
             ref={containerRef}
             tabIndex={-1}
             onKeyDown={handleKeyDown}
-            className="fixed bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden z-[9999] outline-none"
+            className="fixed bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden z-[9999] outline-none font-sans"
             style={{
                 top: position.top,
                 left: position.left,

@@ -27,7 +27,7 @@ export function RegistryTabSwitch({
             <button
                 onClick={() => onTabChange('definitions')}
                 className={clsx(
-                    'px-3 py-1.5 text-xs font-medium rounded transition-all',
+                    'px-3 py-1.5 text-xs font-sans font-medium rounded transition-all',
                     activeTab === 'definitions'
                         ? 'bg-white text-slate-800 shadow-sm'
                         : 'text-slate-500 hover:text-slate-700'
@@ -38,7 +38,7 @@ export function RegistryTabSwitch({
             <button
                 onClick={() => onTabChange('instances')}
                 className={clsx(
-                    'px-3 py-1.5 text-xs font-medium rounded transition-all',
+                    'px-3 py-1.5 text-xs font-sans font-medium rounded transition-all',
                     activeTab === 'instances'
                         ? 'bg-white text-slate-800 shadow-sm'
                         : 'text-slate-500 hover:text-slate-700'

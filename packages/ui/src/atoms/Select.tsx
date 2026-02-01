@@ -43,7 +43,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                     onChange={(e) => onChange(e.target.value || null)}
                     disabled={disabled}
                     className={clsx(
-                        'w-full rounded-lg border transition-colors bg-white',
+                        'w-full rounded-lg border transition-colors bg-white font-sans',
                         'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
                         'disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed',
                         'border-slate-300',
