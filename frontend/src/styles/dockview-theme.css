@@ -27,7 +27,7 @@
   --dv-inactivegroup-hiddenpanel-tab-background-color: var(--ws-tab-bg);
   --dv-inactivegroup-hiddenpanel-tab-color: var(--ws-muted-fg);
   --dv-tab-divider-color: var(--ws-tabstrip-border);
-  --dv-separator-border: var(--ws-panel-border);
+  --dv-separator-border: var(--ws-group-border);
   --dv-drag-over-background-color: var(--ws-drop-target-bg);
   --dv-drag-over-border-color: var(--ws-accent);
 

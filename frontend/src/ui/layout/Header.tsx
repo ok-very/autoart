@@ -29,6 +29,7 @@ import { useWorkspaceStore, useOpenPanelIds } from '../../stores/workspaceStore'
 import { Button, IconButton, Inline } from '@autoart/ui';
 import { Menu, SegmentedControl } from '@autoart/ui';
 import { WorkspaceDropdown } from './WorkspaceDropdown';
+import { ChladniBadge } from './ChladniBadge';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
 
 
@@ -148,9 +149,7 @@ export function Header() {
       <Inline gap="sm" align="center" className="w-full justify-between">
         <div className="flex items-center gap-2">
           {/* Logo */}
-          <Link to="/" className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold hover:bg-slate-800 transition-colors">
-            A
-          </Link>
+          <ChladniBadge />
 
           {/* Projects - primary navigation home (Link for proper anchor semantics) */}
           <Link
