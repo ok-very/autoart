@@ -5,7 +5,6 @@
 ## Bug List
 
 - AutoHelper Settings doesn't link correctly to frontend menu
-- Landing page still not receiving typography/styling tokens
 - Cymatic loader should go seamless pattern/squaretile, slightly heavier line (0.5pt)
 - Login fails with demo account credentials - can't test
 
@@ -80,7 +79,7 @@
 
 | # | Issue | PR |
 |---|-------|----|
-| — | Fix: Methodology→Process rename, fieldBindings crash, Bound→Linked label | #312 |
+| — | Fix: Methodology→Process, fieldBindings crash, Bound→Linked, LoginPage design tokens | #312 |
 
 ---
 

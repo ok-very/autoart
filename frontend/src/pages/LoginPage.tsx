@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useLogin, useRegister } from '../api/hooks';
 import { useAuthStore } from '../stores/authStore';
 import { Button } from '@autoart/ui';
+import { ChladniBadge } from '../ui/layout/ChladniBadge';
 
 interface LoginPageProps {
   /** Initial mode for the form */
@@ -60,12 +61,7 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
         >
           {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-8">
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl"
-              style={{ backgroundColor: 'var(--ws-fg, #2E2E2C)', color: 'var(--ws-panel-bg, #ffffff)' }}
-            >
-              A
-            </div>
+            <ChladniBadge size={48} radius={12} asLink={false} />
             <span className="text-2xl font-semibold font-serif">AutoArt</span>
           </div>
 

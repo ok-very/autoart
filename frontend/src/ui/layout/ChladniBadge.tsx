@@ -72,7 +72,18 @@ function lerpColor(t01: number) {
   return `rgba(${r},${g},${b},${MAX_ALPHA})`;
 }
 
-export function ChladniBadge() {
+interface ChladniBadgeProps {
+  /** Pixel size of the badge (default: 32) */
+  size?: number;
+  /** Border radius in pixels (default: 8) */
+  radius?: number;
+  /** Wrap in a Link to "/" (default: true) */
+  asLink?: boolean;
+  /** Additional className for the outer element */
+  className?: string;
+}
+
+export function ChladniBadge({ size = 32, radius = 8, asLink = true, className }: ChladniBadgeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -82,8 +93,8 @@ export function ChladniBadge() {
     if (!ctx) return;
 
     const dpr = devicePixelRatio || 1;
-    canvas.width = 32 * dpr;
-    canvas.height = 32 * dpr;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
 
     let rafId: number | null = null;
     let running = true;
@@ -193,19 +204,30 @@ export function ChladniBadge() {
       if (rafId) cancelAnimationFrame(rafId);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, []);
+  }, [size]);
+
+  const canvasEl = (
+    <canvas
+      ref={canvasRef}
+      className="w-full h-full"
+      style={{ background: 'var(--ws-bg, #F5F2ED)' }}
+    />
+  );
+
+  const wrapperStyle = { width: size, height: size, borderRadius: radius };
+  const wrapperClass = `block overflow-hidden hover:opacity-75 transition-opacity ${className || ''}`;
+
+  if (asLink) {
+    return (
+      <Link to="/" className={wrapperClass} style={wrapperStyle} title="Home">
+        {canvasEl}
+      </Link>
+    );
+  }
 
   return (
-    <Link
-      to="/"
-      className="block w-8 h-8 rounded-lg overflow-hidden hover:opacity-75 transition-opacity"
-      title="Home"
-    >
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full"
-        style={{ background: 'var(--ws-bg, #F5F2ED)' }}
-      />
-    </Link>
+    <div className={wrapperClass} style={wrapperStyle}>
+      {canvasEl}
+    </div>
   );
 }
