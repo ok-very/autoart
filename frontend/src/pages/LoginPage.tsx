@@ -45,25 +45,48 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ backgroundColor: 'var(--ws-bg, #F5F2ED)', color: 'var(--ws-fg, #2E2E2C)' }}
+    >
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-xl shadow-lg p-8">
+        <div
+          className="rounded-xl p-8"
+          style={{
+            backgroundColor: 'var(--ws-panel-bg, #ffffff)',
+            border: '1px solid var(--ws-group-border, #D6D2CB)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+          }}
+        >
           {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl"
+              style={{ backgroundColor: 'var(--ws-fg, #2E2E2C)', color: 'var(--ws-panel-bg, #ffffff)' }}
+            >
               A
             </div>
-            <span className="text-2xl font-bold text-slate-800">AutoArt</span>
+            <span className="text-2xl font-semibold font-serif">AutoArt</span>
           </div>
 
           {/* Title */}
-          <h1 className="text-xl font-semibold text-center text-slate-700 mb-6">
+          <h1
+            className="text-xl font-semibold text-center mb-6 font-serif"
+            style={{ color: 'var(--ws-text-primary, #2E2E2C)' }}
+          >
             {isLogin ? 'Welcome back' : 'Create your account'}
           </h1>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+            <div
+              className="mb-4 p-3 rounded-lg text-sm"
+              style={{
+                backgroundColor: 'rgba(140, 74, 74, 0.08)',
+                border: '1px solid rgba(140, 74, 74, 0.2)',
+                color: 'var(--ws-color-error, #8C4A4A)',
+              }}
+            >
               {error}
             </div>
           )}
@@ -72,12 +95,22 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                <label
+                  className="block text-sm font-medium mb-1"
+                  style={{ color: 'var(--ws-text-primary, #2E2E2C)' }}
+                >
+                  Name
+                </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1"
+                  style={{
+                    border: '1px solid var(--ws-group-border, #D6D2CB)',
+                    color: 'var(--ws-fg, #2E2E2C)',
+                    backgroundColor: 'var(--ws-panel-bg, #ffffff)',
+                  }}
                   placeholder="Your name"
                   required={!isLogin}
                 />
@@ -85,24 +118,44 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: 'var(--ws-text-primary, #2E2E2C)' }}
+              >
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1"
+                style={{
+                  border: '1px solid var(--ws-group-border, #D6D2CB)',
+                  color: 'var(--ws-fg, #2E2E2C)',
+                  backgroundColor: 'var(--ws-panel-bg, #ffffff)',
+                }}
                 placeholder="you@example.com"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: 'var(--ws-text-primary, #2E2E2C)' }}
+              >
+                Password
+              </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1"
+                style={{
+                  border: '1px solid var(--ws-group-border, #D6D2CB)',
+                  color: 'var(--ws-fg, #2E2E2C)',
+                  backgroundColor: 'var(--ws-panel-bg, #ffffff)',
+                }}
                 placeholder="••••••••"
                 required
                 minLength={6}
@@ -125,11 +178,19 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
           {/* Toggle - Link to other route */}
           <div className="mt-6 text-center">
             {isLogin ? (
-              <Link to={`/register${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`} className="text-sm text-blue-600 hover:underline">
+              <Link
+                to={`/register${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
+                className="text-sm hover:underline"
+                style={{ color: 'var(--ws-accent, #3F5C6E)' }}
+              >
                 Don't have an account? Sign up
               </Link>
             ) : (
-              <Link to={`/login${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`} className="text-sm text-blue-600 hover:underline">
+              <Link
+                to={`/login${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
+                className="text-sm hover:underline"
+                style={{ color: 'var(--ws-accent, #3F5C6E)' }}
+              >
                 Already have an account? Sign in
               </Link>
             )}
@@ -137,9 +198,14 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
 
           {/* Demo Credentials */}
           {isLogin && (
-            <div className="mt-6 p-3 bg-slate-50 rounded-lg text-center">
-              <p className="text-xs text-slate-500 mb-1">Demo credentials:</p>
-              <p className="text-xs font-mono text-slate-600">
+            <div
+              className="mt-6 p-3 rounded-lg text-center"
+              style={{ backgroundColor: 'var(--ws-row-expanded-bg, rgba(63, 92, 110, 0.04))' }}
+            >
+              <p className="text-xs mb-1" style={{ color: 'var(--ws-muted-fg, #6B6560)' }}>
+                Demo credentials:
+              </p>
+              <p className="text-xs font-mono" style={{ color: 'var(--ws-mono-fg, #3A3A38)' }}>
                 demo@autoart.local / demo123
               </p>
             </div>
