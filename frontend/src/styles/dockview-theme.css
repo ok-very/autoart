@@ -158,6 +158,12 @@
 
 /* === Drop target glow === */
 
+/* Allow drop target glow shadow to extend beyond the container boundary.
+   The container uses pointer-events: none and z-index: 9999 — safe to unclip. */
+.dockview-theme-light .dv-drop-target-container {
+  overflow: visible;
+}
+
 .dockview-theme-light .dv-drop-target-container .dv-drop-target-anchor {
   border: 2px solid var(--ws-drop-target-border);
   box-shadow: var(--ws-drop-target-shadow);
