@@ -10,7 +10,7 @@
   --font-mono--font-feature-settings: "liga" 0;
 
   /* Tracking tokens per typeface */
-  --tracking-serif: -0.01em;
+  --tracking-serif: 0em;
   --tracking-sans: 0em;
   --tracking-mono: 0em;
 }
@@ -25,7 +25,7 @@ body {
 }
 
 /* UI chrome uses Source Sans 3 — DESIGN.md */
-button, input, select, textarea {
+button, input, select {
   font-family: var(--font-sans);
   letter-spacing: var(--tracking-sans);
 }
