@@ -42,13 +42,13 @@
   background-image: none !important;
   background-size: auto;
   padding: 0 var(--ws-tab-radius);
-  overflow: hidden;
 }
 
-/* Overflow stack fix — swoopy pseudo-elements extend 8px beyond the tab.
-   dv-scrollable (between tabs-container and tabs-and-actions-container) clips
-   them with its own overflow:hidden. Make both inner layers visible, then clip
-   at tabs-and-actions-container which has padding for the swoopy space. */
+/* Overflow stack fix — swoopy pseudo-elements extend ~8px beyond the tab.
+   All three inner layers (tabs-container, dv-scrollable, tabs-and-actions-container)
+   must be overflow:visible so nothing clips the ::before/::after concave corners.
+   The outermost clip boundary is .dv-groupview (overflow:hidden, set by dockview),
+   which is large enough that the pseudo-elements stay well within its bounds. */
 .dockview-theme-light .dv-scrollable {
   overflow: visible !important;
 }
