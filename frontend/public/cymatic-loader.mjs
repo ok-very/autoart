@@ -11,10 +11,9 @@
   // --- tunables ---------------------------------------------------------
   const GRID       = 150;   // field sample resolution
   const LINE_W     = 2.5;   // CSS-px stroke width (~0.5pt at 2x DPR)
-  const ARC_LEN    = 0.22;  // sweep length in turns (0-1)
-  const FIELD_SC   = 0.5;   // field scale — lower = more repetitions
+  const FIELD_SC   = 2.0;   // field scale — domain [-1,1] for proper plate modes
   const MAX_ALPHA  = 0.72;  // peak line opacity
-  const DURATION   = 3.0;   // loop period (seconds)
+  const DURATION   = 4.0;   // loop period (seconds)
 
   // --- marching-squares lookup table (hoisted — constant) ---------------
   const SEGS = [
@@ -58,10 +57,12 @@
     return [0x3F, 0x5C, 0x6E]; // Oxide Blue fallback
   }
 
-  let ink, bg;
+  let ink, bg, inkStroke;
   function refreshColors() {
     ink = resolveColor('--ws-accent', '#3F5C6E');
     bg  = resolveColor('--ws-bg', '#F5F2ED');
+    const [r, g, b] = parseColorToRgb(ink);
+    inkStroke = `rgba(${r},${g},${b},${MAX_ALPHA})`;
     canvas.style.background = bg;
   }
   refreshColors();
@@ -98,20 +99,15 @@
 
   // Evaluate field on grid, return Float64Array
   function evalField(t01) {
-    const spin = t01 * 2 * PI * 0.6;
     const w = 0.5 - 0.5 * cos(2 * PI * t01);
-    const cosS = cos(spin);
-    const sinS = Math.sin(spin);
     const inv = FIELD_SC / GRID;
     const half = FIELD_SC * 0.5;
     const buf = new Float64Array((GRID + 1) * (GRID + 1));
 
     for (let iy = 0; iy <= GRID; iy++) {
       for (let ix = 0; ix <= GRID; ix++) {
-        const rawX = ix * inv - half;
-        const rawY = iy * inv - half;
-        const qx = rawX * cosS - rawY * sinS;
-        const qy = rawX * sinS + rawY * cosS;
+        const qx = ix * inv - half;
+        const qy = iy * inv - half;
         const f =
           (1 - w) * chladni(qx, qy, 3, 5) +
           w       * chladni(qx, qy, 4, 6) +
@@ -191,32 +187,6 @@
     return p;
   }
 
-  // --- conic gradient for sweep animation --------------------------------
-  const hasConicGradient = typeof ctx.createConicGradient === 'function';
-
-  function arcGradient(t01) {
-    const [r, g, b] = parseColorToRgb(ink);
-
-    if (!hasConicGradient) {
-      return `rgba(${r},${g},${b},${MAX_ALPHA})`;
-    }
-
-    // Sweep start angle: rotates with time
-    const startAngle = t01 * 2 * PI - PI * 0.5;
-    const grad = ctx.createConicGradient(startAngle, cx, cy);
-
-    // Leading edge: full opacity
-    grad.addColorStop(0, `rgba(${r},${g},${b},${MAX_ALPHA})`);
-    // Ramp down over arcLen turns
-    grad.addColorStop(ARC_LEN * 0.5, `rgba(${r},${g},${b},${MAX_ALPHA * 0.5})`);
-    grad.addColorStop(ARC_LEN, `rgba(${r},${g},${b},0)`);
-    // Rest of circle: transparent
-    grad.addColorStop(ARC_LEN + 0.001, `rgba(${r},${g},${b},0)`);
-    grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
-
-    return grad;
-  }
-
   // --- animation loop ---------------------------------------------------
   let rafId = null;
   let running = true;
@@ -233,11 +203,10 @@
     const field = evalField(t01);
     const segs = marchContours(field);
     const contourPath = buildPath(segs);
-    const grad = arcGradient(t01);
 
-    // Draw — full canvas, no ring clip
+    // Draw — full pattern, uniform opacity
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = grad;
+    ctx.strokeStyle = inkStroke;
     ctx.lineWidth = LINE_W * dpr;
     ctx.lineCap = 'round';
     ctx.stroke(contourPath);
