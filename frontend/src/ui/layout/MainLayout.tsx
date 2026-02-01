@@ -95,11 +95,25 @@ function SpawnHandle({ api }: SpawnHandleProps) {
       position = { referencePanel: api.id, direction };
     }
 
+    // Compute initial size from panel definition
+    const def = PANEL_DEFINITIONS[componentKey];
+    const sizeHint = def?.defaultPlacement?.size;
+    let initialWidth: number | undefined;
+    let initialHeight: number | undefined;
+
+    if (sizeHint && direction === 'right') {
+      initialWidth = sizeHint > 100 ? sizeHint : Math.round(dockviewApi.width * (sizeHint / 100));
+    } else if (sizeHint && direction === 'below') {
+      initialHeight = sizeHint > 100 ? sizeHint : Math.round(dockviewApi.height * (sizeHint / 100));
+    }
+
     dockviewApi.addPanel({
       id: newId,
       component: componentKey,
-      title: PANEL_DEFINITIONS[componentKey]?.title || 'New Panel',
-      position
+      title: def?.title || 'New Panel',
+      position,
+      ...(initialWidth !== undefined && { initialWidth }),
+      ...(initialHeight !== undefined && { initialHeight }),
     });
   };
 
@@ -266,14 +280,21 @@ function WatermarkComponent() {
         component: 'center-workspace',
         title: PANEL_DEFINITIONS['center-workspace'].title,
       });
+      const inspectorDef = PANEL_DEFINITIONS['selection-inspector'];
+      const inspectorSize = inspectorDef.defaultPlacement?.size;
+      const inspectorWidth = inspectorSize
+        ? (inspectorSize > 100 ? inspectorSize : Math.round(dockviewApi.width * (inspectorSize / 100)))
+        : undefined;
+
       dockviewApi.addPanel({
         id: 'selection-inspector',
         component: 'selection-inspector',
-        title: PANEL_DEFINITIONS['selection-inspector'].title,
+        title: inspectorDef.title,
         position: {
           referencePanel: centerPanel,
           direction: 'right',
         },
+        ...(inspectorWidth !== undefined && { initialWidth: inspectorWidth }),
       });
     }
   };
@@ -304,9 +325,44 @@ function WatermarkComponent() {
 // TAB COMPONENT
 // ============================================================================
 
+/**
+ * Inject swoopy corner spans directly onto the `.dv-tab` ancestor via DOM API.
+ * Dockview wraps React tab content in `.dv-react-part` (100% width/height),
+ * which traps absolutely-positioned children. By appending corners as siblings
+ * of `.dv-react-part` they become direct children of `.dv-tab` (position: relative),
+ * letting the existing CSS position them correctly.
+ */
+function useSwoopyCorners(innerRef: React.RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const el = innerRef.current;
+    if (!el) return;
+
+    const tab = el.closest('.dv-tab');
+    if (!tab) return;
+
+    const left = document.createElement('span');
+    left.className = 'ws-tab-corner ws-tab-corner-left';
+    left.setAttribute('aria-hidden', 'true');
+
+    const right = document.createElement('span');
+    right.className = 'ws-tab-corner ws-tab-corner-right';
+    right.setAttribute('aria-hidden', 'true');
+
+    tab.appendChild(left);
+    tab.appendChild(right);
+
+    return () => {
+      left.remove();
+      right.remove();
+    };
+  }, []);
+}
+
 function IconTab(props: IDockviewPanelHeaderProps) {
   const { api } = props;
   const closePanel = useWorkspaceStore((s) => s.closePanel);
+  const tabContentRef = useRef<HTMLDivElement>(null);
+  useSwoopyCorners(tabContentRef);
 
   // Get component type from dynamic panel ID (e.g., "project-panel-123" -> "project-panel")
   const getComponentType = (panelId: string): PanelId => {
@@ -342,7 +398,10 @@ function IconTab(props: IDockviewPanelHeaderProps) {
   const boundColorClasses = isBound ? `border-l-2 ${colorClasses.borderL500}` : '';
 
   return (
-    <div className={`flex items-center gap-2 text-current overflow-hidden w-full group ${boundColorClasses}`}>
+    <div
+      ref={tabContentRef}
+      className={`flex items-center gap-2 text-current overflow-hidden w-full group ${boundColorClasses}`}
+    >
       <div className="flex items-center gap-2 flex-1 overflow-hidden min-w-0">
         {Icon && <Icon size={14} strokeWidth={2} className="flex-shrink-0" />}
         <span className="truncate">{def?.title || api.title}</span>
@@ -558,6 +617,17 @@ export function MainLayout() {
           direction = 'below';
         }
 
+        // Compute initial size from panel definition
+        const sizeHint = def.defaultPlacement?.size;
+        let initialWidth: number | undefined;
+        let initialHeight: number | undefined;
+
+        if (sizeHint && direction === 'right') {
+          initialWidth = sizeHint > 100 ? sizeHint : Math.round(api.width * (sizeHint / 100));
+        } else if (sizeHint && direction === 'below') {
+          initialHeight = sizeHint > 100 ? sizeHint : Math.round(api.height * (sizeHint / 100));
+        }
+
         api.addPanel({
           id,
           component: componentType, // Use base component type, not dynamic ID
@@ -567,6 +637,8 @@ export function MainLayout() {
             referencePanel: centerPanel,
             direction,
           },
+          ...(initialWidth !== undefined && { initialWidth }),
+          ...(initialHeight !== undefined && { initialHeight }),
         });
       }
     });

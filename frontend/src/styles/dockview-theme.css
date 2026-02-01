@@ -27,7 +27,8 @@
   --dv-tab-divider-color: var(--ws-tabstrip-border);
   --dv-separator-border: var(--ws-group-border);
   --dv-drag-over-background-color: var(--ws-drop-target-bg);
-  --dv-drag-over-border-color: var(--ws-accent);
+  --dv-drag-over-border: 2px solid var(--ws-drop-target-border);
+  --dv-drag-over-border-color: var(--ws-drop-target-border);
   --dv-icon-hover-background-color: var(--ws-tab-close-hover-bg);
   color: var(--ws-fg);
 }
@@ -40,22 +41,37 @@
   position: relative;
   background-image: none !important;
   background-size: auto;
-  padding: 0 4px;
+  padding: 0 var(--ws-tab-radius);
 }
 
-/* === Tab base (chrome-style rounded top corners) === */
+/* Overflow stack fix — swoopy pseudo-elements extend ~8px beyond the tab.
+   All three inner layers (tabs-container, dv-scrollable, tabs-and-actions-container)
+   must be overflow:visible so nothing clips the ::before/::after concave corners.
+   The outermost clip boundary is .dv-groupview (overflow:hidden, set by dockview),
+   which is large enough that the pseudo-elements stay well within its bounds. */
+.dockview-theme-light .dv-scrollable {
+  overflow: visible !important;
+}
+
+.dockview-theme-light .dv-tabs-container {
+  overflow: visible !important;
+}
+
+.dockview-theme-light .dv-react-part {
+  overflow: visible;
+}
+
+/* === Tab base (inverse-radius swoopy tabs) === */
 
 .dockview-theme-light .dv-tab {
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
   padding: var(--ws-tab-padding-y) var(--ws-tab-padding-x);
-  border: 1px solid transparent;
-  border-bottom: none;
   border-radius: var(--ws-tab-radius) var(--ws-tab-radius) 0 0;
   color: var(--ws-tab-fg);
   transition: color var(--ws-motion-duration-fast) var(--ws-motion-ease),
               background-color var(--ws-motion-duration-fast) var(--ws-motion-ease);
-  margin: 2px 1px 0 1px;
   position: relative;
 }
 
@@ -81,16 +97,54 @@
   outline: none;
 }
 
-/* === Active tab — elevated, connects to panel === */
+/* Suppress dockview tab divider adjacent to active tab */
+.dockview-theme-light .dv-tabs-container.dv-horizontal .dv-tab.dv-active-tab + .dv-tab::before {
+  content: none !important;
+}
+
+/* === Active tab — inverse-radius swoopy === */
 
 .dockview-theme-light .dv-tab.dv-active-tab {
   color: var(--ws-tab-fg-active);
   background-color: var(--ws-tab-bg-active) !important;
-  border-color: var(--ws-panel-border);
-  border-bottom: 1px solid var(--ws-panel-bg);
-  margin-bottom: -1px;
-  z-index: 2;
   font-weight: 500;
+  z-index: 2;
+  margin-bottom: -1px;
+}
+
+/* Suppress dockview's native ::before divider on the active tab */
+.dockview-theme-light .dv-tab.dv-active-tab::before {
+  content: none !important;
+}
+
+/* Suppress dockview's native ::after focus outline on the active tab */
+.dockview-theme-light .dv-tab.dv-active-tab::after {
+  content: none !important;
+}
+
+/* Swoopy concave corners — real DOM elements to bypass dockview styleInject conflicts */
+.ws-tab-corner {
+  display: none;
+  position: absolute;
+  bottom: -1px;
+  width: var(--ws-tab-radius);
+  height: var(--ws-tab-radius);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.dockview-theme-light .dv-active-tab .ws-tab-corner {
+  display: block;
+}
+
+.ws-tab-corner-left {
+  left: calc(-1 * var(--ws-tab-radius));
+  background: radial-gradient(circle at 100% 0, transparent var(--ws-tab-radius), var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px));
+}
+
+.ws-tab-corner-right {
+  right: calc(-1 * var(--ws-tab-radius));
+  background: radial-gradient(circle at 0 0, transparent var(--ws-tab-radius), var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px));
 }
 
 .dockview-theme-light .dv-tab.dv-active-tab:hover {
@@ -148,6 +202,20 @@
   background: var(--ws-panel-bg);
   border: 1px solid var(--ws-panel-border);
   border-top: none;
+}
+
+/* === Drop target glow === */
+
+.dockview-theme-light .dv-drop-target-container .dv-drop-target-anchor {
+  border: 2px solid var(--ws-drop-target-border);
+  box-shadow: var(--ws-drop-target-shadow);
+  border-radius: var(--ws-drop-target-radius);
+}
+
+.dockview-theme-light .dv-drop-target > .dv-drop-target-dropzone > .dv-drop-target-selection {
+  border: 2px solid var(--ws-drop-target-border);
+  box-shadow: var(--ws-drop-target-shadow);
+  border-radius: var(--ws-drop-target-radius);
 }
 
 /* === Scrollbars === */

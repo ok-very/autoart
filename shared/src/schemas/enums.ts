@@ -105,7 +105,7 @@ export const RECORDS_VIEW_MODE_LABELS: Record<RecordsViewMode, string> = {
 
 export const FIELDS_VIEW_MODE_LABELS: Record<FieldsViewMode, string> = {
   browse: 'Browse',
-  aggregate: 'Aggregate',
+  aggregate: 'Select',
 };
 
 // ============================================================================

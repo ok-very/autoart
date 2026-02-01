@@ -80,7 +80,7 @@
   --ws-tab-padding-x: 12px;
   --ws-tab-padding-y: 6px;
   --ws-tab-gap: 2px;
-  --ws-tab-radius: 6px;
+  --ws-tab-radius: 8px;
 
   /* Tab colors */
   --ws-tab-fg: #64748b;
@@ -136,9 +136,13 @@
   /* -------------------------------------------------------------------------
      Drag & Drop
      ------------------------------------------------------------------------- */
-  --ws-drop-target-bg: rgba(59, 130, 246, 0.1);
+  --ws-drop-target-bg: rgba(59, 130, 246, 0.2);
   --ws-drop-target-border: var(--ws-accent);
   --ws-drop-target-radius: 4px;
+  --ws-drop-target-shadow:
+    inset 0 0 20px rgba(59, 130, 246, 0.25),
+    inset 0 0 6px rgba(59, 130, 246, 0.18),
+    0 0 12px rgba(59, 130, 246, 0.12);
 
   --ws-drag-ghost-opacity: 0.8;
   --ws-drag-ghost-scale: 0.95;
