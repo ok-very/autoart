@@ -21,6 +21,7 @@ import {
   type IDockviewPanelProps,
   type IDockviewPanelHeaderProps,
   type IWatermarkPanelProps,
+  type IDockviewHeaderActionsProps,
 } from 'dockview';
 
 import { Plus, MoreHorizontal, Split } from 'lucide-react';
@@ -43,6 +44,9 @@ import {
   PANEL_DEFINITIONS,
   isPermanentPanel,
   type PanelId,
+  type ToolPanelId,
+  type RegistryPanelId,
+  type WorkbenchPanelId,
 } from '../../workspace/panelRegistry';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
 import { WORKSPACE_STRIP_HEX, type WorkspaceColorName } from '../../workspace/workspaceColors';
@@ -70,6 +74,92 @@ import { MailPanel } from '../panels/MailPanel';
 import { IntakePanel } from '../panels/IntakePanel';
 import { ArtCollectorPanel } from '../panels/ArtCollectorPanel';
 import { ProjectPanel } from '../panels/ProjectPanel';
+
+// ============================================================================
+// TAB STRIP ADD BUTTON (rightHeaderActionsComponent)
+// ============================================================================
+
+const TOOL_PANELS: ToolPanelId[] = ['selection-inspector', 'mail-panel'];
+const REGISTRY_PANELS: RegistryPanelId[] = ['records-list', 'fields-list', 'actions-list', 'events-list'];
+const WORKBENCH_PANELS: WorkbenchPanelId[] = [
+  'import-workbench', 'export-workbench', 'composer-workbench',
+  'intake-workbench', 'artcollector-workbench',
+];
+
+function TabStripAddButton({ containerApi, group }: IDockviewHeaderActionsProps) {
+  const handleSpawn = (component: PanelId, direction: 'within' | 'right' | 'below') => {
+    const newId = `${component}-${Date.now()}`;
+    const def = PANEL_DEFINITIONS[component];
+
+    const refPanel = group.activePanel?.id;
+    const position = refPanel
+      ? { referencePanel: refPanel, direction }
+      : undefined;
+
+    let initialWidth: number | undefined;
+    let initialHeight: number | undefined;
+    const sizeHint = def?.defaultPlacement?.size;
+    if (sizeHint && direction === 'right') {
+      initialWidth = sizeHint > 100 ? sizeHint : Math.round(containerApi.width * (sizeHint / 100));
+    } else if (sizeHint && direction === 'below') {
+      initialHeight = sizeHint > 100 ? sizeHint : Math.round(containerApi.height * (sizeHint / 100));
+    }
+
+    containerApi.addPanel({
+      id: newId,
+      component,
+      title: def?.title || 'New Panel',
+      ...(position && { position }),
+      ...(initialWidth !== undefined && { initialWidth }),
+      ...(initialHeight !== undefined && { initialHeight }),
+    });
+  };
+
+  const renderItems = (ids: PanelId[]) =>
+    ids.map((id) => {
+      const def = PANEL_DEFINITIONS[id];
+      const Icon = def.icon;
+      return (
+        <DropdownItem key={id} onSelect={() => handleSpawn(id, 'within')}>
+          <Icon size={14} className="mr-2 shrink-0" />
+          <span>{def.title}</span>
+        </DropdownItem>
+      );
+    });
+
+  return (
+    <div className="tab-strip-add-button">
+      <Dropdown>
+        <DropdownTrigger className="tab-strip-add-trigger">
+          <Plus size={14} strokeWidth={2} />
+        </DropdownTrigger>
+        <DropdownContent align="end" sideOffset={4} className="w-56">
+          <DropdownLabel>Tools</DropdownLabel>
+          {renderItems(TOOL_PANELS)}
+
+          <DropdownSeparator />
+          <DropdownLabel>Registry</DropdownLabel>
+          {renderItems(REGISTRY_PANELS)}
+
+          <DropdownSeparator />
+          <DropdownLabel>Workbenches</DropdownLabel>
+          {renderItems(WORKBENCH_PANELS)}
+
+          <DropdownSeparator />
+          <DropdownLabel>Split</DropdownLabel>
+          <DropdownItem onSelect={() => handleSpawn('selection-inspector', 'right')}>
+            <Split size={14} className="mr-2 shrink-0" />
+            <span>Inspector → Right</span>
+          </DropdownItem>
+          <DropdownItem onSelect={() => handleSpawn('selection-inspector', 'below')}>
+            <Split size={14} className="mr-2 shrink-0 rotate-90" />
+            <span>Inspector → Below</span>
+          </DropdownItem>
+        </DropdownContent>
+      </Dropdown>
+    </div>
+  );
+}
 
 // ============================================================================
 // PANEL SPAWN HANDLE
@@ -682,6 +772,7 @@ export function MainLayout() {
           tabComponents={tabComponents}
           defaultTabComponent={defaultTab}
           watermarkComponent={watermark as FunctionComponent<IWatermarkPanelProps>}
+          rightHeaderActionsComponent={TabStripAddButton}
         />
       </div>
 
