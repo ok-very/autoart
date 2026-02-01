@@ -111,7 +111,7 @@
 /* Left concave corner — !important needed because dockview's styleInject()
    re-injects its CSS at runtime (dev mode), creating an equal-specificity
    ::before divider rule that wins by source order. */
-.dockview-theme-light .dv-tabs-container .dv-tab.dv-active-tab::before {
+.dockview-theme-light .dv-tab.dv-active-tab::before {
   content: '' !important;
   position: absolute;
   top: auto !important;
@@ -120,8 +120,7 @@
   right: auto !important;
   width: var(--ws-tab-radius) !important;
   height: var(--ws-tab-radius) !important;
-  /* DEBUG: red to confirm rendering — revert after verification */
-  background: red !important;
+  background: radial-gradient(circle at 100% 0, transparent var(--ws-tab-radius), var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px)) !important;
   outline: none;
   border: none;
   transform: none;
@@ -130,7 +129,7 @@
 }
 
 /* Right concave corner — same !important rationale as ::before. */
-.dockview-theme-light .dv-tabs-container .dv-tab.dv-active-tab::after {
+.dockview-theme-light .dv-tab.dv-active-tab::after {
   content: '' !important;
   position: absolute;
   top: auto !important;
@@ -139,8 +138,7 @@
   left: auto !important;
   width: var(--ws-tab-radius) !important;
   height: var(--ws-tab-radius) !important;
-  /* DEBUG: red to confirm rendering — revert after verification */
-  background: blue !important;
+  background: radial-gradient(circle at 0 0, transparent var(--ws-tab-radius), var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px)) !important;
   outline: none;
   border: none;
   transform: none;
