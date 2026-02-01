@@ -43,7 +43,7 @@ class ThemeRegistryImpl implements WorkspaceThemeRegistry {
   }
 
   list(): WorkspaceThemeModule[] {
-    return (this.cachedList ??= Array.from(this.themes.values()));
+    return [...(this.cachedList ??= Array.from(this.themes.values()))];
   }
 
   getByDensity(density: ThemeDensity): WorkspaceThemeModule[] {
