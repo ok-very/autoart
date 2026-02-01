@@ -173,11 +173,11 @@ export function SettingsPage() {
                         ) : activeTab === 'autohelper' ? (
                             <AutoHelperSection
                                 onGenerateCode={handleAutoHelperGenerateCode}
-                                autohelperStatus={{ connected: (connections as any)?.autohelper?.connected ?? false }}
+                                autohelperStatus={{ connected: connections?.autohelper?.connected ?? false }}
                             />
                         ) : activeTab === 'integrations' ? (
                             <IntegrationsSection
-                                microsoftStatus={{ connected: (connections as any)?.microsoft?.connected ?? false }}
+                                microsoftStatus={{ connected: connections?.microsoft?.connected ?? false }}
                                 mondayStatus={{ connected: connections?.monday?.connected ?? false }}
                                 googleStatus={{ connected: connections?.google?.connected ?? false }}
                                 onMicrosoftConnect={handleMicrosoftConnect}
