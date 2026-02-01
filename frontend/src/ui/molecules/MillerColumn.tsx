@@ -95,7 +95,7 @@ export type MillerColumnProps = MillerColumnHierarchyProps | MillerColumnGeneric
 
 const COLUMN_CONFIG: Record<NodeType, { label: string; badge: string; bgColor: string; textColor: string }> = {
     project: { label: 'Projects', badge: 'P', bgColor: 'bg-blue-100', textColor: 'text-blue-600' },
-    process: { label: 'Methodology', badge: 'M', bgColor: 'bg-purple-100', textColor: 'text-purple-600' },
+    process: { label: 'Process', badge: 'M', bgColor: 'bg-purple-100', textColor: 'text-purple-600' },
     stage: { label: 'Stages', badge: 'F', bgColor: 'bg-yellow-100', textColor: 'text-yellow-600' },
     subprocess: { label: 'Subprocesses', badge: 'S', bgColor: 'bg-orange-100', textColor: 'text-orange-600' },
     template: { label: 'Templates', badge: 'TP', bgColor: 'bg-pink-100', textColor: 'text-pink-600' },

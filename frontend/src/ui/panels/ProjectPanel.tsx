@@ -98,12 +98,12 @@ export function ProjectPanelContent({ panelId }: ProjectPanelProps) {
                     </Menu.Dropdown>
                 </Menu>
 
-                {/* Bound indicator */}
+                {/* Workspace-linked indicator */}
                 {isBound && (
                     <span
                         className={`text-[10px] px-2 py-0.5 rounded-full ${colorClasses.bg200} ${colorClasses.text700}`}
                     >
-                        Bound
+                        Linked
                     </span>
                 )}
             </div>
