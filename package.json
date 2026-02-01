@@ -10,6 +10,7 @@
     "dev": "bash scripts/dev.sh",
     "dev:win": "powershell -ExecutionPolicy Bypass -File scripts/dev.ps1",
     "dev:kill": "bash scripts/kill-dev.sh",
+    "dev:kill:win": "powershell -ExecutionPolicy Bypass -File scripts/kill-dev.ps1",
     "backup": "bash scripts/backup.sh",
     "db:verify": "bash scripts/db-verify.sh",
     "migrate": "pnpm --filter autoart-backend migrate",
