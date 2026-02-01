@@ -45,7 +45,6 @@
 }
 
 /* Tab — chrome style with rounded top corners */
-/* !important needed to override dockview gradient defaults */
 .dockview-theme-light .dv-tab {
   font-size: 13px;
   font-weight: 500;
@@ -53,17 +52,11 @@
   border: 1px solid transparent;
   border-bottom: none;
   border-radius: var(--ws-tab-radius) var(--ws-tab-radius) 0 0;
-  background: transparent !important;
   color: var(--ws-tab-fg);
   transition: color var(--ws-motion-duration-fast) var(--ws-motion-ease),
               background var(--ws-motion-duration-fast) var(--ws-motion-ease);
   margin: 2px 1px 0 1px;
   position: relative;
-}
-
-/* Ensure child elements don't interfere */
-.dockview-theme-light .dv-tab * {
-  background-color: transparent !important;
 }
 
 .dockview-theme-light .dv-tab:hover {
@@ -74,14 +67,14 @@
 /* Fix for states on click/focus */
 .dockview-theme-light .dv-tab:focus,
 .dockview-theme-light .dv-tab:active,
-.dockview-theme-light .dv-tab.focused {
+.dockview-theme-light .dv-tab:focus-within {
   background: var(--ws-tab-bg-hover) !important;
   color: var(--ws-tab-fg-active);
   outline: none;
 }
 
 /* Active tab — elevated, connects to panel */
-.dockview-theme-light .dv-tab.active {
+.dockview-theme-light .dv-tab.dv-active-tab {
   color: var(--ws-tab-fg-active);
   background: var(--ws-tab-bg-active) !important;
   border-color: var(--ws-panel-border);
@@ -92,12 +85,12 @@
 }
 
 /* Active tab label */
-.dockview-theme-light .dv-tab.active .dv-tab-label {
+.dockview-theme-light .dv-tab.dv-active-tab .dv-default-tab-content {
   background-color: transparent;
   color: var(--ws-tab-fg-active);
 }
 
-.dockview-theme-light .dv-tab:not(.active) .dv-tab-label {
+.dockview-theme-light .dv-tab.dv-inactive-tab .dv-default-tab-content {
   padding: 0;
 }
 
@@ -134,7 +127,7 @@
 }
 
 /* Panel content area */
-.dockview-theme-light .dv-groupview-panel {
+.dockview-theme-light .dv-content-container {
   background: var(--ws-panel-bg);
   border: 1px solid var(--ws-panel-border);
   border-top: none;

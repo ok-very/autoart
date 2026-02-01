@@ -59,51 +59,32 @@ export const floatingTheme: WorkspaceThemeModule = {
         gap: 8px;
       }
 
-      [data-workspace-theme="floating"] .groupview {
+      [data-workspace-theme="floating"] .dv-groupview {
         border-radius: var(--ws-group-radius);
         box-shadow: var(--ws-group-shadow);
         overflow: hidden;
       }
 
-      [data-workspace-theme="floating"] .groupview.active-group {
-        box-shadow: 
+      [data-workspace-theme="floating"] .dv-groupview.dv-active-group {
+        box-shadow:
           var(--ws-group-shadow),
           0 0 0 var(--ws-group-active-ring) var(--ws-group-active-ring-color);
       }
 
-      [data-workspace-theme="floating"] .tabs-container {
+      [data-workspace-theme="floating"] .dv-tabs-container {
         padding: 4px 4px 0 4px;
       }
 
-      [data-workspace-theme="floating"] .tab {
+      [data-workspace-theme="floating"] .dv-tab {
         border-radius: var(--ws-tab-radius) var(--ws-tab-radius) 0 0;
       }
     `,
   },
 
   behavior: {
-    attach(api: DockviewApi) {
-      // Add active group tracking
-      // Note: onDidActiveGroupChange receives the group directly (or undefined), not an event wrapper
-      const disposable = api.onDidActiveGroupChange((group) => {
-        // Guard against SSR/test environments
-        if (typeof document === 'undefined') return;
-
-        // Remove active from all groups
-        document.querySelectorAll('.groupview').forEach((el) => {
-          el.classList.remove('active-group');
-        });
-
-        // Add active to current group
-        if (group) {
-          const groupEl = document.querySelector(`[data-group-id="${group.id}"]`);
-          groupEl?.classList.add('active-group');
-        }
-      });
-
-      return () => {
-        disposable.dispose();
-      };
+    attach(_api: DockviewApi) {
+      // Dockview v4 natively provides .dv-active-group — no manual tracking needed
+      return () => {};
     },
 
     onActivate() {
