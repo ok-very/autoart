@@ -20,17 +20,20 @@ import type {
 class ThemeRegistryImpl implements WorkspaceThemeRegistry {
   private themes = new Map<WorkspaceThemeId, WorkspaceThemeModule>();
   private listeners = new Set<() => void>();
+  private cachedList: WorkspaceThemeModule[] | null = null;
 
   register(theme: WorkspaceThemeModule): void {
     if (this.themes.has(theme.id)) {
       console.warn(`Theme "${theme.id}" is already registered. Overwriting.`);
     }
     this.themes.set(theme.id, theme);
+    this.cachedList = null;
     this.notifyListeners();
   }
 
   unregister(id: WorkspaceThemeId): void {
     if (this.themes.delete(id)) {
+      this.cachedList = null;
       this.notifyListeners();
     }
   }
@@ -40,7 +43,7 @@ class ThemeRegistryImpl implements WorkspaceThemeRegistry {
   }
 
   list(): WorkspaceThemeModule[] {
-    return Array.from(this.themes.values());
+    return (this.cachedList ??= Array.from(this.themes.values()));
   }
 
   getByDensity(density: ThemeDensity): WorkspaceThemeModule[] {
