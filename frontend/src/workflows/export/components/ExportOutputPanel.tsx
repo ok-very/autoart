@@ -74,7 +74,7 @@ export function ExportOutputPanel({ sessionId, exportResult, onBack }: ExportOut
         <div className="flex-1 flex flex-col overflow-hidden" style={{ background: 'var(--ws-bg, #F5F2ED)' }}>
             {/* Header */}
             <div
-                className="flex items-center gap-4 h-12 px-4 border-b"
+                className="flex items-center gap-4 h-10 px-3 border-b"
                 style={{ borderColor: 'var(--ws-text-disabled, #D6D2CB)', background: 'var(--ws-bg, #F5F2ED)' }}
             >
                 <button

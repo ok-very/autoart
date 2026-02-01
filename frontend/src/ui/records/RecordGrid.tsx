@@ -209,7 +209,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
   return (
     <main className="flex-1 flex flex-col overflow-hidden bg-white">
       {/* Toolbar */}
-      <div className="h-14 border-b border-slate-200 flex items-center justify-between px-4 bg-slate-50">
+      <div className="h-10 border-b border-slate-200 flex items-center justify-between px-3 bg-slate-50">
         <div className="flex items-center gap-3">
           {/* Search */}
           <div className="relative">
@@ -444,7 +444,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="h-12 border-t border-slate-200 flex items-center justify-between px-4 bg-slate-50">
+        <div className="h-8 border-t border-slate-200 flex items-center justify-between px-3 bg-slate-50">
           <span className="text-sm text-slate-500">
             Page {page + 1} of {totalPages}
           </span>

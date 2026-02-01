@@ -46,7 +46,7 @@ export function ExportWorkbenchView({
         <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
             {/* Format Selector Bar */}
             <div className="border-b border-slate-200 bg-white px-4">
-                <div className="flex items-center gap-4 h-12">
+                <div className="flex items-center gap-4 h-10">
                     <Text size="xs" weight="semibold" color="muted" className="uppercase">
                         Format
                     </Text>

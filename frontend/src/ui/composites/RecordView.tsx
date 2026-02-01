@@ -315,7 +315,7 @@ export function RecordView({
     return (
         <main className={clsx('flex-1 flex flex-col overflow-hidden bg-slate-50 relative', className)}>
             {/* Toolbar - Sticky at top */}
-            <div className="h-14 shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-20 shadow-sm">
+            <div className="h-10 shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-3 sticky top-0 z-20 shadow-sm">
                 <div className="flex items-center gap-3">
                     {/* Definition Selector */}
                     <DefinitionSelector

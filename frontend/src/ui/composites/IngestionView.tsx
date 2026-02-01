@@ -121,7 +121,7 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
         <div className="flex h-full bg-white">
             {/* Left Panel: Configuration */}
             <div className="w-96 border-r border-slate-200 flex flex-col bg-white shrink-0">
-                <div className="h-12 border-b border-slate-100 flex items-center px-4 bg-slate-50">
+                <div className="h-10 border-b border-slate-100 flex items-center px-3 bg-slate-50">
                     <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                         Input & Logic
                     </h2>

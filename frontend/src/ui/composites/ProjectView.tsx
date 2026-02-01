@@ -323,7 +323,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
             {/* Main content area */}
             {activeTab === 'workflow' ? (
                 <main className="flex-1 flex flex-col overflow-hidden">
-                    <div className="h-12 border-b border-slate-200 bg-white px-4 flex items-center justify-between">
+                    <div className="h-10 border-b border-slate-200 bg-white px-3 flex items-center justify-between">
                         <div className="min-w-0">
                             <div className="text-xs text-slate-400">Subprocess</div>
                             <div className="text-sm font-semibold text-slate-800 truncate">

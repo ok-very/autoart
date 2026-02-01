@@ -152,7 +152,7 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
     if (!inspectedItem && !isAction && !isEmail && !isImportItem) {
         return (
             <div className="bg-white flex flex-col h-full overflow-hidden">
-                <div className="h-14 border-b border-slate-100 flex items-center justify-between px-5 bg-slate-50/50">
+                <div className="h-10 border-b border-slate-100 flex items-center justify-between px-3 bg-slate-50/50">
                     <span className="text-xs text-slate-400">Select an item to inspect</span>
                     {isBound && activeWorkspace && (
                         <span className={clsx('text-[10px] font-medium px-1.5 py-0.5 rounded', colorClasses.bg100, colorClasses.text700)}>
@@ -294,7 +294,7 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
             data-aa-selection-type={selectionType}
         >
             {/* Tab Selector Header */}
-            <div className="h-12 border-b border-slate-100 flex items-center bg-slate-50/50 px-1 shrink-0">
+            <div className="h-10 border-b border-slate-100 flex items-center bg-slate-50/50 px-1 shrink-0">
                 {isBound && activeWorkspace && (
                     <span className={clsx('text-[10px] font-medium px-1.5 py-0.5 rounded ml-1 mr-1 shrink-0', colorClasses.bg100, colorClasses.text700)}>
                         {activeWorkspace.label}

@@ -63,7 +63,7 @@ export function ExportInspector({
             style={{ width }}
         >
             {/* Header */}
-            <div className="h-12 border-b border-slate-100 flex items-center px-4">
+            <div className="h-10 border-b border-slate-100 flex items-center px-3">
                 <Inline gap="sm">
                     <Settings className="w-4 h-4 text-slate-400" />
                     <Text size="sm" weight="semibold">Export Options</Text>

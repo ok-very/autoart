@@ -98,7 +98,7 @@ export function DefinitionListSidebar({
             style={{ width }}
         >
             {/* Header */}
-            <div className="h-14 border-b border-slate-200 flex items-center justify-between px-4 bg-white">
+            <div className="h-10 border-b border-slate-200 flex items-center justify-between px-3 bg-white">
                 <div className="flex items-center gap-2">
                     <Icon size={18} className={iconColor} />
                     <span className="font-semibold text-slate-700">{title}</span>

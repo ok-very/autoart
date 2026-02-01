@@ -552,7 +552,7 @@ export function DataTableFlat({
         if (statusColumns.length === 0) return null;
 
         return (
-            <div className="flex items-center h-10 border-t border-slate-200">
+            <div className="flex items-center h-8 border-t border-slate-200">
                 {/* Checkbox placeholder */}
                 {multiSelect && <div className="w-10 px-3" />}
 

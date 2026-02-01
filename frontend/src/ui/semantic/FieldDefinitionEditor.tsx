@@ -137,7 +137,7 @@ export function FieldDefinitionEditor({ field }: FieldDefinitionEditorProps) {
     return (
         <div className="flex flex-col h-full bg-white">
             {/* Header */}
-            <div className="h-14 px-6 border-b border-slate-200 flex items-center justify-between bg-white">
+            <div className="h-10 px-4 border-b border-slate-200 flex items-center justify-between bg-white">
                 <div>
                     <h2 className="text-base font-semibold text-slate-800">{label || field.label}</h2>
                     <div className="text-xs text-slate-400 flex items-center gap-2">

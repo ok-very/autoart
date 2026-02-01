@@ -49,7 +49,7 @@ export function GanttView({ projection, projectId }: GanttViewProps) {
     return (
         <div className="flex flex-col h-full bg-slate-50">
             {/* Toolbar */}
-            <div className="h-12 border-b border-slate-200 bg-white px-4 flex items-center justify-between shrink-0">
+            <div className="h-10 border-b border-slate-200 bg-white px-3 flex items-center justify-between shrink-0">
                 <Inline gap="sm">
                     <Calendar size={16} className="text-slate-400" />
                     <Text size="sm" weight="medium">Timeline</Text>

@@ -511,7 +511,7 @@ export function ProjectWorkflowView() {
                     </div>
                 ) : (
                     <>
-                        <div className="h-12 border-b border-slate-200 bg-white px-4 flex items-center justify-between">
+                        <div className="h-10 border-b border-slate-200 bg-white px-3 flex items-center justify-between">
                             <div className="min-w-0 flex-1 flex items-center gap-4">
                                 {/* Project Selector */}
                                 <div className="min-w-0">

@@ -20,7 +20,7 @@ export function EventsPanel() {
     return (
         <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
             {/* Page Header */}
-            <div className="h-12 border-b border-slate-200 bg-white flex items-center justify-between px-4 shrink-0">
+            <div className="h-10 border-b border-slate-200 bg-white flex items-center justify-between px-3 shrink-0">
                 <h1 className="text-xl font-semibold text-slate-800 flex items-center gap-2">
                     <Activity size={20} className="text-emerald-500" />
                     Events
@@ -32,7 +32,7 @@ export function EventsPanel() {
             </div>
 
             {/* Filters Bar */}
-            <div className="h-10 border-b border-slate-100 bg-slate-50 flex items-center gap-4 px-4 shrink-0">
+            <div className="h-8 border-b border-slate-100 bg-slate-50 flex items-center gap-4 px-3 shrink-0">
                 <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-500">Context:</span>
                     <select

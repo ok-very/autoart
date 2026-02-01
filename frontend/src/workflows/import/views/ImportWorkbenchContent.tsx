@@ -97,7 +97,7 @@ export function ImportWorkbenchContent() {
         <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
             {/* Preview Mode Tabs */}
             <div className="border-b border-slate-200 bg-white px-4">
-                <div className="flex items-center gap-1 h-12">
+                <div className="flex items-center gap-1 h-10">
                     <button
                         onClick={() => setPreviewMode('hierarchy')}
                         className={clsx(

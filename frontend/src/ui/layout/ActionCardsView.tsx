@@ -178,7 +178,7 @@ export function ActionCardsView() {
     return (
         <div className="flex flex-col h-full bg-slate-50/50">
             {/* Toolbar */}
-            <div className="h-14 border-b border-slate-200 flex items-center justify-between px-6 bg-white shrink-0">
+            <div className="h-10 border-b border-slate-200 flex items-center justify-between px-4 bg-white shrink-0">
                 <div className="flex items-center gap-3">
                     <div className="relative">
                         <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />

@@ -96,7 +96,7 @@ export function ExportWorkbenchContent() {
                 className="border-b px-4"
                 style={{ borderColor: 'var(--ws-text-disabled, #D6D2CB)', background: 'var(--ws-bg, #F5F2ED)' }}
             >
-                <div className="flex items-center gap-4 h-12">
+                <div className="flex items-center gap-4 h-10">
                     <ExportStepIndicator currentStep="configure" />
 
                     <div className="flex items-center gap-1.5 ml-4">

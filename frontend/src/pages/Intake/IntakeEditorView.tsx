@@ -254,7 +254,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     return (
         <div className="flex flex-col h-full">
             {/* Editor Header */}
-            <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0">
+            <header className="h-10 bg-white border-b border-slate-200 flex items-center justify-between px-3 shrink-0">
                 {/* Left: Back + Title */}
                 <div className="flex items-center gap-4 w-1/3">
                     <button

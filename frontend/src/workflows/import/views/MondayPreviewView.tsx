@@ -103,7 +103,7 @@ export function MondayPreviewView({
 
             {/* Preview Mode Tabs */}
             <div className="border-b border-slate-200 bg-white px-4">
-                <div className="flex items-center gap-1 h-12">
+                <div className="flex items-center gap-1 h-10">
                     <button
                         onClick={() => setPreviewMode('hierarchy')}
                         className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${previewMode === 'hierarchy'

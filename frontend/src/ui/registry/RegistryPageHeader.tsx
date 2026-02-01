@@ -48,7 +48,7 @@ export function RegistryPageHeader({
     return (
         <div
             className={clsx(
-                'h-12 border-b border-slate-200 bg-white flex items-center justify-between px-4',
+                'h-10 border-b border-slate-200 bg-white flex items-center justify-between px-3',
                 className
             )}
         >
