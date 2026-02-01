@@ -1,5 +1,6 @@
 // Cymatic loading screen — Chladni nodal-line contours, seamless tiling
-// Pure ES module, zero dependencies. Reads --ws-accent / --ws-bg from :root.
+// Pure ES module, zero dependencies. Reads --ws-bg from :root.
+// Pattern is square, centered, and cycles through DESIGN.md muted tones.
 
 (function boot() {
   const canvas = document.getElementById('cymatic-loader');
@@ -10,10 +11,20 @@
 
   // --- tunables ---------------------------------------------------------
   const GRID       = 150;   // field sample resolution
-  const LINE_W     = 2.5;   // CSS-px stroke width (~0.5pt at 2x DPR)
+  const LINE_W     = 2.0;   // CSS-px stroke width
   const FIELD_SC   = 2.0;   // field scale — domain [-1,1] for proper plate modes
-  const MAX_ALPHA  = 0.72;  // peak line opacity
-  const DURATION   = 4.0;   // loop period (seconds)
+  const MAX_ALPHA  = 0.65;  // peak line opacity
+  const DURATION   = 8.0;   // loop period (seconds)
+  const SIZE_FRAC  = 0.38;  // pattern size as fraction of min(W,H)
+
+  // --- DESIGN.md muted palette ------------------------------------------
+  const PALETTE = [
+    [0x3F, 0x5C, 0x6E],  // Oxide Blue
+    [0x6F, 0x7F, 0x5C],  // Moss Green
+    [0xB8, 0x9B, 0x5E],  // Desaturated Amber
+    [0x8A, 0x5A, 0x3C],  // Burnt Umber
+    [0x8C, 0x4A, 0x4A],  // Iron Red
+  ];
 
   // --- marching-squares lookup table (hoisted — constant) ---------------
   const SEGS = [
@@ -41,34 +52,30 @@
     return v || fallback;
   }
 
-  function parseColorToRgb(color) {
-    const c = color.trim();
-    if (c.startsWith('#')) {
-      let hex = c.slice(1);
-      if (hex.length === 3 || hex.length === 4) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-      else if (hex.length === 8) hex = hex.slice(0, 6);
-      if (hex.length === 6) {
-        const n = parseInt(hex, 16);
-        if (!isNaN(n)) return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
-      }
-    }
-    const m = c.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
-    if (m) return [+m[1], +m[2], +m[3]];
-    return [0x3F, 0x5C, 0x6E]; // Oxide Blue fallback
-  }
-
-  let ink, bg, inkStroke;
+  let bg;
   function refreshColors() {
-    ink = resolveColor('--ws-accent', '#3F5C6E');
-    bg  = resolveColor('--ws-bg', '#F5F2ED');
-    const [r, g, b] = parseColorToRgb(ink);
-    inkStroke = `rgba(${r},${g},${b},${MAX_ALPHA})`;
+    bg = resolveColor('--ws-bg', '#F5F2ED');
     canvas.style.background = bg;
   }
   refreshColors();
 
+  // Smooth interpolation through the muted palette
+  function lerpColor(t01) {
+    const n = PALETTE.length;
+    const pos = t01 * n;
+    const i = Math.floor(pos) % n;
+    const j = (i + 1) % n;
+    const f = pos - Math.floor(pos);
+    // smoothstep for gentle transitions
+    const s = f * f * (3 - 2 * f);
+    const r = Math.round(PALETTE[i][0] + (PALETTE[j][0] - PALETTE[i][0]) * s);
+    const g = Math.round(PALETTE[i][1] + (PALETTE[j][1] - PALETTE[i][1]) * s);
+    const b = Math.round(PALETTE[i][2] + (PALETTE[j][2] - PALETTE[i][2]) * s);
+    return `rgba(${r},${g},${b},${MAX_ALPHA})`;
+  }
+
   // --- sizing -----------------------------------------------------------
-  let W, H, dpr, cx, cy;
+  let W, H, dpr;
 
   function resize() {
     dpr = devicePixelRatio || 1;
@@ -76,8 +83,6 @@
     H = canvas.clientHeight;
     canvas.width  = W * dpr;
     canvas.height = H * dpr;
-    cx = W * dpr * 0.5;
-    cy = H * dpr * 0.5;
   }
   resize();
 
@@ -89,7 +94,7 @@
     ro = { disconnect() {} };
   }
 
-  // --- Chladni field ----------------------------------------------------
+  // --- Chladni field (wider frequency breadth: modes 1–13) --------------
   const PI = Math.PI;
   const cos = Math.cos;
 
@@ -109,23 +114,26 @@
         const qx = ix * inv - half;
         const qy = iy * inv - half;
         const f =
-          (1 - w) * chladni(qx, qy, 3, 5) +
-          w       * chladni(qx, qy, 4, 6) +
-          0.55 * (w * chladni(qx, qy, 2, 7) + (1 - w) * chladni(qx, qy, 5, 3));
+          (1 - w) * chladni(qx, qy, 2, 7)  +
+          w       * chladni(qx, qy, 5, 11)  +
+          0.45 * (w * chladni(qx, qy, 1, 9) + (1 - w) * chladni(qx, qy, 7, 3)) +
+          0.25 * chladni(qx, qy, 3, 13);
         buf[iy * (GRID + 1) + ix] = f;
       }
     }
     return buf;
   }
 
-  // --- marching squares → line segments ---------------------------------
+  // --- marching squares → line segments (uniform scale, centered) -------
   // Returns flat array [x1,y1,x2,y2, x1,y1,x2,y2, ...]
   function marchContours(field) {
     const segs = [];
     const cols = GRID + 1;
-    // Map grid coords → full canvas
-    const scaleX = canvas.width / GRID;
-    const scaleY = canvas.height / GRID;
+    // Uniform scale keeps the pattern square regardless of viewport
+    const dim = Math.min(canvas.width, canvas.height) * SIZE_FRAC;
+    const scale = dim / GRID;
+    const ox = (canvas.width - dim) * 0.5;
+    const oy = (canvas.height - dim) * 0.5;
 
     for (let iy = 0; iy < GRID; iy++) {
       for (let ix = 0; ix < GRID; ix++) {
@@ -166,10 +174,10 @@
           const a = pairs[p][0];
           const b = pairs[p][1];
           segs.push(
-            ex[a] * scaleX,
-            ey[a] * scaleY,
-            ex[b] * scaleX,
-            ey[b] * scaleY,
+            ox + ex[a] * scale,
+            oy + ey[a] * scale,
+            ox + ex[b] * scale,
+            oy + ey[b] * scale,
           );
         }
       }
@@ -204,9 +212,9 @@
     const segs = marchContours(field);
     const contourPath = buildPath(segs);
 
-    // Draw — full pattern, uniform opacity
+    // Draw — centered square pattern, cycling color
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = inkStroke;
+    ctx.strokeStyle = lerpColor(t01);
     ctx.lineWidth = LINE_W * dpr;
     ctx.lineCap = 'round';
     ctx.stroke(contourPath);
