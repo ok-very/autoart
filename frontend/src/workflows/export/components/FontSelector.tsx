@@ -102,7 +102,7 @@ export function FontSelector({
                 aria-haspopup="listbox"
                 aria-expanded={isOpen}
                 aria-labelledby={labelId}
-                className="w-full flex items-center justify-between px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-between px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-sans hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 <span className="flex items-center gap-2">
                     <span style={{ fontFamily: selectedFont }}>{selectedFont}</span>
@@ -121,7 +121,7 @@ export function FontSelector({
                         role="listbox"
                         aria-labelledby={labelId}
                         onKeyDown={handleListKeyDown}
-                        className="absolute z-20 mt-1 w-full bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-auto focus:outline-none"
+                        className="absolute z-20 mt-1 w-full bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-auto font-sans focus:outline-none"
                     >
                         {availableFonts.map((font, index) => (
                             <button

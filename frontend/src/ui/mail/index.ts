@@ -30,3 +30,9 @@ export {
     EmailFactCard,
     type EmailFactCardProps,
 } from './EmailFactCard';
+
+// Email actions menu
+export {
+    EmailActionsMenu,
+    type EmailActionsMenuProps,
+} from './EmailActionsMenu';

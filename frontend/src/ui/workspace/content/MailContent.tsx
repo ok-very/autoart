@@ -4,7 +4,7 @@
  * Thin wrapper for embedding Mail panel as center content.
  */
 
-import { useState, useEffect, memo, useCallback, useRef, useMemo } from 'react';
+import { useState, memo, useCallback, useMemo } from 'react';
 import {
     Mail,
     RefreshCw,
@@ -15,10 +15,6 @@ import {
     Circle,
     Sparkles,
     Paperclip,
-    MoreHorizontal,
-    AlertTriangle,
-    Info,
-    Archive,
     Link2,
 } from 'lucide-react';
 
@@ -26,13 +22,10 @@ import {
     useInbox,
     useEnrichedInbox,
     useMailStatus,
-    useArchiveEmail,
-    useMarkActionRequired,
-    useMarkInformational
 } from '../../../api/hooks/mail';
 import { useUIStore } from '../../../stores/uiStore';
 import type { ProcessedEmail, Priority, TriageStatus as TriageStatusType } from '../../../api/types/mail';
-import { LinkedEntityGroup, type LinkedEntity } from '../../mail';
+import { LinkedEntityGroup, type LinkedEntity, EmailActionsMenu } from '../../mail';
 
 const ITEMS_PER_PAGE = 25;
 
@@ -67,108 +60,6 @@ function TriageStatusIndicator({ status, confidence }: { status: TriageStatusTyp
             <Circle size={8} className={`${color} fill-current`} />
             {showConfidence && (
                 <span className="text-[10px] text-slate-400">{Math.round(confidence * 100)}%</span>
-            )}
-        </div>
-    );
-}
-
-function EmailActions({ email, onAction }: { email: ProcessedEmail; onAction?: () => void }) {
-    const [showMenu, setShowMenu] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
-    const menuButtonRef = useRef<HTMLButtonElement>(null);
-    const archiveMutation = useArchiveEmail();
-    const actionRequiredMutation = useMarkActionRequired();
-    const informationalMutation = useMarkInformational();
-
-    // Close menu on Escape and handle focus
-    useEffect(() => {
-        if (!showMenu) return;
-
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                setShowMenu(false);
-                menuButtonRef.current?.focus();
-            }
-        };
-
-        document.addEventListener('keydown', handleKeyDown);
-        // Focus first menu item when opened
-        menuRef.current?.querySelector('button')?.focus();
-
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [showMenu]);
-
-    const handleArchive = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        archiveMutation.mutate(email.id, { onSuccess: onAction });
-        setShowMenu(false);
-    };
-
-    const handleMarkActionRequired = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        actionRequiredMutation.mutate(email.id, { onSuccess: onAction });
-        setShowMenu(false);
-    };
-
-    const handleMarkInformational = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        informationalMutation.mutate(email.id, { onSuccess: onAction });
-        setShowMenu(false);
-    };
-
-    const isPending = archiveMutation.isPending || actionRequiredMutation.isPending || informationalMutation.isPending;
-
-    return (
-        <div className="relative">
-            <button
-                ref={menuButtonRef}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMenu(prev => !prev);
-                }}
-                disabled={isPending}
-                aria-haspopup="menu"
-                aria-expanded={showMenu}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors disabled:opacity-50"
-            >
-                {isPending ? <Loader2 size={14} className="animate-spin" /> : <MoreHorizontal size={14} />}
-            </button>
-            {showMenu && (
-                <>
-                    <div className="fixed inset-0 z-50" onClick={() => setShowMenu(false)} />
-                    <div
-                        ref={menuRef}
-                        role="menu"
-                        aria-label="Email actions"
-                        className="absolute right-0 top-full mt-1 z-50 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[160px]"
-                    >
-                        <button
-                            role="menuitem"
-                            onClick={handleMarkActionRequired}
-                            className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                        >
-                            <AlertTriangle size={14} className="text-red-500" />
-                            Action Required
-                        </button>
-                        <button
-                            role="menuitem"
-                            onClick={handleMarkInformational}
-                            className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                        >
-                            <Info size={14} className="text-blue-500" />
-                            Informational
-                        </button>
-                        <hr className="my-1 border-slate-100" />
-                        <button
-                            role="menuitem"
-                            onClick={handleArchive}
-                            className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                        >
-                            <Archive size={14} className="text-slate-400" />
-                            Archive
-                        </button>
-                    </div>
-                </>
             )}
         </div>
     );
@@ -292,7 +183,7 @@ const EmailRow = memo(function EmailRow({
             </td>
             <td className="px-4 py-3 w-32 text-sm text-slate-500">{formattedDate}</td>
             <td className="px-4 py-3 w-12">
-                <EmailActions email={email} onAction={onAction} />
+                <EmailActionsMenu email={email} onAction={onAction} />
             </td>
         </tr>
     );
