@@ -361,7 +361,7 @@ export function UniversalTableView({
     }, []);
 
     const handleSelectRecord = useCallback((recordId: string) => {
-        inspectRecord(recordId);
+        inspectRecord(recordId, 'center-workspace');
     }, [inspectRecord]);
 
     const handleCreateRecord = useCallback(() => {

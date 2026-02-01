@@ -49,7 +49,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         isBuiltIn: true,
         panels: [
             { panelId: 'center-workspace', contentType: 'projects', viewMode: 'workflow', position: 'center' },
-            { panelId: 'selection-inspector', position: 'right' },
+            { panelId: 'selection-inspector', position: 'right', bound: true },
         ],
     },
     {
@@ -61,7 +61,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         isBuiltIn: true,
         panels: [
             { panelId: 'center-workspace', contentType: 'projects', viewMode: 'workflow', position: 'center' },
-            { panelId: 'selection-inspector', position: 'right' },
+            { panelId: 'selection-inspector', position: 'right', bound: true },
             { panelId: 'composer-workbench', position: 'bottom' },
         ],
     },
@@ -74,7 +74,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         isBuiltIn: true,
         panels: [
             { panelId: 'center-workspace', contentType: 'projects', viewMode: 'log', position: 'center' },
-            { panelId: 'selection-inspector', position: 'right' },
+            { panelId: 'selection-inspector', position: 'right', bound: true },
         ],
     },
     {
