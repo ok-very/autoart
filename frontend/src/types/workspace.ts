@@ -65,6 +65,8 @@ export interface WorkspacePreset {
     scope: WorkspaceScope;
     /** Whether this is a built-in workspace (vs user-created) */
     isBuiltIn: boolean;
+    /** Scopes this custom workspace under a built-in workspace's submenu */
+    parentWorkspaceId?: string;
     /** @deprecated Use subviews instead. Kept for backward compat with custom workspaces. */
     panels: WorkspacePanelConfig[];
     /** Named sub-configurations. Built-in workspaces should use this. */
