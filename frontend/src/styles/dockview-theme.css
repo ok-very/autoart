@@ -120,10 +120,8 @@
   right: auto !important;
   width: var(--ws-tab-radius) !important;
   height: var(--ws-tab-radius) !important;
-  background: radial-gradient(circle at 0 0,
-    transparent var(--ws-tab-radius),
-    var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px));
-  background-color: transparent !important;
+  /* DEBUG: red to confirm rendering — revert after verification */
+  background: red !important;
   outline: none;
   border: none;
   transform: none;
@@ -141,10 +139,8 @@
   left: auto !important;
   width: var(--ws-tab-radius) !important;
   height: var(--ws-tab-radius) !important;
-  background: radial-gradient(circle at 100% 0,
-    transparent var(--ws-tab-radius),
-    var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px));
-  background-color: transparent !important;
+  /* DEBUG: red to confirm rendering — revert after verification */
+  background: blue !important;
   outline: none;
   border: none;
   transform: none;
