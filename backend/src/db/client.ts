@@ -26,6 +26,9 @@ async function createPool(): Promise<Pool> {
 
   if (isDev || !env.AZURE_AD_USER) {
     // Development: Use password-based connection string
+    if (!env.DATABASE_URL) {
+      throw new Error('DATABASE_URL is required when AZURE_AD_USER is not set');
+    }
     console.log('🔌 Using password-based database connection');
     return new Pool({
       connectionString: env.DATABASE_URL,
@@ -92,12 +95,14 @@ async function initPool(): Promise<Pool> {
 }
 
 // Initialize pool synchronously for backwards compatibility
-// In production with Entra ID, first query will trigger async initialization
-pool = new Pool({
-  connectionString: env.DATABASE_URL,
-  max: env.DATABASE_POOL_SIZE,
-  ssl: env.DATABASE_URL?.includes('azure') ? { rejectUnauthorized: false } : undefined,
-});
+// In production with Entra ID, this placeholder pool is replaced by initializeDatabase()
+pool = env.DATABASE_URL
+  ? new Pool({
+      connectionString: env.DATABASE_URL,
+      max: env.DATABASE_POOL_SIZE,
+      ssl: env.DATABASE_URL.includes('azure') ? { rejectUnauthorized: false } : undefined,
+    })
+  : new Pool({ max: 0 }); // Entra ID: replaced at startup by initializeDatabase()
 
 export const db = new Kysely<Database>({
   dialect: new PostgresDialect({ pool }),

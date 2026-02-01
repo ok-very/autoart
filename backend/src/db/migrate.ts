@@ -34,9 +34,12 @@ async function createPool(): Promise<Pool> {
   }
 
   // Password-based connection string
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is required when AZURE_AD_USER is not set');
+  }
   return new Pool({
     connectionString,
-    ssl: connectionString?.includes('azure') ? { rejectUnauthorized: false } : undefined,
+    ssl: connectionString.includes('azure') ? { rejectUnauthorized: false } : undefined,
   });
 }
 
