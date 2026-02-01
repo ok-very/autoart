@@ -248,6 +248,32 @@ export const WORKSPACE_COLORS: Record<WorkspaceColorName, WorkspaceColorClasses>
     },
 };
 
+/** Tailwind *-50 hex values for tab strip tinting via CSS variable */
+export const WORKSPACE_STRIP_HEX: Partial<Record<WorkspaceColorName, string>> = {
+    red: '#fef2f2',
+    orange: '#fff7ed',
+    amber: '#fffbeb',
+    yellow: '#fefce8',
+    lime: '#f7fee7',
+    green: '#f0fdf4',
+    emerald: '#ecfdf5',
+    teal: '#f0fdfa',
+    cyan: '#ecfeff',
+    sky: '#f0f9ff',
+    blue: '#eff6ff',
+    indigo: '#eef2ff',
+    violet: '#f5f3ff',
+    purple: '#faf5ff',
+    fuchsia: '#fdf4ff',
+    pink: '#fdf2f8',
+    rose: '#fff1f2',
+    slate: '#f8fafc',
+    gray: '#f9fafb',
+    zinc: '#fafafa',
+    neutral: '#fafafa',
+    stone: '#fafaf9',
+};
+
 /** 8 curated defaults shown by default in pickers */
 export const BASIC_COLOR_NAMES: WorkspaceColorName[] = [
     'red', 'orange', 'amber', 'green', 'cyan', 'blue', 'purple', 'pink',
