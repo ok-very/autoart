@@ -40,22 +40,20 @@
   position: relative;
   background-image: none !important;
   background-size: auto;
-  padding: 0 4px;
+  padding: 0 var(--ws-tab-radius);
 }
 
-/* === Tab base (chrome-style rounded top corners) === */
+/* === Tab base (inverse-radius swoopy tabs) === */
 
 .dockview-theme-light .dv-tab {
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 500;
   padding: var(--ws-tab-padding-y) var(--ws-tab-padding-x);
-  border: 1px solid transparent;
-  border-bottom: none;
   border-radius: var(--ws-tab-radius) var(--ws-tab-radius) 0 0;
   color: var(--ws-tab-fg);
   transition: color var(--ws-motion-duration-fast) var(--ws-motion-ease),
               background-color var(--ws-motion-duration-fast) var(--ws-motion-ease);
-  margin: 2px 1px 0 1px;
   position: relative;
 }
 
@@ -81,16 +79,40 @@
   outline: none;
 }
 
-/* === Active tab — elevated, connects to panel === */
+/* === Active tab — inverse-radius swoopy === */
 
 .dockview-theme-light .dv-tab.dv-active-tab {
   color: var(--ws-tab-fg-active);
   background-color: var(--ws-tab-bg-active) !important;
-  border-color: var(--ws-panel-border);
-  border-bottom: 1px solid var(--ws-panel-bg);
-  margin-bottom: -1px;
-  z-index: 2;
   font-weight: 500;
+  z-index: 2;
+  margin-bottom: -1px;
+}
+
+/* Left concave corner */
+.dockview-theme-light .dv-tab.dv-active-tab::before {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: calc(-1 * var(--ws-tab-radius));
+  width: var(--ws-tab-radius);
+  height: var(--ws-tab-radius);
+  background: radial-gradient(circle at 0 0,
+    transparent var(--ws-tab-radius),
+    var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px));
+}
+
+/* Right concave corner */
+.dockview-theme-light .dv-tab.dv-active-tab::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: calc(-1 * var(--ws-tab-radius));
+  width: var(--ws-tab-radius);
+  height: var(--ws-tab-radius);
+  background: radial-gradient(circle at 100% 0,
+    transparent var(--ws-tab-radius),
+    var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px));
 }
 
 .dockview-theme-light .dv-tab.dv-active-tab:hover {

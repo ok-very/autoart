@@ -80,7 +80,7 @@
   --ws-tab-padding-x: 12px;
   --ws-tab-padding-y: 6px;
   --ws-tab-gap: 2px;
-  --ws-tab-radius: 6px;
+  --ws-tab-radius: 8px;
 
   /* Tab colors */
   --ws-tab-fg: #64748b;

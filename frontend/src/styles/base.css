@@ -17,15 +17,9 @@
 
 body {
   margin: 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-optical-sizing: auto;
-  letter-spacing: var(--tracking-serif);
+  letter-spacing: var(--tracking-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* UI chrome uses Source Sans 3 — DESIGN.md */
-button, input, select {
-  font-family: var(--font-sans);
-  letter-spacing: var(--tracking-sans);
 }

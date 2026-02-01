@@ -10,7 +10,6 @@ import {
   TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings, ClipboardList, LayoutGrid, Check,
   AppWindow, FileText, Image, Mail, DollarSign, BarChart3, Calendar
 } from 'lucide-react';
-import { clsx } from 'clsx';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
 
@@ -146,29 +145,21 @@ export function Header() {
 
   return (
     <header className="h-14 bg-white flex items-center justify-between px-4 shrink-0 shadow-sm z-50 relative border-b border-slate-200">
-      <Inline gap="sm" align="center" className="w-full justify-between">
+      <Inline gap="sm" align="center" justify="between" className="w-full">
         <div className="flex items-center gap-2">
           {/* Logo */}
           <ChladniBadge />
 
-          {/* Projects - primary navigation home (Link for proper anchor semantics) */}
-          <Link
-            to="/"
-            className={clsx(
-              'inline-flex items-center justify-center gap-1.5 font-medium rounded-lg transition-colors px-2 py-1 text-xs',
-              location.pathname !== '/' && 'hover:bg-black/5',
-            )}
-            style={
-              location.pathname === '/'
-                ? {
-                    color: 'var(--ws-accent)',
-                    backgroundColor: 'color-mix(in srgb, var(--ws-accent) 12%, transparent)',
-                  }
-                : { color: 'var(--ws-muted-fg)' }
-            }
-          >
-            <LayoutGrid size={14} />
-            Projects
+          {/* Projects - primary navigation home */}
+          <Link to="/">
+            <Button
+              variant={location.pathname === '/' ? 'light' : 'subtle'}
+              color="gray"
+              size="sm"
+              leftSection={<LayoutGrid size={14} />}
+            >
+              Projects
+            </Button>
           </Link>
 
           {/* Workspace Dropdown - primary navigation for workflow stages */}
