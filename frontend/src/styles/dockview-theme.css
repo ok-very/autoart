@@ -181,7 +181,6 @@
 
 .ws-swoopy-corner {
   position: absolute;
-  bottom: 0;
   width: var(--ws-tab-radius);
   height: var(--ws-tab-radius);
   pointer-events: none;
@@ -191,7 +190,7 @@
 
 .ws-swoopy-left {
   background: radial-gradient(
-    circle at 100% 0,
+    circle at 0% 100%,
     transparent var(--ws-tab-radius),
     var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px)
   );
@@ -199,7 +198,7 @@
 
 .ws-swoopy-right {
   background: radial-gradient(
-    circle at 0 0,
+    circle at 100% 100%,
     transparent var(--ws-tab-radius),
     var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px)
   );

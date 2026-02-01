@@ -386,6 +386,8 @@ function useSwoopyCorners(api: DockviewApi | null) {
 
         const tabL = tabRect.left - containerRect.left;
         const tabR = tabRect.right - containerRect.left;
+        // Vertical: align corner bottom with tab bottom
+        const cornerTop = tabRect.bottom - containerRect.top - RADIUS;
         const scrollL = scrollRect ? scrollRect.left - containerRect.left : 0;
         const scrollR = scrollRect ? scrollRect.right - containerRect.left : containerRect.width;
 
@@ -396,6 +398,7 @@ function useSwoopyCorners(api: DockviewApi | null) {
         } else {
           left.style.display = 'block';
           left.style.left = `${lPos}px`;
+          left.style.top = `${cornerTop}px`;
         }
 
         // Right corner
@@ -404,6 +407,7 @@ function useSwoopyCorners(api: DockviewApi | null) {
         } else {
           right.style.display = 'block';
           right.style.left = `${tabR}px`;
+          right.style.top = `${cornerTop}px`;
         }
       });
     }
