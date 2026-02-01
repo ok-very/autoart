@@ -43,7 +43,7 @@ import {
   type PanelId,
 } from '../../workspace/panelRegistry';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
-import { getWorkspaceColorClasses } from '../../workspace/workspaceColors';
+import { getWorkspaceColorClasses, WORKSPACE_STRIP_HEX, type WorkspaceColorName } from '../../workspace/workspaceColors';
 import {
   useWorkspaceTheme,
   useThemeBehavior,
@@ -397,6 +397,24 @@ export function MainLayout() {
   const themeRootAttributes = useThemeRootAttributes();
   useThemeCSS();
   useThemeBehavior(apiRef.current);
+
+  // Workspace tab strip tinting — sync active workspace color to CSS variable
+  const activeWorkspaceIdForTint = useWorkspaceStore((s) => s.activeWorkspaceId);
+  useEffect(() => {
+    const root = document.documentElement;
+    const workspace = BUILT_IN_WORKSPACES.find((w) => w.id === activeWorkspaceIdForTint);
+    const hex = workspace?.color
+      ? WORKSPACE_STRIP_HEX[workspace.color as WorkspaceColorName]
+      : null;
+
+    if (hex) {
+      root.style.setProperty('--ws-tabstrip-tint', hex);
+    } else {
+      root.style.removeProperty('--ws-tabstrip-tint');
+    }
+
+    return () => { root.style.removeProperty('--ws-tabstrip-tint'); };
+  }, [activeWorkspaceIdForTint]);
 
   // Command palette global hotkey (Cmd+K / Ctrl+K)
   const openCommandPalette = useUIStore((s) => s.openCommandPalette);
