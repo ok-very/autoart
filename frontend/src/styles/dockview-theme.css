@@ -108,19 +108,22 @@
   margin-bottom: -1px;
 }
 
-/* Left concave corner (specificity 0-4-1 to beat dockview divider/focus) */
+/* Left concave corner — !important needed because dockview's styleInject()
+   re-injects its CSS at runtime (dev mode), creating an equal-specificity
+   ::before divider rule that wins by source order. */
 .dockview-theme-light .dv-tabs-container .dv-tab.dv-active-tab::before {
-  content: '';
+  content: '' !important;
   position: absolute;
-  top: auto;
-  bottom: -1px;
-  left: calc(-1 * var(--ws-tab-radius));
-  right: auto;
-  width: var(--ws-tab-radius);
-  height: var(--ws-tab-radius);
+  top: auto !important;
+  bottom: -1px !important;
+  left: calc(-1 * var(--ws-tab-radius)) !important;
+  right: auto !important;
+  width: var(--ws-tab-radius) !important;
+  height: var(--ws-tab-radius) !important;
   background: radial-gradient(circle at 0 0,
     transparent var(--ws-tab-radius),
     var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px));
+  background-color: transparent !important;
   outline: none;
   border: none;
   transform: none;
@@ -128,19 +131,20 @@
   pointer-events: none;
 }
 
-/* Right concave corner (specificity 0-4-1 to beat dockview divider/focus) */
+/* Right concave corner — same !important rationale as ::before. */
 .dockview-theme-light .dv-tabs-container .dv-tab.dv-active-tab::after {
-  content: '';
+  content: '' !important;
   position: absolute;
-  top: auto;
-  bottom: -1px;
-  right: calc(-1 * var(--ws-tab-radius));
-  left: auto;
-  width: var(--ws-tab-radius);
-  height: var(--ws-tab-radius);
+  top: auto !important;
+  bottom: -1px !important;
+  right: calc(-1 * var(--ws-tab-radius)) !important;
+  left: auto !important;
+  width: var(--ws-tab-radius) !important;
+  height: var(--ws-tab-radius) !important;
   background: radial-gradient(circle at 100% 0,
     transparent var(--ws-tab-radius),
     var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px));
+  background-color: transparent !important;
   outline: none;
   border: none;
   transform: none;
