@@ -21,7 +21,7 @@ export function ThemedTab({ api }: IDockviewPanelHeaderProps) {
 
   return (
     <div
-      className="ws-tab"
+      className="ws-tab font-sans"
       style={{
         display: 'flex',
         alignItems: 'center',
