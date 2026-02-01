@@ -2,6 +2,16 @@
 
 *Last Updated: 2026-01-31*
 
+## Bug List
+
+- AutoHelper Settings doesn't link correctly to frontend menu
+- Landing page still not receiving typography/styling tokens
+- Remove TNR as fallback font
+- Cymatic loader should go seamless pattern/squaretile, slightly heavier line (0.5pt)
+- Login fails with demo account credentials - can't test
+
+---
+
 ## P0: Blocking
 
 *(none)*
@@ -12,7 +22,6 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| 275 | Epic: Export Workbench — preview-first outputs + finance templates via sessions | Epic |
 | — | Autohelper: add auth key handshake between frontend settings and backend | Security |
 | 217 | Expose interpretation HTTP routes for frontend hooks | Backend |
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
@@ -20,6 +29,11 @@
 | 237 | Performance Optimization & Caching | Backend + Frontend |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 79 | Enhance Workflow View Interactions | Feature |
+| 82a | User CRUD: create/invite user, set role, reset password | Feature |
+| 82b | Project assignment: assign user to project, transfer ownership from demo user | Feature |
+| 82c | User deactivation: soft-delete user, reassign owned actions/records | Feature |
+| 82d | Upgrade user chip: avatar photo, name, role — used in assignee fields, event log, header | UI |
+| 82e | User settings: edit profile, upload avatar photo, change password | Feature |
 
 ---
 
@@ -40,7 +54,9 @@
 | 84 | Email Notices API | Backend |
 | 85 | Templating Engine | Feature |
 | 86 | Monday.com Board Sync Settings | Integration |
-| 82 | User Account Management | Feature |
+| 82 | User Account Management: create user via UI, assign to project, deactivate/delete user | Feature |
+| 291 | Schema editor / Composer relationship-math builder | Feature |
+| — | Action vocabulary: store classification verbs/nouns/adjectives from imports as a heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret what action type is being constructed or referenced | Classification |
 
 ---
 
@@ -71,6 +87,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| 275 | Epic: Export Workbench — preview-first outputs + finance via sessions | PRs #286-290, #292 |
 | 218 | Phase 6: Remove task_references system + hierarchy nodes | PRs #282-285 |
 | — | Polls editor/management surface in dashboard | PRs #271-273 |
 | — | Style token infrastructure + formatter consumption | PRs #279-280 |

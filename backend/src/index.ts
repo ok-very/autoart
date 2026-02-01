@@ -1,7 +1,11 @@
 import { buildApp } from './app.js';
 import { env } from './config/env.js';
+import { initializeDatabase } from './db/client.js';
 
 async function start() {
+  // Initialize database pool (required for Entra ID token auth in production)
+  await initializeDatabase();
+
   const app = await buildApp();
 
   try {

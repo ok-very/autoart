@@ -8,7 +8,7 @@
  */
 
 import dotenv from 'dotenv';
-import { Kysely, PostgresDialect } from 'kysely';
+import { Kysely, PostgresDialect, sql } from 'kysely';
 import path from 'path';
 import { Pool } from 'pg';
 import { fileURLToPath } from 'url';
@@ -23,17 +23,44 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envPath = path.join(__dirname, '..', '..', '..', '..', '.env');
 dotenv.config({ path: envPath });
 
+async function createPool(): Promise<Pool> {
+  const connectionString = process.env.DATABASE_URL;
+  const azureAdUser = process.env.AZURE_AD_USER;
+
+  if (azureAdUser) {
+    const { DefaultAzureCredential } = await import('@azure/identity');
+    const credential = new DefaultAzureCredential();
+    const tokenResponse = await credential.getToken('https://ossrdbms-aad.database.windows.net');
+    if (!tokenResponse) {
+      throw new Error('Failed to acquire Azure AD token for database');
+    }
+    return new Pool({
+      host: 'autoart.postgres.database.azure.com',
+      database: 'postgres',
+      port: 5432,
+      user: azureAdUser,
+      password: tokenResponse.token,
+      ssl: { rejectUnauthorized: false },
+    });
+  }
+
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is required when AZURE_AD_USER is not set');
+  }
+  return new Pool({
+    connectionString,
+    ssl: connectionString.includes('azure') ? { rejectUnauthorized: false } : undefined,
+  });
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const includeDevData = args.includes('--dev') || args.includes('-d');
   const resetFirst = args.includes('--reset') || args.includes('-r');
 
+  const pool = await createPool();
   const db = new Kysely<Database>({
-    dialect: new PostgresDialect({
-      pool: new Pool({
-        connectionString: process.env.DATABASE_URL,
-      }),
-    }),
+    dialect: new PostgresDialect({ pool }),
   });
 
   console.log('');
@@ -46,6 +73,15 @@ async function main() {
     if (resetFirst) {
       console.log('[!] Resetting database data...');
       // Delete in reverse dependency order
+      // Events table has an immutable trigger that blocks DELETE —
+      // TRUNCATE bypasses row-level triggers
+      await db.deleteFrom('import_executions').execute();
+      await db.deleteFrom('import_plans').execute();
+      await db.deleteFrom('import_sessions').execute();
+      await sql`TRUNCATE events CASCADE`.execute(db);
+      await db.deleteFrom('workflow_surface_nodes').execute();
+      await db.deleteFrom('action_references').execute();
+      await db.deleteFrom('actions').execute();
       await db.deleteFrom('records').execute();
       await db.deleteFrom('hierarchy_nodes').execute();
       await db.deleteFrom('record_definitions').execute();

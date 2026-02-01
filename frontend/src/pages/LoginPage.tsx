@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 
 import { useLogin, useRegister } from '../api/hooks';
 import { useAuthStore } from '../stores/authStore';
@@ -12,6 +12,10 @@ interface LoginPageProps {
 
 export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rawRedirect = searchParams.get('redirect') || '/';
+  // Only allow internal paths — block protocol-relative and absolute URLs
+  const redirectTo = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/';
   const login = useLogin();
   const register = useRegister();
   const setUser = useAuthStore((s) => s.setUser);
@@ -34,7 +38,7 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
         const result = await register.mutateAsync({ email, password, name });
         setUser(result.user);
       }
-      navigate('/');
+      navigate(redirectTo);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
     }
@@ -121,11 +125,11 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
           {/* Toggle - Link to other route */}
           <div className="mt-6 text-center">
             {isLogin ? (
-              <Link to="/register" className="text-sm text-blue-600 hover:underline">
+              <Link to={`/register${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`} className="text-sm text-blue-600 hover:underline">
                 Don't have an account? Sign up
               </Link>
             ) : (
-              <Link to="/login" className="text-sm text-blue-600 hover:underline">
+              <Link to={`/login${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`} className="text-sm text-blue-600 hover:underline">
                 Already have an account? Sign in
               </Link>
             )}

@@ -9,15 +9,15 @@ import webbrowser
 
 
 def _settings_url() -> str:
-    """Derive the settings URL from autoart_api_url.
+    """Derive the settings URL from autoart_frontend_url.
 
-    Production: backend serves frontend at the same origin (:3001/settings).
-    Dev fallback: localhost:5173/settings (Vite dev server).
+    Uses the dedicated frontend URL setting so the link works in both
+    dev (Vite :5173) and production (backend-served) environments.
     """
     from autohelper.config import get_settings
 
-    api_url = get_settings().autoart_api_url  # e.g. "http://localhost:3001"
-    return f"{api_url.rstrip('/')}/settings#autohelper"
+    frontend_url = get_settings().autoart_frontend_url
+    return f"{frontend_url.rstrip('/')}/settings#autohelper"
 
 
 def open_settings_in_browser() -> None:
