@@ -163,25 +163,26 @@ function MappingRow({
 
             {/* Actions menu */}
             {onUnlink && (
-                <Menu>
-                    <Menu.Target>
-                        <button
-                            onClick={(e) => e.stopPropagation()}
-                            className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
-                        >
-                            <MoreHorizontal size={14} />
-                        </button>
-                    </Menu.Target>
-                    <Menu.Dropdown align="end">
-                        <Menu.Item
-                            leftSection={<Unlink size={12} />}
-                            className="text-red-600"
-                            onClick={() => onUnlink(entry)}
-                        >
-                            Unlink
-                        </Menu.Item>
-                    </Menu.Dropdown>
-                </Menu>
+                <div onClick={(e) => e.stopPropagation()}>
+                    <Menu>
+                        <Menu.Target>
+                            <button
+                                className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
+                            >
+                                <MoreHorizontal size={14} />
+                            </button>
+                        </Menu.Target>
+                        <Menu.Dropdown align="end">
+                            <Menu.Item
+                                leftSection={<Unlink size={12} />}
+                                className="text-red-600"
+                                onClick={() => onUnlink(entry)}
+                            >
+                                Unlink
+                            </Menu.Item>
+                        </Menu.Dropdown>
+                    </Menu>
+                </div>
             )}
 
             {/* Navigate arrow */}

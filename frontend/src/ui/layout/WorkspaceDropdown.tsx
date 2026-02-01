@@ -169,7 +169,7 @@ function WorkspaceMenuEntry({
     const Icon = workspace.icon ?? Folder;
     const colorClasses = getIconColorClass(workspace.color);
     const subviewCount = workspace.subviews?.length ?? 0;
-    const hasSubmenu = subviewCount > 1 || customChildren.length > 0;
+    const hasSubmenu = subviewCount > 0 || customChildren.length > 0;
 
     const iconElement = (
         <span className={`p-1 rounded ${colorClasses}`}>
@@ -384,6 +384,7 @@ export function WorkspaceDropdown() {
             </Menu>
 
             <AddWorkspaceDialog
+                key={dialogParentId ?? 'global'}
                 open={dialogOpen}
                 onClose={() => {
                     setDialogOpen(false);

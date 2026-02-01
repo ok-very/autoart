@@ -88,6 +88,7 @@
 .dockview-theme-light .dv-tab.dv-active-tab .dv-default-tab-content {
   background-color: transparent;
   color: var(--ws-tab-fg-active);
+  padding: 0;
 }
 
 .dockview-theme-light .dv-tab.dv-inactive-tab .dv-default-tab-content {
