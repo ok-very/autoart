@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 
-import { Badge } from '@autoart/ui';
+import { Badge, Menu } from '@autoart/ui';
 
 import { LinkSearchCombobox } from './LinkSearchCombobox';
 
@@ -114,30 +114,9 @@ function MappingRow({
     onNavigate?: (entry: MappingEntry) => void;
     onUnlink?: (entry: MappingEntry) => void;
 }) {
-    const [showMenu, setShowMenu] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
-    const menuButtonRef = useRef<HTMLButtonElement>(null);
     const Icon = entityIcons[entry.type] || fallbackIcon;
     const statusInfo = statusConfig[entry.status] || fallbackStatusConfig;
     const StatusIcon = statusInfo.icon;
-
-    // Close menu on Escape and handle focus
-    useEffect(() => {
-        if (!showMenu) return;
-
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                setShowMenu(false);
-                menuButtonRef.current?.focus();
-            }
-        };
-
-        document.addEventListener('keydown', handleKeyDown);
-        // Focus the menu when opened
-        menuRef.current?.querySelector('button')?.focus();
-
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [showMenu]);
 
     return (
         <div
@@ -184,44 +163,25 @@ function MappingRow({
 
             {/* Actions menu */}
             {onUnlink && (
-                <div className="relative">
-                    <button
-                        ref={menuButtonRef}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setShowMenu(prev => !prev);
-                        }}
-                        aria-haspopup="menu"
-                        aria-expanded={showMenu}
-                        className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
-                    >
-                        <MoreHorizontal size={14} />
-                    </button>
-                    {showMenu && (
-                        <>
-                            <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-                            <div
-                                ref={menuRef}
-                                role="menu"
-                                aria-label="Mapping actions"
-                                className="absolute right-0 top-full mt-1 z-20 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[120px]"
-                            >
-                                <button
-                                    role="menuitem"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowMenu(false);
-                                        onUnlink(entry);
-                                    }}
-                                    className="w-full px-3 py-1.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                >
-                                    <Unlink size={12} />
-                                    Unlink
-                                </button>
-                            </div>
-                        </>
-                    )}
-                </div>
+                <Menu>
+                    <Menu.Target>
+                        <button
+                            onClick={(e) => e.stopPropagation()}
+                            className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
+                        >
+                            <MoreHorizontal size={14} />
+                        </button>
+                    </Menu.Target>
+                    <Menu.Dropdown align="end">
+                        <Menu.Item
+                            leftSection={<Unlink size={12} />}
+                            className="text-red-600"
+                            onClick={() => onUnlink(entry)}
+                        >
+                            Unlink
+                        </Menu.Item>
+                    </Menu.Dropdown>
+                </Menu>
             )}
 
             {/* Navigate arrow */}

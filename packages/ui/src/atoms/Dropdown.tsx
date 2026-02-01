@@ -1,6 +1,7 @@
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { clsx } from 'clsx';
+import { Check } from 'lucide-react';
 import { ReactNode } from 'react';
 
 export const Dropdown = DropdownMenu.Root;
@@ -66,4 +67,34 @@ export function DropdownLabel({ children, className }: { children: ReactNode, cl
 
 export function DropdownSeparator({ className }: { className?: string }) {
     return <DropdownMenu.Separator className={clsx("-mx-1 my-1 h-px bg-slate-100", className)} />;
+}
+
+interface DropdownCheckboxItemProps {
+    children: ReactNode;
+    checked?: boolean;
+    onCheckedChange?: (checked: boolean) => void;
+    className?: string;
+    disabled?: boolean;
+}
+
+export function DropdownCheckboxItem({ children, checked, onCheckedChange, className, disabled }: DropdownCheckboxItemProps) {
+    return (
+        <DropdownMenu.CheckboxItem
+            checked={checked}
+            onCheckedChange={onCheckedChange}
+            onSelect={(e) => e.preventDefault()}
+            disabled={disabled}
+            className={clsx(
+                "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm font-sans outline-none transition-colors focus:bg-slate-100 focus:text-slate-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+                className
+            )}
+        >
+            <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+                <DropdownMenu.ItemIndicator>
+                    <Check size={14} />
+                </DropdownMenu.ItemIndicator>
+            </span>
+            {children}
+        </DropdownMenu.CheckboxItem>
+    );
 }

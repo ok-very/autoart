@@ -6,7 +6,8 @@
  */
 
 import { Columns } from 'lucide-react';
-import { useState, useCallback } from 'react';
+
+import { Dropdown, DropdownTrigger, DropdownContent, DropdownCheckboxItem, DropdownLabel } from '@autoart/ui';
 
 // ============================================================================
 // TYPES
@@ -38,61 +39,37 @@ export function ColumnPicker<T extends ColumnPickerField>({
     onToggle,
     title = 'Visible Columns',
 }: ColumnPickerProps<T>) {
-    const [isOpen, setIsOpen] = useState(false);
-
-    const handleToggle = useCallback((fieldName: string) => {
-        onToggle(fieldName);
-    }, [onToggle]);
-
     return (
-        <div className="relative">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="p-2 rounded hover:bg-slate-100 text-slate-500"
-                title="Toggle columns"
-            >
-                <Columns size={16} />
-            </button>
-
-            {isOpen && (
-                <>
-                    {/* Backdrop */}
-                    <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setIsOpen(false)}
-                    />
-
-                    {/* Dropdown */}
-                    <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
-                        <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase">
-                            {title}
-                        </div>
-                        {allFields.map((field) => {
-                            const label = field.label || field.fieldName;
-                            return (
-                                <label
-                                    key={field.fieldName}
-                                    className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-50 cursor-pointer"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={visibleKeys.has(field.fieldName)}
-                                        onChange={() => handleToggle(field.fieldName)}
-                                        className="rounded border-slate-300"
-                                    />
-                                    <span className="truncate">{label}</span>
-                                </label>
-                            );
-                        })}
-                        {allFields.length === 0 && (
-                            <div className="px-3 py-2 text-xs text-slate-400">
-                                No columns available
-                            </div>
-                        )}
+        <Dropdown>
+            <DropdownTrigger asChild>
+                <button
+                    className="p-2 rounded hover:bg-slate-100 text-slate-500"
+                    title="Toggle columns"
+                >
+                    <Columns size={16} />
+                </button>
+            </DropdownTrigger>
+            <DropdownContent align="end" className="w-48 max-h-64 overflow-y-auto">
+                <DropdownLabel>{title}</DropdownLabel>
+                {allFields.map((field) => {
+                    const label = field.label || field.fieldName;
+                    return (
+                        <DropdownCheckboxItem
+                            key={field.fieldName}
+                            checked={visibleKeys.has(field.fieldName)}
+                            onCheckedChange={() => onToggle(field.fieldName)}
+                        >
+                            <span className="truncate">{label}</span>
+                        </DropdownCheckboxItem>
+                    );
+                })}
+                {allFields.length === 0 && (
+                    <div className="px-3 py-2 text-xs text-slate-400">
+                        No columns available
                     </div>
-                </>
-            )}
-        </div>
+                )}
+            </DropdownContent>
+        </Dropdown>
     );
 }
 

@@ -6,8 +6,9 @@
  */
 
 import { CaretDown, FileText, Table, GoogleLogo, Gear } from '@phosphor-icons/react';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import type { TemplatePreset } from '../../../stores';
+
+import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from '@autoart/ui';
 
 // ---------------------------------------------------------------------------
 // Preset Configuration
@@ -59,8 +60,8 @@ export function TemplatePresetSelector({ value, onChange, disabled = false }: Te
     const CurrentIcon = currentConfig.icon;
 
     return (
-        <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild disabled={disabled}>
+        <Dropdown>
+            <DropdownTrigger asChild disabled={disabled}>
                 <button
                     type="button"
                     className={`
@@ -73,43 +74,37 @@ export function TemplatePresetSelector({ value, onChange, disabled = false }: Te
                     <span className="flex-1 text-left text-sm font-medium">{currentConfig.label}</span>
                     <CaretDown size={14} className="text-slate-400" />
                 </button>
-            </DropdownMenu.Trigger>
+            </DropdownTrigger>
 
-            <DropdownMenu.Portal>
-                <DropdownMenu.Content
-                    className="bg-white rounded-lg border border-slate-200 shadow-lg p-1 min-w-[220px] z-50"
-                    sideOffset={4}
-                    align="start"
-                >
-                    {PRESET_ORDER.map((preset) => {
-                        const config = PRESET_CONFIGS[preset];
-                        const Icon = config.icon;
-                        const isSelected = preset === value;
+            <DropdownContent className="min-w-[220px]" sideOffset={4}>
+                {PRESET_ORDER.map((preset) => {
+                    const config = PRESET_CONFIGS[preset];
+                    const Icon = config.icon;
+                    const isSelected = preset === value;
 
-                        return (
-                            <DropdownMenu.Item
-                                key={preset}
-                                className={`
-                  flex items-start gap-3 px-3 py-2 rounded-md cursor-pointer outline-none
-                  ${isSelected ? 'bg-emerald-50' : 'hover:bg-slate-50'}
+                    return (
+                        <DropdownItem
+                            key={preset}
+                            className={`
+                  flex items-start gap-3 px-3 py-2 rounded-md cursor-pointer
+                  ${isSelected ? 'bg-emerald-50' : ''}
                 `}
-                                onSelect={() => onChange(preset)}
-                            >
-                                <Icon size={18} className={isSelected ? 'text-emerald-600' : 'text-slate-500'} />
-                                <div className="flex-1">
-                                    <div className={`text-sm font-medium ${isSelected ? 'text-emerald-700' : 'text-slate-900'}`}>
-                                        {config.label}
-                                    </div>
-                                    <div className="text-xs text-slate-500">{config.description}</div>
+                            onSelect={() => onChange(preset)}
+                        >
+                            <Icon size={18} className={isSelected ? 'text-emerald-600' : 'text-slate-500'} />
+                            <div className="flex-1">
+                                <div className={`text-sm font-medium ${isSelected ? 'text-emerald-700' : 'text-slate-900'}`}>
+                                    {config.label}
                                 </div>
-                                {isSelected && (
-                                    <div className="text-emerald-600 text-xs font-medium self-center">✓</div>
-                                )}
-                            </DropdownMenu.Item>
-                        );
-                    })}
-                </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-        </DropdownMenu.Root>
+                                <div className="text-xs text-slate-500">{config.description}</div>
+                            </div>
+                            {isSelected && (
+                                <div className="text-emerald-600 text-xs font-medium self-center">✓</div>
+                            )}
+                        </DropdownItem>
+                    );
+                })}
+            </DropdownContent>
+        </Dropdown>
     );
 }
