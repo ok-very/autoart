@@ -22,6 +22,8 @@ export interface ConnectionStatus {
 export interface ConnectionsStatus {
     monday: ConnectionStatus;
     google: ConnectionStatus;
+    microsoft?: ConnectionStatus;
+    autohelper?: ConnectionStatus;
 }
 
 // ============================================================================
