@@ -51,28 +51,28 @@ export const minimalTheme: WorkspaceThemeModule = {
 
     text: `
       /* Minimal theme - hide chrome until hover */
-      [data-workspace-theme="minimal"] .tabs-container {
+      [data-workspace-theme="minimal"] .dv-tabs-container {
         opacity: 0;
         transition: opacity var(--ws-motion-duration) var(--ws-motion-ease);
       }
 
-      [data-workspace-theme="minimal"] .groupview:hover .tabs-container,
-      [data-workspace-theme="minimal"] .groupview:focus-within .tabs-container {
+      [data-workspace-theme="minimal"] .dv-groupview:hover .dv-tabs-container,
+      [data-workspace-theme="minimal"] .dv-groupview:focus-within .dv-tabs-container {
         opacity: 1;
       }
 
       /* Single-tab groups hide tabs entirely */
-      [data-workspace-theme="minimal"] .groupview[data-tab-count="1"] .tabs-container {
+      [data-workspace-theme="minimal"] .dv-groupview[data-tab-count="1"] .dv-tabs-container {
         display: none;
       }
 
       /* Sashes only visible on hover */
-      [data-workspace-theme="minimal"] .sash {
+      [data-workspace-theme="minimal"] .dv-sash {
         opacity: 0;
         transition: opacity var(--ws-motion-duration) var(--ws-motion-ease);
       }
 
-      [data-workspace-theme="minimal"] .sash:hover {
+      [data-workspace-theme="minimal"] .dv-sash:hover {
         opacity: 1;
       }
     `,
@@ -83,10 +83,7 @@ export const minimalTheme: WorkspaceThemeModule = {
       // Track tab count on groups for CSS targeting
       const updateTabCounts = () => {
         api.groups.forEach((group) => {
-          const groupEl = document.querySelector(`[data-group-id="${group.id}"]`);
-          if (groupEl) {
-            groupEl.setAttribute('data-tab-count', String(group.panels.length));
-          }
+          group.element.setAttribute('data-tab-count', String(group.panels.length));
         });
       };
 

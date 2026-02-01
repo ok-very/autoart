@@ -81,7 +81,7 @@ export const parchmentTheme: WorkspaceThemeModule = {
       }
 
       /* Softer borders for the archival feel */
-      [data-workspace-theme="parchment"] .groupview {
+      [data-workspace-theme="parchment"] .dv-groupview {
         border: 1px solid #D6D2CB;
       }
     `,
