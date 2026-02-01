@@ -8,7 +8,7 @@
  */
 
 import { Settings, User, Plug, Palette, Server, Loader2 } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import { AccountSection, AppearanceSection, AutoHelperSection, IntegrationsSection } from './settings';
@@ -42,9 +42,14 @@ export function SettingsPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const { isLoading } = useCurrentUser();
-    const hashTab = location.hash.replace('#', '') as SettingsTab;
-    const validTab = NAV_ITEMS.some(n => n.id === hashTab) ? hashTab : 'account';
-    const [activeTab, setActiveTab] = useState<SettingsTab>(validTab);
+    const [activeTab, setActiveTab] = useState<SettingsTab>('account');
+
+    // Sync activeTab with location.hash (initial + subsequent navigations)
+    useEffect(() => {
+        const hash = location.hash.replace('#', '');
+        const matched = NAV_ITEMS.find(n => n.id === hash);
+        if (matched) setActiveTab(matched.id);
+    }, [location.hash]);
 
     // Fetch connection status from backend
     const { data: connections } = useConnections();

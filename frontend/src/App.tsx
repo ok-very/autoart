@@ -12,7 +12,7 @@ import { CollectionModeProvider } from './workflows/export/context/CollectionMod
 
 function NavigateToLogin() {
   const location = useLocation();
-  const intended = location.pathname + location.hash;
+  const intended = location.pathname + location.search + location.hash;
   const to = intended && intended !== '/login'
     ? `/login?redirect=${encodeURIComponent(intended)}`
     : '/login';
