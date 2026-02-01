@@ -330,6 +330,106 @@ function WatermarkComponent() {
 }
 
 // ============================================================================
+// SWOOPY CORNERS
+// ============================================================================
+
+/**
+ * Position concave corner spans on each .dv-tabs-and-actions-container —
+ * outside the overflow:hidden scroll viewport so they're never clipped.
+ * Z-index 1 places them above inactive tabs (auto) but below the active tab (2).
+ */
+function useSwoopyCorners(api: DockviewApi | null) {
+  useEffect(() => {
+    if (!api) return;
+    const root = document.querySelector('.dockview-theme-light');
+    if (!root) return;
+
+    const RADIUS = 8;
+    const cornerMap = new WeakMap<Element, { left: HTMLElement; right: HTMLElement }>();
+
+    function ensureCorners(container: Element) {
+      let pair = cornerMap.get(container);
+      if (!pair) {
+        const left = document.createElement('span');
+        left.className = 'ws-swoopy-corner ws-swoopy-left';
+        left.setAttribute('aria-hidden', 'true');
+
+        const right = document.createElement('span');
+        right.className = 'ws-swoopy-corner ws-swoopy-right';
+        right.setAttribute('aria-hidden', 'true');
+
+        container.appendChild(left);
+        container.appendChild(right);
+        pair = { left, right };
+        cornerMap.set(container, pair);
+      }
+      return pair;
+    }
+
+    function update() {
+      root!.querySelectorAll('.dv-tabs-and-actions-container').forEach((container) => {
+        const { left, right } = ensureCorners(container);
+        const activeTab = container.querySelector('.dv-tab.dv-active-tab');
+
+        if (!activeTab) {
+          left.style.display = 'none';
+          right.style.display = 'none';
+          return;
+        }
+
+        const tabRect = activeTab.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        // Clamp to the scrollable viewport so corners hide when tab scrolls away
+        const scrollable = container.querySelector('.dv-scrollable');
+        const scrollRect = scrollable?.getBoundingClientRect();
+
+        const tabL = tabRect.left - containerRect.left;
+        const tabR = tabRect.right - containerRect.left;
+        const scrollL = scrollRect ? scrollRect.left - containerRect.left : 0;
+        const scrollR = scrollRect ? scrollRect.right - containerRect.left : containerRect.width;
+
+        // Left corner
+        const lPos = tabL - RADIUS;
+        if (lPos < scrollL - RADIUS || tabL > scrollR) {
+          left.style.display = 'none';
+        } else {
+          left.style.display = 'block';
+          left.style.left = `${lPos}px`;
+        }
+
+        // Right corner
+        if (tabR + RADIUS > scrollR + RADIUS || tabR < scrollL) {
+          right.style.display = 'none';
+        } else {
+          right.style.display = 'block';
+          right.style.left = `${tabR}px`;
+        }
+      });
+    }
+
+    // Observe class changes (tab switching) and child list (panel add/remove)
+    const observer = new MutationObserver(() => requestAnimationFrame(update));
+    observer.observe(root, { subtree: true, attributes: true, attributeFilter: ['class'], childList: true });
+
+    // Track scroll inside tab containers
+    const onScroll = () => requestAnimationFrame(update);
+    root.querySelectorAll('.dv-tabs-container').forEach((el) => {
+      el.addEventListener('scroll', onScroll, { passive: true });
+    });
+
+    update();
+
+    return () => {
+      observer.disconnect();
+      root.querySelectorAll('.dv-tabs-container').forEach((el) => {
+        el.removeEventListener('scroll', onScroll);
+      });
+    };
+  }, [api]);
+}
+
+// ============================================================================
 // MAIN LAYOUT (THE MASTER COMPONENT)
 // ============================================================================
 
@@ -347,6 +447,7 @@ export function MainLayout() {
   const themeRootAttributes = useThemeRootAttributes();
   useThemeCSS();
   useThemeBehavior(apiRef.current);
+  useSwoopyCorners(apiRef.current);
 
   // Workspace tab strip tinting — sync active workspace color to CSS variable
   const activeWorkspaceIdForTint = useWorkspaceStore((s) => s.activeWorkspaceId);
