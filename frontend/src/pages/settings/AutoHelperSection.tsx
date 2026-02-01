@@ -20,8 +20,10 @@ import {
     CheckCircle2,
     XCircle,
     AlertTriangle,
+    AlertCircle,
     Mail,
     HardDrive,
+    Key,
 } from 'lucide-react';
 import { useState, useCallback } from 'react';
 
@@ -134,6 +136,117 @@ function SmallButton({
 // ============================================================================
 // CARDS
 // ============================================================================
+
+function PairingCodeCard({
+    onGenerateCode,
+    autohelperStatus,
+}: {
+    onGenerateCode: () => Promise<{ code: string; expiresAt: string }>;
+    autohelperStatus: { connected: boolean };
+}) {
+    const [pairingCode, setPairingCode] = useState<string | null>(null);
+    const [expiresAt, setExpiresAt] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const getErrorMessage = (err: unknown): string => {
+        if (!err) return 'Failed to generate code';
+        if (typeof err === 'object') {
+            const anyErr = err as {
+                response?: { data?: { error?: string; message?: string } };
+                message?: string;
+            };
+            const apiMessage =
+                anyErr.response?.data?.error ??
+                anyErr.response?.data?.message ??
+                anyErr.message;
+            if (typeof apiMessage === 'string' && apiMessage.trim()) {
+                return apiMessage;
+            }
+        }
+        if (err instanceof Error && err.message) return err.message;
+        return 'Failed to generate code';
+    };
+
+    const handleGenerateCode = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const result = await onGenerateCode();
+            setPairingCode(result.code);
+            setExpiresAt(result.expiresAt);
+        } catch (err) {
+            setError(getErrorMessage(err));
+        } finally {
+            setIsLoading(false);
+        }
+    }, [onGenerateCode]);
+
+    return (
+        <CardShell
+            icon={<Key className="w-5 h-5 text-indigo-600" />}
+            iconBg="bg-indigo-100"
+            title="Pairing Code"
+            badge={
+                <StatusBadge
+                    ok={autohelperStatus.connected}
+                    label={autohelperStatus.connected ? 'Paired' : 'Not paired'}
+                />
+            }
+        >
+            {autohelperStatus.connected ? (
+                <div className="flex items-center gap-2 text-sm text-emerald-600">
+                    <CheckCircle2 className="w-4 h-4" />
+                    AutoHelper is connected
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    {pairingCode ? (
+                        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">
+                            <p className="text-xs text-slate-500 mb-2">
+                                Enter this code in AutoHelper:
+                            </p>
+                            <div className="font-mono text-3xl font-bold text-slate-900 tracking-widest">
+                                {pairingCode}
+                            </div>
+                            {expiresAt && (
+                                <p className="text-xs text-slate-400 mt-2">
+                                    Expires in 5 minutes
+                                </p>
+                            )}
+                        </div>
+                    ) : (
+                        <button
+                            onClick={handleGenerateCode}
+                            disabled={isLoading}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-500 hover:bg-indigo-600 rounded-lg transition-colors disabled:bg-slate-300"
+                        >
+                            {isLoading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Key className="w-4 h-4" />
+                            )}
+                            Generate Pairing Code
+                        </button>
+                    )}
+                    {error && (
+                        <div className="flex items-center gap-2 text-sm text-red-600">
+                            <AlertCircle className="w-4 h-4" />
+                            {error}
+                        </div>
+                    )}
+                </div>
+            )}
+            <div className="mt-1 flex items-start gap-2 text-xs text-slate-400">
+                <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                <span>
+                    Generate a code here, then enter it in AutoHelper to connect.
+                    Pairing works regardless of AutoHelper connectivity.
+                </span>
+            </div>
+        </CardShell>
+    );
+}
 
 function ServiceStatusCard() {
     const { data: status } = useAutoHelperStatus();
@@ -537,8 +650,25 @@ function AdvancedCard() {
 // MAIN SECTION
 // ============================================================================
 
-export function AutoHelperSection() {
+interface AutoHelperSectionProps {
+    onGenerateCode?: () => Promise<{ code: string; expiresAt: string }>;
+    autohelperStatus?: { connected: boolean };
+}
+
+export function AutoHelperSection({
+    onGenerateCode = async () => ({ code: '', expiresAt: '' }),
+    autohelperStatus = { connected: false },
+}: AutoHelperSectionProps) {
     const { isError: healthError, isLoading: healthLoading } = useAutoHelperHealth();
+
+    // Pairing code card always renders — it's a backend operation,
+    // works regardless of AutoHelper connectivity.
+    const pairingCard = (
+        <PairingCodeCard
+            onGenerateCode={onGenerateCode}
+            autohelperStatus={autohelperStatus}
+        />
+    );
 
     if (healthLoading) {
         return (
@@ -547,6 +677,7 @@ export function AutoHelperSection() {
                     <h2 className="text-lg font-semibold text-slate-900">AutoHelper</h2>
                     <p className="text-sm text-slate-500 mt-1">Local service management</p>
                 </div>
+                {pairingCard}
                 <div className="flex items-center gap-2 text-slate-400">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="text-sm">Connecting to AutoHelper...</span>
@@ -562,6 +693,7 @@ export function AutoHelperSection() {
                     <h2 className="text-lg font-semibold text-slate-900">AutoHelper</h2>
                     <p className="text-sm text-slate-500 mt-1">Local service management</p>
                 </div>
+                {pairingCard}
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
                     <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                     <div>
@@ -582,6 +714,7 @@ export function AutoHelperSection() {
                 <p className="text-sm text-slate-500 mt-1">Local service management</p>
             </div>
 
+            {pairingCard}
             <ServiceStatusCard />
             <CollectorCard />
             <MailCard />

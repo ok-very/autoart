@@ -564,133 +564,13 @@ function SharePointRequestUrlSetting() {
 }
 
 // ============================================================================
-// AUTOHELPER INTEGRATION
-// ============================================================================
-
-interface AutoHelperIntegrationProps {
-    status: IntegrationStatus;
-    onGenerateCode: () => Promise<{ code: string; expiresAt: string }>;
-}
-
-function AutoHelperIntegration({ status, onGenerateCode }: AutoHelperIntegrationProps) {
-    const [pairingCode, setPairingCode] = useState<string | null>(null);
-    const [expiresAt, setExpiresAt] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-
-    /**
-     * Extract a user-friendly error message from various error types.
-     * Handles Axios-style errors, standard Errors, and unknown types.
-     */
-    const getErrorMessage = (err: unknown): string => {
-        if (!err) return 'Failed to generate code';
-
-        // Handle Axios-style API errors
-        if (typeof err === 'object') {
-            const anyErr = err as {
-                response?: { data?: { error?: string; message?: string } };
-                message?: string;
-            };
-            const apiMessage =
-                anyErr.response?.data?.error ??
-                anyErr.response?.data?.message ??
-                anyErr.message;
-            if (typeof apiMessage === 'string' && apiMessage.trim()) {
-                return apiMessage;
-            }
-        }
-
-        // Handle standard Error objects
-        if (err instanceof Error && err.message) {
-            return err.message;
-        }
-
-        return 'Failed to generate code';
-    };
-
-    const handleGenerateCode = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            const result = await onGenerateCode();
-            setPairingCode(result.code);
-            setExpiresAt(result.expiresAt);
-        } catch (err) {
-            setError(getErrorMessage(err));
-        } finally {
-            setIsLoading(false);
-        }
-    }, [onGenerateCode]);
-
-    return (
-        <IntegrationCard
-            icon={<Link2 className="w-5 h-5 text-indigo-600" />}
-            iconBg="bg-indigo-100"
-            name="AutoHelper"
-            description="Local assistant for file indexing, document production, and Outlook mail"
-            hint="Generate a code in AutoArt, then enter it in AutoHelper to connect"
-            status={status}
-        >
-            {status.connected ? (
-                <div className="flex items-center gap-2 text-sm text-emerald-600">
-                    <CheckCircle2 className="w-4 h-4" />
-                    AutoHelper is connected
-                </div>
-            ) : (
-                <div className="space-y-3">
-                    {pairingCode ? (
-                        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">
-                            <p className="text-xs text-slate-500 mb-2">Enter this code in AutoHelper:</p>
-                            <div className="font-mono text-3xl font-bold text-slate-900 tracking-widest">
-                                {pairingCode}
-                            </div>
-                            {expiresAt && (
-                                <p className="text-xs text-slate-400 mt-2">
-                                    Expires in 5 minutes
-                                </p>
-                            )}
-                        </div>
-                    ) : (
-                        <button
-                            onClick={handleGenerateCode}
-                            disabled={isLoading}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-500 hover:bg-indigo-600 rounded-lg transition-colors disabled:bg-slate-300"
-                        >
-                            {isLoading ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                                <Key className="w-4 h-4" />
-                            )}
-                            Generate Pairing Code
-                        </button>
-                    )}
-                    {error && (
-                        <div className="flex items-center gap-2 text-sm text-red-600">
-                            <AlertCircle className="w-4 h-4" />
-                            {error}
-                        </div>
-                    )}
-                </div>
-            )}
-        </IntegrationCard>
-    );
-}
-
-// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
-
-interface ExtendedIntegrationsSectionProps extends IntegrationsSectionProps {
-    autohelperStatus?: IntegrationStatus;
-    onAutoHelperGenerateCode?: () => Promise<{ code: string; expiresAt: string }>;
-}
 
 export function IntegrationsSection({
     microsoftStatus = { connected: false },
     mondayStatus = { connected: false },
     googleStatus = { connected: false },
-    autohelperStatus = { connected: false },
     onMicrosoftConnect = () => { },
     onMicrosoftDisconnect = async () => { },
     onMondayConnect = async () => { },
@@ -699,8 +579,7 @@ export function IntegrationsSection({
     onMondayDisconnect = async () => { },
     onGoogleConnect = () => { },
     onGoogleDisconnect = async () => { },
-    onAutoHelperGenerateCode = async () => ({ code: '', expiresAt: '' }),
-}: ExtendedIntegrationsSectionProps) {
+}: IntegrationsSectionProps) {
     return (
         <div className="space-y-6">
             <div>
@@ -728,10 +607,6 @@ export function IntegrationsSection({
                     onOAuthConnect={onMondayOAuthConnect}
                     oauthAvailable={mondayOAuthAvailable}
                     onDisconnect={onMondayDisconnect}
-                />
-                <AutoHelperIntegration
-                    status={autohelperStatus}
-                    onGenerateCode={onAutoHelperGenerateCode}
                 />
             </div>
         </div>

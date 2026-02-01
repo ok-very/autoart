@@ -171,13 +171,15 @@ export function SettingsPage() {
                         ) : activeTab === 'appearance' ? (
                             <AppearanceSection />
                         ) : activeTab === 'autohelper' ? (
-                            <AutoHelperSection />
+                            <AutoHelperSection
+                                onGenerateCode={handleAutoHelperGenerateCode}
+                                autohelperStatus={{ connected: (connections as any)?.autohelper?.connected ?? false }}
+                            />
                         ) : activeTab === 'integrations' ? (
                             <IntegrationsSection
                                 microsoftStatus={{ connected: (connections as any)?.microsoft?.connected ?? false }}
                                 mondayStatus={{ connected: connections?.monday?.connected ?? false }}
                                 googleStatus={{ connected: connections?.google?.connected ?? false }}
-                                autohelperStatus={{ connected: (connections as any)?.autohelper?.connected ?? false }}
                                 onMicrosoftConnect={handleMicrosoftConnect}
                                 onMicrosoftDisconnect={handleMicrosoftDisconnect}
                                 onMondayConnect={handleMondayConnect}
@@ -186,7 +188,6 @@ export function SettingsPage() {
                                 onMondayDisconnect={handleMondayDisconnect}
                                 onGoogleConnect={handleGoogleConnect}
                                 onGoogleDisconnect={handleGoogleDisconnect}
-                                onAutoHelperGenerateCode={handleAutoHelperGenerateCode}
                             />
                         ) : (
                             <AccountSection />
