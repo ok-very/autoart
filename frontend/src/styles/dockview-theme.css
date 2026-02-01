@@ -41,6 +41,7 @@
   position: relative;
   background-image: none !important;
   background-size: auto;
+  padding: 0 var(--ws-tab-radius);
 }
 
 /* === Tab base (lifted tabs) === */
@@ -84,7 +85,7 @@
   content: none !important;
 }
 
-/* === Active tab — inverse-radius swoopy === */
+/* === Active tab (lifted, swoopy corners via JS-positioned spans) === */
 
 .dockview-theme-light .dv-tab.dv-active-tab {
   color: var(--ws-tab-fg-active);
@@ -174,6 +175,33 @@
   border: 2px solid var(--ws-drop-target-border);
   box-shadow: var(--ws-drop-target-shadow);
   border-radius: var(--ws-drop-target-radius);
+}
+
+/* === Swoopy corners (positioned on .dv-tabs-and-actions-container by JS) === */
+
+.ws-swoopy-corner {
+  position: absolute;
+  width: var(--ws-tab-radius);
+  height: var(--ws-tab-radius);
+  pointer-events: none;
+  z-index: 1;
+  display: none;
+}
+
+.ws-swoopy-left {
+  background: radial-gradient(
+    circle at 0% 0%,
+    transparent var(--ws-tab-radius),
+    var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px)
+  );
+}
+
+.ws-swoopy-right {
+  background: radial-gradient(
+    circle at 100% 0%,
+    transparent var(--ws-tab-radius),
+    var(--ws-tab-bg-active) calc(var(--ws-tab-radius) + 0.5px)
+  );
 }
 
 /* === Scrollbars === */

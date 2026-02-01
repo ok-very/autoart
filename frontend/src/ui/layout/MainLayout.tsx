@@ -45,7 +45,7 @@ import {
   type PanelId,
 } from '../../workspace/panelRegistry';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
-import { getWorkspaceColorClasses, WORKSPACE_STRIP_HEX, type WorkspaceColorName } from '../../workspace/workspaceColors';
+import { WORKSPACE_STRIP_HEX, type WorkspaceColorName } from '../../workspace/workspaceColors';
 import {
   useWorkspaceTheme,
   useThemeBehavior,
@@ -330,85 +330,108 @@ function WatermarkComponent() {
 }
 
 // ============================================================================
-// TAB COMPONENT
+// SWOOPY CORNERS
 // ============================================================================
 
-function IconTab(props: IDockviewPanelHeaderProps) {
-  const { api } = props;
-  const closePanel = useWorkspaceStore((s) => s.closePanel);
+/**
+ * Position concave corner spans on each .dv-tabs-and-actions-container —
+ * outside the overflow:hidden scroll viewport so they're never clipped.
+ * Z-index 1 places them above inactive tabs (auto) but below the active tab (2).
+ */
+function useSwoopyCorners(api: DockviewApi | null) {
+  useEffect(() => {
+    if (!api) return;
+    const root = document.querySelector('.dockview-theme-light');
+    if (!root) return;
 
-  // Get component type from dynamic panel ID (e.g., "project-panel-123" -> "project-panel")
-  const getComponentType = (panelId: string): PanelId => {
-    if (panelId.startsWith('project-panel-')) {
-      return 'project-panel';
+    const RADIUS = 8;
+    const cornerMap = new WeakMap<Element, { left: HTMLElement; right: HTMLElement }>();
+
+    function ensureCorners(container: Element) {
+      let pair = cornerMap.get(container);
+      if (!pair) {
+        const left = document.createElement('span');
+        left.className = 'ws-swoopy-corner ws-swoopy-left';
+        left.setAttribute('aria-hidden', 'true');
+
+        const right = document.createElement('span');
+        right.className = 'ws-swoopy-corner ws-swoopy-right';
+        right.setAttribute('aria-hidden', 'true');
+
+        container.appendChild(left);
+        container.appendChild(right);
+        pair = { left, right };
+        cornerMap.set(container, pair);
+      }
+      return pair;
     }
-    return panelId as PanelId;
-  };
 
-  const componentType = getComponentType(api.id);
-  const def = PANEL_DEFINITIONS[componentType];
-  const Icon = def?.icon;
+    function update() {
+      root!.querySelectorAll('.dv-tabs-and-actions-container').forEach((container) => {
+        const { left, right } = ensureCorners(container);
+        const activeTab = container.querySelector('.dv-tab.dv-active-tab');
 
-  // Check if this panel is bound to workspace
-  const isBound = useWorkspaceStore((s) => s.boundPanelIds.has(api.id));
-  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+        if (!activeTab) {
+          left.style.display = 'none';
+          right.style.display = 'none';
+          return;
+        }
 
-  // Get workspace color for bound styling
-  const workspaceColor = activeWorkspaceId
-    ? BUILT_IN_WORKSPACES.find((w) => w.id === activeWorkspaceId)?.color
-    : null;
+        const tabRect = activeTab.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
 
-  // Get color classes using lookup (ensures Tailwind can detect classes)
-  const colorClasses = getWorkspaceColorClasses(isBound ? workspaceColor : null);
+        // Clamp to the scrollable viewport so corners hide when tab scrolls away
+        const scrollable = container.querySelector('.dv-scrollable');
+        const scrollRect = scrollable?.getBoundingClientRect();
 
-  const handleClose = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Use store's closePanel to keep Dockview and state in sync
-    closePanel(api.id as PanelId);
-  };
+        const tabL = tabRect.left - containerRect.left;
+        const tabR = tabRect.right - containerRect.left;
+        // Vertical: align corner bottom with tab bottom
+        const cornerTop = tabRect.bottom - containerRect.top - RADIUS;
+        const scrollL = scrollRect ? scrollRect.left - containerRect.left : 0;
+        const scrollR = scrollRect ? scrollRect.right - containerRect.left : containerRect.width;
 
-  // Build color classes for bound panels
-  const boundColorClasses = isBound ? `border-l-2 ${colorClasses.borderL500}` : '';
+        // Left corner
+        const lPos = tabL - RADIUS;
+        if (lPos < scrollL - RADIUS || tabL > scrollR) {
+          left.style.display = 'none';
+        } else {
+          left.style.display = 'block';
+          left.style.left = `${lPos}px`;
+          left.style.top = `${cornerTop}px`;
+        }
 
-  return (
-    <div
-      className={`flex items-center gap-2 text-current overflow-hidden w-full group ${boundColorClasses}`}
-    >
-      <div className="flex items-center gap-2 flex-1 overflow-hidden min-w-0">
-        {Icon && <Icon size={14} strokeWidth={2} className="flex-shrink-0" />}
-        <span className="truncate">{def?.title || api.title}</span>
-      </div>
-      {!isPermanentPanel(componentType) && (
-        <div
-          onClick={handleClose}
-          className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-slate-200 rounded cursor-pointer transition-opacity"
-          role="button"
-          aria-label="Close panel"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M18 6 6 18" />
-            <path d="m6 6 12 12" />
-          </svg>
-        </div>
-      )}
-    </div>
-  );
+        // Right corner
+        if (tabR + RADIUS > scrollR + RADIUS || tabR < scrollL) {
+          right.style.display = 'none';
+        } else {
+          right.style.display = 'block';
+          right.style.left = `${tabR}px`;
+          right.style.top = `${cornerTop}px`;
+        }
+      });
+    }
+
+    // Observe class changes (tab switching) and child list (panel add/remove)
+    const observer = new MutationObserver(() => requestAnimationFrame(update));
+    observer.observe(root, { subtree: true, attributes: true, attributeFilter: ['class'], childList: true });
+
+    // Track scroll inside tab containers
+    const onScroll = () => requestAnimationFrame(update);
+    root.querySelectorAll('.dv-tabs-container').forEach((el) => {
+      el.addEventListener('scroll', onScroll, { passive: true });
+    });
+
+    update();
+
+    return () => {
+      observer.disconnect();
+      root.querySelectorAll('.dv-tabs-container').forEach((el) => {
+        el.removeEventListener('scroll', onScroll);
+      });
+    };
+  }, [api]);
 }
-
-const DEFAULT_TAB_COMPONENTS = {
-  'icon-tab': IconTab,
-  'themed-tab': ThemedTab,
-};
 
 // ============================================================================
 // MAIN LAYOUT (THE MASTER COMPONENT)
@@ -428,6 +451,7 @@ export function MainLayout() {
   const themeRootAttributes = useThemeRootAttributes();
   useThemeCSS();
   useThemeBehavior(apiRef.current);
+  useSwoopyCorners(apiRef.current);
 
   // Workspace tab strip tinting — sync active workspace color to CSS variable
   const activeWorkspaceIdForTint = useWorkspaceStore((s) => s.activeWorkspaceId);
@@ -475,10 +499,9 @@ export function MainLayout() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [openCommandPalette, closeOverlay]);
 
-  // Build tab components - theme can override
-  const tabComponents = theme?.components?.tabComponent
-    ? { ...DEFAULT_TAB_COMPONENTS, 'icon-tab': theme.components.tabComponent }
-    : DEFAULT_TAB_COMPONENTS;
+  // Build tab components - theme can override the default
+  const defaultTab = (theme?.components?.tabComponent || ThemedTab) as FunctionComponent<IDockviewPanelHeaderProps>;
+  const tabComponents: Record<string, FunctionComponent<IDockviewPanelHeaderProps>> = { 'default-tab': defaultTab };
 
   // Theme can provide custom watermark
   const watermark = theme?.components?.watermarkComponent || WatermarkComponent;
@@ -494,7 +517,6 @@ export function MainLayout() {
       id: 'center-workspace',
       component: 'center-workspace',
       title: def.title,
-      tabComponent: 'icon-tab',
     });
   }, []);
 
@@ -604,7 +626,6 @@ export function MainLayout() {
           id,
           component: componentType, // Use base component type, not dynamic ID
           title: def.title,
-          tabComponent: 'icon-tab',
           position: {
             referencePanel: centerPanel,
             direction,
@@ -658,7 +679,8 @@ export function MainLayout() {
           theme={autoartTheme}
           onReady={onReady}
           components={COMPONENTS}
-          tabComponents={tabComponents as Record<string, FunctionComponent<IDockviewPanelHeaderProps>>}
+          tabComponents={tabComponents}
+          defaultTabComponent={defaultTab}
           watermarkComponent={watermark as FunctionComponent<IWatermarkPanelProps>}
         />
       </div>

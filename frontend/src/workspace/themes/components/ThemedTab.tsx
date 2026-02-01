@@ -1,102 +1,70 @@
 /**
  * Themed Tab Component
  *
- * A tab component that consumes CSS variables for styling.
- * Can be overridden entirely by theme modules.
+ * The single tab component for all dockview panels.
+ * Handles workspace binding, panel close via store, dynamic panel IDs,
+ * and Tailwind-based styling.
  */
 
 import type { IDockviewPanelHeaderProps } from 'dockview';
-import { X } from 'lucide-react';
-import { PANEL_DEFINITIONS, type PanelId } from '../../panelRegistry';
+import { useWorkspaceStore } from '../../../stores/workspaceStore';
+import { PANEL_DEFINITIONS, isPermanentPanel, type PanelId } from '../../panelRegistry';
+import { BUILT_IN_WORKSPACES } from '../../workspacePresets';
+import { getWorkspaceColorClasses } from '../../workspaceColors';
+
+function getComponentType(panelId: string): PanelId {
+  if (panelId.startsWith('project-panel-')) return 'project-panel';
+  return panelId as PanelId;
+}
 
 export function ThemedTab({ api }: IDockviewPanelHeaderProps) {
-  const def = PANEL_DEFINITIONS[api.id as PanelId];
+  const closePanel = useWorkspaceStore((s) => s.closePanel);
+  const componentType = getComponentType(api.id);
+  const def = PANEL_DEFINITIONS[componentType];
   const Icon = def?.icon;
-  const isPermanent = def?.permanent ?? false;
+
+  const isBound = useWorkspaceStore((s) => s.boundPanelIds.has(api.id));
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+  const workspaceColor = activeWorkspaceId
+    ? BUILT_IN_WORKSPACES.find((w) => w.id === activeWorkspaceId)?.color
+    : null;
+  const colorClasses = getWorkspaceColorClasses(isBound ? workspaceColor : null);
+  const boundColorClasses = isBound ? `border-l-2 ${colorClasses.borderL500}` : '';
 
   const handleClose = (e: React.MouseEvent) => {
     e.stopPropagation();
-    api.close();
+    closePanel(api.id as PanelId);
   };
 
   return (
-    <div
-      className="ws-tab font-sans"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--ws-tab-icon-gap)',
-        height: 'var(--ws-tab-height)',
-        padding: 'var(--ws-tab-padding-y) var(--ws-tab-padding-x)',
-        color: 'inherit',
-        overflow: 'hidden',
-        width: '100%',
-      }}
-    >
-      {/* Icon */}
-      {Icon && (
-        <Icon
-          style={{
-            width: 'var(--ws-tab-icon-size)',
-            height: 'var(--ws-tab-icon-size)',
-            flexShrink: 0,
-          }}
-          strokeWidth={2}
-        />
-      )}
-
-      {/* Title */}
-      <span
-        style={{
-          flex: 1,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {def?.title || api.title}
-      </span>
-
-      {/* Close button */}
-      {!isPermanent && (
-        <button
+    <div className={`flex items-center gap-2 text-current overflow-hidden w-full group ${boundColorClasses}`}>
+      <div className="flex items-center gap-2 flex-1 overflow-hidden min-w-0">
+        {Icon && <Icon size={14} strokeWidth={2} className="flex-shrink-0" />}
+        <span className="truncate">{def?.title || api.title}</span>
+      </div>
+      {!isPermanentPanel(componentType) && (
+        <div
           onClick={handleClose}
-          className="ws-tab-close"
+          className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-[var(--ws-tab-close-hover-bg)] rounded cursor-pointer transition-opacity"
+          role="button"
           aria-label="Close panel"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 'var(--ws-tab-close-size)',
-            height: 'var(--ws-tab-close-size)',
-            padding: 0,
-            border: 'none',
-            background: 'transparent',
-            borderRadius: '2px',
-            cursor: 'pointer',
-            opacity: 0,
-            transition: 'opacity var(--ws-motion-duration-fast) var(--ws-motion-ease)',
-          }}
         >
-          <X
-            style={{
-              width: 'calc(var(--ws-tab-close-size) - 4px)',
-              height: 'calc(var(--ws-tab-close-size) - 4px)',
-            }}
-          />
-        </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </div>
       )}
-
-      {/* Hover styles via inline style tag - themes can override */}
-      <style>{`
-        .ws-tab:hover .ws-tab-close {
-          opacity: 1;
-        }
-        .ws-tab-close:hover {
-          background: var(--ws-tab-close-hover-bg);
-          color: var(--ws-tab-close-hover-fg);
-        }
-      `}</style>
     </div>
   );
 }
