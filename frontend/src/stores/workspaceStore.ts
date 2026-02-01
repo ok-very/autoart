@@ -105,8 +105,10 @@ interface WorkspaceState {
 
     // Workspace preset actions
     applyWorkspace: (workspaceId: string, subviewId?: string) => void;
-    saveCurrentAsWorkspace: (name: string) => void;
+    saveCurrentAsWorkspace: (name: string, options?: { color?: string; parentWorkspaceId?: string }) => void;
     deleteCustomWorkspace: (id: string) => void;
+    duplicateSubview: (parentWorkspaceId: string, subviewId: string, name: string, color?: string) => void;
+    duplicateCustomWorkspace: (id: string) => void;
     captureCurrentState: () => CapturedWorkspaceState;
     getAllWorkspaces: () => WorkspacePreset[];
 }
@@ -388,7 +390,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 }
             },
 
-            saveCurrentAsWorkspace: (name: string) => {
+            saveCurrentAsWorkspace: (name: string, options?: { color?: string; parentWorkspaceId?: string }) => {
                 const state = get();
                 const captured = state.captureCurrentState();
 
@@ -398,9 +400,10 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     id: uniqueId,
                     label: name,
                     icon: DEFAULT_CUSTOM_WORKSPACE_ICON,
-                    color: 'slate',
+                    color: options?.color ?? 'slate',
                     scope: 'global',
                     isBuiltIn: false,
+                    parentWorkspaceId: options?.parentWorkspaceId,
                     panels: captured.openPanels.map(p => ({
                         panelId: p.id,
                         viewMode: p.currentViewMode,
@@ -427,6 +430,47 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     customWorkspaces: state.customWorkspaces.filter(w => w.id !== id),
                     // Clear active if we deleted the active workspace
                     activeWorkspaceId: state.activeWorkspaceId === id ? null : state.activeWorkspaceId,
+                });
+            },
+
+            duplicateSubview: (parentWorkspaceId: string, subviewId: string, name: string, color?: string) => {
+                const parent = BUILT_IN_WORKSPACES.find(w => w.id === parentWorkspaceId);
+                if (!parent?.subviews) return;
+                const subview = parent.subviews.find(s => s.id === subviewId);
+                if (!subview) return;
+
+                const state = get();
+                const uniqueId = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                const newWorkspace: WorkspacePreset = {
+                    id: uniqueId,
+                    label: name,
+                    icon: DEFAULT_CUSTOM_WORKSPACE_ICON,
+                    color: color ?? parent.color,
+                    scope: 'global',
+                    isBuiltIn: false,
+                    parentWorkspaceId,
+                    panels: subview.panels.map(p => ({ ...p })),
+                };
+
+                set({
+                    customWorkspaces: [...state.customWorkspaces, newWorkspace],
+                });
+            },
+
+            duplicateCustomWorkspace: (id: string) => {
+                const state = get();
+                const source = state.customWorkspaces.find(w => w.id === id);
+                if (!source) return;
+
+                const uniqueId = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                const newWorkspace: WorkspacePreset = {
+                    ...source,
+                    id: uniqueId,
+                    label: `${source.label} (copy)`,
+                };
+
+                set({
+                    customWorkspaces: [...state.customWorkspaces, newWorkspace],
                 });
             },
 
@@ -553,3 +597,5 @@ export const useAllWorkspaces = () => useWorkspaceStore((s) => s.getAllWorkspace
 export const usePendingPanelPositions = () => useWorkspaceStore((s) => s.pendingPanelPositions);
 export const useBoundProjectId = () => useWorkspaceStore((s) => s.boundProjectId);
 export const useBoundPanelIds = () => useWorkspaceStore((s) => s.boundPanelIds);
+export const useCustomWorkspacesByParent = (parentId: string) =>
+    useWorkspaceStore((s) => s.customWorkspaces.filter(w => w.parentWorkspaceId === parentId));

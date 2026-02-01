@@ -3,6 +3,7 @@
  *
  * Modal dialog for naming and saving a new custom workspace.
  * Captures the current panel arrangement and saves it as a preset.
+ * Optionally scoped to a parent workspace via parentWorkspaceId.
  */
 
 import { useState, useCallback } from 'react';
@@ -11,15 +12,25 @@ import { Folder } from 'lucide-react';
 import { Modal, Button, Text, Inline } from '@autoart/ui';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
+import { WORKSPACE_COLORS, type WorkspaceColorName } from '../../workspace/workspaceColors';
+
+const COLOR_NAMES: WorkspaceColorName[] = ['slate', 'blue', 'green', 'purple', 'pink', 'orange', 'amber', 'cyan'];
 
 interface AddWorkspaceDialogProps {
     open: boolean;
     onClose: () => void;
+    parentWorkspaceId?: string;
+    defaultColor?: string;
 }
 
-export function AddWorkspaceDialog({ open, onClose }: AddWorkspaceDialogProps) {
+export function AddWorkspaceDialog({ open, onClose, parentWorkspaceId, defaultColor }: AddWorkspaceDialogProps) {
     const [name, setName] = useState('');
+    const [color, setColor] = useState<WorkspaceColorName>((defaultColor as WorkspaceColorName) ?? 'slate');
     const [error, setError] = useState<string | null>(null);
+
+    const parentLabel = parentWorkspaceId
+        ? BUILT_IN_WORKSPACES.find(w => w.id === parentWorkspaceId)?.label
+        : undefined;
 
     const handleSubmit = useCallback((e: React.FormEvent) => {
         e.preventDefault();
@@ -51,28 +62,38 @@ export function AddWorkspaceDialog({ open, onClose }: AddWorkspaceDialogProps) {
 
         // Save workspace with error handling
         try {
-            useWorkspaceStore.getState().saveCurrentAsWorkspace(trimmedName);
+            useWorkspaceStore.getState().saveCurrentAsWorkspace(trimmedName, {
+                color,
+                parentWorkspaceId,
+            });
             // Reset and close only on success
             setName('');
+            setColor((defaultColor as WorkspaceColorName) ?? 'slate');
             setError(null);
             onClose();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to save workspace');
         }
-    }, [name, onClose]);
+    }, [name, color, parentWorkspaceId, defaultColor, onClose]);
 
     const handleClose = useCallback(() => {
         setName('');
+        setColor((defaultColor as WorkspaceColorName) ?? 'slate');
         setError(null);
         onClose();
-    }, [onClose]);
+    }, [defaultColor, onClose]);
+
+    const title = parentLabel ? `Save to ${parentLabel}` : 'Save Workspace';
+    const description = parentLabel
+        ? `Save your current panel arrangement as a custom view in ${parentLabel}.`
+        : 'Save your current panel arrangement as a custom workspace.';
 
     return (
         <Modal
             open={open}
             onOpenChange={(isOpen) => !isOpen && handleClose()}
-            title="Save Workspace"
-            description="Save your current panel arrangement as a custom workspace."
+            title={title}
+            description={description}
             size="sm"
         >
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -87,7 +108,7 @@ export function AddWorkspaceDialog({ open, onClose }: AddWorkspaceDialogProps) {
                 {/* Name input */}
                 <div>
                     <label htmlFor="workspace-name" className="block text-sm font-medium text-slate-700 mb-1">
-                        Workspace Name
+                        Name
                     </label>
                     <input
                         id="workspace-name"
@@ -106,13 +127,37 @@ export function AddWorkspaceDialog({ open, onClose }: AddWorkspaceDialogProps) {
                     )}
                 </div>
 
+                {/* Color picker */}
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Color
+                    </label>
+                    <Inline gap="sm">
+                        {COLOR_NAMES.map((c) => {
+                            const classes = WORKSPACE_COLORS[c];
+                            const isSelected = c === color;
+                            return (
+                                <button
+                                    key={c}
+                                    type="button"
+                                    onClick={() => setColor(c)}
+                                    className={`w-6 h-6 rounded-full ${classes.bg200} transition-all ${
+                                        isSelected ? 'ring-2 ring-offset-1 ring-slate-500' : 'hover:ring-1 hover:ring-offset-1 hover:ring-slate-300'
+                                    }`}
+                                    title={c}
+                                />
+                            );
+                        })}
+                    </Inline>
+                </div>
+
                 {/* Actions */}
                 <Inline gap="sm" justify="end" className="pt-2">
                     <Button variant="secondary" onClick={handleClose} type="button">
                         Cancel
                     </Button>
                     <Button variant="primary" type="submit">
-                        Save Workspace
+                        Save
                     </Button>
                 </Inline>
             </form>
