@@ -15,7 +15,7 @@ import type { ProjectViewMode } from '@autoart/shared';
 
 import { ActionListView } from '../layout/ActionListView';
 import { ActionCardsView } from '../layout/ActionCardsView';
-import { MillerColumnsView } from '../layout/MillerColumnsView';
+import { MillerColumnsView } from '../composites/MillerColumnsView';
 import { ProjectWorkflowView } from '../layout/ProjectWorkflowView';
 import { ProjectLogView } from '../projectLog';
 
