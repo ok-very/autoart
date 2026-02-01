@@ -1,23 +1,21 @@
 @import 'dockview/dist/styles/dockview.css';
 /**
- * Dockview Theme
+ * Dockview Theme — AutoArt design system
  *
- * Custom styling for Dockview panels to match AutoArt design system.
- * Uses theme variables from workspace/themes/variables.css
- *
- * Design principles:
- * - Chrome-style tabs with rounded top corners
- * - Active tab connects to panel (no gap)
- * - Clean, minimal borders
- * - Color through CSS variables, not hardcoded values
+ * Selector reference (dockview v4.13.1):
+ *   Active tab:    .dv-tab.dv-active-tab
+ *   Inactive tab:  .dv-tab.dv-inactive-tab
+ *   Content area:  .dv-groupview > .dv-content-container
+ *   Close button:  .dv-default-tab-action
  *
  * @see docs/DESIGN.md
  */
 
-/* Override Dockview theme variables */
+/* === Variable overrides === */
+
 .dockview-theme-light {
-  --dv-background-color: var(--ws-bg);
-  --dv-tabs-and-actions-container-background-color: var(--ws-tabstrip-bg);
+  --dv-group-view-background-color: var(--ws-bg);
+  --dv-tabs-and-actions-container-background-color: var(--ws-tabstrip-tint, var(--ws-tabstrip-bg));
   --dv-activegroup-visiblepanel-tab-background-color: var(--ws-tab-bg-active);
   --dv-activegroup-visiblepanel-tab-color: var(--ws-tab-fg-active);
   --dv-activegroup-hiddenpanel-tab-background-color: var(--ws-tab-bg);
@@ -30,11 +28,12 @@
   --dv-separator-border: var(--ws-group-border);
   --dv-drag-over-background-color: var(--ws-drop-target-bg);
   --dv-drag-over-border-color: var(--ws-accent);
-
+  --dv-icon-hover-background-color: var(--ws-tab-close-hover-bg);
   color: var(--ws-fg);
 }
 
-/* Tab strip container - !important needed to override dockview defaults */
+/* === Tab strip container === */
+
 .dockview-theme-light .dv-tabs-and-actions-container {
   border-bottom: 1px solid var(--ws-panel-border);
   z-index: 10;
@@ -44,7 +43,8 @@
   padding: 0 4px;
 }
 
-/* Tab — chrome style with rounded top corners */
+/* === Tab base (chrome-style rounded top corners) === */
+
 .dockview-theme-light .dv-tab {
   font-size: 13px;
   font-weight: 500;
@@ -54,29 +54,38 @@
   border-radius: var(--ws-tab-radius) var(--ws-tab-radius) 0 0;
   color: var(--ws-tab-fg);
   transition: color var(--ws-motion-duration-fast) var(--ws-motion-ease),
-              background var(--ws-motion-duration-fast) var(--ws-motion-ease);
+              background-color var(--ws-motion-duration-fast) var(--ws-motion-ease);
   margin: 2px 1px 0 1px;
   position: relative;
 }
 
+/* === Inactive tab === */
+
+.dockview-theme-light .dv-tab.dv-inactive-tab {
+  background-color: var(--ws-tab-bg);
+}
+
+/* === Hover === */
+
 .dockview-theme-light .dv-tab:hover {
-  background: var(--ws-tab-bg-hover) !important;
+  background-color: var(--ws-tab-bg-hover) !important;
   color: var(--ws-tab-fg-hover);
 }
 
-/* Fix for states on click/focus */
+/* === Focus / click === */
+
 .dockview-theme-light .dv-tab:focus,
-.dockview-theme-light .dv-tab:active,
-.dockview-theme-light .dv-tab:focus-within {
-  background: var(--ws-tab-bg-hover) !important;
+.dockview-theme-light .dv-tab:active {
+  background-color: var(--ws-tab-bg-hover) !important;
   color: var(--ws-tab-fg-active);
   outline: none;
 }
 
-/* Active tab — elevated, connects to panel */
+/* === Active tab — elevated, connects to panel === */
+
 .dockview-theme-light .dv-tab.dv-active-tab {
   color: var(--ws-tab-fg-active);
-  background: var(--ws-tab-bg-active) !important;
+  background-color: var(--ws-tab-bg-active) !important;
   border-color: var(--ws-panel-border);
   border-bottom: 1px solid var(--ws-panel-bg);
   margin-bottom: -1px;
@@ -84,30 +93,35 @@
   font-weight: 500;
 }
 
-/* Active tab label */
-.dockview-theme-light .dv-tab.dv-active-tab .dv-default-tab-content {
-  background-color: transparent;
+.dockview-theme-light .dv-tab.dv-active-tab:hover {
+  background-color: var(--ws-tab-bg-active) !important;
   color: var(--ws-tab-fg-active);
-  padding: 0;
 }
 
-.dockview-theme-light .dv-tab.dv-inactive-tab .dv-default-tab-content {
-  padding: 0;
+/* === Dragging === */
+
+.dockview-theme-light .dv-tab.dv-tab-dragging {
+  background-color: var(--ws-tab-bg-active) !important;
+  color: var(--ws-tab-fg-active);
+  opacity: 0.8;
 }
 
-/* Hide close button for permanent Projects tab */
+/* === Hide close on permanent tabs === */
+
 .dockview-theme-light .dv-tab[title="Projects"] .dv-default-tab-action {
   display: none !important;
 }
 
-/* Tab close button */
+/* === Close button === */
+
 .dockview-theme-light .dv-default-tab-action {
   color: var(--ws-muted-fg);
   opacity: 0;
   transition: opacity 0.15s ease;
 }
 
-.dockview-theme-light .dv-tab:hover .dv-default-tab-action {
+.dockview-theme-light .dv-tab:hover .dv-default-tab-action,
+.dockview-theme-light .dv-tab.dv-active-tab .dv-default-tab-action {
   opacity: 1;
 }
 
@@ -117,7 +131,8 @@
   border-radius: 4px;
 }
 
-/* Add tab button */
+/* === Add tab button === */
+
 .dockview-theme-light .dv-tabs-container .dv-void-container button {
   color: var(--ws-muted-fg);
 }
@@ -127,14 +142,16 @@
   background: var(--ws-tab-bg-hover);
 }
 
-/* Panel content area */
-.dockview-theme-light .dv-content-container {
+/* === Panel content area === */
+
+.dockview-theme-light .dv-groupview > .dv-content-container {
   background: var(--ws-panel-bg);
   border: 1px solid var(--ws-panel-border);
   border-top: none;
 }
 
-/* Scrollbars */
+/* === Scrollbars === */
+
 .dockview-theme-light ::-webkit-scrollbar {
   width: var(--ws-scrollbar-width);
   height: var(--ws-scrollbar-width);
