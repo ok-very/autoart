@@ -13,7 +13,7 @@ import { persist } from 'zustand/middleware';
 import type { DockviewApi } from 'dockview';
 import type { PanelId } from '../workspace/panelRegistry';
 import { isPermanentPanel, PANEL_DEFINITIONS } from '../workspace/panelRegistry';
-import type { WorkspacePreset, CapturedWorkspaceState, CapturedPanelState, PersistedWorkspacePreset } from '../types/workspace';
+import type { WorkspacePreset, WorkspacePanelConfig, CapturedWorkspaceState, CapturedPanelState, PersistedWorkspacePreset } from '../types/workspace';
 import { BUILT_IN_WORKSPACES, DEFAULT_CUSTOM_WORKSPACE_ICON } from '../workspace/workspacePresets';
 import { useUIStore } from './uiStore';
 
@@ -36,6 +36,26 @@ const DEFAULT_OPEN_PANELS: PanelId[] = ['center-workspace', 'selection-inspector
  */
 type PanelPosition = 'center' | 'left' | 'right' | 'bottom';
 
+/**
+ * Resolve which panels to use for a workspace preset.
+ * Prefers subviews if available, falls back to legacy `panels` field.
+ * Returns the matching subview ID (or null) and the panels array.
+ */
+function resolveSubviewPanels(
+    preset: WorkspacePreset,
+    subviewId?: string,
+): { resolvedSubviewId: string | null; panels: WorkspacePanelConfig[] } {
+    if (preset.subviews && preset.subviews.length > 0) {
+        const match = subviewId
+            ? preset.subviews.find(s => s.id === subviewId)
+            : preset.subviews[0];
+        const resolved = match ?? preset.subviews[0];
+        return { resolvedSubviewId: resolved.id, panels: resolved.panels };
+    }
+    // Legacy: custom workspaces without subviews
+    return { resolvedSubviewId: null, panels: preset.panels };
+}
+
 interface WorkspaceState {
     // Single layout for entire workspace
     layout: SerializedDockviewState | null;
@@ -54,6 +74,7 @@ interface WorkspaceState {
 
     // Workspace preset state
     activeWorkspaceId: string | null;
+    activeSubviewId: string | null;
     customWorkspaces: WorkspacePreset[];
 
     // Pending panel positions from workspace presets (consumed by MainLayout)
@@ -83,7 +104,7 @@ interface WorkspaceState {
     markWorkspaceModified: () => void;
 
     // Workspace preset actions
-    applyWorkspace: (workspaceId: string) => void;
+    applyWorkspace: (workspaceId: string, subviewId?: string) => void;
     saveCurrentAsWorkspace: (name: string) => void;
     deleteCustomWorkspace: (id: string) => void;
     captureCurrentState: () => CapturedWorkspaceState;
@@ -98,6 +119,7 @@ const initialState = {
     userOverrides: new Map<PanelId, boolean>(),
     dockviewApi: null as DockviewApi | null,
     activeWorkspaceId: null as string | null,
+    activeSubviewId: null as string | null,
     customWorkspaces: [] as WorkspacePreset[],
     pendingPanelPositions: new Map<PanelId, PanelPosition>(),
     boundProjectId: null as string | null,
@@ -219,6 +241,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     panelParams: new Map(),
                     userOverrides: new Map(),
                     activeWorkspaceId: null,
+                    activeSubviewId: null,
                     boundProjectId: null,
                     boundPanelIds: new Set(),
                     workspaceModified: false,
@@ -255,7 +278,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
             // WORKSPACE PRESET ACTIONS
             // =========================================================================
 
-            applyWorkspace: (workspaceId: string) => {
+            applyWorkspace: (workspaceId: string, subviewId?: string) => {
                 const state = get();
                 const allWorkspaces = [...BUILT_IN_WORKSPACES, ...state.customWorkspaces];
                 const preset = allWorkspaces.find(w => w.id === workspaceId);
@@ -265,6 +288,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     return;
                 }
 
+                const { resolvedSubviewId, panels: resolvedPanels } = resolveSubviewPanels(preset, subviewId);
                 const api = state.dockviewApi;
 
                 // Close ALL non-permanent panels (we'll rebuild with unique IDs)
@@ -294,7 +318,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 const newParams = new Map<string, unknown>(state.panelParams);
                 let projectPanelCounter = 0;
 
-                for (const panelConfig of preset.panels) {
+                for (const panelConfig of resolvedPanels) {
                     const baseId = panelConfig.panelId;
 
                     // Generate unique ID for project-panel, keep original ID for others
@@ -343,6 +367,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 set({
                     openPanelIds: newOpenPanelIds as PanelId[],
                     activeWorkspaceId: workspaceId,
+                    activeSubviewId: resolvedSubviewId,
                     pendingPanelPositions: positionMap as Map<PanelId, PanelPosition>,
                     boundPanelIds: newBoundPanelIds,
                     workspaceModified: false,
@@ -350,9 +375,9 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 });
 
                 // Focus the first panel in the preset using Dockview API
-                if (api && preset.panels.length > 0) {
+                if (api && resolvedPanels.length > 0) {
                     // For project-panel, we need to find by generated ID
-                    const firstPanelConfig = preset.panels[0];
+                    const firstPanelConfig = resolvedPanels[0];
                     const firstPanelId = firstPanelConfig.panelId === 'project-panel'
                         ? Array.from(newBoundPanelIds)[0] || firstPanelConfig.panelId
                         : firstPanelConfig.panelId;
@@ -453,6 +478,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 panelParams: Array.from(state.panelParams.entries()),
                 // Workspace presets
                 activeWorkspaceId: state.activeWorkspaceId,
+                activeSubviewId: state.activeSubviewId,
                 // Custom workspaces: omit icon (React component functions cannot be JSON serialized), reattach on load
                 customWorkspaces: state.customWorkspaces.map(({ icon: _, ...w }) => w),
                 // Bound project state
@@ -468,6 +494,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     userOverrides?: [PanelId, boolean][];
                     panelParams?: [string, unknown][];
                     activeWorkspaceId?: string | null;
+                    activeSubviewId?: string | null;
                     customWorkspaces?: PersistedWorkspacePreset[];
                     boundProjectId?: string | null;
                     boundPanelIds?: string[];
@@ -505,6 +532,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     userOverrides: new Map(p?.userOverrides ?? []),
                     panelParams: new Map(p?.panelParams ?? []),
                     activeWorkspaceId: p?.activeWorkspaceId ?? current.activeWorkspaceId,
+                    activeSubviewId: p?.activeSubviewId ?? current.activeSubviewId,
                     customWorkspaces,
                     boundProjectId: p?.boundProjectId ?? current.boundProjectId,
                     boundPanelIds: new Set(p?.boundPanelIds ?? []),
@@ -519,6 +547,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 export const useOpenPanelIds = () => useWorkspaceStore((s) => s.openPanelIds);
 export const useLayout = () => useWorkspaceStore((s) => s.layout);
 export const useActiveWorkspaceId = () => useWorkspaceStore((s) => s.activeWorkspaceId);
+export const useActiveSubviewId = () => useWorkspaceStore((s) => s.activeSubviewId);
 export const useCustomWorkspaces = () => useWorkspaceStore((s) => s.customWorkspaces);
 export const useAllWorkspaces = () => useWorkspaceStore((s) => s.getAllWorkspaces());
 export const usePendingPanelPositions = () => useWorkspaceStore((s) => s.pendingPanelPositions);
