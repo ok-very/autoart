@@ -5,7 +5,6 @@
 ## Bug List
 
 - AutoHelper Settings doesn't link correctly to frontend menu
-- Cymatic loader should go seamless pattern/squaretile, slightly heavier line (0.5pt)
 - Login fails with demo account credentials - can't test
 
 ---
@@ -40,7 +39,6 @@
 | # | Issue | Category |
 |---|-------|----------|
 | 173 | Epic: Finance Management System (Invoices + Budgets + Vendor Bills + Reconciliation) | Epic |
-| 181 | Fix workspace preset timing (pendingPanelPositions) | Bug |
 | 182 | Workspace modification tracking and save workflow | Workspace |
 | 180 | Add route/project context to workspace system | Workspace |
 | 179 | Context-driven automatic panel reconciliation | Workspace |
@@ -77,9 +75,7 @@
 
 ## In-Flight (Awaiting Review)
 
-| # | Issue | PR |
-|---|-------|----|
-| — | Fix: Methodology→Process, fieldBindings crash, Bound→Linked, LoginPage design tokens | #312 |
+*(none)*
 
 ---
 
@@ -87,6 +83,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | Bugfixes: Methodology→Process rename, fieldBindings crash, Bound→Linked, LoginPage tokens, Chladni badge/loader tile | PR #312 |
 | — | Dockview v4 theme, swoopy tab corners, unified ThemedTab, tab strip + button | PRs #307-311 |
 | 275 | Epic: Export Workbench — preview-first outputs + finance via sessions | PRs #286-290, #292 |
 | 218 | Phase 6: Remove task_references system + hierarchy nodes | PRs #282-285 |
