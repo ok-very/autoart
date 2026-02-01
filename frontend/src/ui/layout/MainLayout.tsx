@@ -45,7 +45,7 @@ import {
   type PanelId,
 } from '../../workspace/panelRegistry';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
-import { getWorkspaceColorClasses, WORKSPACE_STRIP_HEX, type WorkspaceColorName } from '../../workspace/workspaceColors';
+import { WORKSPACE_STRIP_HEX, type WorkspaceColorName } from '../../workspace/workspaceColors';
 import {
   useWorkspaceTheme,
   useThemeBehavior,
@@ -330,87 +330,6 @@ function WatermarkComponent() {
 }
 
 // ============================================================================
-// TAB COMPONENT
-// ============================================================================
-
-function IconTab(props: IDockviewPanelHeaderProps) {
-  const { api } = props;
-  const closePanel = useWorkspaceStore((s) => s.closePanel);
-
-  // Get component type from dynamic panel ID (e.g., "project-panel-123" -> "project-panel")
-  const getComponentType = (panelId: string): PanelId => {
-    if (panelId.startsWith('project-panel-')) {
-      return 'project-panel';
-    }
-    return panelId as PanelId;
-  };
-
-  const componentType = getComponentType(api.id);
-  const def = PANEL_DEFINITIONS[componentType];
-  const Icon = def?.icon;
-
-  // Check if this panel is bound to workspace
-  const isBound = useWorkspaceStore((s) => s.boundPanelIds.has(api.id));
-  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
-
-  // Get workspace color for bound styling
-  const workspaceColor = activeWorkspaceId
-    ? BUILT_IN_WORKSPACES.find((w) => w.id === activeWorkspaceId)?.color
-    : null;
-
-  // Get color classes using lookup (ensures Tailwind can detect classes)
-  const colorClasses = getWorkspaceColorClasses(isBound ? workspaceColor : null);
-
-  const handleClose = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Use store's closePanel to keep Dockview and state in sync
-    closePanel(api.id as PanelId);
-  };
-
-  // Build color classes for bound panels
-  const boundColorClasses = isBound ? `border-l-2 ${colorClasses.borderL500}` : '';
-
-  return (
-    <div
-      className={`flex items-center gap-2 text-current overflow-hidden w-full group ${boundColorClasses}`}
-    >
-      <div className="flex items-center gap-2 flex-1 overflow-hidden min-w-0">
-        {Icon && <Icon size={14} strokeWidth={2} className="flex-shrink-0" />}
-        <span className="truncate">{def?.title || api.title}</span>
-      </div>
-      {!isPermanentPanel(componentType) && (
-        <div
-          onClick={handleClose}
-          className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-slate-200 rounded cursor-pointer transition-opacity"
-          role="button"
-          aria-label="Close panel"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M18 6 6 18" />
-            <path d="m6 6 12 12" />
-          </svg>
-        </div>
-      )}
-    </div>
-  );
-}
-
-const DEFAULT_TAB_COMPONENTS = {
-  'icon-tab': IconTab,
-  'themed-tab': ThemedTab,
-};
-
-// ============================================================================
 // MAIN LAYOUT (THE MASTER COMPONENT)
 // ============================================================================
 
@@ -475,10 +394,9 @@ export function MainLayout() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [openCommandPalette, closeOverlay]);
 
-  // Build tab components - theme can override
-  const tabComponents = theme?.components?.tabComponent
-    ? { ...DEFAULT_TAB_COMPONENTS, 'icon-tab': theme.components.tabComponent }
-    : DEFAULT_TAB_COMPONENTS;
+  // Build tab components - theme can override the default
+  const defaultTab = (theme?.components?.tabComponent || ThemedTab) as FunctionComponent<IDockviewPanelHeaderProps>;
+  const tabComponents: Record<string, FunctionComponent<IDockviewPanelHeaderProps>> = { 'default-tab': defaultTab };
 
   // Theme can provide custom watermark
   const watermark = theme?.components?.watermarkComponent || WatermarkComponent;
@@ -494,7 +412,6 @@ export function MainLayout() {
       id: 'center-workspace',
       component: 'center-workspace',
       title: def.title,
-      tabComponent: 'icon-tab',
     });
   }, []);
 
@@ -604,7 +521,6 @@ export function MainLayout() {
           id,
           component: componentType, // Use base component type, not dynamic ID
           title: def.title,
-          tabComponent: 'icon-tab',
           position: {
             referencePanel: centerPanel,
             direction,
@@ -658,7 +574,8 @@ export function MainLayout() {
           theme={autoartTheme}
           onReady={onReady}
           components={COMPONENTS}
-          tabComponents={tabComponents as Record<string, FunctionComponent<IDockviewPanelHeaderProps>>}
+          tabComponents={tabComponents}
+          defaultTabComponent={defaultTab}
           watermarkComponent={watermark as FunctionComponent<IWatermarkPanelProps>}
         />
       </div>
