@@ -12,9 +12,7 @@ import { Folder } from 'lucide-react';
 import { Modal, Button, Text, Inline } from '@autoart/ui';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
-import { WORKSPACE_COLORS, type WorkspaceColorName } from '../../workspace/workspaceColors';
-
-const COLOR_NAMES: WorkspaceColorName[] = ['slate', 'blue', 'green', 'purple', 'pink', 'orange', 'amber', 'cyan'];
+import { WORKSPACE_COLORS, BASIC_COLOR_NAMES, ALL_COLOR_NAMES, type WorkspaceColorName } from '../../workspace/workspaceColors';
 
 interface AddWorkspaceDialogProps {
     open: boolean;
@@ -27,6 +25,8 @@ export function AddWorkspaceDialog({ open, onClose, parentWorkspaceId, defaultCo
     const [name, setName] = useState('');
     const [color, setColor] = useState<WorkspaceColorName>((defaultColor as WorkspaceColorName) ?? 'slate');
     const [error, setError] = useState<string | null>(null);
+    const [showAllColors, setShowAllColors] = useState(false);
+    const visibleColors = showAllColors ? ALL_COLOR_NAMES : BASIC_COLOR_NAMES;
 
     const parentLabel = parentWorkspaceId
         ? BUILT_IN_WORKSPACES.find(w => w.id === parentWorkspaceId)?.label
@@ -70,6 +70,7 @@ export function AddWorkspaceDialog({ open, onClose, parentWorkspaceId, defaultCo
             setName('');
             setColor((defaultColor as WorkspaceColorName) ?? 'slate');
             setError(null);
+            setShowAllColors(false);
             onClose();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to save workspace');
@@ -80,6 +81,7 @@ export function AddWorkspaceDialog({ open, onClose, parentWorkspaceId, defaultCo
         setName('');
         setColor((defaultColor as WorkspaceColorName) ?? 'slate');
         setError(null);
+        setShowAllColors(false);
         onClose();
     }, [defaultColor, onClose]);
 
@@ -129,11 +131,20 @@ export function AddWorkspaceDialog({ open, onClose, parentWorkspaceId, defaultCo
 
                 {/* Color picker */}
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Color
-                    </label>
-                    <Inline gap="sm">
-                        {COLOR_NAMES.map((c) => {
+                    <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-slate-700">
+                            Color
+                        </label>
+                        <button
+                            type="button"
+                            onClick={() => setShowAllColors(!showAllColors)}
+                            className="text-xs text-slate-500 hover:text-slate-700 transition-colors"
+                        >
+                            {showAllColors ? 'Fewer' : 'More'}
+                        </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {visibleColors.map((c) => {
                             const classes = WORKSPACE_COLORS[c];
                             const isSelected = c === color;
                             return (
@@ -148,7 +159,7 @@ export function AddWorkspaceDialog({ open, onClose, parentWorkspaceId, defaultCo
                                 />
                             );
                         })}
-                    </Inline>
+                    </div>
                 </div>
 
                 {/* Actions */}
