@@ -79,7 +79,7 @@ export function ActionsPanel() {
                         {activeTab === 'definitions' ? (
                             <div className="h-full flex items-center justify-center text-slate-400">
                                 <div className="text-center">
-                                    <p className="text-lg font-medium text-slate-600">Action Definitions</p>
+                                    <p className="text-sm text-slate-600">Action Definitions</p>
                                     <p>Select a definition from the sidebar to view its schema.</p>
                                     <p className="text-xs mt-2">Use the Composer panel to create new definitions.</p>
                                 </div>

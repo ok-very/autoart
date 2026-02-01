@@ -170,7 +170,7 @@ export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggest
       return (
         <div className="mention-dropdown">
           <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
-            <span className={clsx('text-sm font-bold', triggerColor)}>{triggerChar}</span>
+            <span className={clsx('text-sm font-semibold', triggerColor)}>{triggerChar}</span>
             <span className="text-xs text-slate-400">{triggerLabel}</span>
           </div>
           <div className="p-4 text-center text-slate-400 text-sm">
@@ -185,7 +185,7 @@ export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggest
       return (
         <div className="mention-dropdown">
           <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
-            <span className={clsx('text-sm font-bold', triggerColor)}>{triggerChar}</span>
+            <span className={clsx('text-sm font-semibold', triggerColor)}>{triggerChar}</span>
             <span className="text-xs text-slate-400">
               {query ? `Search: "${query}"` : triggerLabel}
             </span>
@@ -239,7 +239,7 @@ export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggest
     return (
       <div className="mention-dropdown">
         <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
-          <span className={clsx('text-sm font-bold', triggerColor)}>{triggerChar}</span>
+          <span className={clsx('text-sm font-semibold', triggerColor)}>{triggerChar}</span>
           <span className="text-xs text-slate-400">
             {query ? `Search: "${query}"` : triggerLabel}
           </span>
@@ -257,7 +257,7 @@ export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggest
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <span
-                className={clsx('text-[10px] font-bold uppercase px-1 py-0.5 rounded shrink-0', {
+                className={clsx('text-[10px] font-semibold uppercase px-1 py-0.5 rounded shrink-0', {
                   'bg-blue-100 text-blue-700': item.type === 'record',
                   'bg-purple-100 text-purple-700': item.type === 'node',
                 })}

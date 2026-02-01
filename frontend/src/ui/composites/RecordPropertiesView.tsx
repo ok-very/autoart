@@ -157,10 +157,10 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
             <div className={`${bgColor} border rounded-lg p-4`}>
                 <div className="flex items-start justify-between">
                     <div>
-                        <div className="text-[10px] opacity-75 font-bold uppercase mb-1">
+                        <div className="text-[10px] opacity-75 font-semibold uppercase mb-1">
                             Record Class: {nodeType}
                         </div>
-                        <div className="text-lg font-bold text-slate-900">{title}</div>
+                        <div className="text-base font-semibold text-slate-900">{title}</div>
                         <div className="text-xs opacity-50 mt-1 font-mono">
                             UUID: {item.id.slice(0, 11)}
                         </div>
@@ -177,7 +177,7 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
                                 </button>
                                 {showHistory && (
                                     <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-slate-200 rounded-lg shadow-xl z-10 overflow-hidden">
-                                        <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 text-xs font-bold text-slate-500">
+                                        <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500">
                                             Naming History
                                         </div>
                                         <div className="max-h-60 overflow-y-auto py-1">
@@ -218,7 +218,7 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
             {/* Description Editor (Only for Nodes) */}
             {isNode && (
                 <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase border-b border-slate-100 pb-2">
+                    <h4 className="text-xs font-semibold text-slate-400 uppercase border-b border-slate-100 pb-2">
                         Description
                     </h4>
                     <div className="border border-slate-200 rounded-md bg-white p-1 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
@@ -235,7 +235,7 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
 
             {/* Fields Section */}
             <div className="space-y-4">
-                <h4 className="text-xs font-bold text-slate-400 uppercase border-b border-slate-100 pb-2">
+                <h4 className="text-xs font-semibold text-slate-400 uppercase border-b border-slate-100 pb-2">
                     Record Fields
                 </h4>
 

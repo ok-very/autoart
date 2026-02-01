@@ -52,7 +52,7 @@ export function ActionDetailsPanel({ actionId }: ActionDetailsPanelProps) {
 
             {/* Action Info */}
             <section>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
                     Action Info
                 </h3>
                 <dl className="space-y-2 text-sm">
@@ -79,7 +79,7 @@ export function ActionDetailsPanel({ actionId }: ActionDetailsPanelProps) {
 
             {/* Field Bindings */}
             <section>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
                     Field Bindings
                 </h3>
                 {action.fieldBindings && action.fieldBindings.length > 0 ? (

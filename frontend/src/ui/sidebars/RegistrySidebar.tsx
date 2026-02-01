@@ -143,7 +143,7 @@ export function RegistrySidebar({
                             >
                                 <div className="flex items-center gap-2">
                                     <FolderOpen size={14} className="text-blue-500" />
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                         Data Definitions
                                     </span>
                                     <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
@@ -258,7 +258,7 @@ export function RegistrySidebar({
                             >
                                 <div className="flex items-center gap-2">
                                     <Zap size={14} className="text-amber-500" />
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                         Action Types
                                     </span>
                                     <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
@@ -357,7 +357,7 @@ export function RegistrySidebar({
                             >
                                 <div className="flex items-center gap-2">
                                     <Activity size={14} className="text-blue-500" />
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                         Events & Facts
                                     </span>
                                 </div>

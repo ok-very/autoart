@@ -53,7 +53,7 @@ export function ReferencesManager({ actionId }: ReferencesManagerProps) {
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                     <Link2 size={16} className="text-blue-600" />
-                    <span className="text-sm font-bold text-blue-900">Action References</span>
+                    <span className="text-sm font-semibold text-blue-900">Action References</span>
                 </div>
                 <p className="text-xs text-blue-700 leading-relaxed">
                     References link this action to record fields. Values are resolved dynamically
@@ -63,7 +63,7 @@ export function ReferencesManager({ actionId }: ReferencesManagerProps) {
 
             {/* References List */}
             <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase border-b border-slate-100 pb-2">
+                <h4 className="text-xs font-semibold text-slate-400 uppercase border-b border-slate-100 pb-2">
                     Linked References ({references?.length || 0})
                 </h4>
 
@@ -132,7 +132,7 @@ function ReferenceCard({ reference, actionId }: ReferenceCardProps) {
                 </div>
                 <div className="flex items-center gap-1">
                     <span className={clsx(
-                        'text-[10px] font-bold uppercase px-1.5 py-0.5 rounded shrink-0',
+                        'text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded shrink-0',
                         'bg-blue-100 text-blue-700'
                     )}>
                         {reference.mode}

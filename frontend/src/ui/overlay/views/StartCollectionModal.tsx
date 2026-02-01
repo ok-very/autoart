@@ -42,7 +42,7 @@ export function StartCollectionModal({ onClose, onSubmit }: StartCollectionModal
                     <FolderPlus size={24} className="text-amber-600" />
                 </div>
                 <div>
-                    <h2 className="text-lg font-semibold text-slate-800">Start New Collection</h2>
+                    <h2 className="text-base font-semibold text-slate-800">Start New Collection</h2>
                     <p className="text-sm text-slate-500">
                         Create a collection to gather items for export
                     </p>

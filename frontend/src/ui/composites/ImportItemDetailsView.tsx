@@ -219,7 +219,7 @@ export function ImportItemDetailsView({ itemId, tab, plan: propPlan }: ImportIte
                                         <Text size="xs" color="muted" className="uppercase tracking-wide mb-1">Outcome</Text>
                                         <Badge
                                             size="sm"
-                                            className={`${OUTCOME_COLORS[classification.outcome]?.bg || 'bg-slate-100'} ${OUTCOME_COLORS[classification.outcome]?.text || 'text-slate-600'} font-bold`}
+                                            className={`${OUTCOME_COLORS[classification.outcome]?.bg || 'bg-slate-100'} ${OUTCOME_COLORS[classification.outcome]?.text || 'text-slate-600'} font-semibold`}
                                         >
                                             {classification.outcome.replace(/_/g, ' ')}
                                         </Badge>
@@ -359,7 +359,7 @@ export function ImportItemDetailsView({ itemId, tab, plan: propPlan }: ImportIte
                         {selectedItem.title}
                     </Text>
                     <div className="mt-3 flex items-center gap-2">
-                        <Badge variant="neutral" size="sm" className="uppercase text-[10px] font-bold">
+                        <Badge variant="neutral" size="sm" className="uppercase text-[10px] font-semibold">
                             {isContainer
                                 ? (selectedItem as { type?: string }).type || 'container'
                                 : (selectedItem as { entityType?: string }).entityType || 'item'}

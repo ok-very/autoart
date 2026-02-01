@@ -64,7 +64,7 @@ export const TableHeaderCell = forwardRef<HTMLDivElement, TableHeaderCellProps>(
         )}
         {...props}
       >
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
+        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider truncate">
           {children}
         </span>
         {sortable && sortDir && (

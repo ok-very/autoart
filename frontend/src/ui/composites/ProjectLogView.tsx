@@ -85,7 +85,7 @@ export function ProjectLogView({ projectId: _projectId }: ProjectLogViewProps) {
           />
           <button
             onClick={handleDeclareAction}
-            className="bg-slate-900 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors mr-1"
+            className="bg-slate-900 text-white px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-800 transition-colors mr-1"
           >
             Declare
           </button>
@@ -142,7 +142,7 @@ function ActionCardItem({ card }: { card: ActionCard }) {
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-start">
           <div className="flex-1">
-            <h3 className="text-base font-bold text-slate-800">{card.title}</h3>
+            <h3 className="text-base font-semibold text-slate-800">{card.title}</h3>
             <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
               {card.refCode && (
                 <>
@@ -251,13 +251,13 @@ function ActionBar({ status, actionId }: { status: string; actionId: number }) {
         <>
           <button
             onClick={() => handleTransition('complete')}
-            className="flex items-center gap-2 bg-white border border-slate-200 hover:border-emerald-300 hover:text-emerald-700 text-slate-600 px-3 py-1.5 rounded text-xs font-bold transition-all shadow-sm"
+            className="flex items-center gap-2 bg-white border border-slate-200 hover:border-emerald-300 hover:text-emerald-700 text-slate-600 px-3 py-1.5 rounded text-xs font-semibold transition-all shadow-sm"
           >
             <CheckCircle size={16} /> Complete
           </button>
           <button
             onClick={() => handleTransition('block')}
-            className="flex items-center gap-2 bg-white border border-slate-200 hover:border-red-300 hover:text-red-700 text-slate-600 px-3 py-1.5 rounded text-xs font-bold transition-all shadow-sm"
+            className="flex items-center gap-2 bg-white border border-slate-200 hover:border-red-300 hover:text-red-700 text-slate-600 px-3 py-1.5 rounded text-xs font-semibold transition-all shadow-sm"
           >
             <HandPalm size={16} /> Block
           </button>
@@ -266,7 +266,7 @@ function ActionBar({ status, actionId }: { status: string; actionId: number }) {
       {status === 'declared' && (
         <button
           onClick={() => handleTransition('start')}
-          className="flex items-center gap-2 bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-700 text-slate-600 px-3 py-1.5 rounded text-xs font-bold transition-all shadow-sm"
+          className="flex items-center gap-2 bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-700 text-slate-600 px-3 py-1.5 rounded text-xs font-semibold transition-all shadow-sm"
         >
           <Play size={16} /> Start
         </button>
@@ -314,9 +314,9 @@ function getEventColorClass(type: EventType) {
 
 function getEventTextClass(type: EventType) {
   switch (type) {
-    case 'work_started': return 'text-indigo-700 font-bold';
-    case 'work_finished': return 'text-emerald-700 font-bold';
-    case 'blocked': return 'text-red-700 font-bold';
+    case 'work_started': return 'text-indigo-700 font-semibold';
+    case 'work_finished': return 'text-emerald-700 font-semibold';
+    case 'blocked': return 'text-red-700 font-semibold';
     case 'unblocked': return 'text-emerald-700 font-medium';
     case 'field_value_recorded': return 'text-slate-700 font-medium';
     default: return 'text-slate-700 font-medium';

@@ -340,7 +340,7 @@ export function ComposerView({
                             <Wand2 size={20} />
                         </div>
                         <div>
-                            <h1 className="text-lg font-semibold text-slate-900">Composer</h1>
+                            <h1 className="text-xl font-semibold text-slate-900">Composer</h1>
                             <p className="text-xs text-slate-500">Declare intent with Actions + Events</p>
                         </div>
                     </div>

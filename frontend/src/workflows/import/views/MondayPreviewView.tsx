@@ -136,7 +136,7 @@ export function MondayPreviewView({
                         {Object.entries(outcomeCounts).map(([outcome, count]) => (
                             <span
                                 key={outcome}
-                                className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 rounded"
+                                className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-slate-100 text-slate-600 rounded"
                             >
                                 {outcome.replace(/_/g, ' ')}: {count}
                             </span>

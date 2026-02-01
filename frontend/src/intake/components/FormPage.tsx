@@ -113,7 +113,7 @@ export function FormPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Form Not Found</h1>
+          <h1 className="text-xl font-semibold text-slate-900 mb-2">Form Not Found</h1>
           <p className="text-slate-600">
             This form may have been disabled or doesn't exist.
           </p>
@@ -139,7 +139,7 @@ export function FormPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Submitted!</h1>
+          <h1 className="text-xl font-semibold text-slate-900 mb-2">Submitted!</h1>
           <p className="text-slate-600">{confirmationMessage}</p>
           {redirectUrl && (
             <p className="text-sm text-slate-400 mt-4">Redirecting...</p>
@@ -159,7 +159,7 @@ export function FormPage() {
     <div className="max-w-2xl mx-auto py-8 px-4">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">{form.title}</h1>
+        <h1 className="text-xl font-semibold text-slate-900">{form.title}</h1>
         {form.sharepoint_request_url && (
           <a
             href={form.sharepoint_request_url}
@@ -191,7 +191,7 @@ export function FormPage() {
 
       {/* Page Title */}
       {(currentPageData?.blocks_config?.settings as any)?.pageTitle && (
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">
+        <h2 className="text-base font-semibold text-slate-800 mb-4">
           {(currentPageData.blocks_config.settings as any).pageTitle}
         </h2>
       )}

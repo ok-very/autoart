@@ -114,14 +114,14 @@ export function ActionInspectorOverlay({ actionId }: ActionInspectorOverlayProps
             <div className="flex items-start justify-between mb-6">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="px-2 py-0.5 text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200 rounded uppercase">
+                        <span className="px-2 py-0.5 text-[10px] font-semibold bg-purple-100 text-purple-700 border border-purple-200 rounded uppercase">
                             ACTION
                         </span>
                         <span className="text-xs text-slate-400 font-mono">
                             {action.id.slice(0, 8)}
                         </span>
                     </div>
-                    <h2 className="text-xl font-bold text-slate-800">{getTitle()}</h2>
+                    <h2 className="text-base font-semibold text-slate-800">{getTitle()}</h2>
                     <div className="flex items-center gap-2 mt-1">
                         <Zap size={12} className="text-purple-500" />
                         <span className="text-sm text-purple-700 font-medium">{action.type}</span>
@@ -144,7 +144,7 @@ export function ActionInspectorOverlay({ actionId }: ActionInspectorOverlayProps
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Left: Declared Intent */}
                 <section className="inspector-card bg-white border border-slate-200 rounded-lg p-4">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                         <div className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
                         Declared Intent
                     </h3>
@@ -197,7 +197,7 @@ export function ActionInspectorOverlay({ actionId }: ActionInspectorOverlayProps
                 {/* Right: Interpreted As (Events) */}
                 <section className="inspector-card bg-white border border-slate-200 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                             <ArrowDownRight size={12} className="text-slate-400" />
                             Interpreted As
                         </h3>

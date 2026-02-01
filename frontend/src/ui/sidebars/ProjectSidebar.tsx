@@ -75,7 +75,7 @@ export function ProjectSidebar() {
         <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative" style={{ position: 'relative' }}>
             {/* Project Selector */}
             <div className="p-3 border-b border-slate-200 bg-white">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">
+                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1 block">
                     Project
                 </label>
                 <Menu>
@@ -135,7 +135,7 @@ export function ProjectSidebar() {
             </div>
             {processes.length > 0 && (
                 <div className="p-3 border-b border-slate-200 bg-white">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1 block">
                         Process {processes.length > 1 && `(${processes.length})`}
                     </label>
                     <div className="relative">

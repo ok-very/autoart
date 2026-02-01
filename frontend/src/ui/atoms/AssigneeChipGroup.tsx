@@ -122,7 +122,7 @@ export function AssigneeChipGroup({
                             ${SIZE_CLASSES[size]}
                             ${getColorForName(a.name)}
                             ${index > 0 ? OVERLAP_CLASSES[size] : ''}
-                            rounded-full flex items-center justify-center font-bold
+                            rounded-full flex items-center justify-center font-semibold
                             border-2 border-white shadow-sm
                         `}
                     >

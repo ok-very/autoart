@@ -76,7 +76,7 @@ function ActionCard({ node, onClick }: { node: WorkflowSurfaceNode; onClick: () 
 
             {/* Main Content */}
             <div className="flex-1 mb-4">
-                <h3 className="text-sm font-bold text-slate-800 leading-tight mb-2 group-hover:text-indigo-700 transition-colors">
+                <h3 className="text-sm font-semibold text-slate-800 leading-tight mb-2 group-hover:text-indigo-700 transition-colors">
                     {payload.title || 'Untitled'}
                 </h3>
                 <div className="space-y-1.5">
@@ -95,7 +95,7 @@ function ActionCard({ node, onClick }: { node: WorkflowSurfaceNode; onClick: () 
             <div className="flex justify-between items-center mt-auto">
                 <div className="flex items-center gap-2">
                     {payload.assignees?.[0] && (
-                        <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-600">
+                        <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-semibold text-slate-600">
                             {payload.assignees[0].name?.slice(0, 2).toUpperCase()}
                         </div>
                     )}
@@ -160,7 +160,7 @@ export function ActionCardsView() {
         return (
             <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
                 <div className="text-center">
-                    <p className="text-lg font-medium">Select a project to view actions</p>
+                    <p className="text-sm">Select a project to view actions</p>
                     <p className="text-sm mt-1">Choose from the Projects menu</p>
                 </div>
             </div>

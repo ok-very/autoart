@@ -85,7 +85,7 @@ export function FinanceKPIStrip() {
           <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">
             {kpi.label}
           </div>
-          <div className="text-lg font-mono font-semibold text-slate-800 mt-0.5">
+          <div className="text-base font-mono font-semibold text-slate-800 mt-0.5">
             {kpi.value}
           </div>
           {kpi.sublabel && (

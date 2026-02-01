@@ -193,7 +193,7 @@ function ColumnHeader<T>({ column, columnWidth, sortKey, sortDir, onSort, onResi
             style={{ width, flex: columnWidth === 'flex' ? 1 : undefined }}
             onClick={handleClick}
         >
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
+            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider truncate">
                 {column.label}
             </span>
             {column.sortable && isSorted && (
