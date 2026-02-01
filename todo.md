@@ -29,6 +29,11 @@
 | 237 | Performance Optimization & Caching | Backend + Frontend |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 79 | Enhance Workflow View Interactions | Feature |
+| 82a | User CRUD: create/invite user, set role, reset password | Feature |
+| 82b | Project assignment: assign user to project, transfer ownership from demo user | Feature |
+| 82c | User deactivation: soft-delete user, reassign owned actions/records | Feature |
+| 82d | Upgrade user chip: avatar photo, name, role — used in assignee fields, event log, header | UI |
+| 82e | User settings: edit profile, upload avatar photo, change password | Feature |
 
 ---
 
@@ -49,8 +54,9 @@
 | 84 | Email Notices API | Backend |
 | 85 | Templating Engine | Feature |
 | 86 | Monday.com Board Sync Settings | Integration |
-| 82 | User Account Management | Feature |
+| 82 | User Account Management: create user via UI, assign to project, deactivate/delete user | Feature |
 | 291 | Schema editor / Composer relationship-math builder | Feature |
+| — | Action vocabulary: store classification verbs/nouns/adjectives from imports as a heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret what action type is being constructed or referenced | Classification |
 
 ---
 

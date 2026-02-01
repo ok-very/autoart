@@ -73,6 +73,13 @@ async function main() {
     if (resetFirst) {
       console.log('[!] Resetting database data...');
       // Delete in reverse dependency order
+      await db.deleteFrom('import_executions').execute();
+      await db.deleteFrom('import_plans').execute();
+      await db.deleteFrom('import_sessions').execute();
+      await db.deleteFrom('events').execute();
+      await db.deleteFrom('workflow_surface_nodes').execute();
+      await db.deleteFrom('action_references').execute();
+      await db.deleteFrom('actions').execute();
       await db.deleteFrom('records').execute();
       await db.deleteFrom('hierarchy_nodes').execute();
       await db.deleteFrom('record_definitions').execute();
