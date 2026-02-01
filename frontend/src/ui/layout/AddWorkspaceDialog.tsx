@@ -14,7 +14,11 @@ import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
 import { WORKSPACE_COLORS, type WorkspaceColorName } from '../../workspace/workspaceColors';
 
-const COLOR_NAMES: WorkspaceColorName[] = ['slate', 'blue', 'green', 'purple', 'pink', 'orange', 'amber', 'cyan'];
+const COLOR_NAMES: WorkspaceColorName[] = [
+    'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan',
+    'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose',
+    'slate', 'gray', 'zinc', 'neutral', 'stone',
+];
 
 interface AddWorkspaceDialogProps {
     open: boolean;
@@ -132,7 +136,7 @@ export function AddWorkspaceDialog({ open, onClose, parentWorkspaceId, defaultCo
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                         Color
                     </label>
-                    <Inline gap="sm">
+                    <div className="flex flex-wrap gap-2">
                         {COLOR_NAMES.map((c) => {
                             const classes = WORKSPACE_COLORS[c];
                             const isSelected = c === color;
@@ -148,7 +152,7 @@ export function AddWorkspaceDialog({ open, onClose, parentWorkspaceId, defaultCo
                                 />
                             );
                         })}
-                    </Inline>
+                    </div>
                 </div>
 
                 {/* Actions */}

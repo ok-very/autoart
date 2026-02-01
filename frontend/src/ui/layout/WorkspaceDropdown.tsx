@@ -22,14 +22,30 @@ import { AddWorkspaceDialog } from './AddWorkspaceDialog';
  * Single source of truth to prevent drift between icon and active states.
  */
 const WORKSPACE_COLOR_CONFIG: Record<string, { icon: string; active: string }> = {
-    pink: { icon: 'bg-pink-100 text-pink-700', active: 'bg-pink-50' },
-    blue: { icon: 'bg-blue-100 text-blue-700', active: 'bg-blue-50' },
-    green: { icon: 'bg-green-100 text-green-700', active: 'bg-green-50' },
-    purple: { icon: 'bg-purple-100 text-purple-700', active: 'bg-purple-50' },
+    // Chromatic — warm to cool
+    red: { icon: 'bg-red-100 text-red-700', active: 'bg-red-50' },
     orange: { icon: 'bg-orange-100 text-orange-700', active: 'bg-orange-50' },
     amber: { icon: 'bg-amber-100 text-amber-700', active: 'bg-amber-50' },
+    yellow: { icon: 'bg-yellow-100 text-yellow-700', active: 'bg-yellow-50' },
+    lime: { icon: 'bg-lime-100 text-lime-700', active: 'bg-lime-50' },
+    green: { icon: 'bg-green-100 text-green-700', active: 'bg-green-50' },
+    emerald: { icon: 'bg-emerald-100 text-emerald-700', active: 'bg-emerald-50' },
+    teal: { icon: 'bg-teal-100 text-teal-700', active: 'bg-teal-50' },
     cyan: { icon: 'bg-cyan-100 text-cyan-700', active: 'bg-cyan-50' },
+    sky: { icon: 'bg-sky-100 text-sky-700', active: 'bg-sky-50' },
+    blue: { icon: 'bg-blue-100 text-blue-700', active: 'bg-blue-50' },
+    indigo: { icon: 'bg-indigo-100 text-indigo-700', active: 'bg-indigo-50' },
+    violet: { icon: 'bg-violet-100 text-violet-700', active: 'bg-violet-50' },
+    purple: { icon: 'bg-purple-100 text-purple-700', active: 'bg-purple-50' },
+    fuchsia: { icon: 'bg-fuchsia-100 text-fuchsia-700', active: 'bg-fuchsia-50' },
+    pink: { icon: 'bg-pink-100 text-pink-700', active: 'bg-pink-50' },
+    rose: { icon: 'bg-rose-100 text-rose-700', active: 'bg-rose-50' },
+    // Neutrals
     slate: { icon: 'bg-slate-100 text-slate-700', active: 'bg-slate-50' },
+    gray: { icon: 'bg-gray-100 text-gray-700', active: 'bg-gray-50' },
+    zinc: { icon: 'bg-zinc-100 text-zinc-700', active: 'bg-zinc-50' },
+    neutral: { icon: 'bg-neutral-100 text-neutral-700', active: 'bg-neutral-50' },
+    stone: { icon: 'bg-stone-100 text-stone-700', active: 'bg-stone-50' },
 };
 
 const DEFAULT_COLOR = 'slate';
@@ -40,14 +56,30 @@ const DEFAULT_COLOR = 'slate';
  * Amber and orange both map to yellow — closest available match.
  */
 const BUTTON_COLOR_MAP: Record<string, 'gray' | 'blue' | 'violet' | 'yellow'> = {
-    pink: 'violet',
-    blue: 'blue',
-    green: 'blue',
-    purple: 'violet',
+    // Chromatic — warm to cool
+    red: 'violet',
     orange: 'yellow',
     amber: 'yellow',
+    yellow: 'yellow',
+    lime: 'blue',
+    green: 'blue',
+    emerald: 'blue',
+    teal: 'blue',
     cyan: 'blue',
+    sky: 'blue',
+    blue: 'blue',
+    indigo: 'violet',
+    violet: 'violet',
+    purple: 'violet',
+    fuchsia: 'violet',
+    pink: 'violet',
+    rose: 'violet',
+    // Neutrals
     slate: 'gray',
+    gray: 'gray',
+    zinc: 'gray',
+    neutral: 'gray',
+    stone: 'gray',
 };
 
 function getButtonColor(workspaceColor: string): 'gray' | 'blue' | 'violet' | 'yellow' {
