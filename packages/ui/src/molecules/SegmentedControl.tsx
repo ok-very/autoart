@@ -59,7 +59,7 @@ export function SegmentedControl({
                             }
                         }}
                         className={clsx(
-                            'rounded-md font-medium transition-all',
+                            'rounded-md font-sans font-medium transition-all',
                             sizeStyles[size],
                             isSelected
                                 ? 'bg-white text-slate-900 shadow-sm'

@@ -66,7 +66,7 @@ export function PortalSelect({
                 onClick={handleToggle}
                 disabled={disabled}
                 className={clsx(
-                    'w-full flex items-center justify-between text-left border rounded-lg transition-all bg-white',
+                    'w-full flex items-center justify-between text-left border rounded-lg transition-all bg-white font-sans',
                     'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
                     disabled ? 'bg-slate-50 text-slate-400 cursor-not-allowed' : 'hover:border-slate-300 cursor-pointer',
                     !currentOption && !disabled && 'text-slate-500',

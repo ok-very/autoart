@@ -17,7 +17,7 @@ export function Alert({ variant = 'info', className, children, ...props }: Alert
         <div
             role="alert"
             className={clsx(
-                'px-4 py-3 rounded-lg border text-sm',
+                'px-4 py-3 rounded-lg border text-sm font-sans',
                 variantClasses[variant],
                 className
             )}

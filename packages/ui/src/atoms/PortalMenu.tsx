@@ -154,7 +154,7 @@ export function PortalMenu({
     return createPortal(
         <div
             ref={menuRef}
-            className={`fixed bg-white border border-slate-200 rounded-lg shadow-xl ${className}`}
+            className={`fixed bg-white border border-slate-200 rounded-lg shadow-xl font-sans ${className}`}
             style={{
                 top: position.top,
                 left: position.left,

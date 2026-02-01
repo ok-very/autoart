@@ -67,7 +67,7 @@ export function RadixSelect({
             >
                 <SelectPrimitive.Trigger
                     className={clsx(
-                        'w-full flex items-center justify-between text-left border rounded-lg transition-all bg-white',
+                        'w-full flex items-center justify-between text-left border rounded-lg transition-all bg-white font-sans',
                         'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
                         'data-[disabled]:bg-slate-50 data-[disabled]:text-slate-400 data-[disabled]:cursor-not-allowed',
                         'data-[placeholder]:text-slate-500',
@@ -134,7 +134,7 @@ export const SelectItem = forwardRef<HTMLDivElement, SelectPrimitive.SelectItemP
         <SelectPrimitive.Item
             ref={ref}
             className={clsx(
-                'relative flex items-center px-2 py-1.5 pr-8 text-sm rounded-sm select-none cursor-pointer outline-none',
+                'relative flex items-center px-2 py-1.5 pr-8 text-sm font-sans rounded-sm select-none cursor-pointer outline-none',
                 'focus:bg-slate-100 focus:text-slate-900',
                 'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
                 'data-[state=checked]:bg-blue-50 data-[state=checked]:text-blue-700',

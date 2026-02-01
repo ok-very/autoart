@@ -32,7 +32,7 @@ export function Badge({ variant = 'default', size = 'sm', children, className }:
     return (
         <span
             className={clsx(
-                'inline-flex items-center rounded font-bold uppercase tracking-wider border',
+                'inline-flex items-center rounded font-sans font-bold uppercase tracking-wider border',
                 variantStyles[variant],
                 sizeStyles[size],
                 className

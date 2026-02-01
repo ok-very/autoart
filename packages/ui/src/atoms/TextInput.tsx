@@ -31,7 +31,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
                     ref={ref}
                     id={inputId}
                     className={clsx(
-                        'w-full rounded-lg border transition-colors',
+                        'w-full rounded-lg border transition-colors font-sans',
                         'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
                         'disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed',
                         error
