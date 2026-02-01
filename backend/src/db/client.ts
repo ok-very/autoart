@@ -18,6 +18,10 @@ import { env } from '../config/env.js';
 let pool: Pool;
 let tokenExpiresAt: number | null = null;
 
+// Store the Kysely instance in a mutable container
+// This allows us to update it after async initialization
+const dbContainer: { instance: Kysely<Database> | null } = { instance: null };
+
 /**
  * Create database pool with appropriate authentication
  */
@@ -85,27 +89,25 @@ async function ensureFreshToken(): Promise<void> {
 }
 
 /**
- * Initialize the database pool
+ * Get the database instance (throws if not initialized)
  */
-async function initPool(): Promise<Pool> {
-  if (!pool) {
-    pool = await createPool();
+export function getDb(): Kysely<Database> {
+  if (!dbContainer.instance) {
+    throw new Error('Database not initialized. Call initializeDatabase() first.');
   }
-  return pool;
+  return dbContainer.instance;
 }
 
-// Initialize pool synchronously for backwards compatibility
-// In production with Entra ID, this placeholder pool is replaced by initializeDatabase()
-pool = env.DATABASE_URL
-  ? new Pool({
-      connectionString: env.DATABASE_URL,
-      max: env.DATABASE_POOL_SIZE,
-      ssl: env.DATABASE_URL.includes('azure') ? { rejectUnauthorized: false } : undefined,
-    })
-  : new Pool({ max: 0 }); // Entra ID: replaced at startup by initializeDatabase()
-
-export const db = new Kysely<Database>({
-  dialect: new PostgresDialect({ pool }),
+// For backwards compatibility, export a proxy that uses the container
+// This allows existing code that imports { db } to continue working
+export const db = new Proxy({} as Kysely<Database>, {
+  get(_, prop) {
+    if (!dbContainer.instance) {
+      throw new Error('Database not initialized. Call initializeDatabase() first.');
+    }
+    const value = (dbContainer.instance as any)[prop];
+    return typeof value === 'function' ? value.bind(dbContainer.instance) : value;
+  },
 });
 
 /**
@@ -114,7 +116,8 @@ export const db = new Kysely<Database>({
 export async function checkConnection(): Promise<boolean> {
   try {
     await ensureFreshToken();
-    await db.selectFrom('users').select('id').limit(1).execute();
+    const dbInstance = getDb();
+    await dbInstance.selectFrom('users').select('id').limit(1).execute();
     return true;
   } catch (error) {
     console.error('Database connection check failed:', error);
@@ -124,14 +127,29 @@ export async function checkConnection(): Promise<boolean> {
 
 /**
  * Initialize database with Entra ID support
- * Call this at app startup in production
+ * Call this at app startup
  */
 export async function initializeDatabase(): Promise<void> {
   if (env.NODE_ENV !== 'development' && env.AZURE_AD_USER) {
-    const newPool = await initPool();
-    // Replace the synchronously created pool with the async one
-    // This is a workaround for Kysely requiring a pool at construction time
-    (db as any).executor.adapter.pool = newPool;
-    pool = newPool;
+    // Production: Use Azure AD token auth
+    pool = await createPool();
+    dbContainer.instance = new Kysely<Database>({
+      dialect: new PostgresDialect({ pool }),
+    });
+    console.log('✅ Database initialized with Entra ID authentication');
+  } else {
+    // Development: Use password-based auth
+    if (!env.DATABASE_URL) {
+      throw new Error('DATABASE_URL is required when AZURE_AD_USER is not set');
+    }
+    pool = new Pool({
+      connectionString: env.DATABASE_URL,
+      max: env.DATABASE_POOL_SIZE,
+      ssl: env.DATABASE_URL.includes('azure') ? { rejectUnauthorized: false } : undefined,
+    });
+    dbContainer.instance = new Kysely<Database>({
+      dialect: new PostgresDialect({ pool }),
+    });
+    console.log('🔌 Database initialized with password authentication');
   }
 }

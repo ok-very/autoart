@@ -12,6 +12,12 @@
 
 $ErrorActionPreference = "Stop"
 
+# Ensure Azure CLI is in PATH for DefaultAzureCredential
+$AzureCLIPath = "C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin"
+if (Test-Path $AzureCLIPath) {
+    $env:Path = "$AzureCLIPath;$env:Path"
+}
+
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectDir = Split-Path -Parent $ScriptDir
 
@@ -55,11 +61,13 @@ if (-not (Test-Path "shared\dist")) {
 }
 
 Write-Host "[*] Starting backend server..." -ForegroundColor Green
+$currentPath = $env:Path
 $backendJob = Start-Job -Name "AutoArt-Backend" -ScriptBlock {
-    param($dir)
+    param($dir, $pathWithAz)
+    $env:Path = $pathWithAz
     Set-Location "$dir\backend"
     pnpm dev 2>&1
-} -ArgumentList $ProjectDir
+} -ArgumentList $ProjectDir, $currentPath
 
 Start-Sleep -Seconds 2
 

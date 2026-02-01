@@ -20,6 +20,9 @@ This documentation series describes AutoArt's architecture across multiple dimen
 
 ### Supplementary Documents
 
+- **[Azure Database Authentication](./AZURE-DATABASE-AUTH.md)**  
+  Production deployment with Azure Entra ID (Managed Identity, Service Principal), local dev setup, and troubleshooting.
+
 - **[Architecture Inventory & Deprecation Plan](./architecture-inventory.md)**  
   Living inventory of active vs deprecated modules, migration status, and cleanup proposals.
 
