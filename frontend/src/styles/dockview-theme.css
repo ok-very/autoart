@@ -42,9 +42,17 @@
   background-image: none !important;
   background-size: auto;
   padding: 0 var(--ws-tab-radius);
+  overflow: hidden;
 }
 
-/* Tab container overflow — allow swoopy pseudo-elements to extend */
+/* Overflow stack fix — swoopy pseudo-elements extend 8px beyond the tab.
+   dv-scrollable (between tabs-container and tabs-and-actions-container) clips
+   them with its own overflow:hidden. Make both inner layers visible, then clip
+   at tabs-and-actions-container which has padding for the swoopy space. */
+.dockview-theme-light .dv-scrollable {
+  overflow: visible !important;
+}
+
 .dockview-theme-light .dv-tabs-container {
   overflow: visible !important;
 }
@@ -200,11 +208,13 @@
 /* === Drop target glow === */
 
 .dockview-theme-light .dv-drop-target-container .dv-drop-target-anchor {
+  border: 2px solid var(--ws-drop-target-border);
   box-shadow: var(--ws-drop-target-shadow);
   border-radius: var(--ws-drop-target-radius);
 }
 
 .dockview-theme-light .dv-drop-target > .dv-drop-target-dropzone > .dv-drop-target-selection {
+  border: 2px solid var(--ws-drop-target-border);
   box-shadow: var(--ws-drop-target-shadow);
   border-radius: var(--ws-drop-target-radius);
 }
