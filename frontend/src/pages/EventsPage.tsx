@@ -28,7 +28,7 @@ export function EventsPage() {
             <div className="flex flex-1 flex-col overflow-hidden">
                 {/* Page Header */}
                 <div className="h-10 border-b border-slate-200 bg-white flex items-center justify-between px-3">
-                    <h1 className="text-xl font-semibold text-slate-800 flex items-center gap-2">
+                    <h1 className="text-ws-h1 font-semibold text-slate-800 flex items-center gap-2">
                         <Activity size={20} className="text-emerald-500" />
                         Events
                     </h1>

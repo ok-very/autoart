@@ -42,6 +42,16 @@
   --ws-accent-secondary: #8a5a3c; /* Burnt Umber */
 
   /* -------------------------------------------------------------------------
+     Typography Scale
+     @see docs/DESIGN.md — H1=20px, H2=16px, Body=14px, Meta=12px, Micro=11px
+     ------------------------------------------------------------------------- */
+  --ws-font-size-h1: 20px;
+  --ws-font-size-h2: 16px;
+  --ws-font-size-body: 14px;
+  --ws-font-size-meta: 12px;
+  --ws-font-size-micro: 11px;
+
+  /* -------------------------------------------------------------------------
      Console/Mono Text
      @see docs/DESIGN.md
      ------------------------------------------------------------------------- */

@@ -282,7 +282,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
         ) : paginatedRecords.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-slate-400">
             <FolderOpen size={48} className="mb-3 opacity-50" />
-            <p className="text-sm">No records found</p>
+            <p className="text-ws-body">No records found</p>
             <p className="text-sm mt-1">
               {searchQuery
                 ? 'Try a different search term'

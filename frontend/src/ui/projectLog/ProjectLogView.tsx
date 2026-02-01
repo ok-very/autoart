@@ -160,7 +160,7 @@ export function ProjectLogView() {
     return (
       <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
         <div className="text-center">
-          <p className="text-sm">No project selected</p>
+          <p className="text-ws-body">No project selected</p>
           <p className="text-sm">Select a project from the top menu</p>
         </div>
       </div>

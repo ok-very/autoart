@@ -345,7 +345,7 @@ export function ActionsTableFlat({
         return (
             <div className={clsx('flex flex-col items-center justify-center h-64 text-slate-400', className)}>
                 <Zap size={32} className="mb-2 text-slate-300" />
-                <p className="text-sm">Select an action type</p>
+                <p className="text-ws-body">Select an action type</p>
                 <p className="text-sm">Choose an action type from the sidebar to view instances</p>
             </div>
         );
@@ -356,7 +356,7 @@ export function ActionsTableFlat({
         return (
             <div className={clsx('flex flex-col items-center justify-center h-64 text-slate-400', className)}>
                 <Zap size={32} className="mb-2 text-purple-200" />
-                <p className="text-sm">{emptyMessage}</p>
+                <p className="text-ws-body">{emptyMessage}</p>
                 <p className="text-sm mb-4">Create your first {definition?.name || 'action'} using the Composer</p>
                 {onAddAction && (
                     <button

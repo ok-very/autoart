@@ -45,7 +45,7 @@ export function FormSettingsPanel({ settings, onSave, isSaving }: FormSettingsPa
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                    <h2 className="text-base font-semibold text-slate-800">Form Settings</h2>
+                    <h2 className="text-ws-h2 font-semibold text-slate-800">Form Settings</h2>
                     <Button
                         size="sm"
                         onClick={handleSave}

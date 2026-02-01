@@ -658,7 +658,7 @@ export function DataTableFlat({
     if (!definition) {
         return (
             <div className={clsx('flex flex-col items-center justify-center h-64 text-slate-400', className)}>
-                <p className="text-sm">No definition</p>
+                <p className="text-ws-body">No definition</p>
                 <p className="text-sm">Select a record type to view</p>
             </div>
         );
@@ -668,7 +668,7 @@ export function DataTableFlat({
     if (records.length === 0) {
         return (
             <div className={clsx('flex flex-col items-center justify-center h-64 text-slate-400', className)}>
-                <p className="text-sm">{emptyMessage}</p>
+                <p className="text-ws-body">{emptyMessage}</p>
             </div>
         );
     }

@@ -52,7 +52,7 @@ export function IntakeDashboard({ onOpenForm }: IntakeDashboardProps) {
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-xl font-semibold text-slate-800">Intake Forms</h1>
+                    <h1 className="text-ws-h1 font-semibold text-slate-800">Intake Forms</h1>
                     <p className="text-sm text-slate-500 mt-1">
                         Create and manage intake forms for collecting submissions
                     </p>

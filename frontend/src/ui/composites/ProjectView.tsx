@@ -190,7 +190,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
         return (
             <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
                 <div className="text-center">
-                    <p className="text-sm">No project selected</p>
+                    <p className="text-ws-body">No project selected</p>
                     <p className="text-sm">Select a project from the top menu</p>
                 </div>
             </div>
@@ -201,7 +201,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
         return (
             <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
                 <div className="text-center">
-                    <p className="text-sm">Loading project…</p>
+                    <p className="text-ws-body">Loading project…</p>
                 </div>
             </div>
         );
@@ -416,7 +416,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                     ) : (
                         <div className="flex-1 flex items-center justify-center text-slate-400">
                             <div className="text-center">
-                                <p className="text-sm">No scheduled actions</p>
+                                <p className="text-ws-body">No scheduled actions</p>
                                 <p className="text-sm mt-1">Add dates to actions to see them on the calendar</p>
                             </div>
                         </div>

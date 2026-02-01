@@ -121,7 +121,7 @@ export function ActionInspectorOverlay({ actionId }: ActionInspectorOverlayProps
                             {action.id.slice(0, 8)}
                         </span>
                     </div>
-                    <h2 className="text-base font-semibold text-slate-800">{getTitle()}</h2>
+                    <h2 className="text-ws-h2 font-semibold text-slate-800">{getTitle()}</h2>
                     <div className="flex items-center gap-2 mt-1">
                         <Zap size={12} className="text-purple-500" />
                         <span className="text-sm text-purple-700 font-medium">{action.type}</span>

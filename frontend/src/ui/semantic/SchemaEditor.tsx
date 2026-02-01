@@ -277,7 +277,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
                                     type="text"
                                     value={editedName}
                                     onChange={(e) => setEditedName(e.target.value)}
-                                    className="bg-slate-700 text-white border border-slate-600 rounded px-2 py-0.5 text-base font-semibold capitalize w-48 focus:outline-none focus:border-blue-500"
+                                    className="bg-slate-700 text-white border border-slate-600 rounded px-2 py-0.5 text-ws-h2 font-semibold capitalize w-48 focus:outline-none focus:border-blue-500"
                                     autoFocus
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') handleSaveName();
@@ -299,7 +299,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
                             </div>
                         ) : (
                             <div className="flex items-center gap-2 group">
-                                <div className="text-base font-semibold capitalize">
+                                <div className="text-ws-h2 font-semibold capitalize">
                                     {definition?.name || nodeType} Record
                                 </div>
                                 {definition && (

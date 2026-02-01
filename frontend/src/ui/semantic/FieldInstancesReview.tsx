@@ -147,7 +147,7 @@ export function FieldInstancesReview({ field }: FieldInstancesReviewProps) {
         return (
             <div className="flex-1 flex items-center justify-center text-slate-400">
                 <div className="text-center">
-                    <p className="text-sm text-slate-600">Node Metadata Field</p>
+                    <p className="text-ws-body text-slate-600">Node Metadata Field</p>
                     <p className="text-sm mt-1">
                         This field appears in hierarchy nodes, not records.
                     </p>
@@ -172,7 +172,7 @@ export function FieldInstancesReview({ field }: FieldInstancesReviewProps) {
             {/* Header */}
             <div className="h-10 px-4 border-b border-slate-200 flex items-center justify-between bg-white">
                 <div>
-                    <h2 className="text-base font-semibold text-slate-800">
+                    <h2 className="text-ws-h2 font-semibold text-slate-800">
                         {field.label} Instances
                     </h2>
                     <div className="text-xs text-slate-400">

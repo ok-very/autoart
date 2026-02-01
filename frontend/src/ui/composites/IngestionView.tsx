@@ -282,7 +282,7 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
                                         Project Record
                                     </span>
                                 </div>
-                                <h2 className="text-base font-semibold text-slate-800 mt-2">
+                                <h2 className="text-ws-h2 font-semibold text-slate-800 mt-2">
                                     {preview.data.parsedData.projectTitle}
                                 </h2>
                                 {Object.keys(preview.data.parsedData.projectMeta).length > 0 && (

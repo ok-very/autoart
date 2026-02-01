@@ -78,7 +78,7 @@ export function RecordsPanel() {
                         {activeTab === 'definitions' ? (
                             <div className="h-full flex items-center justify-center text-slate-400">
                                 <div className="text-center">
-                                    <p className="text-sm text-slate-600">Record Definitions</p>
+                                    <p className="text-ws-body text-slate-600">Record Definitions</p>
                                     <p>Select a definition from the sidebar to view its schema.</p>
                                 </div>
                             </div>
