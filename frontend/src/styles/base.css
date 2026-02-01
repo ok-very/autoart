@@ -8,12 +8,24 @@
 
   /* DESIGN.md: "Ligatures off always" for console font */
   --font-mono--font-feature-settings: "liga" 0;
+
+  /* Tracking tokens per typeface */
+  --tracking-serif: 0em;
+  --tracking-sans: 0em;
+  --tracking-mono: 0em;
 }
 
 body {
   margin: 0;
   font-family: var(--font-serif);
   font-optical-sizing: auto;
+  letter-spacing: var(--tracking-serif);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* UI chrome uses Source Sans 3 — DESIGN.md */
+button, input, select {
+  font-family: var(--font-sans);
+  letter-spacing: var(--tracking-sans);
 }
