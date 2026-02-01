@@ -25,7 +25,7 @@ import type { Database } from '../schema.js';
 export async function seedDevData(db: Kysely<Database>): Promise<void> {
   console.log('  Seeding development sample data...');
 
-  // Create demo user
+  // Create demo user (skip if already exists)
   const passwordHash = await bcrypt.hash('demo123', 10);
   const [user] = await db
     .insertInto('users')
@@ -34,10 +34,24 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
       password_hash: passwordHash,
       name: 'Demo User',
     })
+    .onConflict((oc) => oc.column('email').doUpdateSet({ password_hash: passwordHash }))
     .returning('id')
     .execute();
 
-  console.log('  ✓ Created demo user (demo@autoart.local / demo123)');
+  console.log('  ✓ Demo user ready (demo@autoart.local / demo123)');
+
+  // Check if sample data already exists — skip if so
+  const existingProject = await db
+    .selectFrom('hierarchy_nodes')
+    .select('id')
+    .where('title', '=', 'Downtown Mural 2025')
+    .where('created_by', '=', user.id)
+    .executeTakeFirst();
+
+  if (existingProject) {
+    console.log('  ⏭ Sample data already exists, skipping');
+    return;
+  }
 
   // Get record definitions
   const contactDef = await db
