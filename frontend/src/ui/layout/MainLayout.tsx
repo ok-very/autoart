@@ -14,6 +14,8 @@
 import { useCallback, useEffect, useRef, type FunctionComponent } from 'react';
 import {
   DockviewReact,
+  themeLight,
+  type DockviewTheme,
   type DockviewReadyEvent,
   type DockviewApi,
   type IDockviewPanelProps,
@@ -262,6 +264,12 @@ const COMPONENTS: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   'intake-workbench': IntakePanel,
   'artcollector-workbench': ArtCollectorPanel,
   'project-panel': ProjectPanel,
+};
+
+// Dockview v4 theme object — className stays 'dockview-theme-light' so all existing CSS selectors work
+const autoartTheme: DockviewTheme = {
+  ...themeLight,
+  name: 'autoart',
 };
 
 // ============================================================================
@@ -647,7 +655,7 @@ export function MainLayout() {
       {/* Main Dockview Area - fills remaining space */}
       <div className="flex-1 overflow-hidden h-full">
         <DockviewReact
-          className="dockview-theme-light"
+          theme={autoartTheme}
           onReady={onReady}
           components={COMPONENTS}
           tabComponents={tabComponents as Record<string, FunctionComponent<IDockviewPanelHeaderProps>>}
