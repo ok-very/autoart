@@ -12,10 +12,12 @@ const envPath = path.join(__dirname, '..', '..', '..', '.env');
 dotenv.config({ path: envPath });
 
 async function migrate() {
+  const connectionString = process.env.DATABASE_URL;
   const db = new Kysely({
     dialect: new PostgresDialect({
       pool: new Pool({
-        connectionString: process.env.DATABASE_URL,
+        connectionString,
+        ssl: connectionString?.includes('azure') ? { rejectUnauthorized: false } : undefined,
       }),
     }),
   });
