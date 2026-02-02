@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-02 (in-flight: #341-345 User Profiles System)*
+*Last Updated: 2026-02-02*
 
 ## Bug List
 
@@ -139,9 +139,6 @@
 
 | PRs | Description |
 |-----|-------------|
-| #350-352 | Email Section Redesign: Table atom primitives + MailPanel refactor, body_html capture across AutoHelper/backend/frontend, MappingsPanel email section with expand/collapse and HTML rendering + formatTimeAgo utility (Issue 83) |
-| #346-349 | Email Logging System: AutoHelper triage endpoints, PostgreSQL mail_messages + mail_links persistence, frontend mail linking + promoted badges, CodeAnt review fixes + MappingsPanel useMailLinksForTarget wiring (Issue 83) |
-| #341-345 | User Profiles System: schema + role middleware, avatar upload + password change + admin CRUD, account settings UI + admin panel + header avatar, UserChip photo support, project assignment + deactivation reassignment (Issues 82a-82e) |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
 
 ---
@@ -150,8 +147,8 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
-| — | Wire MappingsPanel linked emails to useMailLinksForTarget (rich metadata vs truncated IDs) | PR #349 |
-| 82a-82e | User Profiles System: CRUD + role middleware, avatar upload, password change, admin panel, UserChip photos, project assignment, deactivation reassignment | PRs #341-345 |
+| 83 | Email Section Redesign + Email Logging System: Table atom primitives, body_html capture, MappingsPanel expand/collapse HTML rendering, triage endpoints, mail_messages/mail_links persistence, frontend linking, promoted badges, CodeAnt review fixes | PRs #346-353 |
+| 82a-82e | User Profiles System: schema + role middleware, avatar upload + password change + admin CRUD, account settings UI + admin panel + header avatar, UserChip photo support, project assignment + deactivation reassignment | PRs #341-345 |
 | — | UX polish: Menu/Dropdown `--ws-*` token migration + glassmorphism | PR #337 |
 | — | UX polish: SelectionInspector close button + tab accent migration to `--ws-accent` | PR #338 |
 | — | Header divider, panel spawn activation (`requestAnimationFrame`), "Project View" rename, SchemaEditor pin toggle removal | PR #339 |
