@@ -61,7 +61,7 @@
 
 ---
 
-## Housekeeping (pre-existing, found during PR #313-317 review)
+## Housekeeping
 
 | File | Issue |
 |------|-------|
@@ -76,6 +76,7 @@
 | Toggle atom candidate | AutoHelperSection MailCard has hand-rolled toggle switch — if worth reusing, create Toggle atom using `--ws-accent` for on, `--ws-panel-border` for off |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` has no explicit UI/behavior mapping — containers render as actions (icon, labels, create flow). Needs dedicated UX treatment (CodeAnt #324 review) |
 | `frontend/src/ui/sidebars/` + definition filtering | Definitions without `definition_kind` (legacy/manual rows) excluded entirely by new filter — add fallback or migration to backfill (CodeAnt #324 review) |
+| `ExportMenu.tsx` | `invoiceNumber` now sent to PDF/DOCX export endpoints — backend handlers should consume it for Content-Disposition filenames |
 
 ---
 

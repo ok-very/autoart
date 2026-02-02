@@ -49,11 +49,16 @@ export function ExportMenu({ invoiceId, invoiceNumber }: ExportMenuProps) {
         form.method = 'POST';
         form.action = `/api/exports/finance/invoice-pdf`;
         form.target = '_blank';
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'invoiceId';
-        input.value = invoiceId;
-        form.appendChild(input);
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'invoiceId';
+        idInput.value = invoiceId;
+        form.appendChild(idInput);
+        const numInput = document.createElement('input');
+        numInput.type = 'hidden';
+        numInput.name = 'invoiceNumber';
+        numInput.value = invoiceNumber;
+        form.appendChild(numInput);
         document.body.appendChild(form);
         form.submit();
         document.body.removeChild(form);
@@ -61,8 +66,9 @@ export function ExportMenu({ invoiceId, invoiceNumber }: ExportMenuProps) {
 
     const handleDocxDownload = useCallback(() => {
         setExportError(null);
-        window.open(`/api/exports/finance/invoice-docx/${invoiceId}/download`, '_blank', 'noopener,noreferrer');
-    }, [invoiceId]);
+        const params = new URLSearchParams({ invoiceNumber });
+        window.open(`/api/exports/finance/invoice-docx/${invoiceId}/download?${params}`, '_blank', 'noopener,noreferrer');
+    }, [invoiceId, invoiceNumber]);
 
     const handleOneDrive = useCallback(async () => {
         setExportError(null);

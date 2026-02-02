@@ -14,7 +14,6 @@ import {
     Document,
     Paragraph,
     TextRun,
-    AlignmentType,
     BorderStyle,
 } from 'docx';
 
