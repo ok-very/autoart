@@ -15,6 +15,7 @@ from autohelper.config import Settings, get_settings
 from autohelper.db import get_db, init_db
 from autohelper.db.migrate import run_migrations
 from autohelper.modules.config.router import router as config_router
+from autohelper.modules.pairing.router import router as pairing_router
 from autohelper.modules.export.router import router as export_router
 from autohelper.modules.filetree.router import router as filetree_router
 from autohelper.modules.gc.router import router as gc_router
@@ -160,6 +161,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(runner_router)
     app.include_router(gc_router)
     app.include_router(config_router)
+    app.include_router(pairing_router)
 
     # Root endpoint
     @app.get("/")
