@@ -1,16 +1,19 @@
 /**
- * Migration 036: Action Type Definitions
+ * Migration 049: Drop action_type_definitions table
  *
- * Creates a table to store action type configurations (TASK, BUG, STORY, etc.)
- * Previously hardcoded as KNOWN_ACTION_TYPES in shared/src/schemas/composer.ts
- *
- * This enables runtime extensibility of action types without code deployment.
+ * This table was created in migration 036 but never wired into the Composer.
+ * The Composer uses record_definitions with definition_kind='action_arrangement'
+ * instead. Remove the orphaned infrastructure.
  */
 
 import { Kysely, sql } from 'kysely';
 
 export async function up(db: Kysely<unknown>): Promise<void> {
-    // Create action_type_definitions table
+    await db.schema.dropTable('action_type_definitions').execute();
+}
+
+export async function down(db: Kysely<unknown>): Promise<void> {
+    // Recreate table (from migration 036)
     await db.schema
         .createTable('action_type_definitions')
         .addColumn('id', 'uuid', (col) =>
@@ -36,7 +39,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
         )
         .execute();
 
-    // Seed with default action types (matching KNOWN_ACTION_TYPES from composer.ts)
+    // Seed with default action types
     await sql`
         INSERT INTO action_type_definitions (type, label, field_bindings, is_system) VALUES
         ('TASK', 'Task', '{"title": "string", "description": "text", "dueDate": "date"}'::jsonb, true),
@@ -44,14 +47,10 @@ export async function up(db: Kysely<unknown>): Promise<void> {
         ('STORY', 'Story', '{"title": "string", "description": "text", "points": "number"}'::jsonb, true)
     `.execute(db);
 
-    // Add index for type lookup
+    // Add index
     await db.schema
         .createIndex('idx_action_type_definitions_type')
         .on('action_type_definitions')
         .column('type')
         .execute();
-}
-
-export async function down(db: Kysely<unknown>): Promise<void> {
-    await db.schema.dropTable('action_type_definitions').execute();
 }

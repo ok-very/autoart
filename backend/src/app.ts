@@ -6,7 +6,7 @@ import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-
 
 import { env } from './config/env.js';
 import { actionReferencesRoutes } from './modules/actions/action-references.routes.js';
-import { actionTypesRoutes } from './modules/actions/action-types.routes.js';
+
 import { actionsRoutes } from './modules/actions/actions.routes.js';
 import { containersRoutes } from './modules/actions/containers.routes.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
@@ -80,7 +80,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   // Foundational model routes (Actions & Events)
   await fastify.register(actionsRoutes, { prefix: '/api/actions' });
   await fastify.register(actionReferencesRoutes, { prefix: '/api/actions' });
-  await fastify.register(actionTypesRoutes, { prefix: '/api/action-types' });
+
   await fastify.register(eventsRoutes, { prefix: '/api/events' });
   await fastify.register(workflowRoutes, { prefix: '/api/workflow' });
   await fastify.register(workflowSurfaceRoutes, { prefix: '/api/workflow' });

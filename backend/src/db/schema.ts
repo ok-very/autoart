@@ -421,27 +421,6 @@ export type NewExportSession = Insertable<ExportSessionsTable>;
 export type ExportSessionUpdate = Updateable<ExportSessionsTable>;
 
 // ============================================
-// ACTION TYPE DEFINITIONS TABLE (Migration 036)
-// Soft-intrinsic action types (TASK, BUG, STORY, etc.)
-// ============================================
-
-export interface ActionTypeDefinitionsTable {
-  id: Generated<string>;
-  type: string;
-  label: string;
-  description: string | null;
-  field_bindings: unknown; // JSONB
-  defaults: unknown; // JSONB
-  is_system: Generated<boolean>;
-  created_at: Generated<Date>;
-  updated_at: Generated<Date>;
-}
-
-export type ActionTypeDefinition = Selectable<ActionTypeDefinitionsTable>;
-export type NewActionTypeDefinition = Insertable<ActionTypeDefinitionsTable>;
-export type ActionTypeDefinitionUpdate = Updateable<ActionTypeDefinitionsTable>;
-
-// ============================================
 // MONDAY WORKSPACE TABLES (Migration 038)
 // Configuration-driven Monday.com integration
 // ============================================
@@ -662,7 +641,7 @@ export interface Database {
   user_settings: UserSettingsTable;
   inference_learnings: InferenceLearningsTable;
   export_sessions: ExportSessionsTable;
-  action_type_definitions: ActionTypeDefinitionsTable;
+
   monday_workspaces: MondayWorkspacesTable;
   monday_board_configs: MondayBoardConfigsTable;
   monday_group_configs: MondayGroupConfigsTable;

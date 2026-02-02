@@ -11,6 +11,7 @@
 - "Save current" in menu doesn't activate save workspace prompt
 - Project button in header doesn't spawn new Project container
 - Calendar link in header menu not wired up
+- "Select project" appears in header only in certain contexts and in the wrong position
 
 ---
 
