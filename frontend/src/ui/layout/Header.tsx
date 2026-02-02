@@ -15,7 +15,7 @@ import { useMemo, useCallback } from 'react';
 
 import type { FieldsViewMode } from '@autoart/shared';
 
-import { useProjects } from '../../api/hooks';
+import { useProjects, useCurrentUser } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import {
   useUIStore,
@@ -36,6 +36,7 @@ export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: projects } = useProjects();
+  const { data: currentUser } = useCurrentUser();
   const { getNode: _getNode } = useHierarchyStore();
   const { fieldsViewMode, setFieldsViewMode, openOverlay, setCenterContentType } = useUIStore();
   const collectionMode = useCollectionModeOptional();
@@ -364,6 +365,21 @@ export function Header() {
           {/* Settings */}
           <Link to="/settings">
             <IconButton icon={Settings} variant="ghost" size="md" label="Settings" />
+          </Link>
+
+          {/* User Avatar */}
+          <Link to="/settings" className="shrink-0">
+            {currentUser?.avatar_url ? (
+              <img
+                src={currentUser.avatar_url}
+                alt={currentUser.name}
+                className="w-7 h-7 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-semibold">
+                {currentUser?.name?.charAt(0).toUpperCase() || '?'}
+              </div>
+            )}
           </Link>
         </Inline>
       </Inline>
