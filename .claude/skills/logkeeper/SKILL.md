@@ -1,7 +1,7 @@
 ---
 name: logkeeper
 description: Update todo.md with completed work, priority changes, new items, and housekeeping. The dedicated todo maintenance agent. Keywords todo, log, priorities, tracking, done, close, prune.
-allowed-tools: Read, Edit, Bash(git:*)
+allowed-tools: Read, Edit, Bash(git add:*), Bash(git commit:*), Bash(git push:*), Bash(git status:*), Bash(stackit log:*), Bash(gh pr view:*)
 model: sonnet
 ---
 
