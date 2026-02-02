@@ -56,6 +56,16 @@
 
 ---
 
+## Housekeeping (pre-existing, found during PR #313-317 review)
+
+| File | Issue |
+|------|-------|
+| `frontend/src/intake/components/FormPage.tsx`, `Date.tsx`, `ShortAnswer.tsx` | Intake components use `--ws-*` tokens; should use `--pub-*` per design system token boundary |
+| `frontend/src/ui/sidebars/ProjectSidebar.tsx:78-80, 138-140` | `<label>` elements used as section headings without associated form controls — swap to `<p>` or `<span>` |
+| `frontend/src/intake/components/blocks/Date.tsx:22,29` | Missing `htmlFor`/`id` association between label and date input (ShortAnswer already has the correct pattern) |
+
+---
+
 ## P3: Long-term / Backlog
 
 | # | Issue | Category |

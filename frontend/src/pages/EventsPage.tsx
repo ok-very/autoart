@@ -27,7 +27,7 @@ export function EventsPage() {
             <Header />
             <div className="flex flex-1 flex-col overflow-hidden">
                 {/* Page Header */}
-                <div className="h-10 border-b border-ws-panel-border bg-ws-panel-bg flex items-center justify-between px-3">
+                <div className="h-10 border-b border-ws-panel-border bg-ws-panel-bg flex items-center justify-between px-3 shrink-0">
                     <h1 className="text-ws-h1 font-semibold text-ws-fg flex items-center gap-2">
                         <Activity size={20} className="text-emerald-500" />
                         Events
@@ -39,7 +39,7 @@ export function EventsPage() {
                 </div>
 
                 {/* Filters Bar */}
-                <div className="h-8 border-b border-ws-panel-border bg-ws-bg flex items-center gap-4 px-3">
+                <div className="h-8 border-b border-ws-panel-border bg-ws-bg flex items-center gap-4 px-3 shrink-0">
                     <div className="flex items-center gap-2">
                         <span className="text-xs text-ws-text-secondary">Context:</span>
                         <select
