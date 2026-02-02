@@ -258,32 +258,11 @@ export {
     ComposerFieldValueSchema,
     ComposerInputSchema,
     ComposerResponseSchema,
-    ActionTypeConfigSchema,
-    KNOWN_ACTION_TYPES,
     type ComposerFieldValue,
     type ComposerInput,
     type ComposerResponse,
-    type ActionTypeConfig,
 } from './composer.js';
 
-// ==================== ACTION TYPE DEFINITIONS ====================
-export {
-    ActionTypeFieldBindingSchema,
-    ActionTypeDefinitionSchema,
-    CreateActionTypeInputSchema,
-    UpdateActionTypeInputSchema,
-    ActionTypeDefinitionResponseSchema,
-    ActionTypeDefinitionsResponseSchema,
-    SYSTEM_ACTION_TYPES,
-    DEFAULT_FIELD_BINDINGS,
-    type ActionTypeFieldBinding,
-    type ActionTypeDefinition,
-    type CreateActionTypeInput,
-    type UpdateActionTypeInput,
-    type ActionTypeDefinitionResponse,
-    type ActionTypeDefinitionsResponse,
-    type SystemActionType,
-} from './action-types.js';
 
 // ==================== DOMAIN EVENTS ====================
 export {

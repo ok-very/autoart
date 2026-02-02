@@ -155,20 +155,6 @@ export {
   useChildActions,
 } from './actions';
 
-// Action Types (Registry definitions)
-export {
-  useActionTypeDefinitions,
-  useActionTypeDefinition,
-  useActionTypeStats,
-  useCreateActionType,
-  useUpdateActionType,
-  useDeleteActionType,
-  type ActionTypeDefinition,
-  type ActionTypeFieldBinding,
-  type ActionTypeStats,
-  type CreateActionTypeInput,
-  type UpdateActionTypeInput,
-} from './actionTypes';
 
 // Action Views (Also exported via ./actions)
 export {

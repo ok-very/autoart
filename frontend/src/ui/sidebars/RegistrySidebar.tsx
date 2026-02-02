@@ -1,13 +1,12 @@
 import { clsx } from 'clsx';
-import { Plus, FolderOpen, Zap, Search, Settings, ChevronDown, ChevronRight, Activity } from 'lucide-react';
+import { Plus, FolderOpen, Search, Settings, ChevronDown, ChevronRight, Activity } from 'lucide-react';
 import { useState } from 'react';
 
 import { useRecordDefinitions, useRecordStats } from '../../api/hooks';
-import { useActionTypeDefinitions, useActionTypeStats } from '../../api/hooks/actionTypes';
 import { useFactKindStats } from '../../api/hooks/factKinds';
 import { useUIStore } from '../../stores/uiStore';
 
-type RegistrySection = 'records' | 'actions' | 'events';
+type RegistrySection = 'records' | 'events';
 
 interface RegistrySidebarProps {
     width: number;
@@ -17,14 +16,11 @@ interface RegistrySidebarProps {
 }
 
 /**
- * Registry Sidebar - shows Record Definitions, Action Types, and Event Types
- * 
+ * Registry Sidebar - shows Record Definitions and Event Types
+ *
  * Architecture:
  * - Record Definitions (from record_definitions table) - Data schemas like Contact, Location
- * - Action Types (from action_type_definitions table) - TASK, BUG, STORY, custom types
  * - Event Types - Link to Event Type Catalog for documentation
- * 
- * Updated to use the new action_type_definitions API instead of record_definitions.
  */
 export function RegistrySidebar({
     width,
@@ -33,12 +29,8 @@ export function RegistrySidebar({
     activeSection,
 }: RegistrySidebarProps) {
     // Record definitions from legacy table
-    const { data: definitions, isLoading: recordsLoading } = useRecordDefinitions();
+    const { data: definitions, isLoading } = useRecordDefinitions();
     const { data: stats } = useRecordStats();
-
-    // Action types from new action_type_definitions table
-    const { data: actionTypes = [], isLoading: actionsLoading } = useActionTypeDefinitions();
-    const { data: actionTypeStats = [] } = useActionTypeStats();
 
     // Fact kinds stats
     const { data: factKindStats } = useFactKindStats();
@@ -46,10 +38,7 @@ export function RegistrySidebar({
     const { openOverlay } = useUIStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [recordsExpanded, setRecordsExpanded] = useState(true);
-    const [actionsExpanded, setActionsExpanded] = useState(true);
     const [eventsExpanded, setEventsExpanded] = useState(true);
-
-    const isLoading = recordsLoading || actionsLoading;
 
     // Legacy hierarchy types to exclude
     const legacyHierarchyTypes = ['project', 'process', 'stage', 'subprocess'];
@@ -69,22 +58,10 @@ export function RegistrySidebar({
         )
         : recordDefinitions;
 
-    const filterActionsBySearch = searchQuery.trim()
-        ? actionTypes.filter((def) =>
-            def.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            def.type.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        : actionTypes;
-
     // Stats helpers
     const getRecordCount = (definitionId: string): number => {
         if (!stats) return 0;
         const stat = stats.find((s) => s.definitionId === definitionId);
-        return stat?.count ?? 0;
-    };
-
-    const getActionCount = (type: string): number => {
-        const stat = actionTypeStats.find((s) => s.type === type);
         return stat?.count ?? 0;
     };
 
@@ -250,105 +227,6 @@ export function RegistrySidebar({
                             )}
                         </div>
 
-                        {/* ACTION TYPES SECTION - Now using action_type_definitions */}
-                        <div className="border-b border-ws-panel-border">
-                            <button
-                                onClick={() => setActionsExpanded(!actionsExpanded)}
-                                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-100 transition-colors"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Zap size={14} className="text-amber-500" />
-                                    <span className="text-xs font-semibold text-ws-text-secondary uppercase tracking-wider">
-                                        Action Types
-                                    </span>
-                                    <span className="text-[10px] text-ws-muted bg-slate-100 px-1.5 py-0.5 rounded">
-                                        {actionTypes.length}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    {actionsExpanded ? (
-                                        <ChevronDown size={14} className="text-ws-muted" />
-                                    ) : (
-                                        <ChevronRight size={14} className="text-ws-muted" />
-                                    )}
-                                </div>
-                            </button>
-
-                            {actionsExpanded && (
-                                <div className="pb-2">
-                                    {/* All Actions option */}
-                                    <div className="px-1 pb-1">
-                                        <button
-                                            onClick={() => onSelectDefinition(null, 'actions')}
-                                            className={clsx(
-                                                'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors',
-                                                selectedDefinitionId === null && activeSection === 'actions'
-                                                    ? 'bg-amber-100 text-amber-800'
-                                                    : 'hover:bg-slate-100 text-ws-text-secondary'
-                                            )}
-                                        >
-                                            <span className="text-base">⚡</span>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-sm font-medium">All Actions</div>
-                                                <div className="text-[10px] text-ws-muted">
-                                                    {actionTypeStats.reduce((sum, s) => sum + s.count, 0)} total
-                                                </div>
-                                            </div>
-                                        </button>
-                                    </div>
-
-                                    {/* Action types list */}
-                                    {filterActionsBySearch.length === 0 ? (
-                                        <div className="text-center py-4 px-2">
-                                            <p className="text-xs text-ws-muted">No action types</p>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-0.5 px-1">
-                                            {filterActionsBySearch.map((actionType) => {
-                                                const count = getActionCount(actionType.type);
-                                                const isSelected = selectedDefinitionId === actionType.type && activeSection === 'actions';
-
-                                                return (
-                                                    <div
-                                                        key={actionType.id}
-                                                        onClick={() => onSelectDefinition(actionType.type, 'actions')}
-                                                        className={clsx(
-                                                            'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors group cursor-pointer',
-                                                            isSelected
-                                                                ? 'bg-amber-100 text-amber-800'
-                                                                : 'hover:bg-slate-100 text-ws-text-secondary'
-                                                        )}
-                                                    >
-                                                        <div
-                                                            className={clsx(
-                                                                'w-6 h-6 rounded flex items-center justify-center text-xs font-semibold shrink-0',
-                                                                actionType.is_system
-                                                                    ? 'bg-amber-100 text-amber-600'
-                                                                    : 'bg-purple-100 text-purple-600'
-                                                            )}
-                                                        >
-                                                            {actionType.label.charAt(0)}
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span className="text-sm font-medium truncate">{actionType.label}</span>
-                                                                {actionType.is_system && (
-                                                                    <span className="px-1 py-0.5 text-[9px] bg-slate-200 text-ws-text-secondary rounded">SYS</span>
-                                                                )}
-                                                            </div>
-                                                            <div className="text-[10px] text-ws-muted">
-                                                                {count} instance{count !== 1 ? 's' : ''}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
                         {/* EVENT TYPES SECTION */}
                         <div className="border-b border-ws-panel-border">
                             <button
@@ -417,7 +295,7 @@ export function RegistrySidebar({
             {/* Footer Stats */}
             <div className="border-t border-ws-panel-border px-4 py-3 bg-ws-panel-bg">
                 <div className="text-xs text-ws-muted">
-                    {recordDefinitions.length} data · {actionTypes.length} action types
+                    {recordDefinitions.length} data definitions
                 </div>
             </div>
         </aside>
