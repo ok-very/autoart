@@ -52,10 +52,8 @@
     return v || fallback;
   }
 
-  let bg;
   function refreshColors() {
-    bg = resolveColor('--ws-bg', '#F5F2ED');
-    canvas.style.background = bg;
+    // Canvas renders on transparent — wrapper provides the surface
   }
   refreshColors();
 
