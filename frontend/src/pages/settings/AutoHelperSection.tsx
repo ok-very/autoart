@@ -26,7 +26,7 @@ import {
     Link,
     Unplug,
 } from 'lucide-react';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
 import { useAutoHelperInstances, useDisconnectAutoHelper, useGeneratePairingCode } from '../../api/connections';
 import {
@@ -219,6 +219,7 @@ function ConnectedInstancesCard() {
             onSuccess: () => {
                 // Fire-and-forget: tell the Python app to clear its session
                 unpair.mutate();
+                toast.info('Instance disconnected');
             },
             onSettled: () => {
                 setDisconnectingId(null);
@@ -240,6 +241,7 @@ function ConnectedInstancesCard() {
                             <p className="text-sm text-ws-fg font-medium truncate">{inst.instanceName}</p>
                             <p className="text-xs text-ws-text-secondary">
                                 Connected {new Date(inst.connectedAt).toLocaleDateString()}
+                                {' · '}Last seen {new Date(inst.lastSeen).toLocaleTimeString()}
                             </p>
                         </div>
                         <Button
@@ -662,6 +664,20 @@ export function AutoHelperSection({
     autohelperStatus = { connected: false },
 }: AutoHelperSectionProps) {
     const { isError: healthError, isLoading: healthLoading } = useAutoHelperHealth();
+
+    // Toast on pairing status transitions (not on initial load)
+    const prevConnected = useRef<boolean | null>(null);
+    useEffect(() => {
+        const connected = autohelperStatus.connected;
+        if (prevConnected.current !== null && prevConnected.current !== connected) {
+            if (connected) {
+                toast.success('AutoHelper connected');
+            } else {
+                toast.warning('AutoHelper disconnected');
+            }
+        }
+        prevConnected.current = connected;
+    }, [autohelperStatus.connected]);
 
     // Pairing and instance cards always render — they're backend operations,
     // work regardless of AutoHelper connectivity.
