@@ -205,6 +205,120 @@ export async function listAllUsers() {
 }
 
 /**
+ * Change a user's password. Requires current password verification.
+ */
+export async function changePassword(userId: string, currentPassword: string, newPassword: string) {
+  const user = await db
+    .selectFrom('users')
+    .select(['id', 'password_hash'])
+    .where('id', '=', userId)
+    .where('deleted_at', 'is', null)
+    .executeTakeFirst();
+
+  if (!user) {
+    throw new UnauthorizedError('User not found');
+  }
+
+  const valid = await bcrypt.compare(currentPassword, user.password_hash);
+  if (!valid) {
+    throw new UnauthorizedError('Current password is incorrect');
+  }
+
+  const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  await db
+    .updateTable('users')
+    .set({ password_hash: hash })
+    .where('id', '=', userId)
+    .execute();
+}
+
+/**
+ * Admin: create a user with a temporary password.
+ */
+export async function createUserByAdmin(email: string, name: string, role: string, password: string) {
+  const existing = await db
+    .selectFrom('users')
+    .select('id')
+    .where('email', '=', email.toLowerCase())
+    .executeTakeFirst();
+
+  if (existing) {
+    throw new ConflictError('Email already registered');
+  }
+
+  const hash = await bcrypt.hash(password, SALT_ROUNDS);
+
+  return db
+    .insertInto('users')
+    .values({
+      email: email.toLowerCase(),
+      password_hash: hash,
+      name,
+      role,
+    })
+    .returning(['id', 'email', 'name', 'role', 'avatar_url', 'created_at'])
+    .executeTakeFirstOrThrow();
+}
+
+/**
+ * Admin: force-reset a user's password (no current password required).
+ */
+export async function resetPassword(userId: string, newPassword: string) {
+  const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+  const result = await db
+    .updateTable('users')
+    .set({ password_hash: hash })
+    .where('id', '=', userId)
+    .where('deleted_at', 'is', null)
+    .returning(['id'])
+    .executeTakeFirst();
+
+  if (!result) {
+    return null;
+  }
+
+  // Revoke all sessions so user must re-login
+  await deleteAllUserSessions(userId);
+  return result;
+}
+
+/**
+ * Admin: update a user's role.
+ */
+export async function updateUserRole(userId: string, role: string) {
+  return db
+    .updateTable('users')
+    .set({ role })
+    .where('id', '=', userId)
+    .where('deleted_at', 'is', null)
+    .returning(['id', 'email', 'name', 'role', 'avatar_url', 'created_at'])
+    .executeTakeFirst();
+}
+
+/**
+ * Admin: update a user's profile fields (name, email, role).
+ */
+export async function adminUpdateUser(userId: string, input: { name?: string; email?: string; role?: string }) {
+  const updates: Record<string, unknown> = {};
+  if (input.name !== undefined) updates.name = input.name;
+  if (input.email !== undefined) updates.email = input.email.toLowerCase();
+  if (input.role !== undefined) updates.role = input.role;
+
+  if (Object.keys(updates).length === 0) {
+    return getUserById(userId);
+  }
+
+  return db
+    .updateTable('users')
+    .set(updates)
+    .where('id', '=', userId)
+    .where('deleted_at', 'is', null)
+    .returning(['id', 'email', 'name', 'role', 'avatar_url', 'created_at', 'deleted_at', 'deleted_by'])
+    .executeTakeFirst();
+}
+
+/**
  * Soft delete a user.
  * Sets deleted_at and deleted_by, revokes all sessions.
  */

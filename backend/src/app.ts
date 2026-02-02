@@ -1,5 +1,6 @@
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
+import multipart from '@fastify/multipart';
 import sensible from '@fastify/sensible';
 import Fastify, { FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -10,6 +11,7 @@ import { actionReferencesRoutes } from './modules/actions/action-references.rout
 import { actionsRoutes } from './modules/actions/actions.routes.js';
 import { containersRoutes } from './modules/actions/containers.routes.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
+import { avatarRoutes } from './modules/auth/avatar.routes.js';
 import { composerRoutes } from './modules/composer/composer.routes.js';
 import { definitionsRoutes } from './modules/definitions/index.js';
 import { eventsRoutes } from './modules/events/events.routes.js';
@@ -62,6 +64,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   await fastify.register(sensible);
+  await fastify.register(multipart, { limits: { fileSize: 2 * 1024 * 1024 } });
   await fastify.register(authPlugin);
 
   // Health check
@@ -71,6 +74,7 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Register routes
   await fastify.register(authRoutes, { prefix: '/api/auth' });
+  await fastify.register(avatarRoutes, { prefix: '/api/avatars' });
   await fastify.register(hierarchyRoutes, { prefix: '/api/hierarchy' });
   await fastify.register(recordsRoutes, { prefix: '/api/records' });
   await fastify.register(searchRoutes, { prefix: '/api/search' });

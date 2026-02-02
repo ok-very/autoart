@@ -57,3 +57,46 @@ export function useSoftDeleteUser() {
         },
     });
 }
+
+/**
+ * Create a new user (admin).
+ */
+export function useCreateUser() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: { email: string; name: string; role?: string; password: string }) => {
+            return api.post<{ user: AdminUser }>('/auth/admin/users', data);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+        },
+    });
+}
+
+/**
+ * Update a user's profile (admin).
+ */
+export function useUpdateUser() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ userId, ...data }: { userId: string; name?: string; email?: string; role?: string }) => {
+            return api.patch<{ user: AdminUser }>(`/auth/admin/users/${userId}`, data);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+        },
+    });
+}
+
+/**
+ * Reset a user's password (admin).
+ */
+export function useResetUserPassword() {
+    return useMutation({
+        mutationFn: async ({ userId, password }: { userId: string; password: string }) => {
+            return api.post<{ message: string }>(`/auth/admin/users/${userId}/reset-password`, { password });
+        },
+    });
+}

@@ -67,6 +67,10 @@ certs/
 
 postgres_data/
 
+# User uploads (avatars stored on disk)
+backend/uploads/avatars/*
+!backend/uploads/avatars/.gitkeep
+
 
 
 .aye/

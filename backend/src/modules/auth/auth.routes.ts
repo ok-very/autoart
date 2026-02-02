@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
 import { registerSchema, loginSchema, RegisterInput, LoginInput, RefreshInput } from './auth.schemas.js';
 import * as authService from './auth.service.js';
+import * as avatarService from './avatar.service.js';
 import * as microsoftOAuthService from './microsoft-oauth.service.js';
 import * as oauthService from './oauth.service.js';
 import * as settingsService from './settings.service.js';
@@ -144,6 +145,61 @@ export async function authRoutes(fastify: FastifyInstance) {
 
     const users = await authService.searchUsers(query, limit);
     return reply.send({ users });
+  });
+
+  // ============================================================================
+  // PASSWORD & AVATAR (Self-service)
+  // ============================================================================
+
+  // Change own password
+  interface ChangePasswordBody {
+    Body: { currentPassword: string; newPassword: string };
+  }
+  fastify.post<ChangePasswordBody>('/me/password', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const { currentPassword, newPassword } = request.body || {};
+
+    if (!currentPassword || !newPassword) {
+      return reply.code(400).send({ error: 'VALIDATION_ERROR', message: 'Both currentPassword and newPassword are required' });
+    }
+    if (typeof newPassword !== 'string' || newPassword.length < 6) {
+      return reply.code(400).send({ error: 'VALIDATION_ERROR', message: 'New password must be at least 6 characters' });
+    }
+
+    try {
+      await authService.changePassword(request.user.userId, currentPassword, newPassword);
+      return reply.send({ message: 'Password changed' });
+    } catch (err) {
+      if (err instanceof AppError) {
+        return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+      }
+      throw err;
+    }
+  });
+
+  // Upload avatar (multipart)
+  fastify.post('/me/avatar', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    const file = await request.file();
+    if (!file) {
+      return reply.code(400).send({ error: 'VALIDATION_ERROR', message: 'No file uploaded' });
+    }
+
+    try {
+      const avatarUrl = await avatarService.uploadAvatar(request.user.userId, file.file, file.mimetype);
+      const user = await authService.getUserById(request.user.userId);
+      return reply.send({ avatarUrl, user });
+    } catch (err) {
+      if (err instanceof avatarService.AvatarError) {
+        return reply.code(err.statusCode).send({ error: 'AVATAR_ERROR', message: err.message });
+      }
+      throw err;
+    }
+  });
+
+  // Delete avatar
+  fastify.delete('/me/avatar', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+    await avatarService.deleteAvatar(request.user.userId);
+    const user = await authService.getUserById(request.user.userId);
+    return reply.send({ user });
   });
 
   // ============================================================================
@@ -290,6 +346,66 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
 
     return reply.send({ message: 'User deleted successfully', user: result });
+  });
+
+  // Create user (admin)
+  interface CreateUserBody {
+    Body: { email: string; name: string; role?: string; password: string };
+  }
+  fastify.post<CreateUserBody>('/admin/users', { preHandler: [fastify.authenticate, requireRole('admin')] }, async (request, reply) => {
+    const { email, name, role = 'user', password } = request.body || {};
+
+    if (!email || !name || !password) {
+      return reply.code(400).send({ error: 'VALIDATION_ERROR', message: 'email, name, and password are required' });
+    }
+    if (password.length < 6) {
+      return reply.code(400).send({ error: 'VALIDATION_ERROR', message: 'Password must be at least 6 characters' });
+    }
+
+    try {
+      const user = await authService.createUserByAdmin(email, name, role, password);
+      return reply.code(201).send({ user });
+    } catch (err) {
+      if (err instanceof AppError) {
+        return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+      }
+      throw err;
+    }
+  });
+
+  // Update user (admin)
+  interface UpdateUserParams {
+    Params: { id: string };
+    Body: { name?: string; email?: string; role?: string };
+  }
+  fastify.patch<UpdateUserParams>('/admin/users/:id', { preHandler: [fastify.authenticate, requireRole('admin')] }, async (request, reply) => {
+    const { id } = request.params;
+    const user = await authService.adminUpdateUser(id, request.body || {});
+
+    if (!user) {
+      return reply.code(404).send({ error: 'NOT_FOUND', message: 'User not found' });
+    }
+    return reply.send({ user });
+  });
+
+  // Reset password (admin)
+  interface ResetPasswordParams {
+    Params: { id: string };
+    Body: { password: string };
+  }
+  fastify.post<ResetPasswordParams>('/admin/users/:id/reset-password', { preHandler: [fastify.authenticate, requireRole('admin')] }, async (request, reply) => {
+    const { id } = request.params;
+    const { password } = request.body || {};
+
+    if (!password || password.length < 6) {
+      return reply.code(400).send({ error: 'VALIDATION_ERROR', message: 'Password must be at least 6 characters' });
+    }
+
+    const result = await authService.resetPassword(id, password);
+    if (!result) {
+      return reply.code(404).send({ error: 'NOT_FOUND', message: 'User not found' });
+    }
+    return reply.send({ message: 'Password reset successfully' });
   });
 
   // ============================================================================

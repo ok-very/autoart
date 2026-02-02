@@ -70,8 +70,9 @@ class ApiClient {
 
     const headers = new Headers(fetchOptions.headers);
 
-    // Only set Content-Type for requests with a body
-    if (fetchOptions.body) {
+    // Only set Content-Type for non-FormData requests with a body.
+    // FormData sets its own multipart boundary header via the browser.
+    if (fetchOptions.body && !(fetchOptions.body instanceof FormData)) {
       headers.set('Content-Type', 'application/json');
     }
 
@@ -119,7 +120,7 @@ class ApiClient {
     return this.fetch<T>(endpoint, {
       ...options,
       method: 'POST',
-      body: body ? JSON.stringify(body) : undefined,
+      body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
     });
   }
 
