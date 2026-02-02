@@ -72,8 +72,7 @@
 | Header menu calendar link | Not wired up; could reuse same context badge pattern as selection editor |
 | Workspace naming | "Workspace" panel collides with workspace system name — rename panel back to "Project View"; closing all panels should yield a blank area with just the plus/spawn buttons |
 | `frontend/src/ui/table-core/UniversalTableCore.tsx` + composites | All tables are div-based with `role` attributes — semantic HTML (`<table>`, `<thead>`, `<tbody>`, `<tr>`, `<td>`, `<th>`) would improve accessibility, browser print styles, native keyboard nav |
-| `packages/ui/src/atoms/*` | Atom components (Button, Badge, TextInput, etc.) use hardcoded Tailwind colors (`bg-blue-600`, `bg-green-100`, `border-slate-300`) instead of `--ws-*` design tokens — needs systematic migration |
-| Toggle atom candidate | AutoHelperSection MailCard has hand-rolled toggle switch — if worth reusing, create Toggle atom using `--ws-accent` for on, `--ws-panel-border` for off |
+| `packages/ui/src/atoms/Badge.tsx` | Badge variant colors (project, process, task, etc.) use domain-semantic Tailwind colors — needs separate approach since they're not chrome tokens |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` has no explicit UI/behavior mapping — containers render as actions (icon, labels, create flow). Needs dedicated UX treatment (CodeAnt #324 review) |
 | `frontend/src/ui/sidebars/` + definition filtering | Definitions without `definition_kind` (legacy/manual rows) excluded entirely by new filter — add fallback or migration to backfill (CodeAnt #324 review) |
 | `ExportMenu.tsx` | `invoiceNumber` now sent to PDF/DOCX export endpoints — backend handlers should consume it for Content-Disposition filenames |
