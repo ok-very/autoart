@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-02 (merged #337-339: UX polish + housekeeping stack)*
+*Last Updated: 2026-02-02 (in-flight: #341-345 User Profiles System)*
 
 ## Bug List
 
@@ -45,11 +45,6 @@
 | 237 | Performance Optimization & Caching | Backend + Frontend |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 79 | Enhance Workflow View Interactions | Feature |
-| 82a | User CRUD: create/invite user, set role, reset password | Feature |
-| 82b | Project assignment: assign user to project, transfer ownership from demo user | Feature |
-| 82c | User deactivation: soft-delete user, reassign owned actions/records | Feature |
-| 82d | Upgrade user chip: avatar photo, name, role — used in assignee fields, event log, header | UI |
-| 82e | User settings: edit profile, upload avatar photo, change password | Feature |
 
 ---
 
@@ -70,7 +65,6 @@
 | 84 | Email Notices API | Backend |
 | 85 | Templating Engine | Feature |
 | 86 | Monday.com Board Sync Settings | Integration |
-| 82 | User Account Management: create user via UI, assign to project, deactivate/delete user | Feature |
 | 291 | Schema editor / Composer relationship-math builder | Feature |
 | — | Action vocabulary: store classification verbs/nouns/adjectives from imports as a heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret what action type is being constructed or referenced | Classification |
 | — | Table atom primitives: `<table>`-based Table.Root/Header/Body/Row/Cell/HeaderCell with size scale, semantic HTML for accessibility, lightweight option for simple display tables | UI |
@@ -123,6 +117,7 @@
 
 | PRs | Description |
 |-----|-------------|
+| #341-345 | User Profiles System: schema + role middleware, avatar upload + password change + admin CRUD, account settings UI + admin panel + header avatar, UserChip photo support, project assignment + deactivation reassignment (Issues 82a-82e) |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
 
 ---
@@ -131,6 +126,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| 82a-82e | User Profiles System: CRUD + role middleware, avatar upload, password change, admin panel, UserChip photos, project assignment, deactivation reassignment | PRs #341-345 |
 | — | UX polish: Menu/Dropdown `--ws-*` token migration + glassmorphism | PR #337 |
 | — | UX polish: SelectionInspector close button + tab accent migration to `--ws-accent` | PR #338 |
 | — | Header divider, panel spawn activation (`requestAnimationFrame`), "Project View" rename, SchemaEditor pin toggle removal | PR #339 |
