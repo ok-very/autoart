@@ -85,7 +85,7 @@ export async function promoteEmail(
   externalId: string,
   promotedBy: string
 ): Promise<PromoteResult> {
-  // Check if already promoted
+  // Fast path — return existing row without locking
   const existing = await db
     .selectFrom('mail_messages')
     .selectAll()
@@ -99,6 +99,7 @@ export async function promoteEmail(
   // Fetch from AutoHelper
   const email = await fetchFromAutoHelper(externalId);
 
+  // Upsert — ON CONFLICT handles concurrent promotions
   const message = await db
     .insertInto('mail_messages')
     .values({
@@ -108,12 +109,23 @@ export async function promoteEmail(
       sender_name: extractSenderName(email.sender),
       received_at: email.received_at ? new Date(email.received_at) : null,
       body_preview: email.body_preview,
-      metadata: JSON.stringify(email.metadata ?? {}),
+      metadata: email.metadata ?? {},
       project_id: email.project_id ?? null,
       promoted_by: promotedBy,
     })
+    .onConflict((oc) => oc.column('external_id').doNothing())
     .returningAll()
-    .executeTakeFirstOrThrow();
+    .executeTakeFirst();
+
+  // ON CONFLICT DO NOTHING returns no row — re-select the winner
+  if (!message) {
+    const winner = await db
+      .selectFrom('mail_messages')
+      .selectAll()
+      .where('external_id', '=', externalId)
+      .executeTakeFirstOrThrow();
+    return { message: winner, created: false };
+  }
 
   return { message, created: true };
 }
