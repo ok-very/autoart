@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-02 (in-flight #334-335: AutoHelper frontend-initiated pairing)*
+*Last Updated: 2026-02-02 (merged #337-339: UX polish + housekeeping stack)*
 
 ## Bug List
 
@@ -12,12 +12,14 @@
 - **AutoHelper sessions lost on backend restart** — sessions stored in-memory; backend restart wipes them but AutoHelper tray still shows "Paired" (reads local config). Frontend shows disconnected. Workaround: re-pair or delete `autoart_session_id` from config. Fix: persist to DB. (#340)
 
 **UX polish:**
-- **Selection Inspector stuck open** — can be spawned repeatedly but has no close/dismiss affordance; if it can be called over and over it has to be closeable over and over
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
-- Panel spawner menu (+ button dropdown) has opaque background — would benefit from glassmorphism (`backdrop-blur` + translucent bg) so the workspace context bleeds through. [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20010446.png) · [Reference: glassmorphism with Tailwind](https://www.epicweb.dev/tips/creating-glassmorphism-effects-with-tailwind-css)
-- **Applications dropdown bleeds into workspace tabs** — no visual separation between header and tab strip, Applications menu projects downward and collides with tab area. [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20014118.png)
-- **Panel spawn visibility issue** — newly spawned panels not stacking correctly or not visible from spawn action (z-index/layout layering suspect). [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20013836.png)
-- **Workspace/Fields subtabs have no active accent** — selected tab (e.g. "Fields") is indistinguishable from unselected, no underline or color differentiation; tabs are functionally invisible. [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20013836.png)
+
+**Confirmed resolved (PRs #337-339):**
+- ~~Selection Inspector stuck open~~ — close button added with `onClose` prop, wired through dockview panel (PR #338)
+- ~~Panel spawner menu opaque background~~ — glassmorphism (`backdrop-blur-sm` + translucent bg) on Menu + Dropdown atoms (PR #337)
+- ~~Applications dropdown bleeds into workspace tabs~~ — header divider added between project selector and nav links (PR #339)
+- ~~Panel spawn visibility issue~~ — `setActive()` called on newly spawned panels via `requestAnimationFrame` (PR #339)
+- ~~Workspace/Fields subtabs have no active accent~~ — tab active state migrated from `text-blue-600` to `--ws-accent` token (PR #338)
 
 **Confirmed resolved:**
 - ~~Action definitions empty after migration~~ — definitions seeded in new `record_definitions` system with `definition_kind`
@@ -80,10 +82,10 @@
 | File | Issue |
 |------|-------|
 | SelectionInspector / Record view | Handle `definition_kind` system for filtering/classification — arrangement vs container vs record kinds should drive what's shown and how |
-| Selection editor / Schema editor | "Quick create" button still present even though superseded by ComposerBar; no correlating interface |
+| ~~Selection editor / Schema editor~~ | ~~"Quick create" pin toggle removed (PR #339)~~ |
 | Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate — shared field component needs expanded options for where/how combobox is invoked |
 | Selection editor | "Plan" link badge system could just be a pointer to the active window name / binding group color instead of its own concept |
-| Workspace naming | "Workspace" panel collides with workspace system name — rename panel back to "Project View"; closing all panels should yield a blank area with just the plus/spawn buttons |
+| ~~Workspace naming~~ | ~~Panel renamed to "Project View" (PR #339); blank area with spawn buttons already works~~ |
 | `frontend/src/ui/table-core/UniversalTableCore.tsx` + composites | All tables are div-based with `role` attributes — semantic HTML (`<table>`, `<thead>`, `<tbody>`, `<tr>`, `<td>`, `<th>`) would improve accessibility, browser print styles, native keyboard nav |
 | `packages/ui/src/atoms/Badge.tsx` | Badge variant colors (project, process, task, etc.) use domain-semantic Tailwind colors — needs separate approach since they're not chrome tokens |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` has no explicit UI/behavior mapping — containers render as actions (icon, labels, create flow). Needs dedicated UX treatment (CodeAnt #324 review) |
@@ -121,7 +123,6 @@
 
 | PRs | Description |
 |-----|-------------|
-| #334-335 | AutoHelper frontend-initiated pairing: `/pair` endpoint + one-click Pair button, remove tkinter dialog |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
 
 ---
@@ -130,6 +131,10 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | UX polish: Menu/Dropdown `--ws-*` token migration + glassmorphism | PR #337 |
+| — | UX polish: SelectionInspector close button + tab accent migration to `--ws-accent` | PR #338 |
+| — | Header divider, panel spawn activation (`requestAnimationFrame`), "Project View" rename, SchemaEditor pin toggle removal | PR #339 |
+| — | AutoHelper frontend-initiated pairing: `/pair` endpoint + one-click Pair button, remove tkinter dialog | PRs #334-335 |
 | — | Migration 036 stub restoration + seed transaction wrapping (housekeeping) | PR #331 |
 | — | Accessibility: form label/input associations (Email, Phone, Time); sidebar section headings; SettingsPage + Card.tsx design tokens (housekeeping) | PR #332 |
 | — | Atom token migration: 13 atom files migrated to `--ws-*` tokens; Toggle atom extraction from AutoHelperSection (housekeeping) | PR #333 |
