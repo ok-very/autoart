@@ -200,7 +200,14 @@
 
   function frame(now) {
     if (!running) return;
-    if (t0 === null) t0 = now;
+    if (t0 === null) {
+      t0 = now;
+      const spinner = document.getElementById('cymatic-pre-spinner');
+      if (spinner) {
+        spinner.classList.add('cymatic-hidden');
+        setTimeout(() => spinner.remove(), 200);
+      }
+    }
 
     const elapsed = (now - t0) / 1000;
     const t01 = (elapsed % DURATION) / DURATION;
