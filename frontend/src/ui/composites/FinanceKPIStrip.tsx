@@ -81,15 +81,15 @@ export function FinanceKPIStrip() {
   return (
     <div className="grid grid-cols-4 gap-px bg-slate-200">
       {kpis.map((kpi) => (
-        <div key={kpi.label} className="bg-white px-4 py-3">
-          <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">
+        <div key={kpi.label} className="bg-ws-panel-bg px-4 py-3">
+          <div className="text-[10px] font-medium text-ws-muted uppercase tracking-wide">
             {kpi.label}
           </div>
-          <div className="text-ws-h2 font-mono font-semibold text-slate-800 mt-0.5">
+          <div className="text-ws-h2 font-mono font-semibold text-ws-fg mt-0.5">
             {kpi.value}
           </div>
           {kpi.sublabel && (
-            <div className="text-[10px] text-slate-400 mt-0.5">{kpi.sublabel}</div>
+            <div className="text-[10px] text-ws-muted mt-0.5">{kpi.sublabel}</div>
           )}
         </div>
       ))}

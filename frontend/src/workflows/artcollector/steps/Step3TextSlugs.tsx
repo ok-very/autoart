@@ -75,7 +75,7 @@ export function Step3TextSlugs({ onNext, onBack }: ArtCollectorStepProps) {
       </div>
 
       {/* Footer */}
-      <Inline justify="between" className="pt-4 mt-4 border-t border-slate-200 shrink-0">
+      <Inline justify="between" className="pt-4 mt-4 border-t border-ws-panel-border shrink-0">
         <Button onClick={onBack} variant="secondary">
           Back
         </Button>

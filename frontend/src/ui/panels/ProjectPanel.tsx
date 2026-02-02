@@ -121,7 +121,7 @@ export function ProjectPanelContent({ panelId }: ProjectPanelProps) {
  */
 export function ProjectPanel(props: IDockviewPanelProps) {
     return (
-        <div className="h-full overflow-hidden bg-white">
+        <div className="h-full overflow-hidden bg-ws-panel-bg">
             <ProjectPanelContent panelId={props.api.id} />
         </div>
     );

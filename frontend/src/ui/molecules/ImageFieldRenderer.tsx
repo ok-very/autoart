@@ -49,7 +49,7 @@ export function ImageFieldRenderer({
         return (
             <div
                 className={clsx(
-                    'bg-slate-100 rounded flex items-center justify-center text-slate-400',
+                    'bg-slate-100 rounded flex items-center justify-center text-ws-muted',
                     sizeClasses[size],
                     className
                 )}
@@ -69,7 +69,7 @@ export function ImageFieldRenderer({
                         sizeClasses[size]
                     )}
                 >
-                    <RefreshCw size={12} className="animate-spin text-slate-400" />
+                    <RefreshCw size={12} className="animate-spin text-ws-muted" />
                 </div>
             )}
 
@@ -106,7 +106,7 @@ export function ImageFieldRenderer({
                     className="absolute -top-1 -right-1 bg-slate-100 rounded-full p-0.5"
                     title="Could not verify current location"
                 >
-                    <RefreshCw size={10} className="text-slate-400" />
+                    <RefreshCw size={10} className="text-ws-muted" />
                 </div>
             )}
         </div>

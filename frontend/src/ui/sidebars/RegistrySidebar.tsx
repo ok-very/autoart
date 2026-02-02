@@ -99,30 +99,30 @@ export function RegistrySidebar({
 
     return (
         <aside
-            className="bg-slate-50 border-r border-slate-200 flex flex-col shrink-0"
+            className="bg-ws-bg border-r border-ws-panel-border flex flex-col shrink-0"
             style={{ width }}
         >
             {/* Header */}
-            <div className="h-10 border-b border-slate-200 flex items-center justify-between px-3 bg-white">
+            <div className="h-10 border-b border-ws-panel-border flex items-center justify-between px-3 bg-ws-panel-bg">
                 <div className="flex items-center gap-2">
-                    <FolderOpen size={18} className="text-slate-500" />
-                    <span className="font-semibold text-slate-700">Registry</span>
+                    <FolderOpen size={18} className="text-ws-text-secondary" />
+                    <span className="font-semibold text-ws-text-secondary">Registry</span>
                 </div>
             </div>
 
             {/* Search */}
-            <div className="p-3 border-b border-slate-100">
+            <div className="p-3 border-b border-ws-panel-border">
                 <div className="relative">
                     <Search
                         size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-ws-muted"
                     />
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search definitions..."
-                        className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full pl-9 pr-3 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                 </div>
             </div>
@@ -136,17 +136,17 @@ export function RegistrySidebar({
                 ) : (
                     <>
                         {/* RECORD DEFINITIONS SECTION */}
-                        <div className="border-b border-slate-100">
+                        <div className="border-b border-ws-panel-border">
                             <button
                                 onClick={() => setRecordsExpanded(!recordsExpanded)}
                                 className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-100 transition-colors"
                             >
                                 <div className="flex items-center gap-2">
                                     <FolderOpen size={14} className="text-blue-500" />
-                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    <span className="text-xs font-semibold text-ws-text-secondary uppercase tracking-wider">
                                         Data Definitions
                                     </span>
-                                    <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                    <span className="text-[10px] text-ws-muted bg-slate-100 px-1.5 py-0.5 rounded">
                                         {recordDefinitions.length}
                                     </span>
                                 </div>
@@ -156,15 +156,15 @@ export function RegistrySidebar({
                                             e.stopPropagation();
                                             handleCreateDefinition();
                                         }}
-                                        className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                        className="p-1 text-ws-muted hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                         title="Create data definition"
                                     >
                                         <Plus size={14} />
                                     </button>
                                     {recordsExpanded ? (
-                                        <ChevronDown size={14} className="text-slate-400" />
+                                        <ChevronDown size={14} className="text-ws-muted" />
                                     ) : (
-                                        <ChevronRight size={14} className="text-slate-400" />
+                                        <ChevronRight size={14} className="text-ws-muted" />
                                     )}
                                 </div>
                             </button>
@@ -179,13 +179,13 @@ export function RegistrySidebar({
                                                 'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors',
                                                 selectedDefinitionId === null && activeSection === 'records'
                                                     ? 'bg-blue-100 text-blue-800'
-                                                    : 'hover:bg-slate-100 text-slate-600'
+                                                    : 'hover:bg-slate-100 text-ws-text-secondary'
                                             )}
                                         >
                                             <span className="text-base">📋</span>
                                             <div className="flex-1 min-w-0">
                                                 <div className="text-sm font-medium">All Records</div>
-                                                <div className="text-[10px] text-slate-400">
+                                                <div className="text-[10px] text-ws-muted">
                                                     {stats ? stats.reduce((sum, s) => sum + s.count, 0) : 0} total
                                                 </div>
                                             </div>
@@ -195,7 +195,7 @@ export function RegistrySidebar({
                                     {/* Record definitions list */}
                                     {filterRecordsBySearch.length === 0 ? (
                                         <div className="text-center py-4 px-2">
-                                            <p className="text-xs text-slate-400">No data definitions</p>
+                                            <p className="text-xs text-ws-muted">No data definitions</p>
                                         </div>
                                     ) : (
                                         <div className="space-y-0.5 px-1">
@@ -212,7 +212,7 @@ export function RegistrySidebar({
                                                             'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors group cursor-pointer',
                                                             isSelected
                                                                 ? 'bg-blue-100 text-blue-800'
-                                                                : 'hover:bg-slate-100 text-slate-600'
+                                                                : 'hover:bg-slate-100 text-ws-text-secondary'
                                                         )}
                                                     >
                                                         <span className="text-base shrink-0">
@@ -220,13 +220,13 @@ export function RegistrySidebar({
                                                         </span>
                                                         <div className="flex-1 min-w-0">
                                                             <div className="text-sm font-medium truncate">{def.name}</div>
-                                                            <div className="text-[10px] text-slate-400">
+                                                            <div className="text-[10px] text-ws-muted">
                                                                 {count} record{count !== 1 ? 's' : ''}
                                                             </div>
                                                         </div>
                                                         <button
                                                             onClick={(e) => handleEditDefinition(e, def.id)}
-                                                            className="p-1 text-slate-300 hover:text-slate-600 hover:bg-slate-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            className="p-1 text-ws-muted hover:text-ws-text-secondary hover:bg-slate-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                                                             title={`Edit ${def.name} schema`}
                                                         >
                                                             <Settings size={12} />
@@ -236,7 +236,7 @@ export function RegistrySidebar({
                                                                 e.stopPropagation();
                                                                 openOverlay('create-record', { definitionId: def.id });
                                                             }}
-                                                            className="p-1 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            className="p-1 text-ws-muted hover:text-blue-600 hover:bg-blue-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                                                             title={`Create ${def.name}`}
                                                         >
                                                             <Plus size={12} />
@@ -251,25 +251,25 @@ export function RegistrySidebar({
                         </div>
 
                         {/* ACTION TYPES SECTION - Now using action_type_definitions */}
-                        <div className="border-b border-slate-100">
+                        <div className="border-b border-ws-panel-border">
                             <button
                                 onClick={() => setActionsExpanded(!actionsExpanded)}
                                 className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-100 transition-colors"
                             >
                                 <div className="flex items-center gap-2">
                                     <Zap size={14} className="text-amber-500" />
-                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    <span className="text-xs font-semibold text-ws-text-secondary uppercase tracking-wider">
                                         Action Types
                                     </span>
-                                    <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                    <span className="text-[10px] text-ws-muted bg-slate-100 px-1.5 py-0.5 rounded">
                                         {actionTypes.length}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                     {actionsExpanded ? (
-                                        <ChevronDown size={14} className="text-slate-400" />
+                                        <ChevronDown size={14} className="text-ws-muted" />
                                     ) : (
-                                        <ChevronRight size={14} className="text-slate-400" />
+                                        <ChevronRight size={14} className="text-ws-muted" />
                                     )}
                                 </div>
                             </button>
@@ -284,13 +284,13 @@ export function RegistrySidebar({
                                                 'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors',
                                                 selectedDefinitionId === null && activeSection === 'actions'
                                                     ? 'bg-amber-100 text-amber-800'
-                                                    : 'hover:bg-slate-100 text-slate-600'
+                                                    : 'hover:bg-slate-100 text-ws-text-secondary'
                                             )}
                                         >
                                             <span className="text-base">⚡</span>
                                             <div className="flex-1 min-w-0">
                                                 <div className="text-sm font-medium">All Actions</div>
-                                                <div className="text-[10px] text-slate-400">
+                                                <div className="text-[10px] text-ws-muted">
                                                     {actionTypeStats.reduce((sum, s) => sum + s.count, 0)} total
                                                 </div>
                                             </div>
@@ -300,7 +300,7 @@ export function RegistrySidebar({
                                     {/* Action types list */}
                                     {filterActionsBySearch.length === 0 ? (
                                         <div className="text-center py-4 px-2">
-                                            <p className="text-xs text-slate-400">No action types</p>
+                                            <p className="text-xs text-ws-muted">No action types</p>
                                         </div>
                                     ) : (
                                         <div className="space-y-0.5 px-1">
@@ -316,7 +316,7 @@ export function RegistrySidebar({
                                                             'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors group cursor-pointer',
                                                             isSelected
                                                                 ? 'bg-amber-100 text-amber-800'
-                                                                : 'hover:bg-slate-100 text-slate-600'
+                                                                : 'hover:bg-slate-100 text-ws-text-secondary'
                                                         )}
                                                     >
                                                         <div
@@ -333,10 +333,10 @@ export function RegistrySidebar({
                                                             <div className="flex items-center gap-1.5">
                                                                 <span className="text-sm font-medium truncate">{actionType.label}</span>
                                                                 {actionType.is_system && (
-                                                                    <span className="px-1 py-0.5 text-[9px] bg-slate-200 text-slate-500 rounded">SYS</span>
+                                                                    <span className="px-1 py-0.5 text-[9px] bg-slate-200 text-ws-text-secondary rounded">SYS</span>
                                                                 )}
                                                             </div>
-                                                            <div className="text-[10px] text-slate-400">
+                                                            <div className="text-[10px] text-ws-muted">
                                                                 {count} instance{count !== 1 ? 's' : ''}
                                                             </div>
                                                         </div>
@@ -350,22 +350,22 @@ export function RegistrySidebar({
                         </div>
 
                         {/* EVENT TYPES SECTION */}
-                        <div className="border-b border-slate-100">
+                        <div className="border-b border-ws-panel-border">
                             <button
                                 onClick={() => setEventsExpanded(!eventsExpanded)}
                                 className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-100 transition-colors"
                             >
                                 <div className="flex items-center gap-2">
                                     <Activity size={14} className="text-blue-500" />
-                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    <span className="text-xs font-semibold text-ws-text-secondary uppercase tracking-wider">
                                         Events & Facts
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                     {eventsExpanded ? (
-                                        <ChevronDown size={14} className="text-slate-400" />
+                                        <ChevronDown size={14} className="text-ws-muted" />
                                     ) : (
-                                        <ChevronRight size={14} className="text-slate-400" />
+                                        <ChevronRight size={14} className="text-ws-muted" />
                                     )}
                                 </div>
                             </button>
@@ -379,13 +379,13 @@ export function RegistrySidebar({
                                             'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors',
                                             selectedDefinitionId === 'event-catalog' && activeSection === 'events'
                                                 ? 'bg-blue-100 text-blue-800'
-                                                : 'hover:bg-slate-100 text-slate-600'
+                                                : 'hover:bg-slate-100 text-ws-text-secondary'
                                         )}
                                     >
                                         <Activity size={16} className="text-blue-500 shrink-0" />
                                         <div className="flex-1 min-w-0">
                                             <div className="text-sm font-medium">Event Types</div>
-                                            <div className="text-[10px] text-slate-400">15 event types</div>
+                                            <div className="text-[10px] text-ws-muted">15 event types</div>
                                         </div>
                                     </button>
 
@@ -396,13 +396,13 @@ export function RegistrySidebar({
                                             'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors',
                                             selectedDefinitionId === 'fact-kinds' && activeSection === 'events'
                                                 ? 'bg-blue-100 text-blue-800'
-                                                : 'hover:bg-slate-100 text-slate-600'
+                                                : 'hover:bg-slate-100 text-ws-text-secondary'
                                         )}
                                     >
                                         <span className="text-base shrink-0">📊</span>
                                         <div className="flex-1 min-w-0">
                                             <div className="text-sm font-medium">Fact Kinds</div>
-                                            <div className="text-[10px] text-slate-400">
+                                            <div className="text-[10px] text-ws-muted">
                                                 {factKindStats?.total ?? 12} kinds · {factKindStats?.needsReview ?? 0} need review
                                             </div>
                                         </div>
@@ -415,8 +415,8 @@ export function RegistrySidebar({
             </div>
 
             {/* Footer Stats */}
-            <div className="border-t border-slate-200 px-4 py-3 bg-white">
-                <div className="text-xs text-slate-400">
+            <div className="border-t border-ws-panel-border px-4 py-3 bg-ws-panel-bg">
+                <div className="text-xs text-ws-muted">
                     {recordDefinitions.length} data · {actionTypes.length} action types
                 </div>
             </div>

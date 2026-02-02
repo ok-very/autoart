@@ -73,19 +73,19 @@ export function NamingConfigPanel({
   const preview = useMemo(() => generatePreview(config), [config]);
 
   return (
-    <div className="border border-slate-200 rounded-lg overflow-hidden">
+    <div className="border border-ws-panel-border rounded-lg overflow-hidden">
       {/* Header - always visible */}
       <button
         type="button"
         onClick={() => setIsCollapsed(!isCollapsed)}
         className={clsx(
           'w-full px-4 py-3 flex items-center justify-between',
-          'bg-slate-50 hover:bg-slate-100 transition-colors',
+          'bg-ws-bg hover:bg-slate-100 transition-colors',
           'text-left'
         )}
       >
         <Inline gap="sm" align="center">
-          <Settings className="w-4 h-4 text-slate-500" />
+          <Settings className="w-4 h-4 text-ws-text-secondary" />
           <Text weight="medium" size="sm">
             Advanced Naming Settings
           </Text>
@@ -95,20 +95,20 @@ export function NamingConfigPanel({
             {preview}
           </Text>
           {isCollapsed ? (
-            <ChevronRight className="w-4 h-4 text-slate-400" />
+            <ChevronRight className="w-4 h-4 text-ws-muted" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-slate-400" />
+            <ChevronDown className="w-4 h-4 text-ws-muted" />
           )}
         </Inline>
       </button>
 
       {/* Collapsible content */}
       {!isCollapsed && (
-        <div className="px-4 py-4 bg-white border-t border-slate-200">
+        <div className="px-4 py-4 bg-ws-panel-bg border-t border-ws-panel-border">
           <Stack gap="md">
             {/* Template input */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-ws-text-secondary mb-1">
                 Filename Template
               </label>
               <input
@@ -124,7 +124,7 @@ export function NamingConfigPanel({
                     key={v}
                     type="button"
                     onClick={() => onChange({ template: `${config.template}{${v}}` })}
-                    className="text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded border border-slate-200 transition-colors"
+                    className="text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded border border-ws-panel-border transition-colors"
                     title={description}
                   >
                     {`{${v}}`}
@@ -136,7 +136,7 @@ export function NamingConfigPanel({
             {/* Index settings row */}
             <Inline gap="md">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-ws-text-secondary mb-1">
                   Start Index
                 </label>
                 <input
@@ -152,7 +152,7 @@ export function NamingConfigPanel({
                 />
               </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-ws-text-secondary mb-1">
                   Padding Width
                 </label>
                 <select
@@ -166,7 +166,7 @@ export function NamingConfigPanel({
                 </select>
               </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-ws-text-secondary mb-1">
                   Numbering Mode
                 </label>
                 <select
@@ -179,7 +179,7 @@ export function NamingConfigPanel({
                 </select>
               </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-ws-text-secondary mb-1">
                   On Name Collision
                 </label>
                 <select
@@ -196,7 +196,7 @@ export function NamingConfigPanel({
             {/* Prefix/Suffix row */}
             <Inline gap="md">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-ws-text-secondary mb-1">
                   Prefix
                 </label>
                 <input
@@ -208,7 +208,7 @@ export function NamingConfigPanel({
                 />
               </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-ws-text-secondary mb-1">
                   Suffix
                 </label>
                 <input
@@ -222,11 +222,11 @@ export function NamingConfigPanel({
             </Inline>
 
             {/* Preview */}
-            <div className="p-3 bg-slate-50 rounded-lg">
+            <div className="p-3 bg-ws-bg rounded-lg">
               <Text size="xs" color="muted" className="mb-1">
                 Preview:
               </Text>
-              <Text size="sm" className="font-mono text-slate-800">
+              <Text size="sm" className="font-mono text-ws-fg">
                 {preview}
               </Text>
             </div>

@@ -74,31 +74,31 @@ function IntegrationCard({
     children,
 }: IntegrationCardProps) {
     return (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="bg-ws-panel-bg rounded-xl border border-ws-panel-border overflow-hidden">
             {/* Header */}
-            <div className="p-4 border-b border-slate-100">
+            <div className="p-4 border-b border-ws-panel-border">
                 <div className="flex items-start gap-3">
                     <div className={`w-10 h-10 ${iconBg} rounded-lg flex items-center justify-center flex-shrink-0`}>
                         {icon}
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-slate-900">{name}</h3>
+                            <h3 className="font-semibold text-ws-fg">{name}</h3>
                             {status.connected ? (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700 rounded-full">
                                     <CheckCircle2 className="w-3 h-3" />
                                     Connected
                                 </span>
                             ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-500 rounded-full">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-slate-100 text-ws-text-secondary rounded-full">
                                     <XCircle className="w-3 h-3" />
                                     Not connected
                                 </span>
                             )}
                         </div>
-                        <p className="text-sm text-slate-500 mt-0.5">{description}</p>
+                        <p className="text-sm text-ws-text-secondary mt-0.5">{description}</p>
                         {status.connected && status.accountName && (
-                            <p className="text-xs text-slate-400 mt-1">
+                            <p className="text-xs text-ws-muted mt-1">
                                 Connected as {status.accountName}
                             </p>
                         )}
@@ -111,7 +111,7 @@ function IntegrationCard({
                 {children}
 
                 {/* Hint */}
-                <div className="mt-3 flex items-start gap-2 text-xs text-slate-400">
+                <div className="mt-3 flex items-start gap-2 text-xs text-ws-muted">
                     <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                     <span>
                         {hint}
@@ -242,7 +242,7 @@ function MondayIntegration({ status, onConnect, onOAuthConnect, oauthAvailable, 
                             {!showManualInput && (
                                 <button
                                     onClick={() => setShowManualInput(true)}
-                                    className="text-xs text-slate-500 hover:text-slate-700 hover:underline self-start"
+                                    className="text-xs text-ws-text-secondary hover:text-ws-text-secondary hover:underline self-start"
                                 >
                                     Or enter API key manually
                                 </button>
@@ -252,13 +252,13 @@ function MondayIntegration({ status, onConnect, onOAuthConnect, oauthAvailable, 
 
                     {/* Manual API Key Input */}
                     {showManualInput && (
-                        <div className="space-y-3 pt-2 border-t border-slate-100">
+                        <div className="space-y-3 pt-2 border-t border-ws-panel-border">
                             {oauthAvailable && (
                                 <div className="flex justify-between items-center mb-1">
-                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Manual Connection</span>
+                                    <span className="text-xs font-semibold text-ws-text-secondary uppercase tracking-wider">Manual Connection</span>
                                     <button
                                         onClick={() => setShowManualInput(false)}
-                                        className="text-xs text-slate-400 hover:text-slate-600"
+                                        className="text-xs text-ws-muted hover:text-ws-text-secondary"
                                     >
                                         Hide
                                     </button>
@@ -267,18 +267,18 @@ function MondayIntegration({ status, onConnect, onOAuthConnect, oauthAvailable, 
 
                             <div className="flex gap-2">
                                 <div className="relative flex-1">
-                                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ws-muted" />
                                     <input
                                         type={showKey ? 'text' : 'password'}
                                         value={apiKey}
                                         onChange={(e) => setApiKey(e.target.value)}
                                         placeholder="Enter your API key"
-                                        className="w-full pl-10 pr-10 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                                        className="w-full pl-10 pr-10 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowKey(!showKey)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-ws-muted hover:text-ws-text-secondary"
                                     >
                                         {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                     </button>
@@ -286,7 +286,7 @@ function MondayIntegration({ status, onConnect, onOAuthConnect, oauthAvailable, 
                                 <button
                                     onClick={handleConnect}
                                     disabled={isLoading || !apiKey.trim()}
-                                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50"
+                                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-ws-text-secondary bg-ws-panel-bg border border-ws-panel-border hover:bg-ws-bg rounded-lg transition-colors disabled:opacity-50"
                                 >
                                     {isLoading ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -365,7 +365,7 @@ function GoogleIntegration({ status, onConnect, onDisconnect }: GoogleIntegratio
             ) : (
                 <button
                     onClick={onConnect}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors shadow-sm"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-ws-text-secondary bg-ws-panel-bg border border-ws-panel-border hover:bg-ws-bg rounded-lg transition-colors shadow-sm"
                 >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -434,7 +434,7 @@ function MicrosoftIntegration({ status, onConnect, onDisconnect }: MicrosoftInte
             ) : (
                 <button
                     onClick={onConnect}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors shadow-sm"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-ws-text-secondary bg-ws-panel-bg border border-ws-panel-border hover:bg-ws-bg rounded-lg transition-colors shadow-sm"
                 >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
                         <rect x="1" y="1" width="10" height="10" fill="#F25022" />
@@ -482,15 +482,15 @@ function SharePointRequestUrlSetting() {
     }, [url, setSetting]);
 
     return (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="p-4 border-b border-slate-100">
+        <div className="bg-ws-panel-bg rounded-xl border border-ws-panel-border overflow-hidden">
+            <div className="p-4 border-b border-ws-panel-border">
                 <div className="flex items-start gap-3">
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                         <FileText className="w-5 h-5 text-blue-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-slate-900">SharePoint Request Files URL</h3>
-                        <p className="text-sm text-slate-500 mt-0.5">
+                        <h3 className="font-semibold text-ws-fg">SharePoint Request Files URL</h3>
+                        <p className="text-sm text-ws-text-secondary mt-0.5">
                             Default URL shown on public intake forms for file requests
                         </p>
                     </div>
@@ -525,7 +525,7 @@ function SharePointRequestUrlSetting() {
                                     setUrl(savedUrl);
                                     setIsEditing(false);
                                 }}
-                                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                className="px-4 py-2 text-sm font-medium text-ws-text-secondary hover:bg-slate-100 rounded-lg transition-colors"
                             >
                                 Cancel
                             </button>
@@ -535,23 +535,23 @@ function SharePointRequestUrlSetting() {
                     <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
                             {savedUrl ? (
-                                <code className="text-sm text-slate-700 bg-slate-50 px-2 py-1 rounded truncate block">
+                                <code className="text-sm text-ws-text-secondary bg-ws-bg px-2 py-1 rounded truncate block">
                                     {savedUrl}
                                 </code>
                             ) : (
-                                <span className="text-sm text-slate-400 italic">Not configured</span>
+                                <span className="text-sm text-ws-muted italic">Not configured</span>
                             )}
                         </div>
                         <button
                             onClick={() => setIsEditing(true)}
-                            className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            className="px-3 py-1.5 text-sm font-medium text-ws-text-secondary hover:bg-slate-100 rounded-lg transition-colors"
                         >
                             {savedUrl ? 'Edit' : 'Configure'}
                         </button>
                     </div>
                 )}
 
-                <div className="mt-3 flex items-start gap-2 text-xs text-slate-400">
+                <div className="mt-3 flex items-start gap-2 text-xs text-ws-muted">
                     <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                     <span>
                         This URL will be used as the default SharePoint request link for new intake forms.
@@ -583,8 +583,8 @@ export function IntegrationsSection({
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-ws-h2 font-semibold text-slate-900">Integrations</h2>
-                <p className="text-sm text-slate-500 mt-1">
+                <h2 className="text-ws-h2 font-semibold text-ws-fg">Integrations</h2>
+                <p className="text-sm text-ws-text-secondary mt-1">
                     Connect external services to import data and enable sync
                 </p>
             </div>

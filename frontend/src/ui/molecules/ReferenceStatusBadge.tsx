@@ -64,8 +64,8 @@ const STATUS_CONFIG: Record<ReferenceStatus, {
         label: 'Unresolved',
         icon: HelpCircle,
         bgClass: 'bg-slate-200',
-        textClass: 'text-slate-600',
-        iconClass: 'text-slate-400',
+        textClass: 'text-ws-text-secondary',
+        iconClass: 'text-ws-muted',
         defaultTooltip: 'Reference target not yet determined',
     },
 };

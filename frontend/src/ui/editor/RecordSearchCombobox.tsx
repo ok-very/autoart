@@ -123,7 +123,7 @@ export function RecordSearchCombobox({
             <div
                 className={clsx(
                     'px-3 py-2.5 cursor-pointer flex items-center gap-2 border-b border-slate-50 transition-colors',
-                    isSelected ? 'bg-blue-50' : 'hover:bg-slate-50'
+                    isSelected ? 'bg-blue-50' : 'hover:bg-ws-bg'
                 )}
             >
                 <span
@@ -138,17 +138,17 @@ export function RecordSearchCombobox({
                     {result.type === 'record' ? result.definitionName : result.nodeType}
                 </span>
                 <div className="flex flex-col min-w-0 flex-1">
-                    <span className="text-sm font-medium text-slate-700 truncate">
+                    <span className="text-sm font-medium text-ws-text-secondary truncate">
                         {result.name}
                     </span>
                     {result.matchedAlias && (
-                        <span className="text-[10px] text-slate-400 italic truncate">
+                        <span className="text-[10px] text-ws-muted italic truncate">
                             (matches "{result.matchedAlias}")
                         </span>
                     )}
                 </div>
                 {result.fields && result.fields.length > 0 && shouldShowFieldSelection && (
-                    <span className="text-[10px] text-slate-400 shrink-0">
+                    <span className="text-[10px] text-ws-muted shrink-0">
                         {result.fields.length} fields →
                     </span>
                 )}
@@ -165,13 +165,13 @@ export function RecordSearchCombobox({
             <div
                 className={clsx(
                     'px-3 py-2.5 cursor-pointer flex items-center gap-3 border-b border-slate-50 transition-colors',
-                    isSelected ? 'bg-blue-50' : 'hover:bg-slate-50'
+                    isSelected ? 'bg-blue-50' : 'hover:bg-ws-bg'
                 )}
             >
                 <span className="text-xs font-mono text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
                     {child.id}
                 </span>
-                <span className="text-sm text-slate-700">{child.label}</span>
+                <span className="text-sm text-ws-text-secondary">{child.label}</span>
             </div>
         );
     };

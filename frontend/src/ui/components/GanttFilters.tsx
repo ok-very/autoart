@@ -72,20 +72,20 @@ export function GanttFilters({
         <div className="space-y-3">
             {/* Search */}
             <div className="relative">
-                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ws-muted" />
                 <input
                     type="text"
                     placeholder="Search items..."
                     value={filter.search || ''}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-8 pr-3 py-1.5 text-xs border border-ws-panel-border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                 />
             </div>
 
             {/* Filter Toggle */}
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="flex items-center gap-2 text-xs font-medium text-slate-600 hover:text-slate-800 w-full"
+                className="flex items-center gap-2 text-xs font-medium text-ws-text-secondary hover:text-ws-fg w-full"
             >
                 <Filter size={14} />
                 <span>Filters</span>
@@ -98,10 +98,10 @@ export function GanttFilters({
 
             {/* Expanded Filters */}
             {isExpanded && (
-                <div className="space-y-4 pt-2 border-t border-slate-100">
+                <div className="space-y-4 pt-2 border-t border-ws-panel-border">
                     {/* Group By */}
                     <div>
-                        <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+                        <label className="text-[10px] font-semibold text-ws-text-secondary uppercase tracking-wide">
                             Group By
                         </label>
                         <div className="mt-1.5 flex flex-wrap gap-1">
@@ -112,7 +112,7 @@ export function GanttFilters({
                                     className={`px-2 py-1 text-[10px] rounded ${
                                         (filter.groupBy || 'parent') === option
                                             ? 'bg-blue-100 text-blue-700 font-medium'
-                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                            : 'bg-slate-100 text-ws-text-secondary hover:bg-slate-200'
                                     }`}
                                 >
                                     {option === 'parent' ? 'Parent' : option.charAt(0).toUpperCase() + option.slice(1)}
@@ -124,7 +124,7 @@ export function GanttFilters({
                     {/* Status Filter */}
                     {(availableStatuses?.length ?? 0) > 0 && (
                         <div>
-                            <label className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+                            <label className="flex items-center gap-1.5 text-[10px] font-semibold text-ws-text-secondary uppercase tracking-wide">
                                 <CircleDot size={10} />
                                 Status
                             </label>
@@ -136,7 +136,7 @@ export function GanttFilters({
                                         className={`px-2 py-1 text-[10px] rounded transition-colors ${
                                             filter.statuses?.includes(status)
                                                 ? 'bg-blue-100 text-blue-700 font-medium'
-                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                : 'bg-slate-100 text-ws-text-secondary hover:bg-slate-200'
                                         }`}
                                     >
                                         {formatLabel(status)}
@@ -149,7 +149,7 @@ export function GanttFilters({
                     {/* Assignee Filter */}
                     {(availableAssignees?.length ?? 0) > 0 && (
                         <div>
-                            <label className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+                            <label className="flex items-center gap-1.5 text-[10px] font-semibold text-ws-text-secondary uppercase tracking-wide">
                                 <User size={10} />
                                 Assignee
                             </label>
@@ -161,7 +161,7 @@ export function GanttFilters({
                                         className={`px-2 py-1 text-[10px] rounded transition-colors ${
                                             filter.assignees?.includes(assignee)
                                                 ? 'bg-blue-100 text-blue-700 font-medium'
-                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                                : 'bg-slate-100 text-ws-text-secondary hover:bg-slate-200'
                                         }`}
                                     >
                                         {assignee}

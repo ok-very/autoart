@@ -100,7 +100,7 @@ const TooltipContent = ({ task }: TooltipContentProps) => {
     return (
         <div className="bg-slate-900 text-white text-xs rounded-lg shadow-xl p-3 min-w-[180px]">
             <div className="font-semibold mb-2 text-sm">{task.name}</div>
-            <div className="space-y-1 text-slate-300">
+            <div className="space-y-1 text-ws-muted">
                 <div className="flex justify-between gap-4">
                     <span>Start:</span>
                     <span className="text-white">{formatDate(task.start)}</span>
@@ -117,7 +117,7 @@ const TooltipContent = ({ task }: TooltipContentProps) => {
                 )}
             </div>
             {task.type === 'project' && (
-                <div className="mt-2 pt-2 border-t border-slate-700 text-slate-400 text-[10px]">
+                <div className="mt-2 pt-2 border-t border-slate-700 text-ws-muted text-[10px]">
                     Click to expand/collapse
                 </div>
             )}
@@ -134,7 +134,7 @@ interface TaskListHeaderProps {
 
 const TaskListHeader = ({ headerHeight }: TaskListHeaderProps) => (
     <div
-        className="flex items-center px-3 bg-slate-50 border-b border-slate-200 font-medium text-sm text-slate-600"
+        className="flex items-center px-3 bg-ws-bg border-b border-ws-panel-border font-medium text-sm text-ws-text-secondary"
         style={{ height: headerHeight }}
     >
         Task
@@ -170,9 +170,9 @@ const TaskListTable = ({
                 <div
                     key={task.id}
                     className={`
-                        flex items-center gap-2 px-3 border-b border-slate-100 cursor-pointer
+                        flex items-center gap-2 px-3 border-b border-ws-panel-border cursor-pointer
                         transition-colors duration-100
-                        ${isSelected ? 'bg-blue-50' : 'hover:bg-slate-50'}
+                        ${isSelected ? 'bg-blue-50' : 'hover:bg-ws-bg'}
                     `}
                     style={{
                         height: rowHeight,
@@ -182,7 +182,7 @@ const TaskListTable = ({
                 >
                     {isProject && (
                         <button
-                            className="w-4 h-4 flex items-center justify-center text-slate-400 hover:text-slate-600"
+                            className="w-4 h-4 flex items-center justify-center text-ws-muted hover:text-ws-text-secondary"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onExpanderClick(task);
@@ -412,7 +412,7 @@ export function TimelineWrapper({
     // Empty state
     if (libraryTasks.length === 0) {
         return (
-            <div className={`flex items-center justify-center h-full text-slate-400 ${className}`}>
+            <div className={`flex items-center justify-center h-full text-ws-muted ${className}`}>
                 No items to display
             </div>
         );

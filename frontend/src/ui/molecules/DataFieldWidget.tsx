@@ -71,7 +71,7 @@ function StatusPill({ label, colorClass }: { label: string; colorClass: string }
 
 function FallbackStatusPill({ status }: { status: string }) {
     return (
-        <div className="w-full h-7 rounded flex items-center justify-center text-[11px] font-semibold bg-slate-200 text-slate-600">
+        <div className="w-full h-7 rounded flex items-center justify-center text-[11px] font-semibold bg-slate-200 text-ws-text-secondary">
             {status}
         </div>
     );
@@ -84,7 +84,7 @@ function PercentBar({ percent }: { percent: number }) {
             <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
                 <div className="h-full bg-emerald-500" style={{ width: `${p}%` }} />
             </div>
-            <div className="w-10 text-right text-[11px] text-slate-600 tabular-nums">{Math.round(p)}%</div>
+            <div className="w-10 text-right text-[11px] text-ws-text-secondary tabular-nums">{Math.round(p)}%</div>
         </div>
     );
 }
@@ -102,9 +102,9 @@ export function DataFieldWidget({ kind, value, className, statusConfig, wrapText
             // Treat null boolean as false or just render dash? Default to false behavior for checkbox usually better visually
             // but let's stick to explicit false so we don't infer too much.
             // Actually, a dash for null is safer for data integrity view.
-            return <div className={clsx('text-xs text-slate-400 text-center', className)}>-</div>;
+            return <div className={clsx('text-xs text-ws-muted text-center', className)}>-</div>;
         }
-        return <div className={clsx('text-xs text-slate-400', className)} />;
+        return <div className={clsx('text-xs text-ws-muted', className)} />;
     }
 
     if (kind === 'status') {
@@ -129,7 +129,7 @@ export function DataFieldWidget({ kind, value, className, statusConfig, wrapText
     if (kind === 'percent') {
         const n = typeof value === 'number' ? value : Number(value);
         if (Number.isNaN(n)) {
-            return <div className={clsx('text-xs text-slate-400', className)}>-</div>;
+            return <div className={clsx('text-xs text-ws-muted', className)}>-</div>;
         }
         return (
             <div className={className}>
@@ -151,9 +151,9 @@ export function DataFieldWidget({ kind, value, className, statusConfig, wrapText
         if (typeof value === 'string') dateStr = new Date(value).toLocaleDateString();
         else if (value instanceof Date) dateStr = value.toLocaleDateString();
 
-        if (!dateStr || dateStr === 'Invalid Date') return <div className={clsx('text-xs text-slate-400', className)}>-</div>;
+        if (!dateStr || dateStr === 'Invalid Date') return <div className={clsx('text-xs text-ws-muted', className)}>-</div>;
 
-        return <div className={clsx('text-xs text-slate-600 text-center', className)}>{dateStr}</div>;
+        return <div className={clsx('text-xs text-ws-text-secondary text-center', className)}>{dateStr}</div>;
     }
 
     if (kind === 'url') {
@@ -183,12 +183,12 @@ export function DataFieldWidget({ kind, value, className, statusConfig, wrapText
         if (!email) return null;
         return (
             <div className={clsx('flex items-center gap-1.5', className)}>
-                <Mail size={12} className="text-slate-400 shrink-0" />
+                <Mail size={12} className="text-ws-muted shrink-0" />
                 <a
                     href={`mailto:${email}`}
                     onClick={(e) => e.stopPropagation()}
                     className={clsx(
-                        'text-xs text-slate-700 hover:text-blue-600 hover:underline',
+                        'text-xs text-ws-text-secondary hover:text-blue-600 hover:underline',
                         wrapText ? 'break-all' : 'truncate'
                     )}
                 >
@@ -207,7 +207,7 @@ export function DataFieldWidget({ kind, value, className, statusConfig, wrapText
                         <Check size={14} strokeWidth={3} />
                     </div>
                 ) : (
-                    <div className="w-5 h-5 bg-slate-100 rounded-md flex items-center justify-center text-slate-300">
+                    <div className="w-5 h-5 bg-slate-100 rounded-md flex items-center justify-center text-ws-muted">
                         <X size={14} strokeWidth={3} />
                     </div>
                 )}
@@ -217,7 +217,7 @@ export function DataFieldWidget({ kind, value, className, statusConfig, wrapText
 
     if (kind === 'tags') {
         const tags = Array.isArray(value) ? value : [];
-        if (tags.length === 0) return <div className={clsx('text-xs text-slate-400', className)} />;
+        if (tags.length === 0) return <div className={clsx('text-xs text-ws-muted', className)} />;
         return (
             <div className={clsx(
                 'flex gap-1',
@@ -227,7 +227,7 @@ export function DataFieldWidget({ kind, value, className, statusConfig, wrapText
                 {tags.map((tag, i) => (
                     <span
                         key={i}
-                        className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-medium border border-slate-200 shrink-0"
+                        className="px-1.5 py-0.5 bg-slate-100 text-ws-text-secondary rounded text-[10px] font-medium border border-ws-panel-border shrink-0"
                     >
                         {String(tag)}
                     </span>
@@ -254,12 +254,12 @@ export function DataFieldWidget({ kind, value, className, statusConfig, wrapText
             }
         }
 
-        if (!text) return <div className={clsx('text-xs text-slate-400', className)} />;
+        if (!text) return <div className={clsx('text-xs text-ws-muted', className)} />;
 
         return (
             <div
                 className={clsx(
-                    'text-xs text-slate-600 leading-relaxed',
+                    'text-xs text-ws-text-secondary leading-relaxed',
                     wrapText ? 'whitespace-pre-wrap' : 'line-clamp-2',
                     className
                 )}
@@ -275,7 +275,7 @@ export function DataFieldWidget({ kind, value, className, statusConfig, wrapText
     return (
         <div
             className={clsx(
-                'text-xs text-slate-700',
+                'text-xs text-ws-text-secondary',
                 wrapText ? 'whitespace-normal break-words' : 'truncate',
                 className
             )}

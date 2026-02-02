@@ -294,16 +294,16 @@ export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps)
               {FIELD_TYPES.map((ft) => (
                 <div
                   key={ft.value}
-                  className={`cursor-pointer transition-all bg-white border rounded-lg p-3 ${
+                  className={`cursor-pointer transition-all bg-ws-panel-bg border rounded-lg p-3 ${
                     type === ft.value
                       ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500'
-                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                      : 'border-ws-panel-border hover:border-slate-300 hover:bg-ws-bg'
                   }`}
                   onClick={() => setType(ft.value)}
                 >
                   <Inline gap="xs" className="mb-1">
                     <div className={`w-5 h-5 rounded flex items-center justify-center ${
-                      type === ft.value ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-600'
+                      type === ft.value ? 'bg-blue-500 text-white' : 'bg-slate-100 text-ws-text-secondary'
                     }`}>
                       {ft.icon}
                     </div>
@@ -317,7 +317,7 @@ export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps)
 
           {/* Field Preview */}
           {selectedType && (
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+            <div className="bg-ws-bg border border-ws-panel-border rounded-lg p-3">
               <Text size="xs" weight="medium" color="muted" className="mb-2">Preview</Text>
               <FieldTypePreview type={type} />
             </div>
@@ -372,7 +372,7 @@ export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps)
           />
 
           {/* Actions */}
-          <Inline justify="end" gap="sm" className="pt-4 border-t border-slate-100">
+          <Inline justify="end" gap="sm" className="pt-4 border-t border-ws-panel-border">
             <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>

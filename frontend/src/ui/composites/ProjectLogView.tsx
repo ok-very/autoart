@@ -69,11 +69,11 @@ export function ProjectLogView({ projectId: _projectId }: ProjectLogViewProps) {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50">
+    <div className="flex-1 overflow-y-auto bg-ws-bg">
       <div className="max-w-3xl mx-auto py-10 px-4 space-y-12 pb-32">
         {/* Sticky Composer */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-1 flex items-center gap-2 sticky top-4 z-40 transition-shadow hover:shadow-md">
-          <div className="w-10 h-10 flex items-center justify-center text-slate-400">
+        <div className="bg-ws-panel-bg rounded-xl shadow-sm border border-ws-panel-border p-1 flex items-center gap-2 sticky top-4 z-40 transition-shadow hover:shadow-md">
+          <div className="w-10 h-10 flex items-center justify-center text-ws-muted">
             <PlusCircle size={24} />
           </div>
           <input
@@ -81,7 +81,7 @@ export function ProjectLogView({ projectId: _projectId }: ProjectLogViewProps) {
             onChange={(e) => setComposerDraft(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleDeclareAction()}
             placeholder="Declare new action..."
-            className="flex-1 bg-transparent border-none focus:ring-0 text-slate-700 placeholder-slate-400 h-10 text-sm font-medium"
+            className="flex-1 bg-transparent border-none focus:ring-0 text-ws-text-secondary placeholder-slate-400 h-10 text-sm font-medium"
           />
           <button
             onClick={handleDeclareAction}
@@ -106,9 +106,9 @@ export function ProjectLogView({ projectId: _projectId }: ProjectLogViewProps) {
             </div>
           ) : cards.length === 0 ? (
             <div className="text-center py-16">
-              <PlusCircle size={48} className="mx-auto text-slate-300 mb-3" />
-              <p className="text-slate-500 font-medium">No actions declared yet</p>
-              <p className="text-slate-400 text-xs mt-1">Use the composer above to declare your first action</p>
+              <PlusCircle size={48} className="mx-auto text-ws-muted mb-3" />
+              <p className="text-ws-text-secondary font-medium">No actions declared yet</p>
+              <p className="text-ws-muted text-xs mt-1">Use the composer above to declare your first action</p>
             </div>
           ) : (
             cards.map((card) => (
@@ -117,7 +117,7 @@ export function ProjectLogView({ projectId: _projectId }: ProjectLogViewProps) {
           )}
         </div>
 
-        <div className="flex items-center justify-center gap-2 text-xs text-slate-300 pb-10">
+        <div className="flex items-center justify-center gap-2 text-xs text-ws-muted pb-10">
           <div className="h-px w-10 bg-slate-200" />
           <span>End of Log</span>
           <div className="h-px w-10 bg-slate-200" />
@@ -132,18 +132,18 @@ function ActionCardItem({ card }: { card: ActionCard }) {
     <div className="flex gap-4 group">
       {/* Icon Column */}
       <div className="flex flex-col items-center pt-1">
-        <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm z-10">
+        <div className="w-10 h-10 rounded-full bg-ws-panel-bg border border-ws-panel-border flex items-center justify-center shadow-sm z-10">
           {getStatusIcon(card.status)}
         </div>
       </div>
 
       {/* Card Body */}
-      <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all overflow-hidden">
+      <div className="flex-1 bg-ws-panel-bg rounded-xl border border-ws-panel-border shadow-sm hover:border-slate-300 transition-all overflow-hidden">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-start">
+        <div className="px-5 py-4 border-b border-ws-panel-border bg-ws-bg/50 flex justify-between items-start">
           <div className="flex-1">
-            <h3 className="text-base font-semibold text-slate-800">{card.title}</h3>
-            <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+            <h3 className="text-base font-semibold text-ws-fg">{card.title}</h3>
+            <div className="flex items-center gap-2 mt-1 text-xs text-ws-text-secondary">
               {card.refCode && (
                 <>
                   <span className="font-mono bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded">
@@ -167,7 +167,7 @@ function ActionCardItem({ card }: { card: ActionCard }) {
               />
             </div>
           </div>
-          <button className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button className="text-ws-muted hover:text-ws-text-secondary transition-colors">
             <DotsThree size={20} weight="bold" />
           </button>
         </div>
@@ -210,26 +210,26 @@ function EventRow({ event, isLast }: { event: ExecutionEvent; isLast: boolean })
         <span className={`text-xs font-medium ${getEventTextClass(event.type)}`}>
           {event.summary}
         </span>
-        <span className="text-xs font-mono text-slate-400">{time}</span>
+        <span className="text-xs font-mono text-ws-muted">{time}</span>
       </div>
 
       {event.detail && (
-        <div className="text-xs text-slate-600 bg-slate-50 border border-slate-200 p-2 rounded italic mt-1">
+        <div className="text-xs text-ws-text-secondary bg-ws-bg border border-ws-panel-border p-2 rounded italic mt-1">
           "{event.detail}"
         </div>
       )}
 
       {event.type === 'field_value_recorded' && event.fieldKey && (
-        <div className="bg-slate-50 border border-slate-200 rounded p-2 mt-1 inline-block">
-          <span className="text-xs font-mono text-slate-600">
+        <div className="bg-ws-bg border border-ws-panel-border rounded p-2 mt-1 inline-block">
+          <span className="text-xs font-mono text-ws-text-secondary">
             {event.fieldKey} = {JSON.stringify(event.fieldValue)}
           </span>
         </div>
       )}
 
       {event.type === 'evidence_attached' && event.attachmentUrl && (
-        <div className="flex items-center gap-2 mt-2 bg-slate-50 border border-slate-200 p-2 rounded hover:bg-white cursor-pointer transition-colors w-fit">
-          <Paperclip size={14} className="text-slate-400" />
+        <div className="flex items-center gap-2 mt-2 bg-ws-bg border border-ws-panel-border p-2 rounded hover:bg-ws-panel-bg cursor-pointer transition-colors w-fit">
+          <Paperclip size={14} className="text-ws-muted" />
           <span className="text-xs text-blue-600 underline">
             {event.attachmentUrl.split('/').pop()}
           </span>
@@ -246,18 +246,18 @@ function ActionBar({ status, actionId }: { status: string; actionId: number }) {
   };
 
   return (
-    <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex gap-2">
+    <div className="px-5 py-3 bg-ws-bg border-t border-ws-panel-border flex gap-2">
       {status === 'in_progress' && (
         <>
           <button
             onClick={() => handleTransition('complete')}
-            className="flex items-center gap-2 bg-white border border-slate-200 hover:border-emerald-300 hover:text-emerald-700 text-slate-600 px-3 py-1.5 rounded text-xs font-semibold transition-all shadow-sm"
+            className="flex items-center gap-2 bg-ws-panel-bg border border-ws-panel-border hover:border-emerald-300 hover:text-emerald-700 text-ws-text-secondary px-3 py-1.5 rounded text-xs font-semibold transition-all shadow-sm"
           >
             <CheckCircle size={16} /> Complete
           </button>
           <button
             onClick={() => handleTransition('block')}
-            className="flex items-center gap-2 bg-white border border-slate-200 hover:border-red-300 hover:text-red-700 text-slate-600 px-3 py-1.5 rounded text-xs font-semibold transition-all shadow-sm"
+            className="flex items-center gap-2 bg-ws-panel-bg border border-ws-panel-border hover:border-red-300 hover:text-red-700 text-ws-text-secondary px-3 py-1.5 rounded text-xs font-semibold transition-all shadow-sm"
           >
             <HandPalm size={16} /> Block
           </button>
@@ -266,7 +266,7 @@ function ActionBar({ status, actionId }: { status: string; actionId: number }) {
       {status === 'declared' && (
         <button
           onClick={() => handleTransition('start')}
-          className="flex items-center gap-2 bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-700 text-slate-600 px-3 py-1.5 rounded text-xs font-semibold transition-all shadow-sm"
+          className="flex items-center gap-2 bg-ws-panel-bg border border-ws-panel-border hover:border-indigo-300 hover:text-indigo-700 text-ws-text-secondary px-3 py-1.5 rounded text-xs font-semibold transition-all shadow-sm"
         >
           <Play size={16} /> Start
         </button>
@@ -274,7 +274,7 @@ function ActionBar({ status, actionId }: { status: string; actionId: number }) {
       <div className="h-6 w-px bg-slate-200 mx-1" />
       <button
         onClick={() => handleTransition('attach_evidence')}
-        className="flex items-center gap-2 text-slate-500 hover:text-blue-600 px-2 py-1.5 rounded text-xs font-medium transition-colors"
+        className="flex items-center gap-2 text-ws-text-secondary hover:text-blue-600 px-2 py-1.5 rounded text-xs font-medium transition-colors"
       >
         <Paperclip size={14} /> Evidence
       </button>
@@ -288,7 +288,7 @@ function getStatusIcon(status: string) {
     case 'in_progress': return <Play size={18} className="text-indigo-600" weight="fill" />;
     case 'done': return <CheckCircle size={18} className="text-emerald-600" weight="fill" />;
     case 'blocked': return <HandPalm size={18} className="text-red-600" weight="fill" />;
-    default: return <Circle size={18} className="text-slate-400" />;
+    default: return <Circle size={18} className="text-ws-muted" />;
   }
 }
 
@@ -318,7 +318,7 @@ function getEventTextClass(type: EventType) {
     case 'work_finished': return 'text-emerald-700 font-semibold';
     case 'blocked': return 'text-red-700 font-semibold';
     case 'unblocked': return 'text-emerald-700 font-medium';
-    case 'field_value_recorded': return 'text-slate-700 font-medium';
-    default: return 'text-slate-700 font-medium';
+    case 'field_value_recorded': return 'text-ws-text-secondary font-medium';
+    default: return 'text-ws-text-secondary font-medium';
   }
 }

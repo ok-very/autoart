@@ -59,14 +59,14 @@ export function ExportSidebar({
 
     return (
         <aside
-            className="bg-white border-r border-slate-200 flex flex-col shrink-0"
+            className="bg-ws-panel-bg border-r border-ws-panel-border flex flex-col shrink-0"
             style={{ width }}
         >
             {/* Header */}
-            <div className="p-3 border-b border-slate-200">
+            <div className="p-3 border-b border-ws-panel-border">
                 <Inline justify="between" className="mb-2">
                     <Inline gap="sm">
-                        <FolderOpen className="w-4 h-4 text-slate-500" />
+                        <FolderOpen className="w-4 h-4 text-ws-text-secondary" />
                         <Text size="sm" weight="semibold">Projects</Text>
                         {selectedCount > 0 && (
                             <Badge size="sm" variant="default">
@@ -81,7 +81,7 @@ export function ExportSidebar({
                         >
                             All
                         </button>
-                        <span className="text-slate-300">|</span>
+                        <span className="text-ws-muted">|</span>
                         <button
                             className="text-xs text-blue-600 hover:underline"
                             onClick={onSelectNone}
@@ -92,14 +92,14 @@ export function ExportSidebar({
                 </Inline>
 
                 {/* Filter */}
-                <div className="flex items-center gap-2 px-2 py-1.5 bg-slate-50 rounded-lg">
-                    <Filter className="w-3.5 h-3.5 text-slate-400" />
+                <div className="flex items-center gap-2 px-2 py-1.5 bg-ws-bg rounded-lg">
+                    <Filter className="w-3.5 h-3.5 text-ws-muted" />
                     <input
                         type="text"
                         value={filterQuery}
                         onChange={(e) => setFilterQuery(e.target.value)}
                         placeholder="Filter projects..."
-                        className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                        className="flex-1 bg-transparent text-sm outline-none placeholder:text-ws-muted"
                     />
                 </div>
             </div>
@@ -124,7 +124,7 @@ export function ExportSidebar({
                             return (
                                 <div
                                     key={project.id}
-                                    className={`px-3 py-2 hover:bg-slate-50 transition-colors ${isSelected ? 'bg-emerald-50' : ''
+                                    className={`px-3 py-2 hover:bg-ws-bg transition-colors ${isSelected ? 'bg-emerald-50' : ''
                                         } ${isPreviewing ? 'ring-2 ring-inset ring-blue-400' : ''}`}
                                 >
                                     <Inline justify="between" align="start">
@@ -150,7 +150,7 @@ export function ExportSidebar({
                                             onClick={() => onPreviewProject(isPreviewing ? null : project.id)}
                                             className={`p-1.5 rounded-md transition-colors ${isPreviewing
                                                     ? 'bg-blue-100 text-blue-600'
-                                                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                                                    : 'text-ws-muted hover:text-ws-text-secondary hover:bg-slate-100'
                                                 }`}
                                             title="Preview export"
                                         >
@@ -165,7 +165,7 @@ export function ExportSidebar({
             </div>
 
             {/* Footer Stats */}
-            <div className="p-3 border-t border-slate-200 bg-slate-50">
+            <div className="p-3 border-t border-ws-panel-border bg-ws-bg">
                 <Text size="xs" color="muted">
                     {filteredProjects.length} projects
                     {filterQuery && ` (filtered from ${projects?.length || 0})`}

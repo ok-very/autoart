@@ -52,8 +52,8 @@ export function IntakeDashboard({ onOpenForm }: IntakeDashboardProps) {
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-ws-h1 font-semibold text-slate-800">Intake Forms</h1>
-                    <p className="text-sm text-slate-500 mt-1">
+                    <h1 className="text-ws-h1 font-semibold text-ws-fg">Intake Forms</h1>
+                    <p className="text-sm text-ws-text-secondary mt-1">
                         Create and manage intake forms for collecting submissions
                     </p>
                 </div>
@@ -77,18 +77,18 @@ export function IntakeDashboard({ onOpenForm }: IntakeDashboardProps) {
                     <button
                         key={form.id}
                         onClick={() => handleOpenForm(form.id)}
-                        className="bg-white rounded-xl border border-slate-200 p-6 text-left hover:border-indigo-300 hover:shadow-md transition-all group"
+                        className="bg-ws-panel-bg rounded-xl border border-ws-panel-border p-6 text-left hover:border-indigo-300 hover:shadow-md transition-all group"
                     >
                         <div className="flex items-start gap-4">
                             <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                                 <FileText className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-slate-800 truncate">{form.title}</h3>
-                                <p className="text-sm text-slate-500 mt-1 line-clamp-2">
+                                <h3 className="font-semibold text-ws-fg truncate">{form.title}</h3>
+                                <p className="text-sm text-ws-text-secondary mt-1 line-clamp-2">
                                     {form.status === 'active' ? 'Published' : 'Draft'}
                                 </p>
-                                <p className="text-xs text-slate-400 mt-3">
+                                <p className="text-xs text-ws-muted mt-3">
                                     Created {new Date(form.created_at).toLocaleDateString()}
                                 </p>
                             </div>
@@ -100,10 +100,10 @@ export function IntakeDashboard({ onOpenForm }: IntakeDashboardProps) {
                 <button
                     onClick={handleCreateForm}
                     disabled={createForm.isPending}
-                    className="bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 p-6 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all flex flex-col items-center justify-center min-h-[140px]"
+                    className="bg-ws-bg rounded-xl border-2 border-dashed border-ws-panel-border p-6 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all flex flex-col items-center justify-center min-h-[140px]"
                 >
-                    <Plus className="w-8 h-8 text-slate-400 mb-2" />
-                    <span className="text-sm font-medium text-slate-500">New Form</span>
+                    <Plus className="w-8 h-8 text-ws-muted mb-2" />
+                    <span className="text-sm font-medium text-ws-text-secondary">New Form</span>
                 </button>
             </div>
         </div>

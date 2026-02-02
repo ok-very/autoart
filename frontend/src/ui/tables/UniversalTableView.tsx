@@ -61,30 +61,30 @@ function DefinitionSelector({ definitions, selectedId, onSelect }: DefinitionSel
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg hover:border-slate-300 text-sm font-medium text-slate-700"
+                className="flex items-center gap-2 px-3 py-1.5 bg-ws-panel-bg border border-ws-panel-border rounded-lg hover:border-slate-300 text-sm font-medium text-ws-text-secondary"
             >
                 {selected?.styling?.icon && <span>{selected.styling.icon}</span>}
                 <span>{selected?.name || 'All Records'}</span>
-                <ChevronDown size={14} className={clsx('text-slate-400 transition-transform', isOpen && 'rotate-180')} />
+                <ChevronDown size={14} className={clsx('text-ws-muted transition-transform', isOpen && 'rotate-180')} />
             </button>
 
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-                    <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
+                    <div className="absolute top-full left-0 mt-1 w-56 bg-ws-panel-bg border border-ws-panel-border rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
                         <button
                             onClick={() => {
                                 onSelect(null);
                                 setIsOpen(false);
                             }}
                             className={clsx(
-                                'w-full text-left px-3 py-2 text-sm hover:bg-slate-50',
+                                'w-full text-left px-3 py-2 text-sm hover:bg-ws-bg',
                                 !selectedId && 'bg-blue-50 text-blue-700'
                             )}
                         >
                             All Records
                         </button>
-                        <div className="border-t border-slate-100 my-1" />
+                        <div className="border-t border-ws-panel-border my-1" />
                         {definitions.map((def) => (
                             <button
                                 key={def.id}
@@ -93,7 +93,7 @@ function DefinitionSelector({ definitions, selectedId, onSelect }: DefinitionSel
                                     setIsOpen(false);
                                 }}
                                 className={clsx(
-                                    'w-full text-left px-3 py-2 text-sm hover:bg-slate-50 flex items-center gap-2',
+                                    'w-full text-left px-3 py-2 text-sm hover:bg-ws-bg flex items-center gap-2',
                                     selectedId === def.id && 'bg-blue-50 text-blue-700'
                                 )}
                             >
@@ -123,7 +123,7 @@ function ColumnPicker({ allColumns, visibleKeys, onToggle }: ColumnPickerProps) 
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="p-2 rounded hover:bg-slate-100 text-slate-500"
+                className="p-2 rounded hover:bg-slate-100 text-ws-text-secondary"
                 title="Toggle columns"
             >
                 <Columns size={16} />
@@ -132,14 +132,14 @@ function ColumnPicker({ allColumns, visibleKeys, onToggle }: ColumnPickerProps) 
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-                    <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
-                        <div className="px-3 py-1.5 text-[10px] font-semibold text-slate-400 uppercase">
+                    <div className="absolute top-full right-0 mt-1 w-48 bg-ws-panel-bg border border-ws-panel-border rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
+                        <div className="px-3 py-1.5 text-[10px] font-semibold text-ws-muted uppercase">
                             Visible Columns
                         </div>
                         {allColumns.map((col) => (
                             <label
                                 key={col.key}
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-50 cursor-pointer"
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-ws-bg cursor-pointer"
                             >
                                 <input
                                     type="checkbox"
@@ -246,7 +246,7 @@ export function UniversalTableView({
             resizable: true,
             field: { key: 'unique_name', type: 'text', label: 'Name' },
             renderCell: (record) => (
-                <div className="text-sm font-medium text-slate-800 truncate" title={record.unique_name}>
+                <div className="text-sm font-medium text-ws-fg truncate" title={record.unique_name}>
                     {record.unique_name}
                 </div>
             ),
@@ -299,7 +299,7 @@ export function UniversalTableView({
             renderCell: (record) => {
                 const date = record.updated_at ? new Date(record.updated_at) : null;
                 return (
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-ws-text-secondary">
                         {date ? date.toLocaleDateString() : '-'}
                     </div>
                 );
@@ -386,7 +386,7 @@ export function UniversalTableView({
         return (
             <div className="flex items-center justify-between px-4 py-2">
                 <div className="flex items-center gap-4">
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-ws-text-secondary">
                         {records.length} record{records.length !== 1 ? 's' : ''}
                     </span>
 
@@ -406,17 +406,17 @@ export function UniversalTableView({
                         <button
                             onClick={() => setPage((p) => Math.max(0, p - 1))}
                             disabled={page === 0}
-                            className="px-2 py-1 text-xs rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-50"
+                            className="px-2 py-1 text-xs rounded border border-ws-panel-border hover:bg-ws-bg disabled:opacity-50"
                         >
                             Prev
                         </button>
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-ws-text-secondary">
                             Page {page + 1} of {totalPages}
                         </span>
                         <button
                             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                             disabled={page >= totalPages - 1}
-                            className="px-2 py-1 text-xs rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-50"
+                            className="px-2 py-1 text-xs rounded border border-ws-panel-border hover:bg-ws-bg disabled:opacity-50"
                         >
                             Next
                         </button>
@@ -427,9 +427,9 @@ export function UniversalTableView({
     }, [records.length, selectedIds.size, allowBulkDelete, handleBulkDelete, page, totalPages]);
 
     return (
-        <div className={clsx('flex flex-col h-full bg-slate-50', className)}>
+        <div className={clsx('flex flex-col h-full bg-ws-bg', className)}>
             {/* Toolbar */}
-            <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200">
+            <div className="flex items-center justify-between px-4 py-3 bg-ws-panel-bg border-b border-ws-panel-border">
                 <div className="flex items-center gap-3">
                     {showDefinitionSelector && (
                         <DefinitionSelector
@@ -445,7 +445,7 @@ export function UniversalTableView({
 
                     {/* Search */}
                     <div className="relative">
-                        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-ws-muted" />
                         <input
                             type="text"
                             placeholder="Search records..."
@@ -454,7 +454,7 @@ export function UniversalTableView({
                                 setSearchQuery(e.target.value);
                                 setPage(0);
                             }}
-                            className="pl-8 pr-3 py-1.5 w-64 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="pl-8 pr-3 py-1.5 w-64 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                         />
                     </div>
                 </div>
@@ -481,11 +481,11 @@ export function UniversalTableView({
             {/* Table */}
             <div className="flex-1 overflow-auto p-4">
                 {isLoading ? (
-                    <div className="flex items-center justify-center h-64 text-slate-400">
+                    <div className="flex items-center justify-center h-64 text-ws-muted">
                         Loading records...
                     </div>
                 ) : !selectedDefinitionId ? (
-                    <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+                    <div className="flex flex-col items-center justify-center h-64 text-ws-muted">
                         <p className="text-ws-body">Select a record type</p>
                         <p className="text-sm">Choose a definition from the dropdown to view records</p>
                     </div>

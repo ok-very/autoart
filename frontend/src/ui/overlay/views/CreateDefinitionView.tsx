@@ -204,7 +204,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
                   {selectedEmoji}
                 </button>
                 {emojiPickerOpen && (
-                  <div className="absolute top-full left-0 mt-1 z-10 bg-white border border-slate-200 rounded-lg shadow-md p-2">
+                  <div className="absolute top-full left-0 mt-1 z-10 bg-ws-panel-bg border border-ws-panel-border rounded-lg shadow-md p-2">
                     <div className="grid grid-cols-6 gap-1">
                       {PRESET_EMOJIS.map((emoji) => (
                         <button
@@ -246,7 +246,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
           </Stack>
 
           {/* Preview */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+          <div className="bg-ws-bg border border-ws-panel-border rounded-lg p-4">
             <Text size="xs" color="muted" className="mb-2">Preview</Text>
             <Inline gap="sm">
               <div
@@ -265,7 +265,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
           </div>
 
           {/* Actions */}
-          <Inline justify="end" gap="sm" className="pt-4 border-t border-slate-100">
+          <Inline justify="end" gap="sm" className="pt-4 border-t border-ws-panel-border">
             <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>

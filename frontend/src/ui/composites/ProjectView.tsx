@@ -188,7 +188,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
     // Empty states
     if (!projectId) {
         return (
-            <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
+            <div className="flex-1 flex items-center justify-center bg-ws-bg text-ws-muted">
                 <div className="text-center">
                     <p className="text-ws-body">No project selected</p>
                     <p className="text-sm">Select a project from the top menu</p>
@@ -199,7 +199,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
 
     if (!project) {
         return (
-            <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
+            <div className="flex-1 flex items-center justify-center bg-ws-bg text-ws-muted">
                 <div className="text-center">
                     <p className="text-ws-body">Loading project…</p>
                 </div>
@@ -208,14 +208,14 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
     }
 
     return (
-        <div className={`flex-1 flex overflow-hidden bg-white ${className || ''}`}
+        <div className={`flex-1 flex overflow-hidden bg-ws-panel-bg ${className || ''}`}
             data-aa-component="ProjectView"
             data-aa-view={activeTab}
         >
             {/* Left navigation (subprocess list) */}
-            <aside className="w-[320px] shrink-0 border-r border-slate-200 bg-slate-50 flex flex-col">
-                <div className="p-3 border-b border-slate-200 bg-white">
-                    <div className="text-sm font-semibold text-slate-800 truncate" title={project.title}>
+            <aside className="w-[320px] shrink-0 border-r border-ws-panel-border bg-ws-bg flex flex-col">
+                <div className="p-3 border-b border-ws-panel-border bg-ws-panel-bg">
+                    <div className="text-sm font-semibold text-ws-fg truncate" title={project.title}>
                         {project.title}
                     </div>
                     {/* View Switcher */}
@@ -242,7 +242,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                 {activeTab === 'workflow' && (
                     <div className="flex-1 overflow-y-auto p-2 custom-scroll">
                         {subprocesses.length === 0 ? (
-                            <div className="p-3 text-xs text-slate-400">No subprocesses yet.</div>
+                            <div className="p-3 text-xs text-ws-muted">No subprocesses yet.</div>
                         ) : (
                             <div className="space-y-1">
                                 {subprocesses.map((sp) => {
@@ -254,7 +254,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                                             className={
                                                 isActive
                                                     ? 'w-full text-left px-3 py-2 rounded bg-blue-50 text-blue-700 border border-blue-100'
-                                                    : 'w-full text-left px-3 py-2 rounded hover:bg-white text-slate-700 border border-transparent'
+                                                    : 'w-full text-left px-3 py-2 rounded hover:bg-ws-panel-bg text-ws-text-secondary border border-transparent'
                                             }
                                             data-aa-component="ProjectView"
                                             data-aa-id={`subprocess-${sp.id}`}
@@ -274,7 +274,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                 {/* Gantt Sidebar Content */}
                 {activeTab === 'gantt' && (
                     <div className="flex-1 overflow-y-auto p-3 custom-scroll">
-                        <p className="text-xs font-semibold text-slate-700 mb-3">Timeline Controls</p>
+                        <p className="text-xs font-semibold text-ws-text-secondary mb-3">Timeline Controls</p>
                         <GanttFilters
                             filter={ganttFilter}
                             onFilterChange={setGanttFilter}
@@ -283,8 +283,8 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                             dateRange={dateRangeBounds}
                         />
                         {projectActions.length > 0 && (
-                            <div className="mt-4 pt-3 border-t border-slate-200">
-                                <p className="text-[10px] text-slate-400">
+                            <div className="mt-4 pt-3 border-t border-ws-panel-border">
+                                <p className="text-[10px] text-ws-muted">
                                     {projectActions.length} action{projectActions.length !== 1 ? 's' : ''} in project
                                 </p>
                             </div>
@@ -295,16 +295,16 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                 {/* Calendar Sidebar Content */}
                 {activeTab === 'calendar' && (
                     <div className="flex-1 overflow-y-auto p-3 custom-scroll">
-                        <p className="text-xs font-semibold text-slate-700 mb-3">Calendar View</p>
-                        <p className="text-xs text-slate-500 mb-4">
+                        <p className="text-xs font-semibold text-ws-text-secondary mb-3">Calendar View</p>
+                        <p className="text-xs text-ws-text-secondary mb-4">
                             Drag events to reschedule. Hover near edges during drag to navigate months.
                         </p>
                         {projectActions.length > 0 && (
-                            <div className="pt-3 border-t border-slate-200">
-                                <p className="text-[10px] text-slate-400">
+                            <div className="pt-3 border-t border-ws-panel-border">
+                                <p className="text-[10px] text-ws-muted">
                                     {calendarEvents.length} scheduled action{calendarEvents.length !== 1 ? 's' : ''}
                                 </p>
-                                <p className="text-[10px] text-slate-400 mt-1">
+                                <p className="text-[10px] text-ws-muted mt-1">
                                     {projectActions.length - calendarEvents.length} without dates
                                 </p>
                             </div>
@@ -314,8 +314,8 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
 
                 {activeTab === 'log' && (
                     <div className="flex-1 p-4">
-                        <p className="text-xs font-medium text-slate-600 mb-2">Execution Log</p>
-                        <p className="text-xs text-slate-400">Timeline of all actions and events for this project.</p>
+                        <p className="text-xs font-medium text-ws-text-secondary mb-2">Execution Log</p>
+                        <p className="text-xs text-ws-muted">Timeline of all actions and events for this project.</p>
                     </div>
                 )}
             </aside>
@@ -323,10 +323,10 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
             {/* Main content area */}
             {activeTab === 'workflow' ? (
                 <main className="flex-1 flex flex-col overflow-hidden">
-                    <div className="h-10 border-b border-slate-200 bg-white px-3 flex items-center justify-between">
+                    <div className="h-10 border-b border-ws-panel-border bg-ws-panel-bg px-3 flex items-center justify-between">
                         <div className="min-w-0">
-                            <div className="text-xs text-slate-400">Subprocess</div>
-                            <div className="text-sm font-semibold text-slate-800 truncate">
+                            <div className="text-xs text-ws-muted">Subprocess</div>
+                            <div className="text-sm font-semibold text-ws-fg truncate">
                                 {activeSubprocess?.title || 'Select a subprocess'}
                             </div>
                         </div>
@@ -338,10 +338,10 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                             {recordsByDefinition.map(({ definition, records }) => (
                                 <div key={definition.id} className="mt-6">
                                     <div className="flex items-center justify-between mb-2">
-                                        <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                        <h3 className="text-sm font-semibold text-ws-text-secondary flex items-center gap-2">
                                             {definition.styling?.icon && <span>{definition.styling.icon}</span>}
                                             {definition.name}
-                                            <span className="text-xs font-normal text-slate-400">
+                                            <span className="text-xs font-normal text-ws-muted">
                                                 ({records.length})
                                             </span>
                                         </h3>
@@ -377,7 +377,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                             projectId={projectId}
                         />
                     ) : (
-                        <div className="flex-1 flex items-center justify-center text-slate-400">
+                        <div className="flex-1 flex items-center justify-center text-ws-muted">
                             Loading Gantt...
                         </div>
                     )}
@@ -414,7 +414,7 @@ export function ProjectView({ projectId, className }: ProjectViewProps) {
                             }}
                         />
                     ) : (
-                        <div className="flex-1 flex items-center justify-center text-slate-400">
+                        <div className="flex-1 flex items-center justify-center text-ws-muted">
                             <div className="text-center">
                                 <p className="text-ws-body">No scheduled actions</p>
                                 <p className="text-sm mt-1">Add dates to actions to see them on the calendar</p>

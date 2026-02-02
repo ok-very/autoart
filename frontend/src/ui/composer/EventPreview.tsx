@@ -149,7 +149,7 @@ function EventRow({
 
             {/* Summary */}
             {summary && (
-                <span className="text-slate-500 truncate">
+                <span className="text-ws-text-secondary truncate">
                     {summary}
                 </span>
             )}
@@ -189,13 +189,13 @@ export function EventPreview({
 
     return (
         <div className={clsx(
-            'rounded-lg border border-slate-200 bg-slate-50/50',
+            'rounded-lg border border-ws-panel-border bg-ws-bg/50',
             size === 'sm' ? 'p-2' : 'p-3',
             className
         )}>
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5 text-slate-600">
+                <div className="flex items-center gap-1.5 text-ws-text-secondary">
                     <Sparkles size={size === 'sm' ? 12 : 14} className="text-amber-500" />
                     <span className={clsx(
                         'font-medium',
@@ -209,7 +209,7 @@ export function EventPreview({
                         type="button"
                         onClick={toggleExpanded}
                         className={clsx(
-                            'flex items-center gap-0.5 text-slate-400 hover:text-slate-600 transition-colors',
+                            'flex items-center gap-0.5 text-ws-muted hover:text-ws-text-secondary transition-colors',
                             size === 'sm' ? 'text-[10px]' : 'text-xs'
                         )}
                     >

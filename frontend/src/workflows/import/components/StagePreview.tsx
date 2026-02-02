@@ -41,7 +41,7 @@ export function StagePreview({
 
     if (stageGroups.length === 0) {
         return (
-            <div className="p-6 text-center text-slate-500">
+            <div className="p-6 text-center text-ws-text-secondary">
                 No items to display
             </div>
         );
@@ -52,13 +52,13 @@ export function StagePreview({
             {stageGroups.map((stage) => (
                 <div
                     key={stage.key}
-                    className="bg-white rounded-lg border border-slate-200 overflow-hidden"
+                    className="bg-ws-panel-bg rounded-lg border border-ws-panel-border overflow-hidden"
                 >
                     {/* Stage header */}
-                    <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
+                    <div className="px-4 py-3 bg-ws-bg border-b border-ws-panel-border flex items-center gap-2">
                         <Layers className="w-4 h-4 text-blue-500" />
-                        <h3 className="text-sm font-semibold text-slate-700">{stage.label}</h3>
-                        <span className="text-xs text-slate-400 bg-slate-200 px-1.5 py-0.5 rounded">
+                        <h3 className="text-sm font-semibold text-ws-text-secondary">{stage.label}</h3>
+                        <span className="text-xs text-ws-muted bg-slate-200 px-1.5 py-0.5 rounded">
                             {stage.items.length} items
                         </span>
                     </div>
@@ -71,14 +71,14 @@ export function StagePreview({
                                 onClick={() => onSelect(item.tempId)}
                                 className={`w-full text-left px-4 py-3 transition-colors ${item.tempId === selectedRecordId
                                     ? 'bg-blue-50 border-l-2 border-blue-500'
-                                    : 'hover:bg-slate-50'
+                                    : 'hover:bg-ws-bg'
                                     }`}
                             >
-                                <div className="text-sm font-medium text-slate-800">
+                                <div className="text-sm font-medium text-ws-fg">
                                     {item.title}
                                 </div>
                                 {item.fieldRecordings.length > 0 && (
-                                    <div className="text-xs text-slate-500 mt-1">
+                                    <div className="text-xs text-ws-text-secondary mt-1">
                                         {item.fieldRecordings
                                             .filter(f => f.value != null && String(f.value) !== 'null' && f.value !== '')
                                             .slice(0, 2)

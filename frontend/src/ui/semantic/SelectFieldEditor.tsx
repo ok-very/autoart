@@ -71,14 +71,14 @@ export function SelectFieldEditor({
                         compact ? 'h-7 px-2 text-xs' : 'h-9 px-3 text-sm',
                         currentOption?.color
                             ? `${currentOption.color.replace('bg-', 'bg-opacity-10 text-').replace('-500', '-700')} border-transparent`
-                            : 'border-slate-200 bg-white',
+                            : 'border-ws-panel-border bg-ws-panel-bg',
                         'cursor-default'
                     )}
                 >
                     {currentOption?.color && (
                         <span className={clsx('w-2.5 h-2.5 rounded-full flex-shrink-0', currentOption.color)} />
                     )}
-                    <span className={clsx('flex-1 text-left', !currentOption && 'text-slate-400')}>
+                    <span className={clsx('flex-1 text-left', !currentOption && 'text-ws-muted')}>
                         {currentOption?.label || placeholder}
                     </span>
                 </div>
@@ -97,19 +97,19 @@ export function SelectFieldEditor({
                             compact ? 'h-7 px-2 text-xs' : 'h-9 px-3 text-sm',
                             currentOption?.color
                                 ? `${currentOption.color.replace('bg-', 'bg-opacity-10 text-').replace('-500', '-700')} border-transparent`
-                                : 'border-slate-200 bg-white',
+                                : 'border-ws-panel-border bg-ws-panel-bg',
                             'cursor-pointer hover:border-slate-300'
                         )}
                     >
                         {currentOption?.color && (
                             <span className={clsx('w-2.5 h-2.5 rounded-full flex-shrink-0', currentOption.color)} />
                         )}
-                        <span className={clsx('flex-1 text-left', !currentOption && 'text-slate-400')}>
+                        <span className={clsx('flex-1 text-left', !currentOption && 'text-ws-muted')}>
                             {currentOption?.label || placeholder}
                         </span>
                         <ChevronDown
                             className={clsx(
-                                'text-slate-400 flex-shrink-0',
+                                'text-ws-muted flex-shrink-0',
                                 compact ? 'w-3 h-3' : 'w-4 h-4'
                             )}
                         />
@@ -122,7 +122,7 @@ export function SelectFieldEditor({
                         <>
                             <DropdownItem
                                 onSelect={() => handleSelect(null)}
-                                className="text-slate-400"
+                                className="text-ws-muted"
                             >
                                 Clear
                             </DropdownItem>

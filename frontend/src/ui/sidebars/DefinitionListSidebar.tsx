@@ -94,14 +94,14 @@ export function DefinitionListSidebar({
 
     return (
         <aside
-            className="bg-slate-50 border-r border-slate-200 flex flex-col shrink-0"
+            className="bg-ws-bg border-r border-ws-panel-border flex flex-col shrink-0"
             style={{ width }}
         >
             {/* Header */}
-            <div className="h-10 border-b border-slate-200 flex items-center justify-between px-3 bg-white">
+            <div className="h-10 border-b border-ws-panel-border flex items-center justify-between px-3 bg-ws-panel-bg">
                 <div className="flex items-center gap-2">
                     <Icon size={18} className={iconColor} />
-                    <span className="font-semibold text-slate-700">{title}</span>
+                    <span className="font-semibold text-ws-text-secondary">{title}</span>
                 </div>
                 <button
                     onClick={handleCreate}
@@ -118,18 +118,18 @@ export function DefinitionListSidebar({
             </div>
 
             {/* Search */}
-            <div className="p-3 border-b border-slate-100">
+            <div className="p-3 border-b border-ws-panel-border">
                 <div className="relative">
                     <Search
                         size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-ws-muted"
                     />
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search definitions..."
-                        className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full pl-9 pr-3 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                 </div>
             </div>
@@ -142,7 +142,7 @@ export function DefinitionListSidebar({
                     </div>
                 ) : searchedDefinitions.length === 0 ? (
                     <div className="text-center py-8 px-4">
-                        <p className="text-xs text-slate-400">{emptyMessage}</p>
+                        <p className="text-xs text-ws-muted">{emptyMessage}</p>
                     </div>
                 ) : (
                     <div className="p-1 space-y-0.5">
@@ -153,13 +153,13 @@ export function DefinitionListSidebar({
                                 'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors',
                                 selectedDefinitionId === null
                                     ? isRecords ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                                    : 'hover:bg-slate-100 text-slate-600'
+                                    : 'hover:bg-slate-100 text-ws-text-secondary'
                             )}
                         >
                             <span className="text-base">📋</span>
                             <div className="flex-1 min-w-0">
                                 <div className="text-sm font-medium">All {isRecords ? 'Records' : 'Actions'}</div>
-                                <div className="text-[10px] text-slate-400">
+                                <div className="text-[10px] text-ws-muted">
                                     {stats ? stats.reduce((sum, s) => sum + s.count, 0) : 0} total
                                 </div>
                             </div>
@@ -179,7 +179,7 @@ export function DefinitionListSidebar({
                                         'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors group cursor-pointer',
                                         isSelected
                                             ? isRecords ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                                            : 'hover:bg-slate-100 text-slate-600'
+                                            : 'hover:bg-slate-100 text-ws-text-secondary'
                                     )}
                                 >
                                     {/* Icon */}
@@ -190,7 +190,7 @@ export function DefinitionListSidebar({
                                     {/* Name and Count */}
                                     <div className="flex-1 min-w-0">
                                         <div className="text-sm font-medium truncate">{def.name}</div>
-                                        <div className="text-[10px] text-slate-400">
+                                        <div className="text-[10px] text-ws-muted">
                                             {count} {instanceLabel}{count !== 1 ? 's' : ''}
                                         </div>
                                     </div>
@@ -198,7 +198,7 @@ export function DefinitionListSidebar({
                                     {/* Edit Schema button on hover */}
                                     <button
                                         onClick={(e) => handleEditDefinition(e, def.id)}
-                                        className="p-1 text-slate-300 hover:text-slate-600 hover:bg-slate-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="p-1 text-ws-muted hover:text-ws-text-secondary hover:bg-slate-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                                         title={`Edit ${def.name} schema`}
                                     >
                                         <Settings size={12} />

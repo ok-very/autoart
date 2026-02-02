@@ -66,18 +66,18 @@ export function TextPruningSection({
   };
 
   return (
-    <div className="border border-slate-200 rounded-lg overflow-hidden">
+    <div className="border border-ws-panel-border rounded-lg overflow-hidden">
       {/* Header */}
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full bg-slate-50 px-4 py-3 flex items-center justify-between hover:bg-slate-100 transition-colors"
+        className="w-full bg-ws-bg px-4 py-3 flex items-center justify-between hover:bg-slate-100 transition-colors"
       >
         <Inline gap="sm" align="center">
           {isExpanded ? (
-            <ChevronDown className="w-4 h-4 text-slate-500" />
+            <ChevronDown className="w-4 h-4 text-ws-text-secondary" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-slate-500" />
+            <ChevronRight className="w-4 h-4 text-ws-text-secondary" />
           )}
           <Text weight="medium">Text Elements</Text>
         </Inline>
@@ -88,10 +88,10 @@ export function TextPruningSection({
 
       {/* Content */}
       {isExpanded && (
-        <div className="border-t border-slate-200">
+        <div className="border-t border-ws-panel-border">
           {/* Bulk actions */}
           {textElements.length > 0 && (
-            <div className="px-4 py-2 bg-slate-25 border-b border-slate-100">
+            <div className="px-4 py-2 bg-slate-25 border-b border-ws-panel-border">
               <Inline gap="xs">
                 <Button
                   variant="secondary"
@@ -131,8 +131,8 @@ export function TextPruningSection({
                       className={clsx(
                         'p-3 rounded-lg border transition-colors',
                         isPruned
-                          ? 'bg-slate-50 border-slate-200 opacity-60'
-                          : 'bg-white border-slate-200'
+                          ? 'bg-ws-bg border-ws-panel-border opacity-60'
+                          : 'bg-ws-panel-bg border-ws-panel-border'
                       )}
                     >
                       {isEditing ? (
@@ -178,7 +178,7 @@ export function TextPruningSection({
                               <button
                                 type="button"
                                 onClick={() => handleStartEdit(element)}
-                                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
+                                className="p-1.5 text-ws-muted hover:text-ws-text-secondary hover:bg-slate-100 rounded transition-colors"
                                 title="Edit"
                               >
                                 <Edit2 className="w-4 h-4" />

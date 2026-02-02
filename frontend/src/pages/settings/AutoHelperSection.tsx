@@ -53,7 +53,7 @@ function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
         <span
             className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${ok
                 ? 'bg-emerald-50 text-emerald-700'
-                : 'bg-slate-100 text-slate-500'
+                : 'bg-slate-100 text-ws-text-secondary'
                 }`}
         >
             {ok ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
@@ -76,8 +76,8 @@ function CardShell({
     children: React.ReactNode;
 }) {
     return (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="p-4 border-b border-slate-100">
+        <div className="bg-ws-panel-bg rounded-xl border border-ws-panel-border overflow-hidden">
+            <div className="p-4 border-b border-ws-panel-border">
                 <div className="flex items-start gap-3">
                     <div
                         className={`w-10 h-10 ${iconBg} rounded-lg flex items-center justify-center flex-shrink-0`}
@@ -86,7 +86,7 @@ function CardShell({
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-slate-900">{title}</h3>
+                            <h3 className="font-semibold text-ws-fg">{title}</h3>
                             {badge}
                         </div>
                     </div>
@@ -100,7 +100,7 @@ function CardShell({
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-500 w-36 flex-shrink-0">{label}</span>
+            <span className="text-sm text-ws-text-secondary w-36 flex-shrink-0">{label}</span>
             <div className="flex-1 min-w-0">{children}</div>
         </div>
     );
@@ -121,7 +121,7 @@ function SmallButton({
 }) {
     const base = 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors disabled:opacity-50';
     const variants = {
-        default: 'bg-slate-100 text-slate-700 hover:bg-slate-200',
+        default: 'bg-slate-100 text-ws-text-secondary hover:bg-slate-200',
         danger: 'bg-red-50 text-red-700 hover:bg-red-100',
         primary: 'bg-indigo-500 text-white hover:bg-indigo-600',
     };
@@ -202,15 +202,15 @@ function PairingCodeCard({
             ) : (
                 <div className="space-y-3">
                     {pairingCode ? (
-                        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center">
-                            <p className="text-xs text-slate-500 mb-2">
+                        <div className="bg-ws-bg border border-ws-panel-border rounded-lg p-4 text-center">
+                            <p className="text-xs text-ws-text-secondary mb-2">
                                 Enter this code in AutoHelper:
                             </p>
-                            <div className="font-mono text-ws-h1 font-semibold text-slate-900 tracking-widest">
+                            <div className="font-mono text-ws-h1 font-semibold text-ws-fg tracking-widest">
                                 {pairingCode}
                             </div>
                             {expiresAt && (
-                                <p className="text-xs text-slate-400 mt-2">
+                                <p className="text-xs text-ws-muted mt-2">
                                     Expires in 5 minutes
                                 </p>
                             )}
@@ -237,7 +237,7 @@ function PairingCodeCard({
                     )}
                 </div>
             )}
-            <div className="mt-1 flex items-start gap-2 text-xs text-slate-400">
+            <div className="mt-1 flex items-start gap-2 text-xs text-ws-muted">
                 <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                 <span>
                     Generate a code here, then enter it in AutoHelper to connect.
@@ -265,18 +265,18 @@ function ServiceStatusCard() {
             badge={<StatusBadge ok={dbOk} label={dbOk ? 'Connected' : 'DB offline'} />}
         >
             <FieldRow label="Database">
-                <span className="text-sm text-slate-900">{status?.database?.path ?? '—'}</span>
+                <span className="text-sm text-ws-fg">{status?.database?.path ?? '—'}</span>
             </FieldRow>
             <FieldRow label="Migration">
-                <span className="text-sm text-slate-900">{status?.database?.migration_status ?? '—'}</span>
+                <span className="text-sm text-ws-fg">{status?.database?.migration_status ?? '—'}</span>
             </FieldRow>
             <FieldRow label="Indexed files">
-                <span className="text-sm text-slate-900">
+                <span className="text-sm text-ws-fg">
                     {indexStatus?.total_files != null ? indexStatus.total_files.toLocaleString() : '—'}
                 </span>
             </FieldRow>
             <FieldRow label="Last index run">
-                <span className="text-sm text-slate-900">{indexStatus?.last_run ?? '—'}</span>
+                <span className="text-sm text-ws-fg">{indexStatus?.last_run ?? '—'}</span>
             </FieldRow>
 
             <div className="flex gap-2 pt-2">
@@ -490,7 +490,7 @@ function MailCard() {
                         }`}
                 >
                     <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'
+                        className={`inline-block h-4 w-4 transform rounded-full bg-ws-panel-bg transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'
                             }`}
                     />
                 </button>
@@ -504,10 +504,10 @@ function MailCard() {
                 />
             </FieldRow>
             <FieldRow label="Output path">
-                <span className="text-sm text-slate-900 truncate block">{mailStatus?.output_path ?? '—'}</span>
+                <span className="text-sm text-ws-fg truncate block">{mailStatus?.output_path ?? '—'}</span>
             </FieldRow>
             <FieldRow label="Ingest path">
-                <span className="text-sm text-slate-900 truncate block">{mailStatus?.ingest_path ?? '—'}</span>
+                <span className="text-sm text-ws-fg truncate block">{mailStatus?.ingest_path ?? '—'}</span>
             </FieldRow>
 
             <div className="flex gap-2 pt-2">
@@ -551,20 +551,20 @@ function RootsCard() {
 
     return (
         <CardShell
-            icon={<HardDrive className="w-5 h-5 text-slate-600" />}
+            icon={<HardDrive className="w-5 h-5 text-ws-text-secondary" />}
             iconBg="bg-slate-100"
             title="Roots"
         >
             {roots.length === 0 ? (
-                <p className="text-sm text-slate-400">No roots configured</p>
+                <p className="text-sm text-ws-muted">No roots configured</p>
             ) : (
                 <ul className="space-y-1">
                     {roots.map((root) => (
                         <li key={root} className="flex items-center gap-2 group">
-                            <span className="text-sm text-slate-900 font-mono truncate flex-1">{root}</span>
+                            <span className="text-sm text-ws-fg font-mono truncate flex-1">{root}</span>
                             <button
                                 onClick={() => handleRemove(root)}
-                                className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-opacity"
+                                className="opacity-0 group-hover:opacity-100 text-ws-muted hover:text-red-500 transition-opacity"
                             >
                                 <X className="w-4 h-4" />
                             </button>
@@ -598,33 +598,33 @@ function AdvancedCard() {
 
     return (
         <CardShell
-            icon={<Database className="w-5 h-5 text-slate-600" />}
+            icon={<Database className="w-5 h-5 text-ws-text-secondary" />}
             iconBg="bg-slate-100"
             title="Advanced"
         >
             <FieldRow label="Host">
-                <span className="text-sm text-slate-900 font-mono">
+                <span className="text-sm text-ws-fg font-mono">
                     {(config as Record<string, unknown>)?.host as string ?? '127.0.0.1'}
                 </span>
             </FieldRow>
             <FieldRow label="CORS origins">
-                <span className="text-sm text-slate-900 font-mono truncate block">
+                <span className="text-sm text-ws-fg font-mono truncate block">
                     {Array.isArray((config as Record<string, unknown>)?.cors_origins)
                         ? ((config as Record<string, unknown>).cors_origins as string[]).join(', ')
                         : '—'}
                 </span>
             </FieldRow>
             <FieldRow label="DB path">
-                <span className="text-sm text-slate-900 font-mono truncate block">
+                <span className="text-sm text-ws-fg font-mono truncate block">
                     {status?.database?.path ?? '—'}
                 </span>
             </FieldRow>
 
-            <div className="pt-2 border-t border-slate-100">
+            <div className="pt-2 border-t border-ws-panel-border">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-sm font-medium text-slate-900">Garbage Collection</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-sm font-medium text-ws-fg">Garbage Collection</p>
+                        <p className="text-xs text-ws-text-secondary">
                             {gcStatus?.enabled ? 'Enabled' : 'Disabled'}
                             {gcStatus?.last_run ? ` — last run ${gcStatus.last_run}` : ''}
                         </p>
@@ -674,11 +674,11 @@ export function AutoHelperSection({
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-ws-h2 font-semibold text-slate-900">AutoHelper</h2>
-                    <p className="text-sm text-slate-500 mt-1">Local service management</p>
+                    <h2 className="text-ws-h2 font-semibold text-ws-fg">AutoHelper</h2>
+                    <p className="text-sm text-ws-text-secondary mt-1">Local service management</p>
                 </div>
                 {pairingCard}
-                <div className="flex items-center gap-2 text-slate-400">
+                <div className="flex items-center gap-2 text-ws-muted">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="text-sm">Connecting to AutoHelper...</span>
                 </div>
@@ -690,8 +690,8 @@ export function AutoHelperSection({
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-ws-h2 font-semibold text-slate-900">AutoHelper</h2>
-                    <p className="text-sm text-slate-500 mt-1">Local service management</p>
+                    <h2 className="text-ws-h2 font-semibold text-ws-fg">AutoHelper</h2>
+                    <p className="text-sm text-ws-text-secondary mt-1">Local service management</p>
                 </div>
                 {pairingCard}
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
@@ -710,8 +710,8 @@ export function AutoHelperSection({
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-ws-h2 font-semibold text-slate-900">AutoHelper</h2>
-                <p className="text-sm text-slate-500 mt-1">Local service management</p>
+                <h2 className="text-ws-h2 font-semibold text-ws-fg">AutoHelper</h2>
+                <p className="text-sm text-ws-text-secondary mt-1">Local service management</p>
             </div>
 
             {pairingCard}

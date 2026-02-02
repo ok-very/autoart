@@ -43,7 +43,7 @@ export function GanttCanvas({
     return (
         <div
             ref={containerRef}
-            className={clsx("relative overflow-auto bg-white select-none", className)}
+            className={clsx("relative overflow-auto bg-ws-panel-bg select-none", className)}
             onClick={handleBgClick}
         >
             <div
@@ -55,13 +55,13 @@ export function GanttCanvas({
                 }}
             >
                 {/* Header / Time Axis */}
-                <div className="absolute top-0 left-0 right-0 h-10 border-b border-slate-200 bg-slate-50 z-10 sticky">
+                <div className="absolute top-0 left-0 right-0 h-10 border-b border-ws-panel-border bg-ws-bg z-10 sticky">
                     {ticks.map((tick, i) => (
                         <div
                             key={`tick-${i}`}
                             className={clsx(
-                                "absolute top-0 bottom-0 border-l px-1 py-1 text-[10px] text-slate-500",
-                                tick.type === 'major' ? "border-slate-300 font-medium" : "border-slate-100"
+                                "absolute top-0 bottom-0 border-l px-1 py-1 text-[10px] text-ws-text-secondary",
+                                tick.type === 'major' ? "border-slate-300 font-medium" : "border-ws-panel-border"
                             )}
                             style={{ left: tick.x }}
                         >
@@ -77,7 +77,7 @@ export function GanttCanvas({
                             key={`grid-${i}`}
                             className={clsx(
                                 "absolute top-0 bottom-0 border-l",
-                                tick.type === 'major' ? "border-slate-200" : "border-slate-50"
+                                tick.type === 'major' ? "border-ws-panel-border" : "border-slate-50"
                             )}
                             style={{ left: tick.x }}
                         />
@@ -90,7 +90,7 @@ export function GanttCanvas({
                         <div
                             key={lane.id}
                             className={clsx(
-                                "absolute w-full border-b border-slate-100 hover:bg-slate-50/50 transition-colors group",
+                                "absolute w-full border-b border-ws-panel-border hover:bg-ws-bg/50 transition-colors group",
                                 selection?.selectedLaneIds?.includes(lane.id) && "bg-blue-50/30"
                             )}
                             style={{ top: lane.y, height: lane.height }}
@@ -101,14 +101,14 @@ export function GanttCanvas({
                         >
                             {/* Lane Label */}
                             <div
-                                className="absolute top-0 bottom-0 flex items-center text-xs text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis z-20 pointer-events-none"
+                                className="absolute top-0 bottom-0 flex items-center text-xs text-ws-text-secondary whitespace-nowrap overflow-hidden text-ellipsis z-20 pointer-events-none"
                                 style={{
                                     left: 0,
                                     paddingLeft: (lane.depth * 20) + 8,
                                     width: 250 // sticky-ish width
                                 }}
                             >
-                                <span className="bg-white/80 px-1 rounded group-hover:bg-transparent">
+                                <span className="bg-ws-panel-bg/80 px-1 rounded group-hover:bg-transparent">
                                     {lane.label}
                                 </span>
                             </div>

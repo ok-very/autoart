@@ -63,7 +63,7 @@ export function ArtifactCard({ artifact, isSelected, onToggleSelect }: ArtifactC
         {/* Loading/error placeholder */}
         {(!imageLoaded || imageError) && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <ImageIcon className="w-8 h-8 text-slate-300" />
+            <ImageIcon className="w-8 h-8 text-ws-muted" />
           </div>
         )}
 
@@ -81,7 +81,7 @@ export function ArtifactCard({ artifact, isSelected, onToggleSelect }: ArtifactC
             'absolute top-2 left-2 w-6 h-6 rounded-md flex items-center justify-center transition-all',
             isSelected
               ? 'bg-blue-500 text-white'
-              : 'bg-white/80 border border-slate-300 group-hover:border-slate-400'
+              : 'bg-ws-panel-bg/80 border border-slate-300 group-hover:border-slate-400'
           )}
         >
           {isSelected && <Check className="w-4 h-4" />}
@@ -97,7 +97,7 @@ export function ArtifactCard({ artifact, isSelected, onToggleSelect }: ArtifactC
 
       {/* Title below image (optional) */}
       {artifact.metadata?.title && (
-        <div className="px-2 py-1.5 bg-white text-xs text-slate-600 truncate">
+        <div className="px-2 py-1.5 bg-ws-panel-bg text-xs text-ws-text-secondary truncate">
           {artifact.metadata.title}
         </div>
       )}

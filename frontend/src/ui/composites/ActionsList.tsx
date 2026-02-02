@@ -87,7 +87,7 @@ export function ActionsList({
     // Loading state
     if (isLoading) {
         return (
-            <div className={clsx('flex items-center justify-center h-64 text-slate-400', className)}>
+            <div className={clsx('flex items-center justify-center h-64 text-ws-muted', className)}>
                 <div className="animate-spin w-8 h-8 border-2 border-slate-300 border-t-purple-500 rounded-full" />
             </div>
         );
@@ -96,7 +96,7 @@ export function ActionsList({
     // Empty state
     if (actions.length === 0) {
         return (
-            <div className={clsx('flex flex-col items-center justify-center h-64 text-slate-400', className)}>
+            <div className={clsx('flex flex-col items-center justify-center h-64 text-ws-muted', className)}>
                 <Zap size={40} className="mb-3 text-slate-200" />
                 <p className="text-ws-body">No actions yet</p>
                 <p className="text-sm">Actions will appear here once declared</p>
@@ -108,8 +108,8 @@ export function ActionsList({
         <div className={clsx('flex flex-col h-full', className)}>
             {/* Header with toggle */}
             {onToggleSystemEvents && (
-                <div className="flex items-center justify-between px-6 py-3 border-b border-slate-200 bg-white shrink-0">
-                    <div className="text-sm text-slate-500">
+                <div className="flex items-center justify-between px-6 py-3 border-b border-ws-panel-border bg-ws-panel-bg shrink-0">
+                    <div className="text-sm text-ws-text-secondary">
                         {actions.length} action{actions.length !== 1 ? 's' : ''}
                     </div>
                     <button
@@ -118,7 +118,7 @@ export function ActionsList({
                             'flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-colors',
                             includeSystemEvents
                                 ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'
+                                : 'bg-ws-bg text-ws-text-secondary border border-ws-panel-border hover:bg-slate-100'
                         )}
                     >
                         {includeSystemEvents ? (
@@ -137,7 +137,7 @@ export function ActionsList({
             )}
 
             {/* Scrollable list */}
-            <div className="flex-1 overflow-y-auto custom-scroll p-6 md:p-8 bg-slate-50">
+            <div className="flex-1 overflow-y-auto custom-scroll p-6 md:p-8 bg-ws-bg">
                 <div className="max-w-4xl mx-auto space-y-6">
                     {actions.map((action) => (
                         <ActionCardWithEvents

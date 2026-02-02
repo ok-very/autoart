@@ -145,12 +145,12 @@ export function FileUpload({ block }: FileUploadProps) {
       defaultValue=""
       render={({ fieldState }) => (
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-ws-text-secondary">
             {block.label}
             {block.required && <span className="text-red-500 ml-1">*</span>}
           </label>
           {block.description && (
-            <p className="text-sm text-slate-500">{block.description}</p>
+            <p className="text-sm text-ws-text-secondary">{block.description}</p>
           )}
 
           {/* Upload Area */}
@@ -180,7 +180,7 @@ export function FileUpload({ block }: FileUploadProps) {
             ) : (
               <>
                 <svg
-                  className="w-8 h-8 mx-auto mb-2 text-slate-400"
+                  className="w-8 h-8 mx-auto mb-2 text-ws-muted"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -201,7 +201,7 @@ export function FileUpload({ block }: FileUploadProps) {
                   <span className="text-blue-600 hover:text-blue-700">
                     Choose a file
                   </span>
-                  <span className="text-slate-500"> or drag and drop</span>
+                  <span className="text-ws-text-secondary"> or drag and drop</span>
                   <input
                     type="file"
                     className="hidden"
@@ -214,7 +214,7 @@ export function FileUpload({ block }: FileUploadProps) {
                   />
                 </label>
                 {block.acceptedFileTypes && (
-                  <p className="text-xs text-slate-400 mt-2">
+                  <p className="text-xs text-ws-muted mt-2">
                     Accepted: {block.acceptedFileTypes.join(', ')}
                   </p>
                 )}

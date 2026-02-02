@@ -118,26 +118,26 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
     }
 
     return (
-        <div className="flex h-full bg-white">
+        <div className="flex h-full bg-ws-panel-bg">
             {/* Left Panel: Configuration */}
-            <div className="w-96 border-r border-slate-200 flex flex-col bg-white shrink-0">
-                <div className="h-10 border-b border-slate-100 flex items-center px-3 bg-slate-50">
-                    <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <div className="w-96 border-r border-ws-panel-border flex flex-col bg-ws-panel-bg shrink-0">
+                <div className="h-10 border-b border-ws-panel-border flex items-center px-3 bg-ws-bg">
+                    <h2 className="text-xs font-semibold text-ws-text-secondary uppercase tracking-wide">
                         Input & Logic
                     </h2>
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scroll">
                     {/* Section 1: Data Source */}
-                    <div className="p-5 border-b border-slate-200">
-                        <label className="text-xs font-semibold text-slate-800 uppercase mb-3 flex justify-between">
+                    <div className="p-5 border-b border-ws-panel-border">
+                        <label className="text-xs font-semibold text-ws-fg uppercase mb-3 flex justify-between">
                             <span>1. Data Source</span>
-                            <span className="text-[10px] font-normal text-slate-400 lowercase">csv, xlsx, json</span>
+                            <span className="text-[10px] font-normal text-ws-muted lowercase">csv, xlsx, json</span>
                         </label>
 
                         {/* File Upload */}
                         <div
-                            className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:bg-slate-50 transition-colors cursor-pointer mb-4 group"
+                            className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:bg-ws-bg transition-colors cursor-pointer mb-4 group"
                             onClick={() => document.getElementById('file-upload')?.click()}
                         >
                             <input
@@ -147,35 +147,35 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
                                 accept=".csv,.txt,.json"
                                 onChange={handleFileUpload}
                             />
-                            <Upload className="w-6 h-6 text-slate-400 mx-auto mb-2 group-hover:text-blue-500 transition-colors" />
-                            <div className="text-xs font-medium text-slate-600 group-hover:text-blue-600">
+                            <Upload className="w-6 h-6 text-ws-muted mx-auto mb-2 group-hover:text-blue-500 transition-colors" />
+                            <div className="text-xs font-medium text-ws-text-secondary group-hover:text-blue-600">
                                 Click to Upload File
                             </div>
-                            <div className="text-[10px] text-slate-400">or drag and drop here</div>
+                            <div className="text-[10px] text-ws-muted">or drag and drop here</div>
                         </div>
 
                         {/* Paste Area */}
                         <div className="flex items-center gap-2 mb-2">
                             <span className="h-px bg-slate-200 flex-1" />
-                            <span className="text-[10px] text-slate-400 font-semibold uppercase">OR PASTE RAW DATA</span>
+                            <span className="text-[10px] text-ws-muted font-semibold uppercase">OR PASTE RAW DATA</span>
                             <span className="h-px bg-slate-200 flex-1" />
                         </div>
 
                         <textarea
                             value={rawData}
                             onChange={(e) => setRawData(e.target.value)}
-                            className="w-full h-24 p-2 text-[10px] font-mono border border-slate-300 rounded bg-slate-50 focus:outline-none focus:border-blue-500 resize-none transition-all focus:bg-white"
+                            className="w-full h-24 p-2 text-[10px] font-mono border border-slate-300 rounded bg-ws-bg focus:outline-none focus:border-blue-500 resize-none transition-all focus:bg-ws-panel-bg"
                             placeholder="Paste content here..."
                         />
                     </div>
 
                     {/* Section 2: Parser Modules */}
-                    <div className="p-5 bg-slate-50/50 flex-1">
+                    <div className="p-5 bg-ws-bg/50 flex-1">
                         <div className="flex justify-between items-center mb-3">
-                            <label className="text-xs font-semibold text-slate-800 uppercase">
+                            <label className="text-xs font-semibold text-ws-fg uppercase">
                                 2. Parser Module
                             </label>
-                            <span className="text-[10px] text-slate-400">Logic for interpretation</span>
+                            <span className="text-[10px] text-ws-muted">Logic for interpretation</span>
                         </div>
 
                         <div className="space-y-3">
@@ -185,7 +185,7 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
                                     onClick={() => setSelectedParser(parser.name)}
                                     className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedParser === parser.name
                                             ? 'bg-blue-50 border-blue-500 shadow-sm'
-                                            : 'bg-white border-slate-200 opacity-70 hover:opacity-100 hover:border-slate-300'
+                                            : 'bg-ws-panel-bg border-ws-panel-border opacity-70 hover:opacity-100 hover:border-slate-300'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-2">
@@ -197,10 +197,10 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
                                                 {parser.name.charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <div className={`text-sm font-semibold ${selectedParser === parser.name ? 'text-blue-900' : 'text-slate-700'}`}>
+                                                <div className={`text-sm font-semibold ${selectedParser === parser.name ? 'text-blue-900' : 'text-ws-text-secondary'}`}>
                                                     {parser.name === 'monday' ? 'Monday.com v2' : 'Airtable Grid'}
                                                 </div>
-                                                <div className={`text-[10px] ${selectedParser === parser.name ? 'text-blue-600' : 'text-slate-400'}`}>
+                                                <div className={`text-[10px] ${selectedParser === parser.name ? 'text-blue-600' : 'text-ws-muted'}`}>
                                                     {parser.description}
                                                 </div>
                                             </div>
@@ -222,10 +222,10 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
                                                         type="text"
                                                         value={String(parserConfig[field.key] || field.defaultValue)}
                                                         onChange={(e) => handleConfigChange(field.key, e.target.value)}
-                                                        className="w-full text-[10px] font-mono border border-blue-200 rounded px-2 py-1.5 text-slate-600 focus:border-blue-500 focus:outline-none bg-white"
+                                                        className="w-full text-[10px] font-mono border border-blue-200 rounded px-2 py-1.5 text-ws-text-secondary focus:border-blue-500 focus:outline-none bg-ws-panel-bg"
                                                     />
                                                     {field.description && (
-                                                        <div className="text-[10px] text-slate-400 mt-1">{field.description}</div>
+                                                        <div className="text-[10px] text-ws-muted mt-1">{field.description}</div>
                                                     )}
                                                 </div>
                                             ))}
@@ -239,18 +239,18 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
             </div>
 
             {/* Right Panel: Preview */}
-            <div className="flex-1 flex flex-col bg-slate-50">
+            <div className="flex-1 flex flex-col bg-ws-bg">
                 {/* Preview Header */}
-                <div className="h-10 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0 shadow-sm">
-                    <span className="text-xs font-semibold text-slate-500 uppercase">Live Output Preview</span>
+                <div className="h-10 bg-ws-panel-bg border-b border-ws-panel-border flex items-center justify-between px-4 shrink-0 shadow-sm">
+                    <span className="text-xs font-semibold text-ws-text-secondary uppercase">Live Output Preview</span>
                     <div className="flex gap-3">
                         {preview.data && (
                             <>
-                                <span className="text-[10px] text-slate-500">
-                                    <span className="font-semibold text-slate-800">{preview.data.stageCount}</span> Stages
+                                <span className="text-[10px] text-ws-text-secondary">
+                                    <span className="font-semibold text-ws-fg">{preview.data.stageCount}</span> Stages
                                 </span>
-                                <span className="text-[10px] text-slate-500">
-                                    <span className="font-semibold text-slate-800">{preview.data.taskCount}</span> Tasks
+                                <span className="text-[10px] text-ws-text-secondary">
+                                    <span className="font-semibold text-ws-fg">{preview.data.taskCount}</span> Tasks
                                 </span>
                             </>
                         )}
@@ -275,22 +275,22 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
                     {preview.data && !preview.isPending && (
                         <div className="space-y-4">
                             {/* Project Card */}
-                            <div className="bg-white border border-purple-200 rounded-lg p-4 shadow-sm relative overflow-hidden">
+                            <div className="bg-ws-panel-bg border border-purple-200 rounded-lg p-4 shadow-sm relative overflow-hidden">
                                 <div className="absolute top-0 left-0 w-1 h-full bg-purple-500" />
                                 <div className="flex items-start gap-3">
                                     <span className="text-[10px] font-semibold text-purple-600 uppercase bg-purple-50 px-2 py-1 rounded border border-purple-100">
                                         Project Record
                                     </span>
                                 </div>
-                                <h2 className="text-ws-h2 font-semibold text-slate-800 mt-2">
+                                <h2 className="text-ws-h2 font-semibold text-ws-fg mt-2">
                                     {preview.data.parsedData.projectTitle}
                                 </h2>
                                 {Object.keys(preview.data.parsedData.projectMeta).length > 0 && (
                                     <div className="flex gap-6 mt-2 text-sm">
                                         {Object.entries(preview.data.parsedData.projectMeta).map(([key, value]) => (
                                             <div key={key}>
-                                                <span className="text-[10px] font-semibold text-slate-400 uppercase">{key}</span>
-                                                <div className="font-medium text-slate-700">{String(value)}</div>
+                                                <span className="text-[10px] font-semibold text-ws-muted uppercase">{key}</span>
+                                                <div className="font-medium text-ws-text-secondary">{String(value)}</div>
                                             </div>
                                         ))}
                                     </div>
@@ -304,7 +304,7 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
                                     className={`p-3 rounded border-l-4 ${node.type === 'process' ? 'border-purple-400 bg-purple-50' :
                                             node.type === 'stage' ? 'border-yellow-400 bg-yellow-50' :
                                                 node.type === 'subprocess' ? 'border-orange-400 bg-orange-50' :
-                                                    'border-blue-400 bg-white'
+                                                    'border-blue-400 bg-ws-panel-bg'
                                         }`}
                                     style={{ marginLeft: getNodeIndent(node.type) }}
                                 >
@@ -316,7 +316,7 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
                                             }`}>
                                             {node.type}
                                         </span>
-                                        <span className="text-sm font-medium text-slate-800">{node.title}</span>
+                                        <span className="text-sm font-medium text-ws-fg">{node.title}</span>
                                     </div>
                                 </div>
                             ))}
@@ -324,7 +324,7 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
                     )}
 
                     {!rawData && !preview.data && (
-                        <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                        <div className="flex flex-col items-center justify-center h-full text-ws-muted">
                             <FileText className="w-12 h-12 mb-3" />
                             <p className="text-sm font-medium">No data to preview</p>
                             <p className="text-xs">Upload a file or paste data to see the preview</p>
@@ -333,10 +333,10 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
                 </div>
 
                 {/* Action Bar */}
-                <div className="p-4 border-t border-slate-200 bg-white flex justify-between items-center">
+                <div className="p-4 border-t border-ws-panel-border bg-ws-panel-bg flex justify-between items-center">
                     <button
                         onClick={handleCancel}
-                        className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                        className="px-4 py-2 text-sm font-medium text-ws-text-secondary bg-ws-panel-bg border border-slate-300 rounded-md hover:bg-ws-bg transition-colors"
                     >
                         Cancel
                     </button>

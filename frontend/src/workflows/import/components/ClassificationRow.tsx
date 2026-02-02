@@ -51,23 +51,23 @@ export function ClassificationRow({
     };
 
     return (
-        <div className={`border-b border-slate-100 last:border-b-0 ${needsResolution
+        <div className={`border-b border-ws-panel-border last:border-b-0 ${needsResolution
             ? 'bg-red-50/60 border-l-4 border-l-red-400'
             : ''
             }`}>
             {/* Item row */}
             <div
-                className={`flex items-center gap-3 px-6 py-3 ${hasExpandableContent ? 'hover:bg-slate-50 cursor-pointer' : ''}`}
+                className={`flex items-center gap-3 px-6 py-3 ${hasExpandableContent ? 'hover:bg-ws-bg cursor-pointer' : ''}`}
                 onClick={handleRowClick}
             >
                 <OutcomeIcon
                     outcome={classification.outcome}
-                    className={`w-4 h-4 flex-shrink-0 ${needsResolution ? 'text-amber-600' : 'text-slate-400'}`}
+                    className={`w-4 h-4 flex-shrink-0 ${needsResolution ? 'text-amber-600' : 'text-ws-muted'}`}
                 />
 
                 <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-800 truncate">{itemTitle}</p>
-                    <p className="text-xs text-slate-500 truncate">{classification.rationale}</p>
+                    <p className="font-medium text-ws-fg truncate">{itemTitle}</p>
+                    <p className="text-xs text-ws-text-secondary truncate">{classification.rationale}</p>
                 </div>
 
                 {/* Output kind badges */}
@@ -83,7 +83,7 @@ export function ClassificationRow({
                         );
                     })}
                     {outputs.length > 2 && (
-                        <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] text-ws-muted bg-slate-100 px-1.5 py-0.5 rounded">
                             +{outputs.length - 2} more
                         </span>
                     )}
@@ -93,7 +93,7 @@ export function ClassificationRow({
                 {pending && (
                     <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 rounded-lg border border-amber-100 animate-in fade-in zoom-in duration-200">
                         {pending.outcome === 'DEFERRED' ? (
-                            <span className="text-xs font-medium text-slate-600 flex items-center gap-1.5">
+                            <span className="text-xs font-medium text-ws-text-secondary flex items-center gap-1.5">
                                 <Clock className="w-3 h-3" />
                                 Deferred
                             </span>
@@ -114,19 +114,19 @@ export function ClassificationRow({
                 {/* Expand/Collapse Chevron */}
                 {hasExpandableContent && (
                     <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}>
-                        <ChevronRight className="w-4 h-4 text-slate-400" />
+                        <ChevronRight className="w-4 h-4 text-ws-muted" />
                     </div>
                 )}
             </div>
 
             {/* Expanded details */}
             {isExpanded && hasExpandableContent && (
-                <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 space-y-4">
+                <div className="px-6 py-4 bg-ws-bg border-t border-ws-panel-border space-y-4">
 
                     {/* Resolution Section - if unresolved */}
                     {needsResolution && (
-                        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                            <h4 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                        <div className="bg-ws-panel-bg p-4 rounded-lg border border-ws-panel-border shadow-sm">
+                            <h4 className="text-sm font-semibold text-ws-text-secondary mb-3 flex items-center gap-2">
                                 <Sparkles className="w-4 h-4 text-purple-500" />
                                 Suggested Resolutions
                             </h4>
@@ -134,7 +134,7 @@ export function ClassificationRow({
                             {/* Suggestions List */}
                             {suggestions && suggestions.length > 0 && (
                                 <div className="space-y-3 mb-4">
-                                    <p className="text-xs text-slate-500 mb-2">Based on analysis:</p>
+                                    <p className="text-xs text-ws-text-secondary mb-2">Based on analysis:</p>
                                     <div className="flex flex-wrap gap-2">
                                         {suggestions.map((suggestion, idx) => {
                                             const label = formatSuggestionLabel(suggestion);
@@ -167,13 +167,13 @@ export function ClassificationRow({
                                                     )}
                                                     <span className="font-medium">{label}</span>
                                                     <span className={`text-[10px] px-1 py-0.5 rounded ${isSelected
-                                                        ? 'bg-white/20 text-white'
+                                                        ? 'bg-ws-panel-bg/20 text-white'
                                                         : getConfidenceColor(suggestion.confidence)
                                                         }`}>
                                                         {suggestion.matchScore}%
                                                     </span>
                                                     {/* Rule source tag */}
-                                                    <span className={`text-[9px] px-1 py-0.5 rounded ${isSelected ? 'bg-white/10 text-white/70' : 'bg-slate-100 text-slate-500'
+                                                    <span className={`text-[9px] px-1 py-0.5 rounded ${isSelected ? 'bg-ws-panel-bg/10 text-white/70' : 'bg-slate-100 text-ws-text-secondary'
                                                         }`}>
                                                         [{formatRuleSource(suggestion.ruleSource ?? '')}]
                                                     </span>
@@ -186,7 +186,7 @@ export function ClassificationRow({
 
                             {/* Outcome selection (only for items needing resolution) */}
                             <div>
-                                <p className="text-xs font-medium text-slate-500 mb-2">
+                                <p className="text-xs font-medium text-ws-text-secondary mb-2">
                                     Resolve as:
                                 </p>
                                 <div className="flex flex-wrap gap-2">
@@ -202,7 +202,7 @@ export function ClassificationRow({
                                                 }}
                                                 className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${isSelected
                                                     ? 'bg-slate-800 text-white border-slate-800'
-                                                    : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'
+                                                    : 'bg-ws-panel-bg text-ws-text-secondary border-ws-panel-border hover:border-slate-400'
                                                     }`}
                                             >
                                                 <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : option.color}`} />
@@ -214,8 +214,8 @@ export function ClassificationRow({
 
                                 {/* Custom fact kind input - appears when FACT_EMITTED is selected */}
                                 {pending?.outcome === 'FACT_EMITTED' && !pending?.factKind && (
-                                    <div className="mt-3 pt-3 border-t border-slate-100">
-                                        <label className="block text-xs font-medium text-slate-500 mb-1.5">
+                                    <div className="mt-3 pt-3 border-t border-ws-panel-border">
+                                        <label className="block text-xs font-medium text-ws-text-secondary mb-1.5">
                                             Or enter a custom fact type:
                                         </label>
                                         <input
@@ -224,11 +224,11 @@ export function ClassificationRow({
                                             onChange={(e) => onCustomFactLabelChange(e.target.value)}
                                             onClick={(e) => e.stopPropagation()}
                                             placeholder="e.g., Fee Proposal Submitted"
-                                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-slate-400"
+                                            className="w-full px-3 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-ws-muted"
                                         />
                                         {pending?.customFactLabel && (
-                                            <p className="mt-1.5 text-xs text-slate-500">
-                                                Will be stored as: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-600">{toFactKindKey(pending.customFactLabel)}</code>
+                                            <p className="mt-1.5 text-xs text-ws-text-secondary">
+                                                Will be stored as: <code className="bg-slate-100 px-1 py-0.5 rounded text-ws-text-secondary">{toFactKindKey(pending.customFactLabel)}</code>
                                             </p>
                                         )}
                                     </div>

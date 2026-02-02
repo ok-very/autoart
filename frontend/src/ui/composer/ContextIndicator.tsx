@@ -142,7 +142,7 @@ export function ContextIndicator({
     if (!projectTitle && !contextTitle) {
         return (
             <div className={clsx(
-                'flex items-center gap-1.5 text-slate-400',
+                'flex items-center gap-1.5 text-ws-muted',
                 size === 'sm' ? 'text-xs' : 'text-sm',
                 className
             )}>
@@ -164,11 +164,11 @@ export function ContextIndicator({
             {/* Project */}
             {projectTitle && (
                 <>
-                    <div className="flex items-center gap-1 text-slate-600">
+                    <div className="flex items-center gap-1 text-ws-text-secondary">
                         <FolderKanban size={iconSize} className="text-blue-500" />
                         <span className="font-medium truncate max-w-[120px]">{projectTitle}</span>
                     </div>
-                    <ChevronRight size={chevronSize} className="text-slate-300 shrink-0" />
+                    <ChevronRight size={chevronSize} className="text-ws-muted shrink-0" />
                 </>
             )}
 
@@ -190,8 +190,8 @@ export function ContextIndicator({
             {/* Parent Action (for subtasks) */}
             {parentActionTitle && (
                 <>
-                    <ChevronRight size={chevronSize} className="text-slate-300 shrink-0" />
-                    <div className="flex items-center gap-1 text-slate-500">
+                    <ChevronRight size={chevronSize} className="text-ws-muted shrink-0" />
+                    <div className="flex items-center gap-1 text-ws-text-secondary">
                         <Target size={iconSize} className="text-green-500" />
                         <span className="truncate max-w-[100px]">{parentActionTitle}</span>
                     </div>

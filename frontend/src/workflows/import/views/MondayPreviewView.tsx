@@ -66,7 +66,7 @@ export function MondayPreviewView({
     // No session yet - show empty state (board selection happens in sidebar)
     if (!session || !plan) {
         return (
-            <div className="flex-1 flex items-center justify-center bg-slate-50">
+            <div className="flex-1 flex items-center justify-center bg-ws-bg">
                 <Stack gap="md" className="text-center max-w-md">
                     <div className="w-16 h-16 mx-auto bg-amber-100 rounded-full flex items-center justify-center">
                         <Calendar className="w-8 h-8 text-amber-600" />
@@ -83,9 +83,9 @@ export function MondayPreviewView({
     }
 
     return (
-        <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
+        <div className="flex-1 flex flex-col overflow-hidden bg-ws-bg">
             {/* Board Header */}
-            <div className="px-4 py-3 bg-white border-b border-slate-200">
+            <div className="px-4 py-3 bg-ws-panel-bg border-b border-ws-panel-border">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
                         <Calendar className="w-5 h-5 text-amber-600" />
@@ -102,13 +102,13 @@ export function MondayPreviewView({
             </div>
 
             {/* Preview Mode Tabs */}
-            <div className="border-b border-slate-200 bg-white px-4">
+            <div className="border-b border-ws-panel-border bg-ws-panel-bg px-4">
                 <div className="flex items-center gap-1 h-10">
                     <button
                         onClick={() => setPreviewMode('hierarchy')}
                         className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${previewMode === 'hierarchy'
                             ? 'bg-amber-100 text-amber-700'
-                            : 'text-slate-600 hover:bg-slate-100'
+                            : 'text-ws-text-secondary hover:bg-slate-100'
                             }`}
                     >
                         <Columns className="w-4 h-4" />
@@ -118,7 +118,7 @@ export function MondayPreviewView({
                         onClick={() => setPreviewMode('stage')}
                         className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${previewMode === 'stage'
                             ? 'bg-amber-100 text-amber-700'
-                            : 'text-slate-600 hover:bg-slate-100'
+                            : 'text-ws-text-secondary hover:bg-slate-100'
                             }`}
                     >
                         <Layers className="w-4 h-4" />
@@ -136,7 +136,7 @@ export function MondayPreviewView({
                         {Object.entries(outcomeCounts).map(([outcome, count]) => (
                             <span
                                 key={outcome}
-                                className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-slate-100 text-slate-600 rounded"
+                                className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-slate-100 text-ws-text-secondary rounded"
                             >
                                 {outcome.replace(/_/g, ' ')}: {count}
                             </span>

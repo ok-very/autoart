@@ -219,9 +219,9 @@ export function RichTextInput({
 
   return (
     <div className={clsx(
-      "relative rounded-md border border-slate-300 shadow-sm transition-all bg-white",
+      "relative rounded-md border border-slate-300 shadow-sm transition-all bg-ws-panel-bg",
       "focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500",
-      readOnly && "bg-slate-50 opacity-70 pointer-events-none",
+      readOnly && "bg-ws-bg opacity-70 pointer-events-none",
       className
     )}>
       <EditorContent

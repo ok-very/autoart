@@ -41,9 +41,9 @@ export function RecordsPanel() {
     };
 
     return (
-        <div className="flex flex-col h-full bg-white overflow-hidden">
+        <div className="flex flex-col h-full bg-ws-panel-bg overflow-hidden">
             {/* Header with title and Definitions/Instances toggle */}
-            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-ws-panel-border bg-ws-panel-bg">
                 <RegistryPageHeader
                     title="Records"
                     icon={Database}
@@ -76,9 +76,9 @@ export function RecordsPanel() {
                     {/* Content based on tab */}
                     <div className="flex-1 overflow-hidden">
                         {activeTab === 'definitions' ? (
-                            <div className="h-full flex items-center justify-center text-slate-400">
+                            <div className="h-full flex items-center justify-center text-ws-muted">
                                 <div className="text-center">
-                                    <p className="text-ws-body text-slate-600">Record Definitions</p>
+                                    <p className="text-ws-body text-ws-text-secondary">Record Definitions</p>
                                     <p>Select a definition from the sidebar to view its schema.</p>
                                 </div>
                             </div>

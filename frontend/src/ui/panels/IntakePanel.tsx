@@ -15,7 +15,7 @@ export function IntakePanel(_props: IDockviewPanelProps) {
     const [editingFormId, setEditingFormId] = useState<string | null>(null);
 
     return (
-        <div className="h-full overflow-hidden bg-slate-50 flex flex-col">
+        <div className="h-full overflow-hidden bg-ws-bg flex flex-col">
             {editingFormId ? (
                 <IntakeEditorView
                     formId={editingFormId}

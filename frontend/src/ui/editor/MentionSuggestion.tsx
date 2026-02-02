@@ -169,11 +169,11 @@ export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggest
     if (isLoading) {
       return (
         <div className="mention-dropdown">
-          <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
+          <div className="px-3 py-2 bg-ws-bg border-b border-ws-panel-border flex items-center gap-2">
             <span className={clsx('text-sm font-semibold', triggerColor)}>{triggerChar}</span>
-            <span className="text-xs text-slate-400">{triggerLabel}</span>
+            <span className="text-xs text-ws-muted">{triggerLabel}</span>
           </div>
-          <div className="p-4 text-center text-slate-400 text-sm">
+          <div className="p-4 text-center text-ws-muted text-sm">
             <div className="inline-block animate-spin w-4 h-4 border-2 border-slate-300 border-t-blue-500 rounded-full mr-2" />
             Searching...
           </div>
@@ -184,13 +184,13 @@ export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggest
     if (!showFields && filteredItems.length === 0) {
       return (
         <div className="mention-dropdown">
-          <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
+          <div className="px-3 py-2 bg-ws-bg border-b border-ws-panel-border flex items-center gap-2">
             <span className={clsx('text-sm font-semibold', triggerColor)}>{triggerChar}</span>
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-ws-muted">
               {query ? `Search: "${query}"` : triggerLabel}
             </span>
           </div>
-          <div className="p-4 text-center text-slate-400 text-sm">
+          <div className="p-4 text-center text-ws-muted text-sm">
             {query ? 'No matches found' : 'Type to search...'}
           </div>
         </div>
@@ -201,20 +201,20 @@ export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggest
     if (showFields && selectedItem) {
       return (
         <div className="mention-dropdown">
-          <div className="px-3 py-2 bg-slate-50 border-b border-slate-100">
+          <div className="px-3 py-2 bg-ws-bg border-b border-ws-panel-border">
             <div className="flex items-center gap-2 mb-1">
               <button
                 onClick={goBack}
-                className="text-xs text-slate-400 hover:text-slate-600"
+                className="text-xs text-ws-muted hover:text-ws-text-secondary"
               >
                 ← Back
               </button>
-              <span className="text-xs text-slate-500">Select field from:</span>
+              <span className="text-xs text-ws-text-secondary">Select field from:</span>
             </div>
-            <div className="text-sm font-medium text-slate-700">{selectedItem.name}</div>
+            <div className="text-sm font-medium text-ws-text-secondary">{selectedItem.name}</div>
           </div>
           {filteredFields.length === 0 ? (
-            <div className="p-4 text-center text-slate-400 text-sm">
+            <div className="p-4 text-center text-ws-muted text-sm">
               No fields available
             </div>
           ) : (
@@ -227,7 +227,7 @@ export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggest
                 })}
               >
                 <span className="text-xs font-mono text-blue-500 shrink-0">{field.key}</span>
-                <span className="text-sm text-slate-700 truncate">{field.label}</span>
+                <span className="text-sm text-ws-text-secondary truncate">{field.label}</span>
               </div>
             ))
           )}
@@ -238,12 +238,12 @@ export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggest
     // Show records/nodes list
     return (
       <div className="mention-dropdown">
-        <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
+        <div className="px-3 py-2 bg-ws-bg border-b border-ws-panel-border flex items-center gap-2">
           <span className={clsx('text-sm font-semibold', triggerColor)}>{triggerChar}</span>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-ws-muted">
             {query ? `Search: "${query}"` : triggerLabel}
           </span>
-          <span className="text-[10px] text-slate-300 ml-auto">
+          <span className="text-[10px] text-ws-muted ml-auto">
             {filteredItems.length} result{filteredItems.length !== 1 ? 's' : ''}
           </span>
         </div>
@@ -264,15 +264,15 @@ export const MentionSuggestion = forwardRef<MentionSuggestionRef, MentionSuggest
               >
                 {item.type === 'record' ? item.definitionName : item.nodeType}
               </span>
-              <span className="text-sm font-medium text-slate-700 truncate">{item.name}</span>
+              <span className="text-sm font-medium text-ws-text-secondary truncate">{item.name}</span>
               {item.path && item.path !== item.name && (
-                <span className="text-[10px] text-slate-400 truncate" title={item.path}>
+                <span className="text-[10px] text-ws-muted truncate" title={item.path}>
                   {item.path}
                 </span>
               )}
             </div>
             {item.fields && item.fields.length > 0 && (
-              <span className="text-[10px] text-slate-400 shrink-0">
+              <span className="text-[10px] text-ws-muted shrink-0">
                 {item.fields.length} fields →
               </span>
             )}

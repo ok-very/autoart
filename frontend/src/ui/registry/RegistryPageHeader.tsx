@@ -48,15 +48,15 @@ export function RegistryPageHeader({
     return (
         <div
             className={clsx(
-                'h-10 border-b border-slate-200 bg-white flex items-center justify-between px-3',
+                'h-10 border-b border-ws-panel-border bg-ws-panel-bg flex items-center justify-between px-3',
                 className
             )}
         >
             {/* Left: Title with icon and + button */}
             <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
-                    <Icon size={20} className="text-slate-500" />
-                    <h1 className="text-ws-h1 font-semibold text-slate-800">{title}</h1>
+                    <Icon size={20} className="text-ws-text-secondary" />
+                    <h1 className="text-ws-h1 font-semibold text-ws-fg">{title}</h1>
                 </div>
 
                 {showCreateButton && onCreateClick && (

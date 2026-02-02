@@ -42,7 +42,7 @@ export function ExportProjectList({
                 return (
                     <div
                         key={project.id}
-                        className={`px-3 py-2 hover:bg-slate-50 transition-colors ${isSelected ? 'bg-emerald-50' : ''
+                        className={`px-3 py-2 hover:bg-ws-bg transition-colors ${isSelected ? 'bg-emerald-50' : ''
                             } ${isPreviewing ? 'ring-2 ring-inset ring-blue-400' : ''}`}
                     >
                         <Inline justify="between" align="start">
@@ -76,7 +76,7 @@ export function ExportProjectList({
                                 onClick={() => onPreview(isPreviewing ? null : project.id)}
                                 className={`p-1.5 rounded-md transition-colors ${isPreviewing
                                     ? 'bg-blue-100 text-blue-600'
-                                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                                    : 'text-ws-muted hover:text-ws-text-secondary hover:bg-slate-100'
                                     }`}
                                 title="Preview export"
                             >

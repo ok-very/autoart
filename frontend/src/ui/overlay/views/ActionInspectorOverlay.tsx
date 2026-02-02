@@ -102,7 +102,7 @@ export function ActionInspectorOverlay({ actionId }: ActionInspectorOverlayProps
 
     if (!action) {
         return (
-            <div className="p-4 text-center text-slate-400">
+            <div className="p-4 text-center text-ws-muted">
                 Action not found
             </div>
         );
@@ -117,22 +117,22 @@ export function ActionInspectorOverlay({ actionId }: ActionInspectorOverlayProps
                         <span className="px-2 py-0.5 text-[10px] font-semibold bg-purple-100 text-purple-700 border border-purple-200 rounded uppercase">
                             ACTION
                         </span>
-                        <span className="text-xs text-slate-400 font-mono">
+                        <span className="text-xs text-ws-muted font-mono">
                             {action.id.slice(0, 8)}
                         </span>
                     </div>
-                    <h2 className="text-ws-h2 font-semibold text-slate-800">{getTitle()}</h2>
+                    <h2 className="text-ws-h2 font-semibold text-ws-fg">{getTitle()}</h2>
                     <div className="flex items-center gap-2 mt-1">
                         <Zap size={12} className="text-purple-500" />
                         <span className="text-sm text-purple-700 font-medium">{action.type}</span>
-                        <span className="text-xs text-slate-400">•</span>
-                        <span className="text-xs text-slate-500 capitalize">{action.contextType}</span>
+                        <span className="text-xs text-ws-muted">•</span>
+                        <span className="text-xs text-ws-text-secondary capitalize">{action.contextType}</span>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={handleOpenInInspector}
-                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-2 text-ws-muted hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         title="Open in inspector"
                     >
                         <ExternalLink size={18} />
@@ -143,30 +143,30 @@ export function ActionInspectorOverlay({ actionId }: ActionInspectorOverlayProps
             {/* Content Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Left: Declared Intent */}
-                <section className="inspector-card bg-white border border-slate-200 rounded-lg p-4">
-                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <section className="inspector-card bg-ws-panel-bg border border-ws-panel-border rounded-lg p-4">
+                    <h3 className="text-xs font-semibold text-ws-muted uppercase tracking-wider mb-3 flex items-center gap-2">
                         <div className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
                         Declared Intent
                     </h3>
                     <div className="card-intent space-y-2">
                         {action.fieldBindings && action.fieldBindings.length > 0 ? (
                             action.fieldBindings.map((binding, idx) => (
-                                <div key={idx} className="flex items-start gap-2 py-1 border-b border-dashed border-slate-100 last:border-b-0">
-                                    <span className="text-xs font-medium text-slate-500 min-w-[80px]">
+                                <div key={idx} className="flex items-start gap-2 py-1 border-b border-dashed border-ws-panel-border last:border-b-0">
+                                    <span className="text-xs font-medium text-ws-text-secondary min-w-[80px]">
                                         {binding.fieldKey}
                                     </span>
-                                    <span className="text-sm text-slate-700">
+                                    <span className="text-sm text-ws-text-secondary">
                                         {String(binding.value ?? '—')}
                                     </span>
                                 </div>
                             ))
                         ) : (
-                            <p className="text-sm text-slate-400 italic">No field bindings</p>
+                            <p className="text-sm text-ws-muted italic">No field bindings</p>
                         )}
                     </div>
 
                     {/* Mutation Actions */}
-                    <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-2 mt-4 pt-4 border-t border-ws-panel-border">
                         <button
                             onClick={handleRetract}
                             disabled={retractMutation.isPending}
@@ -195,17 +195,17 @@ export function ActionInspectorOverlay({ actionId }: ActionInspectorOverlayProps
                 </section>
 
                 {/* Right: Interpreted As (Events) */}
-                <section className="inspector-card bg-white border border-slate-200 rounded-lg p-4">
+                <section className="inspector-card bg-ws-panel-bg border border-ws-panel-border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                            <ArrowDownRight size={12} className="text-slate-400" />
+                        <h3 className="text-xs font-semibold text-ws-muted uppercase tracking-wider flex items-center gap-2">
+                            <ArrowDownRight size={12} className="text-ws-muted" />
                             Interpreted As
                         </h3>
                         <button
                             onClick={handleToggleSystemEvents}
                             className={`flex items-center gap-1 px-2 py-0.5 text-[10px] rounded transition-colors ${showSystemEvents
                                 ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'
+                                : 'bg-ws-bg text-ws-text-secondary border border-ws-panel-border hover:bg-slate-100'
                                 }`}
                         >
                             {showSystemEvents ? <Eye size={10} /> : <EyeOff size={10} />}
@@ -224,7 +224,7 @@ export function ActionInspectorOverlay({ actionId }: ActionInspectorOverlayProps
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-sm text-slate-400 italic py-4 text-center">
+                            <p className="text-sm text-ws-muted italic py-4 text-center">
                                 No events {!showSystemEvents && '(system events hidden)'}
                             </p>
                         )}
@@ -233,10 +233,10 @@ export function ActionInspectorOverlay({ actionId }: ActionInspectorOverlayProps
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-slate-100">
+            <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-ws-panel-border">
                 <button
                     onClick={closeOverlay}
-                    className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-ws-text-secondary bg-ws-panel-bg border border-slate-300 rounded-md hover:bg-ws-bg transition-colors"
                 >
                     Close
                 </button>

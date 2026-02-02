@@ -82,8 +82,8 @@ const statusConfig: Record<MappingStatus, {
  */
 const fallbackStatusConfig = {
     icon: Check,
-    colorClass: 'text-slate-600',
-    bgClass: 'bg-slate-50',
+    colorClass: 'text-ws-text-secondary',
+    bgClass: 'bg-ws-bg',
     label: 'Unknown',
 };
 
@@ -122,20 +122,20 @@ function MappingRow({
         <div
             className={clsx(
                 'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
-                'hover:bg-slate-50',
+                'hover:bg-ws-bg',
                 onNavigate && 'cursor-pointer'
             )}
             onClick={() => onNavigate?.(entry)}
         >
             {/* Entity icon */}
             <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                <Icon size={16} className="text-slate-600" />
+                <Icon size={16} className="text-ws-text-secondary" />
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-700 truncate">
+                    <span className="text-sm font-medium text-ws-text-secondary truncate">
                         {entry.title}
                     </span>
                     {entry.mode && (
@@ -144,7 +144,7 @@ function MappingRow({
                         </Badge>
                     )}
                 </div>
-                <p className="text-xs text-slate-500 capitalize">
+                <p className="text-xs text-ws-text-secondary capitalize">
                     {entry.type}
                 </p>
             </div>
@@ -167,7 +167,7 @@ function MappingRow({
                     <Menu>
                         <Menu.Target>
                             <button
-                                className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
+                                className="p-1 text-ws-muted hover:text-ws-text-secondary hover:bg-slate-100 rounded transition-colors"
                             >
                                 <MoreHorizontal size={14} />
                             </button>
@@ -187,7 +187,7 @@ function MappingRow({
 
             {/* Navigate arrow */}
             {onNavigate && !onUnlink && (
-                <ExternalLink size={14} className="text-slate-400 shrink-0" />
+                <ExternalLink size={14} className="text-ws-muted shrink-0" />
             )}
         </div>
     );
@@ -207,8 +207,8 @@ function SectionHeader({
 }) {
     return (
         <div className="flex items-center gap-2 px-3 py-2">
-            <Icon size={14} className="text-slate-400" />
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+            <Icon size={14} className="text-ws-muted" />
+            <span className="text-xs font-medium text-ws-text-secondary uppercase tracking-wide">
                 {title}
             </span>
             <Badge variant="neutral" size="xs">
@@ -286,8 +286,8 @@ function ActionMappingsPanel({
     if (isLoading) {
         return (
             <div className={clsx('flex items-center justify-center py-8', className)}>
-                <RefreshCw size={16} className="animate-spin mr-2 text-slate-400" />
-                <span className="text-sm text-slate-400">Loading mappings...</span>
+                <RefreshCw size={16} className="animate-spin mr-2 text-ws-muted" />
+                <span className="text-sm text-ws-muted">Loading mappings...</span>
             </div>
         );
     }
@@ -302,7 +302,7 @@ function ActionMappingsPanel({
 
     if (entries.length === 0) {
         return (
-            <div className={clsx('text-center py-8 text-slate-400', className)}>
+            <div className={clsx('text-center py-8 text-ws-muted', className)}>
                 <Link2 size={24} className="mx-auto mb-2 opacity-50" />
                 <p className="text-sm">No mappings yet</p>
                 <p className="text-xs mt-1">
@@ -407,13 +407,13 @@ function ActionMappingsPanel({
             )}
 
             {/* Status legend */}
-            <div className="pt-4 border-t border-slate-100">
-                <p className="text-xs text-slate-500 mb-2">Status indicators</p>
+            <div className="pt-4 border-t border-ws-panel-border">
+                <p className="text-xs text-ws-text-secondary mb-2">Status indicators</p>
                 <div className="flex flex-wrap gap-3">
                     {Object.entries(statusConfig).map(([status, config]) => {
                         const StatusIcon = config.icon;
                         return (
-                            <div key={status} className="flex items-center gap-1 text-xs text-slate-500">
+                            <div key={status} className="flex items-center gap-1 text-xs text-ws-text-secondary">
                                 <StatusIcon size={12} className={config.colorClass} />
                                 <span>{config.label}</span>
                             </div>
@@ -441,8 +441,8 @@ function RecordMappingsPanel({
     if (isLoading) {
         return (
             <div className={clsx('flex items-center justify-center py-8', className)}>
-                <RefreshCw size={16} className="animate-spin mr-2 text-slate-400" />
-                <span className="text-sm text-slate-400">Loading mappings...</span>
+                <RefreshCw size={16} className="animate-spin mr-2 text-ws-muted" />
+                <span className="text-sm text-ws-muted">Loading mappings...</span>
             </div>
         );
     }
@@ -460,7 +460,7 @@ function RecordMappingsPanel({
 
     if (!hasReferencingActions && !hasLinks) {
         return (
-            <div className={clsx('text-center py-8 text-slate-400', className)}>
+            <div className={clsx('text-center py-8 text-ws-muted', className)}>
                 <Link2 size={24} className="mx-auto mb-2 opacity-50" />
                 <p className="text-sm">No mappings yet</p>
                 <p className="text-xs mt-1">
@@ -571,7 +571,7 @@ export function MappingsPanel({
 
     // Empty state
     return (
-        <div className={clsx('text-center py-8 text-slate-400', className)}>
+        <div className={clsx('text-center py-8 text-ws-muted', className)}>
             <Link2 size={24} className="mx-auto mb-2 opacity-50" />
             <p className="text-sm">Select an action or record</p>
         </div>

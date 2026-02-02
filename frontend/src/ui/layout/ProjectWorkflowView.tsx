@@ -449,13 +449,13 @@ export function ProjectWorkflowView() {
     const selectedRecordId = selection?.type === 'record' ? selection.id : null;
 
     return (
-        <div className="flex-1 flex overflow-hidden bg-white relative" style={{ position: 'relative' }}>
+        <div className="flex-1 flex overflow-hidden bg-ws-panel-bg relative" style={{ position: 'relative' }}>
             {/* Collapsed Sidebar Toggle (Floating when collapsed) */}
             {isSidebarCollapsed && (
                 <div className="absolute top-3 left-3 z-20">
                     <button
                         onClick={() => setIsSidebarCollapsed(false)}
-                        className="p-1.5 bg-white border border-slate-200 rounded-md shadow-sm text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors"
+                        className="p-1.5 bg-ws-panel-bg border border-ws-panel-border rounded-md shadow-sm text-ws-text-secondary hover:text-ws-text-secondary hover:bg-ws-bg transition-colors"
                         title="Expand Sidebar"
                     >
                         <PanelLeftOpen size={16} />
@@ -465,7 +465,7 @@ export function ProjectWorkflowView() {
 
             {/* Left navigation (merged from old sidebar) - Now reusing shared ProjectSidebarPanel */}
             <aside
-                className={`shrink-0 border-r border-slate-200 bg-slate-50 overflow-hidden flex flex-col relative transition-all duration-300 ease-in-out ${isSidebarCollapsed ? 'w-0 opacity-0 border-r-0' : 'opacity-100'
+                className={`shrink-0 border-r border-ws-panel-border bg-ws-bg overflow-hidden flex flex-col relative transition-all duration-300 ease-in-out ${isSidebarCollapsed ? 'w-0 opacity-0 border-r-0' : 'opacity-100'
                     }`}
                 style={{ width: isSidebarCollapsed ? 0 : sidebarWidth }}
             >
@@ -475,7 +475,7 @@ export function ProjectWorkflowView() {
                     {/* Collapse Button inside sidebar */}
                     <button
                         onClick={() => setIsSidebarCollapsed(true)}
-                        className="absolute top-2 right-2 p-1 rounded-md text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors z-10"
+                        className="absolute top-2 right-2 p-1 rounded-md text-ws-muted hover:bg-slate-200 hover:text-ws-text-secondary transition-colors z-10"
                         title="Collapse Sidebar"
                     >
                         <PanelLeftClose size={14} />
@@ -497,36 +497,36 @@ export function ProjectWorkflowView() {
             {/* Main Content Area */}
             <main className="flex-1 flex flex-col overflow-hidden">
                 {!activeProjectId ? (
-                    <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
+                    <div className="flex-1 flex items-center justify-center bg-ws-bg text-ws-muted">
                         <div className="text-center">
                             <p className="text-ws-body">No project selected</p>
                             <p className="text-sm">Select a project from the top menu</p>
                         </div>
                     </div>
                 ) : !project ? (
-                    <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
+                    <div className="flex-1 flex items-center justify-center bg-ws-bg text-ws-muted">
                         <div className="text-center">
                             <p className="text-ws-body">Loading project…</p>
                         </div>
                     </div>
                 ) : (
                     <>
-                        <div className="h-10 border-b border-slate-200 bg-white px-3 flex items-center justify-between">
+                        <div className="h-10 border-b border-ws-panel-border bg-ws-panel-bg px-3 flex items-center justify-between">
                             <div className="min-w-0 flex-1 flex items-center gap-4">
                                 {/* Project Selector */}
                                 <div className="min-w-0">
-                                    <div className="text-xs text-slate-400">Project</div>
+                                    <div className="text-xs text-ws-muted">Project</div>
                                     <Menu>
                                         <Menu.Target>
-                                            <button className="flex items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors focus:outline-none">
+                                            <button className="flex items-center gap-1 text-sm font-semibold text-ws-fg hover:text-blue-600 transition-colors focus:outline-none">
                                                 {project ? (
                                                     <span className="truncate" title={project.title}>
                                                         {project.title}
                                                     </span>
                                                 ) : (
-                                                    <span className="text-slate-400">Select a project...</span>
+                                                    <span className="text-ws-muted">Select a project...</span>
                                                 )}
-                                                <ChevronDown size={14} className="shrink-0 text-slate-400" />
+                                                <ChevronDown size={14} className="shrink-0 text-ws-muted" />
                                             </button>
                                         </Menu.Target>
                                         <Menu.Dropdown className="min-w-[240px]">
@@ -563,16 +563,16 @@ export function ProjectWorkflowView() {
 
                                 {/* Subprocess Selector */}
                                 <div className="min-w-0">
-                                    <div className="text-xs text-slate-400">Subprocess</div>
+                                    <div className="text-xs text-ws-muted">Subprocess</div>
                                     {/* Subprocess dropdown when multiple exist */}
                                     {subprocesses.length > 1 ? (
                                         <div className="relative">
                                             <Dropdown>
-                                                <DropdownTrigger className="flex items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors focus:outline-none">
+                                                <DropdownTrigger className="flex items-center gap-1 text-sm font-semibold text-ws-fg hover:text-blue-600 transition-colors focus:outline-none">
                                                     <span className="truncate" title={activeSubprocess?.title}>
                                                         {activeSubprocess?.title || 'Select a subprocess'}
                                                     </span>
-                                                    <ChevronDown size={14} className="shrink-0 text-slate-400" />
+                                                    <ChevronDown size={14} className="shrink-0 text-ws-muted" />
                                                 </DropdownTrigger>
                                                 <DropdownContent align="start" className="w-56 max-h-64 overflow-y-auto">
                                                     {subprocesses.map((sp) => (
@@ -588,7 +588,7 @@ export function ProjectWorkflowView() {
                                             </Dropdown>
                                         </div>
                                     ) : (
-                                        <div className="text-sm font-semibold text-slate-800 truncate">
+                                        <div className="text-sm font-semibold text-ws-fg truncate">
                                             {activeSubprocess?.title || 'Select a subprocess'}
                                         </div>
                                     )}
@@ -599,10 +599,10 @@ export function ProjectWorkflowView() {
                                 <div className="flex items-center gap-2">
                                     <div className="relative">
                                         <Dropdown>
-                                            <DropdownTrigger className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors focus:outline-none">
+                                            <DropdownTrigger className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ws-text-secondary hover:text-ws-fg hover:bg-slate-100 rounded transition-colors focus:outline-none">
                                                 <Plus size={14} />
                                                 <span>Add</span>
-                                                <ChevronDown size={12} className="text-slate-400" />
+                                                <ChevronDown size={12} className="text-ws-muted" />
                                             </DropdownTrigger>
                                             <DropdownContent align="end" className="w-44">
                                                 {definitions && definitions.filter((d) => !d.is_system).length > 0 && (
@@ -622,7 +622,7 @@ export function ProjectWorkflowView() {
                                                                     })
                                                                 }
                                                             >
-                                                                <span className="w-5 h-5 rounded bg-slate-100 text-slate-600 flex items-center justify-center text-xs mr-2">
+                                                                <span className="w-5 h-5 rounded bg-slate-100 text-ws-text-secondary flex items-center justify-center text-xs mr-2">
                                                                     {def.styling?.icon || def.name.charAt(0)}
                                                                 </span>
                                                                 Add {def.name}
@@ -647,7 +647,7 @@ export function ProjectWorkflowView() {
                             {isComposerOpen && activeSubprocessId && (
                                 <>
                                     <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setIsComposerOpen(false)} />
-                                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[80vh] bg-white rounded-xl shadow-2xl overflow-hidden">
+                                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[80vh] bg-ws-panel-bg rounded-xl shadow-2xl overflow-hidden">
                                         <ComposerView
                                             mode="drawer"
                                             contextId={activeSubprocessId}
@@ -661,14 +661,14 @@ export function ProjectWorkflowView() {
 
                         <div className="flex-1 overflow-hidden flex flex-col">
                             {/* View Mode Toggle Bar */}
-                            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-slate-50/50 shrink-0">
+                            <div className="flex items-center justify-between px-4 py-2 border-b border-ws-panel-border bg-ws-bg/50 shrink-0">
                                 <div className="flex items-center gap-2">
                                     <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
                                         <button
                                             onClick={() => setUseWorkflowSurface(false)}
                                             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${!useWorkflowSurface
-                                                ? 'bg-white shadow-sm text-slate-700'
-                                                : 'text-slate-500 hover:text-slate-700'
+                                                ? 'bg-ws-panel-bg shadow-sm text-ws-text-secondary'
+                                                : 'text-ws-text-secondary hover:text-ws-text-secondary'
                                                 }`}
                                         >
                                             <Layers size={14} />
@@ -677,8 +677,8 @@ export function ProjectWorkflowView() {
                                         <button
                                             onClick={() => setUseWorkflowSurface(true)}
                                             className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${useWorkflowSurface
-                                                ? 'bg-white shadow-sm text-slate-700'
-                                                : 'text-slate-500 hover:text-slate-700'
+                                                ? 'bg-ws-panel-bg shadow-sm text-ws-text-secondary'
+                                                : 'text-ws-text-secondary hover:text-ws-text-secondary'
                                                 }`}
                                         >
                                             <Layers size={14} />
@@ -730,7 +730,7 @@ export function ProjectWorkflowView() {
                                                 activeSubprocessId ? (
                                                     <div className="flex flex-col items-center justify-center py-12">
                                                         <Dropdown>
-                                                            <DropdownTrigger className="w-12 h-12 bg-white border-2 border-dashed border-slate-300 text-slate-400 hover:border-indigo-400 hover:text-indigo-600 rounded-full flex items-center justify-center transition-all mb-3">
+                                                            <DropdownTrigger className="w-12 h-12 bg-ws-panel-bg border-2 border-dashed border-slate-300 text-ws-muted hover:border-indigo-400 hover:text-indigo-600 rounded-full flex items-center justify-center transition-all mb-3">
                                                                 <Plus size={24} />
                                                             </DropdownTrigger>
                                                             <DropdownContent className="w-56">
@@ -758,10 +758,10 @@ export function ProjectWorkflowView() {
                                                                 )}
                                                             </DropdownContent>
                                                         </Dropdown>
-                                                        <p className="text-sm text-slate-500">Add your first task</p>
+                                                        <p className="text-sm text-ws-text-secondary">Add your first task</p>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-sm text-slate-500">Select a subprocess to view tasks</span>
+                                                    <span className="text-sm text-ws-text-secondary">Select a subprocess to view tasks</span>
                                                 )
                                             }
                                         />
@@ -804,7 +804,7 @@ export function ProjectWorkflowView() {
                                 {activeSubprocessId && (
                                     <div className="flex justify-center pt-6 pb-4">
                                         <Dropdown>
-                                            <DropdownTrigger className="w-10 h-10 bg-white border-2 border-dashed border-slate-300 text-slate-400 hover:border-indigo-400 hover:text-indigo-600 rounded-full flex items-center justify-center transition-all">
+                                            <DropdownTrigger className="w-10 h-10 bg-ws-panel-bg border-2 border-dashed border-slate-300 text-ws-muted hover:border-indigo-400 hover:text-indigo-600 rounded-full flex items-center justify-center transition-all">
                                                 <Plus size={20} />
                                             </DropdownTrigger>
                                             <DropdownContent className="w-56">

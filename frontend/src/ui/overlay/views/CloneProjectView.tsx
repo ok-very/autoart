@@ -155,7 +155,7 @@ export function CloneProjectView(props: CloneProjectViewProps | LegacyCloneProje
               {DEPTH_OPTIONS.map((option) => (
                 <div
                   key={option.value}
-                  className={`bg-white border rounded-lg p-3 cursor-pointer transition-colors ${depth === option.value ? 'border-blue-500 bg-blue-50' : 'border-slate-200'
+                  className={`bg-ws-panel-bg border rounded-lg p-3 cursor-pointer transition-colors ${depth === option.value ? 'border-blue-500 bg-blue-50' : 'border-ws-panel-border'
                     }`}
                   onClick={() => setDepth(option.value)}
                 >
@@ -182,7 +182,7 @@ export function CloneProjectView(props: CloneProjectViewProps | LegacyCloneProje
           <Stack gap="xs">
             {/* Include Definitions */}
             <div
-              className={`bg-white border rounded-lg p-3 cursor-pointer transition-colors ${includeDefinitions ? 'border-purple-500 bg-purple-50' : 'border-slate-200'
+              className={`bg-ws-panel-bg border rounded-lg p-3 cursor-pointer transition-colors ${includeDefinitions ? 'border-purple-500 bg-purple-50' : 'border-ws-panel-border'
                 }`}
               onClick={() => setIncludeDefinitions(!includeDefinitions)}
             >
@@ -215,7 +215,7 @@ export function CloneProjectView(props: CloneProjectViewProps | LegacyCloneProje
 
             {/* Include Records */}
             <div
-              className={`bg-white border rounded-lg p-3 cursor-pointer transition-colors ${includeRecords ? 'border-green-500 bg-green-50' : 'border-slate-200'
+              className={`bg-ws-panel-bg border rounded-lg p-3 cursor-pointer transition-colors ${includeRecords ? 'border-green-500 bg-green-50' : 'border-ws-panel-border'
                 }`}
               onClick={() => setIncludeRecords(!includeRecords)}
             >
@@ -245,7 +245,7 @@ export function CloneProjectView(props: CloneProjectViewProps | LegacyCloneProje
           </Alert>
 
           {/* Actions */}
-          <Inline justify="end" gap="sm" className="pt-4 border-t border-slate-100">
+          <Inline justify="end" gap="sm" className="pt-4 border-t border-ws-panel-border">
             <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>

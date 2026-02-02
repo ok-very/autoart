@@ -72,15 +72,15 @@ export function ProjectSidebar() {
     const createConfig = getCreateNodeConfig();
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 overflow-hidden relative" style={{ position: 'relative' }}>
+        <div className="flex flex-col h-full bg-ws-bg overflow-hidden relative" style={{ position: 'relative' }}>
             {/* Project Selector */}
-            <div className="p-3 border-b border-slate-200 bg-white">
-                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1 block">
+            <div className="p-3 border-b border-ws-panel-border bg-ws-panel-bg">
+                <label className="text-[10px] font-semibold text-ws-muted uppercase tracking-wider mb-1 block">
                     Project
                 </label>
                 <Menu>
                     <Menu.Target>
-                        <button className="w-full flex items-center justify-between bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-2 rounded-lg transition-colors text-left">
+                        <button className="w-full flex items-center justify-between bg-ws-bg hover:bg-slate-100 border border-ws-panel-border px-3 py-2 rounded-lg transition-colors text-left">
                             {project ? (
                                 <div className="flex items-center gap-2 min-w-0">
                                     <Badge variant="project" size="xs">Project</Badge>
@@ -91,7 +91,7 @@ export function ProjectSidebar() {
                             ) : (
                                 <Text size="sm" color="muted">Select a project...</Text>
                             )}
-                            <ChevronDown size={14} className="text-slate-400 shrink-0" />
+                            <ChevronDown size={14} className="text-ws-muted shrink-0" />
                         </button>
                     </Menu.Target>
                     <Menu.Dropdown className="min-w-[240px]">
@@ -134,8 +134,8 @@ export function ProjectSidebar() {
                 </Menu>
             </div>
             {processes.length > 0 && (
-                <div className="p-3 border-b border-slate-200 bg-white">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1 block">
+                <div className="p-3 border-b border-ws-panel-border bg-ws-panel-bg">
+                    <label className="text-[10px] font-semibold text-ws-muted uppercase tracking-wider mb-1 block">
                         Process {processes.length > 1 && `(${processes.length})`}
                     </label>
                     <div className="relative">
@@ -156,7 +156,7 @@ export function ProjectSidebar() {
 
                         {/* Process Dropdown */}
                         {isProcessDropdownOpen && processes.length > 1 && (
-                            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-ws-panel-bg border border-ws-panel-border rounded-lg shadow-lg z-50 overflow-hidden">
                                 {processes.map((process) => (
                                     <button
                                         key={process.id}
@@ -164,14 +164,14 @@ export function ProjectSidebar() {
                                             setSelectedProcessId(process.id);
                                             setIsProcessDropdownOpen(false);
                                         }}
-                                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-slate-50 transition-colors ${process.id === selectedProcessId ? 'bg-purple-50 text-purple-700' : 'text-slate-700'
+                                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-ws-bg transition-colors ${process.id === selectedProcessId ? 'bg-purple-50 text-purple-700' : 'text-ws-text-secondary'
                                             }`}
                                     >
                                         <Settings size={14} className="shrink-0" />
                                         <span className="truncate">{process.title}</span>
                                     </button>
                                 ))}
-                                <div className="border-t border-slate-100">
+                                <div className="border-t border-ws-panel-border">
                                     <button
                                         onClick={() => {
                                             setIsProcessDropdownOpen(false);
@@ -199,7 +199,7 @@ export function ProjectSidebar() {
                     <button
                         onClick={() => createConfig && openOverlay('create-node', createConfig)}
                         disabled={!createConfig}
-                        className="w-full py-2 border border-dashed border-slate-300 rounded text-xs text-slate-500 hover:border-slate-400 hover:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
+                        className="w-full py-2 border border-dashed border-slate-300 rounded text-xs text-ws-text-secondary hover:border-slate-400 hover:text-ws-text-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
                     >
                         <Plus size={14} />
                         New {createConfig?.nodeType === 'subprocess' ? 'Subprocess' : 'Stage'}

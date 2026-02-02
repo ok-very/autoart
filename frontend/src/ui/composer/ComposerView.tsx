@@ -327,7 +327,7 @@ export function ComposerView({
 
     const containerClass = clsx('composer-view', {
         'h-full': mode === 'page' || mode === 'drawer',
-        'rounded-lg border border-slate-200': mode === 'inline',
+        'rounded-lg border border-ws-panel-border': mode === 'inline',
     });
 
     return (
@@ -340,8 +340,8 @@ export function ComposerView({
                             <Wand2 size={20} />
                         </div>
                         <div>
-                            <h1 className="text-ws-h1 font-semibold text-slate-900">Composer</h1>
-                            <p className="text-xs text-slate-500">Declare intent with Actions + Events</p>
+                            <h1 className="text-ws-h1 font-semibold text-ws-fg">Composer</h1>
+                            <p className="text-xs text-ws-text-secondary">Declare intent with Actions + Events</p>
                         </div>
                     </div>
                     <div className="composer-header-actions">
@@ -487,7 +487,7 @@ export function ComposerView({
                             <div className="space-y-3 mb-4">
                                 {Object.entries(linkedRecordsBySlot).map(([slotKey, items]) => (
                                     <div key={slotKey} className="space-y-2">
-                                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                                        <div className="text-xs font-medium text-ws-text-secondary uppercase tracking-wide">
                                             {getSlotLabel(slotKey)}
                                         </div>
                                         {items.map(({ lr, idx }) => (
@@ -552,9 +552,9 @@ export function ComposerView({
                         {/* Record Picker Modal (simplified) */}
                         {showRecordPicker && (
                             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                                <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[70vh] overflow-hidden">
-                                    <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-                                        <h3 className="font-semibold text-slate-900">Select Record</h3>
+                                <div className="bg-ws-panel-bg rounded-xl shadow-2xl w-full max-w-lg max-h-[70vh] overflow-hidden">
+                                    <div className="p-4 border-b border-ws-panel-border flex items-center justify-between">
+                                        <h3 className="font-semibold text-ws-fg">Select Record</h3>
                                         <button
                                             type="button"
                                             onClick={() => setShowRecordPicker(false)}
@@ -569,12 +569,12 @@ export function ComposerView({
                                                 key={record.id}
                                                 type="button"
                                                 onClick={() => handleAddRecord(record)}
-                                                className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all"
+                                                className="w-full text-left p-3 rounded-lg border border-ws-panel-border hover:border-blue-300 hover:bg-blue-50 transition-all"
                                             >
-                                                <div className="font-medium text-slate-900">
+                                                <div className="font-medium text-ws-fg">
                                                     {record.unique_name}
                                                 </div>
-                                                <div className="text-xs text-slate-500">
+                                                <div className="text-xs text-ws-text-secondary">
                                                     ID: {record.id.slice(0, 8)}...
                                                 </div>
                                             </button>
@@ -749,8 +749,8 @@ export function ComposerView({
                     )}
 
                     {/* Submit Footer */}
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-                        <div className="text-sm text-slate-500">
+                    <div className="flex items-center justify-between pt-4 border-t border-ws-panel-border">
+                        <div className="text-sm text-ws-text-secondary">
                             {selectedRecipe && selectedSubprocess ? (
                                 <>
                                     Creating <strong>{selectedRecipe.name}</strong> in{' '}
@@ -805,7 +805,7 @@ export function InlineComposer({ contextId, onSuccess, placeholder }: InlineComp
         return (
             <button
                 onClick={() => setIsExpanded(true)}
-                className="w-full p-3 text-left text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg border border-dashed border-slate-200 transition-all"
+                className="w-full p-3 text-left text-ws-muted hover:text-ws-text-secondary hover:bg-ws-bg rounded-lg border border-dashed border-ws-panel-border transition-all"
             >
                 <Plus size={14} className="inline mr-2" />
                 {placeholder || 'Add an action...'}
@@ -814,7 +814,7 @@ export function InlineComposer({ contextId, onSuccess, placeholder }: InlineComp
     }
 
     return (
-        <div className="border border-slate-200 rounded-lg overflow-hidden">
+        <div className="border border-ws-panel-border rounded-lg overflow-hidden">
             <ComposerView
                 mode="inline"
                 contextId={contextId}

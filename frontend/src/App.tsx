@@ -58,9 +58,9 @@ function App() {
           <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white font-semibold text-xl mx-auto mb-4 animate-pulse">
             A
           </div>
-          <p className="text-slate-500">Loading...</p>
+          <p className="text-ws-text-secondary">Loading...</p>
           {showTimeoutMessage && (
-            <p className="text-xs text-slate-400 mt-2">
+            <p className="text-xs text-ws-muted mt-2">
               Taking longer than expected. Is the backend running?
             </p>
           )}

@@ -90,7 +90,7 @@ export function FontSelector({
 
     return (
         <div className="relative">
-            <label id={labelId} className="block text-sm font-medium text-slate-700 mb-1">
+            <label id={labelId} className="block text-sm font-medium text-ws-text-secondary mb-1">
                 Font Family
             </label>
             <button
@@ -102,15 +102,15 @@ export function FontSelector({
                 aria-haspopup="listbox"
                 aria-expanded={isOpen}
                 aria-labelledby={labelId}
-                className="w-full flex items-center justify-between px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-sans hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-between px-3 py-2 bg-ws-panel-bg border border-slate-300 rounded-lg text-sm font-sans hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 <span className="flex items-center gap-2">
                     <span style={{ fontFamily: selectedFont }}>{selectedFont}</span>
                     {selectedFontOption && (
-                        <span className="text-xs text-slate-500 uppercase">{selectedFontOption.category}</span>
+                        <span className="text-xs text-ws-text-secondary uppercase">{selectedFontOption.category}</span>
                     )}
                 </span>
-                <ChevronDown className="w-4 h-4 text-slate-400" />
+                <ChevronDown className="w-4 h-4 text-ws-muted" />
             </button>
 
             {isOpen && (
@@ -121,7 +121,7 @@ export function FontSelector({
                         role="listbox"
                         aria-labelledby={labelId}
                         onKeyDown={handleListKeyDown}
-                        className="absolute z-20 mt-1 w-full bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-auto font-sans focus:outline-none"
+                        className="absolute z-20 mt-1 w-full bg-ws-panel-bg border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-auto font-sans focus:outline-none"
                     >
                         {availableFonts.map((font, index) => (
                             <button
@@ -137,11 +137,11 @@ export function FontSelector({
                                     buttonRef.current?.focus();
                                 }}
                                 onMouseEnter={() => setFocusedIndex(index)}
-                                className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-slate-100 focus:bg-slate-100 focus:outline-none ${font.family === selectedFont ? 'bg-blue-50 text-blue-700' : 'text-slate-700'
+                                className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-slate-100 focus:bg-slate-100 focus:outline-none ${font.family === selectedFont ? 'bg-blue-50 text-blue-700' : 'text-ws-text-secondary'
                                     }`}
                             >
                                 <span style={{ fontFamily: font.family }}>{font.family}</span>
-                                <span className="text-xs text-slate-500 uppercase">{font.category}</span>
+                                <span className="text-xs text-ws-text-secondary uppercase">{font.category}</span>
                             </button>
                         ))}
                     </div>

@@ -144,7 +144,7 @@ export function Header() {
   }, [setFieldsViewMode, collectionMode, openOverlay]);
 
   return (
-    <header className="h-14 bg-white flex items-center justify-between px-4 shrink-0 shadow-sm z-50 relative border-b border-slate-200">
+    <header className="h-14 bg-ws-panel-bg flex items-center justify-between px-4 shrink-0 shadow-sm z-50 relative border-b border-ws-panel-border">
       <Inline gap="sm" align="center" justify="between" className="w-full">
         <div className="flex items-center gap-2">
           {/* Logo */}

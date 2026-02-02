@@ -73,8 +73,8 @@ function SourceIcon({ id: _id, icon, label, isActive, isConnected, isDisabled, o
             className={clsx(
                 'relative w-10 h-10 flex items-center justify-center rounded-lg transition-all',
                 isActive && 'bg-emerald-100 text-emerald-600 shadow-sm',
-                !isActive && !isDisabled && 'text-slate-500 hover:bg-slate-100 hover:text-slate-700',
-                isDisabled && 'text-slate-300 cursor-not-allowed'
+                !isActive && !isDisabled && 'text-ws-text-secondary hover:bg-slate-100 hover:text-ws-text-secondary',
+                isDisabled && 'text-ws-muted cursor-not-allowed'
             )}
         >
             {icon}
@@ -161,15 +161,15 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
     // For Monday source, we persist the board list below the session header
     if (session && sourceType !== 'monday') {
         return (
-            <aside style={{ width }} className="shrink-0 border-r border-slate-200 bg-white flex flex-col">
+            <aside style={{ width }} className="shrink-0 border-r border-ws-panel-border bg-ws-panel-bg flex flex-col">
                 <div className="flex-1 flex flex-col overflow-hidden">
                     {/* Session Header */}
-                    <div className="p-4 border-b border-slate-200">
-                        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    <div className="p-4 border-b border-ws-panel-border">
+                        <div className="text-[10px] font-semibold text-ws-muted uppercase tracking-wider mb-1">
                             Active Session
                         </div>
-                        <div className="text-sm font-medium text-slate-800">{session.parser_name}</div>
-                        <div className="text-xs text-slate-400 mt-1">
+                        <div className="text-sm font-medium text-ws-fg">{session.parser_name}</div>
+                        <div className="text-xs text-ws-muted mt-1">
                             {new Date(session.created_at).toLocaleString()}
                         </div>
                     </div>
@@ -178,10 +178,10 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                     <div className="flex-1" />
 
                     {/* Reset Button */}
-                    <div className="p-4 border-t border-slate-200">
+                    <div className="p-4 border-t border-ws-panel-border">
                         <button
                             onClick={handleReset}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-ws-text-secondary bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
                         >
                             <RefreshCw className="w-4 h-4" />
                             New Import
@@ -194,9 +194,9 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
 
     // Configuration mode
     return (
-        <aside style={{ width }} className="shrink-0 border-r border-slate-200 bg-white flex flex-col overflow-hidden">
+        <aside style={{ width }} className="shrink-0 border-r border-ws-panel-border bg-ws-panel-bg flex flex-col overflow-hidden">
             {/* Source Icon Bar */}
-            <div className="w-full border-b border-slate-100 bg-slate-50 py-2 px-2 flex items-center justify-center gap-1">
+            <div className="w-full border-b border-ws-panel-border bg-ws-bg py-2 px-2 flex items-center justify-center gap-1">
                 <SourceIcon
                     id="file"
                     icon={<File size={18} />}
@@ -238,7 +238,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                 <button
                     onClick={() => openOverlay('integrations', {})}
                     title="Add Integration"
-                    className="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-lg transition-colors"
+                    className="w-8 h-8 flex items-center justify-center text-ws-muted hover:bg-slate-100 hover:text-ws-text-secondary rounded-lg transition-colors"
                 >
                     <Plus size={16} />
                 </button>
@@ -250,14 +250,14 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                 {sourceType === 'file' && (
                     <>
                         {/* Parser Selection */}
-                        <div className="p-4 border-b border-slate-100">
-                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                        <div className="p-4 border-b border-ws-panel-border">
+                            <label className="text-[10px] font-semibold text-ws-muted uppercase tracking-wider">
                                 Parser
                             </label>
                             <select
                                 value={parserName}
                                 onChange={(e) => setParserName(e.target.value)}
-                                className="mt-1 w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                className="mt-1 w-full px-3 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             >
                                 <option value="monday">Monday.com CSV</option>
                                 <option value="airtable">Airtable CSV</option>
@@ -266,8 +266,8 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                         </div>
 
                         {/* File Upload */}
-                        <div className="p-4 border-b border-slate-100">
-                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                        <div className="p-4 border-b border-ws-panel-border">
+                            <label className="text-[10px] font-semibold text-ws-muted uppercase tracking-wider">
                                 Upload File
                             </label>
                             <input
@@ -279,7 +279,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                             />
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-slate-200 rounded-lg text-sm text-slate-600 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
+                                className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-ws-panel-border rounded-lg text-sm text-ws-text-secondary hover:border-emerald-300 hover:text-emerald-600 transition-colors"
                             >
                                 <Upload className="w-4 h-4" />
                                 Choose File
@@ -289,8 +289,8 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                         {/* Paste Data */}
                         <div className="flex-1 p-4 flex flex-col min-h-0">
                             <div className="flex items-center gap-1 mb-2">
-                                <ClipboardPaste className="w-3 h-3 text-slate-400" />
-                                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                <ClipboardPaste className="w-3 h-3 text-ws-muted" />
+                                <label className="text-[10px] font-semibold text-ws-muted uppercase tracking-wider">
                                     Paste Data
                                 </label>
                             </div>
@@ -298,7 +298,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                                 value={rawData}
                                 onChange={(e) => setRawData(e.target.value)}
                                 placeholder="Paste CSV or JSON..."
-                                className="flex-1 w-full p-3 text-xs font-mono border border-slate-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                className="flex-1 w-full p-3 text-xs font-mono border border-ws-panel-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             />
                         </div>
 
@@ -311,7 +311,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                         )}
 
                         {/* Parse Button */}
-                        <div className="p-4 border-t border-slate-200">
+                        <div className="p-4 border-t border-ws-panel-border">
                             <button
                                 onClick={handleParse}
                                 disabled={isLoading || !rawData.trim()}
@@ -333,11 +333,11 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                 {/* Monday Source - Board list managed by Wizard now */}
                 {sourceType === 'monday' && (
                     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                        <Calendar className="w-12 h-12 text-slate-300 mb-4" />
-                        <div className="text-sm font-medium text-slate-600 mb-2">
+                        <Calendar className="w-12 h-12 text-ws-muted mb-4" />
+                        <div className="text-sm font-medium text-ws-text-secondary mb-2">
                             Monday.com Connected
                         </div>
-                        <p className="text-xs text-slate-400 max-w-48">
+                        <p className="text-xs text-ws-muted max-w-48">
                             Select a board in the main window to begin import.
                         </p>
                     </div>
@@ -353,11 +353,11 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                 {/* API Source (placeholder) */}
                 {sourceType === 'api' && (
                     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                        <Plug className="w-12 h-12 text-slate-300 mb-4" />
-                        <div className="text-sm font-medium text-slate-600 mb-2">
+                        <Plug className="w-12 h-12 text-ws-muted mb-4" />
+                        <div className="text-sm font-medium text-ws-text-secondary mb-2">
                             API Connections
                         </div>
-                        <p className="text-xs text-slate-400 max-w-48">
+                        <p className="text-xs text-ws-muted max-w-48">
                             Coming soon.
                         </p>
                     </div>

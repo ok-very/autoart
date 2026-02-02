@@ -145,8 +145,8 @@ export function ReferenceEditor({
                     className={clsx(
                         'w-full flex items-center gap-2 px-3 py-2 text-sm border rounded-md transition-colors text-left',
                         readOnly
-                            ? 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed'
-                            : 'border-dashed border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50 text-slate-500 hover:text-blue-600 cursor-pointer'
+                            ? 'border-ws-panel-border bg-ws-bg text-ws-muted cursor-not-allowed'
+                            : 'border-dashed border-slate-300 bg-ws-panel-bg hover:border-blue-400 hover:bg-blue-50 text-ws-text-secondary hover:text-blue-600 cursor-pointer'
                     )}
                 >
                     <Link2 size={14} />
@@ -170,9 +170,9 @@ export function ReferenceEditor({
     // Loading state
     if (isLoading) {
         return (
-            <div className="flex items-center gap-2 px-3 py-2 text-sm border border-slate-200 rounded-md bg-slate-50">
-                <RefreshCw size={14} className="animate-spin text-slate-400" />
-                <span className="text-slate-400">Loading...</span>
+            <div className="flex items-center gap-2 px-3 py-2 text-sm border border-ws-panel-border rounded-md bg-ws-bg">
+                <RefreshCw size={14} className="animate-spin text-ws-muted" />
+                <span className="text-ws-muted">Loading...</span>
             </div>
         );
     }
@@ -209,7 +209,7 @@ export function ReferenceEditor({
                 <button
                     type="button"
                     onClick={handleOpenRecord}
-                    className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-100 rounded transition-colors"
+                    className="p-1 text-ws-muted hover:text-blue-600 hover:bg-blue-100 rounded transition-colors"
                     title="Open record"
                 >
                     <ExternalLink size={12} />
@@ -220,7 +220,7 @@ export function ReferenceEditor({
                         type="button"
                         onClick={handleClear}
                         disabled={removeActionRef.isPending}
-                        className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
+                        className="p-1 text-ws-muted hover:text-red-600 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
                         title="Remove link"
                     >
                         <X size={12} />

@@ -137,17 +137,17 @@ export function InspectorFooterComposer() {
     }, [selectedNode, selectedAction, subprocesses]);
 
     return (
-        <div className="border-t border-slate-200 bg-white shrink-0">
+        <div className="border-t border-ws-panel-border bg-ws-panel-bg shrink-0">
             {/* Collapse/Expand Toggle */}
             <button
                 onClick={() => setInspectorComposerExpanded(!inspectorComposerExpanded)}
-                className="w-full flex items-center justify-between px-4 py-2 text-xs text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors"
+                className="w-full flex items-center justify-between px-4 py-2 text-xs text-ws-text-secondary hover:text-ws-text-secondary hover:bg-ws-bg transition-colors"
             >
                 <div className="flex items-center gap-1.5">
                     <Plus size={14} />
                     <span className="font-medium">Quick Declare</span>
                     {contextDisplay && (
-                        <span className="text-slate-400">→ {contextDisplay}</span>
+                        <span className="text-ws-muted">→ {contextDisplay}</span>
                     )}
                 </div>
                 {inspectorComposerExpanded ? (
@@ -167,7 +167,7 @@ export function InspectorFooterComposer() {
                         onChange={(e) => setTitle(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder={`New ${selectedRecipe?.name || 'Task'}...`}
-                        className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                        className="flex-1 px-3 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                         disabled={isLoading}
                     />
                     <button
@@ -177,7 +177,7 @@ export function InspectorFooterComposer() {
                             'p-2 rounded-lg transition-colors',
                             canSubmit
                                 ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                : 'bg-slate-100 text-ws-muted cursor-not-allowed'
                         )}
                     >
                         {isLoading ? (
@@ -193,7 +193,7 @@ export function InspectorFooterComposer() {
                     <div className="mt-3 space-y-3">
                         {/* Recipe Selector */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-1">
+                            <label className="block text-xs font-medium text-ws-text-secondary mb-1">
                                 Action Type
                             </label>
                             <div className="flex flex-wrap gap-1.5">
@@ -209,7 +209,7 @@ export function InspectorFooterComposer() {
                                                 'px-2.5 py-1 text-xs font-medium rounded-full border transition-colors',
                                                 isSelected
                                                     ? 'bg-blue-600 text-white border-blue-600'
-                                                    : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'
+                                                    : 'bg-ws-panel-bg text-ws-text-secondary border-ws-panel-border hover:border-blue-300'
                                             )}
                                         >
                                             {styling?.icon && <span className="mr-1">{styling.icon}</span>}
@@ -222,14 +222,14 @@ export function InspectorFooterComposer() {
 
                         {/* Description */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-1">
+                            <label className="block text-xs font-medium text-ws-text-secondary mb-1">
                                 Description (optional)
                             </label>
                             <textarea
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 placeholder="Add details..."
-                                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none"
+                                className="w-full px-3 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none"
                                 rows={2}
                                 disabled={isLoading}
                             />
@@ -237,8 +237,8 @@ export function InspectorFooterComposer() {
 
                         {/* Context indicator */}
                         {contextDisplay && (
-                            <div className="text-xs text-slate-400">
-                                Creating in: <span className="text-slate-600 font-medium">{contextDisplay}</span>
+                            <div className="text-xs text-ws-muted">
+                                Creating in: <span className="text-ws-text-secondary font-medium">{contextDisplay}</span>
                             </div>
                         )}
                     </div>

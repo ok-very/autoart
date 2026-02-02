@@ -20,7 +20,7 @@ export function getConfidenceColor(confidence: string): string {
         case 'high': return 'bg-green-100 text-green-700';
         case 'medium': return 'bg-amber-100 text-amber-700';
         case 'low': return 'bg-red-100 text-red-700';
-        default: return 'bg-slate-100 text-slate-600';
+        default: return 'bg-slate-100 text-ws-text-secondary';
     }
 }
 
@@ -58,7 +58,7 @@ export function getOutputKindBadge(output: InterpretationOutput) {
         case 'field_value':
             return { label: output.field, color: 'bg-purple-100 text-purple-700', icon: Inbox };
         default:
-            return { label: 'unknown', color: 'bg-slate-100 text-slate-600', icon: HelpCircle };
+            return { label: 'unknown', color: 'bg-slate-100 text-ws-text-secondary', icon: HelpCircle };
     }
 }
 

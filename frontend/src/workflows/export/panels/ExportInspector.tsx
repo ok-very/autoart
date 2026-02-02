@@ -59,13 +59,13 @@ export function ExportInspector({
 
     return (
         <aside
-            className="bg-white border-l border-slate-200 flex flex-col shrink-0"
+            className="bg-ws-panel-bg border-l border-ws-panel-border flex flex-col shrink-0"
             style={{ width }}
         >
             {/* Header */}
-            <div className="h-10 border-b border-slate-100 flex items-center px-3">
+            <div className="h-10 border-b border-ws-panel-border flex items-center px-3">
                 <Inline gap="sm">
-                    <Settings className="w-4 h-4 text-slate-400" />
+                    <Settings className="w-4 h-4 text-ws-muted" />
                     <Text size="sm" weight="semibold">Export Options</Text>
                 </Inline>
             </div>
@@ -108,7 +108,7 @@ export function ExportInspector({
                     </div>
 
                     {/* Next Steps Options */}
-                    <div className="pt-4 border-t border-slate-200">
+                    <div className="pt-4 border-t border-ws-panel-border">
                         <Text size="xs" weight="semibold" color="muted" className="uppercase mb-3">
                             Next Steps
                         </Text>
@@ -121,7 +121,7 @@ export function ExportInspector({
                     </div>
 
                     {/* Format Info */}
-                    <Card className="bg-slate-50 mt-4">
+                    <Card className="bg-ws-bg mt-4">
                         <div className="p-3">
                             <Text size="xs" weight="semibold" color="muted" className="uppercase mb-2">
                                 Output Format
@@ -137,7 +137,7 @@ export function ExportInspector({
 
                     {/* Font Selection */}
                     {onFontChange && (
-                        <div className="pt-4 border-t border-slate-200">
+                        <div className="pt-4 border-t border-ws-panel-border">
                             <FontSelector
                                 selectedFont={font || getDefaultFont(format)}
                                 onChange={onFontChange}
@@ -148,7 +148,7 @@ export function ExportInspector({
             </div>
 
             {/* Export Button */}
-            <div className="p-4 border-t border-slate-200 bg-slate-50">
+            <div className="p-4 border-t border-ws-panel-border bg-ws-bg">
                 {/* Error Display */}
                 {exportError && (
                     <div className="mb-3 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">

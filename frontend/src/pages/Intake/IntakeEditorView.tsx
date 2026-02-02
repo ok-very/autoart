@@ -220,7 +220,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
         switch (saveStatus) {
             case 'saving':
                 return (
-                    <span className="flex items-center gap-1 text-[10px] text-slate-400 whitespace-nowrap">
+                    <span className="flex items-center gap-1 text-[10px] text-ws-muted whitespace-nowrap">
                         <Loader2 className="w-3 h-3 animate-spin shrink-0" />
                         Saving...
                     </span>
@@ -238,7 +238,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                 );
             default:
                 return (
-                    <span className="text-[10px] text-slate-400 whitespace-nowrap">All changes saved</span>
+                    <span className="text-[10px] text-ws-muted whitespace-nowrap">All changes saved</span>
                 );
         }
     };
@@ -254,12 +254,12 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     return (
         <div className="flex flex-col h-full">
             {/* Editor Header */}
-            <header className="h-10 bg-white border-b border-slate-200 flex items-center justify-between px-3 shrink-0">
+            <header className="h-10 bg-ws-panel-bg border-b border-ws-panel-border flex items-center justify-between px-3 shrink-0">
                 {/* Left: Back + Title */}
                 <div className="flex items-center gap-4 w-1/3">
                     <button
                         onClick={handleBack}
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100"
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-ws-text-secondary hover:bg-slate-100"
                     >
                         <ArrowLeft className="w-4 h-4" />
                     </button>
@@ -268,7 +268,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                             type="text"
                             value={formTitle}
                             onChange={(e) => handleTitleChange(e.target.value)}
-                            className="text-sm font-semibold text-slate-800 bg-transparent border-none p-0 focus:ring-0 w-48 hover:border-b hover:border-slate-300 focus:border-b focus:border-indigo-500"
+                            className="text-sm font-semibold text-ws-fg bg-transparent border-none p-0 focus:ring-0 w-48 hover:border-b hover:border-slate-300 focus:border-b focus:border-indigo-500"
                         />
                         {renderSaveStatus()}
                     </div>
@@ -282,7 +282,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                             onClick={() => setActiveTab(tab)}
                             className={`px-4 h-full flex items-center text-sm font-medium border-b-2 transition-colors ${activeTab === tab
                                 ? 'text-indigo-600 border-indigo-600'
-                                : 'text-slate-500 border-transparent hover:text-slate-800'
+                                : 'text-ws-text-secondary border-transparent hover:text-ws-fg'
                                 }`}
                         >
                             {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -292,10 +292,10 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
 
                 {/* Right: Actions */}
                 <div className="flex items-center justify-end gap-3 w-1/3">
-                    <button className="w-8 h-8 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100">
+                    <button className="w-8 h-8 flex items-center justify-center rounded-full text-ws-text-secondary hover:bg-slate-100">
                         <Undo2 className="w-4 h-4" />
                     </button>
-                    <button className="w-8 h-8 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100">
+                    <button className="w-8 h-8 flex items-center justify-center rounded-full text-ws-text-secondary hover:bg-slate-100">
                         <Redo2 className="w-4 h-4" />
                     </button>
                     <div className="h-6 w-px bg-slate-200 mx-1" />
@@ -329,21 +329,21 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                         />
 
                         {/* Form Header Block */}
-                        <div className="bg-white rounded-xl border border-slate-200 mb-4 overflow-hidden border-t-4 border-t-indigo-600">
+                        <div className="bg-ws-panel-bg rounded-xl border border-ws-panel-border mb-4 overflow-hidden border-t-4 border-t-indigo-600">
                             <div className="p-6">
                                 <input
                                     type="text"
                                     value={formTitle}
                                     onChange={(e) => handleTitleChange(e.target.value)}
                                     placeholder="Form Title"
-                                    className="w-full text-ws-h1 font-semibold text-slate-800 bg-transparent border-none p-0 focus:outline-none focus:ring-0"
+                                    className="w-full text-ws-h1 font-semibold text-ws-fg bg-transparent border-none p-0 focus:outline-none focus:ring-0"
                                 />
                                 <textarea
                                     value={formDescription}
                                     onChange={(e) => setFormDescription(e.target.value)}
                                     placeholder="Form description..."
                                     rows={2}
-                                    className="w-full mt-2 text-slate-500 bg-transparent border-none p-0 resize-none focus:outline-none"
+                                    className="w-full mt-2 text-ws-text-secondary bg-transparent border-none p-0 resize-none focus:outline-none"
                                 />
                             </div>
                         </div>
@@ -364,12 +364,12 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
 
                 {activeTab === 'logic' && (
                     <div className="max-w-2xl mx-auto py-8 px-4">
-                        <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
+                        <div className="bg-ws-panel-bg rounded-xl border border-ws-panel-border p-8 text-center">
                             <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
                                 <span className="text-2xl">🔀</span>
                             </div>
-                            <h3 className="text-ws-h2 font-semibold text-slate-700">Conditional Logic</h3>
-                            <p className="text-sm text-slate-500 mt-2">
+                            <h3 className="text-ws-h2 font-semibold text-ws-text-secondary">Conditional Logic</h3>
+                            <p className="text-sm text-ws-text-secondary mt-2">
                                 Coming soon: Add conditional display rules to show or hide questions based on previous answers.
                             </p>
                         </div>
@@ -401,26 +401,26 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
             {/* Publish Dialog */}
             {showPublishDialog && publicUrl && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
-                        <h2 className="text-ws-h2 font-semibold text-slate-900 mb-2">
+                    <div className="bg-ws-panel-bg rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
+                        <h2 className="text-ws-h2 font-semibold text-ws-fg mb-2">
                             Form Published
                         </h2>
-                        <p className="text-slate-600 mb-4">
+                        <p className="text-ws-text-secondary mb-4">
                             Your form is now live and accepting responses.
                         </p>
 
-                        <div className="bg-slate-50 rounded-lg p-3 mb-4">
-                            <p className="text-xs text-slate-500 mb-1">Public URL</p>
+                        <div className="bg-ws-bg rounded-lg p-3 mb-4">
+                            <p className="text-xs text-ws-text-secondary mb-1">Public URL</p>
                             <div className="flex items-center gap-2">
                                 <input
                                     type="text"
                                     value={publicUrl}
                                     readOnly
-                                    className="flex-1 bg-white border border-slate-200 rounded px-3 py-2 text-sm text-slate-800"
+                                    className="flex-1 bg-ws-panel-bg border border-ws-panel-border rounded px-3 py-2 text-sm text-ws-fg"
                                 />
                                 <button
                                     onClick={handleCopyUrl}
-                                    className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded"
+                                    className="p-2 text-ws-text-secondary hover:text-ws-text-secondary hover:bg-slate-100 rounded"
                                     title="Copy URL"
                                 >
                                     {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
@@ -429,7 +429,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                                     href={publicUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded"
+                                    className="p-2 text-ws-text-secondary hover:text-ws-text-secondary hover:bg-slate-100 rounded"
                                     title="Open in new tab"
                                 >
                                     <ExternalLink className="w-4 h-4" />

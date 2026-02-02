@@ -106,16 +106,16 @@ export function AddWorkspaceDialog({ open, onClose, parentWorkspaceId, defaultCo
         >
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Preview of what will be saved */}
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                    <Inline gap="sm" align="center" className="text-slate-600">
-                        <Folder size={16} className="text-slate-400" />
+                <div className="p-3 bg-ws-bg rounded-lg border border-ws-panel-border">
+                    <Inline gap="sm" align="center" className="text-ws-text-secondary">
+                        <Folder size={16} className="text-ws-muted" />
                         <Text size="sm">Current panel arrangement will be saved</Text>
                     </Inline>
                 </div>
 
                 {/* Name input */}
                 <div>
-                    <label htmlFor="workspace-name" className="block text-sm font-medium text-slate-700 mb-1">
+                    <label htmlFor="workspace-name" className="block text-sm font-medium text-ws-text-secondary mb-1">
                         Name
                     </label>
                     <input
@@ -138,13 +138,13 @@ export function AddWorkspaceDialog({ open, onClose, parentWorkspaceId, defaultCo
                 {/* Color picker */}
                 <div>
                     <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-slate-700">
+                        <label className="block text-sm font-medium text-ws-text-secondary">
                             Color
                         </label>
                         <button
                             type="button"
                             onClick={() => setShowAllColors(!showAllColors)}
-                            className="text-xs text-slate-500 hover:text-slate-700 transition-colors"
+                            className="text-xs text-ws-text-secondary hover:text-ws-text-secondary transition-colors"
                         >
                             {showAllColors ? 'Fewer' : 'More'}
                         </button>

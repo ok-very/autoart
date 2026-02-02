@@ -123,14 +123,14 @@ export function EventTypeCatalog({ className }: EventTypeCatalogProps) {
     const totalTypes = EVENT_CATEGORIES.reduce((acc, cat) => acc + cat.types.length, 0);
 
     return (
-        <div className={clsx('flex flex-col h-full bg-slate-50', className)}>
+        <div className={clsx('flex flex-col h-full bg-ws-bg', className)}>
             {/* Header */}
-            <div className="px-4 py-3 border-b border-slate-200 bg-white">
+            <div className="px-4 py-3 border-b border-ws-panel-border bg-ws-panel-bg">
                 <div className="flex items-center gap-2 mb-2">
                     <Activity size={16} className="text-blue-500" />
-                    <h3 className="text-sm font-semibold text-slate-900">Event Types</h3>
+                    <h3 className="text-sm font-semibold text-ws-fg">Event Types</h3>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-ws-text-secondary">
                     {totalTypes} event types in {EVENT_CATEGORIES.length} categories
                 </p>
             </div>
@@ -145,14 +145,14 @@ export function EventTypeCatalog({ className }: EventTypeCatalogProps) {
                             className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-slate-100 text-left"
                         >
                             {expandedCategories.has(category.name) ? (
-                                <ChevronDown size={14} className="text-slate-400" />
+                                <ChevronDown size={14} className="text-ws-muted" />
                             ) : (
-                                <ChevronRight size={14} className="text-slate-400" />
+                                <ChevronRight size={14} className="text-ws-muted" />
                             )}
-                            <span className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                            <span className="text-xs font-medium text-ws-text-secondary uppercase tracking-wide">
                                 {category.name}
                             </span>
-                            <span className="text-xs text-slate-400">
+                            <span className="text-xs text-ws-muted">
                                 ({category.types.length})
                             </span>
                         </button>
@@ -175,8 +175,8 @@ export function EventTypeCatalog({ className }: EventTypeCatalogProps) {
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-2 border-t border-slate-200 bg-white">
-                <div className="flex items-center gap-1 text-xs text-slate-400">
+            <div className="px-4 py-2 border-t border-ws-panel-border bg-ws-panel-bg">
+                <div className="flex items-center gap-1 text-xs text-ws-muted">
                     <Info size={12} />
                     <span>Events are immutable facts</span>
                 </div>
@@ -205,13 +205,13 @@ function EventTypeRow({ eventType, isSelected, onClick }: EventTypeRowProps) {
             )}
         >
             <code className="text-xs font-mono text-blue-600">{eventType.type}</code>
-            <span className="text-xs text-slate-600">{eventType.description}</span>
+            <span className="text-xs text-ws-text-secondary">{eventType.description}</span>
             {eventType.payloadFields && (
                 <div className="flex items-center gap-1 mt-1">
                     {eventType.payloadFields.map((field) => (
                         <span
                             key={field}
-                            className="px-1.5 py-0.5 text-[10px] bg-slate-100 text-slate-500 rounded"
+                            className="px-1.5 py-0.5 text-[10px] bg-slate-100 text-ws-text-secondary rounded"
                         >
                             {field}
                         </span>

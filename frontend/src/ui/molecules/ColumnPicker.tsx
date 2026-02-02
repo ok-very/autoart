@@ -43,7 +43,7 @@ export function ColumnPicker<T extends ColumnPickerField>({
         <Dropdown>
             <DropdownTrigger asChild>
                 <button
-                    className="p-2 rounded hover:bg-slate-100 text-slate-500"
+                    className="p-2 rounded hover:bg-slate-100 text-ws-text-secondary"
                     title="Toggle columns"
                 >
                     <Columns size={16} />
@@ -64,7 +64,7 @@ export function ColumnPicker<T extends ColumnPickerField>({
                     );
                 })}
                 {allFields.length === 0 && (
-                    <div className="px-3 py-2 text-xs text-slate-400">
+                    <div className="px-3 py-2 text-xs text-ws-muted">
                         No columns available
                     </div>
                 )}

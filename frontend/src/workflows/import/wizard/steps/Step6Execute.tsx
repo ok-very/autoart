@@ -209,7 +209,7 @@ export function Step6Execute({ onBack, session, plan }: StepProps) {
                 </Text>
             </Stack>
 
-            <Card padding="lg" className="border border-slate-200">
+            <Card padding="lg" className="border border-ws-panel-border">
                 <Stack gap="md">
                     <Inline justify="between">
                         <Text>Items to Import</Text>

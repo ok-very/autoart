@@ -158,7 +158,7 @@ export function ProjectLogView() {
   // Loading state
   if (!activeProjectId) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
+      <div className="flex-1 flex items-center justify-center bg-ws-bg text-ws-muted">
         <div className="text-center">
           <p className="text-ws-body">No project selected</p>
           <p className="text-sm">Select a project from the top menu</p>
@@ -169,19 +169,19 @@ export function ProjectLogView() {
 
   if (!project) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-slate-50">
-        <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+      <div className="flex-1 flex items-center justify-center bg-ws-bg">
+        <Loader2 className="w-6 h-6 text-ws-muted animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden relative" style={{ position: 'relative' }}>
+    <div className="flex-1 flex flex-col bg-ws-bg overflow-hidden relative" style={{ position: 'relative' }}>
       {/* Header */}
-      <div className="h-10 border-b border-slate-200 bg-white px-3 flex items-center justify-between shrink-0">
+      <div className="h-10 border-b border-ws-panel-border bg-ws-panel-bg px-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div>
-            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="text-[10px] font-semibold text-ws-muted uppercase tracking-wider">
               Project Log
             </div>
             {/* Subprocess dropdown */}
@@ -189,7 +189,7 @@ export function ProjectLogView() {
               <div className="relative">
                 <button
                   onClick={() => setIsSubprocessDropdownOpen(!isSubprocessDropdownOpen)}
-                  className="flex items-center gap-1 text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-1 text-sm font-semibold text-ws-fg hover:text-blue-600 transition-colors"
                 >
                   <span className="truncate max-w-[200px]" title={selectedSubprocess?.title || 'All'}>
                     {selectedSubprocess?.title || 'Select subprocess'}
@@ -205,8 +205,8 @@ export function ProjectLogView() {
                       className="fixed inset-0 z-10"
                       onClick={() => setIsSubprocessDropdownOpen(false)}
                     />
-                    <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
-                      <div className="px-3 py-1.5 text-[10px] font-semibold text-slate-400 uppercase">
+                    <div className="absolute top-full left-0 mt-1 w-56 bg-ws-panel-bg border border-ws-panel-border rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
+                      <div className="px-3 py-1.5 text-[10px] font-semibold text-ws-muted uppercase">
                         Subprocesses
                       </div>
                       {subprocesses.map((sp) => (
@@ -216,9 +216,9 @@ export function ProjectLogView() {
                             setSelectedSubprocessId(sp.id);
                             setIsSubprocessDropdownOpen(false);
                           }}
-                          className={`w-full text-left px-3 py-1.5 text-sm hover:bg-slate-50 ${sp.id === selectedSubprocessId
+                          className={`w-full text-left px-3 py-1.5 text-sm hover:bg-ws-bg ${sp.id === selectedSubprocessId
                             ? 'bg-blue-50 text-blue-700'
-                            : 'text-slate-700'
+                            : 'text-ws-text-secondary'
                             }`}
                         >
                           <span className="truncate block" title={sp.title}>
@@ -231,7 +231,7 @@ export function ProjectLogView() {
                 )}
               </div>
             ) : (
-              <div className="text-sm font-semibold text-slate-800 truncate">
+              <div className="text-sm font-semibold text-ws-fg truncate">
                 {project.title}
               </div>
             )}
@@ -242,7 +242,7 @@ export function ProjectLogView() {
         <button
           onClick={() => refetch()}
           disabled={isLoading}
-          className="p-1.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
+          className="p-1.5 rounded text-ws-muted hover:text-ws-text-secondary hover:bg-slate-100 transition-colors disabled:opacity-50"
           title="Refresh"
         >
           <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
@@ -264,22 +264,22 @@ export function ProjectLogView() {
         <div className="max-w-3xl mx-auto py-6 px-4">
           {isLoading && events.length === 0 ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+              <Loader2 className="w-6 h-6 text-ws-muted animate-spin" />
             </div>
           ) : (isError || events.length === 0) ? (
             <div className="text-center py-12">
               {selectedCategories.length > 0 ? (
                 <>
-                  <p className="font-medium text-slate-400">No events found</p>
-                  <p className="text-sm mt-1 text-slate-400">Try adjusting your filters</p>
+                  <p className="font-medium text-ws-muted">No events found</p>
+                  <p className="text-sm mt-1 text-ws-muted">Try adjusting your filters</p>
                 </>
               ) : (
                 <>
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
                     <span className="text-2xl">📋</span>
                   </div>
-                  <p className="font-medium text-slate-600">No actions yet</p>
-                  <p className="text-sm mt-1 text-slate-400 max-w-xs mx-auto">
+                  <p className="font-medium text-ws-text-secondary">No actions yet</p>
+                  <p className="text-sm mt-1 text-ws-muted max-w-xs mx-auto">
                     Get started by creating your first action or using an existing action recipe.
                   </p>
                   <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -292,13 +292,13 @@ export function ProjectLogView() {
                     </button>
                     <button
                       onClick={() => useUIStore.getState().openOverlay('template-library')}
-                      className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-ws-panel-bg border border-ws-panel-border text-ws-text-secondary rounded-lg text-sm font-medium hover:bg-ws-bg hover:border-slate-300 transition-colors"
                     >
                       <span>📚</span>
                       Browse Action Recipes
                     </button>
                   </div>
-                  <p className="text-xs text-slate-400 mt-4">
+                  <p className="text-xs text-ws-muted mt-4">
                     Or go to{' '}
                     <a href="/records" className="text-blue-600 hover:underline">
                       Records
@@ -330,22 +330,22 @@ export function ProjectLogView() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-slate-200">
+                <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-ws-panel-border">
                   <button
                     onClick={handlePrevPage}
                     disabled={page === 0}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-ws-text-secondary hover:text-ws-fg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft size={16} />
                     Newer
                   </button>
-                  <span className="text-sm text-slate-500">
+                  <span className="text-sm text-ws-text-secondary">
                     Page {page + 1} of {totalPages}
                   </span>
                   <button
                     onClick={handleNextPage}
                     disabled={!hasMore}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-slate-600 hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-ws-text-secondary hover:text-ws-fg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Older
                     <ChevronRight size={16} />
@@ -355,7 +355,7 @@ export function ProjectLogView() {
 
               {/* End marker */}
               {!hasMore && events.length > 0 && (
-                <div className="flex items-center justify-center gap-2 text-xs text-slate-300 pt-6">
+                <div className="flex items-center justify-center gap-2 text-xs text-ws-muted pt-6">
                   <div className="h-px w-10 bg-slate-200" />
                   <span>End of log</span>
                   <div className="h-px w-10 bg-slate-200" />

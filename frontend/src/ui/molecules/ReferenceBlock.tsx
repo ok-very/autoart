@@ -68,7 +68,7 @@ export function ReferenceBlock({
         return (
             <div
                 className={clsx(
-                    'flex items-center gap-2 px-3 py-2 text-sm border border-dashed border-slate-300 rounded-md text-slate-400',
+                    'flex items-center gap-2 px-3 py-2 text-sm border border-dashed border-slate-300 rounded-md text-ws-muted',
                     className
                 )}
             >
@@ -83,12 +83,12 @@ export function ReferenceBlock({
         return (
             <div
                 className={clsx(
-                    'flex items-center gap-2 px-3 py-2 text-sm border border-slate-200 rounded-md bg-slate-50',
+                    'flex items-center gap-2 px-3 py-2 text-sm border border-ws-panel-border rounded-md bg-ws-bg',
                     className
                 )}
             >
-                <RefreshCw size={14} className="animate-spin text-slate-400" />
-                <span className="text-slate-400">Loading...</span>
+                <RefreshCw size={14} className="animate-spin text-ws-muted" />
+                <span className="text-ws-muted">Loading...</span>
             </div>
         );
     }
@@ -185,7 +185,7 @@ export function ReferenceBlock({
                     <button
                         type="button"
                         onClick={onOpen}
-                        className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-100 rounded transition-colors"
+                        className="p-1 text-ws-muted hover:text-blue-600 hover:bg-blue-100 rounded transition-colors"
                         title="Open record"
                     >
                         <ExternalLink size={12} />
@@ -197,7 +197,7 @@ export function ReferenceBlock({
                         type="button"
                         onClick={onClear}
                         disabled={clearing}
-                        className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
+                        className="p-1 text-ws-muted hover:text-red-600 hover:bg-red-100 rounded transition-colors disabled:opacity-50"
                         title="Remove link"
                     >
                         <X size={12} />

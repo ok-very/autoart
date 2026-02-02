@@ -109,9 +109,9 @@ function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCard
         ];
 
     return (
-        <div className="border border-slate-200 rounded-lg bg-white overflow-hidden shadow-sm">
+        <div className="border border-ws-panel-border rounded-lg bg-ws-panel-bg overflow-hidden shadow-sm">
             {/* Sample values - PROMINENT */}
-            <div className="px-4 py-3 bg-gradient-to-b from-slate-50 to-white border-b border-slate-100">
+            <div className="px-4 py-3 bg-gradient-to-b from-slate-50 to-white border-b border-ws-panel-border">
                 {hasSamples ? (
                     <div className="flex flex-wrap gap-2">
                         {column.sampleValues!.slice(0, 5).map((val, i) => {
@@ -119,7 +119,7 @@ function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCard
                             return (
                                 <span
                                     key={i}
-                                    className="text-sm text-slate-700 bg-white px-2.5 py-1 rounded border border-slate-200 shadow-sm truncate max-w-[200px]"
+                                    className="text-sm text-ws-text-secondary bg-ws-panel-bg px-2.5 py-1 rounded border border-ws-panel-border shadow-sm truncate max-w-[200px]"
                                     title={displayVal}
                                 >
                                     "{displayVal}"
@@ -127,13 +127,13 @@ function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCard
                             );
                         })}
                         {column.sampleValues!.length > 5 && (
-                            <span className="text-xs text-slate-400 self-center">
+                            <span className="text-xs text-ws-muted self-center">
                                 +{column.sampleValues!.length - 5} more
                             </span>
                         )}
                     </div>
                 ) : (
-                    <span className="text-sm text-slate-400 italic">No sample values available</span>
+                    <span className="text-sm text-ws-muted italic">No sample values available</span>
                 )}
             </div>
 
@@ -156,7 +156,7 @@ function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCard
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-slate-300">→</span>
+                    <span className="text-ws-muted">→</span>
                     <Select
                         value={column.semanticRole}
                         onChange={(val) => {
@@ -172,9 +172,9 @@ function ColumnCard({ column, boardConfigId, workspaceId, onUpdate }: ColumnCard
             </div>
 
             {/* Footer: description + confidence */}
-            <div className="px-4 py-2 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-4">
+            <div className="px-4 py-2 bg-ws-bg/50 border-t border-ws-panel-border flex items-center justify-between gap-4">
                 <span
-                    className="text-xs text-slate-500 truncate"
+                    className="text-xs text-ws-text-secondary truncate"
                     title={isValidRole ? roleMeta?.description : 'Unknown role - please reassign'}
                 >
                     {isValidRole ? (roleMeta?.description || 'No description') : 'Unknown role - please reassign'}
@@ -207,11 +207,11 @@ function IgnoredColumnChip({ column, boardConfigId, workspaceId, onUpdate }: Ign
                 // Un-ignore: set to 'custom' so user can reassign
                 onUpdate(boardConfigId, workspaceId, column.columnId, { semanticRole: 'custom' });
             }}
-            className="group inline-flex items-center gap-1 text-xs px-2.5 py-1.5 bg-white border border-slate-200 rounded-md hover:border-slate-300 hover:bg-slate-50 transition-colors"
+            className="group inline-flex items-center gap-1 text-xs px-2.5 py-1.5 bg-ws-panel-bg border border-ws-panel-border rounded-md hover:border-slate-300 hover:bg-ws-bg transition-colors"
             title={`Click to un-ignore "${column.columnTitle}"`}
         >
-            <span className="text-slate-600 truncate max-w-[150px]">{column.columnTitle}</span>
-            <X size={12} className="text-slate-400 group-hover:text-slate-600" />
+            <span className="text-ws-text-secondary truncate max-w-[150px]">{column.columnTitle}</span>
+            <X size={12} className="text-ws-muted group-hover:text-ws-text-secondary" />
         </button>
     );
 }
@@ -237,7 +237,7 @@ function CategorySection({ category, columns, boardConfigId, workspaceId, onColu
     // For "other" category with only ignored columns, show compact chip layout
     if (category.id === 'other' && allIgnored && columns.length > 0) {
         return (
-            <div className="border border-slate-200 rounded-lg p-4 bg-slate-50/50">
+            <div className="border border-ws-panel-border rounded-lg p-4 bg-ws-bg/50">
                 <div className="flex items-center gap-2 mb-3">
                     <Text weight="semibold" size="sm" color="muted">{category.label}</Text>
                     <Badge variant="neutral" size="xs">{columns.length} columns</Badge>
@@ -259,14 +259,14 @@ function CategorySection({ category, columns, boardConfigId, workspaceId, onColu
 
     return (
         <CollapsibleRoot open={expanded} onOpenChange={setExpanded}>
-            <div className="border border-slate-200 rounded-lg overflow-hidden bg-white">
+            <div className="border border-ws-panel-border rounded-lg overflow-hidden bg-ws-panel-bg">
                 <CollapsibleTrigger asChild>
-                    <button className="w-full px-4 py-3 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors">
+                    <button className="w-full px-4 py-3 bg-ws-bg flex items-center justify-between hover:bg-slate-100 transition-colors">
                         <div className="flex items-center gap-2">
                             <ChevronDown
                                 size={16}
                                 className={clsx(
-                                    'text-slate-400 transition-transform',
+                                    'text-ws-muted transition-transform',
                                     !expanded && '-rotate-90'
                                 )}
                             />
@@ -440,7 +440,7 @@ export function Step3Columns({ onNext, onBack, session, onSessionCreated }: Step
                     return (
                         <div key={board.boardId} className="space-y-4">
                             {/* Board header */}
-                            <div className="flex items-center gap-3 pb-2 border-b border-slate-200">
+                            <div className="flex items-center gap-3 pb-2 border-b border-ws-panel-border">
                                 <Text weight="medium">{board.boardName}</Text>
                                 <Badge variant="light" size="xs">
                                     {board.columns.length} columns
@@ -471,7 +471,7 @@ export function Step3Columns({ onNext, onBack, session, onSessionCreated }: Step
             </div>
 
             {/* Footer */}
-            <Inline justify="between" className="pt-4 mt-4 border-t border-slate-200 shrink-0">
+            <Inline justify="between" className="pt-4 mt-4 border-t border-ws-panel-border shrink-0">
                 <Button onClick={onBack} variant="secondary" disabled={isRefreshing}>
                     Back
                 </Button>

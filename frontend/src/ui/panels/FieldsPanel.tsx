@@ -44,9 +44,9 @@ export function FieldsPanel() {
     };
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
+        <div className="flex flex-col h-full bg-ws-bg overflow-hidden">
             {/* Page Header with Definitions/Instances tabs on right */}
-            <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-ws-panel-border bg-ws-panel-bg">
                 <RegistryPageHeader
                     title="Fields"
                     icon={TableProperties}
@@ -71,7 +71,7 @@ export function FieldsPanel() {
                         {/* Left Sidebar - Miller Columns for field browsing */}
                         <div
                             style={{ width: sidebarWidth }}
-                            className="flex flex-col border-r border-slate-200 bg-slate-100"
+                            className="flex flex-col border-r border-ws-panel-border bg-slate-100"
                         >
                             <FieldsMillerColumnsView
                                 onSelectField={setSelectedField}
@@ -84,16 +84,16 @@ export function FieldsPanel() {
                         />
 
                         {/* Main Workspace - Field Instances */}
-                        <div className="flex-1 bg-white overflow-hidden">
+                        <div className="flex-1 bg-ws-panel-bg overflow-hidden">
                             {selectedField ? (
                                 <FieldInstancesReview
                                     key={selectedField.id}
                                     field={selectedField}
                                 />
                             ) : (
-                                <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-4">
+                                <div className="h-full flex flex-col items-center justify-center text-ws-muted gap-4">
                                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
-                                        <ClipboardList size={32} className="text-slate-300" />
+                                        <ClipboardList size={32} className="text-ws-muted" />
                                     </div>
                                     <p>Select a field to view its instances</p>
                                 </div>
@@ -106,7 +106,7 @@ export function FieldsPanel() {
                         {/* Left Drawer / Sidebar - Miller Columns */}
                         <div
                             style={{ width: sidebarWidth }}
-                            className="flex flex-col border-r border-slate-200 bg-slate-100"
+                            className="flex flex-col border-r border-ws-panel-border bg-slate-100"
                         >
                             <FieldsMillerColumnsView
                                 onSelectField={setSelectedField}
@@ -119,16 +119,16 @@ export function FieldsPanel() {
                         />
 
                         {/* Main Workspace - Editor */}
-                        <div className="flex-1 bg-white overflow-hidden">
+                        <div className="flex-1 bg-ws-panel-bg overflow-hidden">
                             {selectedField ? (
                                 <FieldDefinitionEditor
                                     key={selectedField.id}
                                     field={selectedField}
                                 />
                             ) : (
-                                <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-4">
+                                <div className="h-full flex flex-col items-center justify-center text-ws-muted gap-4">
                                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
-                                        <ClipboardList size={32} className="text-slate-300" />
+                                        <ClipboardList size={32} className="text-ws-muted" />
                                     </div>
                                     <p>Select a field from the browser to edit its definition</p>
                                 </div>

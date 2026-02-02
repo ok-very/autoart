@@ -110,7 +110,7 @@ export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
     if (isLoading) {
         return (
             <Stack className="items-center justify-center h-full">
-                <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+                <Loader2 className="w-8 h-8 text-ws-muted animate-spin" />
                 <Text color="muted">Loading boards...</Text>
             </Stack>
         );
@@ -153,18 +153,18 @@ export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
 
             {/* Search */}
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ws-muted" />
                 <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search boards..."
-                    className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
             </div>
 
             {/* Board List */}
-            <div className="flex-1 overflow-auto border rounded-lg bg-white relative">
+            <div className="flex-1 overflow-auto border rounded-lg bg-ws-panel-bg relative">
                 {filteredBoards.length === 0 ? (
                     <div className="absolute inset-0 flex items-center justify-center">
                         <Text color="muted">No boards found</Text>
@@ -173,7 +173,7 @@ export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
                     <div className="divide-y divide-slate-100">
                         {Array.from(boardsByWorkspace.entries()).map(([workspace, workspaceBoards]) => (
                             <div key={workspace}>
-                                <div className="bg-slate-50 px-4 py-2 flex items-center gap-2 text-xs font-medium text-slate-500 uppercase sticky top-0">
+                                <div className="bg-ws-bg px-4 py-2 flex items-center gap-2 text-xs font-medium text-ws-text-secondary uppercase sticky top-0">
                                     <ChevronDown className="w-3 h-3" />
                                     {workspace}
                                 </div>
@@ -184,14 +184,14 @@ export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
                                             <button
                                                 key={board.id}
                                                 onClick={() => handleBoardClick(board.id)}
-                                                className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors ${isSelected ? 'bg-blue-50 hover:bg-blue-50' : ''}`}
+                                                className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-ws-bg transition-colors ${isSelected ? 'bg-blue-50 hover:bg-blue-50' : ''}`}
                                             >
                                                 <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ${isSelected ? 'border-blue-500 bg-blue-500 text-white' : 'border-slate-300'}`}>
                                                     {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
                                                 </div>
                                                 <div>
-                                                    <div className={`font-medium ${isSelected ? 'text-blue-700' : 'text-slate-900'}`}>{board.name}</div>
-                                                    <div className="text-xs text-slate-500 flex gap-2">
+                                                    <div className={`font-medium ${isSelected ? 'text-blue-700' : 'text-ws-fg'}`}>{board.name}</div>
+                                                    <div className="text-xs text-ws-text-secondary flex gap-2">
                                                         <span>{board.itemCount} items</span>
                                                         <span>•</span>
                                                         <span className="capitalize">{board.boardKind}</span>
@@ -211,10 +211,10 @@ export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
 
             {/* Target Project Selection */}
             {selectedBoardIds.size > 0 && (
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <div className="bg-ws-bg p-4 rounded-lg border border-ws-panel-border">
                     <Stack gap="sm">
                         <Inline gap="sm" align="center">
-                            <FolderPlus className="w-4 h-4 text-slate-500" />
+                            <FolderPlus className="w-4 h-4 text-ws-text-secondary" />
                             <Text weight="medium">Import Destination</Text>
                         </Inline>
                         <Text size="sm" color="muted">

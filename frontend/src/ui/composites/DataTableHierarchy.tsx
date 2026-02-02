@@ -266,7 +266,7 @@ export function DataTableHierarchy({
                         {/* Nesting toggle chevron */}
                         {enableNesting && hasChildren && (
                             <button
-                                className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 shrink-0"
+                                className="w-5 h-5 flex items-center justify-center text-ws-muted hover:text-ws-text-secondary shrink-0"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleToggleChildren(node.id);
@@ -353,7 +353,7 @@ export function DataTableHierarchy({
         const isSelected = node.id === selectedNodeId;
 
         if (isSelected) return 'bg-blue-50';
-        if (depth > 0) return 'bg-slate-50/50';
+        if (depth > 0) return 'bg-ws-bg/50';
         return '';
     }, [selectedNodeId]);
 
@@ -384,7 +384,7 @@ export function DataTableHierarchy({
                     status,
                     {
                         bgClass: config.colorClass || 'bg-slate-400',
-                        textClass: 'text-slate-600',
+                        textClass: 'text-ws-text-secondary',
                     },
                 ])
             )
@@ -394,7 +394,7 @@ export function DataTableHierarchy({
             <div className="flex h-10 items-center">
                 {/* Title column - show total count */}
                 <div className="px-3" style={{ width: 280, minWidth: 150 }}>
-                    <span className="text-xs font-semibold text-slate-600">
+                    <span className="text-xs font-semibold text-ws-text-secondary">
                         {nodes.length} item{nodes.length !== 1 ? 's' : ''}
                     </span>
                 </div>
@@ -423,7 +423,7 @@ export function DataTableHierarchy({
     }, [showStatusSummary, nodes, collapsedFields, getStatus, statusConfig]);
 
     return (
-        <div className={clsx('flex flex-col border border-slate-200 rounded-lg overflow-hidden', className)}>
+        <div className={clsx('flex flex-col border border-ws-panel-border rounded-lg overflow-hidden', className)}>
             {/* Core table */}
             <UniversalTableCore
                 rowModel={rowModel}
@@ -438,10 +438,10 @@ export function DataTableHierarchy({
 
             {/* Add button */}
             {onAddNode && (
-                <div className="border-t border-slate-200">
+                <div className="border-t border-ws-panel-border">
                     <button
                         onClick={onAddNode}
-                        className="w-full flex items-center justify-center gap-2 py-2 text-sm text-slate-500 hover:bg-slate-50 transition-colors"
+                        className="w-full flex items-center justify-center gap-2 py-2 text-sm text-ws-text-secondary hover:bg-ws-bg transition-colors"
                     >
                         <Plus size={14} />
                         Add Item

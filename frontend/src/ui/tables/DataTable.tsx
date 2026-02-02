@@ -193,11 +193,11 @@ function ColumnHeader<T>({ column, columnWidth, sortKey, sortDir, onSort, onResi
             style={{ width, flex: columnWidth === 'flex' ? 1 : undefined }}
             onClick={handleClick}
         >
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider truncate">
+            <span className="text-[10px] font-semibold text-ws-text-secondary uppercase tracking-wider truncate">
                 {column.label}
             </span>
             {column.sortable && isSorted && (
-                <span className="text-slate-400">
+                <span className="text-ws-muted">
                     {sortDir === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                 </span>
             )}
@@ -249,15 +249,15 @@ function TableRow<T>({
     return (
         <div
             className={clsx(
-                'border-b border-slate-100 transition-all',
+                'border-b border-ws-panel-border transition-all',
                 isSelected && 'bg-blue-50',
-                isExpanded && 'bg-slate-50/50'
+                isExpanded && 'bg-ws-bg/50'
             )}
         >
             {/* Main Row */}
             <div
                 className={clsx(
-                    'flex items-center hover:bg-slate-50 cursor-pointer transition-colors',
+                    'flex items-center hover:bg-ws-bg cursor-pointer transition-colors',
                     rowHeight
                 )}
                 onClick={onSelect}
@@ -265,14 +265,14 @@ function TableRow<T>({
             >
                 {/* Row number / expand toggle */}
                 {(expandable || showRowNumber !== undefined) && (
-                    <div className="w-8 flex items-center justify-center text-slate-400">
+                    <div className="w-8 flex items-center justify-center text-ws-muted">
                         {expandable ? (
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onToggleExpand?.();
                                 }}
-                                className="hover:text-slate-600"
+                                className="hover:text-ws-text-secondary"
                             >
                                 {isExpanded ? (
                                     <ChevronDown size={14} />
@@ -327,7 +327,7 @@ function TableRow<T>({
                         <div
                             key={column.key}
                             className={clsx(
-                                'px-2 text-sm text-slate-700 truncate overflow-hidden',
+                                'px-2 text-sm text-ws-text-secondary truncate overflow-hidden',
                                 column.align === 'center' && 'text-center',
                                 column.align === 'right' && 'text-right'
                             )}
@@ -343,7 +343,7 @@ function TableRow<T>({
 
             {/* Expanded Content */}
             {isExpanded && renderExpandedRow && (
-                <div className="pl-10 pr-4 pb-3 pt-1 bg-slate-50 border-t border-slate-100">
+                <div className="pl-10 pr-4 pb-3 pt-1 bg-ws-bg border-t border-ws-panel-border">
                     {renderExpandedRow(row)}
                 </div>
             )}
@@ -516,23 +516,23 @@ export function DataTable<T>({
     }, [data, sortKey, sortDir, getValue]);
 
     return (
-        <div className={clsx('bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden', className)}>
+        <div className={clsx('bg-ws-panel-bg border border-ws-panel-border rounded-lg shadow-sm overflow-hidden', className)}>
             {/* Header with title */}
             {(title || showAddButton) && (
-                <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <div className="px-4 py-2 bg-ws-bg border-b border-ws-panel-border flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         {icon && <span className="text-base">{icon}</span>}
                         {title && (
                             <>
-                                <span className="text-sm font-semibold text-slate-700">{title}</span>
-                                <span className="text-xs text-slate-400">({data.length})</span>
+                                <span className="text-sm font-semibold text-ws-text-secondary">{title}</span>
+                                <span className="text-xs text-ws-muted">({data.length})</span>
                             </>
                         )}
                     </div>
                     {showAddButton && (
                         <button
                             onClick={onAddRow}
-                            className="text-xs px-2 py-1 rounded border border-slate-200 hover:border-slate-300 hover:bg-white text-slate-600 flex items-center gap-1"
+                            className="text-xs px-2 py-1 rounded border border-ws-panel-border hover:border-slate-300 hover:bg-ws-panel-bg text-ws-text-secondary flex items-center gap-1"
                         >
                             <Plus size={12} />
                             Add
@@ -544,9 +544,9 @@ export function DataTable<T>({
             {/* Column Headers */}
             <div
                 className={clsx(
-                    'flex items-center bg-slate-50/50 border-b border-slate-100',
+                    'flex items-center bg-ws-bg/50 border-b border-ws-panel-border',
                     compact ? 'h-7' : 'h-9',
-                    stickyHeader && 'sticky top-0 z-10 bg-white'
+                    stickyHeader && 'sticky top-0 z-10 bg-ws-panel-bg'
                 )}
             >
                 {(expandable || showRowNumbers) && <div className="w-8" />}
@@ -566,7 +566,7 @@ export function DataTable<T>({
 
             {/* Rows */}
             {sortedData.length === 0 ? (
-                <div className="p-6 text-sm text-slate-400 text-center">{emptyMessage}</div>
+                <div className="p-6 text-sm text-ws-muted text-center">{emptyMessage}</div>
             ) : (
                 <div>
                     {sortedData.map((row, index) => {
@@ -599,7 +599,7 @@ export function DataTable<T>({
             {renderFooter && (
                 <div
                     className={clsx(
-                        'bg-slate-50 border-t border-slate-200',
+                        'bg-ws-bg border-t border-ws-panel-border',
                         stickyFooter && 'sticky bottom-0 z-10'
                     )}
                 >

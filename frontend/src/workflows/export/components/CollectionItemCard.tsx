@@ -49,14 +49,14 @@ export function CollectionItemCard({ item, onRemove, isDragging = false }: Colle
         <div
             className={`
         flex items-center gap-3 p-3 rounded-lg border
-        ${isDragging ? 'border-violet-400 bg-violet-50 shadow-lg' : 'border-slate-200 bg-white hover:border-slate-300'}
+        ${isDragging ? 'border-violet-400 bg-violet-50 shadow-lg' : 'border-ws-panel-border bg-ws-panel-bg hover:border-slate-300'}
         transition-all duration-150
       `}
         >
             {/* Drag handle */}
             <button
                 type="button"
-                className="cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600"
+                className="cursor-grab active:cursor-grabbing text-ws-muted hover:text-ws-text-secondary"
                 aria-label="Drag to reorder"
             >
                 <DotsSixVertical size={16} weight="bold" />
@@ -64,7 +64,7 @@ export function CollectionItemCard({ item, onRemove, isDragging = false }: Colle
 
             {/* Type icon */}
             <div className="flex-shrink-0 w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center">
-                <Icon size={16} className="text-slate-600" />
+                <Icon size={16} className="text-ws-text-secondary" />
             </div>
 
             {/* Content */}
@@ -72,14 +72,14 @@ export function CollectionItemCard({ item, onRemove, isDragging = false }: Colle
             <div className="flex-1 min-w-0">
                 {/* Header: Label & ID */}
                 <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                    <span className="text-[10px] font-semibold text-ws-muted uppercase tracking-wider">
                         {typeLabel}
                     </span>
                     {/* Show display label as subtext if value exists, otherwise it's the main text */}
                     {!!item.value && (
                         <>
-                            <span className="text-[10px] text-slate-300">•</span>
-                            <span className="text-[10px] text-slate-500 font-medium truncate max-w-[120px]">
+                            <span className="text-[10px] text-ws-muted">•</span>
+                            <span className="text-[10px] text-ws-text-secondary font-medium truncate max-w-[120px]">
                                 {item.displayLabel}
                             </span>
                         </>
@@ -87,12 +87,12 @@ export function CollectionItemCard({ item, onRemove, isDragging = false }: Colle
                 </div>
 
                 {/* Primary Content: Value or Label */}
-                <div className="text-sm font-semibold text-slate-800 truncate" title={String(item.value || item.displayLabel)}>
+                <div className="text-sm font-semibold text-ws-fg truncate" title={String(item.value || item.displayLabel)}>
                     {item.value ? String(item.value) : item.displayLabel}
                 </div>
 
                 {/* Footer: ID/Key if needed */}
-                <div className="text-[10px] text-slate-400 truncate mt-0.5 font-mono">
+                <div className="text-[10px] text-ws-muted truncate mt-0.5 font-mono">
                     {item.fieldKey || item.sourceId}
                 </div>
             </div>
@@ -101,7 +101,7 @@ export function CollectionItemCard({ item, onRemove, isDragging = false }: Colle
             <button
                 type="button"
                 onClick={() => onRemove(item.id)}
-                className="flex-shrink-0 p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                className="flex-shrink-0 p-1.5 rounded-md text-ws-muted hover:text-red-500 hover:bg-red-50 transition-colors"
                 aria-label="Remove from collection"
             >
                 <X size={14} weight="bold" />

@@ -39,9 +39,9 @@ export function ImportPreview({
         return (
             <div className="flex-1 flex items-center justify-center p-8">
                 <div className="text-center">
-                    <FileQuestion className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-500 font-medium">No import session</p>
-                    <p className="text-sm text-slate-400 mt-1">
+                    <FileQuestion className="w-12 h-12 text-ws-muted mx-auto mb-3" />
+                    <p className="text-ws-text-secondary font-medium">No import session</p>
+                    <p className="text-sm text-ws-muted mt-1">
                         Upload a file to preview its contents
                     </p>
                 </div>
@@ -55,8 +55,8 @@ export function ImportPreview({
             <div className="flex-1 flex items-center justify-center p-8">
                 <div className="text-center">
                     <FileQuestion className="w-12 h-12 text-amber-300 mx-auto mb-3" />
-                    <p className="text-slate-500 font-medium">No items found</p>
-                    <p className="text-sm text-slate-400 mt-1">
+                    <p className="text-ws-text-secondary font-medium">No items found</p>
+                    <p className="text-sm text-ws-muted mt-1">
                         The parser did not detect any importable items
                     </p>
                 </div>
@@ -104,7 +104,7 @@ export function ImportPreview({
 
         default:
             return (
-                <div className="p-6 text-center text-slate-500">
+                <div className="p-6 text-center text-ws-text-secondary">
                     Unknown projection: {projectionId}
                 </div>
             );

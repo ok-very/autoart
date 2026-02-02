@@ -42,10 +42,10 @@ export function FormSettingsPanel({ settings, onSave, isSaving }: FormSettingsPa
 
     return (
         <div className="max-w-2xl mx-auto py-8 px-4">
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="bg-ws-panel-bg rounded-xl border border-ws-panel-border overflow-hidden">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                    <h2 className="text-ws-h2 font-semibold text-slate-800">Form Settings</h2>
+                <div className="px-6 py-4 border-b border-ws-panel-border flex items-center justify-between">
+                    <h2 className="text-ws-h2 font-semibold text-ws-fg">Form Settings</h2>
                     <Button
                         size="sm"
                         onClick={handleSave}
@@ -68,8 +68,8 @@ export function FormSettingsPanel({ settings, onSave, isSaving }: FormSettingsPa
                     {/* Progress Bar Toggle */}
                     <div className="flex items-start justify-between">
                         <div>
-                            <label className="text-sm font-medium text-slate-700">Show Progress Bar</label>
-                            <p className="text-sm text-slate-500 mt-1">
+                            <label className="text-sm font-medium text-ws-text-secondary">Show Progress Bar</label>
+                            <p className="text-sm text-ws-text-secondary mt-1">
                                 Display a progress indicator for multi-page forms
                             </p>
                         </div>
@@ -80,19 +80,19 @@ export function FormSettingsPanel({ settings, onSave, isSaving }: FormSettingsPa
                             {localSettings.showProgress ? (
                                 <ToggleRight className="w-8 h-8" />
                             ) : (
-                                <ToggleLeft className="w-8 h-8 text-slate-400" />
+                                <ToggleLeft className="w-8 h-8 text-ws-muted" />
                             )}
                         </button>
                     </div>
 
-                    <hr className="border-slate-100" />
+                    <hr className="border-ws-panel-border" />
 
                     {/* Confirmation Message */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                        <label className="block text-sm font-medium text-ws-text-secondary mb-2">
                             Confirmation Message
                         </label>
-                        <p className="text-sm text-slate-500 mb-3">
+                        <p className="text-sm text-ws-text-secondary mb-3">
                             Message shown to respondents after they submit the form
                         </p>
                         <textarea
@@ -100,19 +100,19 @@ export function FormSettingsPanel({ settings, onSave, isSaving }: FormSettingsPa
                             onChange={(e) => handleChange('confirmationMessage', e.target.value || undefined)}
                             placeholder="Thank you! Your response has been recorded."
                             rows={3}
-                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                            className="w-full px-3 py-2 border border-ws-panel-border rounded-lg text-sm text-ws-text-secondary placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
                         />
                     </div>
 
-                    <hr className="border-slate-100" />
+                    <hr className="border-ws-panel-border" />
 
                     {/* Redirect URL */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                        <label className="block text-sm font-medium text-ws-text-secondary mb-2">
                             <ExternalLink className="w-4 h-4 inline mr-1" />
                             Redirect URL
                         </label>
-                        <p className="text-sm text-slate-500 mb-3">
+                        <p className="text-sm text-ws-text-secondary mb-3">
                             After submission, redirect respondents to this URL
                         </p>
                         <input
@@ -120,7 +120,7 @@ export function FormSettingsPanel({ settings, onSave, isSaving }: FormSettingsPa
                             value={localSettings.redirectUrl || ''}
                             onChange={(e) => handleChange('redirectUrl', e.target.value || undefined)}
                             placeholder="https://example.com/thank-you"
-                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-ws-panel-border rounded-lg text-sm text-ws-text-secondary placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         />
                         {localSettings.redirectUrl && !isValidUrl(localSettings.redirectUrl) && (
                             <p className="text-xs text-amber-600 mt-2 flex items-center gap-1">

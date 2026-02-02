@@ -26,7 +26,7 @@ import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem } from '@autoa
 type StatusConfig = Record<string, { label: string; colorClass: string }>;
 
 /** Default fallback config for unknown statuses */
-const DEFAULT_STATUS = { label: 'Unknown', colorClass: 'bg-slate-100 text-slate-500' };
+const DEFAULT_STATUS = { label: 'Unknown', colorClass: 'bg-slate-100 text-ws-text-secondary' };
 
 export interface StatusFieldEditorProps {
     /** Current status value */
@@ -63,7 +63,7 @@ export function StatusFieldEditor({
 
     // Get current status display info with fallback
     const getStatusConfig = (status: string) => config[status] || DEFAULT_STATUS;
-    const currentConfig = getStatusConfig(value) || { label: value || 'Select...', colorClass: 'bg-slate-100 text-slate-500' };
+    const currentConfig = getStatusConfig(value) || { label: value || 'Select...', colorClass: 'bg-slate-100 text-ws-text-secondary' };
 
     const handleSelect = useCallback((status: string) => {
         onChange(status);

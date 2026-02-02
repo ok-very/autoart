@@ -42,7 +42,7 @@ interface FieldRecording {
 const OUTCOME_COLORS: Record<string, { bg: string; text: string; border: string }> = {
     FACT_EMITTED: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
     DERIVED_STATE: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-    INTERNAL_WORK: { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200' },
+    INTERNAL_WORK: { bg: 'bg-ws-bg', text: 'text-ws-text-secondary', border: 'border-ws-panel-border' },
     EXTERNAL_WORK: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
     AMBIGUOUS: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
     UNCLASSIFIED: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
@@ -54,7 +54,7 @@ const STATUS_COLORS: Record<string, string> = {
     'in progress': 'bg-blue-100 text-blue-700 border-blue-200',
     'working on it': 'bg-blue-100 text-blue-700 border-blue-200',
     'stuck': 'bg-red-100 text-red-700 border-red-200',
-    'not started': 'bg-slate-100 text-slate-500 border-slate-200',
+    'not started': 'bg-slate-100 text-ws-text-secondary border-ws-panel-border',
     'pending': 'bg-amber-100 text-amber-700 border-amber-200',
 };
 
@@ -64,14 +64,14 @@ const STATUS_COLORS: Record<string, string> = {
 
 function FieldValue({ value, renderHint }: { value: unknown; renderHint?: string }) {
     if (value == null || value === '' || String(value) === 'null') {
-        return <span className="text-slate-300 italic text-xs">Empty</span>;
+        return <span className="text-ws-muted italic text-xs">Empty</span>;
     }
 
     const strValue = String(value);
 
     switch (renderHint) {
         case 'status': {
-            const colorClass = STATUS_COLORS[strValue.toLowerCase()] ?? 'bg-slate-100 text-slate-600 border-slate-200';
+            const colorClass = STATUS_COLORS[strValue.toLowerCase()] ?? 'bg-slate-100 text-ws-text-secondary border-ws-panel-border';
             return (
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${colorClass}`}>
                     <CheckCircle2 className="w-3 h-3" />
@@ -82,24 +82,24 @@ function FieldValue({ value, renderHint }: { value: unknown; renderHint?: string
 
         case 'date':
             return (
-                <span className="inline-flex items-center gap-1 text-xs text-slate-600">
-                    <Calendar className="w-3 h-3 text-slate-400" />
+                <span className="inline-flex items-center gap-1 text-xs text-ws-text-secondary">
+                    <Calendar className="w-3 h-3 text-ws-muted" />
                     {strValue}
                 </span>
             );
 
         case 'person':
             return (
-                <span className="inline-flex items-center gap-1 text-xs text-slate-600">
-                    <User className="w-3 h-3 text-slate-400" />
+                <span className="inline-flex items-center gap-1 text-xs text-ws-text-secondary">
+                    <User className="w-3 h-3 text-ws-muted" />
                     <span className="truncate max-w-[120px]" title={strValue}>{strValue}</span>
                 </span>
             );
 
         case 'number':
             return (
-                <span className="inline-flex items-center gap-1 text-xs font-mono text-slate-700">
-                    <Hash className="w-3 h-3 text-slate-400" />
+                <span className="inline-flex items-center gap-1 text-xs font-mono text-ws-text-secondary">
+                    <Hash className="w-3 h-3 text-ws-muted" />
                     {strValue}
                 </span>
             );
@@ -107,14 +107,14 @@ function FieldValue({ value, renderHint }: { value: unknown; renderHint?: string
         case 'text':
         case 'longtext':
             return (
-                <span className="text-xs text-slate-600 line-clamp-2" title={strValue}>
+                <span className="text-xs text-ws-text-secondary line-clamp-2" title={strValue}>
                     {strValue}
                 </span>
             );
 
         default:
             return (
-                <span className="text-xs text-slate-600 truncate max-w-[160px]" title={strValue}>
+                <span className="text-xs text-ws-text-secondary truncate max-w-[160px]" title={strValue}>
                     {strValue}
                 </span>
             );
@@ -124,15 +124,15 @@ function FieldValue({ value, renderHint }: { value: unknown; renderHint?: string
 function FieldIcon({ renderHint }: { renderHint?: string }) {
     switch (renderHint) {
         case 'status':
-            return <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />;
+            return <CheckCircle2 className="w-3.5 h-3.5 text-ws-muted" />;
         case 'date':
-            return <Calendar className="w-3.5 h-3.5 text-slate-400" />;
+            return <Calendar className="w-3.5 h-3.5 text-ws-muted" />;
         case 'person':
-            return <User className="w-3.5 h-3.5 text-slate-400" />;
+            return <User className="w-3.5 h-3.5 text-ws-muted" />;
         case 'number':
-            return <Hash className="w-3.5 h-3.5 text-slate-400" />;
+            return <Hash className="w-3.5 h-3.5 text-ws-muted" />;
         default:
-            return <FileText className="w-3.5 h-3.5 text-slate-400" />;
+            return <FileText className="w-3.5 h-3.5 text-ws-muted" />;
     }
 }
 
@@ -142,13 +142,13 @@ function FieldIcon({ renderHint }: { renderHint?: string }) {
 
 function SectionHeader({ icon: Icon, label, count }: { icon: React.ElementType; label: string; count?: number }) {
     return (
-        <div className="flex items-center gap-1.5 pb-2 border-b border-slate-100">
-            <Icon className="w-3.5 h-3.5 text-slate-400" />
+        <div className="flex items-center gap-1.5 pb-2 border-b border-ws-panel-border">
+            <Icon className="w-3.5 h-3.5 text-ws-muted" />
             <Text size="xs" weight="semibold" color="muted" className="uppercase tracking-wide">
                 {label}
             </Text>
             {count !== undefined && (
-                <span className="ml-auto text-[10px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                <span className="ml-auto text-[10px] font-medium text-ws-muted bg-slate-100 px-1.5 py-0.5 rounded">
                     {count}
                 </span>
             )}
@@ -212,14 +212,14 @@ export function ImportItemDetailsView({ itemId, tab, plan: propPlan }: ImportIte
                 {classification ? (
                     <div className="space-y-4">
                         {/* Outcome Badge */}
-                        <Card className={`${OUTCOME_COLORS[classification.outcome]?.bg || 'bg-slate-50'} border ${OUTCOME_COLORS[classification.outcome]?.border || 'border-slate-200'}`}>
+                        <Card className={`${OUTCOME_COLORS[classification.outcome]?.bg || 'bg-ws-bg'} border ${OUTCOME_COLORS[classification.outcome]?.border || 'border-ws-panel-border'}`}>
                             <div className="p-4">
                                 <div className="flex items-start justify-between mb-3">
                                     <div>
                                         <Text size="xs" color="muted" className="uppercase tracking-wide mb-1">Outcome</Text>
                                         <Badge
                                             size="sm"
-                                            className={`${OUTCOME_COLORS[classification.outcome]?.bg || 'bg-slate-100'} ${OUTCOME_COLORS[classification.outcome]?.text || 'text-slate-600'} font-semibold`}
+                                            className={`${OUTCOME_COLORS[classification.outcome]?.bg || 'bg-slate-100'} ${OUTCOME_COLORS[classification.outcome]?.text || 'text-ws-text-secondary'} font-semibold`}
                                         >
                                             {classification.outcome.replace(/_/g, ' ')}
                                         </Badge>
@@ -256,7 +256,7 @@ export function ImportItemDetailsView({ itemId, tab, plan: propPlan }: ImportIte
                                 {classification.rationale && (
                                     <div>
                                         <Text size="xs" color="muted" className="uppercase tracking-wide mb-1">Rationale</Text>
-                                        <Text size="sm" className="text-slate-600 leading-relaxed">
+                                        <Text size="sm" className="text-ws-text-secondary leading-relaxed">
                                             {classification.rationale}
                                         </Text>
                                     </div>
@@ -290,7 +290,7 @@ export function ImportItemDetailsView({ itemId, tab, plan: propPlan }: ImportIte
                 ) : (
                     <div className="text-center py-12">
                         <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
-                            <Tag className="w-6 h-6 text-slate-300" />
+                            <Tag className="w-6 h-6 text-ws-muted" />
                         </div>
                         <Text size="sm" color="muted">No classification for this item</Text>
                         <Text size="xs" color="muted" className="mt-1">Run classification to analyze this item</Text>
@@ -315,7 +315,7 @@ export function ImportItemDetailsView({ itemId, tab, plan: propPlan }: ImportIte
                                         {group === 'other' ? 'Other Fields' : `${group}s`}
                                     </Text>
                                 )}
-                                <div className="bg-slate-50 rounded-lg border border-slate-100 divide-y divide-slate-100">
+                                <div className="bg-ws-bg rounded-lg border border-ws-panel-border divide-y divide-slate-100">
                                     {groupedFields[group].map((field, idx) => (
                                         <div key={idx} className="flex items-center justify-between px-3 py-2.5">
                                             <div className="flex items-center gap-2 min-w-0">
@@ -336,7 +336,7 @@ export function ImportItemDetailsView({ itemId, tab, plan: propPlan }: ImportIte
                 ) : (
                     <div className="text-center py-12">
                         <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
-                            <List className="w-6 h-6 text-slate-300" />
+                            <List className="w-6 h-6 text-ws-muted" />
                         </div>
                         <Text size="sm" color="muted">No field data for this item</Text>
                         <Text size="xs" color="muted" className="mt-1">
@@ -352,7 +352,7 @@ export function ImportItemDetailsView({ itemId, tab, plan: propPlan }: ImportIte
     return (
         <Stack gap="lg">
             {/* Header Card */}
-            <Card className="bg-gradient-to-br from-slate-50 to-white border border-slate-200">
+            <Card className="bg-gradient-to-br from-slate-50 to-white border border-ws-panel-border">
                 <div className="p-4">
                     <Text size="xs" color="muted" className="uppercase tracking-wide mb-1">Title</Text>
                     <Text size="md" weight="semibold" className="leading-snug">
@@ -367,7 +367,7 @@ export function ImportItemDetailsView({ itemId, tab, plan: propPlan }: ImportIte
                         {classification && (
                             <Badge
                                 size="sm"
-                                className={`${OUTCOME_COLORS[classification.outcome]?.bg || 'bg-slate-100'} ${OUTCOME_COLORS[classification.outcome]?.text || 'text-slate-600'} text-[10px]`}
+                                className={`${OUTCOME_COLORS[classification.outcome]?.bg || 'bg-slate-100'} ${OUTCOME_COLORS[classification.outcome]?.text || 'text-ws-text-secondary'} text-[10px]`}
                             >
                                 {classification.outcome.replace(/_/g, ' ')}
                             </Badge>
@@ -382,7 +382,7 @@ export function ImportItemDetailsView({ itemId, tab, plan: propPlan }: ImportIte
                     <SectionHeader icon={List} label="Fields" count={fieldRecordings.length} />
                     <div className="mt-2 space-y-1.5">
                         {fieldRecordings.slice(0, 4).map((field, idx) => (
-                            <div key={idx} className="flex items-center justify-between py-1.5 px-2 bg-slate-50 rounded">
+                            <div key={idx} className="flex items-center justify-between py-1.5 px-2 bg-ws-bg rounded">
                                 <div className="flex items-center gap-1.5">
                                     <FieldIcon renderHint={field.renderHint} />
                                     <Text size="xs" color="muted">{field.fieldName}</Text>

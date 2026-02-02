@@ -66,7 +66,7 @@ export function TableSortHeader({
                             <ChevronDown size={12} className="text-blue-500 shrink-0" />
                         )
                     ) : (
-                        <ArrowUpDown size={10} className="text-slate-300 shrink-0" />
+                        <ArrowUpDown size={10} className="text-ws-muted shrink-0" />
                     )}
                 </>
             )}

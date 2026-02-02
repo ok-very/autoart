@@ -283,14 +283,14 @@ export function ClassificationPanel({
     const needsReview = unresolvedItems.length > 0;
 
     return (
-        <div className="bg-white flex flex-col h-full overflow-hidden">
+        <div className="bg-ws-panel-bg flex flex-col h-full overflow-hidden">
             {/* Toolbar */}
             <div
-                className={`flex items-center justify-between px-4 py-2 border-b border-slate-200 shrink-0 ${needsReview ? 'bg-amber-50/50' : 'bg-white'
+                className={`flex items-center justify-between px-4 py-2 border-b border-ws-panel-border shrink-0 ${needsReview ? 'bg-amber-50/50' : 'bg-ws-panel-bg'
                     }`}
             >
                 <div className="flex items-center gap-3">
-                    <span className="text-sm text-slate-500">
+                    <span className="text-sm text-ws-text-secondary">
                         {allClassifications.length} items
                         {needsReview && (
                             <span className="ml-2 text-amber-600 font-medium">
@@ -330,7 +330,7 @@ export function ClassificationPanel({
                                 }}
                                 className={`flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-lg border transition-colors ${sortUnresolvedFirst
                                     ? 'text-blue-700 bg-blue-50 border-blue-200'
-                                    : 'text-slate-500 bg-white border-slate-200 hover:border-slate-300'
+                                    : 'text-ws-text-secondary bg-ws-panel-bg border-ws-panel-border hover:border-slate-300'
                                     }`}
                                 title={sortUnresolvedFirst ? 'Showing unresolved first' : 'Show in original order'}
                             >
@@ -345,7 +345,7 @@ export function ClassificationPanel({
                                 }}
                                 className={`flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-lg border transition-colors ${viewMode === 'grouped'
                                     ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
-                                    : 'text-slate-500 bg-white border-slate-200 hover:border-slate-300'
+                                    : 'text-ws-text-secondary bg-ws-panel-bg border-ws-panel-border hover:border-slate-300'
                                     }`}
                                 title={viewMode === 'grouped' ? 'Switch to flat view' : 'Group by field'}
                             >
@@ -359,7 +359,7 @@ export function ClassificationPanel({
                                         e.stopPropagation();
                                         setBulkMenuOpen(!bulkMenuOpen);
                                     }}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ws-text-secondary bg-ws-bg hover:bg-slate-100 border border-ws-panel-border rounded-lg transition-colors"
                                     title="Bulk actions"
                                 >
                                     <MoreVertical className="w-3.5 h-3.5" />
@@ -367,24 +367,24 @@ export function ClassificationPanel({
                                 </button>
                                 {bulkMenuOpen && (
                                     <div
-                                        className="absolute right-0 top-full mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-50"
+                                        className="absolute right-0 top-full mt-1 w-48 bg-ws-panel-bg border border-ws-panel-border rounded-lg shadow-lg py-1 z-50"
                                         onClick={(e) => e.stopPropagation()}
                                     >
                                         {/* Primary action: Defer Remaining */}
                                         <button
                                             onClick={handleDeferRemaining}
-                                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-amber-50 hover:text-amber-700 font-medium"
+                                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-ws-text-secondary hover:bg-amber-50 hover:text-amber-700 font-medium"
                                         >
                                             <Clock className="w-4 h-4" />
                                             Defer Remaining
-                                            <span className="ml-auto text-xs text-slate-400">
+                                            <span className="ml-auto text-xs text-ws-muted">
                                                 {unresolvedItems.length - resolvedCount}
                                             </span>
                                         </button>
-                                        <div className="border-t border-slate-100 my-1" />
+                                        <div className="border-t border-ws-panel-border my-1" />
                                         <button
                                             onClick={handleDeferAll}
-                                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-ws-text-secondary hover:bg-ws-bg"
                                         >
                                             <Clock className="w-4 h-4" />
                                             Defer All Unresolved
@@ -431,9 +431,9 @@ export function ClassificationPanel({
             <div className="flex-1 overflow-y-auto">
                 {/* View mode toggle + Group bulk actions */}
                 {viewMode === 'grouped' && groupedByField.size > 0 && (
-                    <div className="px-6 py-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                    <div className="px-6 py-2 bg-ws-bg border-b border-ws-panel-border flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-slate-500">
+                            <span className="text-xs font-medium text-ws-text-secondary">
                                 {selectedGroups.size} of {groupedByField.size} groups selected
                             </span>
                         </div>
@@ -461,19 +461,19 @@ export function ClassificationPanel({
                 {viewMode === 'grouped' ? (
                     /* Grouped View */
                     Array.from(groupedByField.entries()).map(([groupKey, items]) => (
-                        <div key={groupKey} className="border-b border-slate-100 last:border-b-0">
+                        <div key={groupKey} className="border-b border-ws-panel-border last:border-b-0">
                             {/* Group Header */}
                             <div
-                                className="flex items-center gap-3 px-6 py-2 bg-slate-50 hover:bg-slate-100 cursor-pointer"
+                                className="flex items-center gap-3 px-6 py-2 bg-ws-bg hover:bg-slate-100 cursor-pointer"
                                 onClick={() => handleToggleGroup(groupKey)}
                             >
                                 {selectedGroups.has(groupKey) ? (
                                     <CheckSquare className="w-4 h-4 text-blue-600" />
                                 ) : (
-                                    <Square className="w-4 h-4 text-slate-400" />
+                                    <Square className="w-4 h-4 text-ws-muted" />
                                 )}
-                                <span className="font-medium text-slate-700">{groupKey}</span>
-                                <span className="text-xs text-slate-500">({items.length} items)</span>
+                                <span className="font-medium text-ws-text-secondary">{groupKey}</span>
+                                <span className="text-xs text-ws-text-secondary">({items.length} items)</span>
                             </div>
                             {/* Group Items */}
                             <div className="pl-4">

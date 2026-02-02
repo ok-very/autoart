@@ -82,7 +82,7 @@ export function CollectionPreview() {
 
     if (!activeCollection) {
         return (
-            <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+            <div className="h-full flex items-center justify-center text-ws-muted text-sm">
                 Select a collection to preview
             </div>
         );
@@ -92,7 +92,7 @@ export function CollectionPreview() {
     return (
         <div className="flex flex-col h-full">
             {/* Controls Header - Start/Stop Collecting */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200 bg-white shadow-[0_2px_4px_-1px_rgba(0,0,0,0.06)]">
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-ws-panel-border bg-ws-panel-bg shadow-[0_2px_4px_-1px_rgba(0,0,0,0.06)]">
                 {/* Start/Stop Collecting Button */}
                 <button
                     onClick={isCollecting ? stopCollecting : startCollecting}
@@ -124,21 +124,21 @@ export function CollectionPreview() {
                 )}
 
                 {/* Item count on right */}
-                <span className="ml-auto text-xs text-slate-400">
+                <span className="ml-auto text-xs text-ws-muted">
                     {activeCollection.selections.length} item{activeCollection.selections.length !== 1 ? 's' : ''}
                 </span>
             </div>
 
             {/* Content Area */}
             {activeCollection.selections.length === 0 ? (
-                <div className="flex-1 flex items-center justify-center text-slate-400 text-sm">
+                <div className="flex-1 flex items-center justify-center text-ws-muted text-sm">
                     No items in collection
                 </div>
             ) : (
                 <>
                     {/* View Mode Toggle Header */}
-                    <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100 bg-slate-50">
-                        <span className="text-xs font-medium text-slate-500">
+                    <div className="flex items-center justify-between px-4 py-2 border-b border-ws-panel-border bg-ws-bg">
+                        <span className="text-xs font-medium text-ws-text-secondary">
                             {activeCollection.selections.length} item{activeCollection.selections.length !== 1 ? 's' : ''}
                         </span>
 
@@ -207,18 +207,18 @@ function ListView({ groups, expandedGroups, onToggleGroup, onRemove }: ListViewP
                         {hasMultiple ? (
                             <button
                                 onClick={() => onToggleGroup(group.sourceId)}
-                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-50 text-left"
+                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-ws-bg text-left"
                             >
                                 {isExpanded ? (
-                                    <ChevronDown size={14} className="text-slate-400" />
+                                    <ChevronDown size={14} className="text-ws-muted" />
                                 ) : (
-                                    <ChevronRight size={14} className="text-slate-400" />
+                                    <ChevronRight size={14} className="text-ws-muted" />
                                 )}
                                 <Database size={14} className="text-blue-500" />
-                                <span className="text-sm font-medium text-slate-700 truncate">
+                                <span className="text-sm font-medium text-ws-text-secondary truncate">
                                     {group.sourceLabel}
                                 </span>
-                                <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full ml-auto">
+                                <span className="text-[10px] text-ws-muted bg-slate-100 px-1.5 py-0.5 rounded-full ml-auto">
                                     {group.items.length}
                                 </span>
                             </button>
@@ -226,7 +226,7 @@ function ListView({ groups, expandedGroups, onToggleGroup, onRemove }: ListViewP
 
                         {/* Items */}
                         {(isExpanded || !hasMultiple) && (
-                            <div className={hasMultiple ? 'ml-6 border-l border-slate-200 pl-2 space-y-2' : 'space-y-2'}>
+                            <div className={hasMultiple ? 'ml-6 border-l border-ws-panel-border pl-2 space-y-2' : 'space-y-2'}>
                                 {group.items.map(item => (
                                     <CollectionItemCard
                                         key={item.id}

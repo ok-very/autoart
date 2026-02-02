@@ -45,8 +45,8 @@ function SourceIcon({ id, icon, label, isActive, isConnected, isDisabled, onClic
             className={`relative w-10 h-10 flex items-center justify-center rounded-lg transition-all ${isActive
                 ? 'bg-blue-100 text-blue-600 shadow-sm'
                 : isDisabled
-                    ? 'text-slate-300 cursor-not-allowed'
-                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                    ? 'text-ws-muted cursor-not-allowed'
+                    : 'text-ws-text-secondary hover:bg-slate-100 hover:text-ws-text-secondary'
                 }`}
             data-aa-component="SourceIconSidebar"
             data-aa-id={`source-${id}`}
@@ -81,7 +81,7 @@ export function SourceIconSidebar({ activeSource, onSourceChange }: SourceIconSi
     };
 
     return (
-        <div className="w-12 bg-slate-50 border-r border-slate-200 flex flex-col items-center py-2">
+        <div className="w-12 bg-ws-bg border-r border-ws-panel-border flex flex-col items-center py-2">
             {/* Source Icons */}
             <div className="flex flex-col gap-1">
                 <SourceIcon
@@ -123,7 +123,7 @@ export function SourceIconSidebar({ activeSource, onSourceChange }: SourceIconSi
             <button
                 onClick={handleAddIntegration}
                 title="Add Integration"
-                className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-lg transition-colors"
+                className="w-10 h-10 flex items-center justify-center text-ws-muted hover:bg-slate-100 hover:text-ws-text-secondary rounded-lg transition-colors"
                 data-aa-component="SourceIconSidebar"
                 data-aa-id="add-integration"
             >

@@ -74,8 +74,8 @@ export function FieldRenderer({
                 className={clsx(
                     'w-full text-sm border rounded-md shadow-sm px-3 py-2 transition-colors',
                     readOnly
-                        ? 'border-slate-300 bg-white cursor-default'
-                        : 'border-slate-300 bg-white hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
+                        ? 'border-slate-300 bg-ws-panel-bg cursor-default'
+                        : 'border-slate-300 bg-ws-panel-bg hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
                     className
                 )}
             />
@@ -94,8 +94,8 @@ export function FieldRenderer({
                 className={clsx(
                     'w-full text-sm border rounded-md shadow-sm px-3 py-2 transition-colors',
                     readOnly
-                        ? 'border-slate-300 bg-white cursor-default'
-                        : 'border-slate-300 bg-white hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
+                        ? 'border-slate-300 bg-ws-panel-bg cursor-default'
+                        : 'border-slate-300 bg-ws-panel-bg hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
                     className
                 )}
             />
@@ -123,7 +123,7 @@ export function FieldRenderer({
         }
         // Fallback: show as text
         return (
-            <div className={clsx('text-sm text-slate-500 italic', className)}>
+            <div className={clsx('text-sm text-ws-text-secondary italic', className)}>
                 {String(value || 'No link')}
             </div>
         );
@@ -139,7 +139,7 @@ export function FieldRenderer({
             ? (value as { name?: string }).name
             : String(value || '');
         return (
-            <div className={clsx('text-sm text-slate-600', className)}>
+            <div className={clsx('text-sm text-ws-text-secondary', className)}>
                 {userName}
             </div>
         );
@@ -170,8 +170,8 @@ export function FieldRenderer({
                 className={clsx(
                     'w-full text-sm border rounded-md shadow-sm px-3 py-2 transition-colors resize-y',
                     readOnly
-                        ? 'border-slate-300 bg-slate-50 cursor-default'
-                        : 'border-slate-300 bg-white hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
+                        ? 'border-slate-300 bg-ws-bg cursor-default'
+                        : 'border-slate-300 bg-ws-panel-bg hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
                     className
                 )}
             />
@@ -187,7 +187,7 @@ export function FieldRenderer({
                     onChange={(e) => onChange(e.target.value)}
                     disabled={readOnly}
                     className={clsx(
-                        'w-full text-sm border rounded-md shadow-sm px-3 py-2 transition-colors appearance-none bg-white',
+                        'w-full text-sm border rounded-md shadow-sm px-3 py-2 transition-colors appearance-none bg-ws-panel-bg',
                         readOnly
                             ? 'border-slate-300 cursor-default'
                             : 'border-slate-300 hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
@@ -200,7 +200,7 @@ export function FieldRenderer({
                         </option>
                     ))}
                 </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-slate-500">
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-ws-text-secondary">
                     <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
                         <path
                             d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
@@ -226,7 +226,7 @@ export function FieldRenderer({
                         disabled={readOnly}
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors"
                     />
-                    <span className="ml-2 text-sm text-slate-600 select-none">
+                    <span className="ml-2 text-sm text-ws-text-secondary select-none">
                         {isChecked ? 'Yes' : 'No'}
                     </span>
                 </label>
@@ -264,7 +264,7 @@ export function FieldRenderer({
                         disabled={readOnly}
                         className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                     />
-                    <span className="w-12 text-right text-sm font-medium text-slate-700 tabular-nums">
+                    <span className="w-12 text-right text-sm font-medium text-ws-text-secondary tabular-nums">
                         {clampedPercent}%
                     </span>
                 </div>
@@ -289,8 +289,8 @@ export function FieldRenderer({
                 className={clsx(
                     'w-full text-sm border rounded-md shadow-sm px-3 py-2 transition-colors',
                     readOnly
-                        ? 'border-slate-300 bg-white cursor-default'
-                        : 'border-slate-300 bg-white hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
+                        ? 'border-slate-300 bg-ws-panel-bg cursor-default'
+                        : 'border-slate-300 bg-ws-panel-bg hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
                     className
                 )}
             />
@@ -312,8 +312,8 @@ export function FieldRenderer({
                 className={clsx(
                     'w-full text-sm border rounded-md shadow-sm px-3 py-2 transition-colors',
                     readOnly
-                        ? 'border-slate-300 bg-white cursor-default'
-                        : 'border-slate-300 bg-white hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
+                        ? 'border-slate-300 bg-ws-panel-bg cursor-default'
+                        : 'border-slate-300 bg-ws-panel-bg hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
                     className
                 )}
             />
@@ -333,8 +333,8 @@ export function FieldRenderer({
             className={clsx(
                 'w-full text-sm border rounded-md shadow-sm px-3 py-2 transition-colors',
                 readOnly
-                    ? 'border-slate-300 bg-white cursor-default'
-                    : 'border-slate-300 bg-white hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
+                    ? 'border-slate-300 bg-ws-panel-bg cursor-default'
+                    : 'border-slate-300 bg-ws-panel-bg hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
                 className
             )}
         />

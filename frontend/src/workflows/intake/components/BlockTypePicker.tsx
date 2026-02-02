@@ -65,14 +65,14 @@ export function BlockTypePicker({ onAddBlock }: BlockTypePickerProps) {
     };
 
     return (
-        <div className="w-64 bg-white border-l border-slate-200 h-full flex flex-col">
+        <div className="w-64 bg-ws-panel-bg border-l border-ws-panel-border h-full flex flex-col">
             {/* Header */}
-            <div className="px-4 py-3 border-b border-slate-100">
-                <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+            <div className="px-4 py-3 border-b border-ws-panel-border">
+                <h3 className="text-sm font-semibold text-ws-fg flex items-center gap-2">
                     <Plus className="w-4 h-4 text-indigo-600" />
                     Add Block
                 </h3>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-ws-text-secondary mt-1">
                     Click to add to your form
                 </p>
             </div>
@@ -86,13 +86,13 @@ export function BlockTypePicker({ onAddBlock }: BlockTypePickerProps) {
                         <div key={category.id} className="mb-1">
                             <button
                                 onClick={() => toggleCategory(category.id)}
-                                className="w-full px-4 py-2 flex items-center justify-between text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                className="w-full px-4 py-2 flex items-center justify-between text-sm font-medium text-ws-text-secondary hover:bg-ws-bg"
                             >
                                 <span>{category.label}</span>
                                 {isExpanded ? (
-                                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                                    <ChevronDown className="w-4 h-4 text-ws-muted" />
                                 ) : (
-                                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                                    <ChevronRight className="w-4 h-4 text-ws-muted" />
                                 )}
                             </button>
 
@@ -102,7 +102,7 @@ export function BlockTypePicker({ onAddBlock }: BlockTypePickerProps) {
                                         <button
                                             key={tool.id}
                                             onClick={() => onAddBlock(tool.id)}
-                                            className="w-full px-3 py-2 rounded-lg flex items-center gap-3 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors group"
+                                            className="w-full px-3 py-2 rounded-lg flex items-center gap-3 text-ws-text-secondary hover:bg-indigo-50 hover:text-indigo-700 transition-colors group"
                                         >
                                             <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-indigo-100 flex items-center justify-center transition-colors">
                                                 <tool.icon className="w-4 h-4" />
@@ -118,8 +118,8 @@ export function BlockTypePicker({ onAddBlock }: BlockTypePickerProps) {
             </div>
 
             {/* Quick Add Footer */}
-            <div className="px-4 py-3 border-t border-slate-100 bg-slate-50">
-                <p className="text-xs text-slate-500">
+            <div className="px-4 py-3 border-t border-ws-panel-border bg-ws-bg">
+                <p className="text-xs text-ws-text-secondary">
                     Tip: Drag blocks to reorder them
                 </p>
             </div>

@@ -56,7 +56,7 @@ export function PropertySection({
             {/* Header */}
             <div
                 className={clsx(
-                    'flex items-center justify-between border-b border-slate-100 pb-2',
+                    'flex items-center justify-between border-b border-ws-panel-border pb-2',
                     collapsible && 'cursor-pointer select-none'
                 )}
                 onClick={handleToggle}
@@ -64,22 +64,22 @@ export function PropertySection({
                 <div className="flex items-center gap-2">
                     {/* Collapse indicator */}
                     {collapsible && (
-                        <span className="text-slate-400">
+                        <span className="text-ws-muted">
                             {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
                         </span>
                     )}
 
                     {/* Icon */}
-                    {icon && <span className="text-slate-400">{icon}</span>}
+                    {icon && <span className="text-ws-muted">{icon}</span>}
 
                     {/* Title */}
-                    <h4 className="text-xs font-semibold text-slate-400 uppercase">
+                    <h4 className="text-xs font-semibold text-ws-muted uppercase">
                         {title}
                     </h4>
 
                     {/* Badge */}
                     {badge && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-500 rounded">
+                        <span className="px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 text-ws-text-secondary rounded">
                             {badge}
                         </span>
                     )}
@@ -102,7 +102,7 @@ export function PropertySection({
 
             {/* Collapsed placeholder */}
             {!showContent && (
-                <div className="text-xs text-slate-400 italic pl-6">
+                <div className="text-xs text-ws-muted italic pl-6">
                     Click to expand
                 </div>
             )}

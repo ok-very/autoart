@@ -72,14 +72,14 @@ export function ActionInstancesView({
         const icon = definition?.styling?.icon;
 
         return (
-            <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200">
+            <div className="flex items-center justify-between px-4 py-3 bg-ws-panel-bg border-b border-ws-panel-border">
                 <div className="flex items-center gap-3">
                     {/* Definition badge */}
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg">
                         {icon && <span>{icon}</span>}
                         <span className="text-sm font-medium text-purple-700">{title}</span>
                     </div>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-ws-muted">
                         {actions.length} instance{actions.length !== 1 ? 's' : ''}
                     </span>
                 </div>
@@ -98,7 +98,7 @@ export function ActionInstancesView({
     }, [definition, actions.length, handleCreateAction]);
 
     return (
-        <div className={clsx('flex flex-col h-full bg-slate-50', className)}>
+        <div className={clsx('flex flex-col h-full bg-ws-bg', className)}>
             <ActionsTableFlat
                 actions={actions}
                 definition={definition ?? null}

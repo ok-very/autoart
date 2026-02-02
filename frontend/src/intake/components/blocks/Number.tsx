@@ -19,19 +19,19 @@ export function NumberInput({ block }: NumberProps) {
       defaultValue=""
       render={({ field, fieldState }) => (
         <div className="space-y-2">
-          <label htmlFor={block.id} className="block text-sm font-medium text-slate-700">
+          <label htmlFor={block.id} className="block text-sm font-medium text-ws-text-secondary">
             {block.label}
             {block.required && <span className="text-red-500 ml-1">*</span>}
           </label>
           {block.description && (
-            <p className="text-sm text-slate-500">{block.description}</p>
+            <p className="text-sm text-ws-text-secondary">{block.description}</p>
           )}
           <input
             {...field}
             id={block.id}
             type="number"
             placeholder={block.placeholder}
-            className={`w-full px-3 py-2 border rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${fieldState.error ? 'border-red-500' : 'border-slate-300'
+            className={`w-full px-3 py-2 border rounded-lg text-ws-fg placeholder:text-ws-muted focus:outline-none focus:ring-2 focus:ring-blue-500 ${fieldState.error ? 'border-red-500' : 'border-slate-300'
               }`}
           />
           {fieldState.error && (

@@ -205,7 +205,7 @@ function getWidthForRenderHint(renderHint?: string): number {
 const OUTCOME_STYLES: Record<string, { bg: string; text: string; icon: 'alert' | 'check' | 'none' }> = {
     FACT_EMITTED: { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: 'check' },
     DERIVED_STATE: { bg: 'bg-blue-100', text: 'text-blue-700', icon: 'check' },
-    INTERNAL_WORK: { bg: 'bg-slate-100', text: 'text-slate-600', icon: 'none' },
+    INTERNAL_WORK: { bg: 'bg-slate-100', text: 'text-ws-text-secondary', icon: 'none' },
     EXTERNAL_WORK: { bg: 'bg-purple-100', text: 'text-purple-700', icon: 'check' },
     AMBIGUOUS: { bg: 'bg-amber-100', text: 'text-amber-700', icon: 'alert' },
     UNCLASSIFIED: { bg: 'bg-red-100', text: 'text-red-700', icon: 'alert' },
@@ -235,7 +235,7 @@ function ClassificationBadge({ classification }: { classification: ItemClassific
 
 function EntityTypeBadge({ entityType }: { entityType: string }) {
     return (
-        <span className="text-[10px] font-semibold uppercase text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+        <span className="text-[10px] font-semibold uppercase text-ws-muted bg-slate-100 px-1.5 py-0.5 rounded">
             {entityType}
         </span>
     );
@@ -323,7 +323,7 @@ export function DataTableImport({
                                     e.stopPropagation();
                                     onToggleExpanded(row.id);
                                 }}
-                                className="w-4 h-4 flex items-center justify-center text-slate-400 hover:text-slate-600"
+                                className="w-4 h-4 flex items-center justify-center text-ws-muted hover:text-ws-text-secondary"
                             >
                                 {meta.isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                             </button>
@@ -332,7 +332,7 @@ export function DataTableImport({
                         )}
 
                         {/* Icon */}
-                        <Icon className={clsx('w-4 h-4', meta.nodeType === 'container' ? 'text-blue-500' : 'text-slate-400')} />
+                        <Icon className={clsx('w-4 h-4', meta.nodeType === 'container' ? 'text-blue-500' : 'text-ws-muted')} />
 
                         {/* Title */}
                         <span className="text-sm font-medium truncate">{node.title}</span>
@@ -410,7 +410,7 @@ export function DataTableImport({
     return (
         <div className={clsx('flex flex-col h-full', className)}>
             {/* Toolbar with column picker */}
-            <div className="flex items-center justify-end px-3 py-2 border-b border-slate-200 bg-white">
+            <div className="flex items-center justify-end px-3 py-2 border-b border-ws-panel-border bg-ws-panel-bg">
                 <ColumnPicker
                     allFields={fields}
                     visibleKeys={visibleFields}
@@ -427,7 +427,7 @@ export function DataTableImport({
                     getRowClassName={getRowClassName}
                     compact={compact}
                     emptyState={
-                        <div className="text-center text-slate-400 py-8">
+                        <div className="text-center text-ws-muted py-8">
                             <p>{emptyMessage}</p>
                         </div>
                     }
@@ -538,9 +538,9 @@ function NestedLevel({
     }
 
     return (
-        <div className={clsx('border border-slate-200 rounded-lg overflow-hidden', depth > 0 && 'ml-6 mt-2 mb-2')}>
+        <div className={clsx('border border-ws-panel-border rounded-lg overflow-hidden', depth > 0 && 'ml-6 mt-2 mb-2')}>
             {/* Header row for this level */}
-            <div className="flex bg-slate-100 text-[10px] font-semibold uppercase text-slate-500 border-b border-slate-200">
+            <div className="flex bg-slate-100 text-[10px] font-semibold uppercase text-ws-text-secondary border-b border-ws-panel-border">
                 <div className="flex-1 min-w-[200px] px-3 py-1.5">Title</div>
                 <div className="w-16 px-2 py-1.5 text-center">Type</div>
                 {levelFields.map(field => (
@@ -568,7 +568,7 @@ function NestedLevel({
                         {/* Item row */}
                         <div
                             className={clsx(
-                                'flex items-center border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors',
+                                'flex items-center border-b border-ws-panel-border hover:bg-ws-bg cursor-pointer transition-colors',
                                 isSelected && 'bg-blue-50 ring-1 ring-inset ring-blue-200'
                             )}
                             onClick={() => onRowSelect?.(item.tempId)}
@@ -581,14 +581,14 @@ function NestedLevel({
                                             e.stopPropagation();
                                             onToggleExpanded(item.tempId);
                                         }}
-                                        className="w-4 h-4 flex items-center justify-center text-slate-400 hover:text-slate-600"
+                                        className="w-4 h-4 flex items-center justify-center text-ws-muted hover:text-ws-text-secondary"
                                     >
                                         {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                                     </button>
                                 ) : (
                                     <span className="w-4" />
                                 )}
-                                <FileText className="w-4 h-4 text-slate-400" />
+                                <FileText className="w-4 h-4 text-ws-muted" />
                                 <span className="text-sm font-medium truncate">{item.title}</span>
                             </div>
 
@@ -624,7 +624,7 @@ function NestedLevel({
 
                         {/* Recursive children table (nested) */}
                         {isExpandable && isExpanded && (
-                            <div className="bg-slate-50/50">
+                            <div className="bg-ws-bg/50">
                                 <NestedLevel
                                     items={itemChildren}
                                     hierarchy={hierarchy}

@@ -50,19 +50,19 @@ function LinkItemRenderer(item: LinkItem, isSelected: boolean): ReactNode {
         <div
             className={clsx(
                 'px-3 py-2.5 cursor-pointer flex items-center gap-3 border-b border-slate-50 transition-colors',
-                isSelected ? 'bg-blue-50' : 'hover:bg-slate-50'
+                isSelected ? 'bg-blue-50' : 'hover:bg-ws-bg'
             )}
         >
-            <div className="w-7 h-7 rounded flex items-center justify-center bg-white border border-slate-200 shrink-0">
+            <div className="w-7 h-7 rounded flex items-center justify-center bg-ws-panel-bg border border-ws-panel-border shrink-0">
                 <Icon size={14} className={iconColor} />
             </div>
             <div className="flex-1 min-w-0">
-                <div className="text-sm text-slate-700 truncate">{item.label}</div>
+                <div className="text-sm text-ws-text-secondary truncate">{item.label}</div>
                 {item.description && (
-                    <div className="text-xs text-slate-400 truncate">{item.description}</div>
+                    <div className="text-xs text-ws-muted truncate">{item.description}</div>
                 )}
             </div>
-            <span className="text-[10px] text-slate-400 capitalize shrink-0">
+            <span className="text-[10px] text-ws-muted capitalize shrink-0">
                 {item.type}
             </span>
         </div>

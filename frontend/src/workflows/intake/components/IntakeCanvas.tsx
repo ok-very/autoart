@@ -105,9 +105,9 @@ function SortableBlock({
             ref={setNodeRef}
             style={style}
             onClick={() => onSelectBlock(block.id)}
-            className={`bg-white rounded-xl border p-6 transition-all cursor-pointer ${isActive
+            className={`bg-ws-panel-bg rounded-xl border p-6 transition-all cursor-pointer ${isActive
                 ? 'border-indigo-300 shadow-md border-l-4 border-l-indigo-600'
-                : 'border-slate-200 hover:border-slate-300'
+                : 'border-ws-panel-border hover:border-slate-300'
                 } ${isDragging ? 'shadow-lg z-10' : ''}`}
         >
             {/* Edit View (when active) */}
@@ -124,10 +124,10 @@ function SortableBlock({
                                     }
                                 }}
                                 placeholder="Question title"
-                                className="w-full bg-slate-50 p-3 text-base font-medium border-b-2 border-indigo-600 focus:outline-none rounded-t"
+                                className="w-full bg-ws-bg p-3 text-base font-medium border-b-2 border-indigo-600 focus:outline-none rounded-t"
                             />
                         </div>
-                        <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm text-slate-600">
+                        <div className="px-3 py-2 bg-ws-bg border border-ws-panel-border rounded text-sm text-ws-text-secondary">
                             {block.kind === 'module' && typeof block.type === 'string' ? block.type.replace('_', ' ') : 'Record'}
                         </div>
                     </div>
@@ -138,7 +138,7 @@ function SortableBlock({
                             type="text"
                             disabled
                             placeholder="Answer placeholder"
-                            className="w-1/2 border-b border-slate-200 py-2 text-sm text-slate-400 bg-transparent"
+                            className="w-1/2 border-b border-ws-panel-border py-2 text-sm text-ws-muted bg-transparent"
                         />
                     </div>
 
@@ -151,13 +151,13 @@ function SortableBlock({
                     )}
 
                     {/* Footer Actions */}
-                    <div className="flex items-center justify-end gap-4 pt-4 border-t border-slate-100">
+                    <div className="flex items-center justify-end gap-4 pt-4 border-t border-ws-panel-border">
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onDuplicateBlock(block.id);
                             }}
-                            className="text-slate-400 hover:text-indigo-600"
+                            className="text-ws-muted hover:text-indigo-600"
                         >
                             <Copy className="w-4 h-4" />
                         </button>
@@ -166,13 +166,13 @@ function SortableBlock({
                                 e.stopPropagation();
                                 onDeleteBlock(block.id);
                             }}
-                            className="text-slate-400 hover:text-red-500"
+                            className="text-ws-muted hover:text-red-500"
                         >
                             <Trash2 className="w-4 h-4" />
                         </button>
                         <div className="w-px h-6 bg-slate-200" />
                         <label className="flex items-center gap-2 text-sm">
-                            <span className="text-slate-600">Required</span>
+                            <span className="text-ws-text-secondary">Required</span>
                             <input
                                 type="checkbox"
                                 checked={block.kind === 'module' ? block.required : false}
@@ -186,7 +186,7 @@ function SortableBlock({
                             {...attributes}
                             {...listeners}
                             onClick={(e) => e.stopPropagation()}
-                            className="text-slate-400 hover:text-slate-600 cursor-grab active:cursor-grabbing"
+                            className="text-ws-muted hover:text-ws-text-secondary cursor-grab active:cursor-grabbing"
                         >
                             <GripVertical className="w-4 h-4" />
                         </button>
@@ -198,13 +198,13 @@ function SortableBlock({
                     <button
                         {...attributes}
                         {...listeners}
-                        className="text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing shrink-0"
+                        className="text-ws-muted hover:text-ws-text-secondary cursor-grab active:cursor-grabbing shrink-0"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <GripVertical className="w-4 h-4" />
                     </button>
                     <div className="flex-1">
-                        <label className="block text-sm font-medium text-slate-800 mb-2">
+                        <label className="block text-sm font-medium text-ws-fg mb-2">
                             {block.kind === 'module' ? block.label : 'Record Block'}
                             {block.kind === 'module' && block.required && (
                                 <span className="text-red-500 ml-1">*</span>
@@ -214,7 +214,7 @@ function SortableBlock({
                             type="text"
                             disabled
                             placeholder="Your answer"
-                            className="w-full border border-slate-200 rounded px-3 py-2 text-sm text-slate-600 bg-slate-50"
+                            className="w-full border border-ws-panel-border rounded px-3 py-2 text-sm text-ws-text-secondary bg-ws-bg"
                         />
                     </div>
                 </div>
@@ -260,8 +260,8 @@ export function IntakeCanvas({
                 <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
                     <span className="text-2xl">📝</span>
                 </div>
-                <h3 className="text-ws-h2 font-semibold text-slate-700">No blocks yet</h3>
-                <p className="text-sm text-slate-500 mt-1 mb-6">
+                <h3 className="text-ws-h2 font-semibold text-ws-text-secondary">No blocks yet</h3>
+                <p className="text-sm text-ws-text-secondary mt-1 mb-6">
                     Add your first question or content block
                 </p>
                 <Dropdown>
@@ -325,7 +325,7 @@ export function IntakeCanvas({
                     {/* Add Block Button */}
                     <div className="flex justify-center pt-4">
                         <Dropdown>
-                            <DropdownTrigger className="w-10 h-10 bg-white border-2 border-dashed border-slate-300 text-slate-400 hover:border-indigo-400 hover:text-indigo-600 rounded-full flex items-center justify-center transition-all">
+                            <DropdownTrigger className="w-10 h-10 bg-ws-panel-bg border-2 border-dashed border-slate-300 text-ws-muted hover:border-indigo-400 hover:text-indigo-600 rounded-full flex items-center justify-center transition-all">
                                 <Plus size={20} />
                             </DropdownTrigger>
                             <DropdownContent className="w-56">

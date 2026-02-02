@@ -51,29 +51,29 @@ function DefinitionSelector({ definitions, selectedId, onSelect, stats }: Defini
                 onClick={() => setIsOpen(!isOpen)}
                 className={clsx(
                     'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all',
-                    'bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm',
+                    'bg-ws-panel-bg border border-ws-panel-border hover:border-slate-300 hover:shadow-sm',
                     isOpen && 'border-blue-400 ring-2 ring-blue-100'
                 )}
             >
                 {selected?.styling?.icon ? (
                     <span className="text-base">{selected.styling.icon}</span>
                 ) : (
-                    <Database size={16} className="text-slate-400" />
+                    <Database size={16} className="text-ws-muted" />
                 )}
-                <span className="text-slate-700">{selected?.name || 'All Records'}</span>
+                <span className="text-ws-text-secondary">{selected?.name || 'All Records'}</span>
                 {stats && selectedId && stats.get(selectedId) !== undefined && (
                     <Badge size="sm" variant="neutral">{stats.get(selectedId)}</Badge>
                 )}
                 <ChevronDown
                     size={16}
-                    className={clsx('text-slate-400 transition-transform', isOpen && 'rotate-180')}
+                    className={clsx('text-ws-muted transition-transform', isOpen && 'rotate-180')}
                 />
             </button>
 
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-                    <Card className="absolute top-full left-0 mt-2 w-64 z-20 py-1 max-h-80 overflow-y-auto shadow-xl border border-slate-200">
+                    <Card className="absolute top-full left-0 mt-2 w-64 z-20 py-1 max-h-80 overflow-y-auto shadow-xl border border-ws-panel-border">
                         {/* All Records option */}
                         <button
                             onClick={() => {
@@ -81,11 +81,11 @@ function DefinitionSelector({ definitions, selectedId, onSelect, stats }: Defini
                                 setIsOpen(false);
                             }}
                             className={clsx(
-                                'w-full text-left px-3 py-2.5 text-sm flex items-center gap-3 hover:bg-slate-50 transition-colors',
+                                'w-full text-left px-3 py-2.5 text-sm flex items-center gap-3 hover:bg-ws-bg transition-colors',
                                 !selectedId && 'bg-blue-50 text-blue-700'
                             )}
                         >
-                            <Database size={16} className={clsx(!selectedId ? 'text-blue-600' : 'text-slate-400')} />
+                            <Database size={16} className={clsx(!selectedId ? 'text-blue-600' : 'text-ws-muted')} />
                             <span className="flex-1">All Records</span>
                             {stats && (
                                 <Badge size="sm" variant="neutral">
@@ -94,11 +94,11 @@ function DefinitionSelector({ definitions, selectedId, onSelect, stats }: Defini
                             )}
                         </button>
 
-                        <div className="border-t border-slate-100 my-1" />
+                        <div className="border-t border-ws-panel-border my-1" />
 
                         {/* Definition list */}
                         {definitions.length === 0 ? (
-                            <div className="px-3 py-4 text-center text-slate-400 text-sm">
+                            <div className="px-3 py-4 text-center text-ws-muted text-sm">
                                 <Sparkles size={24} className="mx-auto mb-2 opacity-50" />
                                 <p>No record types defined</p>
                             </div>
@@ -111,14 +111,14 @@ function DefinitionSelector({ definitions, selectedId, onSelect, stats }: Defini
                                         setIsOpen(false);
                                     }}
                                     className={clsx(
-                                        'w-full text-left px-3 py-2.5 text-sm flex items-center gap-3 hover:bg-slate-50 transition-colors',
+                                        'w-full text-left px-3 py-2.5 text-sm flex items-center gap-3 hover:bg-ws-bg transition-colors',
                                         selectedId === def.id && 'bg-blue-50 text-blue-700'
                                     )}
                                 >
                                     {def.styling?.icon ? (
                                         <span className="text-base">{def.styling.icon}</span>
                                     ) : (
-                                        <Database size={16} className="text-slate-400" />
+                                        <Database size={16} className="text-ws-muted" />
                                     )}
                                     <span className="flex-1 truncate">{def.name}</span>
                                     {stats && stats.get(def.id) !== undefined && (
@@ -262,15 +262,15 @@ export function RecordView({
         const hasSelection = footerSelectedIds.size > 0;
 
         return (
-            <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-t border-slate-200">
+            <div className="flex items-center justify-between px-4 py-2 bg-ws-bg border-t border-ws-panel-border">
                 <div className="flex items-center gap-4">
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-ws-text-secondary">
                         {totalRecords} record{totalRecords !== 1 ? 's' : ''}
                     </span>
 
                     {hasSelection && (
-                        <div className="flex items-center gap-2 ml-2 pl-2 border-l border-slate-200">
-                            <span className="text-sm text-slate-500">
+                        <div className="flex items-center gap-2 ml-2 pl-2 border-l border-ws-panel-border">
+                            <span className="text-sm text-ws-text-secondary">
                                 {footerSelectedIds.size} selected
                             </span>
                             <button
@@ -299,7 +299,7 @@ export function RecordView({
                 </div>
 
                 {totalPages > 1 && (
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-ws-text-secondary">
                         Page {page + 1} of {totalPages}
                     </span>
                 )}
@@ -313,9 +313,9 @@ export function RecordView({
     );
 
     return (
-        <main className={clsx('flex-1 flex flex-col overflow-hidden bg-slate-50 relative', className)}>
+        <main className={clsx('flex-1 flex flex-col overflow-hidden bg-ws-bg relative', className)}>
             {/* Toolbar - Sticky at top */}
-            <div className="h-10 shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-3 sticky top-0 z-20 shadow-sm">
+            <div className="h-10 shrink-0 bg-ws-panel-bg border-b border-ws-panel-border flex items-center justify-between px-3 sticky top-0 z-20 shadow-sm">
                 <div className="flex items-center gap-3">
                     {/* Definition Selector */}
                     <DefinitionSelector
@@ -332,14 +332,14 @@ export function RecordView({
                     <div className="relative group">
                         <Search
                             size={14}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-ws-muted group-focus-within:text-blue-500 transition-colors"
                         />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search records..."
-                            className="w-64 pl-9 pr-3 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                            className="w-64 pl-9 pr-3 py-1.5 text-sm bg-ws-bg border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-ws-panel-bg transition-all"
                             data-aa-component="RecordList"
                             data-aa-id="search-records"
                         />
@@ -348,7 +348,7 @@ export function RecordView({
 
                 <div className="flex items-center gap-3">
                     {/* Record count badge */}
-                    <div className="px-2 py-1 bg-slate-100 rounded text-xs font-medium text-slate-500">
+                    <div className="px-2 py-1 bg-slate-100 rounded text-xs font-medium text-ws-text-secondary">
                         {records.length} {records.length === 1 ? 'record' : 'records'}
                     </div>
 
@@ -370,7 +370,7 @@ export function RecordView({
             {/* Table Area */}
             <div className="flex-1 overflow-hidden relative">
                 {definitionId ? (
-                    <div className="absolute inset-0 bg-white">
+                    <div className="absolute inset-0 bg-ws-panel-bg">
                         <DataTableFlat
                             records={records}
                             definition={definition ?? null}
@@ -387,12 +387,12 @@ export function RecordView({
                     </div>
                 ) : (
                     /* Elegant Empty State */
-                    <div className="flex flex-col items-center justify-center h-full text-slate-400 bg-slate-50/50">
-                        <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center mb-4">
+                    <div className="flex flex-col items-center justify-center h-full text-ws-muted bg-ws-bg/50">
+                        <div className="w-16 h-16 bg-ws-panel-bg rounded-2xl shadow-sm border border-ws-panel-border flex items-center justify-center mb-4">
                             <FolderOpen size={32} className="text-blue-500/50" />
                         </div>
-                        <h3 className="text-ws-h2 font-semibold text-slate-700 mb-1">Select a Record Type</h3>
-                        <p className="text-sm text-slate-500 max-w-xs text-center">
+                        <h3 className="text-ws-h2 font-semibold text-ws-text-secondary mb-1">Select a Record Type</h3>
+                        <p className="text-sm text-ws-text-secondary max-w-xs text-center">
                             Choose a definition from the dropdown above to view and manage its records.
                         </p>
                     </div>

@@ -68,7 +68,7 @@ export interface ActionRegistryTableProps {
 
 // Default status configuration with Radix-style colors
 const DEFAULT_STATUS_CONFIG: Record<DerivedStatus, { label: string; colorClass: string }> = {
-  pending: { label: 'Pending', colorClass: 'bg-slate-100 text-slate-600 border-slate-200' },
+  pending: { label: 'Pending', colorClass: 'bg-slate-100 text-ws-text-secondary border-ws-panel-border' },
   active: { label: 'Active', colorClass: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
   blocked: { label: 'Blocked', colorClass: 'bg-red-50 text-red-700 border-red-200' },
   finished: { label: 'Done', colorClass: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
@@ -206,12 +206,12 @@ export function ActionRegistryTable({
   if (nodes.length === 0) {
     return (
       <div className={clsx('flex flex-col h-full', className)}>
-        <div className="flex-1 flex items-center justify-center bg-slate-50 rounded-lg border border-slate-200">
+        <div className="flex-1 flex items-center justify-center bg-ws-bg rounded-lg border border-ws-panel-border">
           <div className="text-center py-12">
             <div className="w-12 h-12 mx-auto mb-3 bg-slate-100 rounded-full flex items-center justify-center">
-              <SlidersHorizontal className="w-5 h-5 text-slate-400" />
+              <SlidersHorizontal className="w-5 h-5 text-ws-muted" />
             </div>
-            <p className="text-sm text-slate-500">{emptyMessage}</p>
+            <p className="text-sm text-ws-text-secondary">{emptyMessage}</p>
             {onAddAction && (
               <button
                 onClick={onAddAction}
@@ -228,33 +228,33 @@ export function ActionRegistryTable({
   }
 
   return (
-    <div className={clsx('flex flex-col h-full bg-white rounded-lg border border-slate-200 overflow-hidden', className)}>
+    <div className={clsx('flex flex-col h-full bg-ws-panel-bg rounded-lg border border-ws-panel-border overflow-hidden', className)}>
       {/* Toolbar */}
-      <div className="h-10 border-b border-slate-200 flex items-center justify-between px-3 bg-slate-50/50 shrink-0">
+      <div className="h-10 border-b border-ws-panel-border flex items-center justify-between px-3 bg-ws-bg/50 shrink-0">
         <div className="flex items-center gap-3">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ws-muted" />
             <input
               type="text"
               placeholder="Filter actions..."
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
-              className="h-8 pl-8 pr-3 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-56 transition-shadow"
+              className="h-8 pl-8 pr-3 text-xs bg-ws-panel-bg border border-ws-panel-border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-56 transition-shadow"
             />
           </div>
           <div className="h-4 w-px bg-slate-200" />
-          <button className="h-8 px-3 text-xs font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-1.5 transition-colors">
+          <button className="h-8 px-3 text-xs font-medium text-ws-text-secondary hover:text-ws-fg hover:bg-slate-100 rounded-md flex items-center gap-1.5 transition-colors">
             <SlidersHorizontal size={14} />
             View: All
           </button>
-          <button className="h-8 px-3 text-xs font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-1.5 transition-colors">
+          <button className="h-8 px-3 text-xs font-medium text-ws-text-secondary hover:text-ws-fg hover:bg-slate-100 rounded-md flex items-center gap-1.5 transition-colors">
             <ArrowUpDown size={14} />
             Sort
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <button className="h-8 px-3 text-xs font-medium text-slate-600 hover:text-slate-800 border border-slate-200 hover:border-slate-300 bg-white rounded-md flex items-center gap-1.5 transition-colors">
+          <button className="h-8 px-3 text-xs font-medium text-ws-text-secondary hover:text-ws-fg border border-ws-panel-border hover:border-slate-300 bg-ws-panel-bg rounded-md flex items-center gap-1.5 transition-colors">
             <Download size={14} />
             Export
           </button>
@@ -275,34 +275,34 @@ export function ActionRegistryTable({
         <table className="w-full border-collapse text-[13px]">
           <thead>
             <tr>
-              <th className="bg-slate-50 border-b border-slate-200 px-4 h-10 text-left font-medium text-slate-500 sticky top-0 z-10 w-10">
+              <th className="bg-ws-bg border-b border-ws-panel-border px-4 h-10 text-left font-medium text-ws-text-secondary sticky top-0 z-10 w-10">
                 <input
                   type="checkbox"
                   className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                 />
               </th>
-              <th className="bg-slate-50 border-b border-slate-200 px-4 h-10 text-left font-medium text-slate-500 sticky top-0 z-10 w-28">
+              <th className="bg-ws-bg border-b border-ws-panel-border px-4 h-10 text-left font-medium text-ws-text-secondary sticky top-0 z-10 w-28">
                 Action ID
               </th>
-              <th className="bg-slate-50 border-b border-slate-200 px-4 h-10 text-left font-medium text-slate-500 sticky top-0 z-10 min-w-[240px]">
+              <th className="bg-ws-bg border-b border-ws-panel-border px-4 h-10 text-left font-medium text-ws-text-secondary sticky top-0 z-10 min-w-[240px]">
                 Intent (Title)
               </th>
-              <th className="bg-slate-50 border-b border-slate-200 px-4 h-10 text-left font-medium text-slate-500 sticky top-0 z-10 w-28">
+              <th className="bg-ws-bg border-b border-ws-panel-border px-4 h-10 text-left font-medium text-ws-text-secondary sticky top-0 z-10 w-28">
                 Status
               </th>
-              <th className="bg-slate-50 border-b border-slate-200 px-4 h-10 text-left font-medium text-slate-500 sticky top-0 z-10 w-32">
+              <th className="bg-ws-bg border-b border-ws-panel-border px-4 h-10 text-left font-medium text-ws-text-secondary sticky top-0 z-10 w-32">
                 Assignee
               </th>
-              <th className="bg-slate-50 border-b border-slate-200 px-4 h-10 text-left font-medium text-slate-500 sticky top-0 z-10 w-36">
+              <th className="bg-ws-bg border-b border-ws-panel-border px-4 h-10 text-left font-medium text-ws-text-secondary sticky top-0 z-10 w-36">
                 Context
               </th>
-              <th className="bg-slate-50 border-b border-slate-200 px-4 h-10 text-right font-medium text-slate-500 sticky top-0 z-10 w-20">
+              <th className="bg-ws-bg border-b border-ws-panel-border px-4 h-10 text-right font-medium text-ws-text-secondary sticky top-0 z-10 w-20">
                 Events
               </th>
-              <th className="bg-slate-50 border-b border-slate-200 px-4 h-10 text-left font-medium text-slate-500 sticky top-0 z-10 w-32">
+              <th className="bg-ws-bg border-b border-ws-panel-border px-4 h-10 text-left font-medium text-ws-text-secondary sticky top-0 z-10 w-32">
                 Last Updated
               </th>
-              <th className="bg-slate-50 border-b border-slate-200 px-2 h-10 sticky top-0 z-10 w-10" />
+              <th className="bg-ws-bg border-b border-ws-panel-border px-2 h-10 sticky top-0 z-10 w-10" />
             </tr>
           </thead>
           <tbody>
@@ -318,11 +318,11 @@ export function ActionRegistryTable({
                   onClick={() => onRowSelect?.(node.actionId)}
                   className={clsx(
                     'group cursor-pointer transition-colors',
-                    isSelected ? 'bg-indigo-50' : 'hover:bg-slate-50'
+                    isSelected ? 'bg-indigo-50' : 'hover:bg-ws-bg'
                   )}
                 >
                   {/* Checkbox */}
-                  <td className="border-b border-slate-100 px-4 h-11">
+                  <td className="border-b border-ws-panel-border px-4 h-11">
                     <input
                       type="checkbox"
                       onClick={(e) => e.stopPropagation()}
@@ -331,19 +331,19 @@ export function ActionRegistryTable({
                   </td>
 
                   {/* Action ID */}
-                  <td className="border-b border-slate-100 px-4 h-11">
-                    <span className="font-mono text-xs text-slate-400">
+                  <td className="border-b border-ws-panel-border px-4 h-11">
+                    <span className="font-mono text-xs text-ws-muted">
                       {node.actionId.slice(0, 12)}
                     </span>
                   </td>
 
                   {/* Title with indent */}
-                  <td className="border-b border-slate-100 px-4 h-11">
+                  <td className="border-b border-ws-panel-border px-4 h-11">
                     <div className="flex items-center gap-1" style={{ paddingLeft: `${indentPx}px` }}>
                       {hasChildren && (
                         <button
                           onClick={(e) => handleToggleExpanded(node.actionId, e)}
-                          className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 shrink-0"
+                          className="w-5 h-5 flex items-center justify-center text-ws-muted hover:text-ws-text-secondary shrink-0"
                         >
                           <ChevronRight
                             size={14}
@@ -355,14 +355,14 @@ export function ActionRegistryTable({
                       {depth > 0 && !hasChildren && (
                         <span className="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0 ml-1.5 mr-1" />
                       )}
-                      <span className="font-medium text-slate-900 truncate">
+                      <span className="font-medium text-ws-fg truncate">
                         {node.payload.title || 'Untitled'}
                       </span>
                     </div>
                   </td>
 
                   {/* Status */}
-                  <td className="border-b border-slate-100 px-4 h-11" onClick={(e) => e.stopPropagation()}>
+                  <td className="border-b border-ws-panel-border px-4 h-11" onClick={(e) => e.stopPropagation()}>
                     {onStatusChange ? (
                       <StatusFieldEditor
                         value={node.payload.status as DerivedStatus}
@@ -376,35 +376,35 @@ export function ActionRegistryTable({
                   </td>
 
                   {/* Assignee */}
-                  <td className="border-b border-slate-100 px-4 h-11">
+                  <td className="border-b border-ws-panel-border px-4 h-11">
                     <AssigneeChipGroup assignees={node.payload.assignees} showNames size="sm" />
                   </td>
 
                   {/* Context */}
-                  <td className="border-b border-slate-100 px-4 h-11">
-                    <span className="text-xs text-slate-500">{contextLabel || '—'}</span>
+                  <td className="border-b border-ws-panel-border px-4 h-11">
+                    <span className="text-xs text-ws-text-secondary">{contextLabel || '—'}</span>
                   </td>
 
                   {/* Events count */}
-                  <td className="border-b border-slate-100 px-4 h-11 text-right">
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded border border-slate-200 bg-white text-xs font-mono text-slate-500">
+                  <td className="border-b border-ws-panel-border px-4 h-11 text-right">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded border border-ws-panel-border bg-ws-panel-bg text-xs font-mono text-ws-text-secondary">
                       {String((node.flags as Record<string, unknown>)?.eventCount ?? 0)}
                     </span>
                   </td>
 
                   {/* Last Updated */}
-                  <td className="border-b border-slate-100 px-4 h-11">
-                    <span className="text-xs text-slate-500">
+                  <td className="border-b border-ws-panel-border px-4 h-11">
+                    <span className="text-xs text-ws-text-secondary">
                       {formatRelativeTime((node.payload as Record<string, unknown>).updatedAt as string | undefined)}
                     </span>
                   </td>
 
                   {/* Menu */}
-                  <td className="border-b border-slate-100 px-2 h-11">
+                  <td className="border-b border-ws-panel-border px-2 h-11">
                     <Dropdown>
                       <DropdownTrigger
                         onClick={(e) => e.stopPropagation()}
-                        className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-ws-muted hover:text-ws-text-secondary transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                       >
                         <MoreHorizontal size={16} />
                       </DropdownTrigger>

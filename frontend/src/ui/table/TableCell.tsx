@@ -64,11 +64,11 @@ export const TableHeaderCell = forwardRef<HTMLDivElement, TableHeaderCellProps>(
         )}
         {...props}
       >
-        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider truncate">
+        <span className="text-[10px] font-semibold text-ws-text-secondary uppercase tracking-wider truncate">
           {children}
         </span>
         {sortable && sortDir && (
-          <span className="text-slate-400 text-xs">
+          <span className="text-ws-muted text-xs">
             {sortDir === 'asc' ? '\u25B2' : '\u25BC'}
           </span>
         )}
@@ -96,7 +96,7 @@ export const TableCell = forwardRef<HTMLDivElement, TableCellProps>(
         onClick={onClick}
         style={{ ...getWidthStyle(width, minWidth), ...style }}
         className={clsx(
-          'px-3 flex items-center overflow-hidden text-sm text-slate-700',
+          'px-3 flex items-center overflow-hidden text-sm text-ws-text-secondary',
           getAlignClass(align),
           truncate && 'truncate',
           className

@@ -74,8 +74,8 @@ export const eventFormatters: Record<string, EventFormatter> = {
     category: 'workflow',
     icon: FileText,
     dotBgClass: 'bg-slate-200',
-    dotTextClass: 'text-slate-600',
-    labelClass: 'text-slate-700',
+    dotTextClass: 'text-ws-text-secondary',
+    labelClass: 'text-ws-text-secondary',
     isMajor: false,
     summarize: (payload) => {
       const title = payload.title as string | undefined;
@@ -99,8 +99,8 @@ export const eventFormatters: Record<string, EventFormatter> = {
     category: 'workflow',
     icon: Square,
     dotBgClass: 'bg-slate-100',
-    dotTextClass: 'text-slate-600',
-    labelClass: 'text-slate-700',
+    dotTextClass: 'text-ws-text-secondary',
+    labelClass: 'text-ws-text-secondary',
     isMajor: true,
     summarize: () => null,
   },
@@ -151,7 +151,7 @@ export const eventFormatters: Record<string, EventFormatter> = {
     icon: PenLine,
     dotBgClass: 'bg-blue-400',
     dotTextClass: 'text-white',
-    labelClass: 'text-slate-700',
+    labelClass: 'text-ws-text-secondary',
     isMajor: false,
     summarize: (payload) => {
       const field = payload.field_key as string | undefined;
@@ -293,8 +293,8 @@ export const eventFormatters: Record<string, EventFormatter> = {
     category: 'workflow',
     icon: ArrowUpDown,
     dotBgClass: 'bg-slate-200',
-    dotTextClass: 'text-slate-500',
-    labelClass: 'text-slate-600',
+    dotTextClass: 'text-ws-text-secondary',
+    labelClass: 'text-ws-text-secondary',
     isMajor: false,
     summarize: (payload) => {
       const from = payload.from_position as number | undefined;
@@ -355,8 +355,8 @@ export const unknownEventFormatter: EventFormatter = {
   category: 'system',
   icon: HelpCircle,
   dotBgClass: 'bg-slate-200',
-  dotTextClass: 'text-slate-400',
-  labelClass: 'text-slate-600',
+  dotTextClass: 'text-ws-muted',
+  labelClass: 'text-ws-text-secondary',
   isMajor: false,
   summarize: () => null,
 };

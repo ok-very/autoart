@@ -292,9 +292,9 @@ export function ArtCollectorWizardView() {
 
   return (
     <ArtCollectorContextProvider value={contextValue}>
-      <Stack className="h-full bg-slate-50 relative overflow-hidden" gap="none">
+      <Stack className="h-full bg-ws-bg relative overflow-hidden" gap="none">
         {/* Wizard Header */}
-        <div className="bg-white border-b border-slate-200 px-6 py-4">
+        <div className="bg-ws-panel-bg border-b border-ws-panel-border px-6 py-4">
           <Stack gap="sm">
             <Inline align="center" justify="between">
               <Text size="lg" weight="bold">
@@ -311,7 +311,7 @@ export function ArtCollectorWizardView() {
         {/* Main Content */}
         <div className="flex-1 overflow-auto p-6">
           <Card
-            className="min-h-[400px] h-full shadow-sm border border-slate-200"
+            className="min-h-[400px] h-full shadow-sm border border-ws-panel-border"
             padding="lg"
           >
             <CurrentStepComponent onNext={handleNext} onBack={handleBack} />

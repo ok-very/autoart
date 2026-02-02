@@ -112,7 +112,7 @@ export function ImportPanel() {
     };
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
+        <div className="flex flex-col h-full bg-ws-bg overflow-hidden">
             <div className="flex flex-1 overflow-hidden">
                 {/* Left Sidebar: Source selection & configuration */}
                 <ImportSidebar

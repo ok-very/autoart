@@ -151,24 +151,24 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
     // Empty state
     if (!inspectedItem && !isAction && !isEmail && !isImportItem) {
         return (
-            <div className="bg-white flex flex-col h-full overflow-hidden">
-                <div className="h-10 border-b border-slate-100 flex items-center justify-between px-3 bg-slate-50/50">
-                    <span className="text-xs text-slate-400">Select an item to inspect</span>
+            <div className="bg-ws-panel-bg flex flex-col h-full overflow-hidden">
+                <div className="h-10 border-b border-ws-panel-border flex items-center justify-between px-3 bg-ws-bg/50">
+                    <span className="text-xs text-ws-muted">Select an item to inspect</span>
                     {isBound && activeWorkspace && (
                         <span className={clsx('text-[10px] font-medium px-1.5 py-0.5 rounded', colorClasses.bg100, colorClasses.text700)}>
                             {activeWorkspace.label}
                         </span>
                     )}
                 </div>
-                <div className="flex-1 flex items-center justify-center text-xs text-slate-400 p-4 text-center">
+                <div className="flex-1 flex items-center justify-center text-xs text-ws-muted p-4 text-center">
                     <div>
                         <p className="mb-2">
                             {isBound && activeWorkspace
                                 ? `No selection in ${activeWorkspace.label}`
                                 : 'No selection'}
                         </p>
-                        <p className="text-slate-300">
-                            Press <kbd className="px-1 py-0.5 bg-slate-100 rounded text-slate-500">Ctrl+D</kbd> to quick declare
+                        <p className="text-ws-muted">
+                            Press <kbd className="px-1 py-0.5 bg-slate-100 rounded text-ws-text-secondary">Ctrl+D</kbd> to quick declare
                         </p>
                     </div>
                 </div>
@@ -210,7 +210,7 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
                 case 'email_details':
                     // TODO: Phase 3 - EmailDetailsPanel
                     return (
-                        <div className="text-center py-8 text-slate-400">
+                        <div className="text-center py-8 text-ws-muted">
                             <Mail size={24} className="mx-auto mb-2 opacity-50" />
                             <p className="text-sm">Email details coming soon</p>
                             <p className="text-xs mt-1 font-mono">{inspectedEmailId}</p>
@@ -288,13 +288,13 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
 
     return (
         <div
-            className="bg-white flex flex-col h-full overflow-hidden"
+            className="bg-ws-panel-bg flex flex-col h-full overflow-hidden"
             data-aa-component="SelectionInspector"
             data-aa-view={effectiveTab}
             data-aa-selection-type={selectionType}
         >
             {/* Tab Selector Header */}
-            <div className="h-10 border-b border-slate-100 flex items-center bg-slate-50/50 px-1 shrink-0">
+            <div className="h-10 border-b border-ws-panel-border flex items-center bg-ws-bg/50 px-1 shrink-0">
                 {isBound && activeWorkspace && (
                     <span className={clsx('text-[10px] font-medium px-1.5 py-0.5 rounded ml-1 mr-1 shrink-0', colorClasses.bg100, colorClasses.text700)}>
                         {activeWorkspace.label}
@@ -309,7 +309,7 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
                             onClick={() => setInspectorMode(tab.id)}
                             className={clsx(
                                 'flex-1 h-full flex items-center justify-center gap-1.5 text-xs font-medium transition-all relative',
-                                isActive ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'
+                                isActive ? 'text-blue-600' : 'text-ws-muted hover:text-ws-text-secondary'
                             )}
                             data-aa-component="SelectionInspector"
                             data-aa-id={`tab-${tab.id}`}

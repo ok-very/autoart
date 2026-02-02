@@ -191,14 +191,14 @@ export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateReco
           {/* Classification Node Selector */}
           <div>
             <Inline gap="xs" className="mb-1">
-              <FolderTree size={12} className="text-slate-500" />
+              <FolderTree size={12} className="text-ws-text-secondary" />
               <Text size="xs" weight="medium" color="dimmed">
                 Classify Under
               </Text>
             </Inline>
 
             {selectedNode ? (
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+              <div className="bg-ws-bg border border-ws-panel-border rounded-lg p-3">
                 <Inline justify="between">
                   <div className="min-w-0 flex-1">
                     <Text size="sm" weight="medium" truncate>
@@ -224,19 +224,19 @@ export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateReco
                 <button
                   type="button"
                   onClick={() => setNodeDropdownOpen(!nodeDropdownOpen)}
-                  className="w-full flex items-center justify-between px-3 py-2 text-left border border-slate-300 rounded-lg bg-white hover:bg-slate-50 transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 text-left border border-slate-300 rounded-lg bg-ws-panel-bg hover:bg-ws-bg transition-colors"
                 >
                   <Text size="sm" color="dimmed">
                     Select a project/task to classify under (optional)
                   </Text>
-                  <ChevronDown size={16} className="text-slate-400" />
+                  <ChevronDown size={16} className="text-ws-muted" />
                 </button>
 
                 {nodeDropdownOpen && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-52 overflow-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-ws-panel-bg border border-ws-panel-border rounded-lg shadow-lg max-h-52 overflow-auto">
                     <button
                       type="button"
-                      className="w-full px-3 py-2 text-left hover:bg-slate-50 transition-colors"
+                      className="w-full px-3 py-2 text-left hover:bg-ws-bg transition-colors"
                       onClick={() => {
                         setSelectedNodeId(null);
                         setNodeDropdownOpen(false);
@@ -248,7 +248,7 @@ export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateReco
                       <button
                         type="button"
                         key={node.id}
-                        className="w-full px-3 py-2 text-left hover:bg-slate-50 transition-colors"
+                        className="w-full px-3 py-2 text-left hover:bg-ws-bg transition-colors"
                         onClick={() => {
                           setSelectedNodeId(node.id);
                           setNodeDropdownOpen(false);
@@ -283,7 +283,7 @@ export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateReco
             ))}
 
           {/* Actions */}
-          <Inline justify="end" gap="sm" className="pt-4 mt-2 border-t border-slate-100">
+          <Inline justify="end" gap="sm" className="pt-4 mt-2 border-t border-ws-panel-border">
             <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>
