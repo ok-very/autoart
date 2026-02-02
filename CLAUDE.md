@@ -37,6 +37,7 @@ Quality and consistency matter more than speed. Check references before acting.
 @.claude/skills/frontend.md - React components, workspace system, UI patterns
 @.claude/skills/backend.md - Fastify modules, Action/Event pattern, database
 @.claude/skills/project.md - Monorepo structure, commands, nomenclature, coding principles
+@.claude/skills/logkeeper/SKILL.md - Todo maintenance agent (`/logkeeper`)
 
 ### Design System
 
