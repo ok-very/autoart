@@ -250,3 +250,40 @@
 .dockview-theme-light ::-webkit-scrollbar-thumb:hover {
   background: var(--ws-scrollbar-thumb-hover);
 }
+
+/* === Tab overflow — ellipsis tab that lists hidden panels === */
+
+.dockview-theme-light .dv-tabs-overflow-dropdown-default {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding: var(--ws-tab-padding-y) var(--ws-tab-padding-x);
+  border-radius: var(--ws-tab-radius) var(--ws-tab-radius) 0 0;
+  color: var(--ws-tab-fg);
+  background-color: var(--ws-tab-bg);
+  transition: color var(--ws-motion-duration-fast) var(--ws-motion-ease),
+              background-color var(--ws-motion-duration-fast) var(--ws-motion-ease);
+}
+
+.dockview-theme-light .dv-tabs-overflow-dropdown-default:hover {
+  background-color: var(--ws-tab-bg-hover);
+  color: var(--ws-tab-fg-hover);
+}
+
+/* Hide default span text + chevron svg, show ellipsis */
+.dockview-theme-light .dv-tabs-overflow-dropdown-default > span,
+.dockview-theme-light .dv-tabs-overflow-dropdown-default > svg {
+  display: none;
+}
+
+.dockview-theme-light .dv-tabs-overflow-dropdown-default::after {
+  content: "\2026"; /* … */
+}
+
+/* Overflow dropdown panel */
+.dockview-theme-light .dv-tabs-overflow-container {
+  background-color: var(--ws-panel-bg);
+  border: 1px solid var(--ws-panel-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+}

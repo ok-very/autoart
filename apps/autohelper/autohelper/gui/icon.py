@@ -90,36 +90,18 @@ class AutoHelperIcon:
 
     @staticmethod
     def _check_paired() -> bool:
-        """Check whether an autoart_session_id is valid against the backend."""
+        """Check whether an autoart_session_id exists in persisted config or settings."""
         try:
             from autohelper.config.store import ConfigStore
 
             cfg = ConfigStore().load()
-            session_id = cfg.get("autoart_session_id")
-            if not session_id:
-                from autohelper.config import get_settings
-
-                settings = get_settings()
-                session_id = getattr(settings, "autoart_session_id", "")
-            if not session_id:
-                return False
-
-            # Validate against backend (2s timeout inside verify_session)
-            from autohelper.config import get_settings
-            from autohelper.modules.context.autoart import AutoArtClient
-
-            settings = get_settings()
-            client = AutoArtClient(
-                api_url=settings.autoart_api_url,
-                api_key=settings.autoart_api_key or None,
-            )
-            if client.verify_session(session_id):
+            if cfg.get("autoart_session_id"):
                 return True
 
-            # Stale — clear it
-            cfg.pop("autoart_session_id", None)
-            ConfigStore().save(cfg)
-            return False
+            from autohelper.config import get_settings
+
+            settings = get_settings()
+            return bool(getattr(settings, "autoart_session_id", ""))
         except Exception:
             return False
 

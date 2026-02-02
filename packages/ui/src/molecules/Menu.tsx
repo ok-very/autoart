@@ -55,7 +55,7 @@ function MenuDropdown({
         <DropdownMenu.Portal>
             <DropdownMenu.Content
                 className={clsx(
-                    'z-50 min-w-[160px] py-1 bg-[var(--ws-panel-bg,#fff)]/90 backdrop-blur-sm rounded-lg border border-[var(--ws-panel-border,#e2e8f0)] shadow-lg font-sans',
+                    'z-50 min-w-[160px] py-1 bg-[var(--ws-panel-bg,#fff)] rounded-lg border border-[var(--ws-panel-border,#e2e8f0)] shadow-lg font-sans',
                     'data-[state=open]:animate-in data-[state=closed]:animate-out',
                     'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
                     'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
@@ -211,7 +211,7 @@ function MenuSubContent({ children, className, sideOffset = 2, alignOffset = -5 
         <DropdownMenu.Portal>
             <DropdownMenu.SubContent
                 className={clsx(
-                    'z-50 min-w-[160px] py-1 bg-[var(--ws-panel-bg,#fff)]/90 backdrop-blur-sm rounded-lg border border-[var(--ws-panel-border,#e2e8f0)] shadow-lg font-sans',
+                    'z-50 min-w-[160px] py-1 bg-[var(--ws-panel-bg,#fff)] rounded-lg border border-[var(--ws-panel-border,#e2e8f0)] shadow-lg font-sans',
                     'data-[state=open]:animate-in data-[state=closed]:animate-out',
                     'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
                     'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
