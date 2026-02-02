@@ -328,10 +328,7 @@ function ClassificationPanelAdapter(_props: IDockviewPanelProps) {
 
 function SearchResultsPanel(props: IDockviewPanelProps) {
   return (
-    <div className="h-full overflow-auto bg-white p-4 relative">
-      <div className="text-sm text-slate-500">
-        Search for records, definitions, or actions...
-      </div>
+    <div className="h-full overflow-auto bg-white relative">
       <SpawnHandle api={props.api} panelId="search-results" />
     </div>
   );
