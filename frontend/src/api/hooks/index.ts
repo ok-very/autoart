@@ -59,10 +59,14 @@ export {
   useLogoutEverywhere,
   useCurrentUser,
   useUpdateProfile,
+  useChangePassword,
+  useUploadAvatar,
+  useDeleteAvatar,
   useSessions,
   useUserSettings,
   useUserSetting,
   useSetUserSetting,
+  useSearchUsers,
 } from './auth';
 
 // Hierarchy (Also exported via ./entities)
@@ -222,6 +226,9 @@ export type { CrudHookConfig, CrudHooks } from './factory';
 export {
   useAdminUsers,
   useSoftDeleteUser,
+  useCreateUser,
+  useUpdateUser,
+  useResetUserPassword,
   type AdminUser,
 } from './admin';
 
