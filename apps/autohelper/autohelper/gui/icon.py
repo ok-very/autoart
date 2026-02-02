@@ -6,9 +6,8 @@ The smiley wears a cowboy hat when a job is running.
 Menu:
   - AutoHelper Service      (disabled label)
   - Status: Idle/Working...  (disabled label)
-  - Paired / Not paired      (disabled label)
+  - Paired / Not paired      (disabled, live-checked on each menu open)
   - ---
-  - Pair with AutoArt        (visible only when not paired)
   - Open Settings
   - ---
   - Exit
@@ -86,7 +85,6 @@ class AutoHelperIcon:
         self.stop_callback = stop_callback
         self.icon: pystray.Icon | None = None
         self._hat_on = False
-        self._paired = self._check_paired()
         self._stop_polling = threading.Event()
         self._setup_icon()
 
@@ -119,16 +117,11 @@ class AutoHelperIcon:
                 enabled=False,
             ),
             item(
-                lambda _: "Paired" if self._paired else "Not paired",
+                lambda _: "Paired" if self._check_paired() else "Not paired",
                 lambda *_: None,
                 enabled=False,
             ),
             pystray.Menu.SEPARATOR,
-            item(
-                "Pair with AutoArt",
-                self._on_pair,
-                visible=lambda _: not self._paired,
-            ),
             item("Open Settings", self._on_open_settings),
             pystray.Menu.SEPARATOR,
             item("Exit", self._on_exit),
@@ -139,64 +132,6 @@ class AutoHelperIcon:
 
     def _on_open_settings(self, icon: pystray.Icon, menu_item: pystray.MenuItem) -> None:
         open_settings_in_browser()
-
-    def _on_pair(self, icon: pystray.Icon, menu_item: pystray.MenuItem) -> None:
-        from autohelper.gui.pairing import ask_pairing_code
-
-        code = ask_pairing_code()
-        if code is None:
-            return
-
-        try:
-            from autohelper.config import get_settings, reset_settings
-            from autohelper.config.store import ConfigStore
-            from autohelper.modules.context.autoart import AutoArtClient
-
-            settings = get_settings()
-            client = AutoArtClient(
-                api_url=settings.autoart_api_url,
-                api_key=settings.autoart_api_key or None,
-            )
-            session_id = client.pair_with_code(code)
-
-            if session_id:
-                # Persist to config and propagate
-                store = ConfigStore()
-                cfg = store.load()
-                cfg["autoart_session_id"] = session_id
-                store.save(cfg)
-                reset_settings()
-
-                try:
-                    from autohelper.modules.context.service import ContextService
-
-                    ContextService().reinit_clients()
-                except Exception as exc:
-                    logger.warning("Failed to reinit context service after pairing: %s", exc)
-
-                self._paired = True
-                if self.icon:
-                    self.icon.update_menu()
-                logger.info("Pairing successful")
-            else:
-                self._show_error("Pairing failed — check the code and try again.")
-        except Exception as exc:
-            logger.error("Pairing error: %s", exc)
-            self._show_error(f"Pairing error: {exc}")
-
-    @staticmethod
-    def _show_error(message: str) -> None:
-        """Show an error dialog, falling back to console if tkinter unavailable."""
-        try:
-            import tkinter as tk
-            from tkinter import messagebox
-
-            root = tk.Tk()
-            root.withdraw()
-            messagebox.showerror("Pairing Error", message)
-            root.destroy()
-        except Exception:
-            logger.error(message)
 
     def _on_exit(self, icon: pystray.Icon, menu_item: pystray.MenuItem) -> None:
         print("Stopping AutoHelper...")
