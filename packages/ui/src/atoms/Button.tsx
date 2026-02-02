@@ -68,10 +68,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             if (variant === 'light') return colorStyles[color].light;
             if (variant === 'subtle') return colorStyles[color].subtle;
             return {
-                primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-                secondary: 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 focus:ring-slate-500',
-                ghost: 'text-slate-600 hover:bg-slate-100 focus:ring-slate-500',
-                danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+                primary: 'bg-[var(--ws-accent,#3b82f6)] text-[var(--ws-accent-fg,#fff)] hover:opacity-90 focus:ring-[var(--ws-accent,#3b82f6)]',
+                secondary: 'bg-[var(--ws-panel-bg,#fff)] text-[var(--ws-fg,#1e293b)] border border-[var(--ws-panel-border,#e2e8f0)] hover:bg-[var(--ws-bg,#f8fafc)] focus:ring-[var(--ws-accent,#3b82f6)]',
+                ghost: 'text-[var(--ws-text-secondary,#5a5a57)] hover:bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))] focus:ring-[var(--ws-accent,#3b82f6)]',
+                danger: 'bg-[var(--ws-color-error,#8c4a4a)] text-[var(--ws-accent-fg,#fff)] hover:opacity-90 focus:ring-[var(--ws-color-error,#8c4a4a)]',
             }[variant] || '';
         };
 

@@ -53,7 +53,7 @@ export function ProgressBar({
     size = 'md',
     className,
     showTooltip = true,
-    color = '#3b82f6', // blue-500
+    color = 'var(--ws-accent, #3b82f6)',
 }: ProgressBarProps) {
     const resolvedHeight = height ?? sizeToHeight[size];
 
@@ -61,7 +61,7 @@ export function ProgressBar({
     if (value !== undefined) {
         return (
             <div
-                className={clsx("w-full bg-slate-200 rounded overflow-hidden", className)}
+                className={clsx("w-full bg-[var(--ws-panel-border,#e2e8f0)] rounded overflow-hidden", className)}
                 style={{ height: resolvedHeight }}
             >
                 <div
@@ -79,7 +79,7 @@ export function ProgressBar({
     if (!segments || segments.length === 0) {
         return (
             <div
-                className={clsx("w-full bg-slate-200 rounded overflow-hidden", className)}
+                className={clsx("w-full bg-[var(--ws-panel-border,#e2e8f0)] rounded overflow-hidden", className)}
                 style={{ height: resolvedHeight }}
             />
         );
@@ -87,7 +87,7 @@ export function ProgressBar({
 
     return (
         <div
-            className={clsx("flex rounded overflow-hidden shadow-sm bg-slate-200 w-full", className)}
+            className={clsx("flex rounded overflow-hidden shadow-sm bg-[var(--ws-panel-border,#e2e8f0)] w-full", className)}
             style={{ height: resolvedHeight }}
         >
             {segments.map((segment) => (

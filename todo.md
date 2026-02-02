@@ -1,17 +1,22 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-02 (merged #323-325: intake tokens, definition_kind system, context breadcrumb)*
+*Last Updated: 2026-02-02 (triaged bug list, removed calendar housekeeping entry)*
 
 ## Bug List
 
-- AutoHelper Settings doesn't link correctly to frontend menu
-- Login fails with demo account credentials - can't test
-- Action definitions are empty after migration
-- Avisina Broadway test seed data not populating record content, containers; processes/subprocesses not attached or recognized
-- "Save current" in menu doesn't activate save workspace prompt
-- Project button in header doesn't spawn new Project container
-- Calendar link in header menu not wired up
-- "Select project" appears in header only in certain contexts and in the wrong position
+**Needs manual verification:**
+- Login fails with demo account credentials — `seed:dev` creates the user, but default `db:rebuild` workflow may not
+- Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
+- "Save current" in menu doesn't activate save workspace prompt — handler chain exists, not confirmed working
+- Project button in header doesn't spawn new Project container — may be a feature gap, not a misunderstanding
+- AutoHelper Settings doesn't link correctly to frontend menu — settings tab exists, linking path unverified
+
+**UX polish:**
+- "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
+
+**Confirmed resolved:**
+- ~~Action definitions empty after migration~~ — definitions seeded in new `record_definitions` system with `definition_kind`
+- ~~Calendar link in header menu not wired up~~ — fully implemented (PR #271)
 
 ---
 
@@ -69,11 +74,9 @@
 | Selection editor / Schema editor | "Quick create" button still present even though superseded by ComposerBar; no correlating interface |
 | Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate — shared field component needs expanded options for where/how combobox is invoked |
 | Selection editor | "Plan" link badge system could just be a pointer to the active window name / binding group color instead of its own concept |
-| Header menu calendar link | Not wired up; could reuse same context badge pattern as selection editor |
 | Workspace naming | "Workspace" panel collides with workspace system name — rename panel back to "Project View"; closing all panels should yield a blank area with just the plus/spawn buttons |
 | `frontend/src/ui/table-core/UniversalTableCore.tsx` + composites | All tables are div-based with `role` attributes — semantic HTML (`<table>`, `<thead>`, `<tbody>`, `<tr>`, `<td>`, `<th>`) would improve accessibility, browser print styles, native keyboard nav |
-| `packages/ui/src/atoms/*` | Atom components (Button, Badge, TextInput, etc.) use hardcoded Tailwind colors (`bg-blue-600`, `bg-green-100`, `border-slate-300`) instead of `--ws-*` design tokens — needs systematic migration |
-| Toggle atom candidate | AutoHelperSection MailCard has hand-rolled toggle switch — if worth reusing, create Toggle atom using `--ws-accent` for on, `--ws-panel-border` for off |
+| `packages/ui/src/atoms/Badge.tsx` | Badge variant colors (project, process, task, etc.) use domain-semantic Tailwind colors — needs separate approach since they're not chrome tokens |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` has no explicit UI/behavior mapping — containers render as actions (icon, labels, create flow). Needs dedicated UX treatment (CodeAnt #324 review) |
 | `frontend/src/ui/sidebars/` + definition filtering | Definitions without `definition_kind` (legacy/manual rows) excluded entirely by new filter — add fallback or migration to backfill (CodeAnt #324 review) |
 | `ExportMenu.tsx` | `invoiceNumber` now sent to PDF/DOCX export endpoints — backend handlers should consume it for Content-Disposition filenames |

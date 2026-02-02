@@ -20,6 +20,7 @@ export * from './Spinner';
 export * from './Stack';
 export * from './Text';
 export * from './TextInput';
+export * from './Toggle';
 export * from './UserChip';
 export * from './ValueDisplay';
 export * from './Dropdown';

@@ -45,7 +45,7 @@ import {
     useGCStatus,
     useRunGC,
 } from '../../api/hooks/autohelper';
-import { Badge, Button, TextInput } from '@autoart/ui';
+import { Badge, Button, TextInput, Toggle } from '@autoart/ui';
 
 // ============================================================================
 // SUB-COMPONENTS
@@ -542,11 +542,10 @@ function MailCard() {
     const enabled = localEnabled ?? mailStatus?.enabled ?? false;
     const running = mailStatus?.running ?? false;
 
-    const handleToggleEnabled = useCallback(() => {
-        const next = !enabled;
+    const handleToggleEnabled = useCallback((next: boolean) => {
         setLocalEnabled(next);
         updateConfig.mutate({ mail_enabled: next });
-    }, [enabled, updateConfig]);
+    }, [updateConfig]);
 
     const handleSave = useCallback(() => {
         updateConfig.mutate({
@@ -563,16 +562,7 @@ function MailCard() {
             badge={<StatusBadge ok={running} label={running ? 'Running' : 'Stopped'} />}
         >
             <FieldRow label="Enabled">
-                <button
-                    onClick={handleToggleEnabled}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enabled ? 'bg-[var(--ws-accent)]' : 'bg-[var(--ws-panel-border)]'
-                        }`}
-                >
-                    <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-ws-panel-bg transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'
-                            }`}
-                    />
-                </button>
+                <Toggle checked={enabled} onChange={handleToggleEnabled} />
             </FieldRow>
             <FieldRow label="Poll interval (s)">
                 <TextInput

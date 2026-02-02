@@ -38,16 +38,16 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 
         const variantClasses = {
             ghost: clsx(
-                'text-slate-500 hover:text-slate-700 hover:bg-slate-100',
-                active && 'text-blue-600 bg-blue-50'
+                'text-[var(--ws-muted-fg,#64748b)] hover:text-[var(--ws-fg,#1e293b)] hover:bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))]',
+                active && 'text-[var(--ws-accent,#3b82f6)] bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))]'
             ),
             subtle: clsx(
-                'text-slate-600 bg-slate-100 hover:bg-slate-200',
-                active && 'text-blue-600 bg-blue-100'
+                'text-[var(--ws-text-secondary,#5a5a57)] bg-[var(--ws-bg,#f8fafc)] hover:opacity-80',
+                active && 'text-[var(--ws-accent,#3b82f6)]'
             ),
             solid: clsx(
-                'text-white bg-blue-600 hover:bg-blue-700',
-                active && 'bg-blue-700'
+                'text-[var(--ws-accent-fg,#fff)] bg-[var(--ws-accent,#3b82f6)] hover:opacity-90',
+                active && 'opacity-90'
             )
         };
 
@@ -57,7 +57,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
                 type="button"
                 className={clsx(
                     'inline-flex items-center justify-center rounded-md transition-colors',
-                    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1',
+                    'focus:outline-none focus:ring-2 focus:ring-[var(--ws-accent,#3b82f6)] focus:ring-offset-1',
                     'disabled:opacity-50 disabled:cursor-not-allowed',
                     sizeConfig[size].button,
                     variantClasses[variant],
