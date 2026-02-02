@@ -112,6 +112,39 @@ export function useLogoutEverywhere() {
   });
 }
 
+// ==================== PASSWORD & AVATAR ====================
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (data: { currentPassword: string; newPassword: string }) =>
+      api.post<{ message: string }>('/auth/me/password', data),
+  });
+}
+
+export function useUploadAvatar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return api.post<{ avatarUrl: string; user: User }>('/auth/me/avatar', formData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
+}
+
+export function useDeleteAvatar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.delete<{ user: User }>('/auth/me/avatar'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
+}
+
 // ==================== USER SETTINGS ====================
 
 export function useUserSettings() {
