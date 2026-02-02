@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-02 (submitted #323-329: intake tokens, definition_kind, context breadcrumb, loading screen, AutoHelper pairing)*
+*Last Updated: 2026-02-02 (submitted #323-330: intake tokens, definition_kind, context breadcrumb, loading screen, AutoHelper pairing)*
 
 ## Bug List
 
@@ -25,7 +25,6 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| — | Autohelper: add auth key handshake between frontend settings and backend | Security |
 | 217 | Expose interpretation HTTP routes for frontend hooks | Backend |
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
 | 237 | Performance Optimization & Caching | Backend + Frontend |
@@ -74,6 +73,10 @@
 | `frontend/src/intake/components/FormPage.tsx`, `Date.tsx`, `ShortAnswer.tsx` | Intake components use `--ws-*` tokens; should use `--pub-*` per design system token boundary |
 | `frontend/src/ui/sidebars/ProjectSidebar.tsx:78-80, 138-140` | `<label>` elements used as section headings without associated form controls — swap to `<p>` or `<span>` |
 | `frontend/src/intake/components/blocks/Date.tsx:22,29` | Missing `htmlFor`/`id` association between label and date input (ShortAnswer already has the correct pattern) |
+| `frontend/src/pages/SettingsPage.tsx:123-124, 144-146` | Hardcoded Tailwind colors in header icon gradient (`from-indigo-500 to-purple-600`) and nav active/hover states (`bg-slate-900 text-white`, `hover:bg-slate-100`) — should use `--ws-*` tokens |
+| `packages/ui/src/atoms/*` | Atom components (Button, Badge, Card, TextInput, etc.) use hardcoded Tailwind colors (`bg-blue-600`, `bg-green-100`, `bg-white`, `border-slate-300`) instead of `--ws-*` design tokens — needs systematic migration |
+| `packages/ui/src/atoms/Card.tsx` | Uses `bg-white` instead of `--ws-panel-bg` token |
+| Toggle atom candidate | AutoHelperSection MailCard has hand-rolled toggle switch — if worth reusing, create Toggle atom using `--ws-accent` for on, `--ws-panel-border` for off |
 
 ---
 
@@ -103,7 +106,7 @@
 | #324 | `definition_kind` system: seed containers, remove sidebar heuristics (housekeeping) |
 | #325 | #235 Context Breadcrumb to Events (P1) |
 | #326-328 | Loading screen improvements: rounded corners + wrapper, AutoArt text + pre-spinner, design tokens in React fallback |
-| #329 | AutoHelper pairing code input (housekeeping) |
+| #329-330 | AutoHelper pairing: tray menu + frontend design token cleanup (housekeeping) |
 
 ---
 
