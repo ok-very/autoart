@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-02 (merged #331-333: migration stub, accessibility labels, atom token migration + Toggle atom)*
+*Last Updated: 2026-02-02 (in-flight #334-335: AutoHelper frontend-initiated pairing)*
 
 ## Bug List
 
@@ -9,10 +9,10 @@
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
 - "Save current" in menu doesn't activate save workspace prompt — handler chain exists, not confirmed working
 - Project button in header doesn't spawn new Project container — may be a feature gap, not a misunderstanding
-- AutoHelper Settings doesn't link correctly to frontend menu — settings tab exists, linking path unverified
 
 **UX polish:**
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
+- Panel spawner menu (+ button dropdown) has opaque background — would benefit from glassmorphism (`backdrop-blur` + translucent bg) so the workspace context bleeds through. [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20010446.png) · [Reference: glassmorphism with Tailwind](https://www.epicweb.dev/tips/creating-glassmorphism-effects-with-tailwind-css)
 
 **Confirmed resolved:**
 - ~~Action definitions empty after migration~~ — definitions seeded in new `record_definitions` system with `definition_kind`
@@ -112,6 +112,7 @@
 
 | PRs | Description |
 |-----|-------------|
+| #334-335 | AutoHelper frontend-initiated pairing: `/pair` endpoint + one-click Pair button, remove tkinter dialog |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
 
 ---
