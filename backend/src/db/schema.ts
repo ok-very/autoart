@@ -190,7 +190,7 @@ export interface ActionsTable {
   context_id: string;
   context_type: ContextType;
   parent_action_id: string | null; // Self-referential for container hierarchy
-  definition_id: string | null; // Links to action recipe definition
+  definition_id: string | null; // Links to action arrangement definition
   type: string;
   field_bindings: Generated<unknown>; // JSONB - bindings to Field definitions
   created_at: Generated<Date>;

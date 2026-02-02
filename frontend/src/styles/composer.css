@@ -330,16 +330,16 @@
 }
 
 /* ============================================
-   Recipe Picker (Action Type Selector)
+   Arrangement Picker (Action Type Selector)
    ============================================ */
 
-.composer-recipe-grid {
+.composer-arrangement-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 12px;
 }
 
-.composer-recipe-card {
+.composer-arrangement-card {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -352,19 +352,19 @@
     transition: all 0.2s ease;
 }
 
-.composer-recipe-card:hover {
+.composer-arrangement-card:hover {
     border-color: #cbd5e1;
     box-shadow: var(--composer-shadow-md);
     transform: translateY(-2px);
 }
 
-.composer-recipe-card.selected {
+.composer-arrangement-card.selected {
     border-color: var(--composer-accent-blue);
     background: #eff6ff;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
-.composer-recipe-icon {
+.composer-arrangement-icon {
     width: 40px;
     height: 40px;
     border-radius: 10px;
@@ -375,7 +375,7 @@
     background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
 }
 
-.composer-recipe-name {
+.composer-arrangement-name {
     font-size: 13px;
     font-weight: 500;
     color: var(--composer-text);

@@ -31,7 +31,7 @@ export function RecordTypeSidebar({
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter to show only data definitions (kind='record')
-  // Exclude action recipes and legacy hierarchy node types
+  // Exclude action arrangements and legacy hierarchy node types
   const legacyHierarchyTypes = ['project', 'process', 'stage', 'subprocess'];
 
   const recordDefinitions = (definitions || []).filter((def) => {

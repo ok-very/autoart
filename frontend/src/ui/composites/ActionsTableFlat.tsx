@@ -28,7 +28,7 @@ import { UniversalTableCore, makeFlatRowModel, type TableColumn as CoreTableColu
 export interface ActionsTableFlatProps {
     /** Actions to display */
     actions: Action[];
-    /** Action recipe definition (for schema/display info) */
+    /** Action arrangement definition (for schema/display info) */
     definition: RecordDefinition | null;
     /** Loading state */
     isLoading?: boolean;

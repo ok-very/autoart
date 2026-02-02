@@ -14,9 +14,9 @@
  *
  * Sections:
  * 1. Project Context - Select project → subprocess
- * 2. Action Definition - Pick action recipe, title, description
+ * 2. Action Definition - Pick action arrangement, title, description
  * 3. Referenced Records - Link records to named slots
- * 4. Action Inputs - Schema-driven fields from recipe
+ * 4. Action Inputs - Schema-driven fields from arrangement
  */
 
 import { clsx } from 'clsx';
@@ -68,8 +68,8 @@ export interface ComposerViewProps {
     onSuccess?: (actionId: string) => void;
     /** Callback to close drawer mode */
     onClose?: () => void;
-    /** Pre-selected action recipe ID or name */
-    defaultRecipe?: string;
+    /** Pre-selected action arrangement ID or name */
+    defaultArrangement?: string;
 }
 
 interface LinkedRecord {
@@ -91,11 +91,11 @@ export function ComposerView({
     projectId: initialProjectId,
     onSuccess,
     onClose,
-    defaultRecipe,
+    defaultArrangement,
 }: ComposerViewProps) {
     // ==================== STATE ====================
 
-    const [userRecipeId, setUserRecipeId] = useState<string | null>(null);
+    const [userArrangementId, setUserArrangementId] = useState<string | null>(null);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [fieldValues, setFieldValues] = useState<FieldValue[]>([]);
@@ -124,41 +124,41 @@ export function ComposerView({
     // ==================== DERIVED DATA ====================
 
     // Filter definitions to only action_arrangement kind
-    const actionRecipes = useMemo(() => {
+    const actionArrangements = useMemo(() => {
         if (!allDefinitions) return [];
         return allDefinitions.filter((d) => d.kind === 'action_arrangement');
     }, [allDefinitions]);
 
-    // Derive default recipe ID (from defaultRecipe prop or first recipe)
-    const defaultRecipeId = useMemo(() => {
-        if (!actionRecipes.length) return null;
-        if (defaultRecipe) {
-            const match = actionRecipes.find(
-                (r) => r.id === defaultRecipe || r.name === defaultRecipe
+    // Derive default arrangement ID (from defaultArrangement prop or first arrangement)
+    const defaultArrangementId = useMemo(() => {
+        if (!actionArrangements.length) return null;
+        if (defaultArrangement) {
+            const match = actionArrangements.find(
+                (a) => a.id === defaultArrangement || a.name === defaultArrangement
             );
             if (match) return match.id;
         }
-        return actionRecipes[0].id;
-    }, [actionRecipes, defaultRecipe]);
+        return actionArrangements[0].id;
+    }, [actionArrangements, defaultArrangement]);
 
-    // Effective recipe selection (user choice or default)
-    const selectedRecipeId = userRecipeId ?? defaultRecipeId;
+    // Effective arrangement selection (user choice or default)
+    const selectedArrangementId = userArrangementId ?? defaultArrangementId;
 
-    // Get selected recipe
-    const selectedRecipe = useMemo(() => {
-        if (!selectedRecipeId || !actionRecipes.length) return null;
-        return actionRecipes.find((r) => r.id === selectedRecipeId || r.name === selectedRecipeId) || null;
-    }, [selectedRecipeId, actionRecipes]);
+    // Get selected arrangement
+    const selectedArrangement = useMemo(() => {
+        if (!selectedArrangementId || !actionArrangements.length) return null;
+        return actionArrangements.find((r) => r.id === selectedArrangementId || r.name === selectedArrangementId) || null;
+    }, [selectedArrangementId, actionArrangements]);
 
     // Safely extract schema_config as object
     const schemaConfig = useMemo(() => {
-        const raw = selectedRecipe?.schema_config;
+        const raw = selectedArrangement?.schema_config;
         if (!raw || typeof raw !== 'object') return null;
         return raw as SchemaConfig & { referenceSlots?: ReferenceSlot[] };
-    }, [selectedRecipe]);
+    }, [selectedArrangement]);
 
-    // Extract schema fields from selected recipe
-    const recipeFields = useMemo(() => {
+    // Extract schema fields from selected arrangement
+    const arrangementFields = useMemo(() => {
         if (!schemaConfig) return [];
         // Filter out title and description as they're handled separately
         return (schemaConfig.fields || []).filter(
@@ -166,7 +166,7 @@ export function ComposerView({
         );
     }, [schemaConfig]);
 
-    // Extract reference slots from selected recipe
+    // Extract reference slots from selected arrangement
     const referenceSlots = useMemo((): ReferenceSlot[] => {
         if (!schemaConfig) return [];
         return schemaConfig.referenceSlots || [];
@@ -246,10 +246,10 @@ export function ComposerView({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!title.trim() || !selectedSubprocessId || !selectedRecipe) return;
+        if (!title.trim() || !selectedSubprocessId || !selectedArrangement) return;
 
         try {
-            // Build field bindings from title, description, and recipe fields
+            // Build field bindings from title, description, and arrangement fields
             const fieldBindings = [
                 { fieldKey: 'title' },
                 ...(description ? [{ fieldKey: 'description' }] : []),
@@ -277,7 +277,7 @@ export function ComposerView({
                 action: {
                     contextId: selectedSubprocessId,
                     contextType: contextType,
-                    type: selectedRecipe.name,
+                    type: selectedArrangement.name,
                     fieldBindings: fieldBindings.length > 0 ? fieldBindings : [{ fieldKey: 'title' }],
                 },
                 fieldValues: fieldValueEvents,
@@ -291,7 +291,7 @@ export function ComposerView({
             setLinkedRecords([]);
 
             // Show success message
-            const actionType = selectedRecipe?.name || 'Action';
+            const actionType = selectedArrangement?.name || 'Action';
             setSuccessMessage(`${actionType} created successfully!`);
             setTimeout(() => setSuccessMessage(null), 4000);
 
@@ -311,7 +311,7 @@ export function ComposerView({
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                if (title.trim() && selectedSubprocessId && selectedRecipe && !isLoading) {
+                if (title.trim() && selectedSubprocessId && selectedArrangement && !isLoading) {
                     e.preventDefault();
                     // Submit form programmatically
                     const form = document.querySelector('.composer-view form') as HTMLFormElement;
@@ -321,7 +321,7 @@ export function ComposerView({
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [title, selectedSubprocessId, selectedRecipe, isLoading]);
+    }, [title, selectedSubprocessId, selectedArrangement, isLoading]);
 
     // ==================== RENDER ====================
 
@@ -411,24 +411,24 @@ export function ComposerView({
                             <div className="composer-section-badge">2</div>
                             <div className="composer-section-title">Action Definition</div>
                             <div className="composer-section-subtitle">
-                                {actionRecipes.length} recipe{actionRecipes.length !== 1 ? 's' : ''} available
+                                {actionArrangements.length} arrangement{actionArrangements.length !== 1 ? 's' : ''} available
                             </div>
                         </div>
 
-                        {/* Recipe Grid */}
-                        <div className="composer-recipe-grid mb-4">
-                            {actionRecipes.map((recipe) => {
-                                const isSelected = selectedRecipeId === recipe.id;
-                                const styling = recipe.styling as { icon?: string; color?: string } | undefined;
+                        {/* Arrangement Grid */}
+                        <div className="composer-arrangement-grid mb-4">
+                            {actionArrangements.map((arrangement) => {
+                                const isSelected = selectedArrangementId === arrangement.id;
+                                const styling = arrangement.styling as { icon?: string; color?: string } | undefined;
                                 return (
                                     <button
-                                        key={recipe.id}
+                                        key={arrangement.id}
                                         type="button"
-                                        onClick={() => setUserRecipeId(recipe.id)}
-                                        className={clsx('composer-recipe-card', { selected: isSelected })}
+                                        onClick={() => setUserArrangementId(arrangement.id)}
+                                        className={clsx('composer-arrangement-card', { selected: isSelected })}
                                     >
                                         <div
-                                            className="composer-recipe-icon"
+                                            className="composer-arrangement-icon"
                                             style={{
                                                 background: isSelected
                                                     ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
@@ -436,9 +436,9 @@ export function ComposerView({
                                                 color: isSelected ? '#fff' : undefined,
                                             }}
                                         >
-                                            {styling?.icon || recipe.name.charAt(0)}
+                                            {styling?.icon || arrangement.name.charAt(0)}
                                         </div>
-                                        <div className="composer-recipe-name">{recipe.name}</div>
+                                        <div className="composer-arrangement-name">{arrangement.name}</div>
                                     </button>
                                 );
                             })}
@@ -454,7 +454,7 @@ export function ComposerView({
                                     type="text"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
-                                    placeholder={`Enter ${selectedRecipe?.name || 'action'} title...`}
+                                    placeholder={`Enter ${selectedArrangement?.name || 'action'} title...`}
                                     className="composer-input"
                                     autoFocus={mode === 'page'}
                                 />
@@ -592,17 +592,17 @@ export function ComposerView({
                     </div>
 
                     {/* Section 4: Action Inputs (Schema-driven) */}
-                    {selectedRecipe && recipeFields.length > 0 && (
+                    {selectedArrangement && arrangementFields.length > 0 && (
                         <div className="composer-section composer-section-dashed composer-slide-up">
                             <div className="composer-section-header">
                                 <div className="composer-section-badge">4</div>
                                 <div className="composer-section-title">Action Inputs</div>
                                 <div className="composer-section-subtitle">
-                                    From {selectedRecipe.name} schema
+                                    From {selectedArrangement.name} schema
                                 </div>
                             </div>
                             <div className="composer-field-grid">
-                                {recipeFields.map((field) => (
+                                {arrangementFields.map((field) => (
                                     <div
                                         key={field.key}
                                         className={clsx('composer-input-group', {
@@ -690,7 +690,7 @@ export function ComposerView({
                                 <div className="composer-event-item">
                                     <span className="composer-event-type">ACTION_DECLARED</span>
                                     <span className="composer-event-payload">
-                                        type: "{selectedRecipe?.name || 'TASK'}"
+                                        type: "{selectedArrangement?.name || 'TASK'}"
                                     </span>
                                 </div>
                                 {title && (
@@ -751,19 +751,19 @@ export function ComposerView({
                     {/* Submit Footer */}
                     <div className="flex items-center justify-between pt-4 border-t border-ws-panel-border">
                         <div className="text-sm text-ws-text-secondary">
-                            {selectedRecipe && selectedSubprocess ? (
+                            {selectedArrangement && selectedSubprocess ? (
                                 <>
-                                    Creating <strong>{selectedRecipe.name}</strong> in{' '}
+                                    Creating <strong>{selectedArrangement.name}</strong> in{' '}
                                     <strong>{selectedSubprocess.title}</strong>
                                 </>
                             ) : (
-                                'Select a recipe and context to continue'
+                                'Select an arrangement and context to continue'
                             )}
                         </div>
                         <button
                             type="submit"
                             disabled={
-                                !title.trim() || !selectedSubprocessId || !selectedRecipe || isLoading
+                                !title.trim() || !selectedSubprocessId || !selectedArrangement || isLoading
                             }
                             className="composer-btn composer-btn-success"
                         >

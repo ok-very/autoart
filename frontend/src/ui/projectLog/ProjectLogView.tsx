@@ -280,7 +280,7 @@ export function ProjectLogView() {
                   </div>
                   <p className="font-medium text-ws-text-secondary">No actions yet</p>
                   <p className="text-sm mt-1 text-ws-muted max-w-xs mx-auto">
-                    Get started by creating your first action or using an existing action recipe.
+                    Get started by creating your first action or using an existing action arrangement.
                   </p>
                   <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
                     <button
@@ -295,7 +295,7 @@ export function ProjectLogView() {
                       className="flex items-center gap-2 px-4 py-2 bg-ws-panel-bg border border-ws-panel-border text-ws-text-secondary rounded-lg text-sm font-medium hover:bg-ws-bg hover:border-slate-300 transition-colors"
                     >
                       <span>📚</span>
-                      Browse Action Recipes
+                      Browse Action Arrangements
                     </button>
                   </div>
                   <p className="text-xs text-ws-muted mt-4">
@@ -303,7 +303,7 @@ export function ProjectLogView() {
                     <a href="/records" className="text-blue-600 hover:underline">
                       Records
                     </a>
-                    {' '}to manage action recipes
+                    {' '}to manage action arrangements
                   </p>
                 </>
               )}
