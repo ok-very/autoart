@@ -5,7 +5,7 @@
  * Supports add/remove rows, inline editing, and auto-calculated amounts.
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { formatCurrency } from '@autoart/shared';
@@ -52,11 +52,6 @@ export function LineItemTable({ items, onChange, currency, disabled }: LineItemT
             );
         },
         [items, onChange],
-    );
-
-    const subtotal = useMemo(
-        () => items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0),
-        [items],
     );
 
     return (
