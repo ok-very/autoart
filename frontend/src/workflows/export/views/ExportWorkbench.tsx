@@ -112,7 +112,7 @@ export function ExportWorkbench({ onExportComplete, onClose }: ExportWorkbenchPr
             <div className="flex flex-col h-full bg-slate-50">
                 {/* Header */}
                 <Card className="border-b border-slate-200 rounded-none shadow-sm z-10 relative">
-                    <Inline justify="between" className="h-14 px-4">
+                    <Inline justify="between" className="h-10 px-3">
                         <Inline gap="sm">
                             <Download size={20} className="text-emerald-600" />
                             <Text size="lg" weight="bold">Export Workbench</Text>

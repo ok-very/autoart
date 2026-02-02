@@ -160,7 +160,7 @@ export function ActionCardsView() {
         return (
             <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
                 <div className="text-center">
-                    <p className="text-sm">Select a project to view actions</p>
+                    <p className="text-ws-body">Select a project to view actions</p>
                     <p className="text-sm mt-1">Choose from the Projects menu</p>
                 </div>
             </div>
@@ -178,7 +178,7 @@ export function ActionCardsView() {
     return (
         <div className="flex flex-col h-full bg-slate-50/50">
             {/* Toolbar */}
-            <div className="h-14 border-b border-slate-200 flex items-center justify-between px-6 bg-white shrink-0">
+            <div className="h-10 border-b border-slate-200 flex items-center justify-between px-4 bg-white shrink-0">
                 <div className="flex items-center gap-3">
                     <div className="relative">
                         <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />

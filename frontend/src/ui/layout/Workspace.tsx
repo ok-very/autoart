@@ -188,7 +188,7 @@ function SubprocessSection({ subprocess }: SubprocessSectionProps) {
   return (
     <div className="pl-4 border-l border-slate-200 ml-2 mt-4">
       <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-semibold text-slate-700">{subprocess.title}</h4>
+        <h4 className="text-ws-body font-semibold text-slate-700">{subprocess.title}</h4>
       </div>
       <div className="space-y-3">
         {children.map((task) => (
@@ -216,7 +216,7 @@ function StageSection({ stage }: StageSectionProps) {
   return (
     <div className={`mb-8 p-4 rounded-lg border ${isCompleted ? 'border-green-200 bg-green-50/50' : 'border-slate-200 bg-white'}`}>
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold text-slate-800 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <h3 className="text-ws-h2 font-semibold text-slate-800 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
           {stage.title}
         </h3>
         <div className="flex items-center gap-2">
@@ -298,7 +298,7 @@ export function Workspace() {
       {/* Project Header - could be more elaborate */}
       {project && (
         <div className="px-6 py-4 border-b border-slate-100 bg-white flex-shrink-0">
-          <h1 className="text-xl font-semibold text-slate-800">{project.title} Workflow</h1>
+          <h1 className="text-ws-h1 font-semibold text-slate-800">{project.title} Workflow</h1>
           {project.description ? <p className="text-sm text-slate-600">{String(project.description)}</p> : null}
         </div>
       )}

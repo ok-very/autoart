@@ -160,7 +160,7 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
                         <div className="text-[10px] opacity-75 font-semibold uppercase mb-1">
                             Record Class: {nodeType}
                         </div>
-                        <div className="text-base font-semibold text-slate-900">{title}</div>
+                        <div className="text-ws-h2 font-semibold text-slate-900">{title}</div>
                         <div className="text-xs opacity-50 mt-1 font-mono">
                             UUID: {item.id.slice(0, 11)}
                         </div>

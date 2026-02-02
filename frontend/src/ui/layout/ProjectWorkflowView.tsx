@@ -499,19 +499,19 @@ export function ProjectWorkflowView() {
                 {!activeProjectId ? (
                     <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
                         <div className="text-center">
-                            <p className="text-sm">No project selected</p>
+                            <p className="text-ws-body">No project selected</p>
                             <p className="text-sm">Select a project from the top menu</p>
                         </div>
                     </div>
                 ) : !project ? (
                     <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
                         <div className="text-center">
-                            <p className="text-sm">Loading project…</p>
+                            <p className="text-ws-body">Loading project…</p>
                         </div>
                     </div>
                 ) : (
                     <>
-                        <div className="h-12 border-b border-slate-200 bg-white px-4 flex items-center justify-between">
+                        <div className="h-10 border-b border-slate-200 bg-white px-3 flex items-center justify-between">
                             <div className="min-w-0 flex-1 flex items-center gap-4">
                                 {/* Project Selector */}
                                 <div className="min-w-0">

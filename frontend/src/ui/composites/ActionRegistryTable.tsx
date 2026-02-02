@@ -230,7 +230,7 @@ export function ActionRegistryTable({
   return (
     <div className={clsx('flex flex-col h-full bg-white rounded-lg border border-slate-200 overflow-hidden', className)}>
       {/* Toolbar */}
-      <div className="h-12 border-b border-slate-200 flex items-center justify-between px-4 bg-slate-50/50 shrink-0">
+      <div className="h-10 border-b border-slate-200 flex items-center justify-between px-3 bg-slate-50/50 shrink-0">
         <div className="flex items-center gap-3">
           {/* Search */}
           <div className="relative">

@@ -34,7 +34,7 @@ export function ProjectionSelector({
     disabled = false,
 }: ProjectionSelectorProps) {
     return (
-        <div className="h-12 bg-white border-b border-slate-200 flex items-center px-4 gap-3">
+        <div className="h-10 bg-white border-b border-slate-200 flex items-center px-3 gap-3">
             <Eye className="w-4 h-4 text-slate-400" />
             <span className="text-xs font-semibold text-slate-500 uppercase">View as:</span>
 

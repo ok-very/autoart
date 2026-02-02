@@ -315,7 +315,7 @@ export function RecordView({
     return (
         <main className={clsx('flex-1 flex flex-col overflow-hidden bg-slate-50 relative', className)}>
             {/* Toolbar - Sticky at top */}
-            <div className="h-14 shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-20 shadow-sm">
+            <div className="h-10 shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-3 sticky top-0 z-20 shadow-sm">
                 <div className="flex items-center gap-3">
                     {/* Definition Selector */}
                     <DefinitionSelector
@@ -391,7 +391,7 @@ export function RecordView({
                         <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center mb-4">
                             <FolderOpen size={32} className="text-blue-500/50" />
                         </div>
-                        <h3 className="text-base font-semibold text-slate-700 mb-1">Select a Record Type</h3>
+                        <h3 className="text-ws-h2 font-semibold text-slate-700 mb-1">Select a Record Type</h3>
                         <p className="text-sm text-slate-500 max-w-xs text-center">
                             Choose a definition from the dropdown above to view and manage its records.
                         </p>

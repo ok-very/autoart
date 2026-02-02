@@ -61,7 +61,7 @@ export function ProjectLibraryOverlay({ projectId, projectTitle }: ProjectLibrar
           <Library className="w-5 h-5 text-purple-600" />
         </div>
         <div>
-          <h2 className="text-base font-semibold text-slate-800">
+          <h2 className="text-ws-h2 font-semibold text-slate-800">
             Project Template Library
           </h2>
           {projectTitle && (

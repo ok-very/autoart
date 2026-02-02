@@ -107,7 +107,7 @@ export function ViewDefinitionOverlay({ recordId, definitionId }: ViewDefinition
             <div className="text-[10px] font-semibold text-slate-400 uppercase mb-1">
               Record Definition
             </div>
-            <h2 className="text-base font-semibold text-slate-800">{definition.name}</h2>
+            <h2 className="text-ws-h2 font-semibold text-slate-800">{definition.name}</h2>
             {definition.derived_from_id && (
               <div className="text-xs text-slate-400 mt-1">
                 Derived from another definition

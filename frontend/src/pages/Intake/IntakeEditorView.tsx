@@ -254,7 +254,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     return (
         <div className="flex flex-col h-full">
             {/* Editor Header */}
-            <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0">
+            <header className="h-10 bg-white border-b border-slate-200 flex items-center justify-between px-3 shrink-0">
                 {/* Left: Back + Title */}
                 <div className="flex items-center gap-4 w-1/3">
                     <button
@@ -336,7 +336,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                                     value={formTitle}
                                     onChange={(e) => handleTitleChange(e.target.value)}
                                     placeholder="Form Title"
-                                    className="w-full text-xl font-semibold text-slate-800 bg-transparent border-none p-0 focus:outline-none focus:ring-0"
+                                    className="w-full text-ws-h1 font-semibold text-slate-800 bg-transparent border-none p-0 focus:outline-none focus:ring-0"
                                 />
                                 <textarea
                                     value={formDescription}
@@ -368,7 +368,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                             <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
                                 <span className="text-2xl">🔀</span>
                             </div>
-                            <h3 className="text-base font-semibold text-slate-700">Conditional Logic</h3>
+                            <h3 className="text-ws-h2 font-semibold text-slate-700">Conditional Logic</h3>
                             <p className="text-sm text-slate-500 mt-2">
                                 Coming soon: Add conditional display rules to show or hide questions based on previous answers.
                             </p>
@@ -402,7 +402,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
             {showPublishDialog && publicUrl && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
-                        <h2 className="text-base font-semibold text-slate-900 mb-2">
+                        <h2 className="text-ws-h2 font-semibold text-slate-900 mb-2">
                             Form Published
                         </h2>
                         <p className="text-slate-600 mb-4">

@@ -28,6 +28,13 @@
   --color-ws-info: var(--ws-color-info);
   --color-ws-accent-secondary: var(--ws-accent-secondary);
   --color-ws-border: var(--ws-border, #D6D2CB);
+
+  /* Typography scale — enables text-ws-h1, text-ws-h2, text-ws-body, etc. */
+  --font-size-ws-h1: var(--ws-font-size-h1);
+  --font-size-ws-h2: var(--ws-font-size-h2);
+  --font-size-ws-body: var(--ws-font-size-body);
+  --font-size-ws-meta: var(--ws-font-size-meta);
+  --font-size-ws-micro: var(--ws-font-size-micro);
 }
 
 body {

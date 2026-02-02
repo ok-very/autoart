@@ -271,7 +271,7 @@ function TearsheetPagePreview({
         {/* Sidebar */}
         <div className="flex flex-col">
           <div>
-            <h1 className="text-xl font-semibold uppercase tracking-wide text-slate-800">
+            <h1 className="text-ws-h1 font-semibold uppercase tracking-wide text-slate-800">
               Artist Name
             </h1>
             <p className="text-sm text-slate-500 mt-1">(Region)</p>

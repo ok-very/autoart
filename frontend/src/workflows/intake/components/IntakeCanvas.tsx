@@ -260,7 +260,7 @@ export function IntakeCanvas({
                 <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
                     <span className="text-2xl">📝</span>
                 </div>
-                <h3 className="text-base font-semibold text-slate-700">No blocks yet</h3>
+                <h3 className="text-ws-h2 font-semibold text-slate-700">No blocks yet</h3>
                 <p className="text-sm text-slate-500 mt-1 mb-6">
                     Add your first question or content block
                 </p>

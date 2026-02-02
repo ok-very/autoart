@@ -486,7 +486,7 @@ export function UniversalTableView({
                     </div>
                 ) : !selectedDefinitionId ? (
                     <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-                        <p className="text-sm">Select a record type</p>
+                        <p className="text-ws-body">Select a record type</p>
                         <p className="text-sm">Choose a definition from the dropdown to view records</p>
                     </div>
                 ) : (

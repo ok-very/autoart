@@ -82,7 +82,7 @@ export function ImportWorkbenchContent() {
                     <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
                         <FileSpreadsheet className="w-8 h-8 text-slate-400" />
                     </div>
-                    <p className="text-sm text-slate-500 mb-2">
+                    <p className="text-ws-body text-slate-500 mb-2">
                         No import session active
                     </p>
                     <p className="text-sm text-slate-400">
@@ -97,7 +97,7 @@ export function ImportWorkbenchContent() {
         <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
             {/* Preview Mode Tabs */}
             <div className="border-b border-slate-200 bg-white px-4">
-                <div className="flex items-center gap-1 h-12">
+                <div className="flex items-center gap-1 h-10">
                     <button
                         onClick={() => setPreviewMode('hierarchy')}
                         className={clsx(

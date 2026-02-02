@@ -215,7 +215,7 @@ export function MailPage() {
         ) : isError ? (
           <div className="flex flex-col items-center justify-center h-64 text-center">
             <AlertCircle className="text-red-400 mb-3" size={40} />
-            <h3 className="text-sm text-slate-900 mb-1">Failed to load emails</h3>
+            <h3 className="text-ws-body text-slate-900 mb-1">Failed to load emails</h3>
             <p className="text-sm text-slate-500 mb-4">
               {error instanceof Error ? error.message : 'Could not connect to AutoHelper'}
             </p>
@@ -229,7 +229,7 @@ export function MailPage() {
         ) : data?.emails.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-center">
             <Mail className="text-slate-300 mb-3" size={40} />
-            <h3 className="text-sm text-slate-900 mb-1">No emails yet</h3>
+            <h3 className="text-ws-body text-slate-900 mb-1">No emails yet</h3>
             <p className="text-sm text-slate-500">Emails will appear here once ingested</p>
           </div>
         ) : (

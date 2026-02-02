@@ -64,7 +64,7 @@ export function BillsListView() {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="h-12 shrink-0 flex items-center justify-between px-4 border-b border-slate-200 bg-white">
+      <header className="h-10 shrink-0 flex items-center justify-between px-3 border-b border-slate-200 bg-white">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-semibold text-slate-700">Vendor Bills</h2>
           <span className="text-xs text-slate-400">{bills.length}</span>
