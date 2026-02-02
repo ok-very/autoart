@@ -30,20 +30,9 @@ export function useNode(nodeId: string | null) {
   });
 }
 
-export interface AncestorPathEntry {
-  id: string;
-  title: string;
-  type: string;
-}
-
-export function useNodePath(nodeId: string | null) {
-  return useQuery({
-    queryKey: ['hierarchy', 'nodePath', nodeId],
-    queryFn: () => api.get<{ path: AncestorPathEntry[] }>(`/hierarchy/nodes/${nodeId}/path`).then(r => r.path),
-    enabled: !!nodeId,
-    staleTime: 5 * 60 * 1000,
-  });
-}
+// Canonical implementation in entities/hierarchy.ts — re-export here for barrel compatibility
+export type { AncestorPathEntry } from './entities/hierarchy';
+export { useNodePath } from './entities/hierarchy';
 
 interface CreateNodeInput {
   parentId?: string | null;

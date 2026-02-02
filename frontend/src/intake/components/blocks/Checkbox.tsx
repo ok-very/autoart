@@ -31,10 +31,10 @@ export function Checkbox({ block }: CheckboxProps) {
 
         return (
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-pub-text-secondary">
+            <p className="block text-sm font-medium text-pub-text-secondary">
               {block.label}
               {block.required && <span className="text-red-500 ml-1">*</span>}
-            </label>
+            </p>
             {block.description && (
               <p className="text-sm text-pub-text-secondary">{block.description}</p>
             )}

@@ -57,6 +57,7 @@
 | 82 | User Account Management: create user via UI, assign to project, deactivate/delete user | Feature |
 | 291 | Schema editor / Composer relationship-math builder | Feature |
 | — | Action vocabulary: store classification verbs/nouns/adjectives from imports as a heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret what action type is being constructed or referenced | Classification |
+| — | Table atom primitives: `<table>`-based Table.Root/Header/Body/Row/Cell/HeaderCell with size scale, semantic HTML for accessibility, lightweight option for simple display tables | UI |
 
 ---
 
@@ -73,6 +74,7 @@
 | `frontend/src/intake/components/FormPage.tsx`, `Date.tsx`, `ShortAnswer.tsx` | Intake components use `--ws-*` tokens; should use `--pub-*` per design system token boundary |
 | `frontend/src/ui/sidebars/ProjectSidebar.tsx:78-80, 138-140` | `<label>` elements used as section headings without associated form controls — swap to `<p>` or `<span>` |
 | `frontend/src/intake/components/blocks/Date.tsx:22,29` | Missing `htmlFor`/`id` association between label and date input (ShortAnswer already has the correct pattern) |
+| `frontend/src/ui/table-core/UniversalTableCore.tsx` + composites | All tables are div-based with `role` attributes — semantic HTML (`<table>`, `<thead>`, `<tbody>`, `<tr>`, `<td>`, `<th>`) would improve accessibility, browser print styles, native keyboard nav |
 | `frontend/src/pages/SettingsPage.tsx:123-124, 144-146` | Hardcoded Tailwind colors in header icon gradient (`from-indigo-500 to-purple-600`) and nav active/hover states (`bg-slate-900 text-white`, `hover:bg-slate-100`) — should use `--ws-*` tokens |
 | `packages/ui/src/atoms/*` | Atom components (Button, Badge, Card, TextInput, etc.) use hardcoded Tailwind colors (`bg-blue-600`, `bg-green-100`, `bg-white`, `border-slate-300`) instead of `--ws-*` design tokens — needs systematic migration |
 | `packages/ui/src/atoms/Card.tsx` | Uses `bg-white` instead of `--ws-panel-bg` token |

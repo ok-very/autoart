@@ -144,7 +144,7 @@ export function ProjectLogEventRow({
         {/* Context breadcrumb */}
         {event.contextId && (
           <div className="mt-0.5">
-            <EventBreadcrumb contextId={event.contextId} />
+            <EventBreadcrumb contextId={event.contextId} contextType={event.contextType} />
           </div>
         )}
 

@@ -61,7 +61,7 @@ export function ActionEventsPanel({ actionId }: ActionEventsPanelProps) {
                                 </div>
                                 {event.contextId && (
                                     <div className="mt-0.5">
-                                        <EventBreadcrumb contextId={event.contextId} />
+                                        <EventBreadcrumb contextId={event.contextId} contextType={event.contextType} />
                                     </div>
                                 )}
                                 <div className="text-xs text-ws-muted mt-0.5">
