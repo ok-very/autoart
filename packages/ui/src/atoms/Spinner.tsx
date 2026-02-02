@@ -15,10 +15,11 @@ export function Spinner({ size = 'md', className }: SpinnerProps) {
     return (
         <svg
             className={clsx(
-                'animate-spin text-blue-600',
+                'animate-spin',
                 sizeClasses[size],
                 className
             )}
+            style={{ color: 'var(--ws-color-info, #3F5C6E)' }}
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
