@@ -42,7 +42,7 @@ class ThemeRegistryImpl implements WorkspaceThemeRegistry {
     return this.themes.get(id);
   }
 
-  list(): WorkspaceThemeModule[] {
+  list(): readonly WorkspaceThemeModule[] {
     return (this.cachedList ??= Array.from(this.themes.values()));
   }
 

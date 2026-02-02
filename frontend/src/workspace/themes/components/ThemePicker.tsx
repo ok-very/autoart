@@ -19,6 +19,7 @@ import {
   useWorkspaceThemeId,
   setWorkspaceTheme,
 } from '../useWorkspaceTheme';
+import type { WorkspaceThemeModule } from '../types';
 
 export function ThemePicker() {
   const themes = useAvailableThemes();
@@ -31,7 +32,7 @@ export function ThemePicker() {
       acc[variant].push(theme);
       return acc;
     },
-    {} as Record<string, typeof themes>
+    {} as Record<string, WorkspaceThemeModule[]>
   );
 
   return (

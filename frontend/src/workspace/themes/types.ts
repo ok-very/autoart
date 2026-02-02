@@ -123,7 +123,7 @@ export interface WorkspaceThemeRegistry {
   get(id: WorkspaceThemeId): WorkspaceThemeModule | undefined;
 
   /** List all registered themes */
-  list(): WorkspaceThemeModule[];
+  list(): readonly WorkspaceThemeModule[];
 
   /** Get themes by density */
   getByDensity(density: ThemeDensity): WorkspaceThemeModule[];
