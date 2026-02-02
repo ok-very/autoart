@@ -635,6 +635,42 @@ export type ProjectMember = Selectable<ProjectMembersTable>;
 export type NewProjectMember = Insertable<ProjectMembersTable>;
 export type ProjectMemberUpdate = Updateable<ProjectMembersTable>;
 
+// ============================================
+// MAIL TABLES (Migration 052)
+// Promoted emails from AutoHelper + polymorphic links
+// ============================================
+
+export interface MailMessagesTable {
+  id: Generated<string>;
+  external_id: string;
+  subject: string | null;
+  sender: string | null;
+  sender_name: string | null;
+  received_at: Date | null;
+  body_preview: string | null;
+  metadata: Generated<unknown>; // JSONB
+  project_id: string | null;
+  promoted_at: Generated<Date>;
+  promoted_by: string;
+  created_at: Generated<Date>;
+}
+
+export type MailMessage = Selectable<MailMessagesTable>;
+export type NewMailMessage = Insertable<MailMessagesTable>;
+export type MailMessageUpdate = Updateable<MailMessagesTable>;
+
+export interface MailLinksTable {
+  id: Generated<string>;
+  mail_message_id: string;
+  target_type: string; // 'action' | 'record' | 'hierarchy_node'
+  target_id: string;
+  created_at: Generated<Date>;
+  created_by: string;
+}
+
+export type MailLink = Selectable<MailLinksTable>;
+export type NewMailLink = Insertable<MailLinksTable>;
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -670,6 +706,8 @@ export interface Database {
   poll_responses: PollResponsesTable;
   engagements: EngagementsTable;
   project_members: ProjectMembersTable;
+  mail_messages: MailMessagesTable;
+  mail_links: MailLinksTable;
 }
 
 

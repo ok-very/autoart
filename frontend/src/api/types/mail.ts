@@ -115,3 +115,37 @@ export interface TriageActionResponse {
   triage_status: TriageStatus;
   triaged_at: string;
 }
+
+// =============================================================================
+// PROMOTED MAIL MESSAGES (PostgreSQL persistence)
+// =============================================================================
+
+export interface MailMessage {
+  id: string;
+  external_id: string;
+  subject: string | null;
+  sender: string | null;
+  sender_name: string | null;
+  received_at: string | null;
+  body_preview: string | null;
+  metadata: Record<string, unknown>;
+  project_id: string | null;
+  promoted_at: string;
+  promoted_by: string;
+  created_at: string;
+}
+
+export type MailLinkTargetType = 'action' | 'record' | 'hierarchy_node';
+
+export interface MailLink {
+  id: string;
+  mail_message_id: string;
+  target_type: MailLinkTargetType;
+  target_id: string;
+  created_at: string;
+  created_by: string;
+}
+
+export interface MailLinkWithMessage extends MailLink {
+  message: MailMessage;
+}

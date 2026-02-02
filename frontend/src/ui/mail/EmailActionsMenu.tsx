@@ -6,7 +6,7 @@
  * MailContent, MailPage, and MailPanel.
  */
 
-import { MoreHorizontal, AlertTriangle, Info, Archive, Loader2 } from 'lucide-react';
+import { MoreHorizontal, AlertTriangle, Info, Archive, Loader2, BookmarkPlus } from 'lucide-react';
 
 import { Menu } from '@autoart/ui';
 
@@ -15,6 +15,7 @@ import {
     useMarkActionRequired,
     useMarkInformational,
 } from '../../api/hooks/mail';
+import { usePromoteEmail } from '../../api/hooks/mailMessages';
 import type { ProcessedEmail } from '../../api/types/mail';
 
 export interface EmailActionsMenuProps {
@@ -26,11 +27,13 @@ export function EmailActionsMenu({ email, onAction }: EmailActionsMenuProps) {
     const archiveMutation = useArchiveEmail();
     const actionRequiredMutation = useMarkActionRequired();
     const informationalMutation = useMarkInformational();
+    const promoteMutation = usePromoteEmail();
 
     const isPending =
         archiveMutation.isPending ||
         actionRequiredMutation.isPending ||
-        informationalMutation.isPending;
+        informationalMutation.isPending ||
+        promoteMutation.isPending;
 
     return (
         <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
@@ -67,6 +70,15 @@ export function EmailActionsMenu({ email, onAction }: EmailActionsMenuProps) {
                         Informational
                     </Menu.Item>
                     <Menu.Divider />
+                    <Menu.Item
+                        leftSection={<BookmarkPlus size={14} className="text-amber-600" />}
+                        disabled={isPending}
+                        onClick={() => {
+                            promoteMutation.mutate(email.id, { onSuccess: onAction });
+                        }}
+                    >
+                        Save to System
+                    </Menu.Item>
                     <Menu.Item
                         leftSection={<Archive size={14} className="text-slate-400" />}
                         disabled={isPending}

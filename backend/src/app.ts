@@ -29,6 +29,7 @@ import { pollRoutes, pollPublicRoutes } from './modules/polls/index.js';
 import { workflowSurfaceRoutes } from './modules/projections/workflow-surface.routes.js';
 import { factKindsRoutes } from './modules/records/fact-kinds.routes.js';
 import { recordsRoutes } from './modules/records/records.routes.js';
+import { mailRoutes } from './modules/mail/mail.routes.js';
 import { runnerRoutes } from './modules/runner/runner.routes.js';
 import { searchRoutes } from './modules/search/search.routes.js';
 import authPlugin from './plugins/auth.js';
@@ -129,7 +130,10 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(pollRoutes, { prefix: '/api/polls' });
   await fastify.register(pollPublicRoutes, { prefix: '/public/poll' });
 
-  // Mail module now handled by AutoHelper service on port 8000
+  // Promoted mail messages and links (persisted in PostgreSQL)
+  await fastify.register(mailRoutes, { prefix: '/api/mail' });
+
+  // Transient mail browsing/triage handled by AutoHelper on port 8100
 
   fastify.setErrorHandler(errorHandler);
   fastify.setNotFoundHandler(notFoundHandler);
