@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-02 (merged #326-330: loading screen + AutoHelper pairing + review fixes)*
+*Last Updated: 2026-02-02 (merged #323-325: intake tokens, definition_kind system, context breadcrumb)*
 
 ## Bug List
 
@@ -108,9 +108,6 @@
 | PRs | Description |
 |-----|-------------|
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
-| #323 | Intake `--pub-*` token boundary fix (housekeeping) |
-| #324 | `definition_kind` system: seed containers, remove sidebar heuristics (housekeeping) |
-| #325 | #235 Context Breadcrumb to Events (P1) |
 
 ---
 
@@ -118,6 +115,8 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | Intake `--pub-*` token boundary fix (housekeeping); `definition_kind` system: seed containers + sidebar heuristics removal + idempotency fix (housekeeping) | PRs #323-324 |
+| 235 | Context breadcrumb to events (P1) | PR #325 |
 | — | Loading screen refactoring: rounded corners + wrapper, AutoArt text + pre-spinner, design tokens in React fallback; AutoHelper pairing: tray menu + TclError fallback; Review feedback fixes: `_check_paired()` settings fallback, container seed upsert `is_system` | PRs #326-330 |
 | — | Add /logkeeper skill: dedicated todo.md maintenance agent with personality | PR (commit 4b6e228) |
 | — | Refactor: rename recipe → arrangement, drop orphaned action_type_definitions, seed arrangement definitions | PRs #320-322 |
