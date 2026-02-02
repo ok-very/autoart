@@ -1,1 +1,23 @@
 @import "../styles/base.css";
+@import "./variables.css";
+
+@theme {
+  --color-pub-bg: var(--pub-bg);
+  --color-pub-fg: var(--pub-fg);
+  --color-pub-muted: var(--pub-muted-fg);
+  --color-pub-accent: var(--pub-accent);
+  --color-pub-accent-fg: var(--pub-accent-fg);
+  --color-pub-panel-bg: var(--pub-panel-bg);
+  --color-pub-panel-border: var(--pub-panel-border);
+  --color-pub-text-secondary: var(--pub-text-secondary);
+  --color-pub-text-disabled: var(--pub-text-disabled);
+  --color-pub-success: var(--pub-color-success);
+  --color-pub-warning: var(--pub-color-warning);
+  --color-pub-error: var(--pub-color-error);
+  --color-pub-info: var(--pub-color-info);
+  --font-size-pub-h1: var(--pub-font-size-h1);
+  --font-size-pub-h2: var(--pub-font-size-h2);
+  --font-size-pub-body: var(--pub-font-size-body);
+  --font-size-pub-meta: var(--pub-font-size-meta);
+  --font-size-pub-micro: var(--pub-font-size-micro);
+}

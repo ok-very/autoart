@@ -87,7 +87,7 @@ export function RadixRenderer({
 
     case 'Text':
       return (
-        <p className={`text-ws-text-secondary ${props.className || ''}`}>
+        <p className={`text-pub-text-secondary ${props.className || ''}`}>
           {props.content as string}
           {renderedChildren}
         </p>
@@ -183,7 +183,7 @@ export function RadixRenderer({
 
     case 'Label':
       return (
-        <label className={`block text-sm font-medium text-ws-text-secondary ${props.className || ''}`}>
+        <label className={`block text-sm font-medium text-pub-text-secondary ${props.className || ''}`}>
           {props.content as string}
           {renderedChildren}
         </label>
@@ -191,13 +191,13 @@ export function RadixRenderer({
 
     case 'Card':
       return (
-        <div className={`bg-ws-panel-bg rounded-lg shadow p-4 ${props.className || ''}`}>
+        <div className={`bg-pub-panel-bg rounded-lg shadow p-4 ${props.className || ''}`}>
           {renderedChildren}
         </div>
       );
 
     case 'Separator':
-      return <hr className={`my-4 border-ws-panel-border ${props.className || ''}`} />;
+      return <hr className={`my-4 border-pub-panel-border ${props.className || ''}`} />;
 
     case 'Link': {
       const href = props.href as string || '#';

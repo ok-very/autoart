@@ -113,8 +113,8 @@ export function FormPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h1 className="text-ws-h1 font-semibold text-ws-fg mb-2">Form Not Found</h1>
-          <p className="text-ws-text-secondary">
+          <h1 className="text-pub-h1 font-semibold text-pub-fg mb-2">Form Not Found</h1>
+          <p className="text-pub-text-secondary">
             This form may have been disabled or doesn't exist.
           </p>
         </div>
@@ -139,10 +139,10 @@ export function FormPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-ws-h1 font-semibold text-ws-fg mb-2">Submitted!</h1>
-          <p className="text-ws-text-secondary">{confirmationMessage}</p>
+          <h1 className="text-pub-h1 font-semibold text-pub-fg mb-2">Submitted!</h1>
+          <p className="text-pub-text-secondary">{confirmationMessage}</p>
           {redirectUrl && (
-            <p className="text-sm text-ws-muted mt-4">Redirecting...</p>
+            <p className="text-sm text-pub-muted mt-4">Redirecting...</p>
           )}
         </div>
       </div>
@@ -159,7 +159,7 @@ export function FormPage() {
     <div className="max-w-2xl mx-auto py-8 px-4">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-ws-h1 font-semibold text-ws-fg">{form.title}</h1>
+        <h1 className="text-pub-h1 font-semibold text-pub-fg">{form.title}</h1>
         {form.sharepoint_request_url && (
           <a
             href={form.sharepoint_request_url}
@@ -183,7 +183,7 @@ export function FormPage() {
               />
             ))}
           </div>
-          <p className="text-sm text-ws-text-secondary mt-2">
+          <p className="text-sm text-pub-text-secondary mt-2">
             Page {currentPage + 1} of {pages.length}
           </p>
         </div>
@@ -191,7 +191,7 @@ export function FormPage() {
 
       {/* Page Title */}
       {(currentPageData?.blocks_config?.settings as any)?.pageTitle && (
-        <h2 className="text-ws-h2 font-semibold text-ws-fg mb-4">
+        <h2 className="text-pub-h2 font-semibold text-pub-fg mb-4">
           {(currentPageData.blocks_config.settings as any).pageTitle}
         </h2>
       )}
@@ -205,7 +205,7 @@ export function FormPage() {
 
           {/* Empty state */}
           {blocks.length === 0 && (
-            <div className="text-center py-12 text-ws-text-secondary">
+            <div className="text-center py-12 text-pub-text-secondary">
               This page has no questions yet.
             </div>
           )}
@@ -216,7 +216,7 @@ export function FormPage() {
               type="button"
               onClick={handlePrev}
               disabled={isFirstPage}
-              className={`px-4 py-2 rounded ${isFirstPage ? 'text-ws-muted cursor-not-allowed' : 'text-ws-text-secondary hover:bg-slate-100'}`}
+              className={`px-4 py-2 rounded ${isFirstPage ? 'text-pub-muted cursor-not-allowed' : 'text-pub-text-secondary hover:bg-slate-100'}`}
             >
               Previous
             </button>

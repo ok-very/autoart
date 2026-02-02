@@ -1,0 +1,39 @@
+/**
+ * Public (--pub-*) CSS Custom Properties
+ *
+ * Client-facing intake forms use their own token namespace,
+ * separate from the workspace (--ws-*) tokens.
+ * See docs/DESIGN.md § CSS Variable Prefixes.
+ */
+
+:root {
+  /* Foundation Neutrals */
+  --pub-bg: #F5F2ED;
+  --pub-fg: #2E2E2C;
+  --pub-muted-fg: #6B6560;
+
+  /* Text Hierarchy */
+  --pub-text-secondary: #5A5A57;
+  --pub-text-disabled: #8C8C88;
+
+  /* Structural Accent */
+  --pub-accent: #3F5C6E;
+  --pub-accent-fg: #FFFFFF;
+
+  /* Surfaces */
+  --pub-panel-bg: #FFFFFF;
+  --pub-panel-border: #D6D2CB;
+
+  /* System Feedback */
+  --pub-color-success: #6F7F5C;
+  --pub-color-warning: #B89B5E;
+  --pub-color-error: #8C4A4A;
+  --pub-color-info: #3F5C6E;
+
+  /* Typography Scale */
+  --pub-font-size-h1: 20px;
+  --pub-font-size-h2: 16px;
+  --pub-font-size-body: 14px;
+  --pub-font-size-meta: 12px;
+  --pub-font-size-micro: 11px;
+}
