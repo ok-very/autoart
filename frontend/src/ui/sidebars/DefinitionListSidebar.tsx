@@ -15,7 +15,7 @@ import { useState } from 'react';
 import { useRecordDefinitions, useRecordStats } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
 
-type DefinitionKind = 'record' | 'action_arrangement';
+type DefinitionKind = 'record' | 'action_arrangement' | 'container';
 
 interface DefinitionListSidebarProps {
     width: number;
@@ -39,23 +39,10 @@ export function DefinitionListSidebar({
     const { openOverlay } = useUIStore();
     const [searchQuery, setSearchQuery] = useState('');
 
-    // Legacy hierarchy types to always exclude
-    const legacyHierarchyTypes = ['project', 'process', 'stage', 'subprocess'];
-
-    // Filter definitions by kind
+    // Filter definitions by kind — no fallback heuristics, definition_kind is authoritative
     const filteredDefinitions = (definitions || []).filter((def) => {
         const defKind = (def as { definition_kind?: string }).definition_kind;
-
-        if (definitionKind === 'record') {
-            if (defKind) return defKind === 'record';
-            // Fallback for missing kind: exclude hierarchy and known actions
-            const name = def.name.toLowerCase();
-            return !legacyHierarchyTypes.includes(name);
-        } else {
-            if (defKind) return defKind === 'action_arrangement';
-            // No fallback heuristic - require explicit kind
-            return false;
-        }
+        return defKind === definitionKind;
     });
 
     // Apply search filter

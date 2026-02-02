@@ -40,15 +40,10 @@ export function RegistrySidebar({
     const [recordsExpanded, setRecordsExpanded] = useState(true);
     const [eventsExpanded, setEventsExpanded] = useState(true);
 
-    // Legacy hierarchy types to exclude
-    const legacyHierarchyTypes = ['project', 'process', 'stage', 'subprocess'];
-
-    // Filter record definitions (exclude action_arrangements from old system)
+    // Filter record definitions — definition_kind is authoritative
     const recordDefinitions = (definitions || []).filter((def) => {
         const defKind = (def as { definition_kind?: string }).definition_kind;
-        if (defKind) return defKind === 'record';
-        const name = def.name.toLowerCase();
-        return !legacyHierarchyTypes.includes(name);
+        return defKind === 'record';
     });
 
     // Apply search filter

@@ -30,18 +30,10 @@ export function RecordTypeSidebar({
   const { openOverlay } = useUIStore();
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Filter to show only data definitions (kind='record')
-  // Exclude action arrangements and legacy hierarchy node types
-  const legacyHierarchyTypes = ['project', 'process', 'stage', 'subprocess'];
-
+  // Filter to show only data definitions — definition_kind is authoritative
   const recordDefinitions = (definitions || []).filter((def) => {
-    // If kind is available, use it as the primary discriminator
-    const kind = (def as { kind?: string }).kind;
-    if (kind) {
-      return kind === 'record';
-    }
-    // Fallback: exclude legacy hierarchy types by name
-    return !legacyHierarchyTypes.includes(def.name.toLowerCase());
+    const defKind = (def as { definition_kind?: string }).definition_kind;
+    return defKind === 'record';
   });
 
   const filteredDefinitions = searchQuery.trim()
