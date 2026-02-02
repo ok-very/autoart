@@ -291,84 +291,85 @@ export async function seed(db: Kysely<Database>): Promise<void> {
     },
   ];
 
-  for (const def of definitions) {
-    // Check if already exists (idempotent)
-    const existing = await db
+  await db.transaction().execute(async (trx) => {
+    for (const def of definitions) {
+      const existing = await trx
+        .selectFrom('record_definitions')
+        .select('id')
+        .where('name', '=', def.name)
+        .executeTakeFirst();
+
+      if (!existing) {
+        await trx.insertInto('record_definitions').values(def).execute();
+      }
+    }
+
+    // Seed containers (idempotent — lookup by name alone to avoid unique constraint crash
+    // when a row exists with the same name but a different definition_kind)
+    for (const ctr of containers) {
+      const existing = await trx
+        .selectFrom('record_definitions')
+        .select('id')
+        .where('name', '=', ctr.name)
+        .executeTakeFirst();
+
+      if (!existing) {
+        await trx.insertInto('record_definitions').values(ctr).execute();
+      } else {
+        await trx
+          .updateTable('record_definitions')
+          .set({
+            definition_kind: ctr.definition_kind,
+            schema_config: ctr.schema_config,
+            styling: ctr.styling,
+            is_system: ctr.is_system,
+          })
+          .where('id', '=', existing.id)
+          .execute();
+      }
+    }
+
+    // Seed arrangements (idempotent — same name-only lookup as containers)
+    for (const arr of arrangements) {
+      const existing = await trx
+        .selectFrom('record_definitions')
+        .select('id')
+        .where('name', '=', arr.name)
+        .executeTakeFirst();
+
+      if (!existing) {
+        await trx.insertInto('record_definitions').values(arr).execute();
+      } else {
+        await trx
+          .updateTable('record_definitions')
+          .set({
+            definition_kind: arr.definition_kind,
+            schema_config: arr.schema_config,
+            styling: arr.styling,
+            is_system: arr.is_system,
+          })
+          .where('id', '=', existing.id)
+          .execute();
+      }
+    }
+
+    // Link Subtask → Task parent_definition_id
+    const taskDef = await trx
       .selectFrom('record_definitions')
       .select('id')
-      .where('name', '=', def.name)
-      .executeTakeFirst();
-
-    if (!existing) {
-      await db.insertInto('record_definitions').values(def).execute();
-    }
-  }
-
-  // Seed containers (idempotent — lookup by name alone to avoid unique constraint crash
-  // when a row exists with the same name but a different definition_kind)
-  for (const ctr of containers) {
-    const existing = await db
-      .selectFrom('record_definitions')
-      .select('id')
-      .where('name', '=', ctr.name)
-      .executeTakeFirst();
-
-    if (!existing) {
-      await db.insertInto('record_definitions').values(ctr).execute();
-    } else {
-      await db
-        .updateTable('record_definitions')
-        .set({
-          definition_kind: ctr.definition_kind,
-          schema_config: ctr.schema_config,
-          styling: ctr.styling,
-          is_system: ctr.is_system,
-        })
-        .where('id', '=', existing.id)
-        .execute();
-    }
-  }
-
-  // Seed arrangements (idempotent — same name-only lookup as containers)
-  for (const arr of arrangements) {
-    const existing = await db
-      .selectFrom('record_definitions')
-      .select('id')
-      .where('name', '=', arr.name)
-      .executeTakeFirst();
-
-    if (!existing) {
-      await db.insertInto('record_definitions').values(arr).execute();
-    } else {
-      await db
-        .updateTable('record_definitions')
-        .set({
-          definition_kind: arr.definition_kind,
-          schema_config: arr.schema_config,
-          styling: arr.styling,
-          is_system: arr.is_system,
-        })
-        .where('id', '=', existing.id)
-        .execute();
-    }
-  }
-
-  // Link Subtask → Task parent_definition_id
-  const taskDef = await db
-    .selectFrom('record_definitions')
-    .select('id')
-    .where('name', '=', 'Task')
-    .where('definition_kind', '=', 'action_arrangement')
-    .executeTakeFirst();
-
-  if (taskDef) {
-    await db
-      .updateTable('record_definitions')
-      .set({ parent_definition_id: taskDef.id })
-      .where('name', '=', 'Subtask')
+      .where('name', '=', 'Task')
       .where('definition_kind', '=', 'action_arrangement')
-      .execute();
-  }
+      .executeTakeFirst();
+
+    if (taskDef) {
+      await trx
+        .updateTable('record_definitions')
+        .set({ parent_definition_id: taskDef.id })
+        .where('name', '=', 'Subtask')
+        .where('definition_kind', '=', 'action_arrangement')
+        .execute();
+    }
+  });
 
   console.log('  ✓ Record definitions seeded');
 }
