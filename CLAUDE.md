@@ -23,7 +23,7 @@ Quality and consistency matter more than speed. Check references before acting.
 - **NEVER** use `--squash` when merging PRs. Always `--merge`.
 - **NEVER** amend pushed commits. Create new commits.
 - **Do NOT use Mantine.** Use bespoke atoms/molecules from `ui/atoms/` and `ui/molecules/`.
-- **Use `--ws-*` design tokens for all colors and font sizes.** Tailwind classes like `text-ws-fg`, `bg-ws-panel-bg`, `border-ws-panel-border`, `text-ws-h1` through `text-ws-micro` are defined in `index.css` `@theme`; never hardcode `text-slate-*`, `bg-white`, or raw pixel font sizes.
+- **Use `--ws-*` design tokens for all colors and font sizes** in the workspace (staff-facing app). Use `--pub-*` tokens for client-facing surfaces (intake forms, polls). Never cross the boundary. See `docs/DESIGN.md § CSS Variable Prefixes`.
 - **ALWAYS use pnpm catalog** for shared dependencies.
 
 - **NEVER use `git stash`** to work around dirty trees. Commit the changes (even to unrelated files like `todo.md` or build artifacts) so branch switching works cleanly. Stash/pop loops waste tokens and risk data loss.
