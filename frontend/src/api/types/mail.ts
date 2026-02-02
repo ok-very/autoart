@@ -128,6 +128,7 @@ export interface MailMessage {
   sender_name: string | null;
   received_at: string | null;
   body_preview: string | null;
+  body_html: string | null;
   metadata: Record<string, unknown>;
   project_id: string | null;
   promoted_at: string;
