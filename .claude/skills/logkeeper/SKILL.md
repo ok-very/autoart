@@ -2,7 +2,7 @@
 name: logkeeper
 description: Update todo.md with completed work, priority changes, new items, and housekeeping. The dedicated todo maintenance agent. Keywords todo, log, priorities, tracking, done, close, prune.
 allowed-tools: Read, Edit, Bash(git:*)
-model: haiku
+model: sonnet
 ---
 
 # /logkeeper - Todo Maintenance Agent

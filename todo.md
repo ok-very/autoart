@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-02*
+*Last Updated: 2026-02-02 (merged #320-322, added /logkeeper skill)*
 
 ## Bug List
 
@@ -108,6 +108,8 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | Add /logkeeper skill: dedicated todo.md maintenance agent with personality | PR (commit 4b6e228) |
+| — | Refactor: rename recipe → arrangement, drop orphaned action_type_definitions, seed arrangement definitions | PRs #320-322 |
 | — | UI Consistency Audit: dead code removal, font-bold→semibold, header heights h-10/h-8, `--ws-font-size-*` typography tokens, 2744 hardcoded slate/white→`--ws-*` color tokens, stale TODOs purged | PRs #313-317 |
 | — | Bugfixes: Methodology→Process rename, fieldBindings crash, Bound→Linked, LoginPage tokens, Chladni badge/loader tile | PR #312 |
 | — | Dockview v4 theme, swoopy tab corners, unified ThemedTab, tab strip + button | PRs #307-311 |
