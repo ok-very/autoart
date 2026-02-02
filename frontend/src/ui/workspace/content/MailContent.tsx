@@ -244,9 +244,8 @@ export function MailContent() {
         refetch();
     }, [refetch]);
 
-    const handleLinkClick = useCallback((emailId: string) => {
-        // TODO: Phase 4 - integrate LinkSearchCombobox
-        console.log('Link email:', emailId);
+    const handleLinkClick = useCallback((_emailId: string) => {
+        // Wire to LinkSearchCombobox
     }, []);
 
     const totalPages = data ? Math.ceil(data.total / ITEMS_PER_PAGE) : 0;

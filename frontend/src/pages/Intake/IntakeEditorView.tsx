@@ -364,15 +364,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
 
                 {activeTab === 'logic' && (
                     <div className="max-w-2xl mx-auto py-8 px-4">
-                        <div className="bg-ws-panel-bg rounded-xl border border-ws-panel-border p-8 text-center">
-                            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                                <span className="text-2xl">🔀</span>
-                            </div>
-                            <h3 className="text-ws-h2 font-semibold text-ws-text-secondary">Conditional Logic</h3>
-                            <p className="text-sm text-ws-text-secondary mt-2">
-                                Coming soon: Add conditional display rules to show or hide questions based on previous answers.
-                            </p>
-                        </div>
+                        <div className="flex-1" />
                     </div>
                 )}
 

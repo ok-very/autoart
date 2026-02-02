@@ -208,12 +208,9 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
         if (selectionType === 'email' && inspectedEmailId) {
             switch (effectiveTab) {
                 case 'email_details':
-                    // TODO: Phase 3 - EmailDetailsPanel
                     return (
-                        <div className="text-center py-8 text-ws-muted">
-                            <Mail size={24} className="mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">Email details coming soon</p>
-                            <p className="text-xs mt-1 font-mono">{inspectedEmailId}</p>
+                        <div className="p-4">
+                            <p className="text-xs font-mono text-ws-muted">{inspectedEmailId}</p>
                         </div>
                     );
                 case 'email_mappings':

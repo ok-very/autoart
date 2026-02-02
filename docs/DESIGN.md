@@ -203,9 +203,24 @@ Never animated, never bold/italic.
 
 ---
 
+## CSS Variable Prefixes
+
+Two token namespaces, one boundary:
+
+| Prefix | Scope | Examples |
+|--------|-------|---------|
+| `--ws-*` | **Workspace** — the internal app (dashboard, panels, dockview, all staff-facing UI) | `--ws-bg`, `--ws-fg`, `--ws-font-size-h1`, `--ws-panel-border` |
+| `--pub-*` | **Public** — client-facing surfaces (intake forms, polls, any externally rendered page) | `--pub-bg`, `--pub-fg`, `--pub-accent` |
+
+The workspace *is* the backend application — everything behind login. Public surfaces are generated artifacts that respondents or clients interact with; they have their own palette, independent of the workspace theme.
+
+**Never cross the boundary.** A `--pub-*` surface must not reference `--ws-*` tokens and vice versa.
+
+---
+
 ## CSS Variable Mapping
 
-The workspace theme system uses CSS custom properties defined in:
+The workspace token contract is defined in:
 `frontend/src/workspace/themes/variables.css`
 
 ### Parchment Theme Variables
