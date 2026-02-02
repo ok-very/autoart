@@ -39,6 +39,9 @@ class TransientEmail(BaseModel):
     metadata: dict[str, Any] | None = None
     ingestion_id: int | None = None
     created_at: datetime | None = None
+    triage_status: str | None = "pending"
+    triage_notes: str | None = None
+    triaged_at: datetime | None = None
 
 
 class TransientEmailList(BaseModel):
@@ -71,6 +74,32 @@ class IngestionLogList(BaseModel):
 
     entries: list[IngestionLogEntry]
     total: int
+
+
+# =============================================================================
+# TRIAGE
+# =============================================================================
+
+
+class TriageRequest(BaseModel):
+    """Request to update triage status of an email."""
+
+    status: str  # 'pending' | 'action_required' | 'informational' | 'archived'
+    notes: str | None = None
+
+
+class TriageResponse(BaseModel):
+    """Response from triage operation."""
+
+    status: str
+    email_id: str
+    triage_status: str
+    triaged_at: str | None
+
+
+# =============================================================================
+# INGESTION
+# =============================================================================
 
 
 class IngestRequest(BaseModel):

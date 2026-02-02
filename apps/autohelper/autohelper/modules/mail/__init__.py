@@ -7,6 +7,8 @@ from .schemas import (
     MailServiceStatus,
     TransientEmail,
     TransientEmailList,
+    TriageRequest,
+    TriageResponse,
 )
 from .service import MailService
 
@@ -20,4 +22,6 @@ __all__ = [
     "IngestionLogList",
     "IngestRequest",
     "IngestResponse",
+    "TriageRequest",
+    "TriageResponse",
 ]
