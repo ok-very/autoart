@@ -18,6 +18,7 @@ import { useState } from 'react';
 
 import type { Event } from '@autoart/shared';
 
+import { EventBreadcrumb } from './EventBreadcrumb';
 import { getEventFormatter } from './eventFormatters';
 
 
@@ -139,6 +140,13 @@ export function ProjectLogEventRow({
             {formatRelativeTime(event.occurredAt instanceof Date ? event.occurredAt.toISOString() : String(event.occurredAt))}
           </span>
         </div>
+
+        {/* Context breadcrumb */}
+        {event.contextId && (
+          <div className="mt-0.5">
+            <EventBreadcrumb contextId={event.contextId} />
+          </div>
+        )}
 
         {/* Action context (when not grouped) */}
         {actionTitle && event.actionId && (

@@ -8,6 +8,7 @@
 import { History, Zap } from 'lucide-react';
 
 import { useActionEvents } from '../../api/hooks';
+import { EventBreadcrumb } from '../projectLog/EventBreadcrumb';
 
 interface ActionEventsPanelProps {
     actionId: string;
@@ -58,6 +59,11 @@ export function ActionEventsPanel({ actionId }: ActionEventsPanelProps) {
                                 <div className="font-medium text-sm text-ws-fg">
                                     {event.type}
                                 </div>
+                                {event.contextId && (
+                                    <div className="mt-0.5">
+                                        <EventBreadcrumb contextId={event.contextId} />
+                                    </div>
+                                )}
                                 <div className="text-xs text-ws-muted mt-0.5">
                                     {new Date(event.occurredAt).toLocaleString()}
                                 </div>

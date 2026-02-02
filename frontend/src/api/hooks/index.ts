@@ -70,11 +70,13 @@ export {
   useProjects,
   useProjectTree,
   useNode,
+  useNodePath,
   useCreateNode,
   useUpdateNode,
   useDeleteNode,
   useMoveNode,
   useCloneNode,
+  type AncestorPathEntry,
 } from './hierarchy';
 
 // Record Definitions (Also exported via ./entities)

@@ -39,6 +39,7 @@ export const queryKeys = {
     projects: () => ['hierarchy', 'projects'] as const,
     projectTree: (projectId: string) => ['hierarchy', 'projectTree', projectId] as const,
     node: (nodeId: string) => ['hierarchy', 'node', nodeId] as const,
+    nodePath: (nodeId: string) => ['hierarchy', 'nodePath', nodeId] as const,
   },
 
   // ============================================================================

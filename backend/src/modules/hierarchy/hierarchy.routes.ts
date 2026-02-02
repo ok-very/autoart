@@ -52,6 +52,26 @@ export async function hierarchyRoutes(fastify: FastifyInstance) {
     }
   );
 
+  // Get ancestor path for a node (root-to-leaf)
+  fastify.get<{ Params: { nodeId: string } }>(
+    '/nodes/:nodeId/path',
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      try {
+        const path = await hierarchyService.getNodeAncestorPath(request.params.nodeId);
+        if (path.length === 0) {
+          return reply.code(404).send({ error: 'NOT_FOUND', message: 'Node not found' });
+        }
+        return reply.send({ path });
+      } catch (err) {
+        if (err instanceof AppError) {
+          return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+        }
+        throw err;
+      }
+    }
+  );
+
   // Create node
   fastify.post<{ Body: CreateNodeInput }>(
     '/nodes',

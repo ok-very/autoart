@@ -16,6 +16,7 @@ import { Badge } from '@autoart/ui';
 
 import type { Event } from '@autoart/shared';
 import { useActionEvents } from '../../api/hooks';
+import { EventBreadcrumb } from '../projectLog/EventBreadcrumb';
 import { getEventFormatter } from '../projectLog/eventFormatters';
 
 export interface NarrativeThreadPanelProps {
@@ -93,6 +94,11 @@ function EventRow({ event }: { event: Event }) {
                     <p className="text-sm text-ws-text-secondary truncate mt-0.5">
                         {summary}
                     </p>
+                )}
+                {event.contextId && (
+                    <div className="mt-0.5">
+                        <EventBreadcrumb contextId={event.contextId} />
+                    </div>
                 )}
                 {event.actorId && (
                     <p className="text-xs text-ws-muted mt-0.5">
