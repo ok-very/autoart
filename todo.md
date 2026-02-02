@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-02 (merged #320-322, added /logkeeper skill)*
+*Last Updated: 2026-02-02 (submitted #323-329: intake tokens, definition_kind, context breadcrumb, loading screen, AutoHelper pairing)*
 
 ## Bug List
 
@@ -28,7 +28,6 @@
 | — | Autohelper: add auth key handshake between frontend settings and backend | Security |
 | 217 | Expose interpretation HTTP routes for frontend hooks | Backend |
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
-| 235 | Add Context Breadcrumb to Events | Frontend |
 | 237 | Performance Optimization & Caching | Backend + Frontend |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 79 | Enhance Workflow View Interactions | Feature |
@@ -71,7 +70,6 @@
 | Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate — shared field component needs expanded options for where/how combobox is invoked |
 | Selection editor | "Plan" link badge system could just be a pointer to the active window name / binding group color instead of its own concept |
 | Header menu calendar link | Not wired up; could reuse same context badge pattern as selection editor |
-| AutoHelper popup menu | Needs space to insert and validate pairing code |
 | Workspace naming | "Workspace" panel collides with workspace system name — rename panel back to "Project View"; closing all panels should yield a blank area with just the plus/spawn buttons |
 | `frontend/src/intake/components/FormPage.tsx`, `Date.tsx`, `ShortAnswer.tsx` | Intake components use `--ws-*` tokens; should use `--pub-*` per design system token boundary |
 | `frontend/src/ui/sidebars/ProjectSidebar.tsx:78-80, 138-140` | `<label>` elements used as section headings without associated form controls — swap to `<p>` or `<span>` |
@@ -101,9 +99,11 @@
 | PRs | Description |
 |-----|-------------|
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
-| — | Intake `--pub-*` token boundary fix (housekeeping) |
-| — | `definition_kind` system: seed containers, remove sidebar heuristics (housekeeping) |
-| — | #235 Context Breadcrumb to Events (P1) |
+| #323 | Intake `--pub-*` token boundary fix (housekeeping) |
+| #324 | `definition_kind` system: seed containers, remove sidebar heuristics (housekeeping) |
+| #325 | #235 Context Breadcrumb to Events (P1) |
+| #326-328 | Loading screen improvements: rounded corners + wrapper, AutoArt text + pre-spinner, design tokens in React fallback |
+| #329 | AutoHelper pairing code input (housekeeping) |
 
 ---
 

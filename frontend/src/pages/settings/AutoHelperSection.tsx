@@ -24,9 +24,11 @@ import {
     Mail,
     HardDrive,
     Key,
+    Unplug,
 } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
+import { useAutoHelperInstances, useDisconnectAutoHelper } from '../../api/connections';
 import {
     useAutoHelperHealth,
     useAutoHelperStatus,
@@ -43,6 +45,7 @@ import {
     useGCStatus,
     useRunGC,
 } from '../../api/hooks/autohelper';
+import { Badge, Button, TextInput } from '@autoart/ui';
 
 // ============================================================================
 // SUB-COMPONENTS
@@ -50,15 +53,10 @@ import {
 
 function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
     return (
-        <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${ok
-                ? 'bg-emerald-50 text-emerald-700'
-                : 'bg-slate-100 text-ws-text-secondary'
-                }`}
-        >
+        <Badge variant={ok ? 'success' : 'neutral'} size="sm" className="gap-1">
             {ok ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
             {label}
-        </span>
+        </Badge>
     );
 }
 
@@ -119,17 +117,17 @@ function SmallButton({
     variant?: 'default' | 'danger' | 'primary';
     children: React.ReactNode;
 }) {
-    const base = 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors disabled:opacity-50';
-    const variants = {
-        default: 'bg-slate-100 text-ws-text-secondary hover:bg-slate-200',
-        danger: 'bg-red-50 text-red-700 hover:bg-red-100',
-        primary: 'bg-indigo-500 text-white hover:bg-indigo-600',
-    };
+    const variantMap = { default: 'secondary', danger: 'danger', primary: 'primary' } as const;
     return (
-        <button onClick={onClick} disabled={disabled || loading} className={`${base} ${variants[variant]}`}>
-            {loading && <Loader2 className="w-3 h-3 animate-spin" />}
+        <Button
+            onClick={onClick}
+            disabled={disabled || loading}
+            variant={variantMap[variant]}
+            size="xs"
+            leftSection={loading ? <Loader2 className="w-3 h-3 animate-spin" /> : undefined}
+        >
             {children}
-        </button>
+        </Button>
     );
 }
 
@@ -141,13 +139,30 @@ function PairingCodeCard({
     onGenerateCode,
     autohelperStatus,
 }: {
-    onGenerateCode: () => Promise<{ code: string; expiresAt: string }>;
+    onGenerateCode: () => Promise<{ code: string; expiresAt: string; expiresInSeconds: number }>;
     autohelperStatus: { connected: boolean };
 }) {
     const [pairingCode, setPairingCode] = useState<string | null>(null);
-    const [expiresAt, setExpiresAt] = useState<string | null>(null);
+    const [remaining, setRemaining] = useState<number>(0);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    // Countdown timer
+    useEffect(() => {
+        if (remaining <= 0) {
+            if (timerRef.current) clearInterval(timerRef.current);
+            if (pairingCode && remaining === 0) setPairingCode(null);
+            return;
+        }
+        timerRef.current = setInterval(() => {
+            setRemaining((r) => {
+                if (r <= 1) return 0;
+                return r - 1;
+            });
+        }, 1000);
+        return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    }, [remaining > 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const getErrorMessage = (err: unknown): string => {
         if (!err) return 'Failed to generate code';
@@ -174,7 +189,7 @@ function PairingCodeCard({
         try {
             const result = await onGenerateCode();
             setPairingCode(result.code);
-            setExpiresAt(result.expiresAt);
+            setRemaining(result.expiresInSeconds || 300);
         } catch (err) {
             setError(getErrorMessage(err));
         } finally {
@@ -182,10 +197,16 @@ function PairingCodeCard({
         }
     }, [onGenerateCode]);
 
+    const formatRemaining = (s: number) => {
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return `${m}:${String(sec).padStart(2, '0')}`;
+    };
+
     return (
         <CardShell
-            icon={<Key className="w-5 h-5 text-indigo-600" />}
-            iconBg="bg-indigo-100"
+            icon={<Key className="w-5 h-5 text-[var(--ws-accent)]" />}
+            iconBg="bg-[var(--ws-accent)]/10"
             title="Pairing Code"
             badge={
                 <StatusBadge
@@ -195,13 +216,13 @@ function PairingCodeCard({
             }
         >
             {autohelperStatus.connected ? (
-                <div className="flex items-center gap-2 text-sm text-emerald-600">
+                <div className="flex items-center gap-2 text-sm text-[var(--ws-color-success)]">
                     <CheckCircle2 className="w-4 h-4" />
                     AutoHelper is connected
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {pairingCode ? (
+                    {pairingCode && remaining > 0 ? (
                         <div className="bg-ws-bg border border-ws-panel-border rounded-lg p-4 text-center">
                             <p className="text-xs text-ws-text-secondary mb-2">
                                 Enter this code in AutoHelper:
@@ -209,28 +230,47 @@ function PairingCodeCard({
                             <div className="font-mono text-ws-h1 font-semibold text-ws-fg tracking-widest">
                                 {pairingCode}
                             </div>
-                            {expiresAt && (
-                                <p className="text-xs text-ws-muted mt-2">
-                                    Expires in 5 minutes
-                                </p>
-                            )}
+                            <p className="text-xs text-ws-muted mt-2">
+                                {formatRemaining(remaining)} remaining
+                            </p>
+                            <Button
+                                variant="ghost"
+                                size="xs"
+                                onClick={handleGenerateCode}
+                                disabled={isLoading}
+                                className="mt-2"
+                                leftSection={isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                            >
+                                New Code
+                            </Button>
+                        </div>
+                    ) : pairingCode && remaining === 0 ? (
+                        <div className="bg-ws-bg border border-ws-panel-border rounded-lg p-4 text-center">
+                            <p className="text-sm text-ws-text-secondary">Code expired</p>
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={handleGenerateCode}
+                                disabled={isLoading}
+                                className="mt-2"
+                                leftSection={isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                            >
+                                Generate New Code
+                            </Button>
                         </div>
                     ) : (
-                        <button
+                        <Button
                             onClick={handleGenerateCode}
                             disabled={isLoading}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-500 hover:bg-indigo-600 rounded-lg transition-colors disabled:bg-slate-300"
+                            variant="primary"
+                            size="sm"
+                            leftSection={isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
                         >
-                            {isLoading ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                                <Key className="w-4 h-4" />
-                            )}
                             Generate Pairing Code
-                        </button>
+                        </Button>
                     )}
                     {error && (
-                        <div className="flex items-center gap-2 text-sm text-red-600">
+                        <div className="flex items-center gap-2 text-sm text-[var(--ws-color-error)]">
                             <AlertCircle className="w-4 h-4" />
                             {error}
                         </div>
@@ -248,6 +288,45 @@ function PairingCodeCard({
     );
 }
 
+function ConnectedInstancesCard() {
+    const { data } = useAutoHelperInstances();
+    const disconnect = useDisconnectAutoHelper();
+
+    const instances = data?.instances ?? [];
+    if (instances.length === 0) return null;
+
+    return (
+        <CardShell
+            icon={<Server className="w-5 h-5 text-[var(--ws-accent)]" />}
+            iconBg="bg-[var(--ws-accent)]/10"
+            title="Connected Instances"
+            badge={<Badge variant="info" size="sm">{instances.length}</Badge>}
+        >
+            <ul className="divide-y divide-ws-panel-border">
+                {instances.map((inst) => (
+                    <li key={inst.displayId} className="flex items-center justify-between py-2 first:pt-0 last:pb-0">
+                        <div className="min-w-0">
+                            <p className="text-sm text-ws-fg font-medium truncate">{inst.instanceName}</p>
+                            <p className="text-xs text-ws-text-secondary">
+                                Connected {new Date(inst.connectedAt).toLocaleDateString()}
+                            </p>
+                        </div>
+                        <Button
+                            variant="danger"
+                            size="xs"
+                            onClick={() => disconnect.mutate(inst.displayId)}
+                            disabled={disconnect.isPending}
+                            leftSection={disconnect.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Unplug className="w-3 h-3" />}
+                        >
+                            Disconnect
+                        </Button>
+                    </li>
+                ))}
+            </ul>
+        </CardShell>
+    );
+}
+
 function ServiceStatusCard() {
     const { data: status } = useAutoHelperStatus();
     const { data: indexStatus } = useIndexStatus();
@@ -259,8 +338,8 @@ function ServiceStatusCard() {
 
     return (
         <CardShell
-            icon={<Server className="w-5 h-5 text-indigo-600" />}
-            iconBg="bg-indigo-100"
+            icon={<Server className="w-5 h-5 text-[var(--ws-accent)]" />}
+            iconBg="bg-[var(--ws-accent)]/10"
             title="Service Status"
             badge={<StatusBadge ok={dbOk} label={dbOk ? 'Connected' : 'DB offline'} />}
         >
@@ -296,7 +375,7 @@ function ServiceStatusCard() {
                     </SmallButton>
                 ) : (
                     <div className="flex items-center gap-2">
-                        <span className="text-xs text-red-600">Rebuild entire index?</span>
+                        <span className="text-xs text-[var(--ws-color-error)]">Rebuild entire index?</span>
                         <SmallButton
                             onClick={() => {
                                 rebuild.mutate();
@@ -367,56 +446,56 @@ function CollectorCard() {
 
     return (
         <CardShell
-            icon={<FolderSearch className="w-5 h-5 text-amber-600" />}
-            iconBg="bg-amber-100"
+            icon={<FolderSearch className="w-5 h-5 text-[var(--ws-color-warning)]" />}
+            iconBg="bg-[var(--ws-color-warning)]/10"
             title="Collector"
             badge={active ? <StatusBadge ok label="Running" /> : undefined}
         >
             <FieldRow label="URL">
-                <input
+                <TextInput
                     type="url"
+                    size="sm"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder="https://example.com/gallery"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
             </FieldRow>
             <FieldRow label="Output path">
-                <input
-                    type="text"
+                <TextInput
+                    size="sm"
                     value={outputPath}
                     onChange={(e) => setOutputPath(e.target.value)}
                     placeholder="(default)"
-                    className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
             </FieldRow>
             <FieldRow label="Crawl depth">
-                <input
+                <TextInput
                     type="number"
-                    value={crawlDepth}
+                    size="sm"
+                    value={String(crawlDepth)}
                     onChange={(e) => setCrawlDepth(e.target.value ? Number(e.target.value) : '')}
-                    className="w-24 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-24"
                 />
             </FieldRow>
 
             <div className="grid grid-cols-2 gap-4">
                 <FieldRow label="Min width">
-                    <input type="number" value={minWidth} onChange={(e) => setMinWidth(e.target.value ? Number(e.target.value) : '')} className="w-24 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <TextInput type="number" size="sm" value={String(minWidth)} onChange={(e) => setMinWidth(e.target.value ? Number(e.target.value) : '')} className="w-24" />
                 </FieldRow>
                 <FieldRow label="Max width">
-                    <input type="number" value={maxWidth} onChange={(e) => setMaxWidth(e.target.value ? Number(e.target.value) : '')} className="w-24 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <TextInput type="number" size="sm" value={String(maxWidth)} onChange={(e) => setMaxWidth(e.target.value ? Number(e.target.value) : '')} className="w-24" />
                 </FieldRow>
                 <FieldRow label="Min height">
-                    <input type="number" value={minHeight} onChange={(e) => setMinHeight(e.target.value ? Number(e.target.value) : '')} className="w-24 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <TextInput type="number" size="sm" value={String(minHeight)} onChange={(e) => setMinHeight(e.target.value ? Number(e.target.value) : '')} className="w-24" />
                 </FieldRow>
                 <FieldRow label="Max height">
-                    <input type="number" value={maxHeight} onChange={(e) => setMaxHeight(e.target.value ? Number(e.target.value) : '')} className="w-24 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <TextInput type="number" size="sm" value={String(maxHeight)} onChange={(e) => setMaxHeight(e.target.value ? Number(e.target.value) : '')} className="w-24" />
                 </FieldRow>
                 <FieldRow label="Min size (KB)">
-                    <input type="number" value={minFilesize} onChange={(e) => setMinFilesize(e.target.value ? Number(e.target.value) : '')} className="w-24 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <TextInput type="number" size="sm" value={String(minFilesize)} onChange={(e) => setMinFilesize(e.target.value ? Number(e.target.value) : '')} className="w-24" />
                 </FieldRow>
                 <FieldRow label="Max size (KB)">
-                    <input type="number" value={maxFilesize} onChange={(e) => setMaxFilesize(e.target.value ? Number(e.target.value) : '')} className="w-24 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <TextInput type="number" size="sm" value={String(maxFilesize)} onChange={(e) => setMaxFilesize(e.target.value ? Number(e.target.value) : '')} className="w-24" />
                 </FieldRow>
             </div>
 
@@ -435,14 +514,14 @@ function CollectorCard() {
             </div>
 
             {invoke.isSuccess && (
-                <p className="text-xs text-emerald-600">
+                <p className={`text-xs ${invoke.data?.success ? 'text-[var(--ws-color-success)]' : 'text-[var(--ws-color-error)]'}`}>
                     {invoke.data?.success
                         ? `Done — ${invoke.data.artifacts?.length ?? 0} artifacts collected`
                         : `Failed: ${invoke.data?.error ?? 'unknown error'}`}
                 </p>
             )}
             {invoke.isError && (
-                <p className="text-xs text-red-600">Error: {(invoke.error as Error).message}</p>
+                <p className="text-xs text-[var(--ws-color-error)]">Error: {(invoke.error as Error).message}</p>
             )}
         </CardShell>
     );
@@ -478,15 +557,15 @@ function MailCard() {
 
     return (
         <CardShell
-            icon={<Mail className="w-5 h-5 text-blue-600" />}
-            iconBg="bg-blue-100"
+            icon={<Mail className="w-5 h-5 text-[var(--ws-color-info)]" />}
+            iconBg="bg-[var(--ws-color-info)]/10"
             title="Mail"
             badge={<StatusBadge ok={running} label={running ? 'Running' : 'Stopped'} />}
         >
             <FieldRow label="Enabled">
                 <button
                     onClick={handleToggleEnabled}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enabled ? 'bg-indigo-500' : 'bg-slate-300'
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enabled ? 'bg-[var(--ws-accent)]' : 'bg-[var(--ws-panel-border)]'
                         }`}
                 >
                     <span
@@ -496,11 +575,12 @@ function MailCard() {
                 </button>
             </FieldRow>
             <FieldRow label="Poll interval (s)">
-                <input
+                <TextInput
                     type="number"
-                    value={pollInterval}
+                    size="sm"
+                    value={String(pollInterval)}
                     onChange={(e) => setPollInterval(e.target.value ? Number(e.target.value) : '')}
-                    className="w-24 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-24"
                 />
             </FieldRow>
             <FieldRow label="Output path">
@@ -552,7 +632,7 @@ function RootsCard() {
     return (
         <CardShell
             icon={<HardDrive className="w-5 h-5 text-ws-text-secondary" />}
-            iconBg="bg-slate-100"
+            iconBg="bg-[var(--ws-bg)]"
             title="Roots"
         >
             {roots.length === 0 ? (
@@ -564,7 +644,7 @@ function RootsCard() {
                             <span className="text-sm text-ws-fg font-mono truncate flex-1">{root}</span>
                             <button
                                 onClick={() => handleRemove(root)}
-                                className="opacity-0 group-hover:opacity-100 text-ws-muted hover:text-red-500 transition-opacity"
+                                className="opacity-0 group-hover:opacity-100 text-ws-muted hover:text-[var(--ws-color-error)] transition-opacity"
                             >
                                 <X className="w-4 h-4" />
                             </button>
@@ -574,13 +654,13 @@ function RootsCard() {
             )}
 
             <div className="flex gap-2 pt-2">
-                <input
-                    type="text"
+                <TextInput
+                    size="sm"
                     value={newRoot}
                     onChange={(e) => setNewRoot(e.target.value)}
                     placeholder="/path/to/files"
                     onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                    className="flex-1 px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="flex-1"
                 />
                 <SmallButton onClick={handleAdd} disabled={!newRoot.trim()}>
                     <Plus className="w-3 h-3" /> Add
@@ -599,7 +679,7 @@ function AdvancedCard() {
     return (
         <CardShell
             icon={<Database className="w-5 h-5 text-ws-text-secondary" />}
-            iconBg="bg-slate-100"
+            iconBg="bg-[var(--ws-bg)]"
             title="Advanced"
         >
             <FieldRow label="Host">
@@ -634,10 +714,10 @@ function AdvancedCard() {
                     </SmallButton>
                 </div>
                 {runGC.isSuccess && (
-                    <p className="text-xs text-emerald-600 mt-1">GC started</p>
+                    <p className="text-xs text-[var(--ws-color-success)] mt-1">GC started</p>
                 )}
                 {runGC.isError && (
-                    <p className="text-xs text-red-600 mt-1">
+                    <p className="text-xs text-[var(--ws-color-error)] mt-1">
                         {(runGC.error as Error).message}
                     </p>
                 )}
@@ -651,23 +731,26 @@ function AdvancedCard() {
 // ============================================================================
 
 interface AutoHelperSectionProps {
-    onGenerateCode?: () => Promise<{ code: string; expiresAt: string }>;
+    onGenerateCode?: () => Promise<{ code: string; expiresAt: string; expiresInSeconds: number }>;
     autohelperStatus?: { connected: boolean };
 }
 
 export function AutoHelperSection({
-    onGenerateCode = async () => ({ code: '', expiresAt: '' }),
+    onGenerateCode = async () => ({ code: '', expiresAt: '', expiresInSeconds: 300 }),
     autohelperStatus = { connected: false },
 }: AutoHelperSectionProps) {
     const { isError: healthError, isLoading: healthLoading } = useAutoHelperHealth();
 
-    // Pairing code card always renders — it's a backend operation,
-    // works regardless of AutoHelper connectivity.
-    const pairingCard = (
-        <PairingCodeCard
-            onGenerateCode={onGenerateCode}
-            autohelperStatus={autohelperStatus}
-        />
+    // Pairing and instance cards always render — they're backend operations,
+    // work regardless of AutoHelper connectivity.
+    const pairingCards = (
+        <>
+            <PairingCodeCard
+                onGenerateCode={onGenerateCode}
+                autohelperStatus={autohelperStatus}
+            />
+            <ConnectedInstancesCard />
+        </>
     );
 
     if (healthLoading) {
@@ -677,7 +760,7 @@ export function AutoHelperSection({
                     <h2 className="text-ws-h2 font-semibold text-ws-fg">AutoHelper</h2>
                     <p className="text-sm text-ws-text-secondary mt-1">Local service management</p>
                 </div>
-                {pairingCard}
+                {pairingCards}
                 <div className="flex items-center gap-2 text-ws-muted">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="text-sm">Connecting to AutoHelper...</span>
@@ -693,12 +776,12 @@ export function AutoHelperSection({
                     <h2 className="text-ws-h2 font-semibold text-ws-fg">AutoHelper</h2>
                     <p className="text-sm text-ws-text-secondary mt-1">Local service management</p>
                 </div>
-                {pairingCard}
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                    <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                {pairingCards}
+                <div className="bg-[var(--ws-color-warning)]/5 border border-[var(--ws-color-warning)]/20 rounded-xl p-4 flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-[var(--ws-color-warning)] flex-shrink-0 mt-0.5" />
                     <div>
-                        <p className="text-sm font-medium text-amber-800">AutoHelper is not running</p>
-                        <p className="text-xs text-amber-600 mt-1">
+                        <p className="text-sm font-medium text-ws-fg">AutoHelper is not running</p>
+                        <p className="text-xs text-[var(--ws-color-warning)] mt-1">
                             Start the service to manage indexing, mail, and collector settings.
                         </p>
                     </div>
@@ -714,7 +797,7 @@ export function AutoHelperSection({
                 <p className="text-sm text-ws-text-secondary mt-1">Local service management</p>
             </div>
 
-            {pairingCard}
+            {pairingCards}
             <ServiceStatusCard />
             <CollectorCard />
             <MailCard />
