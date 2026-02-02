@@ -5,22 +5,25 @@
 ## Bug List
 
 **Active blocking:**
-- **AutoHelper tray menu shows "Paired" on launch without pairing** — stale state from local config, no backend validation on tray init
+- **Dropdowns rendering empty frames** — glassmorphism styling applied but content not visible (Menu/Dropdown atoms broken after recent changes, intermittent)
+- **Projects button in header doesn't spawn new panel** — confirmed not working (may be feature gap, not wiring issue)
+- **Project view "columns" sidebar not functioning** — no project selection mechanism, add button calls non-existent overlay/handler
+- **AutoHelper pairing times out** — service is open but pairing request never completes (frontend or AutoHelper service issue)
 - **dompurify throws blocking Vite build errors** — introduced in #352, breaks production builds
 
 **Needs manual verification:**
 - Login fails with demo account credentials — `seed:dev` creates the user, but default `db:rebuild` workflow may not
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
 - "Save current" in menu doesn't activate save workspace prompt — handler chain exists, not confirmed working
-- Project button in header doesn't spawn new Project container — may be a feature gap, not a misunderstanding
 - **AutoHelper sessions lost on backend restart** — sessions stored in-memory; backend restart wipes them but AutoHelper tray still shows "Paired" (reads local config). Frontend shows disconnected. Workaround: re-pair or delete `autoart_session_id` from config. Fix: persist to DB. (#340)
 
 **UX polish:**
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
 
-**Confirmed resolved (PRs #337-339):**
+**Confirmed resolved (PRs #337-339, #353):**
 - ~~Selection Inspector stuck open~~ — close button added with `onClose` prop, wired through dockview panel (PR #338)
 - ~~Panel spawner menu opaque background~~ — glassmorphism (`backdrop-blur-sm` + translucent bg) on Menu + Dropdown atoms (PR #337)
+- ~~AutoHelper tray menu shows "Paired" on launch without pairing~~ — poll-loop validation caches backend session check, menu reads cached bool (PR #353)
 - ~~Applications dropdown bleeds into workspace tabs~~ — header divider added between project selector and nav links (PR #339)
 - ~~Panel spawn visibility issue~~ — `setActive()` called on newly spawned panels via `requestAnimationFrame` (PR #339)
 - ~~Workspace/Fields subtabs have no active accent~~ — tab active state migrated from `text-blue-600` to `--ws-accent` token (PR #338)
@@ -78,6 +81,10 @@
 
 | File | Issue |
 |------|-------|
+| Project Log view | Missing project sidebar (inconsistent with other project-scoped views) |
+| Records view | Align layout with Fields view: definitions filter + search bar, no redundant dropdown title |
+| `packages/ui/src/molecules/SegmentedControl.tsx` | Still using glassmorphism (`bg-[var(--ws-tabstrip-bg,#f1f5f9)]` with translucent styling) — not in DESIGN.md, should be solid background |
+| Intake forms + poll deployments | Need verification: localhost vs production endpoint config (forms and poll submit endpoints may be hardcoded or misconfigured for dev vs prod) |
 | SelectionInspector / Record view | Handle `definition_kind` system for filtering/classification — arrangement vs container vs record kinds should drive what's shown and how |
 | ~~Selection editor / Schema editor~~ | ~~"Quick create" pin toggle removed (PR #339)~~ |
 | Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate — shared field component needs expanded options for where/how combobox is invoked |
