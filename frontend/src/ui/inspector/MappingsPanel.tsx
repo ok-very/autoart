@@ -10,6 +10,7 @@
  */
 
 import { clsx } from 'clsx';
+import DOMPurify from 'dompurify';
 import {
     Link2,
     Mail,
@@ -23,6 +24,7 @@ import {
     Plus,
     MoreHorizontal,
     Unlink,
+    ChevronRight,
 } from 'lucide-react';
 import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 
@@ -33,11 +35,13 @@ import { LinkSearchCombobox } from './LinkSearchCombobox';
 import {
     useActionMappings,
     useRecordMappings,
-    toMappingEntries,
     type MappingStatus,
     type MappingEntry,
 } from '../../api/hooks/mappings';
+import { useMailLinksForTarget, useUnlinkEmail } from '../../api/hooks/mailMessages';
+import type { MailLinkWithMessage } from '../../api/types/mail';
 import { useUIStore } from '../../stores/uiStore';
+import { formatTimeAgo } from '../../utils/formatTimeAgo';
 
 export interface MappingsPanelProps {
     /** Action ID to show mappings for (mutually exclusive with recordId) */
@@ -135,7 +139,7 @@ function MappingRow({
             {/* Content */}
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-ws-text-secondary truncate">
+                    <span className="text-sm font-medium text-ws-text-primary truncate">
                         {entry.title}
                     </span>
                     {entry.mode && (
@@ -144,9 +148,15 @@ function MappingRow({
                         </Badge>
                     )}
                 </div>
-                <p className="text-xs text-ws-text-secondary capitalize">
-                    {entry.type}
-                </p>
+                {entry.subtitle ? (
+                    <p className="text-xs text-ws-text-secondary truncate">
+                        {entry.subtitle}
+                    </p>
+                ) : (
+                    <p className="text-xs text-ws-text-secondary capitalize">
+                        {entry.type}
+                    </p>
+                )}
             </div>
 
             {/* Status indicator */}
@@ -219,6 +229,134 @@ function SectionHeader({
 }
 
 /**
+ * DOMPurify config for email HTML — strip elements that could escape
+ * the container or hijack the page, but allow inline styles (emails
+ * depend on them for layout).
+ */
+const PURIFY_CONFIG = {
+    FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'form'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick'],
+    ALLOW_ARIA_ATTR: false,
+    ADD_ATTR: ['target'],
+};
+
+/**
+ * Email mapping row with expand/collapse and HTML rendering.
+ * File-local — only used in ActionMappingsPanel.
+ */
+function EmailMappingRow({
+    link,
+    onUnlink,
+}: {
+    link: MailLinkWithMessage;
+    onUnlink?: (link: MailLinkWithMessage) => void;
+}) {
+    const [expanded, setExpanded] = useState(false);
+    const { message } = link;
+
+    const receivedLabel = message.received_at
+        ? formatTimeAgo(message.received_at)
+        : '';
+
+    return (
+        <div>
+            {/* Collapsed header row */}
+            <div
+                className={clsx(
+                    'flex items-center gap-3 px-3 py-2 rounded-lg transition-colors cursor-pointer',
+                    'hover:bg-[var(--ws-bg)]',
+                    expanded && 'bg-[var(--ws-row-expanded-bg)]',
+                )}
+                onClick={() => setExpanded((v) => !v)}
+            >
+                {/* Mail icon */}
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                    <Mail size={16} className="text-[var(--ws-text-secondary)]" />
+                </div>
+
+                {/* Subject + sender */}
+                <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-[var(--ws-text-primary)] truncate block">
+                        {message.subject || '(no subject)'}
+                    </span>
+                    <span className="text-xs text-[var(--ws-text-secondary)] truncate block">
+                        {message.sender_name || message.sender || 'Unknown sender'}
+                    </span>
+                </div>
+
+                {/* Date */}
+                {receivedLabel && (
+                    <span className="text-xs text-[var(--ws-text-secondary)] shrink-0">
+                        {receivedLabel}
+                    </span>
+                )}
+
+                {/* Chevron */}
+                <ChevronRight
+                    size={12}
+                    className={clsx(
+                        'text-[var(--ws-muted-fg)] shrink-0 transition-transform duration-150',
+                        expanded && 'rotate-90',
+                    )}
+                />
+            </div>
+
+            {/* Expanded detail */}
+            <div
+                className={clsx(
+                    'grid transition-[grid-template-rows] duration-150 ease-out',
+                    expanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
+                )}
+            >
+                <div
+                    className={clsx(
+                        'overflow-hidden transition-opacity duration-150 ease-out',
+                        expanded ? 'opacity-100' : 'opacity-0',
+                    )}
+                >
+                    <div className="px-3 pb-3 pt-1 ml-11 space-y-2">
+                        {/* Body content */}
+                        {message.body_html ? (
+                            <div
+                                className={clsx(
+                                    'text-xs text-[var(--ws-text-secondary)] max-h-60 overflow-auto',
+                                    'rounded border border-[var(--ws-panel-border)] p-2',
+                                    '[&_*]:max-w-full [&_img]:max-w-full [&_table]:max-w-full',
+                                    '[&_*]:!position-[static] [&_*]:!z-auto',
+                                )}
+                                dangerouslySetInnerHTML={{
+                                    __html: DOMPurify.sanitize(message.body_html, PURIFY_CONFIG),
+                                }}
+                            />
+                        ) : message.body_preview ? (
+                            <p className="text-xs text-[var(--ws-text-secondary)] whitespace-pre-line line-clamp-3">
+                                {message.body_preview}
+                            </p>
+                        ) : null}
+
+                        {/* Unlink */}
+                        {onUnlink && (
+                            <div className="flex justify-end">
+                                <button
+                                    className="text-xs text-[var(--ws-text-secondary)] hover:text-[var(--ws-color-error)] transition-colors inline-flex items-center gap-1"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onUnlink(link);
+                                    }}
+                                >
+                                    <Unlink size={10} />
+                                    Unlink
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/**
  * MappingsPanel for Action
  */
 function ActionMappingsPanel({
@@ -230,14 +368,31 @@ function ActionMappingsPanel({
 }) {
     const { inspectRecord, inspectAction, openOverlay } = useUIStore();
     const { data: mappings, isLoading, error } = useActionMappings(actionId);
+    const { data: mailLinks } = useMailLinksForTarget('action', actionId);
+    const unlinkEmail = useUnlinkEmail();
 
     // Link picker state
     const [showLinkPicker, setShowLinkPicker] = useState(false);
     const linkButtonRef = useRef<HTMLButtonElement>(null);
 
     const entries = useMemo(() => {
-        if (!mappings) return [];
-        return toMappingEntries(mappings);
+        const recordEntries: MappingEntry[] = [];
+
+        if (mappings) {
+            for (const ref of mappings.references) {
+                if (ref.source_record_id) {
+                    recordEntries.push({
+                        id: ref.id,
+                        type: 'record',
+                        title: ref.target_field_key || 'Record',
+                        status: 'synced',
+                        mode: ref.mode,
+                    });
+                }
+            }
+        }
+
+        return recordEntries;
     }, [mappings]);
 
     const handleNavigate = useCallback((entry: MappingEntry) => {
@@ -263,6 +418,21 @@ function ActionMappingsPanel({
             },
         });
     }, [actionId, openOverlay]);
+
+    const handleUnlinkEmail = useCallback((link: MailLinkWithMessage) => {
+        openOverlay('confirm-unlink', {
+            sourceType: 'action',
+            sourceId: actionId,
+            targetType: 'email',
+            targetId: link.id,
+            targetTitle: link.message.subject || '(no subject)',
+            onConfirm: () =>
+                unlinkEmail.mutateAsync({
+                    messageId: link.mail_message_id,
+                    linkId: link.id,
+                }),
+        });
+    }, [actionId, openOverlay, unlinkEmail]);
 
     const handleLinkSelect = useCallback((type: 'action' | 'record', id: string) => {
         // TODO: Call useCreateMapping mutation
@@ -300,7 +470,9 @@ function ActionMappingsPanel({
         );
     }
 
-    if (entries.length === 0) {
+    const hasAnyEntries = entries.length > 0 || (mailLinks?.length ?? 0) > 0;
+
+    if (!hasAnyEntries) {
         return (
             <div className={clsx('text-center py-8 text-ws-muted', className)}>
                 <Link2 size={24} className="mx-auto mb-2 opacity-50" />
@@ -330,7 +502,6 @@ function ActionMappingsPanel({
 
     // Group by type
     const recordEntries = entries.filter((e) => e.type === 'record');
-    const emailEntries = entries.filter((e) => e.type === 'email');
     const actionEntries = entries.filter((e) => e.type === 'action');
 
     return (
@@ -373,16 +544,15 @@ function ActionMappingsPanel({
             )}
 
             {/* Emails section */}
-            {emailEntries.length > 0 && (
+            {(mailLinks?.length ?? 0) > 0 && (
                 <div>
-                    <SectionHeader title="Emails" count={emailEntries.length} icon={Mail} />
+                    <SectionHeader title="Emails" count={mailLinks!.length} icon={Mail} />
                     <div className="space-y-1">
-                        {emailEntries.map((entry) => (
-                            <MappingRow
-                                key={entry.id}
-                                entry={entry}
-                                onNavigate={handleNavigate}
-                                onUnlink={handleUnlink}
+                        {mailLinks!.map((link) => (
+                            <EmailMappingRow
+                                key={link.id}
+                                link={link}
+                                onUnlink={handleUnlinkEmail}
                             />
                         ))}
                     </div>
