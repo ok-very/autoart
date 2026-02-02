@@ -13,7 +13,6 @@
 **UX polish:**
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
 - Panel spawner menu (+ button dropdown) has opaque background — would benefit from glassmorphism (`backdrop-blur` + translucent bg) so the workspace context bleeds through. [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20010446.png) · [Reference: glassmorphism with Tailwind](https://www.epicweb.dev/tips/creating-glassmorphism-effects-with-tailwind-css)
-- **Header spacing too tight** — nav items cramped, insufficient breathing room between Projects/Desk/Project dropdown/Workbench/Applications/Composer/Registry links. [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20014118.png)
 - **Applications dropdown bleeds into workspace tabs** — no visual separation between header and tab strip, Applications menu projects downward and collides with tab area. [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20014118.png)
 - **Panel spawn visibility issue** — newly spawned panels not stacking correctly or not visible from spawn action (z-index/layout layering suspect). [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20013836.png)
 - **Workspace/Fields subtabs have no active accent** — selected tab (e.g. "Fields") is indistinguishable from unselected, no underline or color differentiation; tabs are functionally invisible. [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20013836.png)
@@ -21,6 +20,7 @@
 **Confirmed resolved:**
 - ~~Action definitions empty after migration~~ — definitions seeded in new `record_definitions` system with `definition_kind`
 - ~~Calendar link in header menu not wired up~~ — fully implemented (PR #271)
+- ~~Header spacing too tight~~ — widened nav gap and margin in Header.tsx (PR #335)
 
 ---
 
