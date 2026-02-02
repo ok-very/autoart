@@ -10,7 +10,12 @@
 - "Save current" in menu doesn't activate save workspace prompt — handler chain exists, not confirmed working
 - Project button in header doesn't spawn new Project container — may be a feature gap, not a misunderstanding
 
+**Review feedback (PRs #334-335):**
+- `apps/autohelper/autohelper/modules/pairing/router.py` — `/pair` endpoint declared `async` but performs blocking network+disk I/O (`requests.post`, `ConfigStore` file ops); should be sync `def` so FastAPI runs it in a threadpool instead of starving the event loop
+- `frontend/src/pages/settings/AutoHelperSection.tsx` — disconnect mutation `isPending` is shared across all instance rows; clicking one Disconnect button shows spinners on every row. Track `disconnectingId` locally to scope the spinner to the affected row
+
 **UX polish:**
+- **Selection Inspector stuck open** — can be spawned repeatedly but has no close/dismiss affordance; if it can be called over and over it has to be closeable over and over
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
 - Panel spawner menu (+ button dropdown) has opaque background — would benefit from glassmorphism (`backdrop-blur` + translucent bg) so the workspace context bleeds through. [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20010446.png) · [Reference: glassmorphism with Tailwind](https://www.epicweb.dev/tips/creating-glassmorphism-effects-with-tailwind-css)
 - **Applications dropdown bleeds into workspace tabs** — no visual separation between header and tab strip, Applications menu projects downward and collides with tab area. [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20014118.png)
