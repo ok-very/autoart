@@ -34,7 +34,7 @@ class UnpairResponse(BaseModel):
 
 
 @router.post("", response_model=PairResponse)
-async def pair(body: PairRequest) -> PairResponse:
+def pair(body: PairRequest) -> PairResponse:
     """Exchange a pairing code for a session, persist it, and propagate."""
     try:
         settings = get_settings()
@@ -75,7 +75,7 @@ async def pair(body: PairRequest) -> PairResponse:
 
 
 @router.post("/unpair", response_model=UnpairResponse)
-async def unpair() -> UnpairResponse:
+def unpair() -> UnpairResponse:
     """Invalidate session server-side, then clear local state."""
     store = ConfigStore()
     cfg = store.load()

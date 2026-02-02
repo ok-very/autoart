@@ -208,15 +208,20 @@ function ConnectedInstancesCard() {
     const { data } = useAutoHelperInstances();
     const disconnect = useDisconnectAutoHelper();
     const unpair = useUnpairAutoHelper();
+    const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
 
     const instances = data?.instances ?? [];
     if (instances.length === 0) return null;
 
     const handleDisconnect = useCallback((displayId: string) => {
+        setDisconnectingId(displayId);
         disconnect.mutate(displayId, {
             onSuccess: () => {
                 // Fire-and-forget: tell the Python app to clear its session
                 unpair.mutate();
+            },
+            onSettled: () => {
+                setDisconnectingId(null);
             },
         });
     }, [disconnect, unpair]);
@@ -242,7 +247,7 @@ function ConnectedInstancesCard() {
                             size="xs"
                             onClick={() => handleDisconnect(inst.displayId)}
                             disabled={disconnect.isPending}
-                            leftSection={disconnect.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Unplug className="w-3 h-3" />}
+                            leftSection={disconnectingId === inst.displayId ? <Loader2 className="w-3 h-3 animate-spin" /> : <Unplug className="w-3 h-3" />}
                         >
                             Disconnect
                         </Button>
