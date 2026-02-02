@@ -106,7 +106,7 @@ export function UserMentionInput({
 
     // Handle selecting a user
     const handleSelectUser = useCallback((user: UserType) => {
-        onChange({ id: user.id, name: user.name, email: user.email });
+        onChange({ id: user.id, name: user.name, email: user.email, avatar_url: user.avatar_url });
         setInputValue('');
         setIsOpen(false);
     }, [onChange]);
@@ -203,9 +203,13 @@ export function UserMentionInput({
                                 onClick={() => handleSelectUser(user)}
                                 className="w-full px-3 py-2 text-left hover:bg-blue-50 transition-colors flex items-center gap-2"
                             >
-                                <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600">
-                                    <User size={16} />
-                                </div>
+                                {user.avatar_url ? (
+                                    <img src={user.avatar_url} alt={user.name} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                                ) : (
+                                    <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 shrink-0">
+                                        <User size={16} />
+                                    </div>
+                                )}
                                 <div className="flex-1 min-w-0">
                                     <div className="text-sm font-medium text-slate-800 truncate">{user.name}</div>
                                     <div className="text-xs text-slate-500 truncate">{user.email}</div>

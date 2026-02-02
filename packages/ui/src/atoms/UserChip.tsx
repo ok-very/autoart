@@ -8,6 +8,8 @@ interface UserValue {
     id?: string;
     name?: string;
     email?: string;
+    avatar_url?: string;
+    role?: string;
 }
 
 interface UserChipProps {
@@ -37,6 +39,8 @@ function parseUserValue(value: unknown): UserValue | null {
             id: obj.id as string | undefined,
             name: obj.name as string | undefined,
             email: obj.email as string | undefined,
+            avatar_url: obj.avatar_url as string | undefined,
+            role: obj.role as string | undefined,
         };
     }
 
@@ -98,23 +102,42 @@ export function UserChip({
         return <div className={clsx('text-xs text-slate-400', className)}>-</div>;
     }
 
+    // Avatar element with img fallback to initials
+    const [imgError, setImgError] = useState(false);
+    const avatarUrl = user?.avatar_url;
+    const showImg = avatarUrl && !imgError;
+
     // Compact mode for table cells - just show avatar with tooltip
     if (compact) {
         return (
             <div className={clsx('flex items-center justify-center', className)}>
                 <PopoverRoot open={showMenu} onOpenChange={setShowMenu}>
                     <PopoverTrigger asChild>
-                        <div
-                            className={clsx(
-                                'w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold',
-                                'flex items-center justify-center border border-white shadow-sm',
-                                'cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all'
-                            )}
-                            title={displayName}
-                            onContextMenu={handleContextMenu}
-                        >
-                            {initials || displayName.slice(0, 2).toUpperCase()}
-                        </div>
+                        {showImg ? (
+                            <img
+                                src={avatarUrl}
+                                alt={displayName}
+                                onError={() => setImgError(true)}
+                                className={clsx(
+                                    'w-6 h-6 rounded-full object-cover border border-white shadow-sm',
+                                    'cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all'
+                                )}
+                                title={displayName}
+                                onContextMenu={handleContextMenu}
+                            />
+                        ) : (
+                            <div
+                                className={clsx(
+                                    'w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold',
+                                    'flex items-center justify-center border border-white shadow-sm',
+                                    'cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all'
+                                )}
+                                title={displayName}
+                                onContextMenu={handleContextMenu}
+                            >
+                                {initials || displayName.slice(0, 2).toUpperCase()}
+                            </div>
+                        )}
                     </PopoverTrigger>
                     <PopoverContent className="min-w-[180px] p-0" align="start" sideOffset={8}>
                         <UserContextMenuContent
@@ -182,11 +205,22 @@ function UserContextMenuContent({
             {/* Header */}
             <div className="px-3 py-1.5 border-b border-slate-100">
                 <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center justify-center">
-                        {displayName.slice(0, 2).toUpperCase()}
-                    </div>
+                    {user?.avatar_url ? (
+                        <img src={user.avatar_url} alt={displayName} className="w-6 h-6 rounded-full object-cover" />
+                    ) : (
+                        <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center justify-center">
+                            {displayName.slice(0, 2).toUpperCase()}
+                        </div>
+                    )}
                     <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-slate-800 truncate">{displayName}</div>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-medium text-slate-800 truncate">{displayName}</span>
+                            {user?.role && (
+                                <span className="text-[9px] font-bold uppercase px-1 py-0.5 bg-slate-100 text-slate-500 rounded">
+                                    {user.role}
+                                </span>
+                            )}
+                        </div>
                         {user?.email && user.email !== displayName && (
                             <div className="text-[10px] text-slate-500 truncate">{user.email}</div>
                         )}
