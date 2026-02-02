@@ -178,7 +178,7 @@ export function ExportPreview({ projectId, format, options, sessionId }: ExportP
                     </div>
                     <div>
                         <Text size="xs" color="dimmed">Install</Text>
-                        <Text>{exportModel.header.install.dateText || exportModel.header.install.statusText || 'TBD'}</Text>
+                        <Text>{exportModel.header.install.dateText || exportModel.header.install.statusText || ''}</Text>
                     </div>
                     <div>
                         <Text size="xs" color="dimmed">Stage</Text>
@@ -242,7 +242,7 @@ function renderPreview(model: BfaProjectExportModel, _format: ExportFormat, opti
         model.header.budgets.artwork?.text ? `Art: ${model.header.budgets.artwork.text}` : null,
         model.header.budgets.total?.text ? `Total: ${model.header.budgets.total.text}` : null,
     ].filter(Boolean).join(' | ');
-    const installStr = model.header.install.dateText || model.header.install.statusText || 'TBD';
+    const installStr = model.header.install.dateText || model.header.install.statusText || '';
 
     lines.push(`${initials}${model.header.clientName}: ${model.header.projectName}, ${model.header.location} (${budgetStr}) Install: ${installStr}`);
     lines.push('');

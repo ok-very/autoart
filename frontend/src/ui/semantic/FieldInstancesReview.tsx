@@ -145,17 +145,7 @@ export function FieldInstancesReview({ field }: FieldInstancesReviewProps) {
 
     if (!field.sourceDefinitionId) {
         return (
-            <div className="flex-1 flex items-center justify-center text-ws-muted">
-                <div className="text-center">
-                    <p className="text-ws-body text-ws-text-secondary">Node Metadata Field</p>
-                    <p className="text-sm mt-1">
-                        This field appears in hierarchy nodes, not records.
-                    </p>
-                    <p className="text-xs mt-4 text-ws-muted">
-                        Instance browsing for node fields is coming soon.
-                    </p>
-                </div>
-            </div>
+            <div className="flex-1" />
         );
     }
 

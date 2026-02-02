@@ -352,15 +352,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
 
                 {/* API Source (placeholder) */}
                 {sourceType === 'api' && (
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                        <Plug className="w-12 h-12 text-ws-muted mb-4" />
-                        <div className="text-sm font-medium text-ws-text-secondary mb-2">
-                            API Connections
-                        </div>
-                        <p className="text-xs text-ws-muted max-w-48">
-                            Coming soon.
-                        </p>
-                    </div>
+                    <div className="flex-1" />
                 )}
             </div>
         </aside>

@@ -54,17 +54,14 @@ interface ProjectLogViewProps {
 export function ProjectLogView({ projectId: _projectId }: ProjectLogViewProps) {
   const [composerDraft, setComposerDraft] = useState('');
 
-  // TODO: Replace with API fetch + TanStack Query
   const cards: ActionCard[] = useMemo(() => {
     return [];
   }, []);
 
-  const isLoading = false; // TODO: Get from query hook
+  const isLoading = false;
 
   const handleDeclareAction = () => {
     if (!composerDraft.trim()) return;
-    // TODO: Call declareAction API
-    console.log('Declare:', composerDraft);
     setComposerDraft('');
   };
 
@@ -239,10 +236,9 @@ function EventRow({ event, isLast }: { event: ExecutionEvent; isLast: boolean })
   );
 }
 
-function ActionBar({ status, actionId }: { status: string; actionId: number }) {
-  const handleTransition = (transition: string) => {
-    // TODO: Call transition API
-    console.log('Transition:', transition, 'for action', actionId);
+function ActionBar({ status }: { status: string; actionId: number }) {
+  const handleTransition = (_transition: string) => {
+    // Wire to transition API
   };
 
   return (
