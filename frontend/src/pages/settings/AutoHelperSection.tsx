@@ -26,6 +26,7 @@ import {
     Link,
     Unplug,
 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
 import { useAutoHelperInstances, useDisconnectAutoHelper, useGeneratePairingCode } from '../../api/connections';
@@ -141,9 +142,14 @@ function SmallButton({
 function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean } }) {
     const generateCode = useGeneratePairingCode();
     const pairAutoHelper = usePairAutoHelper();
+    const unpairAutoHelper = useUnpairAutoHelper();
+    const disconnectAutoHelper = useDisconnectAutoHelper();
+    const { data: instanceData } = useAutoHelperInstances();
+    const queryClient = useQueryClient();
     const [error, setError] = useState<string | null>(null);
 
     const isPairing = generateCode.isPending || pairAutoHelper.isPending;
+    const isUnpairing = unpairAutoHelper.isPending || disconnectAutoHelper.isPending;
 
     const handlePair = useCallback(async () => {
         setError(null);
@@ -164,6 +170,24 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
         }
     }, [generateCode, pairAutoHelper]);
 
+    const handleUnpair = useCallback(async () => {
+        try {
+            // Disconnect all instances on the backend
+            const instances = instanceData?.instances ?? [];
+            for (const inst of instances) {
+                await disconnectAutoHelper.mutateAsync(inst.displayId);
+            }
+            // Tell the Python app to clear its session
+            await unpairAutoHelper.mutateAsync();
+            queryClient.invalidateQueries({ queryKey: ['connections'] });
+            queryClient.invalidateQueries({ queryKey: ['connections', 'autohelper'] });
+            toast.info('AutoHelper unpaired');
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : 'Unpair failed';
+            toast.error(msg);
+        }
+    }, [disconnectAutoHelper, unpairAutoHelper, instanceData, queryClient]);
+
     return (
         <CardShell
             icon={<Link className="w-5 h-5 text-[var(--ws-accent)]" />}
@@ -177,9 +201,20 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
             }
         >
             {autohelperStatus.connected ? (
-                <div className="flex items-center gap-2 text-sm text-[var(--ws-color-success)]">
-                    <CheckCircle2 className="w-4 h-4" />
-                    AutoHelper is connected
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-[var(--ws-color-success)]">
+                        <CheckCircle2 className="w-4 h-4" />
+                        AutoHelper is connected
+                    </div>
+                    <Button
+                        onClick={handleUnpair}
+                        disabled={isUnpairing}
+                        variant="danger"
+                        size="xs"
+                        leftSection={isUnpairing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Unplug className="w-3 h-3" />}
+                    >
+                        Unpair
+                    </Button>
                 </div>
             ) : (
                 <div className="space-y-3">

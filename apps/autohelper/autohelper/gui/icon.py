@@ -7,6 +7,7 @@ Menu:
   - AutoHelper Service      (disabled label)
   - Status: Idle/Working...  (disabled label)
   - Paired / Not paired      (disabled, validated against backend every 3 s)
+  - Unpair                   (visible only when paired)
   - ---
   - Open Settings
   - ---
@@ -180,6 +181,11 @@ class AutoHelperIcon:
                 lambda *_: None,
                 enabled=False,
             ),
+            item(
+                "Unpair",
+                self._on_unpair,
+                visible=lambda _: self._paired,
+            ),
             pystray.Menu.SEPARATOR,
             item("Open Settings", self._on_open_settings),
             pystray.Menu.SEPARATOR,
@@ -188,6 +194,27 @@ class AutoHelperIcon:
         self.icon = pystray.Icon("AutoHelper", image, "AutoHelper Service", menu)
 
     # ── Menu actions ─────────────────────────────────────────────────
+
+    def _on_unpair(self, icon: pystray.Icon, menu_item: pystray.MenuItem) -> None:
+        """Hit the local /pair/unpair endpoint to clear session on both sides."""
+        try:
+            from autohelper.config import get_settings
+
+            settings = get_settings()
+            host = settings.host
+            if host in ("0.0.0.0", "::"):
+                host = "127.0.0.1"
+            url = f"http://{host}:{settings.port}/pair/unpair"
+            req = urllib.request.Request(url, data=b"", method="POST")
+            req.add_header("Content-Type", "application/json")
+            with urllib.request.urlopen(req, timeout=5):
+                pass
+            self._paired = False
+            if self.icon:
+                self.icon.update_menu()
+            logger.info("Unpaired via tray menu")
+        except Exception:
+            logger.exception("Unpair from tray menu failed")
 
     def _on_open_settings(self, icon: pystray.Icon, menu_item: pystray.MenuItem) -> None:
         open_settings_in_browser()
