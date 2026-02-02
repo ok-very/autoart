@@ -213,6 +213,58 @@ export async function seed(db: Kysely<Database>): Promise<void> {
     },
   ];
 
+  // ==================== ACTION ARRANGEMENT DEFINITIONS ====================
+
+  const arrangements = [
+    {
+      name: 'Task',
+      definition_kind: 'action_arrangement',
+      is_system: true,
+      schema_config: JSON.stringify({
+        fields: [
+          { key: 'title', type: 'text', label: 'Title', required: true },
+          { key: 'description', type: 'textarea', label: 'Description' },
+          { key: 'assignee', type: 'user', label: 'Assignee' },
+          { key: 'priority', type: 'select', label: 'Priority', options: ['Low', 'Medium', 'High'] },
+          { key: 'due_date', type: 'date', label: 'Due Date' },
+          {
+            key: 'status', type: 'status', label: 'Status',
+            statusConfig: {
+              open: { label: 'Open', colorClass: 'bg-slate-100 text-slate-700' },
+              in_progress: { label: 'In Progress', colorClass: 'bg-blue-100 text-blue-700' },
+              done: { label: 'Done', colorClass: 'bg-green-100 text-green-700' },
+              blocked: { label: 'Blocked', colorClass: 'bg-red-100 text-red-700' },
+            },
+          },
+          { key: 'tags', type: 'text', label: 'Tags' },
+        ],
+      }),
+      styling: JSON.stringify({ color: 'green', icon: '✅' }),
+    },
+    {
+      name: 'Subtask',
+      definition_kind: 'action_arrangement',
+      is_system: true,
+      parent_definition_id: null, // resolved below
+      schema_config: JSON.stringify({
+        fields: [
+          { key: 'title', type: 'text', label: 'Title', required: true },
+          {
+            key: 'status', type: 'status', label: 'Status',
+            statusConfig: {
+              open: { label: 'Open', colorClass: 'bg-slate-100 text-slate-700' },
+              in_progress: { label: 'In Progress', colorClass: 'bg-blue-100 text-blue-700' },
+              done: { label: 'Done', colorClass: 'bg-green-100 text-green-700' },
+            },
+          },
+          { key: 'assignee', type: 'user', label: 'Assignee' },
+          { key: 'due_date', type: 'date', label: 'Due Date' },
+        ],
+      }),
+      styling: JSON.stringify({ color: 'teal', icon: '☑️' }),
+    },
+  ];
+
   for (const def of definitions) {
     // Check if already exists (idempotent)
     const existing = await db
@@ -224,6 +276,44 @@ export async function seed(db: Kysely<Database>): Promise<void> {
     if (!existing) {
       await db.insertInto('record_definitions').values(def).execute();
     }
+  }
+
+  // Seed arrangements (idempotent, updates schema_config on re-run)
+  for (const arr of arrangements) {
+    const existing = await db
+      .selectFrom('record_definitions')
+      .select('id')
+      .where('name', '=', arr.name)
+      .where('definition_kind', '=', 'action_arrangement')
+      .executeTakeFirst();
+
+    if (!existing) {
+      await db.insertInto('record_definitions').values(arr).execute();
+    } else {
+      // Update schema_config to stay current
+      await db
+        .updateTable('record_definitions')
+        .set({ schema_config: arr.schema_config })
+        .where('id', '=', existing.id)
+        .execute();
+    }
+  }
+
+  // Link Subtask → Task parent_definition_id
+  const taskDef = await db
+    .selectFrom('record_definitions')
+    .select('id')
+    .where('name', '=', 'Task')
+    .where('definition_kind', '=', 'action_arrangement')
+    .executeTakeFirst();
+
+  if (taskDef) {
+    await db
+      .updateTable('record_definitions')
+      .set({ parent_definition_id: taskDef.id })
+      .where('name', '=', 'Subtask')
+      .where('definition_kind', '=', 'action_arrangement')
+      .execute();
   }
 
   console.log('  ✓ Record definitions seeded');
