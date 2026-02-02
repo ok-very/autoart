@@ -8,7 +8,7 @@ export function SuccessPage() {
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center max-w-md mx-auto px-4">
         <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">
+        <h1 className="text-xl font-semibold text-slate-900 mb-2">
           Submission Complete
         </h1>
         <p className="text-slate-600 mb-6">

@@ -165,7 +165,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                 <div className="flex-1 flex flex-col overflow-hidden">
                     {/* Session Header */}
                     <div className="p-4 border-b border-slate-200">
-                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                        <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                             Active Session
                         </div>
                         <div className="text-sm font-medium text-slate-800">{session.parser_name}</div>
@@ -251,7 +251,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                     <>
                         {/* Parser Selection */}
                         <div className="p-4 border-b border-slate-100">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                                 Parser
                             </label>
                             <select
@@ -267,7 +267,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
 
                         {/* File Upload */}
                         <div className="p-4 border-b border-slate-100">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                                 Upload File
                             </label>
                             <input
@@ -290,7 +290,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                         <div className="flex-1 p-4 flex flex-col min-h-0">
                             <div className="flex items-center gap-1 mb-2">
                                 <ClipboardPaste className="w-3 h-3 text-slate-400" />
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                                     Paste Data
                                 </label>
                             </div>

@@ -128,7 +128,7 @@ export function RecordSearchCombobox({
             >
                 <span
                     className={clsx(
-                        'text-[10px] font-bold uppercase px-1.5 py-0.5 rounded shrink-0',
+                        'text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded shrink-0',
                         {
                             'bg-blue-100 text-blue-700': result.type === 'record',
                             'bg-purple-100 text-purple-700': result.type === 'node',
@@ -184,7 +184,7 @@ export function RecordSearchCombobox({
             : 'text-blue-600 bg-blue-50';
 
     const headerPrefix = (
-        <span className={clsx('text-xs font-bold px-1.5 py-0.5 rounded', triggerColor)}>
+        <span className={clsx('text-xs font-semibold px-1.5 py-0.5 rounded', triggerColor)}>
             {triggerChar}
         </span>
     );

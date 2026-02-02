@@ -77,7 +77,7 @@ export function HierarchySidebar() {
     >
       {/* Project Selector */}
       <div className="p-3 border-b border-slate-200 bg-white">
-        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">
+        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1 block">
           Project
         </label>
         <Menu>
@@ -137,7 +137,7 @@ export function HierarchySidebar() {
       </div>
       {processes.length > 0 && (
         <div className="p-3 border-b border-slate-200 bg-white">
-          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">
+          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1 block">
             Process {processes.length > 1 && `(${processes.length})`}
           </label>
           <div className="relative">

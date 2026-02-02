@@ -43,7 +43,7 @@ export function IntakeListPanel({ onSelectForm }: IntakeListPanelProps) {
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Intake Forms</h2>
+        <h2 className="text-base font-semibold">Intake Forms</h2>
         <Button size="sm" onClick={() => setShowCreate(true)}>
           <Plus className="w-4 h-4 mr-1" />
           New Form

@@ -188,7 +188,7 @@ function SubprocessSection({ subprocess }: SubprocessSectionProps) {
   return (
     <div className="pl-4 border-l border-slate-200 ml-2 mt-4">
       <div className="flex items-center justify-between mb-3">
-        <h4 className="text-lg font-bold text-slate-700">{subprocess.title}</h4>
+        <h4 className="text-sm font-semibold text-slate-700">{subprocess.title}</h4>
       </div>
       <div className="space-y-3">
         {children.map((task) => (
@@ -216,7 +216,7 @@ function StageSection({ stage }: StageSectionProps) {
   return (
     <div className={`mb-8 p-4 rounded-lg border ${isCompleted ? 'border-green-200 bg-green-50/50' : 'border-slate-200 bg-white'}`}>
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-slate-800 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <h3 className="text-base font-semibold text-slate-800 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
           {stage.title}
         </h3>
         <div className="flex items-center gap-2">
@@ -283,7 +283,7 @@ export function Workspace() {
     return (
       <main className="flex-1 bg-slate-50 flex items-center justify-center">
         <div className="text-center text-slate-400">
-          <p className="text-lg font-medium">Select a project to view its workflow</p>
+          <p className="text-sm">Select a project to view its workflow</p>
           <p className="text-sm mt-1">Choose from the top menu</p>
         </div>
       </main>
@@ -298,7 +298,7 @@ export function Workspace() {
       {/* Project Header - could be more elaborate */}
       {project && (
         <div className="px-6 py-4 border-b border-slate-100 bg-white flex-shrink-0">
-          <h1 className="text-2xl font-bold text-slate-800">{project.title} Workflow</h1>
+          <h1 className="text-xl font-semibold text-slate-800">{project.title} Workflow</h1>
           {project.description ? <p className="text-sm text-slate-600">{String(project.description)}</p> : null}
         </div>
       )}
@@ -307,7 +307,7 @@ export function Workspace() {
       <div className="flex-1 overflow-y-auto bg-slate-50 p-6 custom-scroll">
         {stages.length === 0 ? (
           <div className="text-center text-slate-400">
-            <p className="text-lg font-medium">No stages defined for this project</p>
+            <p className="text-sm">No stages defined for this project</p>
             {/* Add button to create first stage? */}
           </div>
         ) : (

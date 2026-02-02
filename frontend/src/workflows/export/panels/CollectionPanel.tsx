@@ -38,7 +38,7 @@ export function CollectionPanel() {
             {/* Header */}
             <div className="p-3 border-b border-slate-200 bg-slate-50">
                 <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
                         Collections
                     </span>
                     <button

@@ -312,7 +312,7 @@ function TypeBadge({ group, onRoleChange }: TypeBadgeProps) {
             contentClassName="p-1 w-40"
             align="end"
         >
-            <div className="text-[10px] font-bold text-slate-400 px-2 py-1 uppercase">Convert To</div>
+            <div className="text-[10px] font-semibold text-slate-400 px-2 py-1 uppercase">Convert To</div>
             {TYPE_OPTIONS.map(opt => (
                 <button
                     type="button"

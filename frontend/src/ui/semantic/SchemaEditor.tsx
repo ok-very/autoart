@@ -268,7 +268,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
             <div className="bg-slate-800 text-slate-100 rounded-lg p-4 shadow-md">
                 <div className="flex justify-between items-start">
                     <div>
-                        <div className="text-[10px] text-slate-400 font-bold uppercase mb-1">
+                        <div className="text-[10px] text-slate-400 font-semibold uppercase mb-1">
                             Editing Class Definition
                         </div>
                         {isEditingName ? (
@@ -277,7 +277,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
                                     type="text"
                                     value={editedName}
                                     onChange={(e) => setEditedName(e.target.value)}
-                                    className="bg-slate-700 text-white border border-slate-600 rounded px-2 py-0.5 text-lg font-bold capitalize w-48 focus:outline-none focus:border-blue-500"
+                                    className="bg-slate-700 text-white border border-slate-600 rounded px-2 py-0.5 text-base font-semibold capitalize w-48 focus:outline-none focus:border-blue-500"
                                     autoFocus
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') handleSaveName();
@@ -299,7 +299,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
                             </div>
                         ) : (
                             <div className="flex items-center gap-2 group">
-                                <div className="text-lg font-bold capitalize">
+                                <div className="text-base font-semibold capitalize">
                                     {definition?.name || nodeType} Record
                                 </div>
                                 {definition && (
@@ -340,7 +340,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
             </div>
 
             <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase border-b border-slate-100 pb-2">
+                <h4 className="text-xs font-semibold text-slate-400 uppercase border-b border-slate-100 pb-2">
                     Defined Fields
                 </h4>
 
@@ -421,7 +421,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
             {/* Styling Override */}
             {definition && (
                 <div className="space-y-3 pt-4 border-t border-slate-100">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase">Class Styling</h4>
+                    <h4 className="text-xs font-semibold text-slate-400 uppercase">Class Styling</h4>
                     <div className="flex items-center gap-4">
                         {/* Emoji Picker */}
                         <div className="flex items-center gap-2">

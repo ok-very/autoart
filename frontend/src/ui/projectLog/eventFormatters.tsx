@@ -89,7 +89,7 @@ export const eventFormatters: Record<string, EventFormatter> = {
     icon: Play,
     dotBgClass: 'bg-indigo-100',
     dotTextClass: 'text-indigo-600',
-    labelClass: 'text-indigo-700 font-bold',
+    labelClass: 'text-indigo-700 font-semibold',
     isMajor: true,
     summarize: () => null,
   },
@@ -111,7 +111,7 @@ export const eventFormatters: Record<string, EventFormatter> = {
     icon: CheckCircle,
     dotBgClass: 'bg-emerald-100',
     dotTextClass: 'text-emerald-600',
-    labelClass: 'text-emerald-700 font-bold',
+    labelClass: 'text-emerald-700 font-semibold',
     isMajor: true,
     summarize: () => null,
   },
@@ -122,7 +122,7 @@ export const eventFormatters: Record<string, EventFormatter> = {
     icon: AlertOctagon,
     dotBgClass: 'bg-red-100',
     dotTextClass: 'text-red-600',
-    labelClass: 'text-red-700 font-bold',
+    labelClass: 'text-red-700 font-semibold',
     isMajor: true,
     summarize: (payload) => {
       const reason = payload.reason as string | undefined;

@@ -73,7 +73,7 @@ export function PropertySection({
                     {icon && <span className="text-slate-400">{icon}</span>}
 
                     {/* Title */}
-                    <h4 className="text-xs font-bold text-slate-400 uppercase">
+                    <h4 className="text-xs font-semibold text-slate-400 uppercase">
                         {title}
                     </h4>
 

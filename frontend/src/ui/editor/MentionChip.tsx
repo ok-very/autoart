@@ -284,7 +284,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
           <span className="absolute inset-0" />
         </PopoverTrigger>
         <PopoverContent className="min-w-[200px] p-0" align="start" sideOffset={8}>
-          <div className="px-3 py-1.5 text-[10px] text-slate-400 uppercase font-bold border-b border-slate-100">
+          <div className="px-3 py-1.5 text-[10px] text-slate-400 uppercase font-semibold border-b border-slate-100">
             Reference Actions
           </div>
 

@@ -83,7 +83,7 @@ export function ReferenceStatusBadge({
     return (
         <span
             className={clsx(
-                'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase shrink-0',
+                'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase shrink-0',
                 config.bgClass,
                 config.textClass,
                 className

@@ -98,7 +98,7 @@ export function ActionsList({
         return (
             <div className={clsx('flex flex-col items-center justify-center h-64 text-slate-400', className)}>
                 <Zap size={40} className="mb-3 text-slate-200" />
-                <p className="text-lg font-medium">No actions yet</p>
+                <p className="text-sm">No actions yet</p>
                 <p className="text-sm">Actions will appear here once declared</p>
             </div>
         );

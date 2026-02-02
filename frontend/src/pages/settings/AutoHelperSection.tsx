@@ -206,7 +206,7 @@ function PairingCodeCard({
                             <p className="text-xs text-slate-500 mb-2">
                                 Enter this code in AutoHelper:
                             </p>
-                            <div className="font-mono text-3xl font-bold text-slate-900 tracking-widest">
+                            <div className="font-mono text-xl font-semibold text-slate-900 tracking-widest">
                                 {pairingCode}
                             </div>
                             {expiresAt && (
@@ -674,7 +674,7 @@ export function AutoHelperSection({
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-lg font-semibold text-slate-900">AutoHelper</h2>
+                    <h2 className="text-base font-semibold text-slate-900">AutoHelper</h2>
                     <p className="text-sm text-slate-500 mt-1">Local service management</p>
                 </div>
                 {pairingCard}
@@ -690,7 +690,7 @@ export function AutoHelperSection({
         return (
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-lg font-semibold text-slate-900">AutoHelper</h2>
+                    <h2 className="text-base font-semibold text-slate-900">AutoHelper</h2>
                     <p className="text-sm text-slate-500 mt-1">Local service management</p>
                 </div>
                 {pairingCard}
@@ -710,7 +710,7 @@ export function AutoHelperSection({
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-lg font-semibold text-slate-900">AutoHelper</h2>
+                <h2 className="text-base font-semibold text-slate-900">AutoHelper</h2>
                 <p className="text-sm text-slate-500 mt-1">Local service management</p>
             </div>
 

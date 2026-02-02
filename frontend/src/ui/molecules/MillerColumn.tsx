@@ -136,10 +136,10 @@ function HierarchyColumn({
             {/* Column Header */}
             <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <span className={`w-6 h-6 rounded ${config.bgColor} ${config.textColor} flex items-center justify-center text-xs font-bold`}>
+                    <span className={`w-6 h-6 rounded ${config.bgColor} ${config.textColor} flex items-center justify-center text-xs font-semibold`}>
                         {config.badge}
                     </span>
-                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
                         {config.label}
                     </span>
                 </div>
@@ -223,7 +223,7 @@ function GenericColumn({
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         {headerBadge}
-                        <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                        <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
                             {title}
                         </span>
                     </div>

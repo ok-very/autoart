@@ -80,7 +80,7 @@ export function IntakeDetailPanel({ formId, onBack }: IntakeDetailPanelProps) {
           </Button>
         )}
         <div className="flex-1">
-          <h2 className="text-lg font-semibold">{form.title}</h2>
+          <h2 className="text-base font-semibold">{form.title}</h2>
           <div className="text-sm text-slate-500">{form.unique_id}</div>
         </div>
         <Badge variant={form.status === 'active' ? 'success' : 'neutral'}>

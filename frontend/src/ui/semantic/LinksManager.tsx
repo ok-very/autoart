@@ -68,7 +68,7 @@ export function LinksManager({ recordId }: LinksManagerProps) {
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                     <ExternalLink size={16} className="text-purple-600" />
-                    <span className="text-sm font-bold text-purple-900">Record Links</span>
+                    <span className="text-sm font-semibold text-purple-900">Record Links</span>
                 </div>
                 <p className="text-xs text-purple-700 leading-relaxed mb-3">
                     Links connect this record to other records in the system. Use{' '}
@@ -78,7 +78,7 @@ export function LinksManager({ recordId }: LinksManagerProps) {
 
                 <button
                     onClick={() => openOverlay('create-link', { sourceRecordId: recordId })}
-                    className="w-full py-2 bg-white border border-purple-200 text-purple-700 rounded text-xs font-bold hover:bg-purple-50 hover:border-purple-300 transition-all flex items-center justify-center gap-2 shadow-sm"
+                    className="w-full py-2 bg-white border border-purple-200 text-purple-700 rounded text-xs font-semibold hover:bg-purple-50 hover:border-purple-300 transition-all flex items-center justify-center gap-2 shadow-sm"
                 >
                     <ExternalLink size={12} />
                     Link Another Record
@@ -101,7 +101,7 @@ export function LinksManager({ recordId }: LinksManagerProps) {
 
             {/* Outgoing Links */}
             <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase border-b border-slate-100 pb-2 flex items-center gap-2">
+                <h4 className="text-xs font-semibold text-slate-400 uppercase border-b border-slate-100 pb-2 flex items-center gap-2">
                     <span className="text-blue-500">→</span> Outgoing Links ({outgoing.length})
                 </h4>
 
@@ -121,7 +121,7 @@ export function LinksManager({ recordId }: LinksManagerProps) {
 
             {/* Incoming Links */}
             <div className="space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase border-b border-slate-100 pb-2 flex items-center gap-2">
+                <h4 className="text-xs font-semibold text-slate-400 uppercase border-b border-slate-100 pb-2 flex items-center gap-2">
                     <span className="text-green-500">←</span> Incoming Links ({incoming.length})
                 </h4>
 

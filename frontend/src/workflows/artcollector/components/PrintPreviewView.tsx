@@ -271,7 +271,7 @@ function TearsheetPagePreview({
         {/* Sidebar */}
         <div className="flex flex-col">
           <div>
-            <h1 className="text-2xl font-bold uppercase tracking-wide text-slate-800">
+            <h1 className="text-xl font-semibold uppercase tracking-wide text-slate-800">
               Artist Name
             </h1>
             <p className="text-sm text-slate-500 mt-1">(Region)</p>
@@ -421,7 +421,7 @@ function TearsheetPagePrint({
                 </div>
                 {artifact?.metadata?.title && (
                   <figcaption style={{ fontSize: '9pt', marginTop: '8px' }}>
-                    <span className="font-bold italic">{artifact.metadata.title}</span>
+                    <span className="font-semibold italic">{artifact.metadata.title}</span>
                   </figcaption>
                 )}
               </figure>

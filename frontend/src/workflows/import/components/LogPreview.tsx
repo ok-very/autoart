@@ -101,7 +101,7 @@ export function LogPreview({ plan, selectedRecordId, onSelect }: LogPreviewProps
         }[type] || 'bg-slate-100 text-slate-700';
 
         return (
-            <span className={`px-1.5 py-0.5 text-[10px] font-bold uppercase rounded ${styles}`}>
+            <span className={`px-1.5 py-0.5 text-[10px] font-semibold uppercase rounded ${styles}`}>
                 {type}
             </span>
         );

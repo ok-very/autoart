@@ -223,7 +223,7 @@ function ClassificationBadge({ classification }: { classification: ItemClassific
 
     return (
         <span
-            className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold uppercase rounded ${styles.bg} ${styles.text}`}
+            className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase rounded ${styles.bg} ${styles.text}`}
             title={classification.rationale}
         >
             {needsAttention && <AlertCircle className="w-3 h-3" />}
@@ -235,7 +235,7 @@ function ClassificationBadge({ classification }: { classification: ItemClassific
 
 function EntityTypeBadge({ entityType }: { entityType: string }) {
     return (
-        <span className="text-[10px] font-bold uppercase text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+        <span className="text-[10px] font-semibold uppercase text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
             {entityType}
         </span>
     );
@@ -540,7 +540,7 @@ function NestedLevel({
     return (
         <div className={clsx('border border-slate-200 rounded-lg overflow-hidden', depth > 0 && 'ml-6 mt-2 mb-2')}>
             {/* Header row for this level */}
-            <div className="flex bg-slate-100 text-[10px] font-bold uppercase text-slate-500 border-b border-slate-200">
+            <div className="flex bg-slate-100 text-[10px] font-semibold uppercase text-slate-500 border-b border-slate-200">
                 <div className="flex-1 min-w-[200px] px-3 py-1.5">Title</div>
                 <div className="w-16 px-2 py-1.5 text-center">Type</div>
                 {levelFields.map(field => (

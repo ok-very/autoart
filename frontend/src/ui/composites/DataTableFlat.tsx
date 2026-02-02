@@ -136,7 +136,7 @@ function ColumnPicker({ allColumns, visibleKeys, onToggle }: ColumnPickerProps) 
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
                     <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
-                        <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase">
+                        <div className="px-3 py-1.5 text-[10px] font-semibold text-slate-400 uppercase">
                             Visible Columns
                         </div>
                         {allColumns.map((col) => (
@@ -658,7 +658,7 @@ export function DataTableFlat({
     if (!definition) {
         return (
             <div className={clsx('flex flex-col items-center justify-center h-64 text-slate-400', className)}>
-                <p className="text-lg font-medium">No definition</p>
+                <p className="text-sm">No definition</p>
                 <p className="text-sm">Select a record type to view</p>
             </div>
         );
@@ -668,7 +668,7 @@ export function DataTableFlat({
     if (records.length === 0) {
         return (
             <div className={clsx('flex flex-col items-center justify-center h-64 text-slate-400', className)}>
-                <p className="text-lg font-medium">{emptyMessage}</p>
+                <p className="text-sm">{emptyMessage}</p>
             </div>
         );
     }

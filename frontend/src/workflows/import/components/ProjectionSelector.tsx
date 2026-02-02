@@ -36,7 +36,7 @@ export function ProjectionSelector({
     return (
         <div className="h-12 bg-white border-b border-slate-200 flex items-center px-4 gap-3">
             <Eye className="w-4 h-4 text-slate-400" />
-            <span className="text-xs font-bold text-slate-500 uppercase">View as:</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase">View as:</span>
 
             <div className="flex gap-1">
                 {availableProjections.map((projection) => (

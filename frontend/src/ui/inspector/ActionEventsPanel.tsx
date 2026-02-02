@@ -36,7 +36,7 @@ export function ActionEventsPanel({ actionId }: ActionEventsPanelProps) {
     return (
         <div className="space-y-3">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     Execution Log
                 </h3>
                 <span className="text-xs text-slate-500">

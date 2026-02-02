@@ -57,7 +57,7 @@ export function StagePreview({
                     {/* Stage header */}
                     <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
                         <Layers className="w-4 h-4 text-blue-500" />
-                        <h3 className="text-sm font-bold text-slate-700">{stage.label}</h3>
+                        <h3 className="text-sm font-semibold text-slate-700">{stage.label}</h3>
                         <span className="text-xs text-slate-400 bg-slate-200 px-1.5 py-0.5 rounded">
                             {stage.items.length} items
                         </span>

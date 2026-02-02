@@ -128,7 +128,7 @@ export function ActionCard({
                             size={14}
                             className={`text-slate-400 transition-transform ${!isExpanded ? '-rotate-90' : ''}`}
                         />
-                        <span className="bg-indigo-100 text-indigo-700 border border-indigo-200 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                        <span className="bg-indigo-100 text-indigo-700 border border-indigo-200 text-[10px] font-semibold px-1.5 py-0.5 rounded">
                             ACTION: {action.type}
                         </span>
                         <span className="text-sm font-medium text-slate-700 truncate max-w-[200px]">
@@ -145,7 +145,7 @@ export function ActionCard({
                     <>
                         {/* Field Bindings */}
                         <div className="pl-6 mb-4">
-                            <div className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">
+                            <div className="text-[10px] font-semibold text-slate-400 uppercase mb-1.5 tracking-wider">
                                 Field Bindings
                             </div>
                             {displayBindings.length > 0 ? (
@@ -170,7 +170,7 @@ export function ActionCard({
                                         e.stopPropagation();
                                         onRetract();
                                     }}
-                                    className="text-[10px] font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 px-3 py-1.5 rounded transition-colors flex items-center gap-1"
+                                    className="text-[10px] font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 px-3 py-1.5 rounded transition-colors flex items-center gap-1"
                                 >
                                     <XCircle size={12} /> Retract
                                 </button>
@@ -181,7 +181,7 @@ export function ActionCard({
                                         e.stopPropagation();
                                         onAmend();
                                     }}
-                                    className="text-[10px] font-bold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded transition-colors flex items-center gap-1"
+                                    className="text-[10px] font-semibold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded transition-colors flex items-center gap-1"
                                 >
                                     <PencilLine size={12} /> Amend
                                 </button>
@@ -207,7 +207,7 @@ export function ActionCard({
                         size={12}
                         className={`transition-transform ${!eventsExpanded ? '-rotate-90' : ''}`}
                     />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider">
                         Events emitted ({visibleEvents.length})
                     </span>
                 </div>

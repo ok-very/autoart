@@ -104,10 +104,10 @@ export function ViewDefinitionOverlay({ recordId, definitionId }: ViewDefinition
             {styling.icon || definition.name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div className="text-[10px] font-bold text-slate-400 uppercase mb-1">
+            <div className="text-[10px] font-semibold text-slate-400 uppercase mb-1">
               Record Definition
             </div>
-            <h2 className="text-xl font-bold text-slate-800">{definition.name}</h2>
+            <h2 className="text-base font-semibold text-slate-800">{definition.name}</h2>
             {definition.derived_from_id && (
               <div className="text-xs text-slate-400 mt-1">
                 Derived from another definition
@@ -173,7 +173,7 @@ export function ViewDefinitionOverlay({ recordId, definitionId }: ViewDefinition
               >
                 {/* Type badge */}
                 <span
-                  className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                  className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded ${
                     FIELD_TYPE_COLORS[field.type] || 'bg-slate-100 text-slate-600'
                   }`}
                 >

@@ -160,7 +160,7 @@ export function ProjectLogView() {
     return (
       <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
         <div className="text-center">
-          <p className="text-lg font-medium">No project selected</p>
+          <p className="text-sm">No project selected</p>
           <p className="text-sm">Select a project from the top menu</p>
         </div>
       </div>
@@ -181,7 +181,7 @@ export function ProjectLogView() {
       <div className="h-12 border-b border-slate-200 bg-white px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div>
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
               Project Log
             </div>
             {/* Subprocess dropdown */}
@@ -206,7 +206,7 @@ export function ProjectLogView() {
                       onClick={() => setIsSubprocessDropdownOpen(false)}
                     />
                     <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
-                      <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase">
+                      <div className="px-3 py-1.5 text-[10px] font-semibold text-slate-400 uppercase">
                         Subprocesses
                       </div>
                       {subprocesses.map((sp) => (
