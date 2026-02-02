@@ -107,7 +107,7 @@ function TabStripAddButton({ containerApi, group }: IDockviewHeaderActionsProps)
       initialHeight = sizeHint > 100 ? sizeHint : Math.round(containerApi.height * (sizeHint / 100));
     }
 
-    containerApi.addPanel({
+    const newPanel = containerApi.addPanel({
       id: newId,
       component,
       title: def?.title || 'New Panel',
@@ -115,6 +115,7 @@ function TabStripAddButton({ containerApi, group }: IDockviewHeaderActionsProps)
       ...(initialWidth !== undefined && { initialWidth }),
       ...(initialHeight !== undefined && { initialHeight }),
     });
+    requestAnimationFrame(() => newPanel?.api.setActive());
   };
 
   const renderItems = (ids: PanelId[]) =>
@@ -201,7 +202,7 @@ function SpawnHandle({ api }: SpawnHandleProps) {
       initialHeight = sizeHint > 100 ? sizeHint : Math.round(dockviewApi.height * (sizeHint / 100));
     }
 
-    dockviewApi.addPanel({
+    const newPanel = dockviewApi.addPanel({
       id: newId,
       component: componentKey,
       title: def?.title || 'New Panel',
@@ -209,6 +210,7 @@ function SpawnHandle({ api }: SpawnHandleProps) {
       ...(initialWidth !== undefined && { initialWidth }),
       ...(initialHeight !== undefined && { initialHeight }),
     });
+    requestAnimationFrame(() => newPanel?.api.setActive());
   };
 
   return (

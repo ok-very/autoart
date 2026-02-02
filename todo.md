@@ -9,6 +9,7 @@
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
 - "Save current" in menu doesn't activate save workspace prompt — handler chain exists, not confirmed working
 - Project button in header doesn't spawn new Project container — may be a feature gap, not a misunderstanding
+- **AutoHelper sessions lost on backend restart** — sessions stored in-memory; backend restart wipes them but AutoHelper tray still shows "Paired" (reads local config). Frontend shows disconnected. Workaround: re-pair or delete `autoart_session_id` from config. Fix: persist to DB. (#340)
 
 **UX polish:**
 - **Selection Inspector stuck open** — can be spawned repeatedly but has no close/dismiss affordance; if it can be called over and over it has to be closeable over and over
@@ -54,6 +55,7 @@
 
 | # | Issue | Category |
 |---|-------|----------|
+| 340 | Persist AutoHelper sessions to database (in-memory sessions lost on backend restart) | Backend |
 | 173 | Epic: Finance Management System (Invoices + Budgets + Vendor Bills + Reconciliation) | Epic |
 | 182 | Workspace modification tracking and save workflow | Workspace |
 | 180 | Add route/project context to workspace system | Workspace |

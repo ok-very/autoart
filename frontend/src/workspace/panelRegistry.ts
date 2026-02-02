@@ -117,7 +117,7 @@ export const PANEL_DEFINITIONS: Record<PanelId, PanelDefinition> = {
     // Core - always open (agnostic container for any content type)
     'center-workspace': {
         id: 'center-workspace',
-        title: 'Workspace',
+        title: 'Project View',
         icon: Layout,
         permanent: true,
         defaultPlacement: { area: 'center', size: 70 },
