@@ -194,7 +194,7 @@ export function Header() {
           )}
 
           {/* Navigation Links */}
-          <Inline gap="xs" className="ml-2">
+          <Inline gap="sm" className="ml-4">
             {/* Workbench Dropdown */}
             <Menu>
               <Menu.Target>

@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-02 (merged #331-333: migration stub, accessibility labels, atom token migration + Toggle atom)*
+*Last Updated: 2026-02-02 (in-flight #334-335: AutoHelper frontend-initiated pairing)*
 
 ## Bug List
 
@@ -9,14 +9,21 @@
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
 - "Save current" in menu doesn't activate save workspace prompt — handler chain exists, not confirmed working
 - Project button in header doesn't spawn new Project container — may be a feature gap, not a misunderstanding
-- AutoHelper Settings doesn't link correctly to frontend menu — settings tab exists, linking path unverified
 
 **UX polish:**
+- **Selection Inspector stuck open** — can be spawned repeatedly but has no close/dismiss affordance; if it can be called over and over it has to be closeable over and over
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
+- Panel spawner menu (+ button dropdown) has opaque background — would benefit from glassmorphism (`backdrop-blur` + translucent bg) so the workspace context bleeds through. [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20010446.png) · [Reference: glassmorphism with Tailwind](https://www.epicweb.dev/tips/creating-glassmorphism-effects-with-tailwind-css)
+- **Applications dropdown bleeds into workspace tabs** — no visual separation between header and tab strip, Applications menu projects downward and collides with tab area. [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20014118.png)
+- **Panel spawn visibility issue** — newly spawned panels not stacking correctly or not visible from spawn action (z-index/layout layering suspect). [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20013836.png)
+- **Workspace/Fields subtabs have no active accent** — selected tab (e.g. "Fields") is indistinguishable from unselected, no underline or color differentiation; tabs are functionally invisible. [Screenshot](/mnt/c/Users/nealm/Pictures/Screenshots/Screenshot%202026-02-02%20013836.png)
 
 **Confirmed resolved:**
 - ~~Action definitions empty after migration~~ — definitions seeded in new `record_definitions` system with `definition_kind`
 - ~~Calendar link in header menu not wired up~~ — fully implemented (PR #271)
+- ~~Header spacing too tight~~ — widened nav gap and margin in Header.tsx (PR #335)
+- ~~`/pair` async blocking I/O~~ — handlers converted to sync `def` for threadpool execution (PR #334, commit b4c1259)
+- ~~Disconnect spinner bleeds to all rows~~ — per-row `disconnectingId` tracking added (PR #335, commit b4c1259)
 
 ---
 
@@ -112,6 +119,7 @@
 
 | PRs | Description |
 |-----|-------------|
+| #334-335 | AutoHelper frontend-initiated pairing: `/pair` endpoint + one-click Pair button, remove tkinter dialog |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
 
 ---

@@ -23,12 +23,12 @@ import {
     AlertCircle,
     Mail,
     HardDrive,
-    Key,
+    Link,
     Unplug,
 } from 'lucide-react';
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
-import { useAutoHelperInstances, useDisconnectAutoHelper } from '../../api/connections';
+import { useAutoHelperInstances, useDisconnectAutoHelper, useGeneratePairingCode } from '../../api/connections';
 import {
     useAutoHelperHealth,
     useAutoHelperStatus,
@@ -44,7 +44,10 @@ import {
     useStopMail,
     useGCStatus,
     useRunGC,
+    usePairAutoHelper,
+    useUnpairAutoHelper,
 } from '../../api/hooks/autohelper';
+import { toast } from '../../stores/toastStore';
 import { Badge, Button, TextInput, Toggle } from '@autoart/ui';
 
 // ============================================================================
@@ -135,79 +138,37 @@ function SmallButton({
 // CARDS
 // ============================================================================
 
-function PairingCodeCard({
-    onGenerateCode,
-    autohelperStatus,
-}: {
-    onGenerateCode: () => Promise<{ code: string; expiresAt: string; expiresInSeconds: number }>;
-    autohelperStatus: { connected: boolean };
-}) {
-    const [pairingCode, setPairingCode] = useState<string | null>(null);
-    const [remaining, setRemaining] = useState<number>(0);
-    const [isLoading, setIsLoading] = useState(false);
+function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean } }) {
+    const generateCode = useGeneratePairingCode();
+    const pairAutoHelper = usePairAutoHelper();
     const [error, setError] = useState<string | null>(null);
-    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    // Countdown timer
-    useEffect(() => {
-        if (remaining <= 0) {
-            if (timerRef.current) clearInterval(timerRef.current);
-            if (pairingCode && remaining === 0) setPairingCode(null);
-            return;
-        }
-        timerRef.current = setInterval(() => {
-            setRemaining((r) => {
-                if (r <= 1) return 0;
-                return r - 1;
-            });
-        }, 1000);
-        return () => { if (timerRef.current) clearInterval(timerRef.current); };
-    }, [remaining > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+    const isPairing = generateCode.isPending || pairAutoHelper.isPending;
 
-    const getErrorMessage = (err: unknown): string => {
-        if (!err) return 'Failed to generate code';
-        if (typeof err === 'object') {
-            const anyErr = err as {
-                response?: { data?: { error?: string; message?: string } };
-                message?: string;
-            };
-            const apiMessage =
-                anyErr.response?.data?.error ??
-                anyErr.response?.data?.message ??
-                anyErr.message;
-            if (typeof apiMessage === 'string' && apiMessage.trim()) {
-                return apiMessage;
-            }
-        }
-        if (err instanceof Error && err.message) return err.message;
-        return 'Failed to generate code';
-    };
-
-    const handleGenerateCode = useCallback(async () => {
-        setIsLoading(true);
+    const handlePair = useCallback(async () => {
         setError(null);
         try {
-            const result = await onGenerateCode();
-            setPairingCode(result.code);
-            setRemaining(result.expiresInSeconds || 300);
+            // 1. Generate code from the backend
+            const { code } = await generateCode.mutateAsync();
+            // 2. Send code to the AutoHelper Python service
+            const result = await pairAutoHelper.mutateAsync(code);
+            if (result.paired) {
+                toast.success('AutoHelper paired');
+            } else {
+                setError(result.error ?? 'Pairing failed');
+            }
         } catch (err) {
-            setError(getErrorMessage(err));
-        } finally {
-            setIsLoading(false);
+            const msg = err instanceof Error ? err.message : 'Pairing failed — is AutoHelper running?';
+            setError(msg);
+            toast.error(msg);
         }
-    }, [onGenerateCode]);
-
-    const formatRemaining = (s: number) => {
-        const m = Math.floor(s / 60);
-        const sec = s % 60;
-        return `${m}:${String(sec).padStart(2, '0')}`;
-    };
+    }, [generateCode, pairAutoHelper]);
 
     return (
         <CardShell
-            icon={<Key className="w-5 h-5 text-[var(--ws-accent)]" />}
+            icon={<Link className="w-5 h-5 text-[var(--ws-accent)]" />}
             iconBg="bg-[var(--ws-accent)]/10"
-            title="Pairing Code"
+            title="Pairing"
             badge={
                 <StatusBadge
                     ok={autohelperStatus.connected}
@@ -222,53 +183,15 @@ function PairingCodeCard({
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {pairingCode && remaining > 0 ? (
-                        <div className="bg-ws-bg border border-ws-panel-border rounded-lg p-4 text-center">
-                            <p className="text-xs text-ws-text-secondary mb-2">
-                                Enter this code in AutoHelper:
-                            </p>
-                            <div className="font-mono text-ws-h1 font-semibold text-ws-fg tracking-widest">
-                                {pairingCode}
-                            </div>
-                            <p className="text-xs text-ws-muted mt-2">
-                                {formatRemaining(remaining)} remaining
-                            </p>
-                            <Button
-                                variant="ghost"
-                                size="xs"
-                                onClick={handleGenerateCode}
-                                disabled={isLoading}
-                                className="mt-2"
-                                leftSection={isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-                            >
-                                New Code
-                            </Button>
-                        </div>
-                    ) : pairingCode && remaining === 0 ? (
-                        <div className="bg-ws-bg border border-ws-panel-border rounded-lg p-4 text-center">
-                            <p className="text-sm text-ws-text-secondary">Code expired</p>
-                            <Button
-                                variant="primary"
-                                size="sm"
-                                onClick={handleGenerateCode}
-                                disabled={isLoading}
-                                className="mt-2"
-                                leftSection={isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                            >
-                                Generate New Code
-                            </Button>
-                        </div>
-                    ) : (
-                        <Button
-                            onClick={handleGenerateCode}
-                            disabled={isLoading}
-                            variant="primary"
-                            size="sm"
-                            leftSection={isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Key className="w-4 h-4" />}
-                        >
-                            Generate Pairing Code
-                        </Button>
-                    )}
+                    <Button
+                        onClick={handlePair}
+                        disabled={isPairing}
+                        variant="primary"
+                        size="sm"
+                        leftSection={isPairing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link className="w-4 h-4" />}
+                    >
+                        Pair
+                    </Button>
                     {error && (
                         <div className="flex items-center gap-2 text-sm text-[var(--ws-color-error)]">
                             <AlertCircle className="w-4 h-4" />
@@ -277,13 +200,6 @@ function PairingCodeCard({
                     )}
                 </div>
             )}
-            <div className="mt-1 flex items-start gap-2 text-xs text-ws-muted">
-                <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                <span>
-                    Generate a code here, then enter it in AutoHelper to connect.
-                    Pairing works regardless of AutoHelper connectivity.
-                </span>
-            </div>
         </CardShell>
     );
 }
@@ -291,9 +207,24 @@ function PairingCodeCard({
 function ConnectedInstancesCard() {
     const { data } = useAutoHelperInstances();
     const disconnect = useDisconnectAutoHelper();
+    const unpair = useUnpairAutoHelper();
+    const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
 
     const instances = data?.instances ?? [];
     if (instances.length === 0) return null;
+
+    const handleDisconnect = useCallback((displayId: string) => {
+        setDisconnectingId(displayId);
+        disconnect.mutate(displayId, {
+            onSuccess: () => {
+                // Fire-and-forget: tell the Python app to clear its session
+                unpair.mutate();
+            },
+            onSettled: () => {
+                setDisconnectingId(null);
+            },
+        });
+    }, [disconnect, unpair]);
 
     return (
         <CardShell
@@ -314,9 +245,9 @@ function ConnectedInstancesCard() {
                         <Button
                             variant="danger"
                             size="xs"
-                            onClick={() => disconnect.mutate(inst.displayId)}
+                            onClick={() => handleDisconnect(inst.displayId)}
                             disabled={disconnect.isPending}
-                            leftSection={disconnect.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Unplug className="w-3 h-3" />}
+                            leftSection={disconnectingId === inst.displayId ? <Loader2 className="w-3 h-3 animate-spin" /> : <Unplug className="w-3 h-3" />}
                         >
                             Disconnect
                         </Button>
@@ -724,12 +655,10 @@ function AdvancedCard() {
 // ============================================================================
 
 interface AutoHelperSectionProps {
-    onGenerateCode?: () => Promise<{ code: string; expiresAt: string; expiresInSeconds: number }>;
     autohelperStatus?: { connected: boolean };
 }
 
 export function AutoHelperSection({
-    onGenerateCode = async () => ({ code: '', expiresAt: '', expiresInSeconds: 300 }),
     autohelperStatus = { connected: false },
 }: AutoHelperSectionProps) {
     const { isError: healthError, isLoading: healthLoading } = useAutoHelperHealth();
@@ -738,10 +667,7 @@ export function AutoHelperSection({
     // work regardless of AutoHelper connectivity.
     const pairingCards = (
         <>
-            <PairingCodeCard
-                onGenerateCode={onGenerateCode}
-                autohelperStatus={autohelperStatus}
-            />
+            <PairCard autohelperStatus={autohelperStatus} />
             <ConnectedInstancesCard />
         </>
     );

@@ -34,46 +34,63 @@ class UnpairResponse(BaseModel):
 
 
 @router.post("", response_model=PairResponse)
-async def pair(body: PairRequest) -> PairResponse:
+def pair(body: PairRequest) -> PairResponse:
     """Exchange a pairing code for a session, persist it, and propagate."""
-    settings = get_settings()
-    client = AutoArtClient(
-        api_url=settings.autoart_api_url,
-        api_key=settings.autoart_api_key or None,
-    )
-
-    hostname = socket.gethostname()
-    session_id = client.pair_with_code(body.code, instance_name=hostname)
-
-    if not session_id:
-        return PairResponse(paired=False, error="Handshake failed — check the code and try again")
-
-    # Persist to config.json
-    store = ConfigStore()
-    cfg = store.load()
-    cfg["autoart_session_id"] = session_id
-    store.save(cfg)
-
-    # Clear cached Settings so dependents pick up the new session
-    reset_settings()
-
-    # Reinitialise the context service
     try:
-        from autohelper.modules.context.service import ContextService
+        settings = get_settings()
+        client = AutoArtClient(
+            api_url=settings.autoart_api_url,
+            api_key=settings.autoart_api_key or None,
+        )
 
-        ContextService().reinit_clients()
+        hostname = socket.gethostname()
+        session_id = client.pair_with_code(body.code, instance_name=hostname)
+
+        if not session_id:
+            return PairResponse(paired=False, error="Handshake failed — check the code and try again")
+
+        # Persist to config.json
+        store = ConfigStore()
+        cfg = store.load()
+        cfg["autoart_session_id"] = session_id
+        store.save(cfg)
+
+        # Clear cached Settings so dependents pick up the new session
+        reset_settings()
+
+        # Reinitialise the context service
+        try:
+            from autohelper.modules.context.service import ContextService
+
+            ContextService().reinit_clients()
+        except Exception as exc:
+            logger.warning("Failed to reinit context service after pairing: %s", exc)
+
+        logger.info("Paired via HTTP endpoint, session: %s...", session_id[:8])
+        return PairResponse(paired=True, displayId=hostname)
+
     except Exception as exc:
-        logger.warning("Failed to reinit context service after pairing: %s", exc)
-
-    logger.info("Paired via HTTP endpoint, session: %s...", session_id[:8])
-    return PairResponse(paired=True, displayId=hostname)
+        logger.error("Pairing failed: %s", exc)
+        return PairResponse(paired=False, error="Internal error during pairing")
 
 
 @router.post("/unpair", response_model=UnpairResponse)
-async def unpair() -> UnpairResponse:
-    """Clear the local session so the tray shows 'Not paired' immediately."""
+def unpair() -> UnpairResponse:
+    """Invalidate session server-side, then clear local state."""
     store = ConfigStore()
     cfg = store.load()
+    old_session_id = cfg.get("autoart_session_id")
+
+    # Tell the backend to drop the session before we forget the ID
+    if old_session_id:
+        settings = get_settings()
+        client = AutoArtClient(
+            api_url=settings.autoart_api_url,
+            api_key=settings.autoart_api_key or None,
+        )
+        client.disconnect_session(old_session_id)
+
+    # Clear local state regardless of backend result
     cfg.pop("autoart_session_id", None)
     store.save(cfg)
 

@@ -12,7 +12,7 @@ import { useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import { AccountSection, AppearanceSection, AutoHelperSection, IntegrationsSection } from './settings';
-import { useConnections, useConnectMonday, useDisconnectMonday, useGeneratePairingCode, useConnectGoogle, useDisconnectGoogle, useConnectMicrosoft, useDisconnectMicrosoft, useMondayOAuthStatus, useConnectMondayOAuth } from '../api/connections';
+import { useConnections, useConnectMonday, useDisconnectMonday, useConnectGoogle, useDisconnectGoogle, useConnectMicrosoft, useDisconnectMicrosoft, useMondayOAuthStatus, useConnectMondayOAuth } from '../api/connections';
 import { useCurrentUser } from '../api/hooks';
 
 // ============================================================================
@@ -50,8 +50,6 @@ export function SettingsPage() {
     const { data: connections } = useConnections();
     const connectMondayMutation = useConnectMonday();
     const disconnectMondayMutation = useDisconnectMonday();
-    const generatePairingCodeMutation = useGeneratePairingCode();
-
     // Monday OAuth hooks
     const { data: mondayOAuthStatus } = useMondayOAuthStatus();
     const connectMondayOAuthMutation = useConnectMondayOAuth();
@@ -94,12 +92,6 @@ export function SettingsPage() {
     const handleMicrosoftDisconnect = useCallback(async () => {
         await disconnectMicrosoftMutation.mutateAsync();
     }, [disconnectMicrosoftMutation]);
-
-    // AutoHelper pairing handler
-    const handleAutoHelperGenerateCode = useCallback(async () => {
-        const result = await generatePairingCodeMutation.mutateAsync();
-        return { code: result.code, expiresAt: result.expiresAt, expiresInSeconds: result.expiresInSeconds };
-    }, [generatePairingCodeMutation]);
 
     if (isLoading) {
         return (
@@ -167,7 +159,6 @@ export function SettingsPage() {
                             <AppearanceSection />
                         ) : derivedTab === 'autohelper' ? (
                             <AutoHelperSection
-                                onGenerateCode={handleAutoHelperGenerateCode}
                                 autohelperStatus={{ connected: connections?.autohelper?.connected ?? false }}
                             />
                         ) : derivedTab === 'integrations' ? (

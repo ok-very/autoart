@@ -283,6 +283,33 @@ export function useStopMail() {
     });
 }
 
+// ==================== PAIRING HOOKS ====================
+
+export interface PairAutoHelperResponse {
+    paired: boolean;
+    displayId?: string;
+    error?: string;
+}
+
+export function usePairAutoHelper() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (code: string) =>
+            autohelperApi.post<PairAutoHelperResponse>('/pair', { code }),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['connections'] });
+            qc.invalidateQueries({ queryKey: ['connections', 'autohelper'] });
+        },
+    });
+}
+
+export function useUnpairAutoHelper() {
+    return useMutation({
+        mutationFn: () =>
+            autohelperApi.post<{ paired: boolean }>('/pair/unpair'),
+    });
+}
+
 // ==================== GC HOOKS ====================
 
 export interface GCStatusResponse {

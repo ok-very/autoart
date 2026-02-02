@@ -533,6 +533,27 @@ export async function connectionsRoutes(app: FastifyInstance) {
     });
 
     /**
+     * Self-disconnect — AutoHelper invalidates its own session
+     * Uses session auth (X-AutoHelper-Session), not user auth
+     */
+    app.post('/connections/autohelper/disconnect', async (request, reply) => {
+        const sessionId = (request.headers['x-autohelper-session'] as string) || '';
+
+        if (!sessionId) {
+            return reply.status(401).send({ error: 'Session ID required in X-AutoHelper-Session header' });
+        }
+
+        const userId = connectionsService.validateSession(sessionId);
+        if (!userId) {
+            // Session already gone or expired — still a success from the caller's perspective
+            return reply.send({ disconnected: true });
+        }
+
+        connectionsService.disconnectAutoHelper(sessionId);
+        return reply.send({ disconnected: true });
+    });
+
+    /**
      * List connected AutoHelper instances
      * Requires authentication
      */

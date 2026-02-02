@@ -207,6 +207,31 @@ class AutoArtClient:
             logger.error(f"Pairing request failed: {e}")
             return None
 
+    def disconnect_session(self, session_id: str) -> bool:
+        """
+        Tell the AutoArt backend to invalidate this session.
+
+        Best-effort — returns False on any failure so callers can
+        proceed with local cleanup regardless.
+        """
+        try:
+            response = requests.post(
+                f"{self.api_url}/api/connections/autohelper/disconnect",
+                headers={
+                    "X-AutoHelper-Session": session_id,
+                    "Content-Type": "application/json",
+                },
+                timeout=5,
+            )
+            if response.status_code == 200:
+                logger.info("Session invalidated on backend")
+                return True
+            logger.warning("Backend disconnect returned %s", response.status_code)
+            return False
+        except requests.RequestException as e:
+            logger.warning("Backend disconnect failed: %s", e)
+            return False
+
     def get_monday_token(self, session_id: str) -> str | None:
         """
         Fetch Monday API token from AutoArt using session credentials.
