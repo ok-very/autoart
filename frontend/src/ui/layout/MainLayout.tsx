@@ -115,7 +115,7 @@ function TabStripAddButton({ containerApi, group }: IDockviewHeaderActionsProps)
       ...(initialWidth !== undefined && { initialWidth }),
       ...(initialHeight !== undefined && { initialHeight }),
     });
-    newPanel?.api.setActive();
+    requestAnimationFrame(() => newPanel?.api.setActive());
   };
 
   const renderItems = (ids: PanelId[]) =>
@@ -210,7 +210,7 @@ function SpawnHandle({ api }: SpawnHandleProps) {
       ...(initialWidth !== undefined && { initialWidth }),
       ...(initialHeight !== undefined && { initialHeight }),
     });
-    newPanel?.api.setActive();
+    requestAnimationFrame(() => newPanel?.api.setActive());
   };
 
   return (
