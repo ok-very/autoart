@@ -621,6 +621,20 @@ export type Engagement = Selectable<EngagementsTable>;
 export type NewEngagement = Insertable<EngagementsTable>;
 export type EngagementUpdate = Updateable<EngagementsTable>;
 
+// Project Members Table (Many-to-Many: Projects <-> Users)
+export interface ProjectMembersTable {
+  id: Generated<string>;
+  project_id: string;
+  user_id: string;
+  role: Generated<string>; // 'owner' | 'member' | 'viewer'
+  assigned_at: Generated<Date>;
+  assigned_by: string | null;
+}
+
+export type ProjectMember = Selectable<ProjectMembersTable>;
+export type NewProjectMember = Insertable<ProjectMembersTable>;
+export type ProjectMemberUpdate = Updateable<ProjectMembersTable>;
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -655,6 +669,7 @@ export interface Database {
   polls: PollsTable;
   poll_responses: PollResponsesTable;
   engagements: EngagementsTable;
+  project_members: ProjectMembersTable;
 }
 
 

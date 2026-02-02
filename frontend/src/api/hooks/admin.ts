@@ -47,9 +47,10 @@ export function useSoftDeleteUser() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (userId: string) => {
+        mutationFn: async ({ userId, reassignTo }: { userId: string; reassignTo?: string }) => {
+            const qs = reassignTo ? `?reassignTo=${reassignTo}` : '';
             return api.delete<{ message: string; user: AdminUser }>(
-                `/auth/admin/users/${userId}`
+                `/auth/admin/users/${userId}${qs}`
             );
         },
         onSuccess: () => {

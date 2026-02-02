@@ -329,17 +329,19 @@ export async function authRoutes(fastify: FastifyInstance) {
   // Soft delete user (admin)
   interface DeleteUserParams {
     Params: { id: string };
+    Querystring: { reassignTo?: string };
   }
   fastify.delete<DeleteUserParams>('/admin/users/:id', { preHandler: [fastify.authenticate, requireRole('admin')] }, async (request, reply) => {
     const { id } = request.params;
     const deletedBy = request.user.userId;
+    const reassignToUserId = request.query.reassignTo;
 
     // Prevent self-deletion
     if (id === deletedBy) {
       return reply.code(400).send({ error: 'BAD_REQUEST', message: 'Cannot delete your own account' });
     }
 
-    const result = await authService.softDeleteUser(id, deletedBy);
+    const result = await authService.softDeleteUser(id, deletedBy, reassignToUserId);
 
     if (!result) {
       return reply.code(404).send({ error: 'NOT_FOUND', message: 'User not found or already deleted' });
