@@ -101,6 +101,9 @@
 | PRs | Description |
 |-----|-------------|
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
+| — | Intake `--pub-*` token boundary fix (housekeeping) |
+| — | `definition_kind` system: seed containers, remove sidebar heuristics (housekeeping) |
+| — | #235 Context Breadcrumb to Events (P1) |
 
 ---
 
