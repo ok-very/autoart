@@ -20,7 +20,7 @@
 
 import { useMemo } from 'react';
 import { clsx } from 'clsx';
-import { FileText, Link2, ExternalLink, Wrench, Lightbulb, Info, History, Tag, List, Plus, GitBranch, Map, Mail } from 'lucide-react';
+import { FileText, Link2, ExternalLink, Wrench, Lightbulb, Info, History, Tag, List, Plus, GitBranch, Map, Mail, X } from 'lucide-react';
 
 import { RecordPropertiesView } from './RecordPropertiesView';
 import { ImportItemDetailsView } from './ImportItemDetailsView';
@@ -79,6 +79,7 @@ export interface SelectionInspectorProps {
         selectedItemId: string | null;
         onSelectItem?: (id: string | null) => void;
     };
+    onClose?: () => void;
 }
 
 /**
@@ -98,7 +99,7 @@ function shouldAcceptSelection(selection: Selection, boundPanelIds: Set<string>)
     return false;
 }
 
-export function SelectionInspector({ importContext }: SelectionInspectorProps = {}) {
+export function SelectionInspector({ importContext, onClose }: SelectionInspectorProps = {}) {
     const { selection: globalSelection, inspectorTabMode, setInspectorMode, importPlan: globalPlan } = useUIStore();
     const collectionMode = useCollectionModeOptional();
     const boundPanelIds = useBoundPanelIds();
@@ -154,11 +155,22 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
             <div className="bg-ws-panel-bg flex flex-col h-full overflow-hidden">
                 <div className="h-10 border-b border-ws-panel-border flex items-center justify-between px-3 bg-ws-bg/50">
                     <span className="text-xs text-ws-muted">Select an item to inspect</span>
-                    {isBound && activeWorkspace && (
-                        <span className={clsx('text-[10px] font-medium px-1.5 py-0.5 rounded', colorClasses.bg100, colorClasses.text700)}>
-                            {activeWorkspace.label}
-                        </span>
-                    )}
+                    <div className="flex items-center">
+                        {isBound && activeWorkspace && (
+                            <span className={clsx('text-[10px] font-medium px-1.5 py-0.5 rounded', colorClasses.bg100, colorClasses.text700)}>
+                                {activeWorkspace.label}
+                            </span>
+                        )}
+                        {onClose && (
+                            <button
+                                onClick={onClose}
+                                className="ml-auto px-1.5 h-full flex items-center text-ws-muted hover:text-ws-text-secondary transition-colors"
+                                title="Close inspector"
+                            >
+                                <X size={14} />
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <div className="flex-1 flex items-center justify-center text-xs text-ws-muted p-4 text-center">
                     <div>
@@ -168,7 +180,7 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
                                 : 'No selection'}
                         </p>
                         <p className="text-ws-muted">
-                            Press <kbd className="px-1 py-0.5 bg-slate-100 rounded text-ws-text-secondary">Ctrl+D</kbd> to quick declare
+                            Press <kbd className="px-1 py-0.5 bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))] rounded text-ws-text-secondary">Ctrl+D</kbd> to quick declare
                         </p>
                     </div>
                 </div>
@@ -306,7 +318,7 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
                             onClick={() => setInspectorMode(tab.id)}
                             className={clsx(
                                 'flex-1 h-full flex items-center justify-center gap-1.5 text-xs font-medium transition-all relative',
-                                isActive ? 'text-blue-600' : 'text-ws-muted hover:text-ws-text-secondary'
+                                isActive ? 'text-[var(--ws-accent,#3F5C6E)]' : 'text-ws-muted hover:text-ws-text-secondary'
                             )}
                             data-aa-component="SelectionInspector"
                             data-aa-id={`tab-${tab.id}`}
@@ -315,7 +327,7 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
                             <Icon size={14} />
                             <span>{tab.label}</span>
                             {isActive && (
-                                <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-blue-600 rounded-t" />
+                                <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-[var(--ws-accent,#3F5C6E)] rounded-t" />
                             )}
                         </button>
                     );
@@ -344,6 +356,20 @@ export function SelectionInspector({ importContext }: SelectionInspectorProps = 
                     >
                         <Plus size={12} />
                         {collectionMode.isInCollection(inspectedItem.id) ? 'Added' : 'Add'}
+                    </button>
+                )}
+
+                {/* Close button */}
+                {onClose && (
+                    <button
+                        onClick={onClose}
+                        className={clsx(
+                            'px-1.5 h-full flex items-center text-ws-muted hover:text-ws-text-secondary transition-colors',
+                            collectionMode?.isCollecting && inspectedItem ? 'ml-1' : 'ml-auto'
+                        )}
+                        title="Close inspector"
+                    >
+                        <X size={14} />
                     </button>
                 )}
             </div>
