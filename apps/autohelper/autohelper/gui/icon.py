@@ -92,12 +92,18 @@ class AutoHelperIcon:
 
     @staticmethod
     def _check_paired() -> bool:
-        """Check whether an autoart_session_id exists in the persisted config."""
+        """Check whether an autoart_session_id exists in persisted config or settings."""
         try:
             from autohelper.config.store import ConfigStore
 
             cfg = ConfigStore().load()
-            return bool(cfg.get("autoart_session_id"))
+            if cfg.get("autoart_session_id"):
+                return True
+
+            from autohelper.config import get_settings
+
+            settings = get_settings()
+            return bool(getattr(settings, "autoart_session_id", ""))
         except Exception:
             return False
 

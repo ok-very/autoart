@@ -213,6 +213,32 @@ export async function seed(db: Kysely<Database>): Promise<void> {
     },
   ];
 
+  // ==================== CONTAINER DEFINITIONS ====================
+
+  const containers = [
+    {
+      name: 'Process',
+      definition_kind: 'container' as const,
+      is_system: true,
+      schema_config: JSON.stringify({ fields: [] }),
+      styling: JSON.stringify({ color: 'slate', icon: '⚙️' }),
+    },
+    {
+      name: 'Stage',
+      definition_kind: 'container' as const,
+      is_system: true,
+      schema_config: JSON.stringify({ fields: [] }),
+      styling: JSON.stringify({ color: 'slate', icon: '📂' }),
+    },
+    {
+      name: 'Subprocess',
+      definition_kind: 'container' as const,
+      is_system: true,
+      schema_config: JSON.stringify({ fields: [] }),
+      styling: JSON.stringify({ color: 'slate', icon: '🔧' }),
+    },
+  ];
+
   // ==================== ACTION ARRANGEMENT DEFINITIONS ====================
 
   const arrangements = [
@@ -278,6 +304,26 @@ export async function seed(db: Kysely<Database>): Promise<void> {
     }
   }
 
+  // Seed containers (idempotent, ensures is_system stays authoritative)
+  for (const ctr of containers) {
+    const existing = await db
+      .selectFrom('record_definitions')
+      .select('id')
+      .where('name', '=', ctr.name)
+      .where('definition_kind', '=', 'container')
+      .executeTakeFirst();
+
+    if (!existing) {
+      await db.insertInto('record_definitions').values(ctr).execute();
+    } else {
+      await db
+        .updateTable('record_definitions')
+        .set({ is_system: ctr.is_system })
+        .where('id', '=', existing.id)
+        .execute();
+    }
+  }
+
   // Seed arrangements (idempotent, updates schema_config on re-run)
   for (const arr of arrangements) {
     const existing = await db
@@ -290,10 +336,10 @@ export async function seed(db: Kysely<Database>): Promise<void> {
     if (!existing) {
       await db.insertInto('record_definitions').values(arr).execute();
     } else {
-      // Update schema_config to stay current
+      // Update schema_config and is_system to stay current
       await db
         .updateTable('record_definitions')
-        .set({ schema_config: arr.schema_config })
+        .set({ schema_config: arr.schema_config, is_system: arr.is_system })
         .where('id', '=', existing.id)
         .execute();
     }
