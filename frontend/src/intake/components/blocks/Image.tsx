@@ -12,10 +12,10 @@ export function ImageBlock({ block }: ImageBlockProps) {
     return (
       <div className="py-4">
         <div className="h-48 bg-slate-100 rounded-lg flex items-center justify-center">
-          <span className="text-ws-muted">Image placeholder</span>
+          <span className="text-pub-muted">Image placeholder</span>
         </div>
         {block.label && (
-          <p className="mt-2 text-sm text-center text-ws-text-secondary">{block.label}</p>
+          <p className="mt-2 text-sm text-center text-pub-text-secondary">{block.label}</p>
         )}
       </div>
     );
@@ -29,7 +29,7 @@ export function ImageBlock({ block }: ImageBlockProps) {
         className="max-w-full h-auto rounded-lg"
       />
       {block.label && (
-        <p className="mt-2 text-sm text-center text-ws-text-secondary">{block.label}</p>
+        <p className="mt-2 text-sm text-center text-pub-text-secondary">{block.label}</p>
       )}
     </div>
   );

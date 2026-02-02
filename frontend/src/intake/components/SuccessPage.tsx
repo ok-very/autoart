@@ -8,10 +8,10 @@ export function SuccessPage() {
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center max-w-md mx-auto px-4">
         <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-        <h1 className="text-ws-h1 font-semibold text-ws-fg mb-2">
+        <h1 className="text-pub-h1 font-semibold text-pub-fg mb-2">
           Submission Complete
         </h1>
-        <p className="text-ws-text-secondary mb-6">
+        <p className="text-pub-text-secondary mb-6">
           Thank you! Your form has been submitted successfully.
         </p>
         <a
