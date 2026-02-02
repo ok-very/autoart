@@ -1,11 +1,16 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-01*
+*Last Updated: 2026-02-02*
 
 ## Bug List
 
 - AutoHelper Settings doesn't link correctly to frontend menu
 - Login fails with demo account credentials - can't test
+- Action definitions are empty after migration
+- Avisina Broadway test seed data not populating record content, containers; processes/subprocesses not attached or recognized
+- "Save current" in menu doesn't activate save workspace prompt
+- Project button in header doesn't spawn new Project container
+- Calendar link in header menu not wired up
 
 ---
 
@@ -60,6 +65,13 @@
 
 | File | Issue |
 |------|-------|
+| Composer | Still references "recipes" rather than "arrangements" — rename throughout |
+| Selection editor / Schema editor | "Quick create" button still present even though superseded by ComposerBar; no correlating interface |
+| Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate — shared field component needs expanded options for where/how combobox is invoked |
+| Selection editor | "Plan" link badge system could just be a pointer to the active window name / binding group color instead of its own concept |
+| Header menu calendar link | Not wired up; could reuse same context badge pattern as selection editor |
+| AutoHelper popup menu | Needs space to insert and validate pairing code |
+| Workspace naming | "Workspace" panel collides with workspace system name — rename panel back to "Project View"; closing all panels should yield a blank area with just the plus/spawn buttons |
 | `frontend/src/intake/components/FormPage.tsx`, `Date.tsx`, `ShortAnswer.tsx` | Intake components use `--ws-*` tokens; should use `--pub-*` per design system token boundary |
 | `frontend/src/ui/sidebars/ProjectSidebar.tsx:78-80, 138-140` | `<label>` elements used as section headings without associated form controls — swap to `<p>` or `<span>` |
 | `frontend/src/intake/components/blocks/Date.tsx:22,29` | Missing `htmlFor`/`id` association between label and date input (ShortAnswer already has the correct pattern) |
@@ -87,7 +99,7 @@
 
 | PRs | Description |
 |-----|-------------|
-| #313-317 | UI Consistency Audit: dead code removal, font-bold→semibold, header heights h-10/h-8, `--ws-font-size-*` typography tokens, 2744 hardcoded slate/white→`--ws-*` color tokens, stale TODOs purged |
+| #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
 
 ---
 
@@ -95,6 +107,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | UI Consistency Audit: dead code removal, font-bold→semibold, header heights h-10/h-8, `--ws-font-size-*` typography tokens, 2744 hardcoded slate/white→`--ws-*` color tokens, stale TODOs purged | PRs #313-317 |
 | — | Bugfixes: Methodology→Process rename, fieldBindings crash, Bound→Linked, LoginPage tokens, Chladni badge/loader tile | PR #312 |
 | — | Dockview v4 theme, swoopy tab corners, unified ThemedTab, tab strip + button | PRs #307-311 |
 | 275 | Epic: Export Workbench — preview-first outputs + finance via sessions | PRs #286-290, #292 |
