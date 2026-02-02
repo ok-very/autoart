@@ -35,8 +35,14 @@ function CreateUserForm({ onClose }: { onClose: () => void }) {
 
     const handleSubmit = useCallback(async () => {
         setError('');
-        if (!email || !name || !password) {
+        const trimmedEmail = email.trim();
+        const trimmedName = name.trim();
+        if (!trimmedEmail || !trimmedName || !password) {
             setError('All fields are required');
+            return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+            setError('Invalid email address');
             return;
         }
         if (password.length < 6) {
@@ -44,7 +50,7 @@ function CreateUserForm({ onClose }: { onClose: () => void }) {
             return;
         }
         try {
-            await createMutation.mutateAsync({ email, name, role, password });
+            await createMutation.mutateAsync({ email: trimmedEmail, name: trimmedName, role, password });
             onClose();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to create user');
@@ -370,8 +376,12 @@ function UserRow({
     const [resetError, setResetError] = useState('');
 
     const handleRoleChange = useCallback(async (newRole: string) => {
-        await updateMutation.mutateAsync({ userId: user.id, role: newRole });
-        setEditingRole(false);
+        try {
+            await updateMutation.mutateAsync({ userId: user.id, role: newRole });
+            setEditingRole(false);
+        } catch {
+            // Keep the edit UI open so the user can retry.
+        }
     }, [user.id, updateMutation]);
 
     const handleResetPassword = useCallback(async () => {

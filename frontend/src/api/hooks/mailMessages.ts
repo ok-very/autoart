@@ -21,7 +21,7 @@ import type {
 
 export const mailMessageQueryKeys = {
   all: () => ['mailMessages'] as const,
-  messages: (filters?: { projectId?: string }) =>
+  messages: (filters?: { projectId?: string; limit?: number; offset?: number }) =>
     ['mailMessages', 'list', filters] as const,
   message: (id: string) => ['mailMessages', 'detail', id] as const,
   promotedIds: () => ['mailMessages', 'promotedIds'] as const,
@@ -42,8 +42,8 @@ export function useMailMessages(filters?: { projectId?: string; limit?: number; 
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters?.projectId) params.set('projectId', filters.projectId);
-      if (filters?.limit) params.set('limit', String(filters.limit));
-      if (filters?.offset) params.set('offset', String(filters.offset));
+      if (filters?.limit != null) params.set('limit', String(filters.limit));
+      if (filters?.offset != null) params.set('offset', String(filters.offset));
 
       const qs = params.toString();
       return api.get<{ messages: MailMessage[]; total: number }>(

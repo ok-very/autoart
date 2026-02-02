@@ -95,8 +95,9 @@ export function getAvatarPath(filename: string): string {
 }
 
 async function removeAvatarFile(userId: string): Promise<void> {
+    const safe = path.basename(userId);
     for (const ext of Object.values(ALLOWED_MIME)) {
-        const filePath = path.join(AVATARS_DIR, `${userId}.${ext}`);
+        const filePath = path.join(AVATARS_DIR, `${safe}.${ext}`);
         try {
             await stat(filePath);
             await unlink(filePath);

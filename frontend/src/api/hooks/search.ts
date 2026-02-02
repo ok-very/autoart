@@ -5,13 +5,13 @@ import { api } from '../client';
 
 // ==================== SEARCH ====================
 
-export function useSearch(query: string, projectId?: string, enabled = true) {
+export function useSearch(query: string, type?: string, enabled = true) {
   return useQuery({
-    queryKey: ['search', query, projectId],
+    queryKey: ['search', query, type],
     queryFn: () => {
       const params = new URLSearchParams({ q: query || '' });
-      if (projectId) params.set('projectId', projectId);
-      return api.get<{ results: SearchResult[] }>(`/search/resolve?${params}`).then(r => r.results);
+      return api.get<{ results: SearchResult[] }>(`/search/resolve?${params}`)
+        .then(r => type ? r.results.filter(item => item.type === type) : r.results);
     },
     enabled,
     staleTime: 10000,
