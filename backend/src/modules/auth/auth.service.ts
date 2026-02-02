@@ -321,8 +321,73 @@ export async function adminUpdateUser(userId: string, input: { name?: string; em
 /**
  * Soft delete a user.
  * Sets deleted_at and deleted_by, revokes all sessions.
+ * If reassignToUserId is provided:
+ *   - Reassigns created_by on hierarchy_nodes and records
+ *   - Transfers project ownership where user is owner
+ *   - Removes user from all project_members
+ * Does NOT reassign actor_id on events — those are immutable audit history.
  */
-export async function softDeleteUser(userId: string, deletedBy: string) {
+export async function softDeleteUser(userId: string, deletedBy: string, reassignToUserId?: string) {
+  // Reassign ownership before deactivation
+  if (reassignToUserId) {
+    // Reassign created_by on hierarchy_nodes
+    await db
+      .updateTable('hierarchy_nodes')
+      .set({ created_by: reassignToUserId })
+      .where('created_by', '=', userId)
+      .execute();
+
+    // Reassign created_by on records
+    await db
+      .updateTable('records')
+      .set({ created_by: reassignToUserId })
+      .where('created_by', '=', userId)
+      .execute();
+
+    // Transfer project ownerships
+    const ownerships = await db
+      .selectFrom('project_members')
+      .select('project_id')
+      .where('user_id', '=', userId)
+      .where('role', '=', 'owner')
+      .execute();
+
+    for (const { project_id } of ownerships) {
+      // Check if target is already a member
+      const existing = await db
+        .selectFrom('project_members')
+        .select('id')
+        .where('project_id', '=', project_id)
+        .where('user_id', '=', reassignToUserId)
+        .executeTakeFirst();
+
+      if (existing) {
+        await db
+          .updateTable('project_members')
+          .set({ role: 'owner' })
+          .where('project_id', '=', project_id)
+          .where('user_id', '=', reassignToUserId)
+          .execute();
+      } else {
+        await db
+          .insertInto('project_members')
+          .values({
+            project_id,
+            user_id: reassignToUserId,
+            role: 'owner',
+            assigned_by: deletedBy,
+          })
+          .execute();
+      }
+    }
+
+    // Remove user from all project memberships
+    await db
+      .deleteFrom('project_members')
+      .where('user_id', '=', userId)
+      .execute();
+  }
+
   // Set deleted_at and deleted_by
   const result = await db
     .updateTable('users')

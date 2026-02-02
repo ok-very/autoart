@@ -232,6 +232,16 @@ export {
   type AdminUser,
 } from './admin';
 
+// Project Members
+export {
+  useProjectMembers,
+  useAddProjectMember,
+  useRemoveProjectMember,
+  useUpdateProjectMemberRole,
+  useTransferOwnership,
+  type ProjectMember,
+} from './projectMembers';
+
 // Intake Forms
 export {
   useIntakeForms,

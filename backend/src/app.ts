@@ -19,6 +19,7 @@ import { workflowRoutes } from './modules/events/workflow.routes.js';
 import { exportsRoutes } from './modules/exports/exports.routes.js';
 import { gcRoutes } from './modules/gc/gc.routes.js';
 import { hierarchyRoutes } from './modules/hierarchy/hierarchy.routes.js';
+import { projectMembersRoutes } from './modules/hierarchy/project-members.routes.js';
 import { connectionsRoutes } from './modules/imports/connections.routes.js';
 import { importsRoutes } from './modules/imports/imports.routes.js';
 import { mondayWorkspaceRoutes } from './modules/imports/monday/monday-workspace.routes.js';
@@ -76,6 +77,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(authRoutes, { prefix: '/api/auth' });
   await fastify.register(avatarRoutes, { prefix: '/api/avatars' });
   await fastify.register(hierarchyRoutes, { prefix: '/api/hierarchy' });
+  await fastify.register(projectMembersRoutes, { prefix: '/api/projects' });
   await fastify.register(recordsRoutes, { prefix: '/api/records' });
   await fastify.register(searchRoutes, { prefix: '/api/search' });
   await fastify.register(linksRoutes, { prefix: '/api/links' });

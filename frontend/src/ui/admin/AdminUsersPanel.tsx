@@ -5,7 +5,7 @@
  */
 
 import { Trash2, Users, Loader2, AlertTriangle, CheckCircle2, XCircle, UserPlus, KeyRound } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 import {
     useAdminUsers,
@@ -13,8 +13,10 @@ import {
     useCreateUser,
     useUpdateUser,
     useResetUserPassword,
+    useSearchUsers,
     type AdminUser,
 } from '../../api/hooks';
+import { useDebounce } from '../../hooks/useDebounce';
 import { Badge } from '@autoart/ui';
 
 const ROLE_OPTIONS = ['user', 'admin', 'viewer'] as const;
@@ -105,6 +107,115 @@ function CreateUserForm({ onClose }: { onClose: () => void }) {
 }
 
 // ============================================================================
+// REASSIGN PICKER (inline user search for deactivation)
+// ============================================================================
+
+function ReassignPicker({
+    users,
+    value,
+    onChange,
+}: {
+    users: AdminUser[];
+    value: string | null;
+    onChange: (userId: string | null) => void;
+}) {
+    const [query, setQuery] = useState('');
+    const [open, setOpen] = useState(false);
+    const debouncedQuery = useDebounce(query, 150);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Also search backend for users not in the admin list
+    const { data: searchResults = [] } = useSearchUsers(debouncedQuery, open && debouncedQuery.length >= 1);
+
+    // Merge admin list with search results, deduplicate
+    const candidates = debouncedQuery.length >= 1
+        ? (() => {
+            const ids = new Set<string>();
+            const merged: { id: string; name: string; email: string; avatar_url: string | null }[] = [];
+            // Prioritize admin list (already loaded)
+            for (const u of users) {
+                if (u.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+                    u.email.toLowerCase().includes(debouncedQuery.toLowerCase())) {
+                    ids.add(u.id);
+                    merged.push(u);
+                }
+            }
+            for (const u of searchResults) {
+                if (!ids.has(u.id)) {
+                    merged.push({ id: u.id, name: u.name, email: u.email, avatar_url: u.avatar_url ?? null });
+                }
+            }
+            return merged.slice(0, 8);
+        })()
+        : users.slice(0, 8);
+
+    const selected = value ? users.find(u => u.id === value) ?? null : null;
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                setOpen(false);
+            }
+        };
+        if (open) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [open]);
+
+    if (selected && !open) {
+        return (
+            <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-slate-700">{selected.name}</span>
+                <button
+                    onClick={() => { onChange(null); setQuery(''); }}
+                    className="text-slate-400 hover:text-slate-600"
+                >
+                    <XCircle className="w-3 h-3" />
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div ref={containerRef} className="relative">
+            <input
+                type="text"
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+                onFocus={() => setOpen(true)}
+                placeholder="(optional)"
+                className="px-2 py-0.5 text-xs border border-slate-300 rounded w-36 focus:outline-none focus:ring-1 focus:ring-slate-400"
+            />
+            {open && candidates.length > 0 && (
+                <div className="absolute z-50 w-56 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-40 overflow-auto">
+                    {candidates.map((u) => (
+                        <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => { onChange(u.id); setOpen(false); setQuery(''); }}
+                            className="w-full px-3 py-1.5 text-left hover:bg-slate-50 flex items-center gap-2"
+                        >
+                            {u.avatar_url ? (
+                                <img src={u.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover shrink-0" />
+                            ) : (
+                                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-[10px] font-semibold shrink-0">
+                                    {u.name.charAt(0).toUpperCase()}
+                                </div>
+                            )}
+                            <div className="min-w-0">
+                                <div className="text-xs font-medium text-slate-800 truncate">{u.name}</div>
+                                <div className="text-[10px] text-slate-500 truncate">{u.email}</div>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -112,16 +223,23 @@ export function AdminUsersPanel() {
     const { data: users, isLoading, error } = useAdminUsers();
     const softDeleteMutation = useSoftDeleteUser();
     const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
+    const [reassignTo, setReassignTo] = useState<string | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
 
     const handleDelete = useCallback(async (userId: string) => {
         try {
-            await softDeleteMutation.mutateAsync(userId);
+            await softDeleteMutation.mutateAsync({ userId, reassignTo: reassignTo ?? undefined });
             setConfirmingDelete(null);
+            setReassignTo(null);
         } catch (err) {
             console.error('Failed to delete user:', err);
         }
-    }, [softDeleteMutation]);
+    }, [softDeleteMutation, reassignTo]);
+
+    const cancelDelete = useCallback(() => {
+        setConfirmingDelete(null);
+        setReassignTo(null);
+    }, []);
 
     if (isLoading) {
         return (
@@ -173,11 +291,14 @@ export function AdminUsersPanel() {
                     <UserRow
                         key={user.id}
                         user={user}
+                        allUsers={activeUsers}
                         isConfirmingDelete={confirmingDelete === user.id}
-                        isDeleting={softDeleteMutation.isPending && softDeleteMutation.variables === user.id}
+                        isDeleting={softDeleteMutation.isPending && softDeleteMutation.variables?.userId === user.id}
+                        reassignTo={reassignTo}
+                        onReassignToChange={setReassignTo}
                         onDeleteClick={() => setConfirmingDelete(user.id)}
                         onConfirmDelete={() => handleDelete(user.id)}
-                        onCancelDelete={() => setConfirmingDelete(null)}
+                        onCancelDelete={cancelDelete}
                     />
                 ))}
             </div>
@@ -218,9 +339,12 @@ export function AdminUsersPanel() {
 
 interface UserRowProps {
     user: AdminUser;
+    allUsers?: AdminUser[];
     isDeleted?: boolean;
     isConfirmingDelete?: boolean;
     isDeleting?: boolean;
+    reassignTo?: string | null;
+    onReassignToChange?: (userId: string | null) => void;
     onDeleteClick?: () => void;
     onConfirmDelete?: () => void;
     onCancelDelete?: () => void;
@@ -228,9 +352,12 @@ interface UserRowProps {
 
 function UserRow({
     user,
+    allUsers = [],
     isDeleted = false,
     isConfirmingDelete = false,
     isDeleting = false,
+    reassignTo,
+    onReassignToChange,
     onDeleteClick,
     onConfirmDelete,
     onCancelDelete,
@@ -344,8 +471,18 @@ function UserRow({
             {!isDeleted && (
                 <div className="flex items-center gap-1 ml-4">
                     {isConfirmingDelete ? (
-                        <>
-                            <span className="text-sm text-red-600 mr-2">Delete user?</span>
+                        <div className="flex items-center gap-2">
+                            <div className="flex flex-col gap-1.5 mr-2">
+                                <span className="text-sm text-red-600">Deactivate user?</span>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-xs text-slate-500">Reassign to:</span>
+                                    <ReassignPicker
+                                        users={allUsers.filter(u => u.id !== user.id)}
+                                        value={reassignTo ?? null}
+                                        onChange={onReassignToChange ?? (() => {})}
+                                    />
+                                </div>
+                            </div>
                             <button
                                 onClick={onConfirmDelete}
                                 disabled={isDeleting}
@@ -364,7 +501,7 @@ function UserRow({
                             >
                                 <XCircle className="w-4 h-4" />
                             </button>
-                        </>
+                        </div>
                     ) : (
                         <>
                             <button
