@@ -75,9 +75,9 @@ export function ProjectSidebar() {
         <div className="flex flex-col h-full bg-ws-bg overflow-hidden relative" style={{ position: 'relative' }}>
             {/* Project Selector */}
             <div className="p-3 border-b border-ws-panel-border bg-ws-panel-bg">
-                <label className="text-[10px] font-semibold text-ws-muted uppercase tracking-wider mb-1 block">
+                <p className="text-[10px] font-semibold text-ws-muted uppercase tracking-wider mb-1">
                     Project
-                </label>
+                </p>
                 <Menu>
                     <Menu.Target>
                         <button className="w-full flex items-center justify-between bg-ws-bg hover:bg-slate-100 border border-ws-panel-border px-3 py-2 rounded-lg transition-colors text-left">
@@ -135,9 +135,9 @@ export function ProjectSidebar() {
             </div>
             {processes.length > 0 && (
                 <div className="p-3 border-b border-ws-panel-border bg-ws-panel-bg">
-                    <label className="text-[10px] font-semibold text-ws-muted uppercase tracking-wider mb-1 block">
+                    <p className="text-[10px] font-semibold text-ws-muted uppercase tracking-wider mb-1">
                         Process {processes.length > 1 && `(${processes.length})`}
-                    </label>
+                    </p>
                     <div className="relative">
                         <button
                             onClick={() => processes.length > 1 ? setIsProcessDropdownOpen(!isProcessDropdownOpen) : setSelection({ type: 'node', id: selectedProcess!.id })}

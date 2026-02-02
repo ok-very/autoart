@@ -71,18 +71,11 @@
 | Selection editor | "Plan" link badge system could just be a pointer to the active window name / binding group color instead of its own concept |
 | Header menu calendar link | Not wired up; could reuse same context badge pattern as selection editor |
 | Workspace naming | "Workspace" panel collides with workspace system name — rename panel back to "Project View"; closing all panels should yield a blank area with just the plus/spawn buttons |
-| `frontend/src/intake/components/FormPage.tsx`, `Date.tsx`, `ShortAnswer.tsx` | Intake components use `--ws-*` tokens; should use `--pub-*` per design system token boundary |
-| `frontend/src/ui/sidebars/ProjectSidebar.tsx:78-80, 138-140` | `<label>` elements used as section headings without associated form controls — swap to `<p>` or `<span>` |
-| `frontend/src/intake/components/blocks/Date.tsx:22,29` | Missing `htmlFor`/`id` association between label and date input (ShortAnswer already has the correct pattern) |
 | `frontend/src/ui/table-core/UniversalTableCore.tsx` + composites | All tables are div-based with `role` attributes — semantic HTML (`<table>`, `<thead>`, `<tbody>`, `<tr>`, `<td>`, `<th>`) would improve accessibility, browser print styles, native keyboard nav |
-| `frontend/src/pages/SettingsPage.tsx:123-124, 144-146` | Hardcoded Tailwind colors in header icon gradient (`from-indigo-500 to-purple-600`) and nav active/hover states (`bg-slate-900 text-white`, `hover:bg-slate-100`) — should use `--ws-*` tokens |
-| `packages/ui/src/atoms/*` | Atom components (Button, Badge, Card, TextInput, etc.) use hardcoded Tailwind colors (`bg-blue-600`, `bg-green-100`, `bg-white`, `border-slate-300`) instead of `--ws-*` design tokens — needs systematic migration |
-| `packages/ui/src/atoms/Card.tsx` | Uses `bg-white` instead of `--ws-panel-bg` token |
+| `packages/ui/src/atoms/*` | Atom components (Button, Badge, TextInput, etc.) use hardcoded Tailwind colors (`bg-blue-600`, `bg-green-100`, `border-slate-300`) instead of `--ws-*` design tokens — needs systematic migration |
 | Toggle atom candidate | AutoHelperSection MailCard has hand-rolled toggle switch — if worth reusing, create Toggle atom using `--ws-accent` for on, `--ws-panel-border` for off |
-| `backend/src/db/seeds/001_record_definitions.ts` | Wrap seed loops in a transaction for atomicity (CodeAnt #324 review) |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` has no explicit UI/behavior mapping — containers render as actions (icon, labels, create flow). Needs dedicated UX treatment (CodeAnt #324 review) |
 | `frontend/src/ui/sidebars/` + definition filtering | Definitions without `definition_kind` (legacy/manual rows) excluded entirely by new filter — add fallback or migration to backfill (CodeAnt #324 review) |
-| `backend/src/db/migrations/` | Missing migration file `036_action_type_definitions` — Kysely complains "corrupted migrations: previously executed migration 036_action_type_definitions is missing" on `db:rebuild` |
 
 ---
 

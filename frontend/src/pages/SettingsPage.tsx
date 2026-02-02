@@ -120,8 +120,8 @@ export function SettingsPage() {
             <header className="bg-ws-panel-bg border-b border-ws-panel-border">
                 <div className="max-w-5xl mx-auto px-6 py-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <Settings className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 bg-[var(--ws-accent)] rounded-lg flex items-center justify-center">
+                            <Settings className="w-5 h-5 text-[var(--ws-accent-fg)]" />
                         </div>
                         <div>
                             <h1 className="text-xl font-semibold text-ws-fg">Settings</h1>
@@ -142,8 +142,8 @@ export function SettingsPage() {
                                     <button
                                         onClick={() => setActiveTab(item.id)}
                                         className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === item.id
-                                            ? 'bg-slate-900 text-white'
-                                            : 'text-ws-text-secondary hover:bg-slate-100'
+                                            ? 'bg-[var(--ws-accent)] text-[var(--ws-accent-fg)]'
+                                            : 'text-ws-text-secondary hover:bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))]'
                                             }`}
                                     >
                                         {item.icon}
