@@ -52,5 +52,8 @@ catalog:
   # Document generation
   docx: "^9.4.1"
 
+  # HTML sanitization
+  dompurify: "^3.2.0"
+
   # Document preview
   react-pdf: "^10.0.0"

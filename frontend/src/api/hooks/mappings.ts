@@ -29,8 +29,6 @@ export interface ActionMappings {
     references: ActionReference[];
     /** Events associated with this action */
     events: Event[];
-    /** Email IDs linked to this action (via events) */
-    linkedEmailIds: string[];
 }
 
 /**
@@ -63,6 +61,7 @@ export interface MappingEntry {
     id: string;
     type: 'email' | 'record' | 'action' | 'document';
     title: string;
+    subtitle?: string;
     status: MappingStatus;
     mode?: 'static' | 'dynamic';
     lastSynced?: string;
@@ -81,7 +80,7 @@ export function useActionMappings(actionId: string | null) {
         queryKey: ['mappings', 'action', actionId],
         queryFn: async (): Promise<ActionMappings> => {
             if (!actionId) {
-                return { references: [], events: [], linkedEmailIds: [] };
+                return { references: [], events: [] };
             }
 
             // Fetch references and events in parallel with individual error handling
@@ -98,19 +97,9 @@ export function useActionMappings(actionId: string | null) {
                 ? eventsResult.value.events
                 : [];
 
-            // Extract email IDs from email-related events with safe payload access
-            const linkedEmailIds = events
-                .filter((e) => e.type === 'EMAIL_RECEIVED' || e.type === 'EMAIL_SENT')
-                .map((e) => {
-                    const payload = e.payload as Record<string, unknown> | null;
-                    return payload && typeof payload.emailId === 'string' ? payload.emailId : null;
-                })
-                .filter((id): id is string => !!id);
-
             return {
                 references,
                 events,
-                linkedEmailIds: [...new Set(linkedEmailIds)],
             };
         },
         enabled: !!actionId,
@@ -190,16 +179,6 @@ export function toMappingEntries(mappings: ActionMappings): MappingEntry[] {
                 mode: ref.mode,
             });
         }
-    }
-
-    // Add linked emails
-    for (const emailId of mappings.linkedEmailIds) {
-        entries.push({
-            id: emailId,
-            type: 'email',
-            title: `Email ${emailId.slice(0, 8)}...`,
-            status: 'synced',
-        });
     }
 
     return entries;

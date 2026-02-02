@@ -62,12 +62,11 @@
 | 177 | Integrate intake forms with records system | Intake |
 | 159 | Contacts quick-export overlay (vCard, recipient formats) | Feature |
 | 84 | Email Notices API | Backend |
-| — | Wire MappingsPanel "Linked Emails" section to real data (useMailLinksForTarget hook) | Frontend |
 | 85 | Templating Engine | Feature |
 | 86 | Monday.com Board Sync Settings | Integration |
 | 291 | Schema editor / Composer relationship-math builder | Feature |
+| — | Composer bar as sleek dockview popout window (replace modal) | UX |
 | — | Action vocabulary: store classification verbs/nouns/adjectives from imports as a heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret what action type is being constructed or referenced | Classification |
-| — | Table atom primitives: `<table>`-based Table.Root/Header/Body/Row/Cell/HeaderCell with size scale, semantic HTML for accessibility, lightweight option for simple display tables | UI |
 
 ---
 
@@ -80,11 +79,23 @@
 | Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate — shared field component needs expanded options for where/how combobox is invoked |
 | Selection editor | "Plan" link badge system could just be a pointer to the active window name / binding group color instead of its own concept |
 | ~~Workspace naming~~ | ~~Panel renamed to "Project View" (PR #339); blank area with spawn buttons already works~~ |
-| `frontend/src/ui/table-core/UniversalTableCore.tsx` + composites | All tables are div-based with `role` attributes — semantic HTML (`<table>`, `<thead>`, `<tbody>`, `<tr>`, `<td>`, `<th>`) would improve accessibility, browser print styles, native keyboard nav |
+| `frontend/src/ui/table-core/UniversalTableCore.tsx` + composites | All tables are div-based with `role` attributes — migrate to new Table atom primitives from PR #350 for semantic HTML, browser print styles, native keyboard nav |
 | `packages/ui/src/atoms/Badge.tsx` | Badge variant colors (project, process, task, etc.) use domain-semantic Tailwind colors — needs separate approach since they're not chrome tokens |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` has no explicit UI/behavior mapping — containers render as actions (icon, labels, create flow). Needs dedicated UX treatment (CodeAnt #324 review) |
 | `frontend/src/ui/sidebars/` + definition filtering | Definitions without `definition_kind` (legacy/manual rows) excluded entirely by new filter — add fallback or migration to backfill (CodeAnt #324 review) |
 | `ExportMenu.tsx` | `invoiceNumber` now sent to PDF/DOCX export endpoints — backend handlers should consume it for Content-Disposition filenames |
+| `apps/autohelper/autohelper/modules/mail/router.py` | Triage status "pending" in `VALID_TRIAGE_STATUSES` conflicts with implicit "pending" default — callers can't distinguish never-triaged from explicitly-triaged (CodeAnt #346) |
+| `apps/autohelper/autohelper/modules/mail/router.py` | `_update_triage` shorthand endpoints (`archive`, `mark-action-required`, `mark-informational`) silently erase existing `triage_notes` when passing `None` — preserve existing notes (CodeAnt #346) |
+| `apps/autohelper/autohelper/modules/mail/schemas.py` | `TriageResponse.triaged_at` typed as `str | None` but `TransientEmail.triaged_at` is `datetime | None` — inconsistent API contract (CodeAnt #346) |
+| `frontend/src/api/types/mail.ts` | Frontend `triage_status` typed as `TriageStatus` union but backend schema is plain `str | None` — type mismatch if backend sends unexpected value (CodeAnt #346) |
+| `frontend/src/api/hooks/mailMessages.ts` | `usePromoteEmail` invalidates `messages()` with no args — filtered queries (project/pagination) stay stale; invalidate `['mailMessages', 'list']` prefix (CodeAnt #347) |
+| `frontend/src/api/hooks/mailMessages.ts` | `useUnlinkEmail` only invalidates generic `mailMessages` key, not specific `links` queries — `useMailLinksForTarget` consumers keep showing removed links (CodeAnt #347) |
+| `frontend/src/api/types/mail.ts` | `MailMessage.metadata` typed as `Record<string, unknown>` but backend stores via `JSON.stringify` — could be any JSON value, use `unknown` (CodeAnt #347) |
+| `backend/src/db/migrations/052_mail_messages.ts` | Explicit index on `external_id` redundant (UNIQUE already creates one) — extra write overhead (CodeAnt #348) |
+| `backend/src/db/migrations/052_mail_messages.ts` | Explicit index on `mail_message_id` redundant (composite unique constraint already covers it as leading column) — extra write overhead (CodeAnt #348) |
+| `frontend/src/api/hooks/search.ts` | `useSearch` second param repurposed from `projectId` to `type` — `MentionSuggestion.tsx` still passes project UUID, returns empty results (CodeAnt #349) |
+| `frontend/src/ui/admin/AdminUsersPanel.tsx` | Create-user handler lacks `isPending` guard — rapid Enter presses can fire duplicate create requests (CodeAnt #349) |
+| `frontend/src/ui/admin/AdminUsersPanel.tsx` | Role-change empty `catch` doesn't reopen edit UI after failure when `onBlur` already closed it — suggest `setEditingRole(true)` in catch (CodeAnt #349) |
 
 **Low priority (CodeAnt #332 nitpicks):**
 
@@ -117,7 +128,8 @@
 
 | PRs | Description |
 |-----|-------------|
-| #346-348 | Email Logging System: AutoHelper triage endpoints, PostgreSQL mail_messages + mail_links persistence, frontend mail linking + promoted badges (Issue 83) |
+| #350-352 | Email Section Redesign: Table atom primitives + MailPanel refactor, body_html capture across AutoHelper/backend/frontend, MappingsPanel email section with expand/collapse and HTML rendering + formatTimeAgo utility (Issue 83) |
+| #346-349 | Email Logging System: AutoHelper triage endpoints, PostgreSQL mail_messages + mail_links persistence, frontend mail linking + promoted badges, CodeAnt review fixes + MappingsPanel useMailLinksForTarget wiring (Issue 83) |
 | #341-345 | User Profiles System: schema + role middleware, avatar upload + password change + admin CRUD, account settings UI + admin panel + header avatar, UserChip photo support, project assignment + deactivation reassignment (Issues 82a-82e) |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
 
@@ -127,6 +139,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | Wire MappingsPanel linked emails to useMailLinksForTarget (rich metadata vs truncated IDs) | PR #349 |
 | 82a-82e | User Profiles System: CRUD + role middleware, avatar upload, password change, admin panel, UserChip photos, project assignment, deactivation reassignment | PRs #341-345 |
 | — | UX polish: Menu/Dropdown `--ws-*` token migration + glassmorphism | PR #337 |
 | — | UX polish: SelectionInspector close button + tab accent migration to `--ws-accent` | PR #338 |
