@@ -75,7 +75,9 @@
 
 ## In-Flight (Awaiting Review)
 
-*(none)*
+| PRs | Description |
+|-----|-------------|
+| #313-317 | UI Consistency Audit: dead code removal, font-bold→semibold, header heights h-10/h-8, `--ws-font-size-*` typography tokens, 2744 hardcoded slate/white→`--ws-*` color tokens, stale TODOs purged |
 
 ---
 
