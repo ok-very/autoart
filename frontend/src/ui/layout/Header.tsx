@@ -193,8 +193,11 @@ export function Header() {
             </Menu>
           )}
 
+          {/* Divider */}
+          <div className="h-5 w-px bg-[var(--ws-panel-border)]" />
+
           {/* Navigation Links */}
-          <Inline gap="sm" className="ml-4">
+          <Inline gap="sm">
             {/* Workbench Dropdown */}
             <Menu>
               <Menu.Target>

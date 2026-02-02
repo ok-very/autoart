@@ -5,7 +5,6 @@
  * - Fetches definition data based on item type (node or record)
  * - Manages schema fields CRUD operations
  * - Handles definition styling (icon, color)
- * - Manages pinned state for quick create
  *
  * Design Rules:
  * - Self-contained data fetching and persistence
@@ -13,8 +12,7 @@
  * - No external onChange - all updates go through API
  */
 
-import { clsx } from 'clsx';
-import { Copy, AlertCircle, Trash2, Pin, Edit2, Check, X } from 'lucide-react';
+import { Copy, AlertCircle, Trash2, Edit2, Check, X } from 'lucide-react';
 import { useState, useMemo } from 'react';
 
 import {
@@ -209,15 +207,6 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
         await updateDefinition.mutateAsync({
             id: definition.id,
             styling: { ...definition.styling, icon: emoji },
-        });
-    };
-
-    const handlePinnedChange = async (pinned: boolean) => {
-        if (!definition) return;
-
-        await updateDefinition.mutateAsync({
-            id: definition.id,
-            pinned,
         });
     };
 
@@ -452,31 +441,6 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
                         </div>
                     </div>
 
-                    {/* Pinned Toggle */}
-                    <div className="flex items-center justify-between pt-2">
-                        <div className="flex items-center gap-2">
-                            <Pin size={14} className={definition.pinned ? 'text-blue-500' : 'text-ws-muted'} />
-                            <span className="text-xs text-ws-text-secondary">Pin to Quick Create</span>
-                        </div>
-                        <button
-                            onClick={() => handlePinnedChange(!definition.pinned)}
-                            className={clsx(
-                                'relative inline-flex h-5 w-9 items-center rounded-full transition-colors',
-                                definition.pinned ? 'bg-blue-500' : 'bg-slate-300'
-                            )}
-                        >
-                            <span
-                                className={clsx(
-                                    'inline-block h-4 w-4 transform rounded-full bg-ws-panel-bg shadow transition-transform',
-                                    definition.pinned ? 'translate-x-4' : 'translate-x-0.5'
-                                )}
-                            />
-                        </button>
-                    </div>
-                    <p className="text-[10px] text-ws-muted leading-relaxed">
-                        When pinned, this record type appears in the quick create menu in the hierarchy
-                        sidebar.
-                    </p>
                 </div>
             )}
         </div>
