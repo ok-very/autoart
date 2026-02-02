@@ -4,6 +4,10 @@
 
 ## Bug List
 
+**Active blocking:**
+- **AutoHelper tray menu shows "Paired" on launch without pairing** — stale state from local config, no backend validation on tray init
+- **dompurify throws blocking Vite build errors** — introduced in #352, breaks production builds
+
 **Needs manual verification:**
 - Login fails with demo account credentials — `seed:dev` creates the user, but default `db:rebuild` workflow may not
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested

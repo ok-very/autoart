@@ -10,7 +10,7 @@
  */
 
 import { clsx } from 'clsx';
-import DOMPurify from 'dompurify';
+
 import {
     Link2,
     Mail,
@@ -229,18 +229,6 @@ function SectionHeader({
 }
 
 /**
- * DOMPurify config for email HTML — strip elements that could escape
- * the container or hijack the page, but allow inline styles (emails
- * depend on them for layout).
- */
-const PURIFY_CONFIG = {
-    FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'form'],
-    FORBID_ATTR: ['onerror', 'onload', 'onclick'],
-    ALLOW_ARIA_ATTR: false,
-    ADD_ATTR: ['target'],
-};
-
-/**
  * Email mapping row with expand/collapse and HTML rendering.
  * File-local — only used in ActionMappingsPanel.
  */
@@ -317,16 +305,11 @@ function EmailMappingRow({
                     <div className="px-3 pb-3 pt-1 ml-11 space-y-2">
                         {/* Body content */}
                         {message.body_html ? (
-                            <div
-                                className={clsx(
-                                    'text-xs text-[var(--ws-text-secondary)] max-h-60 overflow-auto',
-                                    'rounded border border-[var(--ws-panel-border)] p-2',
-                                    '[&_*]:max-w-full [&_img]:max-w-full [&_table]:max-w-full',
-                                    '[&_*]:!position-[static] [&_*]:!z-auto',
-                                )}
-                                dangerouslySetInnerHTML={{
-                                    __html: DOMPurify.sanitize(message.body_html, PURIFY_CONFIG),
-                                }}
+                            <iframe
+                                srcDoc={message.body_html}
+                                sandbox=""
+                                className="w-full max-h-60 border border-[var(--ws-panel-border)] rounded"
+                                title="Email content"
                             />
                         ) : message.body_preview ? (
                             <p className="text-xs text-[var(--ws-text-secondary)] whitespace-pre-line line-clamp-3">

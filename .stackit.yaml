@@ -17,7 +17,7 @@ navigation:
 
 # Branch naming pattern
 branch:
-  pattern: "{username}/{date}/{message}"
+  pattern: "cc/{date}/{message}"
 
 # PR submission settings
 submit:
