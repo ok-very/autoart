@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
     Mail,
     RefreshCw,
@@ -17,6 +17,7 @@ import {
     useEnrichedInbox,
     useMailStatus,
 } from '../../api/hooks/mail';
+import { usePromotedIds } from '../../api/hooks/mailMessages';
 import type { ProcessedEmail, Priority, TriageStatus as TriageStatusType } from '../../api/types/mail';
 import { EmailActionsMenu } from '../mail/EmailActionsMenu';
 
@@ -58,7 +59,7 @@ function TriageStatusIndicator({ status, confidence }: { status: TriageStatusTyp
     );
 }
 
-function EmailRow({ email, onAction }: { email: ProcessedEmail; onAction?: () => void }) {
+function EmailRow({ email, isPromoted, onAction }: { email: ProcessedEmail; isPromoted?: boolean; onAction?: () => void }) {
     const formattedDate = email.receivedAt
         ? new Intl.DateTimeFormat('en-US', {
             month: 'short',
@@ -83,6 +84,11 @@ function EmailRow({ email, onAction }: { email: ProcessedEmail; onAction?: () =>
             <td className="px-4 py-3">
                 <div className="flex items-center gap-2">
                     <span className="font-medium text-ws-fg truncate">{email.subject}</span>
+                    {isPromoted && (
+                        <span className="shrink-0 px-1.5 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-medium rounded" title="Saved to system">
+                            saved
+                        </span>
+                    )}
                     {email.hasAttachments && <Paperclip size={14} className="text-ws-muted flex-shrink-0" />}
                 </div>
                 <div className="text-sm text-ws-text-secondary truncate">{email.bodyPreview}</div>
@@ -134,6 +140,12 @@ function StatusIndicator() {
 export function MailPanel(_props: IDockviewPanelProps) {
     const [offset, setOffset] = useState(0);
     const [useEnrichment, setUseEnrichment] = useState(true);
+
+    const { data: promotedIds } = usePromotedIds();
+    const promotedSet = useMemo(
+        () => new Set(promotedIds ?? []),
+        [promotedIds]
+    );
 
     const basicQuery = useInbox({
         limit: ITEMS_PER_PAGE,
@@ -259,7 +271,7 @@ export function MailPanel(_props: IDockviewPanelProps) {
                             </thead>
                             <tbody>
                                 {data?.emails.map((email) => (
-                                    <EmailRow key={email.id} email={email} onAction={() => refetch()} />
+                                    <EmailRow key={email.id} email={email} isPromoted={promotedSet.has(email.id)} onAction={() => refetch()} />
                                 ))}
                             </tbody>
                         </table>

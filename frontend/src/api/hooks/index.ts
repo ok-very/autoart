@@ -273,6 +273,18 @@ export {
   mailQueryKeys,
 } from './mail';
 
+// Mail Messages (PostgreSQL persistence - promoted emails + links)
+export {
+  useMailMessages,
+  useMailMessage,
+  usePromotedIds,
+  usePromoteEmail,
+  useLinkEmail,
+  useUnlinkEmail,
+  useMailLinksForTarget,
+  mailMessageQueryKeys,
+} from './mailMessages';
+
 // AutoHelper Filetree, Export & Artifact Lookup
 export {
   useFiletree,
