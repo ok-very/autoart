@@ -10,51 +10,16 @@
  */
 
 import { FastifyInstance } from 'fastify';
+import { z } from 'zod';
 
 import * as projector from './workflow-surface.projector.js';
 import type { ContextType } from '../../db/schema.js';
 
-// Response schema for surface nodes
-const surfaceNodeSchema = {
-  type: 'object',
-  properties: {
-    actionId: { type: 'string', format: 'uuid' },
-    parentActionId: { type: 'string', format: 'uuid', nullable: true },
-    depth: { type: 'integer' },
-    position: { type: 'integer' },
-    payload: {
-      type: 'object',
-      properties: {
-        title: { type: 'string' },
-        description: {},
-        status: { type: 'string', enum: ['pending', 'active', 'blocked', 'finished'] },
-        assignees: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              id: { type: 'string', format: 'uuid' },
-              name: { type: 'string' },
-              email: { type: 'string' },
-            },
-          },
-        },
-        dueDate: { type: 'string', nullable: true },
-        percentComplete: { type: 'number', nullable: true },
-      },
-    },
-    flags: {
-      type: 'object',
-      properties: {
-        cycleDetected: { type: 'boolean' },
-        hasChildren: { type: 'boolean' },
-      },
-      nullable: true,
-    },
-    renderedAt: { type: 'string', format: 'date-time' },
-    lastEventOccurredAt: { type: 'string', format: 'date-time' },
-  },
-};
+// Querystring schema using Zod (required for fastify-type-provider-zod)
+const querystringSchema = z.object({
+  contextId: z.string().uuid(),
+  contextType: z.enum(['subprocess', 'stage', 'process', 'project', 'record']),
+});
 
 export async function workflowSurfaceRoutes(fastify: FastifyInstance) {
   /**
@@ -65,38 +30,15 @@ export async function workflowSurfaceRoutes(fastify: FastifyInstance) {
    * - contextId: UUID (required)
    * - contextType: 'subprocess' | 'stage' | 'process' | 'project' (required)
    */
-  fastify.get<{
-    Querystring: { contextId: string; contextType: ContextType };
-  }>(
+  fastify.get(
     '/surfaces/workflow_table',
     {
       schema: {
-        querystring: {
-          type: 'object',
-          required: ['contextId', 'contextType'],
-          properties: {
-            contextId: { type: 'string', format: 'uuid' },
-            contextType: {
-              type: 'string',
-              enum: ['subprocess', 'stage', 'process', 'project', 'record'],
-            },
-          },
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              nodes: {
-                type: 'array',
-                items: surfaceNodeSchema,
-              },
-            },
-          },
-        },
+        querystring: querystringSchema,
       },
     },
     async (request, reply) => {
-      const { contextId, contextType } = request.query;
+      const { contextId, contextType } = request.query as { contextId: string; contextType: ContextType };
 
       const nodes = await projector.getWorkflowSurfaceNodes(
         contextId,
@@ -112,36 +54,15 @@ export async function workflowSurfaceRoutes(fastify: FastifyInstance) {
    * POST /workflow/surfaces/workflow_table/refresh
    * Force refresh the workflow surface for a context (debug/admin)
    */
-  fastify.post<{
-    Querystring: { contextId: string; contextType: ContextType };
-  }>(
+  fastify.post(
     '/surfaces/workflow_table/refresh',
     {
       schema: {
-        querystring: {
-          type: 'object',
-          required: ['contextId', 'contextType'],
-          properties: {
-            contextId: { type: 'string', format: 'uuid' },
-            contextType: {
-              type: 'string',
-              enum: ['subprocess', 'stage', 'process', 'project', 'record'],
-            },
-          },
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              message: { type: 'string' },
-            },
-          },
-        },
+        querystring: querystringSchema,
       },
     },
     async (request, reply) => {
-      const { contextId, contextType } = request.query;
+      const { contextId, contextType } = request.query as { contextId: string; contextType: ContextType };
 
       await projector.forceRefreshAllSurfaces(contextId, contextType);
 
