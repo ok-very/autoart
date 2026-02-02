@@ -273,10 +273,21 @@ function CenterWorkspacePanel(props: IDockviewPanelProps) {
 
 function SelectionInspectorPanel(props: IDockviewPanelProps) {
   const importContext = useImportContextOptional();
+  const { closePanel } = useWorkspaceStore();
+
+  const handleClose = useCallback(() => {
+    const panelId = props.api.id;
+    if (panelId === 'selection-inspector') {
+      closePanel('selection-inspector');
+    } else {
+      props.api.close();
+    }
+  }, [props.api, closePanel]);
 
   return (
     <div className="h-full overflow-auto bg-ws-panel-bg relative group">
       <SelectionInspector
+        onClose={handleClose}
         importContext={importContext ? {
           plan: importContext.plan,
           selectedItemId: importContext.selectedItemId,
