@@ -12,6 +12,9 @@ export interface TransientEmail {
   metadata: Record<string, unknown> | null;
   ingestion_id: number | null;
   created_at: string | null;
+  triage_status: TriageStatus | null;
+  triage_notes: string | null;
+  triaged_at: string | null;
 }
 
 export interface TransientEmailList {

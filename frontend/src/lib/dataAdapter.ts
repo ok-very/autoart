@@ -53,9 +53,19 @@ function inferPriority(email: TransientEmail): Priority {
 /**
  * Create placeholder triage info for emails without enrichment
  */
-function createPlaceholderTriage(): TriageInfo {
+function createPlaceholderTriage(email?: TransientEmail): TriageInfo {
+  // Use real triage_status from the backend when available
+  if (email?.triage_status && email.triage_status !== 'pending') {
+    return {
+      status: email.triage_status,
+      confidence: 1,
+      reasoning: email.triage_notes ?? null,
+      suggestedAction: null,
+    };
+  }
+
   return {
-    status: 'pending',
+    status: email?.triage_status ?? 'pending',
     confidence: 0,
     reasoning: null,
     suggestedAction: null,
@@ -74,7 +84,7 @@ export function adaptTransientEmail(email: TransientEmail): ProcessedEmail {
     receivedAt: email.received_at ? new Date(email.received_at) : null,
     projectId: email.project_id,
     bodyPreview: email.body_preview || '',
-    triage: createPlaceholderTriage(),
+    triage: createPlaceholderTriage(email),
     priority: inferPriority(email),
     priorityFactors: [],
     extractedKeywords: [],
