@@ -103,7 +103,7 @@ export function SettingsPage() {
     // AutoHelper pairing handler
     const handleAutoHelperGenerateCode = useCallback(async () => {
         const result = await generatePairingCodeMutation.mutateAsync();
-        return { code: result.code, expiresAt: result.expiresAt };
+        return { code: result.code, expiresAt: result.expiresAt, expiresInSeconds: result.expiresInSeconds };
     }, [generatePairingCodeMutation]);
 
     if (isLoading) {
