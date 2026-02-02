@@ -19,6 +19,8 @@ import { useState, useMemo } from 'react';
 import { Button, Badge } from '@autoart/ui';
 
 import { useSearch } from '../../api/hooks';
+import { usePromoteEmail, useLinkEmail } from '../../api/hooks/mailMessages';
+import type { MailLinkTargetType } from '../../api/types/mail';
 import type { LinkedEntity, LinkedEntityType } from './LinkedEntityBadge';
 
 export interface EmailLinkActionsProps {
@@ -82,7 +84,7 @@ function SearchResultItem({
  * EmailLinkActions Component
  */
 export function EmailLinkActions({
-    emailId: _emailId,
+    emailId,
     linkedEntities = [],
     onLinkCreated,
     onLinkRemoved: _onLinkRemoved,
@@ -91,6 +93,9 @@ export function EmailLinkActions({
     const [linkMode, setLinkMode] = useState<LinkMode>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [isLinking, setIsLinking] = useState(false);
+
+    const promoteMutation = usePromoteEmail();
+    const linkMutation = useLinkEmail();
 
     // Search for entities
     const { data: searchResults, isLoading: searchLoading } = useSearch(
@@ -108,8 +113,17 @@ export function EmailLinkActions({
     const handleSelectEntity = async (type: LinkedEntityType, id: string) => {
         setIsLinking(true);
         try {
-            // In a real implementation, this would call an API to create the link
-            await new Promise((resolve) => setTimeout(resolve, 300));
+            // Promote the email first (idempotent — returns existing if already promoted)
+            const message = await promoteMutation.mutateAsync(emailId);
+
+            // Create the link
+            const targetType: MailLinkTargetType = type === 'action' ? 'action' : 'record';
+            await linkMutation.mutateAsync({
+                messageId: message.id,
+                targetType,
+                targetId: id,
+            });
+
             onLinkCreated?.(type, id);
             setLinkMode(null);
             setSearchQuery('');
@@ -119,8 +133,7 @@ export function EmailLinkActions({
     };
 
     const handleCreateNewAction = () => {
-        // This would open the action composer with the email context
-        console.log('Create new action from email:', _emailId);
+        // TODO: Open action composer with email context
     };
 
     // Collapsed state - just show link button
