@@ -402,6 +402,7 @@ class MailService:
         subject = getattr(item, "Subject", "")
         sender = getattr(item, "SenderEmailAddress", "")
         body = getattr(item, "Body", "")[:500]  # Preview
+        body_html = getattr(item, "HTMLBody", None)
 
         metadata = {
             "importance": getattr(item, "Importance", 1),
@@ -411,10 +412,10 @@ class MailService:
         db.execute(
             """
             INSERT OR IGNORE INTO transient_emails
-                (id, subject, sender, received_at, project_id, body_preview, metadata)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+                (id, subject, sender, received_at, project_id, body_preview, body_html, metadata)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (entry_id, subject, sender, received_dt, project_id, body, json.dumps(metadata)),
+            (entry_id, subject, sender, received_dt, project_id, body, body_html, json.dumps(metadata)),
         )
         db.commit()
 

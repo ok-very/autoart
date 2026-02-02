@@ -36,6 +36,7 @@ class TransientEmail(BaseModel):
     received_at: datetime | None
     project_id: str | None
     body_preview: str | None
+    body_html: str | None = None
     metadata: dict[str, Any] | None = None
     ingestion_id: int | None = None
     created_at: datetime | None = None

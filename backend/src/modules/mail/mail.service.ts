@@ -24,6 +24,7 @@ interface AutoHelperEmail {
   received_at: string | null;
   project_id: string | null;
   body_preview: string | null;
+  body_html: string | null;
   metadata: Record<string, unknown> | null;
 }
 
@@ -109,6 +110,7 @@ export async function promoteEmail(
       sender_name: extractSenderName(email.sender),
       received_at: email.received_at ? new Date(email.received_at) : null,
       body_preview: email.body_preview,
+      body_html: email.body_html ?? null,
       metadata: email.metadata ?? {},
       project_id: email.project_id ?? null,
       promoted_by: promotedBy,
@@ -249,6 +251,7 @@ export async function getLinksForTarget(
       'mail_messages.sender_name',
       'mail_messages.received_at',
       'mail_messages.body_preview',
+      'mail_messages.body_html',
       'mail_messages.metadata',
       'mail_messages.project_id',
       'mail_messages.promoted_at',
@@ -275,6 +278,7 @@ export async function getLinksForTarget(
       sender_name: row.sender_name,
       received_at: row.received_at,
       body_preview: row.body_preview,
+      body_html: row.body_html,
       metadata: row.metadata,
       project_id: row.project_id,
       promoted_at: row.promoted_at,

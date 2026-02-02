@@ -648,6 +648,7 @@ export interface MailMessagesTable {
   sender_name: string | null;
   received_at: Date | null;
   body_preview: string | null;
+  body_html: string | null;
   metadata: Generated<unknown>; // JSONB
   project_id: string | null;
   promoted_at: Generated<Date>;
