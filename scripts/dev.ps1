@@ -75,6 +75,7 @@ Write-Host "[*] Starting frontend server..." -ForegroundColor Green
 $frontendJob = Start-Job -Name "AutoArt-Frontend" -ScriptBlock {
     param($dir)
     Set-Location "$dir\frontend"
+    $env:NODE_OPTIONS = "--max-old-space-size=8192"
     pnpm dev 2>&1
 } -ArgumentList $ProjectDir
 
