@@ -53,9 +53,9 @@ function App() {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-slate-100">
+      <div className="h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--ws-bg, #F5F2ED)' }}>
         <div className="text-center">
-          <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white font-semibold text-xl mx-auto mb-4 animate-pulse">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center font-semibold text-xl mx-auto mb-4 animate-pulse" style={{ backgroundColor: 'var(--ws-fg, #2E2E2C)', color: 'var(--ws-bg, #F5F2ED)' }}>
             A
           </div>
           <p className="text-ws-text-secondary">Loading...</p>

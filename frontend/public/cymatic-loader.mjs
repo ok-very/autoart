@@ -47,16 +47,6 @@
   ];
 
   // --- colour -----------------------------------------------------------
-  function resolveColor(prop, fallback) {
-    const v = getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
-    return v || fallback;
-  }
-
-  function refreshColors() {
-    // Canvas renders on transparent — wrapper provides the surface
-  }
-  refreshColors();
-
   // Smooth interpolation through the muted palette
   function lerpColor(t01) {
     const n = PALETTE.length;
