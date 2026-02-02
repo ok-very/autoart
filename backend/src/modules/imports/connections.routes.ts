@@ -610,6 +610,17 @@ export async function connectionsRoutes(app: FastifyInstance) {
             message: success ? 'AutoHelper disconnected' : 'Failed to disconnect'
         });
     });
+
+    // ── Periodic cleanup ─────────────────────────────────────────────
+    // Sweep expired sessions and pairing codes every 60 s to bound
+    // memory growth from entries that nobody queries.
+    const CLEANUP_INTERVAL_MS = 60_000;
+    const cleanupTimer = setInterval(() => {
+        connectionsService.cleanupExpiredAutohelperSessions();
+        connectionsService.cleanupExpiredPairingCodes();
+    }, CLEANUP_INTERVAL_MS);
+
+    app.addHook('onClose', () => clearInterval(cleanupTimer));
 }
 
 export default connectionsRoutes;

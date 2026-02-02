@@ -6,7 +6,8 @@ The smiley wears a cowboy hat when a job is running.
 Menu:
   - AutoHelper Service      (disabled label)
   - Status: Idle/Working...  (disabled label)
-  - Paired / Not paired      (disabled, live-checked on each menu open)
+  - Paired / Not paired      (disabled, validated against backend every 3 s)
+  - Unpair                   (visible only when paired)
   - ---
   - Open Settings
   - ---
@@ -15,6 +16,7 @@ Menu:
 
 import json
 import threading
+import urllib.error
 import urllib.request
 from collections.abc import Callable
 
@@ -85,12 +87,13 @@ class AutoHelperIcon:
         self.stop_callback = stop_callback
         self.icon: pystray.Icon | None = None
         self._hat_on = False
+        self._paired = self._check_paired()
         self._stop_polling = threading.Event()
         self._setup_icon()
 
     @staticmethod
     def _check_paired() -> bool:
-        """Check whether an autoart_session_id exists in persisted config or settings."""
+        """Fast config-only check — used for initial state before the poll loop starts."""
         try:
             from autohelper.config.store import ConfigStore
 
@@ -105,6 +108,63 @@ class AutoHelperIcon:
         except Exception:
             return False
 
+    @staticmethod
+    def _get_session_id() -> str:
+        """Return the persisted session ID, or empty string if absent."""
+        try:
+            from autohelper.config.store import ConfigStore
+
+            cfg = ConfigStore().load()
+            sid = cfg.get("autoart_session_id", "")
+            if sid:
+                return sid
+
+            from autohelper.config import get_settings
+
+            settings = get_settings()
+            return getattr(settings, "autoart_session_id", "") or ""
+        except Exception:
+            return ""
+
+    @staticmethod
+    def _verify_paired() -> bool | None:
+        """Verify session against the AutoArt backend (2 s timeout).
+
+        Returns True/False for definitive answers, None if inconclusive
+        (network error, timeout, server error).
+        """
+        try:
+            sid = AutoHelperIcon._get_session_id()
+            if not sid:
+                return False
+
+            from autohelper.config import get_settings
+
+            settings = get_settings()
+            url = f"{settings.autoart_api_url}/api/connections/autohelper/credentials"
+            req = urllib.request.Request(url)
+            req.add_header("X-AutoHelper-Session", sid)
+            if settings.autoart_api_key:
+                req.add_header("X-API-Key", settings.autoart_api_key)
+
+            with urllib.request.urlopen(req, timeout=2) as resp:
+                return resp.status == 200
+        except urllib.error.HTTPError as e:
+            if 400 <= e.code < 500:
+                # Session rejected — clear stale config
+                try:
+                    from autohelper.config.store import ConfigStore
+
+                    cfg = ConfigStore().load()
+                    cfg.pop("autoart_session_id", None)
+                    ConfigStore().save(cfg)
+                except Exception:
+                    pass
+                return False
+            return None  # 5xx — inconclusive
+        except Exception:
+            return None  # timeout, connection refused, DNS, etc.
+
     # ── Icon setup ───────────────────────────────────────────────────
 
     def _setup_icon(self) -> None:
@@ -117,9 +177,14 @@ class AutoHelperIcon:
                 enabled=False,
             ),
             item(
-                lambda _: "Paired" if self._check_paired() else "Not paired",
+                lambda _: "Paired" if self._paired else "Not paired",
                 lambda *_: None,
                 enabled=False,
+            ),
+            item(
+                "Unpair",
+                self._on_unpair,
+                visible=lambda _: self._paired,
             ),
             pystray.Menu.SEPARATOR,
             item("Open Settings", self._on_open_settings),
@@ -129,6 +194,27 @@ class AutoHelperIcon:
         self.icon = pystray.Icon("AutoHelper", image, "AutoHelper Service", menu)
 
     # ── Menu actions ─────────────────────────────────────────────────
+
+    def _on_unpair(self, icon: pystray.Icon, menu_item: pystray.MenuItem) -> None:
+        """Hit the local /pair/unpair endpoint to clear session on both sides."""
+        try:
+            from autohelper.config import get_settings
+
+            settings = get_settings()
+            host = settings.host
+            if host in ("0.0.0.0", "::"):
+                host = "127.0.0.1"
+            url = f"http://{host}:{settings.port}/pair/unpair"
+            req = urllib.request.Request(url, data=b"", method="POST")
+            req.add_header("Content-Type", "application/json")
+            with urllib.request.urlopen(req, timeout=5):
+                pass
+            self._paired = False
+            if self.icon:
+                self.icon.update_menu()
+            logger.info("Unpaired via tray menu")
+        except Exception:
+            logger.exception("Unpair from tray menu failed")
 
     def _on_open_settings(self, icon: pystray.Icon, menu_item: pystray.MenuItem) -> None:
         open_settings_in_browser()
@@ -143,8 +229,10 @@ class AutoHelperIcon:
     # ── Job polling ──────────────────────────────────────────────────
 
     def _poll_loop(self) -> None:
-        """Check every 3 s whether a job is active; swap hat on/off."""
+        """Poll job status + pairing every 3 s, update tray accordingly."""
         while not self._stop_polling.wait(3):
+            menu_dirty = False
+
             try:
                 active = self._is_job_active()
             except Exception:
@@ -154,7 +242,15 @@ class AutoHelperIcon:
                 self._hat_on = active
                 if self.icon:
                     self.icon.icon = _make_icon(wearing_hat=active)
-                    self.icon.update_menu()
+                menu_dirty = True
+
+            paired = self._verify_paired()
+            if paired is not None and paired != self._paired:
+                self._paired = paired
+                menu_dirty = True
+
+            if menu_dirty and self.icon:
+                self.icon.update_menu()
 
     def _is_job_active(self) -> bool:
         """Hit localhost to see if runner or indexer is busy."""

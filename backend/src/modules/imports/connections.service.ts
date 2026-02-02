@@ -480,10 +480,16 @@ export async function getProxiedMondayToken(sessionId: string): Promise<string |
 
 /**
  * List connected AutoHelper instances for a user.
+ * Filters out and deletes expired sessions inline.
  */
 export function getAutoHelperSessions(userId: string): AutoHelperSession[] {
+    const now = new Date();
     const sessions: AutoHelperSession[] = [];
-    for (const session of autohelperSessions.values()) {
+    for (const [id, session] of autohelperSessions) {
+        if (now > session.expiresAt) {
+            autohelperSessions.delete(id);
+            continue;
+        }
         if (session.userId === userId) {
             sessions.push(session);
         }

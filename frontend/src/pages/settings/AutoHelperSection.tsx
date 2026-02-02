@@ -26,7 +26,8 @@ import {
     Link,
     Unplug,
 } from 'lucide-react';
-import { useState, useCallback, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
 import { useAutoHelperInstances, useDisconnectAutoHelper, useGeneratePairingCode } from '../../api/connections';
 import {
@@ -141,9 +142,14 @@ function SmallButton({
 function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean } }) {
     const generateCode = useGeneratePairingCode();
     const pairAutoHelper = usePairAutoHelper();
+    const unpairAutoHelper = useUnpairAutoHelper();
+    const disconnectAutoHelper = useDisconnectAutoHelper();
+    const { data: instanceData } = useAutoHelperInstances();
+    const queryClient = useQueryClient();
     const [error, setError] = useState<string | null>(null);
 
     const isPairing = generateCode.isPending || pairAutoHelper.isPending;
+    const isUnpairing = unpairAutoHelper.isPending || disconnectAutoHelper.isPending;
 
     const handlePair = useCallback(async () => {
         setError(null);
@@ -164,6 +170,24 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
         }
     }, [generateCode, pairAutoHelper]);
 
+    const handleUnpair = useCallback(async () => {
+        try {
+            // Disconnect all instances on the backend
+            const instances = instanceData?.instances ?? [];
+            for (const inst of instances) {
+                await disconnectAutoHelper.mutateAsync(inst.displayId);
+            }
+            // Tell the Python app to clear its session
+            await unpairAutoHelper.mutateAsync();
+            queryClient.invalidateQueries({ queryKey: ['connections'] });
+            queryClient.invalidateQueries({ queryKey: ['connections', 'autohelper'] });
+            toast.info('AutoHelper unpaired');
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : 'Unpair failed';
+            toast.error(msg);
+        }
+    }, [disconnectAutoHelper, unpairAutoHelper, instanceData, queryClient]);
+
     return (
         <CardShell
             icon={<Link className="w-5 h-5 text-[var(--ws-accent)]" />}
@@ -177,9 +201,20 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
             }
         >
             {autohelperStatus.connected ? (
-                <div className="flex items-center gap-2 text-sm text-[var(--ws-color-success)]">
-                    <CheckCircle2 className="w-4 h-4" />
-                    AutoHelper is connected
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-[var(--ws-color-success)]">
+                        <CheckCircle2 className="w-4 h-4" />
+                        AutoHelper is connected
+                    </div>
+                    <Button
+                        onClick={handleUnpair}
+                        disabled={isUnpairing}
+                        variant="danger"
+                        size="xs"
+                        leftSection={isUnpairing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Unplug className="w-3 h-3" />}
+                    >
+                        Unpair
+                    </Button>
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -219,6 +254,7 @@ function ConnectedInstancesCard() {
             onSuccess: () => {
                 // Fire-and-forget: tell the Python app to clear its session
                 unpair.mutate();
+                toast.info('Instance disconnected');
             },
             onSettled: () => {
                 setDisconnectingId(null);
@@ -240,6 +276,7 @@ function ConnectedInstancesCard() {
                             <p className="text-sm text-ws-fg font-medium truncate">{inst.instanceName}</p>
                             <p className="text-xs text-ws-text-secondary">
                                 Connected {new Date(inst.connectedAt).toLocaleDateString()}
+                                {' · '}Last seen {new Date(inst.lastSeen).toLocaleTimeString()}
                             </p>
                         </div>
                         <Button
@@ -662,6 +699,20 @@ export function AutoHelperSection({
     autohelperStatus = { connected: false },
 }: AutoHelperSectionProps) {
     const { isError: healthError, isLoading: healthLoading } = useAutoHelperHealth();
+
+    // Toast on pairing status transitions (not on initial load)
+    const prevConnected = useRef<boolean | null>(null);
+    useEffect(() => {
+        const connected = autohelperStatus.connected;
+        if (prevConnected.current !== null && prevConnected.current !== connected) {
+            if (connected) {
+                toast.success('AutoHelper connected');
+            } else {
+                toast.warning('AutoHelper disconnected');
+            }
+        }
+        prevConnected.current = connected;
+    }, [autohelperStatus.connected]);
 
     // Pairing and instance cards always render — they're backend operations,
     // work regardless of AutoHelper connectivity.
