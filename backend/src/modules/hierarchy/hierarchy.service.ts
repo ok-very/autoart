@@ -478,6 +478,33 @@ async function cloneProjectRecords(
     .execute();
 }
 
+export interface AncestorPathEntry {
+  id: string;
+  title: string;
+  type: NodeType;
+}
+
+/**
+ * Get the ancestor path for a node, ordered root-to-leaf.
+ * Uses a recursive CTE walking up from the given node to the root.
+ */
+export async function getNodeAncestorPath(nodeId: string): Promise<AncestorPathEntry[]> {
+  const result = await sql<AncestorPathEntry>`
+    WITH RECURSIVE ancestors AS (
+      SELECT id, title, type, parent_id, 0 AS depth
+      FROM hierarchy_nodes WHERE id = ${nodeId}
+      UNION ALL
+      SELECT h.id, h.title, h.type, h.parent_id, a.depth + 1
+      FROM hierarchy_nodes h
+      INNER JOIN ancestors a ON h.id = a.parent_id
+    )
+    SELECT id, title, type FROM ancestors
+    ORDER BY depth DESC
+  `.execute(db);
+
+  return result.rows;
+}
+
 export async function listProjects(userId?: string): Promise<HierarchyNode[]> {
   let query = db
     .selectFrom('hierarchy_nodes')

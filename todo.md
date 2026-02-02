@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-02 (submitted #323-330: intake tokens, definition_kind, context breadcrumb, loading screen, AutoHelper pairing)*
+*Last Updated: 2026-02-02 (merged #326-330: loading screen + AutoHelper pairing + review fixes)*
 
 ## Bug List
 
@@ -57,6 +57,7 @@
 | 82 | User Account Management: create user via UI, assign to project, deactivate/delete user | Feature |
 | 291 | Schema editor / Composer relationship-math builder | Feature |
 | — | Action vocabulary: store classification verbs/nouns/adjectives from imports as a heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret what action type is being constructed or referenced | Classification |
+| — | Table atom primitives: `<table>`-based Table.Root/Header/Body/Row/Cell/HeaderCell with size scale, semantic HTML for accessibility, lightweight option for simple display tables | UI |
 
 ---
 
@@ -73,10 +74,15 @@
 | `frontend/src/intake/components/FormPage.tsx`, `Date.tsx`, `ShortAnswer.tsx` | Intake components use `--ws-*` tokens; should use `--pub-*` per design system token boundary |
 | `frontend/src/ui/sidebars/ProjectSidebar.tsx:78-80, 138-140` | `<label>` elements used as section headings without associated form controls — swap to `<p>` or `<span>` |
 | `frontend/src/intake/components/blocks/Date.tsx:22,29` | Missing `htmlFor`/`id` association between label and date input (ShortAnswer already has the correct pattern) |
+| `frontend/src/ui/table-core/UniversalTableCore.tsx` + composites | All tables are div-based with `role` attributes — semantic HTML (`<table>`, `<thead>`, `<tbody>`, `<tr>`, `<td>`, `<th>`) would improve accessibility, browser print styles, native keyboard nav |
 | `frontend/src/pages/SettingsPage.tsx:123-124, 144-146` | Hardcoded Tailwind colors in header icon gradient (`from-indigo-500 to-purple-600`) and nav active/hover states (`bg-slate-900 text-white`, `hover:bg-slate-100`) — should use `--ws-*` tokens |
 | `packages/ui/src/atoms/*` | Atom components (Button, Badge, Card, TextInput, etc.) use hardcoded Tailwind colors (`bg-blue-600`, `bg-green-100`, `bg-white`, `border-slate-300`) instead of `--ws-*` design tokens — needs systematic migration |
 | `packages/ui/src/atoms/Card.tsx` | Uses `bg-white` instead of `--ws-panel-bg` token |
 | Toggle atom candidate | AutoHelperSection MailCard has hand-rolled toggle switch — if worth reusing, create Toggle atom using `--ws-accent` for on, `--ws-panel-border` for off |
+| `backend/src/db/seeds/001_record_definitions.ts` | Wrap seed loops in a transaction for atomicity (CodeAnt #324 review) |
+| `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` has no explicit UI/behavior mapping — containers render as actions (icon, labels, create flow). Needs dedicated UX treatment (CodeAnt #324 review) |
+| `frontend/src/ui/sidebars/` + definition filtering | Definitions without `definition_kind` (legacy/manual rows) excluded entirely by new filter — add fallback or migration to backfill (CodeAnt #324 review) |
+| `backend/src/db/migrations/` | Missing migration file `036_action_type_definitions` — Kysely complains "corrupted migrations: previously executed migration 036_action_type_definitions is missing" on `db:rebuild` |
 
 ---
 
@@ -105,8 +111,6 @@
 | #323 | Intake `--pub-*` token boundary fix (housekeeping) |
 | #324 | `definition_kind` system: seed containers, remove sidebar heuristics (housekeeping) |
 | #325 | #235 Context Breadcrumb to Events (P1) |
-| #326-328 | Loading screen improvements: rounded corners + wrapper, AutoArt text + pre-spinner, design tokens in React fallback |
-| #329-330 | AutoHelper pairing: tray menu + frontend design token cleanup (housekeeping) |
 
 ---
 
@@ -114,6 +118,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | Loading screen refactoring: rounded corners + wrapper, AutoArt text + pre-spinner, design tokens in React fallback; AutoHelper pairing: tray menu + TclError fallback; Review feedback fixes: `_check_paired()` settings fallback, container seed upsert `is_system` | PRs #326-330 |
 | — | Add /logkeeper skill: dedicated todo.md maintenance agent with personality | PR (commit 4b6e228) |
 | — | Refactor: rename recipe → arrangement, drop orphaned action_type_definitions, seed arrangement definitions | PRs #320-322 |
 | — | UI Consistency Audit: dead code removal, font-bold→semibold, header heights h-10/h-8, `--ws-font-size-*` typography tokens, 2744 hardcoded slate/white→`--ws-*` color tokens, stale TODOs purged | PRs #313-317 |

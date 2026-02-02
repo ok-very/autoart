@@ -304,13 +304,13 @@ export async function seed(db: Kysely<Database>): Promise<void> {
     }
   }
 
-  // Seed containers (idempotent, ensures is_system stays authoritative)
+  // Seed containers (idempotent — lookup by name alone to avoid unique constraint crash
+  // when a row exists with the same name but a different definition_kind)
   for (const ctr of containers) {
     const existing = await db
       .selectFrom('record_definitions')
       .select('id')
       .where('name', '=', ctr.name)
-      .where('definition_kind', '=', 'container')
       .executeTakeFirst();
 
     if (!existing) {
@@ -318,28 +318,36 @@ export async function seed(db: Kysely<Database>): Promise<void> {
     } else {
       await db
         .updateTable('record_definitions')
-        .set({ is_system: ctr.is_system })
+        .set({
+          definition_kind: ctr.definition_kind,
+          schema_config: ctr.schema_config,
+          styling: ctr.styling,
+          is_system: ctr.is_system,
+        })
         .where('id', '=', existing.id)
         .execute();
     }
   }
 
-  // Seed arrangements (idempotent, updates schema_config on re-run)
+  // Seed arrangements (idempotent — same name-only lookup as containers)
   for (const arr of arrangements) {
     const existing = await db
       .selectFrom('record_definitions')
       .select('id')
       .where('name', '=', arr.name)
-      .where('definition_kind', '=', 'action_arrangement')
       .executeTakeFirst();
 
     if (!existing) {
       await db.insertInto('record_definitions').values(arr).execute();
     } else {
-      // Update schema_config and is_system to stay current
       await db
         .updateTable('record_definitions')
-        .set({ schema_config: arr.schema_config, is_system: arr.is_system })
+        .set({
+          definition_kind: arr.definition_kind,
+          schema_config: arr.schema_config,
+          styling: arr.styling,
+          is_system: arr.is_system,
+        })
         .where('id', '=', existing.id)
         .execute();
     }
