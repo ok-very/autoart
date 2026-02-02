@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import type { IDockviewPanelProps } from 'dockview';
 
+import { Table } from '@autoart/ui';
+
 import {
     useInbox,
     useEnrichedInbox,
@@ -70,20 +72,20 @@ function EmailRow({ email, isPromoted, onAction }: { email: ProcessedEmail; isPr
         : '—';
 
     return (
-        <tr className="border-b border-ws-panel-border hover:bg-ws-bg cursor-pointer">
-            <td className="px-4 py-3 w-12">
+        <Table.Row>
+            <Table.Cell className="w-12">
                 <TriageStatusIndicator
                     status={email.triage.status}
                     confidence={email.triage.confidence}
                 />
-            </td>
-            <td className="px-4 py-3 w-48">
-                <div className="font-medium text-ws-fg truncate">{email.senderName}</div>
-                <div className="text-xs text-ws-text-secondary truncate">{email.sender}</div>
-            </td>
-            <td className="px-4 py-3">
+            </Table.Cell>
+            <Table.Cell className="w-48">
+                <div className="font-medium text-[var(--ws-fg)] truncate">{email.senderName}</div>
+                <div className="text-xs text-[var(--ws-text-secondary)] truncate">{email.sender}</div>
+            </Table.Cell>
+            <Table.Cell>
                 <div className="flex items-center gap-2">
-                    <span className="font-medium text-ws-fg truncate">{email.subject}</span>
+                    <span className="font-medium text-[var(--ws-fg)] truncate">{email.subject}</span>
                     {isPromoted && (
                         <span className="shrink-0 px-1.5 py-0.5 bg-amber-50 text-amber-700 text-[10px] font-medium rounded" title="Saved to system">
                             saved
@@ -91,25 +93,25 @@ function EmailRow({ email, isPromoted, onAction }: { email: ProcessedEmail; isPr
                     )}
                     {email.hasAttachments && <Paperclip size={14} className="text-ws-muted flex-shrink-0" />}
                 </div>
-                <div className="text-sm text-ws-text-secondary truncate">{email.bodyPreview}</div>
+                <div className="text-sm text-[var(--ws-text-secondary)] truncate">{email.bodyPreview}</div>
                 {email.extractedKeywords.length > 0 && (
                     <div className="flex gap-1 mt-1 flex-wrap">
                         {email.extractedKeywords.slice(0, 3).map((keyword) => (
-                            <span key={keyword} className="px-1.5 py-0.5 bg-slate-100 text-ws-text-secondary text-[10px] rounded">
+                            <span key={keyword} className="px-1.5 py-0.5 bg-slate-100 text-[var(--ws-text-secondary)] text-[10px] rounded">
                                 {keyword}
                             </span>
                         ))}
                     </div>
                 )}
-            </td>
-            <td className="px-4 py-3 w-20">
+            </Table.Cell>
+            <Table.Cell className="w-20">
                 <PriorityBadge priority={email.priority} />
-            </td>
-            <td className="px-4 py-3 w-32 text-sm text-ws-text-secondary">{formattedDate}</td>
-            <td className="px-4 py-3 w-12">
+            </Table.Cell>
+            <Table.Cell className="w-32 text-[var(--ws-text-secondary)]">{formattedDate}</Table.Cell>
+            <Table.Cell className="w-12">
                 <EmailActionsMenu email={email} onAction={onAction} />
-            </td>
-        </tr>
+            </Table.Cell>
+        </Table.Row>
     );
 }
 
@@ -247,34 +249,24 @@ export function MailPanel(_props: IDockviewPanelProps) {
                         <p className="text-sm text-ws-text-secondary">Emails will appear here once ingested</p>
                     </div>
                 ) : (
-                    <div className="bg-ws-panel-bg rounded-lg border border-ws-panel-border overflow-hidden">
-                        <table className="w-full">
-                            <thead className="bg-ws-bg border-b border-ws-panel-border">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-ws-text-secondary uppercase tracking-wider w-12">
-                                        Status
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-ws-text-secondary uppercase tracking-wider">
-                                        From
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-ws-text-secondary uppercase tracking-wider">
-                                        Subject
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-ws-text-secondary uppercase tracking-wider">
-                                        Priority
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-ws-text-secondary uppercase tracking-wider">
-                                        Date
-                                    </th>
-                                    <th className="px-4 py-3 w-12" />
-                                </tr>
-                            </thead>
-                            <tbody>
+                    <div className="bg-[var(--ws-panel-bg)] rounded-lg border border-[var(--ws-panel-border)] overflow-hidden">
+                        <Table hoverable>
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.HeaderCell width="3rem">Status</Table.HeaderCell>
+                                    <Table.HeaderCell>From</Table.HeaderCell>
+                                    <Table.HeaderCell>Subject</Table.HeaderCell>
+                                    <Table.HeaderCell>Priority</Table.HeaderCell>
+                                    <Table.HeaderCell>Date</Table.HeaderCell>
+                                    <Table.HeaderCell width="3rem" />
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {data?.emails.map((email) => (
                                     <EmailRow key={email.id} email={email} isPromoted={promotedSet.has(email.id)} onAction={() => refetch()} />
                                 ))}
-                            </tbody>
-                        </table>
+                            </Table.Body>
+                        </Table>
                     </div>
                 )}
             </main>
