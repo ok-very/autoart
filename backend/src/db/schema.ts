@@ -35,6 +35,7 @@ export {
   BulkResolveInputSchema,
   LoginInputSchema,
   RegisterInputSchema,
+  UserRoleSchema,
   CreateLinkInputSchema,
   SearchQueryInputSchema,
 } from '@autoart/shared';
@@ -51,6 +52,7 @@ export interface UsersTable {
   password_hash: string;
   name: string;
   role: Generated<string>; // 'user' | 'admin' | 'viewer'
+  avatar_url: string | null;
   created_at: Generated<Date>;
   deleted_at: Date | null;
   deleted_by: string | null;

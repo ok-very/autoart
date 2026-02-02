@@ -5,6 +5,7 @@ import * as authService from './auth.service.js';
 import * as microsoftOAuthService from './microsoft-oauth.service.js';
 import * as oauthService from './oauth.service.js';
 import * as settingsService from './settings.service.js';
+import { requireRole } from '../../plugins/requireRole.js';
 import { AppError } from '../../utils/errors.js';
 
 export async function authRoutes(fastify: FastifyInstance) {
@@ -21,7 +22,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       const accessToken = fastify.jwt.sign({ userId: user.id, email: user.email });
 
       return reply.code(201).send({
-        user: { id: user.id, email: user.email, name: user.name },
+        user: { id: user.id, email: user.email, name: user.name, role: user.role, avatar_url: user.avatar_url },
         accessToken,
         refreshToken,
       });
@@ -46,7 +47,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       const accessToken = fastify.jwt.sign({ userId: user.id, email: user.email });
 
       return reply.send({
-        user: { id: user.id, email: user.email, name: user.name },
+        user: { id: user.id, email: user.email, name: user.name, role: user.role, avatar_url: user.avatar_url },
         accessToken,
         refreshToken,
       });
@@ -184,7 +185,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       const accessToken = fastify.jwt.sign({ userId: user.id, email: user.email });
 
       return reply.send({
-        user: { id: user.id, email: user.email, name: user.name },
+        user: { id: user.id, email: user.email, name: user.name, role: user.role, avatar_url: user.avatar_url },
         accessToken,
         refreshToken,
       });
@@ -247,7 +248,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       const accessToken = fastify.jwt.sign({ userId: user.id, email: user.email });
 
       return reply.send({
-        user: { id: user.id, email: user.email, name: user.name },
+        user: { id: user.id, email: user.email, name: user.name, role: user.role, avatar_url: user.avatar_url },
         accessToken,
         refreshToken,
       });
@@ -264,8 +265,7 @@ export async function authRoutes(fastify: FastifyInstance) {
   // ============================================================================
 
   // List all users (admin)
-  fastify.get('/admin/users', { preHandler: [fastify.authenticate] }, async (request: FastifyRequest, reply: FastifyReply) => {
-    // TODO: Add admin role check when roles are implemented
+  fastify.get('/admin/users', { preHandler: [fastify.authenticate, requireRole('admin')] }, async (request: FastifyRequest, reply: FastifyReply) => {
     const users = await authService.listAllUsers();
     return reply.send({ users });
   });
@@ -274,7 +274,7 @@ export async function authRoutes(fastify: FastifyInstance) {
   interface DeleteUserParams {
     Params: { id: string };
   }
-  fastify.delete<DeleteUserParams>('/admin/users/:id', { preHandler: [fastify.authenticate] }, async (request, reply) => {
+  fastify.delete<DeleteUserParams>('/admin/users/:id', { preHandler: [fastify.authenticate, requireRole('admin')] }, async (request, reply) => {
     const { id } = request.params;
     const deletedBy = request.user.userId;
 

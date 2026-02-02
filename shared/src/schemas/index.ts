@@ -145,11 +145,13 @@ export {
 // ==================== AUTH ====================
 export {
     UserSchema,
+    UserRoleSchema,
     LoginInputSchema,
     RegisterInputSchema,
     AuthResponseSchema,
     RefreshResponseSchema,
     type User,
+    type UserRole,
     type LoginInput,
     type RegisterInput,
     type AuthResponse,

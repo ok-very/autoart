@@ -52,6 +52,7 @@ export {
 
   // Auth
   type User,
+  type UserRole,
   type LoginInput,
   type RegisterInput,
   type AuthResponse,
@@ -100,6 +101,7 @@ export {
 
   // Auth response schemas
   UserSchema,
+  UserRoleSchema,
   AuthResponseSchema,
 
   // Search response schemas

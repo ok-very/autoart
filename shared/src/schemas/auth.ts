@@ -7,10 +7,15 @@ export const UserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
   name: z.string().min(1),
+  role: z.string().default('user'),
+  avatar_url: z.string().nullable().optional(),
   created_at: z.string().datetime(),
 });
 
 export type User = z.infer<typeof UserSchema>;
+
+export const UserRoleSchema = z.enum(['admin', 'user', 'viewer']);
+export type UserRole = z.infer<typeof UserRoleSchema>;
 
 /**
  * Login Input Schema

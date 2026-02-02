@@ -40,7 +40,7 @@ export async function registerUser(input: RegisterInput) {
       password_hash: passwordHash,
       name: input.name,
     })
-    .returning(['id', 'email', 'name', 'created_at'])
+    .returning(['id', 'email', 'name', 'role', 'avatar_url', 'created_at'])
     .executeTakeFirstOrThrow();
 
   return user;
@@ -49,7 +49,7 @@ export async function registerUser(input: RegisterInput) {
 export async function loginUser(input: LoginInput) {
   const user = await db
     .selectFrom('users')
-    .select(['id', 'email', 'name', 'password_hash', 'deleted_at'])
+    .select(['id', 'email', 'name', 'role', 'avatar_url', 'password_hash', 'deleted_at'])
     .where('email', '=', input.email.toLowerCase())
     .executeTakeFirst();
 
@@ -71,6 +71,8 @@ export async function loginUser(input: LoginInput) {
     id: user.id,
     email: user.email,
     name: user.name,
+    role: user.role,
+    avatar_url: user.avatar_url,
   };
 }
 
@@ -131,7 +133,7 @@ export async function deleteAllUserSessions(userId: string): Promise<void> {
 export async function getUserById(userId: string) {
   return db
     .selectFrom('users')
-    .select(['id', 'email', 'name', 'role', 'created_at'])
+    .select(['id', 'email', 'name', 'role', 'avatar_url', 'created_at'])
     .where('id', '=', userId)
     .where('deleted_at', 'is', null)
     .executeTakeFirst();
@@ -156,7 +158,7 @@ export async function updateUser(userId: string, input: UpdateUserInput) {
     .set(updates)
     .where('id', '=', userId)
     .where('deleted_at', 'is', null)
-    .returning(['id', 'email', 'name', 'role', 'created_at'])
+    .returning(['id', 'email', 'name', 'role', 'avatar_url', 'created_at'])
     .executeTakeFirst();
 }
 
@@ -175,7 +177,7 @@ export async function searchUsers(query: string, limit: number = 10) {
 
   return db
     .selectFrom('users')
-    .select(['id', 'email', 'name'])
+    .select(['id', 'email', 'name', 'avatar_url'])
     .where('deleted_at', 'is', null) // Only active users for search
     .where((eb) =>
       eb.or([
@@ -197,7 +199,7 @@ export async function searchUsers(query: string, limit: number = 10) {
 export async function listAllUsers() {
   return db
     .selectFrom('users')
-    .select(['id', 'email', 'name', 'created_at', 'deleted_at', 'deleted_by'])
+    .select(['id', 'email', 'name', 'role', 'avatar_url', 'created_at', 'deleted_at', 'deleted_by'])
     .orderBy('created_at', 'desc')
     .execute();
 }

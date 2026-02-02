@@ -16,6 +16,8 @@ export interface AdminUser {
     id: string;
     email: string;
     name: string;
+    role: string;
+    avatar_url: string | null;
     created_at: string;
     deleted_at: string | null;
     deleted_by: string | null;
