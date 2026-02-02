@@ -82,6 +82,7 @@
 | `backend/src/db/seeds/001_record_definitions.ts` | Wrap seed loops in a transaction for atomicity (CodeAnt #324 review) |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` has no explicit UI/behavior mapping — containers render as actions (icon, labels, create flow). Needs dedicated UX treatment (CodeAnt #324 review) |
 | `frontend/src/ui/sidebars/` + definition filtering | Definitions without `definition_kind` (legacy/manual rows) excluded entirely by new filter — add fallback or migration to backfill (CodeAnt #324 review) |
+| `backend/src/db/migrations/` | Missing migration file `036_action_type_definitions` — Kysely complains "corrupted migrations: previously executed migration 036_action_type_definitions is missing" on `db:rebuild` |
 
 ---
 
