@@ -6,7 +6,7 @@
  *
  * Features:
  * - Collapsed mode: Quick title input with send button
- * - Expanded mode: Title + description + recipe picker
+ * - Expanded mode: Title + description + arrangement picker
  * - Context auto-derived from selection (node/record/action)
  */
 
@@ -27,7 +27,7 @@ export function InspectorFooterComposer() {
 
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [userRecipeId, setUserRecipeId] = useState<string | null>(null);
+    const [userArrangementId, setUserArrangementId] = useState<string | null>(null);
 
     const compose = useCompose();
     const { data: allDefinitions } = useRecordDefinitions();
@@ -41,21 +41,21 @@ export function InspectorFooterComposer() {
     const { data: selectedAction } = useAction(actionId);
 
     // Filter to action arrangements only
-    const actionRecipes = useMemo(() => {
+    const actionArrangements = useMemo(() => {
         if (!allDefinitions) return [];
         return allDefinitions.filter((d) => d.kind === 'action_arrangement');
     }, [allDefinitions]);
 
-    // Derive default recipe ID (first arrangement)
-    const defaultRecipeId = useMemo(() => actionRecipes[0]?.id ?? null, [actionRecipes]);
+    // Derive default arrangement ID (first arrangement)
+    const defaultArrangementId = useMemo(() => actionArrangements[0]?.id ?? null, [actionArrangements]);
 
-    // Effective recipe selection (user choice or default)
-    const selectedRecipeId = userRecipeId ?? defaultRecipeId;
+    // Effective arrangement selection (user choice or default)
+    const selectedArrangementId = userArrangementId ?? defaultArrangementId;
 
-    const selectedRecipe = useMemo(() => {
-        if (!selectedRecipeId || !actionRecipes.length) return null;
-        return actionRecipes.find((r) => r.id === selectedRecipeId) || null;
-    }, [selectedRecipeId, actionRecipes]);
+    const selectedArrangement = useMemo(() => {
+        if (!selectedArrangementId || !actionArrangements.length) return null;
+        return actionArrangements.find((r) => r.id === selectedArrangementId) || null;
+    }, [selectedArrangementId, actionArrangements]);
 
     // Derive context ID from selection
     const contextId = useMemo(() => {
@@ -88,14 +88,14 @@ export function InspectorFooterComposer() {
     // Handle form submission
     const handleSubmit = async (e?: React.FormEvent) => {
         e?.preventDefault();
-        if (!title.trim() || !contextId || !selectedRecipe) return;
+        if (!title.trim() || !contextId || !selectedArrangement) return;
 
         try {
             await compose.mutateAsync({
                 action: {
                     contextId,
                     contextType,
-                    type: selectedRecipe.name,
+                    type: selectedArrangement.name,
                     fieldBindings: [{ fieldKey: 'title' }],
                 },
                 fieldValues: [
@@ -122,7 +122,7 @@ export function InspectorFooterComposer() {
     };
 
     const isLoading = compose.isPending;
-    const canSubmit = title.trim() && contextId && selectedRecipe && !isLoading;
+    const canSubmit = title.trim() && contextId && selectedArrangement && !isLoading;
 
     // Determine context display name
     const contextDisplay = useMemo(() => {
@@ -166,7 +166,7 @@ export function InspectorFooterComposer() {
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder={`New ${selectedRecipe?.name || 'Task'}...`}
+                        placeholder={`New ${selectedArrangement?.name || 'Task'}...`}
                         className="flex-1 px-3 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                         disabled={isLoading}
                     />
@@ -191,20 +191,20 @@ export function InspectorFooterComposer() {
                 {/* Expanded Section */}
                 {inspectorComposerExpanded && (
                     <div className="mt-3 space-y-3">
-                        {/* Recipe Selector */}
+                        {/* Arrangement Selector */}
                         <div>
                             <label className="block text-xs font-medium text-ws-text-secondary mb-1">
                                 Action Type
                             </label>
                             <div className="flex flex-wrap gap-1.5">
-                                {actionRecipes.map((recipe) => {
-                                    const isSelected = selectedRecipeId === recipe.id;
-                                    const styling = recipe.styling as { icon?: string } | undefined;
+                                {actionArrangements.map((arrangement) => {
+                                    const isSelected = selectedArrangementId === arrangement.id;
+                                    const styling = arrangement.styling as { icon?: string } | undefined;
                                     return (
                                         <button
-                                            key={recipe.id}
+                                            key={arrangement.id}
                                             type="button"
-                                            onClick={() => setUserRecipeId(recipe.id)}
+                                            onClick={() => setUserArrangementId(arrangement.id)}
                                             className={clsx(
                                                 'px-2.5 py-1 text-xs font-medium rounded-full border transition-colors',
                                                 isSelected
@@ -213,7 +213,7 @@ export function InspectorFooterComposer() {
                                             )}
                                         >
                                             {styling?.icon && <span className="mr-1">{styling.icon}</span>}
-                                            {recipe.name}
+                                            {arrangement.name}
                                         </button>
                                     );
                                 })}

@@ -62,7 +62,7 @@ export function UnifiedComposerBar({
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [expanded, setExpanded] = useState(false);
-    const [userRecipeId, setUserRecipeId] = useState<string | null>(null);
+    const [userArrangementId, setUserArrangementId] = useState<string | null>(null);
     const [showEventPreview, setShowEventPreview] = useState(true);
     const [dismissedSuggestions, setDismissedSuggestions] = useState<Set<string>>(new Set());
 
@@ -75,31 +75,31 @@ export function UnifiedComposerBar({
     const { activeProjectId } = useUIStore();
 
     // Filter to action arrangements only
-    const actionRecipes = useMemo(() => {
+    const actionArrangements = useMemo(() => {
         if (!allDefinitions) return [];
         return allDefinitions.filter((d) => d.kind === 'action_arrangement');
     }, [allDefinitions]);
 
-    // Derive default recipe ID (first available arrangement)
-    const defaultRecipeId = useMemo(() => actionRecipes[0]?.id ?? null, [actionRecipes]);
+    // Derive default arrangement ID (first available arrangement)
+    const defaultArrangementId = useMemo(() => actionArrangements[0]?.id ?? null, [actionArrangements]);
 
-    // Effective recipe selection (user choice or default)
-    const selectedRecipeId = userRecipeId ?? defaultRecipeId;
+    // Effective arrangement selection (user choice or default)
+    const selectedArrangementId = userArrangementId ?? defaultArrangementId;
 
-    const selectedRecipe = useMemo(() => {
-        if (!selectedRecipeId || !actionRecipes.length) return null;
-        return actionRecipes.find((r) => r.id === selectedRecipeId) || null;
-    }, [selectedRecipeId, actionRecipes]);
+    const selectedArrangement = useMemo(() => {
+        if (!selectedArrangementId || !actionArrangements.length) return null;
+        return actionArrangements.find((r) => r.id === selectedArrangementId) || null;
+    }, [selectedArrangementId, actionArrangements]);
 
     // Build pending events for preview
     const pendingEvents = useMemo(() => {
-        if (!selectedRecipe || !title.trim()) return [];
+        if (!selectedArrangement || !title.trim()) return [];
         return buildPendingEvents({
-            actionType: selectedRecipe.name,
+            actionType: selectedArrangement.name,
             title: title.trim(),
             description: description.trim() || undefined,
         });
-    }, [selectedRecipe, title, description]);
+    }, [selectedArrangement, title, description]);
 
     // Generate suggestions based on title input
     const suggestions = useMemo(() => {
@@ -119,14 +119,14 @@ export function UnifiedComposerBar({
     // Submit handler
     const handleSubmit = useCallback(async (e?: React.FormEvent) => {
         e?.preventDefault();
-        if (!title.trim() || !derivedContext.contextId || !selectedRecipe) return;
+        if (!title.trim() || !derivedContext.contextId || !selectedArrangement) return;
 
         try {
             const result = await compose.mutateAsync({
                 action: {
                     contextId: derivedContext.contextId,
                     contextType: derivedContext.contextType,
-                    type: selectedRecipe.name,
+                    type: selectedArrangement.name,
                     fieldBindings: [{ fieldKey: 'title' }],
                     ...(derivedContext.parentActionId ? { parentActionId: derivedContext.parentActionId } : {}),
                 },
@@ -148,14 +148,14 @@ export function UnifiedComposerBar({
         } catch (err) {
             console.error('Failed to compose action:', err);
         }
-    }, [title, description, derivedContext, selectedRecipe, compose, onActionCreated]);
+    }, [title, description, derivedContext, selectedArrangement, compose, onActionCreated]);
 
     // Keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             // Ctrl/Cmd + Enter to submit
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                if (title.trim() && derivedContext.contextId && selectedRecipe && !compose.isPending) {
+                if (title.trim() && derivedContext.contextId && selectedArrangement && !compose.isPending) {
                     e.preventDefault();
                     handleSubmit();
                 }
@@ -167,10 +167,10 @@ export function UnifiedComposerBar({
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [title, derivedContext.contextId, selectedRecipe, compose.isPending, expanded, handleSubmit]);
+    }, [title, derivedContext.contextId, selectedArrangement, compose.isPending, expanded, handleSubmit]);
 
     const isLoading = compose.isPending;
-    const canSubmit = title.trim() && derivedContext.contextId && selectedRecipe && !isLoading;
+    const canSubmit = title.trim() && derivedContext.contextId && selectedArrangement && !isLoading;
     const hasContent = title.trim() || description.trim();
 
     // Don't render if no project is active
@@ -224,7 +224,7 @@ export function UnifiedComposerBar({
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                placeholder={`New ${selectedRecipe?.name || 'action'}...`}
+                                placeholder={`New ${selectedArrangement?.name || 'action'}...`}
                                 className={clsx(
                                     'w-full px-3 py-2 text-sm bg-ws-bg border border-ws-panel-border rounded-lg',
                                     'focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100',
@@ -265,20 +265,20 @@ export function UnifiedComposerBar({
                     {/* Expanded Section */}
                     {expanded && (
                         <div className="mt-4 space-y-4">
-                            {/* Recipe Selector */}
+                            {/* Arrangement Selector */}
                             <div className="flex items-center gap-2">
                                 <span className="text-xs font-medium text-ws-text-secondary shrink-0">
                                     Type:
                                 </span>
                                 <div className="flex flex-wrap gap-1.5">
-                                    {actionRecipes.map((recipe) => {
-                                        const isSelected = selectedRecipeId === recipe.id;
-                                        const styling = recipe.styling as { icon?: string } | undefined;
+                                    {actionArrangements.map((arrangement) => {
+                                        const isSelected = selectedArrangementId === arrangement.id;
+                                        const styling = arrangement.styling as { icon?: string } | undefined;
                                         return (
                                             <button
-                                                key={recipe.id}
+                                                key={arrangement.id}
                                                 type="button"
-                                                onClick={() => setUserRecipeId(recipe.id)}
+                                                onClick={() => setUserArrangementId(arrangement.id)}
                                                 className={clsx(
                                                     'px-2.5 py-1 text-xs font-medium rounded-full border transition-colors',
                                                     isSelected
@@ -287,7 +287,7 @@ export function UnifiedComposerBar({
                                                 )}
                                             >
                                                 {styling?.icon && <span className="mr-1">{styling.icon}</span>}
-                                                {recipe.name}
+                                                {arrangement.name}
                                             </button>
                                         );
                                     })}

@@ -47,7 +47,7 @@ export function ActionsPage() {
     };
 
     const handleCreateDefinition = () => {
-        // Navigate to Composer to create a new action recipe
+        // Navigate to Composer to create a new action arrangement
         navigate('/composer');
     };
 

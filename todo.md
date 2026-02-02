@@ -66,7 +66,7 @@
 
 | File | Issue |
 |------|-------|
-| Composer | Still references "recipes" rather than "arrangements" — rename throughout |
+| SelectionInspector / Record view | Handle `definition_kind` system for filtering/classification — arrangement vs container vs record kinds should drive what's shown and how |
 | Selection editor / Schema editor | "Quick create" button still present even though superseded by ComposerBar; no correlating interface |
 | Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate — shared field component needs expanded options for where/how combobox is invoked |
 | Selection editor | "Plan" link badge system could just be a pointer to the active window name / binding group color instead of its own concept |
