@@ -19,7 +19,7 @@ export function Email({ block }: EmailProps) {
       defaultValue=""
       render={({ field, fieldState }) => (
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-pub-text-secondary">
+          <label htmlFor={block.id} className="block text-sm font-medium text-pub-text-secondary">
             {block.label}
             {block.required && <span className="text-red-500 ml-1">*</span>}
           </label>
@@ -28,6 +28,7 @@ export function Email({ block }: EmailProps) {
           )}
           <input
             {...field}
+            id={block.id}
             type="email"
             placeholder={block.placeholder ?? 'email@example.com'}
             className={`w-full px-3 py-2 border rounded-lg text-pub-fg placeholder:text-pub-muted focus:outline-none focus:ring-2 focus:ring-blue-500 ${fieldState.error ? 'border-red-500' : 'border-slate-300'

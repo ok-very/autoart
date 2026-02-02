@@ -8,7 +8,7 @@
  */
 
 import { Settings, User, Plug, Palette, Server, Loader2 } from 'lucide-react';
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import { AccountSection, AppearanceSection, AutoHelperSection, IntegrationsSection } from './settings';
@@ -42,14 +42,9 @@ export function SettingsPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const { isLoading } = useCurrentUser();
-    const [activeTab, setActiveTab] = useState<SettingsTab>('account');
-
-    // Sync activeTab with location.hash (initial + subsequent navigations)
-    useEffect(() => {
-        const hash = location.hash.replace('#', '');
-        const matched = NAV_ITEMS.find(n => n.id === hash);
-        if (matched) setActiveTab(matched.id);
-    }, [location.hash]);
+    // Derive active tab from location hash
+    const hashTab = location.hash.replace('#', '');
+    const derivedTab: SettingsTab = NAV_ITEMS.find(n => n.id === hashTab)?.id ?? 'account';
 
     // Fetch connection status from backend
     const { data: connections } = useConnections();
@@ -120,8 +115,8 @@ export function SettingsPage() {
             <header className="bg-ws-panel-bg border-b border-ws-panel-border">
                 <div className="max-w-5xl mx-auto px-6 py-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <Settings className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 bg-[var(--ws-accent)] rounded-lg flex items-center justify-center">
+                            <Settings className="w-5 h-5 text-[var(--ws-accent-fg)]" />
                         </div>
                         <div>
                             <h1 className="text-xl font-semibold text-ws-fg">Settings</h1>
@@ -140,10 +135,10 @@ export function SettingsPage() {
                             {NAV_ITEMS.map((item) => (
                                 <li key={item.id}>
                                     <button
-                                        onClick={() => setActiveTab(item.id)}
-                                        className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === item.id
-                                            ? 'bg-slate-900 text-white'
-                                            : 'text-ws-text-secondary hover:bg-slate-100'
+                                        onClick={() => navigate(`#${item.id}`)}
+                                        className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${derivedTab === item.id
+                                            ? 'bg-[var(--ws-accent)] text-[var(--ws-accent-fg)]'
+                                            : 'text-ws-text-secondary hover:bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))]'
                                             }`}
                                     >
                                         {item.icon}
@@ -166,16 +161,16 @@ export function SettingsPage() {
 
                     {/* Content Area */}
                     <div className="flex-1 min-w-0">
-                        {activeTab === 'account' ? (
+                        {derivedTab === 'account' ? (
                             <AccountSection />
-                        ) : activeTab === 'appearance' ? (
+                        ) : derivedTab === 'appearance' ? (
                             <AppearanceSection />
-                        ) : activeTab === 'autohelper' ? (
+                        ) : derivedTab === 'autohelper' ? (
                             <AutoHelperSection
                                 onGenerateCode={handleAutoHelperGenerateCode}
                                 autohelperStatus={{ connected: connections?.autohelper?.connected ?? false }}
                             />
-                        ) : activeTab === 'integrations' ? (
+                        ) : derivedTab === 'integrations' ? (
                             <IntegrationsSection
                                 microsoftStatus={{ connected: connections?.microsoft?.connected ?? false }}
                                 mondayStatus={{ connected: connections?.monday?.connected ?? false }}

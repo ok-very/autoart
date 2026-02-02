@@ -26,7 +26,7 @@ import {
     Key,
     Unplug,
 } from 'lucide-react';
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
 import { useAutoHelperInstances, useDisconnectAutoHelper } from '../../api/connections';
 import {
@@ -613,7 +613,10 @@ function RootsCard() {
     const updateConfig = useUpdateAutoHelperConfig();
     const [newRoot, setNewRoot] = useState('');
 
-    const roots: string[] = (config?.allowed_roots as string[]) ?? [];
+    const roots: string[] = useMemo(
+        () => (config?.allowed_roots as string[]) ?? [],
+        [config?.allowed_roots],
+    );
 
     const handleAdd = useCallback(() => {
         const trimmed = newRoot.trim();

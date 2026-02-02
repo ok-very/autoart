@@ -292,7 +292,7 @@ export function ProjectWorkflowView() {
         if (!selectedNode) return subprocesses[0]?.id || null;
         if (selectedNode.type === 'subprocess') return selectedNode.id;
         return subprocesses[0]?.id || null;
-    }, [localSubprocessId, selectedNode, subprocesses, getNode]);
+    }, [localSubprocessId, selectedNode, subprocesses]);
 
     // Sync local selection when user clicks a subprocess in the sidebar
     const handleSubprocessClick = useCallback(

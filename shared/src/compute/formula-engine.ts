@@ -396,7 +396,7 @@ export function formatCurrency(value: CurrencyValue, locale?: string): string {
  * "150.00" → 15000, "1,234.56" → 123456
  */
 export function parseCurrencyInput(input: string): number {
-  const cleaned = input.replace(/[^0-9.\-]/g, '');
+  const cleaned = input.replace(/[^0-9.-]/g, '');
   const parsed = parseFloat(cleaned);
   if (isNaN(parsed)) return 0;
   return Math.round(parsed * 100);

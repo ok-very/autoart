@@ -153,7 +153,7 @@ export function useArtifactStream(
               try {
                 const data = JSON.parse(line.slice(6));
                 handleStreamEvent(data, onArtifact, onProgress, setProgress);
-              } catch (_parseError) {
+              } catch {
                 console.warn('Failed to parse SSE event:', line);
               }
             }

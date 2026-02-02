@@ -100,7 +100,7 @@ export function FileUpload({ block }: FileUploadProps) {
               setUploadedUrl(url);
               setValue(block.id, url, { shouldValidate: true });
               resolve();
-            } catch (_err) {
+            } catch {
               reject(new Error('Invalid response'));
             }
           } else {

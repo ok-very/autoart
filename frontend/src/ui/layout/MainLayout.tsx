@@ -86,9 +86,11 @@ const WORKBENCH_PANELS: WorkbenchPanelId[] = [
   'intake-workbench', 'artcollector-workbench',
 ];
 
+let panelCounter = 0;
+
 function TabStripAddButton({ containerApi, group }: IDockviewHeaderActionsProps) {
   const handleSpawn = (component: PanelId, direction: 'within' | 'right' | 'below') => {
-    const newId = `${component}-${Date.now()}`;
+    const newId = `${component}-${++panelCounter}`;
     const def = PANEL_DEFINITIONS[component];
 
     const refPanel = group.activePanel?.id;
