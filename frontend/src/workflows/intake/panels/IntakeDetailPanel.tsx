@@ -66,7 +66,7 @@ export function IntakeDetailPanel({ formId, onBack }: IntakeDetailPanelProps) {
 
   if (!form) {
     return (
-      <div className="p-4 text-center text-slate-500">Form not found</div>
+      <div className="p-4 text-center text-ws-text-secondary">Form not found</div>
     );
   }
 
@@ -81,7 +81,7 @@ export function IntakeDetailPanel({ formId, onBack }: IntakeDetailPanelProps) {
         )}
         <div className="flex-1">
           <h2 className="text-ws-h2 font-semibold">{form.title}</h2>
-          <div className="text-sm text-slate-500">{form.unique_id}</div>
+          <div className="text-sm text-ws-text-secondary">{form.unique_id}</div>
         </div>
         <Badge variant={form.status === 'active' ? 'success' : 'neutral'}>
           {form.status}
@@ -144,7 +144,7 @@ export function IntakeDetailPanel({ formId, onBack }: IntakeDetailPanelProps) {
             </div>
           ) : (
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-sm text-slate-600 truncate flex-1">
+              <span className="text-sm text-ws-text-secondary truncate flex-1">
                 {form.sharepoint_request_url || '(not set)'}
               </span>
               <Button
@@ -171,7 +171,7 @@ export function IntakeDetailPanel({ formId, onBack }: IntakeDetailPanelProps) {
         {loadingSubmissions ? (
           <Spinner />
         ) : submissions?.length === 0 ? (
-          <p className="text-sm text-slate-500 text-center py-8">
+          <p className="text-sm text-ws-text-secondary text-center py-8">
             No submissions yet.
           </p>
         ) : (
@@ -191,13 +191,13 @@ function SubmissionRow({ submission }: { submission: IntakeSubmission }) {
 
   return (
     <Card
-      className="p-3 cursor-pointer hover:bg-slate-50"
+      className="p-3 cursor-pointer hover:bg-ws-bg"
       onClick={() => setExpanded(!expanded)}
     >
       <div className="flex items-center justify-between">
         <div>
           <span className="font-mono text-sm">{submission.upload_code}</span>
-          <span className="text-xs text-slate-500 ml-2">
+          <span className="text-xs text-ws-text-secondary ml-2">
             {new Date(submission.created_at).toLocaleString()}
           </span>
         </div>

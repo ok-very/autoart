@@ -190,23 +190,23 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
         </Text>
         <Inline gap="sm">
           {/* Page Navigation */}
-          <Inline gap="xs" align="center" className="border border-slate-200 rounded-lg px-2 py-1">
+          <Inline gap="xs" align="center" className="border border-ws-panel-border rounded-lg px-2 py-1">
             <button
               type="button"
               onClick={handlePrevPage}
               disabled={safePageIndex === 0 || totalPages === 0}
-              className="p-1 text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1 text-ws-text-secondary hover:text-ws-text-secondary disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-sm text-slate-600 min-w-[60px] text-center">
+            <span className="text-sm text-ws-text-secondary min-w-[60px] text-center">
               {totalPages > 0 ? `${displayPageNumber} / ${totalPages}` : 'No pages'}
             </span>
             <button
               type="button"
               onClick={handleNextPage}
               disabled={safePageIndex >= totalPages - 1 || totalPages === 0}
-              className="p-1 text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1 text-ws-text-secondary hover:text-ws-text-secondary disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -240,7 +240,7 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
       </Inline>
 
       {/* Tearsheet Preview */}
-      <div className="flex-1 min-h-0 border border-slate-200 rounded-lg bg-slate-100 p-4 overflow-auto">
+      <div className="flex-1 min-h-0 border border-ws-panel-border rounded-lg bg-slate-100 p-4 overflow-auto">
         {totalPages === 0 ? (
           <div className="h-full flex items-center justify-center">
             <Stack align="center" gap="md">
@@ -253,7 +253,7 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
           </div>
         ) : (
           <div
-            className="mx-auto bg-white shadow-lg print:shadow-none"
+            className="mx-auto bg-ws-panel-bg shadow-lg print:shadow-none"
             style={{
               width: '100%',
               maxWidth: '1056px',
@@ -275,7 +275,7 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
                     {activeBioText || 'Artist biography text will appear here.'}
                   </Text>
                 </div>
-                <div className="mt-auto pt-4 border-t border-slate-200">
+                <div className="mt-auto pt-4 border-t border-ws-panel-border">
                   <Text size="xs" color="muted">
                     Contact information
                   </Text>
@@ -328,7 +328,7 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
                 }).map((_, i) => (
                   <div
                     key={`empty-${i}`}
-                    className="bg-slate-50 border-2 border-dashed border-slate-200 rounded flex items-center justify-center text-slate-400"
+                    className="bg-ws-bg border-2 border-dashed border-ws-panel-border rounded flex items-center justify-center text-ws-muted"
                   >
                     <Text size="xs" color="muted">
                       Empty slot
@@ -342,7 +342,7 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
       </div>
 
       {/* Available Images */}
-      <div className="flex-shrink-0 border border-slate-200 rounded-lg bg-slate-50 p-3">
+      <div className="flex-shrink-0 border border-ws-panel-border rounded-lg bg-ws-bg p-3">
         <Inline justify="between" align="center" className="mb-2">
           <Text size="sm" weight="medium">
             Available Images ({availableImages.length})
@@ -367,7 +367,7 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
                   type="button"
                   onClick={() => handleAddImageToPage(refId)}
                   disabled={!canAddToCurrentPage || totalPages === 0}
-                  className="w-14 h-14 bg-white border border-slate-200 rounded flex-shrink-0 overflow-hidden cursor-pointer hover:border-blue-400 hover:ring-2 hover:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="w-14 h-14 bg-ws-panel-bg border border-ws-panel-border rounded flex-shrink-0 overflow-hidden cursor-pointer hover:border-blue-400 hover:ring-2 hover:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   title={canAddToCurrentPage ? 'Click to add to current page' : 'Page is full'}
                 >
                   {artifact?.thumbnailUrl ? (
@@ -377,7 +377,7 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-xs text-slate-300">img</span>
+                    <span className="text-xs text-ws-muted">img</span>
                   )}
                 </button>
               );
@@ -387,7 +387,7 @@ export function Step4Tearsheet({ onBack }: ArtCollectorStepProps) {
       </div>
 
       {/* Footer */}
-      <Inline justify="between" className="pt-2 border-t border-slate-200 shrink-0">
+      <Inline justify="between" className="pt-2 border-t border-ws-panel-border shrink-0">
         <Button onClick={onBack} variant="secondary">
           Back
         </Button>

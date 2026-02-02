@@ -91,7 +91,7 @@ export function EditableCell({
         return (
             <div
                 className={clsx(
-                    'px-2 py-1 min-h-[32px] flex items-center cursor-pointer hover:bg-slate-50 transition-colors rounded',
+                    'px-2 py-1 min-h-[32px] flex items-center cursor-pointer hover:bg-ws-bg transition-colors rounded',
                     editable && 'hover:ring-1 hover:ring-slate-200',
                     className
                 )}
@@ -208,7 +208,7 @@ export function EditableCell({
                         <div className="flex justify-end gap-1 mt-1">
                             <button
                                 onClick={handleCancel}
-                                className="p-1 rounded hover:bg-slate-100 text-slate-500"
+                                className="p-1 rounded hover:bg-slate-100 text-ws-text-secondary"
                             >
                                 <X size={14} />
                             </button>

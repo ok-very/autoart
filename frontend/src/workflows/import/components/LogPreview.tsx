@@ -72,8 +72,8 @@ export function LogPreview({ plan, selectedRecordId, onSelect }: LogPreviewProps
         return (
             <div className="flex-1 flex items-center justify-center p-8">
                 <div className="text-center">
-                    <ScrollText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-500 font-medium">No log entries</p>
+                    <ScrollText className="w-12 h-12 text-ws-muted mx-auto mb-3" />
+                    <p className="text-ws-text-secondary font-medium">No log entries</p>
                 </div>
             </div>
         );
@@ -87,7 +87,7 @@ export function LogPreview({ plan, selectedRecordId, onSelect }: LogPreviewProps
             case 'AMBIGUOUS':
                 return <AlertCircle size={14} className="text-amber-500" />;
             case 'UNCLASSIFIED':
-                return <HelpCircle size={14} className="text-slate-400" />;
+                return <HelpCircle size={14} className="text-ws-muted" />;
             default:
                 return <ArrowRight size={14} className="text-blue-400" />;
         }
@@ -98,7 +98,7 @@ export function LogPreview({ plan, selectedRecordId, onSelect }: LogPreviewProps
             container: 'bg-purple-100 text-purple-700',
             item: 'bg-blue-100 text-blue-700',
             classification: 'bg-green-100 text-green-700',
-        }[type] || 'bg-slate-100 text-slate-700';
+        }[type] || 'bg-slate-100 text-ws-text-secondary';
 
         return (
             <span className={`px-1.5 py-0.5 text-[10px] font-semibold uppercase rounded ${styles}`}>
@@ -119,7 +119,7 @@ export function LogPreview({ plan, selectedRecordId, onSelect }: LogPreviewProps
                             onClick={() => onSelect(entry.tempId)}
                             className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${isSelected
                                     ? 'bg-blue-50 border-blue-200 shadow-sm'
-                                    : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                                    : 'bg-ws-panel-bg border-ws-panel-border hover:border-slate-300 hover:shadow-sm'
                                 }`}
                         >
                             <div className="pt-0.5">
@@ -128,18 +128,18 @@ export function LogPreview({ plan, selectedRecordId, onSelect }: LogPreviewProps
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                     {getTypeBadge(entry.type)}
-                                    <span className="font-medium text-slate-800 truncate">
+                                    <span className="font-medium text-ws-fg truncate">
                                         {entry.title}
                                     </span>
                                 </div>
-                                <p className="text-sm text-slate-500">{entry.details}</p>
+                                <p className="text-sm text-ws-text-secondary">{entry.details}</p>
                             </div>
                             {entry.outcome && (
                                 <span className={`text-xs font-medium px-2 py-0.5 rounded ${entry.outcome === 'FACT_EMITTED' || entry.outcome === 'DERIVED_STATE'
                                         ? 'bg-green-50 text-green-700'
                                         : entry.outcome === 'AMBIGUOUS'
                                             ? 'bg-amber-50 text-amber-700'
-                                            : 'bg-slate-50 text-slate-600'
+                                            : 'bg-ws-bg text-ws-text-secondary'
                                     }`}>
                                     {entry.outcome}
                                 </span>

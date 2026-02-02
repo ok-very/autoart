@@ -98,9 +98,9 @@ export function FieldSchemaPreview({ item, schemaMatch, compact = false }: Field
             width: 120,
             renderCell: (row: FieldRow) => (
                 <div className="flex items-center gap-1.5">
-                    <span className="font-medium text-slate-700">{row.fieldName}</span>
+                    <span className="font-medium text-ws-text-secondary">{row.fieldName}</span>
                     {row.renderHint && (
-                        <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1 rounded">
+                        <span className="text-[10px] font-mono text-ws-muted bg-slate-100 px-1 rounded">
                             {row.renderHint}
                         </span>
                     )}
@@ -112,9 +112,9 @@ export function FieldSchemaPreview({ item, schemaMatch, compact = false }: Field
             label: 'Value',
             width: 'flex',
             renderCell: (row: FieldRow) => (
-                <span className="text-slate-600 truncate block">
+                <span className="text-ws-text-secondary truncate block">
                     {row.value === null || row.value === undefined
-                        ? <span className="text-slate-400 italic">empty</span>
+                        ? <span className="text-ws-muted italic">empty</span>
                         : String(row.value)}
                 </span>
             ),
@@ -131,7 +131,7 @@ export function FieldSchemaPreview({ item, schemaMatch, compact = false }: Field
                         <AlertCircle size={12} className="text-amber-500 flex-shrink-0" />
                     ) : null}
                     <span className={`text-xs font-mono ${row.status === 'matched' ? 'text-green-700' :
-                        row.status === 'proposed' ? 'text-amber-700' : 'text-slate-400'
+                        row.status === 'proposed' ? 'text-amber-700' : 'text-ws-muted'
                         }`}>
                         {row.matchedType || row.renderHint || 'text'}
                     </span>
@@ -142,7 +142,7 @@ export function FieldSchemaPreview({ item, schemaMatch, compact = false }: Field
 
     if (rows.length === 0) {
         return (
-            <div className="p-4 text-center text-slate-400 text-sm">
+            <div className="p-4 text-center text-ws-muted text-sm">
                 No field recordings
             </div>
         );
@@ -154,14 +154,14 @@ export function FieldSchemaPreview({ item, schemaMatch, compact = false }: Field
             ? 'bg-green-50 border-green-200'
             : schemaMatch.proposedDefinition
                 ? 'bg-amber-50 border-amber-200'
-                : 'bg-slate-50 border-slate-200'
+                : 'bg-ws-bg border-ws-panel-border'
             }`}>
             <TableProperties size={14} className={
                 schemaMatch.matchScore >= 0.7 ? 'text-green-600' :
-                    schemaMatch.proposedDefinition ? 'text-amber-600' : 'text-slate-500'
+                    schemaMatch.proposedDefinition ? 'text-amber-600' : 'text-ws-text-secondary'
             } />
             <span className={`text-xs font-medium ${schemaMatch.matchScore >= 0.7 ? 'text-green-700' :
-                schemaMatch.proposedDefinition ? 'text-amber-700' : 'text-slate-600'
+                schemaMatch.proposedDefinition ? 'text-amber-700' : 'text-ws-text-secondary'
                 }`}>
                 {schemaMatch.matchScore >= 0.7 ? (
                     <>Matched: <span className="font-semibold">{schemaMatch.definitionName}</span> ({Math.round(schemaMatch.matchScore * 100)}%)</>
@@ -177,7 +177,7 @@ export function FieldSchemaPreview({ item, schemaMatch, compact = false }: Field
     return (
         <div className="flex flex-col">
             {matchHeader}
-            <div className={`border rounded-b ${matchHeader ? 'border-t-0' : 'rounded-t'} border-slate-200 overflow-hidden`}>
+            <div className={`border rounded-b ${matchHeader ? 'border-t-0' : 'rounded-t'} border-ws-panel-border overflow-hidden`}>
                 <DataTable<FieldRow>
                     data={rows}
                     columns={columns}

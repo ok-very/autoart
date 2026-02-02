@@ -153,7 +153,7 @@ export function CollectorPanel({ onComplete }: CollectorPanelProps) {
     // -------------------------------------------------------------------------
 
     return (
-        <Card className="p-4 bg-white/50">
+        <Card className="p-4 bg-ws-panel-bg/50">
             <Stack gap="md">
                 {/* Header / Mode Switcher */}
                 <div className="flex bg-slate-100 p-1 rounded-lg">
@@ -161,7 +161,7 @@ export function CollectorPanel({ onComplete }: CollectorPanelProps) {
                         onClick={() => setMode('web')}
                         className={`
                             flex-1 flex items-center justify-center gap-2 py-1.5 px-3 rounded-md text-sm font-medium transition-all
-                            ${mode === 'web' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}
+                            ${mode === 'web' ? 'bg-ws-panel-bg text-emerald-600 shadow-sm' : 'text-ws-text-secondary hover:text-ws-text-secondary'}
                         `}
                     >
                         <Globe size={14} />
@@ -171,7 +171,7 @@ export function CollectorPanel({ onComplete }: CollectorPanelProps) {
                         onClick={() => setMode('intake')}
                         className={`
                             flex-1 flex items-center justify-center gap-2 py-1.5 px-3 rounded-md text-sm font-medium transition-all
-                            ${mode === 'intake' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}
+                            ${mode === 'intake' ? 'bg-ws-panel-bg text-emerald-600 shadow-sm' : 'text-ws-text-secondary hover:text-ws-text-secondary'}
                         `}
                     >
                         <FolderInput size={14} />
@@ -191,7 +191,7 @@ export function CollectorPanel({ onComplete }: CollectorPanelProps) {
                             onChange={(e) => setUrl(e.target.value)}
                             placeholder="https://artistwebsite.com"
                             disabled={isRunning}
-                            className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50"
+                            className="w-full px-3 py-2 text-sm bg-ws-bg border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50"
                         />
                     </div>
                 )}
@@ -216,9 +216,9 @@ export function CollectorPanel({ onComplete }: CollectorPanelProps) {
                                     onChange={(e) => setFolderPath(e.target.value)}
                                     placeholder="C:/Path/To/Files"
                                     disabled={isRunning}
-                                    className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono disabled:opacity-50"
+                                    className="w-full pl-9 pr-3 py-2 text-sm bg-ws-bg border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono disabled:opacity-50"
                                 />
-                                <FolderOpen size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <FolderOpen size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ws-muted" />
                             </div>
                         )}
                     </div>
@@ -242,9 +242,9 @@ export function CollectorPanel({ onComplete }: CollectorPanelProps) {
 
                 {/* Progress */}
                 {progress && (
-                    <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                    <div className="bg-ws-bg rounded-lg p-3 border border-ws-panel-border">
                         <Inline justify="between" className="mb-2">
-                            <Text size="sm" weight="medium" className="capitalize text-slate-700">
+                            <Text size="sm" weight="medium" className="capitalize text-ws-text-secondary">
                                 {progress.stage}
                             </Text>
                             {progress.percent !== undefined && (

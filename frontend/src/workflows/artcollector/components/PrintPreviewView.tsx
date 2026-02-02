@@ -80,9 +80,9 @@ export function PrintPreviewView({
       {/* Main View - hidden during print */}
       <div className="h-full flex print:hidden">
         {/* Sidebar */}
-        <div className="w-64 flex-shrink-0 border-r border-slate-200 bg-slate-50 flex flex-col">
+        <div className="w-64 flex-shrink-0 border-r border-ws-panel-border bg-ws-bg flex flex-col">
           {/* Sidebar Header */}
-          <div className="p-4 border-b border-slate-200">
+          <div className="p-4 border-b border-ws-panel-border">
             <Button variant="secondary" size="sm" onClick={onBack} className="w-full">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Editor
@@ -120,7 +120,7 @@ export function PrintPreviewView({
                     className={`w-full text-left p-2 rounded-lg border-2 transition-all ${
                       index === safePageIndex
                         ? 'border-blue-500 bg-blue-50'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
+                        : 'border-ws-panel-border bg-ws-panel-bg hover:border-slate-300'
                     }`}
                   >
                     <div className="aspect-[11/8.5] bg-slate-100 rounded mb-2 flex items-center justify-center">
@@ -138,7 +138,7 @@ export function PrintPreviewView({
           </div>
 
           {/* Sidebar Footer - Actions */}
-          <div className="p-4 border-t border-slate-200 space-y-2">
+          <div className="p-4 border-t border-ws-panel-border space-y-2">
             <Button onClick={handlePrint} className="w-full">
               <Printer className="w-4 h-4 mr-2" />
               Print All Pages
@@ -149,7 +149,7 @@ export function PrintPreviewView({
         {/* Main Preview Area */}
         <div className="flex-1 flex flex-col bg-slate-100 min-w-0">
           {/* Toolbar */}
-          <div className="flex-shrink-0 px-6 py-3 bg-white border-b border-slate-200">
+          <div className="flex-shrink-0 px-6 py-3 bg-ws-panel-bg border-b border-ws-panel-border">
             <Inline justify="between" align="center">
               {/* Page Navigation */}
               <Inline gap="sm" align="center">
@@ -157,7 +157,7 @@ export function PrintPreviewView({
                   type="button"
                   onClick={handlePrevPage}
                   disabled={safePageIndex === 0 || pages.length === 0}
-                  className="p-2 text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg hover:bg-slate-100"
+                  className="p-2 text-ws-text-secondary hover:text-ws-text-secondary disabled:opacity-30 disabled:cursor-not-allowed rounded-lg hover:bg-slate-100"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -168,7 +168,7 @@ export function PrintPreviewView({
                   type="button"
                   onClick={handleNextPage}
                   disabled={safePageIndex >= pages.length - 1 || pages.length === 0}
-                  className="p-2 text-slate-500 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg hover:bg-slate-100"
+                  className="p-2 text-ws-text-secondary hover:text-ws-text-secondary disabled:opacity-30 disabled:cursor-not-allowed rounded-lg hover:bg-slate-100"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -260,7 +260,7 @@ function TearsheetPagePreview({
 }: TearsheetPagePreviewProps) {
   return (
     <div
-      className="bg-white shadow-lg border border-slate-200 rounded-lg overflow-hidden"
+      className="bg-ws-panel-bg shadow-lg border border-ws-panel-border rounded-lg overflow-hidden"
       style={{
         width: '100%',
         maxWidth: '1000px',
@@ -271,17 +271,17 @@ function TearsheetPagePreview({
         {/* Sidebar */}
         <div className="flex flex-col">
           <div>
-            <h1 className="text-ws-h1 font-semibold uppercase tracking-wide text-slate-800">
+            <h1 className="text-ws-h1 font-semibold uppercase tracking-wide text-ws-fg">
               Artist Name
             </h1>
-            <p className="text-sm text-slate-500 mt-1">(Region)</p>
-            <p className="text-sm mt-6 text-justify leading-relaxed text-slate-700">
+            <p className="text-sm text-ws-text-secondary mt-1">(Region)</p>
+            <p className="text-sm mt-6 text-justify leading-relaxed text-ws-text-secondary">
               {bioText || 'Artist biography text will appear here.'}
             </p>
           </div>
-          <div className="mt-auto pt-4 border-t border-slate-200">
-            <p className="text-xs text-slate-400">Contact information</p>
-            <p className="text-xs text-slate-500 mt-1">
+          <div className="mt-auto pt-4 border-t border-ws-panel-border">
+            <p className="text-xs text-ws-muted">Contact information</p>
+            <p className="text-xs text-ws-text-secondary mt-1">
               Page {pageNumber} of {totalPages}
             </p>
           </div>
@@ -313,7 +313,7 @@ function TearsheetPagePreview({
                   </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-xs text-slate-400">Missing</span>
+                    <span className="text-xs text-ws-muted">Missing</span>
                   </div>
                 )}
               </div>
@@ -325,9 +325,9 @@ function TearsheetPagePreview({
           }).map((_, i) => (
             <div
               key={`empty-${i}`}
-              className="bg-slate-50 border-2 border-dashed border-slate-200 rounded flex items-center justify-center"
+              className="bg-ws-bg border-2 border-dashed border-ws-panel-border rounded flex items-center justify-center"
             >
-              <span className="text-xs text-slate-300">Empty</span>
+              <span className="text-xs text-ws-muted">Empty</span>
             </div>
           ))}
         </div>
@@ -355,7 +355,7 @@ function TearsheetPagePrint({
 }: TearsheetPagePrintProps) {
   return (
     <div
-      className={`w-full bg-white ${!isLastPage ? 'break-after-page' : ''}`}
+      className={`w-full bg-ws-panel-bg ${!isLastPage ? 'break-after-page' : ''}`}
       style={{
         aspectRatio: '11 / 8.5',
         padding: '40px',
@@ -366,26 +366,26 @@ function TearsheetPagePrint({
         <div className="flex flex-col">
           <div>
             <h1
-              className="uppercase tracking-wide text-slate-800"
+              className="uppercase tracking-wide text-ws-fg"
               style={{ fontSize: '24pt', fontWeight: 700 }}
             >
               Artist Name
             </h1>
-            <p className="text-slate-500" style={{ fontSize: '14pt' }}>
+            <p className="text-ws-text-secondary" style={{ fontSize: '14pt' }}>
               (Region)
             </p>
             <p
-              className="mt-4 text-justify leading-relaxed text-slate-700"
+              className="mt-4 text-justify leading-relaxed text-ws-text-secondary"
               style={{ fontSize: '11pt', lineHeight: 1.4 }}
             >
               {bioText || 'Artist biography text will appear here.'}
             </p>
           </div>
-          <div className="mt-auto pt-4 border-t border-slate-200">
-            <p className="text-slate-400" style={{ fontSize: '10pt' }}>
+          <div className="mt-auto pt-4 border-t border-ws-panel-border">
+            <p className="text-ws-muted" style={{ fontSize: '10pt' }}>
               Contact information
             </p>
-            <p className="text-slate-500 mt-1" style={{ fontSize: '9pt' }}>
+            <p className="text-ws-text-secondary mt-1" style={{ fontSize: '9pt' }}>
               Page {pageNumber} of {totalPages}
             </p>
           </div>
@@ -413,7 +413,7 @@ function TearsheetPagePrint({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-slate-400" style={{ fontSize: '9pt' }}>
+                      <span className="text-ws-muted" style={{ fontSize: '9pt' }}>
                         Missing
                       </span>
                     </div>

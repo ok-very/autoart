@@ -22,7 +22,7 @@ export const TableFrame = forwardRef<HTMLDivElement, TableFrameProps>(
       <div
         ref={ref}
         className={clsx(
-          'bg-white border border-slate-200 rounded-lg overflow-hidden',
+          'bg-ws-panel-bg border border-ws-panel-border rounded-lg overflow-hidden',
           shadow && 'shadow-sm',
           maxHeight && 'overflow-y-auto',
           className

@@ -116,7 +116,7 @@ export function FieldEditor({
             />
         ),
         renderRichText: (vm: FieldViewModel, onChange: (value: unknown) => void, _multiline: boolean) => (
-            <div className="border border-slate-200 rounded-md bg-white p-1 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+            <div className="border border-ws-panel-border rounded-md bg-ws-panel-bg p-1 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
                 <RichTextEditor
                     content={vm.value}
                     contextId={recordId}
@@ -149,7 +149,7 @@ export function FieldEditor({
     return (
         <div className={clsx('relative', className)}>
             {showLabel && (
-                <label className="block text-xs font-medium text-slate-500 mb-1">
+                <label className="block text-xs font-medium text-ws-text-secondary mb-1">
                     {viewModel.label}
                     {viewModel.required && <span className="text-red-500 ml-1">*</span>}
                 </label>

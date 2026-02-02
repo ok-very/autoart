@@ -13,7 +13,7 @@ import { Header } from '../ui/layout/Header';
 
 export function ComposerPage() {
     return (
-        <div className="flex flex-col h-full bg-slate-50">
+        <div className="flex flex-col h-full bg-ws-bg">
             <Header />
 
             <div className="flex-1 overflow-hidden">
@@ -21,14 +21,14 @@ export function ComposerPage() {
                     {/* Back Link */}
                     <Link
                         to="/"
-                        className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-4"
+                        className="inline-flex items-center gap-1 text-sm text-ws-text-secondary hover:text-ws-text-secondary mb-4"
                     >
                         <ArrowLeft size={14} />
                         Back to Projects
                     </Link>
 
                     {/* ComposerSurface in page mode */}
-                    <div className="h-[calc(100%-40px)] bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div className="h-[calc(100%-40px)] bg-ws-panel-bg rounded-xl shadow-sm border border-ws-panel-border overflow-hidden">
                         <ComposerView
                             mode="page"
                             onSuccess={(actionId: string) => {

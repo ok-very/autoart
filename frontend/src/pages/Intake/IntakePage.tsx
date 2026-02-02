@@ -32,11 +32,11 @@ export function IntakePage() {
             <div className="flex flex-1 overflow-hidden">
                 {/* Left Sidebar: Form list or editor tools */}
                 <div
-                    className="flex flex-col border-r border-slate-200 bg-white shrink-0"
+                    className="flex flex-col border-r border-ws-panel-border bg-ws-panel-bg shrink-0"
                     style={{ width: sidebarWidth }}
                 >
-                    <div className="p-4 border-b border-slate-100">
-                        <h2 className="text-sm font-semibold text-slate-700">
+                    <div className="p-4 border-b border-ws-panel-border">
+                        <h2 className="text-sm font-semibold text-ws-text-secondary">
                             {isEditing ? 'Form Tools' : 'Intake Forms'}
                         </h2>
                     </div>
@@ -47,7 +47,7 @@ export function IntakePage() {
                 <ResizeHandle direction="right" onResize={handleSidebarResize} />
 
                 {/* Center: Dashboard or Editor */}
-                <div className="flex-1 flex flex-col overflow-hidden relative bg-slate-50">
+                <div className="flex-1 flex flex-col overflow-hidden relative bg-ws-bg">
                     {isEditing ? (
                         <IntakeEditorView formId={formId!} />
                     ) : (

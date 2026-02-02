@@ -28,10 +28,10 @@ const THEME_ICONS: Record<WorkspaceThemeId, React.ReactNode> = {
 };
 
 const THEME_PREVIEWS: Record<WorkspaceThemeId, string> = {
-  default: 'bg-white border-slate-200',
-  compact: 'bg-slate-50 border-slate-300',
+  default: 'bg-ws-panel-bg border-ws-panel-border',
+  compact: 'bg-ws-bg border-slate-300',
   floating: 'bg-slate-100 border-transparent shadow-md rounded-lg',
-  minimal: 'bg-white border-transparent',
+  minimal: 'bg-ws-panel-bg border-transparent',
   parchment: 'bg-[#F5F2ED] border-[#D6D2CB]',
 };
 
@@ -46,21 +46,21 @@ export function AppearanceSection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-ws-h2 font-semibold text-slate-900">Appearance</h2>
-        <p className="text-sm text-slate-500 mt-1">
+        <h2 className="text-ws-h2 font-semibold text-ws-fg">Appearance</h2>
+        <p className="text-sm text-ws-text-secondary mt-1">
           Customize the look and feel of your workspace
         </p>
       </div>
 
       {/* Workspace Theme */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
+      <div className="bg-ws-panel-bg rounded-xl border border-ws-panel-border p-5">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
             <Palette className="w-5 h-5 text-indigo-600" />
           </div>
           <div>
-            <h3 className="font-medium text-slate-900">Workspace Theme</h3>
-            <p className="text-sm text-slate-500">
+            <h3 className="font-medium text-ws-fg">Workspace Theme</h3>
+            <p className="text-sm text-ws-text-secondary">
               Choose how panels and tabs appear in your workspace
             </p>
           </div>
@@ -74,7 +74,7 @@ export function AppearanceSection() {
             const label = WORKSPACE_THEME_LABELS[themeId] || theme.label;
             const description = WORKSPACE_THEME_DESCRIPTIONS[themeId] || theme.description;
             const icon = isKnownTheme ? THEME_ICONS[themeId] : <Palette className="w-5 h-5" />;
-            const previewClass = THEME_PREVIEWS[themeId] || 'bg-white border-slate-200';
+            const previewClass = THEME_PREVIEWS[themeId] || 'bg-ws-panel-bg border-ws-panel-border';
 
             return (
               <button
@@ -84,7 +84,7 @@ export function AppearanceSection() {
                   relative flex flex-col p-4 rounded-lg border-2 transition-all text-left
                   ${isSelected
                     ? 'border-indigo-500 bg-indigo-50/50'
-                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                    : 'border-ws-panel-border hover:border-slate-300 hover:bg-ws-bg'
                   }
                 `}
               >
@@ -106,10 +106,10 @@ export function AppearanceSection() {
 
                 {/* Label and description */}
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-slate-500">{icon}</span>
-                  <span className="font-medium text-slate-900">{label}</span>
+                  <span className="text-ws-text-secondary">{icon}</span>
+                  <span className="font-medium text-ws-fg">{label}</span>
                 </div>
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs text-ws-text-secondary leading-relaxed">
                   {description}
                 </p>
               </button>
@@ -120,8 +120,8 @@ export function AppearanceSection() {
 
       {/* Future: Additional appearance settings */}
       {/* 
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="font-medium text-slate-900 mb-3">Display Density</h3>
+      <div className="bg-ws-panel-bg rounded-xl border border-ws-panel-border p-5">
+        <h3 className="font-medium text-ws-fg mb-3">Display Density</h3>
         ...
       </div>
       */}

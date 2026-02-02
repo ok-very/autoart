@@ -71,7 +71,7 @@ export function ViewDefinitionOverlay({ recordId, definitionId }: ViewDefinition
 
   if (!definition) {
     return (
-      <div className="p-4 text-center text-slate-400">
+      <div className="p-4 text-center text-ws-muted">
         Definition not found
       </div>
     );
@@ -104,16 +104,16 @@ export function ViewDefinitionOverlay({ recordId, definitionId }: ViewDefinition
             {styling.icon || definition.name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div className="text-[10px] font-semibold text-slate-400 uppercase mb-1">
+            <div className="text-[10px] font-semibold text-ws-muted uppercase mb-1">
               Record Definition
             </div>
-            <h2 className="text-ws-h2 font-semibold text-slate-800">{definition.name}</h2>
+            <h2 className="text-ws-h2 font-semibold text-ws-fg">{definition.name}</h2>
             {definition.derived_from_id && (
-              <div className="text-xs text-slate-400 mt-1">
+              <div className="text-xs text-ws-muted mt-1">
                 Derived from another definition
               </div>
             )}
-            <div className="text-xs text-slate-400 font-mono mt-1">
+            <div className="text-xs text-ws-muted font-mono mt-1">
               ID: {String(definition.id ?? '').slice(0, 8)}
             </div>
           </div>
@@ -121,7 +121,7 @@ export function ViewDefinitionOverlay({ recordId, definitionId }: ViewDefinition
         {recordId && (
           <button
             onClick={handleOpenInInspector}
-            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            className="p-2 text-ws-muted hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
             title="Open in inspector"
           >
             <ExternalLink size={18} />
@@ -130,8 +130,8 @@ export function ViewDefinitionOverlay({ recordId, definitionId }: ViewDefinition
       </div>
 
       {/* Styling & Clone Settings */}
-      <div className="mb-6 p-4 bg-slate-50 rounded-lg">
-        <div className="text-xs font-medium text-slate-500 mb-2 flex items-center gap-1">
+      <div className="mb-6 p-4 bg-ws-bg rounded-lg">
+        <div className="text-xs font-medium text-ws-text-secondary mb-2 flex items-center gap-1">
           <Palette size={12} />
           <span>Settings</span>
         </div>
@@ -140,16 +140,16 @@ export function ViewDefinitionOverlay({ recordId, definitionId }: ViewDefinition
             {styling.icon && (
               <div className="flex items-center gap-2">
                 <span className="text-lg">{styling.icon}</span>
-                <span className="text-sm text-slate-600">Icon</span>
+                <span className="text-sm text-ws-text-secondary">Icon</span>
               </div>
             )}
             {styling.color && (
               <div className="flex items-center gap-2">
                 <div
-                  className="w-6 h-6 rounded-md border border-slate-200"
+                  className="w-6 h-6 rounded-md border border-ws-panel-border"
                   style={{ backgroundColor: getTailwindColor(styling.color, 500) }}
                 />
-                <span className="text-sm text-slate-600 capitalize">{styling.color}</span>
+                <span className="text-sm text-ws-text-secondary capitalize">{styling.color}</span>
               </div>
             )}
           </div>
@@ -158,23 +158,23 @@ export function ViewDefinitionOverlay({ recordId, definitionId }: ViewDefinition
 
       {/* Fields */}
       <div className="mb-6">
-        <div className="text-xs font-medium text-slate-500 mb-3">
+        <div className="text-xs font-medium text-ws-text-secondary mb-3">
           Fields ({fields.length})
         </div>
 
         {fields.length === 0 ? (
-          <p className="text-sm text-slate-400 italic">No fields defined</p>
+          <p className="text-sm text-ws-muted italic">No fields defined</p>
         ) : (
           <div className="space-y-2">
             {fields.map((field: FieldDef) => (
               <div
                 key={field.key}
-                className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-lg"
+                className="flex items-center gap-3 p-3 bg-ws-panel-bg border border-ws-panel-border rounded-lg"
               >
                 {/* Type badge */}
                 <span
                   className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded ${
-                    FIELD_TYPE_COLORS[field.type] || 'bg-slate-100 text-slate-600'
+                    FIELD_TYPE_COLORS[field.type] || 'bg-slate-100 text-ws-text-secondary'
                   }`}
                 >
                   {field.type}
@@ -182,27 +182,27 @@ export function ViewDefinitionOverlay({ recordId, definitionId }: ViewDefinition
 
                 {/* Field info */}
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-slate-700">
+                  <div className="text-sm font-medium text-ws-text-secondary">
                     {field.label}
                     {field.required && (
                       <span className="text-red-500 ml-1">*</span>
                     )}
                   </div>
-                  <div className="text-xs text-slate-400 font-mono">
+                  <div className="text-xs text-ws-muted font-mono">
                     {field.key}
                   </div>
                 </div>
 
                 {/* Options preview for select type */}
                 {field.type === 'select' && field.options && (
-                  <div className="text-[10px] text-slate-400">
+                  <div className="text-[10px] text-ws-muted">
                     {field.options.length} options
                   </div>
                 )}
 
                 {/* Default value indicator */}
                 {field.defaultValue !== undefined && (
-                  <div className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                  <div className="text-[10px] text-ws-muted bg-slate-100 px-1.5 py-0.5 rounded">
                     has default
                   </div>
                 )}
@@ -213,15 +213,15 @@ export function ViewDefinitionOverlay({ recordId, definitionId }: ViewDefinition
       </div>
 
       {/* Metadata */}
-      <div className="text-xs text-slate-400 border-t border-slate-100 pt-4">
+      <div className="text-xs text-ws-muted border-t border-ws-panel-border pt-4">
         <div>Created: {new Date(definition.created_at).toLocaleDateString()}</div>
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-slate-100">
+      <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-ws-panel-border">
         <button
           onClick={closeOverlay}
-          className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+          className="px-4 py-2 text-sm font-medium text-ws-text-secondary bg-ws-panel-bg border border-slate-300 rounded-md hover:bg-ws-bg transition-colors"
         >
           Close
         </button>

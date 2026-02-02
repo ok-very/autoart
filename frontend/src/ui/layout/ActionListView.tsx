@@ -63,7 +63,7 @@ export function ActionListView() {
 
     if (!activeProjectId) {
         return (
-            <div className="flex-1 flex items-center justify-center bg-slate-50 text-slate-400">
+            <div className="flex-1 flex items-center justify-center bg-ws-bg text-ws-muted">
                 <div className="text-center">
                     <p className="text-ws-body">Select a project to view actions</p>
                     <p className="text-sm mt-1">Choose from the Projects menu</p>

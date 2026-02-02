@@ -77,10 +77,10 @@ export function BudgetView() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <header className="h-10 shrink-0 flex items-center justify-between px-3 border-b border-slate-200 bg-white">
+      <header className="h-10 shrink-0 flex items-center justify-between px-3 border-b border-ws-panel-border bg-ws-panel-bg">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-slate-700">Budgets</h2>
-          <span className="text-xs text-slate-400">{budgets.length}</span>
+          <h2 className="text-sm font-semibold text-ws-text-secondary">Budgets</h2>
+          <span className="text-xs text-ws-muted">{budgets.length}</span>
         </div>
         <Button variant="primary" size="sm" leftSection={<Plus size={14} />} onClick={handleAllocate}>
           Allocate
@@ -90,9 +90,9 @@ export function BudgetView() {
       {/* Content */}
       <div className="flex-1 overflow-auto">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-slate-400">Loading budgets...</div>
+          <div className="p-8 text-center text-sm text-ws-muted">Loading budgets...</div>
         ) : budgets.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-400">No budget allocations</div>
+          <div className="p-8 text-center text-sm text-ws-muted">No budget allocations</div>
         ) : (
           <div className="p-4 space-y-2">
             {budgets.map((budget) => {
@@ -101,20 +101,20 @@ export function BudgetView() {
               return (
                 <div
                   key={budget.id}
-                  className="border border-slate-200 rounded-lg p-4"
+                  className="border border-ws-panel-border rounded-lg p-4"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div>
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-sm font-medium text-ws-text-secondary">
                         {budget.name}
                       </span>
-                      <span className="text-xs text-slate-400 ml-2">
+                      <span className="text-xs text-ws-muted ml-2">
                         {budget.allocationType}
                       </span>
                     </div>
                     <span className={clsx(
                       'text-xs font-medium',
-                      isOver ? 'text-red-600' : 'text-slate-500',
+                      isOver ? 'text-red-600' : 'text-ws-text-secondary',
                     )}>
                       {pct}% used
                     </span>
@@ -133,22 +133,22 @@ export function BudgetView() {
 
                   <div className="grid grid-cols-3 gap-4 text-xs">
                     <div>
-                      <span className="text-slate-400">Allocated</span>
-                      <p className="font-mono text-slate-700 mt-0.5">
+                      <span className="text-ws-muted">Allocated</span>
+                      <p className="font-mono text-ws-text-secondary mt-0.5">
                         {formatCurrency({ amount: budget.allocated, currency: budget.currency })}
                       </p>
                     </div>
                     <div>
-                      <span className="text-slate-400">Spent</span>
-                      <p className="font-mono text-slate-700 mt-0.5">
+                      <span className="text-ws-muted">Spent</span>
+                      <p className="font-mono text-ws-text-secondary mt-0.5">
                         {formatCurrency({ amount: budget.spent, currency: budget.currency })}
                       </p>
                     </div>
                     <div>
-                      <span className="text-slate-400">Remaining</span>
+                      <span className="text-ws-muted">Remaining</span>
                       <p className={clsx(
                         'font-mono mt-0.5',
-                        isOver ? 'text-red-600' : 'text-slate-700',
+                        isOver ? 'text-red-600' : 'text-ws-text-secondary',
                       )}>
                         {formatCurrency({ amount: budget.remaining, currency: budget.currency })}
                       </p>
@@ -159,26 +159,26 @@ export function BudgetView() {
             })}
 
             {/* Total row */}
-            <div className="border border-slate-300 rounded-lg p-4 bg-slate-50">
-              <div className="text-xs font-medium text-slate-500 mb-2">Project Total</div>
+            <div className="border border-slate-300 rounded-lg p-4 bg-ws-bg">
+              <div className="text-xs font-medium text-ws-text-secondary mb-2">Project Total</div>
               <div className="grid grid-cols-3 gap-4 text-xs">
                 <div>
-                  <span className="text-slate-400">Allocated</span>
-                  <p className="font-mono text-slate-900 font-semibold mt-0.5">
+                  <span className="text-ws-muted">Allocated</span>
+                  <p className="font-mono text-ws-fg font-semibold mt-0.5">
                     {formatCurrency({ amount: totals.allocated, currency: 'CAD' })}
                   </p>
                 </div>
                 <div>
-                  <span className="text-slate-400">Spent</span>
-                  <p className="font-mono text-slate-900 font-semibold mt-0.5">
+                  <span className="text-ws-muted">Spent</span>
+                  <p className="font-mono text-ws-fg font-semibold mt-0.5">
                     {formatCurrency({ amount: totals.spent, currency: 'CAD' })}
                   </p>
                 </div>
                 <div>
-                  <span className="text-slate-400">Remaining</span>
+                  <span className="text-ws-muted">Remaining</span>
                   <p className={clsx(
                     'font-mono font-semibold mt-0.5',
-                    totals.remaining < 0 ? 'text-red-600' : 'text-slate-900',
+                    totals.remaining < 0 ? 'text-red-600' : 'text-ws-fg',
                   )}>
                     {formatCurrency({ amount: totals.remaining, currency: 'CAD' })}
                   </p>

@@ -84,7 +84,7 @@ export function ExportPreview({ projectId, format, options, sessionId }: ExportP
         return (
             <Card padding="lg" className="text-center">
                 <Stack gap="sm" className="items-center">
-                    <Loader2 size={24} className="text-slate-400 animate-spin" />
+                    <Loader2 size={24} className="text-ws-muted animate-spin" />
                     <Text color="dimmed">Loading preview...</Text>
                 </Stack>
             </Card>
@@ -128,27 +128,27 @@ export function ExportPreview({ projectId, format, options, sessionId }: ExportP
             {/* Two-column comparison */}
             <div className="grid grid-cols-2 gap-4">
                 {/* Original */}
-                <Card padding="md" className="bg-slate-50">
+                <Card padding="md" className="bg-ws-bg">
                     <Inline gap="xs" className="mb-3">
-                        <FileText size={14} className="text-slate-500" />
+                        <FileText size={14} className="text-ws-text-secondary" />
                         <Text size="xs" weight="semibold" color="dimmed" className="uppercase tracking-wide">
                             Original Import
                         </Text>
                     </Inline>
-                    <pre className="text-xs font-mono text-slate-700 whitespace-pre-wrap leading-relaxed">
+                    <pre className="text-xs font-mono text-ws-text-secondary whitespace-pre-wrap leading-relaxed">
                         {exportModel.rawBlockText}
                     </pre>
                 </Card>
 
                 {/* Regenerated */}
-                <Card padding="md" className="bg-white border-emerald-200">
+                <Card padding="md" className="bg-ws-panel-bg border-emerald-200">
                     <Inline gap="xs" className="mb-3">
                         <ArrowRight size={14} className="text-emerald-600" />
                         <Text size="xs" weight="semibold" color="dimmed" className="uppercase tracking-wide">
                             Export Preview
                         </Text>
                     </Inline>
-                    <pre className="text-xs font-mono text-slate-700 whitespace-pre-wrap leading-relaxed">
+                    <pre className="text-xs font-mono text-ws-text-secondary whitespace-pre-wrap leading-relaxed">
                         {renderPreview(exportModel, format, options)}
                     </pre>
                 </Card>
@@ -188,7 +188,7 @@ export function ExportPreview({ projectId, format, options, sessionId }: ExportP
 
                 {/* Milestones */}
                 {(exportModel.timelineBlock?.milestones?.length ?? 0) > 0 && (
-                    <div className="mt-4 pt-4 border-t border-slate-100">
+                    <div className="mt-4 pt-4 border-t border-ws-panel-border">
                         <Text size="xs" color="dimmed" className="mb-2">Milestones</Text>
                         <div className="flex flex-row flex-wrap gap-2">
                             {exportModel.timelineBlock.milestones.map((m, i) => (
@@ -205,17 +205,17 @@ export function ExportPreview({ projectId, format, options, sessionId }: ExportP
 
                 {/* Next Steps */}
                 {(exportModel.nextStepsBullets?.length ?? 0) > 0 && (
-                    <div className="mt-4 pt-4 border-t border-slate-100">
+                    <div className="mt-4 pt-4 border-t border-ws-panel-border">
                         <Text size="xs" color="dimmed" className="mb-2">
                             Next Steps ({exportModel.nextStepsBullets?.filter(b => !b.completed).length ?? 0} open)
                         </Text>
                         <ul className="space-y-1">
                             {exportModel.nextStepsBullets.map((bullet, i) => (
                                 <li key={i} className="flex items-start gap-2 text-sm">
-                                    <span className={bullet.completed ? 'text-emerald-500' : 'text-slate-400'}>
+                                    <span className={bullet.completed ? 'text-emerald-500' : 'text-ws-muted'}>
                                         {bullet.completed ? '✓' : '●'}
                                     </span>
-                                    <span className={bullet.completed ? 'text-slate-400 line-through' : ''}>
+                                    <span className={bullet.completed ? 'text-ws-muted line-through' : ''}>
                                         {bullet.text}
                                     </span>
                                 </li>

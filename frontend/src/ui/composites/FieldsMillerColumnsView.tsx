@@ -51,7 +51,7 @@ export function FieldsMillerColumnsView({
             id: def.id,
             label: def.label,
             hasChildren: (def.fields?.length || 0) > 0,
-            badge: { text: String(def.childCount), color: 'bg-slate-100 text-slate-500' },
+            badge: { text: String(def.childCount), color: 'bg-slate-100 text-ws-text-secondary' },
             data: def
         }));
     }, [fieldIndex]);
@@ -100,7 +100,7 @@ export function FieldsMillerColumnsView({
 
     if (isLoading) {
         return (
-            <div className="flex-1 flex items-center justify-center p-8 text-slate-400 bg-slate-100">
+            <div className="flex-1 flex items-center justify-center p-8 text-ws-muted bg-slate-100">
                 <div className="flex flex-col items-center gap-2">
                     <div className="animate-spin w-6 h-6 border-2 border-slate-300 border-t-blue-500 rounded-full" />
                     <span>Loading field definitions...</span>
@@ -111,7 +111,7 @@ export function FieldsMillerColumnsView({
 
     if (!definitions || definitions.length === 0) {
         return (
-            <div className="flex-1 flex items-center justify-center p-8 text-slate-400 bg-slate-100">
+            <div className="flex-1 flex items-center justify-center p-8 text-ws-muted bg-slate-100">
                 <div className="text-center">
                     <p>No field definitions found.</p>
                 </div>
@@ -121,7 +121,7 @@ export function FieldsMillerColumnsView({
 
     return (
         <div
-            className={`flex flex-1 overflow-hidden bg-slate-100 border-r border-slate-200 ${className || ''}`}
+            className={`flex flex-1 overflow-hidden bg-slate-100 border-r border-ws-panel-border ${className || ''}`}
             data-aa-component="FieldsMillerColumnsView"
         >
             <div

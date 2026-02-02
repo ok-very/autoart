@@ -104,7 +104,7 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
     // Determine which item we're working with
     const item = isNode ? node : record;
     if (!item && !recordLoading) return null;
-    if (!item) return <div className="p-4 text-slate-400">Loading...</div>;
+    if (!item) return <div className="p-4 text-ws-muted">Loading...</div>;
 
     const nodeType = isNode ? (item as { type: NodeType }).type : 'record';
     const title = isNode
@@ -115,11 +115,11 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
     const bgColor = {
         project: 'bg-blue-50 border-blue-100 text-blue-900',
         process: 'bg-purple-50 border-purple-100 text-purple-900',
-        stage: 'bg-slate-50 border-slate-100 text-slate-900',
+        stage: 'bg-ws-bg border-ws-panel-border text-ws-fg',
         subprocess: 'bg-orange-50 border-orange-100 text-orange-900',
         task: 'bg-green-50 border-green-100 text-green-900',
         subtask: 'bg-teal-50 border-teal-100 text-teal-900',
-        record: 'bg-slate-50 border-slate-100 text-slate-900',
+        record: 'bg-ws-bg border-ws-panel-border text-ws-fg',
         template: 'bg-amber-50 border-amber-100 text-amber-900',
     }[nodeType];
 
@@ -160,7 +160,7 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
                         <div className="text-[10px] opacity-75 font-semibold uppercase mb-1">
                             Record Class: {nodeType}
                         </div>
-                        <div className="text-ws-h2 font-semibold text-slate-900">{title}</div>
+                        <div className="text-ws-h2 font-semibold text-ws-fg">{title}</div>
                         <div className="text-xs opacity-50 mt-1 font-mono">
                             UUID: {item.id.slice(0, 11)}
                         </div>
@@ -170,30 +170,30 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
                             <div className="relative" ref={historyRef}>
                                 <button
                                     onClick={() => setShowHistory(!showHistory)}
-                                    className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                    className="p-1.5 text-ws-muted hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                     title="View naming history"
                                 >
                                     <History size={16} />
                                 </button>
                                 {showHistory && (
-                                    <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-slate-200 rounded-lg shadow-xl z-10 overflow-hidden">
-                                        <div className="px-3 py-2 bg-slate-50 border-b border-slate-100 text-xs font-semibold text-slate-500">
+                                    <div className="absolute top-full right-0 mt-2 w-64 bg-ws-panel-bg border border-ws-panel-border rounded-lg shadow-xl z-10 overflow-hidden">
+                                        <div className="px-3 py-2 bg-ws-bg border-b border-ws-panel-border text-xs font-semibold text-ws-text-secondary">
                                             Naming History
                                         </div>
                                         <div className="max-h-60 overflow-y-auto py-1">
                                             {!history || history.length === 0 ? (
-                                                <div className="px-4 py-3 text-xs text-slate-400 italic text-center">
+                                                <div className="px-4 py-3 text-xs text-ws-muted italic text-center">
                                                     No aliases found
                                                 </div>
                                             ) : (
                                                 history.map((alias: any) => (
-                                                    <div key={alias.id} className="flex items-center justify-between px-4 py-2 hover:bg-slate-50">
-                                                        <span className="text-sm font-medium text-slate-700">{alias.name}</span>
+                                                    <div key={alias.id} className="flex items-center justify-between px-4 py-2 hover:bg-ws-bg">
+                                                        <span className="text-sm font-medium text-ws-text-secondary">{alias.name}</span>
                                                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${alias.type === 'primary' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                                                             }`}>
                                                             {alias.type}
                                                         </span>
-                                                        <span className="text-[10px] text-slate-400">
+                                                        <span className="text-[10px] text-ws-muted">
                                                             {new Date(alias.created_at).toLocaleDateString()}
                                                         </span>
                                                     </div>
@@ -205,7 +205,7 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
                             </div>
                             <button
                                 onClick={confirmDeleteRecord}
-                                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                className="p-1.5 text-ws-muted hover:text-red-500 hover:bg-red-50 rounded transition-colors"
                                 title="Delete record"
                             >
                                 <Trash2 size={16} />
@@ -218,10 +218,10 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
             {/* Description Editor (Only for Nodes) */}
             {isNode && (
                 <div className="space-y-2">
-                    <h4 className="text-xs font-semibold text-slate-400 uppercase border-b border-slate-100 pb-2">
+                    <h4 className="text-xs font-semibold text-ws-muted uppercase border-b border-ws-panel-border pb-2">
                         Description
                     </h4>
-                    <div className="border border-slate-200 rounded-md bg-white p-1 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+                    <div className="border border-ws-panel-border rounded-md bg-ws-panel-bg p-1 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
                         <RichTextEditor
                             key={item.id}
                             content={description}
@@ -235,7 +235,7 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
 
             {/* Fields Section */}
             <div className="space-y-4">
-                <h4 className="text-xs font-semibold text-slate-400 uppercase border-b border-slate-100 pb-2">
+                <h4 className="text-xs font-semibold text-ws-muted uppercase border-b border-ws-panel-border pb-2">
                     Record Fields
                 </h4>
 
@@ -251,12 +251,12 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
 
                 {/* Records with no fields */}
                 {!isNode && !hasRecordViewModels && !recordLoading && (
-                    <p className="text-sm text-slate-400 italic">No fields defined</p>
+                    <p className="text-sm text-ws-muted italic">No fields defined</p>
                 )}
 
                 {/* Nodes: Use semantic NodeFieldEditor */}
                 {isNode && nodeFieldKeys.length === 0 && (
-                    <p className="text-sm text-slate-400 italic">No fields defined</p>
+                    <p className="text-sm text-ws-muted italic">No fields defined</p>
                 )}
 
                 {isNode && nodeFieldKeys.map((fieldKey) => (

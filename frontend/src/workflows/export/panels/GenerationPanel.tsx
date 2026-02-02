@@ -111,16 +111,16 @@ export function GenerationPanel() {
 
     if (!activeCollection) {
         return (
-            <div className="h-full flex items-center justify-center p-4 text-slate-400 text-sm text-center">
+            <div className="h-full flex items-center justify-center p-4 text-ws-muted text-sm text-center">
                 Select a collection to configure output
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 relative">
+        <div className="flex flex-col h-full bg-ws-bg relative">
             {/* Header */}
-            <div className="p-4 border-b border-slate-200 bg-white shadow-[0_2px_4px_-1px_rgba(0,0,0,0.06)]">
+            <div className="p-4 border-b border-ws-panel-border bg-ws-panel-bg shadow-[0_2px_4px_-1px_rgba(0,0,0,0.06)]">
                 <Text weight="bold" size="sm">Output</Text>
             </div>
 
@@ -141,24 +141,24 @@ export function GenerationPanel() {
                                         w-full p-3 rounded-lg text-left transition-all
                                         ${isSelected
                                             ? 'bg-emerald-50 border-2 border-emerald-400 shadow-sm'
-                                            : 'bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                                            : 'bg-ws-panel-bg border border-ws-panel-border hover:border-slate-300 hover:shadow-sm'
                                         }
                                     `}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`p-2 rounded ${isSelected ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
+                                        <div className={`p-2 rounded ${isSelected ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-ws-text-secondary'}`}>
                                             <Icon size={18} />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className={`text-sm font-medium ${isSelected ? 'text-emerald-800' : 'text-slate-700'}`}>
+                                            <div className={`text-sm font-medium ${isSelected ? 'text-emerald-800' : 'text-ws-text-secondary'}`}>
                                                 {module.label}
                                             </div>
-                                            <div className="text-[10px] text-slate-500 truncate">
+                                            <div className="text-[10px] text-ws-text-secondary truncate">
                                                 {module.description}
                                             </div>
                                         </div>
                                         {module.hasSettings && (
-                                            <div className="text-slate-400">
+                                            <div className="text-ws-muted">
                                                 {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                                             </div>
                                         )}
@@ -167,8 +167,8 @@ export function GenerationPanel() {
 
                                 {/* Settings Panel (fold-out) */}
                                 {isExpanded && module.hasSettings && (
-                                    <div className="mt-1 ml-4 p-3 bg-white border border-slate-200 rounded-lg">
-                                        <div className="flex items-center gap-2 mb-2 text-slate-500">
+                                    <div className="mt-1 ml-4 p-3 bg-ws-panel-bg border border-ws-panel-border rounded-lg">
+                                        <div className="flex items-center gap-2 mb-2 text-ws-text-secondary">
                                             <Settings size={12} />
                                             <span className="text-[10px] font-medium uppercase tracking-wider">Settings</span>
                                         </div>
@@ -178,10 +178,10 @@ export function GenerationPanel() {
                                             <div className="space-y-3 text-xs">
                                                 {/* Document ID Input */}
                                                 <div>
-                                                    <label className="block text-slate-600 font-medium mb-1">
+                                                    <label className="block text-ws-text-secondary font-medium mb-1">
                                                         Target Document
                                                     </label>
-                                                    <select className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm bg-white">
+                                                    <select className="w-full px-2 py-1.5 border border-ws-panel-border rounded text-sm bg-ws-panel-bg">
                                                         <option value="">Select document...</option>
                                                         <option value="doc-001">Project Alpha - To-Do List</option>
                                                         <option value="doc-002">Client Deliverables</option>
@@ -192,18 +192,18 @@ export function GenerationPanel() {
 
                                                 {/* Document ID Manual Entry */}
                                                 <div>
-                                                    <label className="block text-slate-600 font-medium mb-1">
+                                                    <label className="block text-ws-text-secondary font-medium mb-1">
                                                         Or enter Document ID
                                                     </label>
                                                     <input
                                                         type="text"
                                                         placeholder="e.g. DOC-12345"
-                                                        className="w-full px-2 py-1.5 border border-slate-200 rounded text-sm placeholder:text-slate-300"
+                                                        className="w-full px-2 py-1.5 border border-ws-panel-border rounded text-sm placeholder:text-ws-muted"
                                                     />
                                                 </div>
 
                                                 {/* Options */}
-                                                <div className="pt-2 border-t border-slate-100 space-y-2">
+                                                <div className="pt-2 border-t border-ws-panel-border space-y-2">
                                                     <label className="flex items-center gap-2">
                                                         <input type="checkbox" defaultChecked className="rounded" />
                                                         <span>Include project metadata</span>
@@ -247,7 +247,7 @@ export function GenerationPanel() {
                 </div>
 
                 {/* Generate Button */}
-                <div className="p-3 border-t border-slate-200">
+                <div className="p-3 border-t border-ws-panel-border">
                     <button
                         onClick={handleGenerate}
                         disabled={isLoading || activeCollection.selections.length === 0}
@@ -255,7 +255,7 @@ export function GenerationPanel() {
                             w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-colors
                             ${activeCollection.selections.length > 0 && !isLoading
                                 ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                : 'bg-slate-200 text-ws-muted cursor-not-allowed'
                             }
                         `}
                     >
@@ -273,21 +273,21 @@ export function GenerationPanel() {
 
                 {/* Artifacts List */}
                 {artifacts.length > 0 && (
-                    <div className="p-3 border-t border-slate-200">
+                    <div className="p-3 border-t border-ws-panel-border">
                         <Text size="xs" weight="bold" color="dimmed" className="mb-2 uppercase tracking-wider">
                             Generated ({artifacts.length})
                         </Text>
                         <div className="space-y-2">
                             {artifacts.map((art) => (
-                                <div key={art.ref_id} className="p-2 bg-white border border-slate-200 rounded shadow-sm">
+                                <div key={art.ref_id} className="p-2 bg-ws-panel-bg border border-ws-panel-border rounded shadow-sm">
                                     <div className="flex items-center gap-2">
                                         <FileText size={12} className="text-emerald-500" />
-                                        <span className="text-xs font-medium text-slate-700 flex-1 truncate">
+                                        <span className="text-xs font-medium text-ws-text-secondary flex-1 truncate">
                                             {art.artifact_type.replace(/_/g, ' ')}
                                         </span>
                                         <Check size={12} className="text-green-500" />
                                     </div>
-                                    <div className="text-[10px] text-slate-400 truncate mt-1" title={art.path}>
+                                    <div className="text-[10px] text-ws-muted truncate mt-1" title={art.path}>
                                         {art.path}
                                     </div>
                                 </div>
@@ -299,7 +299,7 @@ export function GenerationPanel() {
 
             {/* Loading Overlay */}
             {isLoading && (
-                <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10 backdrop-blur-sm">
+                <div className="absolute inset-0 bg-ws-panel-bg/70 flex items-center justify-center z-10 backdrop-blur-sm">
                     <Loader2 className="animate-spin text-emerald-500" size={32} />
                 </div>
             )}

@@ -311,7 +311,7 @@ export function UniversalTableCore({
 
     if (isLoading) {
         return (
-            <div className={clsx('flex items-center justify-center h-64 text-slate-400', className)}>
+            <div className={clsx('flex items-center justify-center h-64 text-ws-muted', className)}>
                 {loadingState ?? (
                     <div className="animate-spin w-8 h-8 border-2 border-slate-300 border-t-blue-500 rounded-full" />
                 )}
@@ -325,7 +325,7 @@ export function UniversalTableCore({
                 {errorState ?? (
                     <div className="text-center">
                         <p className="font-medium">Error loading data</p>
-                        <p className="text-sm text-slate-400">{String(error)}</p>
+                        <p className="text-sm text-ws-muted">{String(error)}</p>
                     </div>
                 )}
             </div>
@@ -334,7 +334,7 @@ export function UniversalTableCore({
 
     if (sortedRows.length === 0) {
         return (
-            <div className={clsx('flex items-center justify-center h-64 text-slate-400', className)}>
+            <div className={clsx('flex items-center justify-center h-64 text-ws-muted', className)}>
                 {emptyState ?? <p className="text-sm">No data available</p>}
             </div>
         );
@@ -346,7 +346,7 @@ export function UniversalTableCore({
         <div className={clsx('flex flex-col h-full overflow-hidden', className)}>
             {/* Toolbar from features */}
             {features.some((f) => f.renderToolbarLeft || f.renderToolbarRight) && (
-                <div className="flex items-center justify-between px-2 py-1 bg-slate-50 border-b border-slate-200">
+                <div className="flex items-center justify-between px-2 py-1 bg-ws-bg border-b border-ws-panel-border">
                     <div className="flex items-center gap-2">
                         {features.map((f) => f.renderToolbarLeft?.(ctx))}
                     </div>
@@ -361,7 +361,7 @@ export function UniversalTableCore({
                 {/* Header */}
                 <div
                     className={clsx(
-                        'flex items-center bg-slate-50 border-b border-slate-200',
+                        'flex items-center bg-ws-bg border-b border-ws-panel-border',
                         compact ? 'h-7' : 'h-9',
                         stickyHeader && 'sticky top-0 z-10'
                     )}
@@ -389,12 +389,12 @@ export function UniversalTableCore({
                                 {column.renderHeader ? (
                                     column.renderHeader()
                                 ) : (
-                                    <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider truncate">
+                                    <span className="text-[10px] font-semibold text-ws-text-secondary uppercase tracking-wider truncate">
                                         {column.header}
                                     </span>
                                 )}
                                 {isSortable && isSorted && (
-                                    <span className="text-slate-400">
+                                    <span className="text-ws-muted">
                                         {sortState.direction === 'asc' ? (
                                             <ChevronUp size={12} />
                                         ) : (
@@ -422,8 +422,8 @@ export function UniversalTableCore({
                             <div
                                 key={decoratedRow.id}
                                 className={clsx(
-                                    'flex border-b border-slate-100 cursor-pointer transition-colors',
-                                    'hover:bg-slate-50',
+                                    'flex border-b border-ws-panel-border cursor-pointer transition-colors',
+                                    'hover:bg-ws-bg',
                                     // Vertical alignment: start for auto-height (wrapping), center for fixed
                                     rowHeightProp === 'auto' ? 'items-start py-2' : 'items-center',
                                     rowHeightClass,
@@ -464,7 +464,7 @@ export function UniversalTableCore({
             {renderFooter && (
                 <div
                     className={clsx(
-                        'bg-slate-50 border-t border-slate-200',
+                        'bg-ws-bg border-t border-ws-panel-border',
                         stickyFooter && 'sticky bottom-0 z-10'
                     )}
                 >

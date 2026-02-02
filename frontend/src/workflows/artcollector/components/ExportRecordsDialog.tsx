@@ -68,9 +68,9 @@ export function ExportRecordsDialog({
       />
 
       {/* Dialog */}
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-lg mx-4">
+      <div className="relative bg-ws-panel-bg rounded-lg shadow-xl w-full max-w-lg mx-4">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-ws-panel-border">
           <Inline gap="sm" align="center">
             <FileText className="w-5 h-5 text-blue-600" />
             <Text size="lg" weight="bold">
@@ -80,7 +80,7 @@ export function ExportRecordsDialog({
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-slate-600 rounded"
+            className="p-1 text-ws-muted hover:text-ws-text-secondary rounded"
           >
             <X className="w-5 h-5" />
           </button>
@@ -90,7 +90,7 @@ export function ExportRecordsDialog({
         <div className="px-6 py-4">
           <Stack gap="md">
             {/* Summary */}
-            <div className="bg-slate-50 rounded-lg p-4">
+            <div className="bg-ws-bg rounded-lg p-4">
               <Text size="sm" color="muted" className="mb-1">
                 Export Summary
               </Text>
@@ -143,24 +143,24 @@ export function ExportRecordsDialog({
                 <Text size="sm" weight="medium" className="mb-2">
                   Artworks Preview
                 </Text>
-                <div className="border border-slate-200 rounded-lg max-h-48 overflow-auto">
+                <div className="border border-ws-panel-border rounded-lg max-h-48 overflow-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-slate-50 sticky top-0">
+                    <thead className="bg-ws-bg sticky top-0">
                       <tr>
-                        <th className="px-3 py-2 text-left font-medium text-slate-600">
+                        <th className="px-3 py-2 text-left font-medium text-ws-text-secondary">
                           Slug
                         </th>
-                        <th className="px-3 py-2 text-left font-medium text-slate-600">
+                        <th className="px-3 py-2 text-left font-medium text-ws-text-secondary">
                           Title
                         </th>
-                        <th className="px-3 py-2 text-center font-medium text-slate-600">
+                        <th className="px-3 py-2 text-center font-medium text-ws-text-secondary">
                           Page
                         </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {artworks.slice(0, 10).map((artwork) => (
-                        <tr key={artwork.refId} className="hover:bg-slate-50">
+                        <tr key={artwork.refId} className="hover:bg-ws-bg">
                           <td className="px-3 py-2">
                             <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">
                               {artwork.slug}
@@ -180,7 +180,7 @@ export function ExportRecordsDialog({
                         <tr>
                           <td
                             colSpan={3}
-                            className="px-3 py-2 text-center text-slate-500"
+                            className="px-3 py-2 text-center text-ws-text-secondary"
                           >
                             ...and {artworks.length - 10} more
                           </td>
@@ -207,7 +207,7 @@ export function ExportRecordsDialog({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-lg">
+        <div className="px-6 py-4 border-t border-ws-panel-border bg-ws-bg rounded-b-lg">
           <Inline justify="end" gap="sm">
             <Button variant="secondary" onClick={onClose}>
               Cancel

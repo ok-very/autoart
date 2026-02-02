@@ -36,7 +36,7 @@ function parseInvoiceRow(record: { id: string; unique_name: string; data: Record
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  Draft: 'bg-slate-100 text-slate-700',
+  Draft: 'bg-slate-100 text-ws-text-secondary',
   Sent: 'bg-blue-100 text-blue-700',
   Paid: 'bg-green-100 text-green-700',
   Overdue: 'bg-amber-100 text-amber-700',
@@ -82,10 +82,10 @@ export function InvoiceListView() {
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
-      <header className="h-10 shrink-0 flex items-center justify-between px-3 border-b border-slate-200 bg-white">
+      <header className="h-10 shrink-0 flex items-center justify-between px-3 border-b border-ws-panel-border bg-ws-panel-bg">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-slate-700">Invoices</h2>
-          <span className="text-xs text-slate-400">
+          <h2 className="text-sm font-semibold text-ws-text-secondary">Invoices</h2>
+          <span className="text-xs text-ws-muted">
             {filteredInvoices.length}
           </span>
         </div>
@@ -102,18 +102,18 @@ export function InvoiceListView() {
       {/* Table */}
       <div className="flex-1 overflow-auto">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-slate-400">Loading invoices...</div>
+          <div className="p-8 text-center text-sm text-ws-muted">Loading invoices...</div>
         ) : filteredInvoices.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-400">No invoices</div>
+          <div className="p-8 text-center text-sm text-ws-muted">No invoices</div>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-100 text-left">
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs">Number</th>
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs">Issue Date</th>
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs">Due Date</th>
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs text-right">Total</th>
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs">Status</th>
+              <tr className="border-b border-ws-panel-border text-left">
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs">Number</th>
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs">Issue Date</th>
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs">Due Date</th>
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs text-right">Total</th>
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -121,18 +121,18 @@ export function InvoiceListView() {
                 <tr
                   key={inv.id}
                   onClick={() => handleRowClick(inv.id)}
-                  className="border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors"
+                  className="border-b border-slate-50 hover:bg-ws-bg cursor-pointer transition-colors"
                 >
-                  <td className="px-4 py-2.5 font-medium text-slate-700">
+                  <td className="px-4 py-2.5 font-medium text-ws-text-secondary">
                     {inv.invoiceNumber}
                   </td>
-                  <td className="px-4 py-2.5 text-slate-600">
+                  <td className="px-4 py-2.5 text-ws-text-secondary">
                     {inv.issueDate}
                   </td>
-                  <td className="px-4 py-2.5 text-slate-600">
+                  <td className="px-4 py-2.5 text-ws-text-secondary">
                     {inv.dueDate}
                   </td>
-                  <td className="px-4 py-2.5 text-right font-mono text-slate-700">
+                  <td className="px-4 py-2.5 text-right font-mono text-ws-text-secondary">
                     {inv.total !== null
                       ? formatCurrency({ amount: inv.total, currency: inv.currency })
                       : '\u2014'}
@@ -140,7 +140,7 @@ export function InvoiceListView() {
                   <td className="px-4 py-2.5">
                     <span className={clsx(
                       'inline-flex px-2 py-0.5 rounded-full text-xs font-medium',
-                      STATUS_COLORS[inv.status] || 'bg-slate-100 text-slate-600',
+                      STATUS_COLORS[inv.status] || 'bg-slate-100 text-ws-text-secondary',
                     )}>
                       {inv.status}
                     </span>

@@ -55,14 +55,14 @@ export function CalendarContent() {
 
     if (isLoading) {
         return (
-            <div className="h-full flex items-center justify-center bg-white">
-                <Loader2 className="animate-spin text-slate-400" size={24} />
+            <div className="h-full flex items-center justify-center bg-ws-panel-bg">
+                <Loader2 className="animate-spin text-ws-muted" size={24} />
             </div>
         );
     }
 
     return (
-        <div className="h-full overflow-hidden bg-white">
+        <div className="h-full overflow-hidden bg-ws-panel-bg">
             <CalendarView events={events} />
         </div>
     );

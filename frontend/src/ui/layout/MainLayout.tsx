@@ -212,7 +212,7 @@ function SpawnHandle({ api }: SpawnHandleProps) {
   return (
     <div className="absolute bottom-3 right-3 z-50">
       <Dropdown>
-        <DropdownTrigger className="w-6 h-6 bg-white border border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 hover:bg-slate-50 rounded-full shadow-sm flex items-center justify-center transition-all focus:outline-none">
+        <DropdownTrigger className="w-6 h-6 bg-ws-panel-bg border border-ws-panel-border text-ws-muted hover:text-ws-text-secondary hover:border-slate-300 hover:bg-ws-bg rounded-full shadow-sm flex items-center justify-center transition-all focus:outline-none">
           <Plus size={14} strokeWidth={2.5} />
         </DropdownTrigger>
         <DropdownContent align="end" className="w-56">
@@ -262,7 +262,7 @@ function SpawnHandle({ api }: SpawnHandleProps) {
 
 function CenterWorkspacePanel(props: IDockviewPanelProps) {
   return (
-    <div className="h-full overflow-hidden bg-white relative">
+    <div className="h-full overflow-hidden bg-ws-panel-bg relative">
       <CenterContentRouter />
       <SpawnHandle api={props.api} panelId="center-workspace" />
     </div>
@@ -273,7 +273,7 @@ function SelectionInspectorPanel(props: IDockviewPanelProps) {
   const importContext = useImportContextOptional();
 
   return (
-    <div className="h-full overflow-auto bg-white relative group">
+    <div className="h-full overflow-auto bg-ws-panel-bg relative group">
       <SelectionInspector
         importContext={importContext ? {
           plan: importContext.plan,
@@ -315,7 +315,7 @@ function ClassificationPanelAdapter(_props: IDockviewPanelProps) {
   const sessionId = session?.id ?? null;
 
   return (
-    <div className="h-full overflow-auto bg-white relative">
+    <div className="h-full overflow-auto bg-ws-panel-bg relative">
       <ClassificationPanel
         sessionId={sessionId}
         plan={plan}
@@ -328,7 +328,7 @@ function ClassificationPanelAdapter(_props: IDockviewPanelProps) {
 
 function SearchResultsPanel(props: IDockviewPanelProps) {
   return (
-    <div className="h-full overflow-auto bg-white relative">
+    <div className="h-full overflow-auto bg-ws-panel-bg relative">
       <SpawnHandle api={props.api} panelId="search-results" />
     </div>
   );
@@ -395,12 +395,12 @@ function WatermarkComponent() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-slate-50 text-slate-500 relative">
+    <div className="flex flex-col items-center justify-center h-full bg-ws-bg text-ws-text-secondary relative">
       <p className="mb-2 text-sm">Workspace is empty</p>
-      <p className="text-xs text-slate-400">Click below to restore default panels</p>
+      <p className="text-xs text-ws-muted">Click below to restore default panels</p>
       <div className="absolute bottom-3 right-3">
         <Dropdown>
-          <DropdownTrigger className="w-6 h-6 bg-white border border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 hover:bg-slate-50 rounded-full shadow-sm flex items-center justify-center transition-all focus:outline-none">
+          <DropdownTrigger className="w-6 h-6 bg-ws-panel-bg border border-ws-panel-border text-ws-muted hover:text-ws-text-secondary hover:border-slate-300 hover:bg-ws-bg rounded-full shadow-sm flex items-center justify-center transition-all focus:outline-none">
             <Plus size={14} strokeWidth={2.5} />
           </DropdownTrigger>
           <DropdownContent align="end" className="w-56">

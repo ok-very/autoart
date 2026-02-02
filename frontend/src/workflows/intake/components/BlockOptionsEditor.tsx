@@ -55,13 +55,13 @@ export function BlockOptionsEditor({ block, onUpdate }: BlockOptionsEditorProps)
 
     return (
         <div className="mt-4 space-y-2">
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Options</p>
+            <p className="text-xs font-medium text-ws-text-secondary uppercase tracking-wide">Options</p>
 
             {/* Existing Options */}
             <div className="space-y-2">
                 {options.map((option, index) => (
                     <div key={index} className="flex items-center gap-2 group">
-                        <GripVertical className="w-4 h-4 text-slate-300" />
+                        <GripVertical className="w-4 h-4 text-ws-muted" />
                         <div className="flex items-center gap-2 flex-1">
                             {block.type === 'multiple_choice' && (
                                 <div className="w-4 h-4 rounded-full border-2 border-slate-300 shrink-0" />
@@ -70,18 +70,18 @@ export function BlockOptionsEditor({ block, onUpdate }: BlockOptionsEditorProps)
                                 <div className="w-4 h-4 rounded border-2 border-slate-300 shrink-0" />
                             )}
                             {block.type === 'dropdown' && (
-                                <span className="text-slate-400 text-sm shrink-0">{index + 1}.</span>
+                                <span className="text-ws-muted text-sm shrink-0">{index + 1}.</span>
                             )}
                             <input
                                 type="text"
                                 value={option}
                                 onChange={(e) => handleUpdateOption(index, e.target.value)}
-                                className="flex-1 bg-transparent text-sm text-slate-700 border-b border-transparent hover:border-slate-200 focus:border-indigo-500 focus:outline-none py-1"
+                                className="flex-1 bg-transparent text-sm text-ws-text-secondary border-b border-transparent hover:border-ws-panel-border focus:border-indigo-500 focus:outline-none py-1"
                             />
                         </div>
                         <button
                             onClick={() => handleRemoveOption(index)}
-                            className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-opacity"
+                            className="opacity-0 group-hover:opacity-100 text-ws-muted hover:text-red-500 transition-opacity"
                         >
                             <X className="w-4 h-4" />
                         </button>
@@ -98,7 +98,7 @@ export function BlockOptionsEditor({ block, onUpdate }: BlockOptionsEditorProps)
                     <div className="w-4 h-4 rounded border-2 border-dashed border-slate-300 shrink-0" />
                 )}
                 {block.type === 'dropdown' && (
-                    <Plus className="w-4 h-4 text-slate-400 shrink-0" />
+                    <Plus className="w-4 h-4 text-ws-muted shrink-0" />
                 )}
                 <input
                     type="text"
@@ -106,12 +106,12 @@ export function BlockOptionsEditor({ block, onUpdate }: BlockOptionsEditorProps)
                     onChange={(e) => setNewOption(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Add option"
-                    className="flex-1 bg-transparent text-sm text-slate-500 placeholder-slate-400 border-b border-slate-200 focus:border-indigo-500 focus:outline-none py-1"
+                    className="flex-1 bg-transparent text-sm text-ws-text-secondary placeholder-slate-400 border-b border-ws-panel-border focus:border-indigo-500 focus:outline-none py-1"
                 />
                 <button
                     onClick={handleAddOption}
                     disabled={!newOption.trim()}
-                    className="text-indigo-600 hover:text-indigo-700 disabled:text-slate-300 disabled:cursor-not-allowed"
+                    className="text-indigo-600 hover:text-indigo-700 disabled:text-ws-muted disabled:cursor-not-allowed"
                 >
                     <Plus className="w-4 h-4" />
                 </button>

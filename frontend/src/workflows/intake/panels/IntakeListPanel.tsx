@@ -88,7 +88,7 @@ export function IntakeListPanel({ onSelectForm }: IntakeListPanelProps) {
 
       <div className="space-y-2">
         {filteredForms?.length === 0 && (
-          <p className="text-sm text-slate-500 text-center py-8">
+          <p className="text-sm text-ws-text-secondary text-center py-8">
             No forms found. Create one to get started.
           </p>
         )}
@@ -115,7 +115,7 @@ interface IntakeFormRowProps {
 function IntakeFormRow({ form, onSelect, onCopyUrl }: IntakeFormRowProps) {
   return (
     <Card
-      className="p-3 cursor-pointer hover:bg-slate-50 transition-colors"
+      className="p-3 cursor-pointer hover:bg-ws-bg transition-colors"
       onClick={onSelect}
     >
       <div className="flex items-center justify-between">
@@ -126,7 +126,7 @@ function IntakeFormRow({ form, onSelect, onCopyUrl }: IntakeFormRowProps) {
               {form.status}
             </Badge>
           </div>
-          <div className="text-xs text-slate-500 mt-1">
+          <div className="text-xs text-ws-text-secondary mt-1">
             {form.unique_id} · {new Date(form.created_at).toLocaleDateString()}
           </div>
         </div>

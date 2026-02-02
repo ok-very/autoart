@@ -108,24 +108,24 @@ export function SettingsPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+            <div className="min-h-screen flex items-center justify-center bg-ws-bg">
+                <Loader2 className="w-8 h-8 text-ws-muted animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-ws-bg">
             {/* Header */}
-            <header className="bg-white border-b border-slate-200">
+            <header className="bg-ws-panel-bg border-b border-ws-panel-border">
                 <div className="max-w-5xl mx-auto px-6 py-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
                             <Settings className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-xl font-semibold text-slate-900">Settings</h1>
-                            <p className="text-sm text-slate-500">Account and preferences</p>
+                            <h1 className="text-xl font-semibold text-ws-fg">Settings</h1>
+                            <p className="text-sm text-ws-text-secondary">Account and preferences</p>
                         </div>
                     </div>
                 </div>
@@ -143,7 +143,7 @@ export function SettingsPage() {
                                         onClick={() => setActiveTab(item.id)}
                                         className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === item.id
                                             ? 'bg-slate-900 text-white'
-                                            : 'text-slate-600 hover:bg-slate-100'
+                                            : 'text-ws-text-secondary hover:bg-slate-100'
                                             }`}
                                     >
                                         {item.icon}
@@ -154,10 +154,10 @@ export function SettingsPage() {
                         </ul>
 
                         {/* Back link */}
-                        <div className="mt-8 pt-4 border-t border-slate-200">
+                        <div className="mt-8 pt-4 border-t border-ws-panel-border">
                             <button
                                 onClick={() => navigate('/')}
-                                className="text-sm text-slate-500 hover:text-slate-700"
+                                className="text-sm text-ws-text-secondary hover:text-ws-text-secondary"
                             >
                                 ← Back to Home
                             </button>

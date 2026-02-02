@@ -35,11 +35,11 @@ export function TableAddRow({
             disabled={disabled}
             className={clsx(
                 'w-full flex items-center justify-center gap-2 py-2',
-                'text-sm text-slate-500 transition-colors',
-                'border-t border-slate-200',
+                'text-sm text-ws-text-secondary transition-colors',
+                'border-t border-ws-panel-border',
                 disabled
                     ? 'opacity-50 cursor-not-allowed'
-                    : 'hover:bg-slate-50 hover:text-slate-700',
+                    : 'hover:bg-ws-bg hover:text-ws-text-secondary',
                 className
             )}
         >

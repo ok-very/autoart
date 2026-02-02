@@ -207,15 +207,15 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
   const hasSelection = selectedIds.size > 0;
 
   return (
-    <main className="flex-1 flex flex-col overflow-hidden bg-white">
+    <main className="flex-1 flex flex-col overflow-hidden bg-ws-panel-bg">
       {/* Toolbar */}
-      <div className="h-10 border-b border-slate-200 flex items-center justify-between px-3 bg-slate-50">
+      <div className="h-10 border-b border-ws-panel-border flex items-center justify-between px-3 bg-ws-bg">
         <div className="flex items-center gap-3">
           {/* Search */}
           <div className="relative">
             <Search
               size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-ws-muted"
             />
             <input
               type="text"
@@ -225,14 +225,14 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
                 setPage(0);
               }}
               placeholder="Search records..."
-              className="w-64 pl-9 pr-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-64 pl-9 pr-3 py-1.5 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           {/* Bulk actions */}
           {hasSelection && (
-            <div className="flex items-center gap-2 ml-2 pl-2 border-l border-slate-200">
-              <span className="text-sm text-slate-500">
+            <div className="flex items-center gap-2 ml-2 pl-2 border-l border-ws-panel-border">
+              <span className="text-sm text-ws-text-secondary">
                 {selectedIds.size} selected
               </span>
               <button
@@ -256,7 +256,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
 
         <div className="flex items-center gap-2">
           {/* Record count */}
-          <span className="text-sm text-slate-400">
+          <span className="text-sm text-ws-muted">
             {processedRecords.length} record{processedRecords.length !== 1 ? 's' : ''}
           </span>
 
@@ -280,7 +280,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
             <div className="animate-spin w-8 h-8 border-2 border-slate-300 border-t-blue-500 rounded-full" />
           </div>
         ) : paginatedRecords.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-slate-400">
+          <div className="flex flex-col items-center justify-center h-full text-ws-muted">
             <FolderOpen size={48} className="mb-3 opacity-50" />
             <p className="text-ws-body">No records found</p>
             <p className="text-sm mt-1">
@@ -301,7 +301,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
           </div>
         ) : (
           <table className="w-full">
-            <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 z-10">
+            <thead className="sticky top-0 bg-ws-bg border-b border-ws-panel-border z-10">
               <tr>
                 {/* Checkbox column */}
                 <th className="w-10 px-4 py-3">
@@ -318,7 +318,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
 
                 {/* Type column (only when showing all) */}
                 {!definitionId && (
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-ws-text-secondary uppercase">
                     Type
                   </th>
                 )}
@@ -328,7 +328,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
                   <th
                     key={col.key}
                     onClick={() => handleSort(col.key)}
-                    className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase cursor-pointer hover:bg-slate-100 transition-colors"
+                    className="px-4 py-3 text-left text-xs font-semibold text-ws-text-secondary uppercase cursor-pointer hover:bg-slate-100 transition-colors"
                   >
                     <div className="flex items-center gap-1">
                       {col.label}
@@ -357,8 +357,8 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
                     key={record.id}
                     onClick={() => handleRowClick(record)}
                     className={clsx(
-                      'border-b border-slate-100 cursor-pointer transition-colors',
-                      isSelected ? 'bg-blue-50' : 'hover:bg-slate-50'
+                      'border-b border-ws-panel-border cursor-pointer transition-colors',
+                      isSelected ? 'bg-blue-50' : 'hover:bg-ws-bg'
                     )}
                   >
                     {/* Checkbox */}
@@ -377,7 +377,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
                     {/* Type badge (only when showing all) */}
                     {!definitionId && (
                       <td className="px-4 py-3">
-                        <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                        <span className="text-xs bg-slate-100 text-ws-text-secondary px-2 py-0.5 rounded">
                           {getDefinitionName(record.definition_id)}
                         </span>
                       </td>
@@ -403,7 +403,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
                       return (
                         <td
                           key={col.key}
-                          className="px-4 py-3 text-sm text-slate-700 truncate max-w-xs"
+                          className="px-4 py-3 text-sm text-ws-text-secondary truncate max-w-xs"
                         >
                           {getCellValue(record, col.key)}
                         </td>
@@ -418,7 +418,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={(e) => handleDuplicateRecord(e, record)}
-                          className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          className="p-1 text-ws-muted hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                           title="Duplicate record"
                         >
                           <Copy size={16} />
@@ -427,7 +427,7 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
                           onClick={() => {
                             openOverlay('view-definition', { recordId: record.id });
                           }}
-                          className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors"
+                          className="p-1 text-ws-muted hover:text-ws-text-secondary hover:bg-slate-100 rounded transition-colors"
                           title="More options"
                         >
                           <MoreHorizontal size={16} />
@@ -444,22 +444,22 @@ export function RecordGrid({ definitionId }: RecordGridProps) {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="h-8 border-t border-slate-200 flex items-center justify-between px-3 bg-slate-50">
-          <span className="text-sm text-slate-500">
+        <div className="h-8 border-t border-ws-panel-border flex items-center justify-between px-3 bg-ws-bg">
+          <span className="text-sm text-ws-text-secondary">
             Page {page + 1} of {totalPages}
           </span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="px-3 py-1 text-sm border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-1 text-sm border border-ws-panel-border rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Previous
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
-              className="px-3 py-1 text-sm border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-1 text-sm border border-ws-panel-border rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Next
             </button>

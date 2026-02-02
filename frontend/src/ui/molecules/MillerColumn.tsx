@@ -132,21 +132,21 @@ function HierarchyColumn({
     const config = COLUMN_CONFIG[type];
 
     return (
-        <div className="flex-shrink-0 w-80 border-r border-slate-200 bg-white flex flex-col">
+        <div className="flex-shrink-0 w-80 border-r border-ws-panel-border bg-ws-panel-bg flex flex-col">
             {/* Column Header */}
-            <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <div className="p-3 bg-ws-bg border-b border-ws-panel-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <span className={`w-6 h-6 rounded ${config.bgColor} ${config.textColor} flex items-center justify-center text-xs font-semibold`}>
                         {config.badge}
                     </span>
-                    <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    <span className="text-xs font-semibold text-ws-text-secondary uppercase tracking-wider">
                         {config.label}
                     </span>
                 </div>
                 {onAdd && (
                     <button
                         onClick={onAdd}
-                        className="text-slate-400 hover:text-blue-600 transition-colors"
+                        className="text-ws-muted hover:text-blue-600 transition-colors"
                         title={`Add ${type}`}
                         data-aa-component="MillerColumn"
                         data-aa-id={`add-${type}`}
@@ -160,7 +160,7 @@ function HierarchyColumn({
             {/* Items List */}
             <div className="flex-1 overflow-y-auto custom-scroll">
                 {items.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-slate-400">
+                    <div className="p-4 text-center text-sm text-ws-muted">
                         No {config.label.toLowerCase()} yet
                     </div>
                 ) : (
@@ -177,7 +177,7 @@ function HierarchyColumn({
             </div>
 
             {/* Footer Stats */}
-            <div className="p-2 border-t border-slate-100 text-[10px] text-slate-400 text-center">
+            <div className="p-2 border-t border-ws-panel-border text-[10px] text-ws-muted text-center">
                 {items.length} {items.length === 1 ? type : config.label.toLowerCase()}
             </div>
         </div>
@@ -217,17 +217,17 @@ function GenericColumn({
     }, [items, searchQuery]);
 
     return (
-        <div className={`flex-shrink-0 w-72 border-r border-slate-200 bg-white flex flex-col ${className}`}>
+        <div className={`flex-shrink-0 w-72 border-r border-ws-panel-border bg-ws-panel-bg flex flex-col ${className}`}>
             {/* Header */}
-            <div className="p-3 flex flex-col gap-2 bg-slate-50 border-b border-slate-200">
+            <div className="p-3 flex flex-col gap-2 bg-ws-bg border-b border-ws-panel-border">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         {headerBadge}
-                        <span className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        <span className="text-xs font-semibold text-ws-text-secondary uppercase tracking-wider">
                             {title}
                         </span>
                     </div>
-                    <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                    <span className="text-[10px] text-ws-muted bg-slate-100 px-1.5 py-0.5 rounded-full">
                         {filteredItems.length}
                     </span>
                 </div>
@@ -235,15 +235,15 @@ function GenericColumn({
                 {/* Optional Search Bar */}
                 {enableSearch && (
                     <div className="relative">
-                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-ws-muted" size={14} />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Filter..."
                             className="
-                                w-full pl-7 pr-2 py-1 text-xs rounded border border-slate-200
-                                bg-white focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100
+                                w-full pl-7 pr-2 py-1 text-xs rounded border border-ws-panel-border
+                                bg-ws-panel-bg focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100
                             "
                         />
                     </div>
@@ -253,7 +253,7 @@ function GenericColumn({
             {/* List */}
             <div className="flex-1 overflow-y-auto custom-scroll">
                 {filteredItems.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-slate-400">
+                    <div className="p-4 text-center text-sm text-ws-muted">
                         {searchQuery ? 'No matches found' : 'No items'}
                     </div>
                 ) : (
@@ -309,12 +309,12 @@ function HierarchyColumnItem({ item, isSelected, onClick, showArrow = true }: Hi
         <div
             onClick={onClick}
             className={`
-                px-4 py-3 border-b border-slate-100 cursor-pointer
+                px-4 py-3 border-b border-ws-panel-border cursor-pointer
                 flex justify-between items-center gap-2
                 transition-colors
                 ${isSelected
                     ? 'bg-blue-50 border-l-[3px] border-l-blue-500'
-                    : 'hover:bg-slate-50 border-l-[3px] border-l-transparent'
+                    : 'hover:bg-ws-bg border-l-[3px] border-l-transparent'
                 }
             `}
             data-aa-component="MillerColumn"
@@ -322,10 +322,10 @@ function HierarchyColumnItem({ item, isSelected, onClick, showArrow = true }: Hi
             data-aa-action="select"
         >
             <div className="min-w-0 flex-1">
-                <div className={`text-sm font-semibold truncate ${isCompleted ? 'text-slate-500 line-through' : 'text-slate-800'}`}>
+                <div className={`text-sm font-semibold truncate ${isCompleted ? 'text-ws-text-secondary line-through' : 'text-ws-fg'}`}>
                     {item.title}
                 </div>
-                <div className="text-[10px] text-slate-400 font-mono">
+                <div className="text-[10px] text-ws-muted font-mono">
                     ID: {item.id.slice(0, 8)}
                 </div>
                 {item.type === 'subprocess' && (
@@ -384,12 +384,12 @@ function GenericColumnItem({
             onClick={handleRowClick}
             className={`
                 group
-                px-3 py-2 border-b border-slate-100 cursor-pointer
+                px-3 py-2 border-b border-ws-panel-border cursor-pointer
                 flex justify-between items-center gap-3
                 transition-colors select-none
                 ${isSelected
                     ? 'bg-blue-50 border-l-[3px] border-l-blue-500 pl-[9px]'
-                    : 'hover:bg-slate-50 border-l-[3px] border-l-transparent pl-[9px]'
+                    : 'hover:bg-ws-bg border-l-[3px] border-l-transparent pl-[9px]'
                 }
                 ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}
             `}
@@ -420,7 +420,7 @@ function GenericColumnItem({
             {/* Main Content */}
             <div className="min-w-0 flex-1 flex flex-col">
                 <div className="flex items-center gap-2">
-                    <span className={`text-sm font-medium truncate ${isSelected ? 'text-blue-900' : 'text-slate-700'}`}>
+                    <span className={`text-sm font-medium truncate ${isSelected ? 'text-blue-900' : 'text-ws-text-secondary'}`}>
                         {item.label}
                     </span>
                     {item.badge && (
@@ -430,7 +430,7 @@ function GenericColumnItem({
                     )}
                 </div>
                 {item.sublabel && (
-                    <span className="text-[11px] text-slate-400 truncate">
+                    <span className="text-[11px] text-ws-muted truncate">
                         {item.sublabel}
                     </span>
                 )}

@@ -36,7 +36,7 @@ function parseBillRow(record: { id: string; unique_name: string; data: Record<st
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  Received: 'bg-slate-100 text-slate-700',
+  Received: 'bg-slate-100 text-ws-text-secondary',
   Approved: 'bg-blue-100 text-blue-700',
   Paid: 'bg-green-100 text-green-700',
   Disputed: 'bg-red-100 text-red-700',
@@ -64,10 +64,10 @@ export function BillsListView() {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="h-10 shrink-0 flex items-center justify-between px-3 border-b border-slate-200 bg-white">
+      <header className="h-10 shrink-0 flex items-center justify-between px-3 border-b border-ws-panel-border bg-ws-panel-bg">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-slate-700">Vendor Bills</h2>
-          <span className="text-xs text-slate-400">{bills.length}</span>
+          <h2 className="text-sm font-semibold text-ws-text-secondary">Vendor Bills</h2>
+          <span className="text-xs text-ws-muted">{bills.length}</span>
         </div>
         <Button variant="primary" size="sm" leftSection={<Plus size={14} />} onClick={() => openOverlay('create-bill', {})}>
           New Bill
@@ -76,18 +76,18 @@ export function BillsListView() {
 
       <div className="flex-1 overflow-auto">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-slate-400">Loading bills...</div>
+          <div className="p-8 text-center text-sm text-ws-muted">Loading bills...</div>
         ) : bills.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-400">No vendor bills</div>
+          <div className="p-8 text-center text-sm text-ws-muted">No vendor bills</div>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-100 text-left">
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs">Bill #</th>
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs">Category</th>
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs">Due Date</th>
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs text-right">Amount</th>
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs">Status</th>
+              <tr className="border-b border-ws-panel-border text-left">
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs">Bill #</th>
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs">Category</th>
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs">Due Date</th>
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs text-right">Amount</th>
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -95,18 +95,18 @@ export function BillsListView() {
                 <tr
                   key={bill.id}
                   onClick={() => handleRowClick(bill.id)}
-                  className="border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors"
+                  className="border-b border-slate-50 hover:bg-ws-bg cursor-pointer transition-colors"
                 >
-                  <td className="px-4 py-2.5 font-medium text-slate-700">{bill.billNumber}</td>
-                  <td className="px-4 py-2.5 text-slate-600">{bill.category}</td>
-                  <td className="px-4 py-2.5 text-slate-600">{bill.dueDate}</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-slate-700">
+                  <td className="px-4 py-2.5 font-medium text-ws-text-secondary">{bill.billNumber}</td>
+                  <td className="px-4 py-2.5 text-ws-text-secondary">{bill.category}</td>
+                  <td className="px-4 py-2.5 text-ws-text-secondary">{bill.dueDate}</td>
+                  <td className="px-4 py-2.5 text-right font-mono text-ws-text-secondary">
                     {formatCurrency({ amount: bill.amount, currency: bill.currency })}
                   </td>
                   <td className="px-4 py-2.5">
                     <span className={clsx(
                       'inline-flex px-2 py-0.5 rounded-full text-xs font-medium',
-                      STATUS_COLORS[bill.status] || 'bg-slate-100 text-slate-600',
+                      STATUS_COLORS[bill.status] || 'bg-slate-100 text-ws-text-secondary',
                     )}>
                       {bill.status}
                     </span>

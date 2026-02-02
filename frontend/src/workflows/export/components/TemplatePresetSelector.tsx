@@ -66,13 +66,13 @@ export function TemplatePresetSelector({ value, onChange, disabled = false }: Te
                     type="button"
                     className={`
             flex items-center gap-2 px-3 py-2 rounded-lg border
-            ${disabled ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-white hover:bg-slate-50 border-slate-200'}
+            ${disabled ? 'bg-slate-100 text-ws-muted cursor-not-allowed' : 'bg-ws-panel-bg hover:bg-ws-bg border-ws-panel-border'}
             transition-colors min-w-[180px]
           `}
                 >
-                    <CurrentIcon size={16} className="text-slate-600" />
+                    <CurrentIcon size={16} className="text-ws-text-secondary" />
                     <span className="flex-1 text-left text-sm font-medium">{currentConfig.label}</span>
-                    <CaretDown size={14} className="text-slate-400" />
+                    <CaretDown size={14} className="text-ws-muted" />
                 </button>
             </DropdownTrigger>
 
@@ -91,12 +91,12 @@ export function TemplatePresetSelector({ value, onChange, disabled = false }: Te
                 `}
                             onSelect={() => onChange(preset)}
                         >
-                            <Icon size={18} className={isSelected ? 'text-emerald-600' : 'text-slate-500'} />
+                            <Icon size={18} className={isSelected ? 'text-emerald-600' : 'text-ws-text-secondary'} />
                             <div className="flex-1">
-                                <div className={`text-sm font-medium ${isSelected ? 'text-emerald-700' : 'text-slate-900'}`}>
+                                <div className={`text-sm font-medium ${isSelected ? 'text-emerald-700' : 'text-ws-fg'}`}>
                                     {config.label}
                                 </div>
-                                <div className="text-xs text-slate-500">{config.description}</div>
+                                <div className="text-xs text-ws-text-secondary">{config.description}</div>
                             </div>
                             {isSelected && (
                                 <div className="text-emerald-600 text-xs font-medium self-center">✓</div>

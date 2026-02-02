@@ -122,7 +122,7 @@ export function Step2StreamReview({ onNext, onBack }: ArtCollectorStepProps) {
       </Inline>
 
       {/* Gallery */}
-      <div className="flex-1 min-h-0 border border-slate-200 rounded-lg bg-white p-4 overflow-hidden">
+      <div className="flex-1 min-h-0 border border-ws-panel-border rounded-lg bg-ws-panel-bg p-4 overflow-hidden">
         <StreamingGallery
           artifacts={artifacts}
           selectedIds={selectedIds}
@@ -135,7 +135,7 @@ export function Step2StreamReview({ onNext, onBack }: ArtCollectorStepProps) {
       </div>
 
       {/* Footer */}
-      <Inline justify="between" className="pt-4 mt-4 border-t border-slate-200 shrink-0">
+      <Inline justify="between" className="pt-4 mt-4 border-t border-ws-panel-border shrink-0">
         <Button onClick={onBack} variant="secondary">
           Back
         </Button>

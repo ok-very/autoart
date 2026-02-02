@@ -125,7 +125,7 @@ export function CreateLinkView(props: CreateLinkViewProps | LegacyCreateLinkView
             </div>
 
             <div
-              className="flex-1 overflow-y-auto bg-slate-50 border border-slate-200 rounded-lg p-2"
+              className="flex-1 overflow-y-auto bg-ws-bg border border-ws-panel-border rounded-lg p-2"
               style={{ minHeight: 200 }}
             >
               {isSearching ? (
@@ -144,12 +144,12 @@ export function CreateLinkView(props: CreateLinkViewProps | LegacyCreateLinkView
                       key={record.id}
                       className={`cursor-pointer transition-colors border rounded p-3 ${selectedTargetId === record.id
                         ? 'bg-blue-50 border-blue-300'
-                        : 'bg-white border-slate-200 hover:border-blue-300'
+                        : 'bg-ws-panel-bg border-ws-panel-border hover:border-blue-300'
                         }`}
                       onClick={() => setSelectedTargetId(record.id)}
                     >
                       <Inline gap="xs" wrap={false}>
-                        <Link2 size={14} className={selectedTargetId === record.id ? 'text-blue-500' : 'text-slate-400'} />
+                        <Link2 size={14} className={selectedTargetId === record.id ? 'text-blue-500' : 'text-ws-muted'} />
                         <Stack gap="none">
                           <Text size="sm" weight="medium">{record.name}</Text>
                           {record.definitionName && (
@@ -164,7 +164,7 @@ export function CreateLinkView(props: CreateLinkViewProps | LegacyCreateLinkView
             </div>
           </div>
 
-          <Inline justify="end" gap="sm" className="pt-4 border-t border-slate-100">
+          <Inline justify="end" gap="sm" className="pt-4 border-t border-ws-panel-border">
             <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>

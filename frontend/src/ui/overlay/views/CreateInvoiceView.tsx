@@ -77,7 +77,7 @@ export function CreateInvoiceView({
 
   return (
     <div className="p-6">
-      <h2 className="text-base font-semibold text-slate-700 mb-4">New Invoice</h2>
+      <h2 className="text-base font-semibold text-ws-text-secondary mb-4">New Invoice</h2>
       <Stack gap="md">
         <TextInput
           label="Invoice Number"

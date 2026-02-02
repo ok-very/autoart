@@ -59,18 +59,18 @@ export function SlugEditorSection({
   const duplicateCount = slugData.filter((d) => duplicateSlugs.has(d.finalSlug)).length;
 
   return (
-    <div className="border border-slate-200 rounded-lg overflow-hidden">
+    <div className="border border-ws-panel-border rounded-lg overflow-hidden">
       {/* Header */}
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full bg-slate-50 px-4 py-3 flex items-center justify-between hover:bg-slate-100 transition-colors"
+        className="w-full bg-ws-bg px-4 py-3 flex items-center justify-between hover:bg-slate-100 transition-colors"
       >
         <Inline gap="sm" align="center">
           {isExpanded ? (
-            <ChevronDown className="w-4 h-4 text-slate-500" />
+            <ChevronDown className="w-4 h-4 text-ws-text-secondary" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-slate-500" />
+            <ChevronRight className="w-4 h-4 text-ws-text-secondary" />
           )}
           <Text weight="medium">Image Slugs</Text>
           {duplicateCount > 0 && (
@@ -86,10 +86,10 @@ export function SlugEditorSection({
 
       {/* Content */}
       {isExpanded && (
-        <div className="border-t border-slate-200">
+        <div className="border-t border-ws-panel-border">
           {/* Toolbar */}
           {artifacts.length > 0 && (
-            <div className="px-4 py-2 bg-slate-25 border-b border-slate-100">
+            <div className="px-4 py-2 bg-slate-25 border-b border-ws-panel-border">
               <Inline justify="between" align="center">
                 <Button variant="secondary" size="sm" onClick={onRegenerateAll}>
                   <RefreshCw className="w-3 h-3 mr-1" />
@@ -115,12 +115,12 @@ export function SlugEditorSection({
               </div>
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-left">
+                <thead className="bg-ws-bg text-left">
                   <tr>
-                    <th className="px-4 py-2 font-medium text-slate-600 w-16">Preview</th>
-                    <th className="px-4 py-2 font-medium text-slate-600">Auto-Generated</th>
-                    <th className="px-4 py-2 font-medium text-slate-600">Override</th>
-                    <th className="px-4 py-2 font-medium text-slate-600 w-20">Status</th>
+                    <th className="px-4 py-2 font-medium text-ws-text-secondary w-16">Preview</th>
+                    <th className="px-4 py-2 font-medium text-ws-text-secondary">Auto-Generated</th>
+                    <th className="px-4 py-2 font-medium text-ws-text-secondary">Override</th>
+                    <th className="px-4 py-2 font-medium text-ws-text-secondary w-20">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -187,7 +187,7 @@ function SlugRow({
   };
 
   return (
-    <tr className="hover:bg-slate-50">
+    <tr className="hover:bg-ws-bg">
       {/* Thumbnail */}
       <td className="px-4 py-2">
         <div className="w-12 h-12 bg-slate-100 rounded overflow-hidden">
@@ -198,7 +198,7 @@ function SlugRow({
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-300 text-xs">
+            <div className="w-full h-full flex items-center justify-center text-ws-muted text-xs">
               img
             </div>
           )}
@@ -207,7 +207,7 @@ function SlugRow({
 
       {/* Auto-generated slug */}
       <td className="px-4 py-2">
-        <code className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">
+        <code className="text-xs bg-slate-100 px-2 py-1 rounded text-ws-text-secondary">
           {autoSlug}
         </code>
       </td>
@@ -222,7 +222,7 @@ function SlugRow({
           placeholder="(use auto)"
           className={clsx(
             'w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500',
-            hasOverride ? 'border-blue-300 bg-blue-50' : 'border-slate-200'
+            hasOverride ? 'border-blue-300 bg-blue-50' : 'border-ws-panel-border'
           )}
         />
       </td>

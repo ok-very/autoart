@@ -41,7 +41,7 @@ const WORKSPACE_COLOR_CONFIG: Record<string, { icon: string; active: string }> =
     pink: { icon: 'bg-pink-100 text-pink-700', active: 'bg-pink-50' },
     rose: { icon: 'bg-rose-100 text-rose-700', active: 'bg-rose-50' },
     // Neutrals
-    slate: { icon: 'bg-slate-100 text-slate-700', active: 'bg-slate-50' },
+    slate: { icon: 'bg-slate-100 text-ws-text-secondary', active: 'bg-ws-bg' },
     gray: { icon: 'bg-gray-100 text-gray-700', active: 'bg-gray-50' },
     zinc: { icon: 'bg-zinc-100 text-zinc-700', active: 'bg-zinc-50' },
     neutral: { icon: 'bg-neutral-100 text-neutral-700', active: 'bg-neutral-50' },
@@ -102,7 +102,7 @@ function CustomItemActions({ onDuplicate, onDelete }: { onDuplicate: () => void;
                 tabIndex={0}
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDuplicate(); }}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); onDuplicate(); } }}
-                className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                className="p-1 hover:bg-slate-200 rounded text-ws-muted hover:text-ws-text-secondary transition-colors cursor-pointer"
                 title="Duplicate"
             >
                 <Copy size={12} />
@@ -112,7 +112,7 @@ function CustomItemActions({ onDuplicate, onDelete }: { onDuplicate: () => void;
                 tabIndex={0}
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(); }}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); onDelete(); } }}
-                className="p-1 hover:bg-red-100 rounded text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                className="p-1 hover:bg-red-100 rounded text-ws-muted hover:text-red-600 transition-colors cursor-pointer"
                 title="Delete"
             >
                 <Trash2 size={12} />
@@ -130,7 +130,7 @@ function SubviewDuplicateAction({ onDuplicate }: { onDuplicate: () => void }) {
                 tabIndex={0}
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDuplicate(); }}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); onDuplicate(); } }}
-                className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                className="p-1 hover:bg-slate-200 rounded text-ws-muted hover:text-ws-text-secondary transition-colors cursor-pointer"
                 title="Duplicate as custom view"
             >
                 <Copy size={12} />
@@ -241,7 +241,7 @@ function WorkspaceMenuEntry({
                     <Menu.Item
                         onClick={() => onOpenAddDialog(workspace.id)}
                         leftSection={<Plus size={14} />}
-                        className="text-slate-500"
+                        className="text-ws-text-secondary"
                     >
                         Save current
                     </Menu.Item>

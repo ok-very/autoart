@@ -29,8 +29,8 @@ export function RegistryTabSwitch({
                 className={clsx(
                     'px-3 py-1.5 text-xs font-sans font-medium rounded transition-all',
                     activeTab === 'definitions'
-                        ? 'bg-white text-slate-800 shadow-sm'
-                        : 'text-slate-500 hover:text-slate-700'
+                        ? 'bg-ws-panel-bg text-ws-fg shadow-sm'
+                        : 'text-ws-text-secondary hover:text-ws-text-secondary'
                 )}
             >
                 Definitions
@@ -40,8 +40,8 @@ export function RegistryTabSwitch({
                 className={clsx(
                     'px-3 py-1.5 text-xs font-sans font-medium rounded transition-all',
                     activeTab === 'instances'
-                        ? 'bg-white text-slate-800 shadow-sm'
-                        : 'text-slate-500 hover:text-slate-700'
+                        ? 'bg-ws-panel-bg text-ws-fg shadow-sm'
+                        : 'text-ws-text-secondary hover:text-ws-text-secondary'
                 )}
             >
                 Instances

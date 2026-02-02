@@ -58,7 +58,7 @@ function getActionTitle(action: Action): string {
  */
 function formatBindingValue(key: string, value: unknown) {
     if (value === null || value === undefined) {
-        return <span className="text-slate-400 italic">—</span>;
+        return <span className="text-ws-muted italic">—</span>;
     }
 
     // Handle user/assignee mentions
@@ -68,16 +68,16 @@ function formatBindingValue(key: string, value: unknown) {
 
     // Handle dates
     if (key.toLowerCase().includes('date') && typeof value === 'string') {
-        return <span className="text-slate-700">{value}</span>;
+        return <span className="text-ws-text-secondary">{value}</span>;
     }
 
     // Handle strings with quotes
     if (typeof value === 'string') {
-        return <span className="font-semibold text-slate-800">"{value}"</span>;
+        return <span className="font-semibold text-ws-fg">"{value}"</span>;
     }
 
     // Handle other types
-    return <span className="text-slate-700">{JSON.stringify(value)}</span>;
+    return <span className="text-ws-text-secondary">{JSON.stringify(value)}</span>;
 }
 
 // ==================== COMPONENT ====================
@@ -110,11 +110,11 @@ export function ActionCard({
 
     return (
         <div
-            className="inspector-card bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
+            className="inspector-card bg-ws-panel-bg border border-ws-panel-border rounded-lg overflow-hidden shadow-sm hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
             onClick={onClick}
         >
             {/* TOP: MUTABLE INTENT */}
-            <div className="card-intent p-4 bg-white">
+            <div className="card-intent p-4 bg-ws-panel-bg">
                 {/* Header row */}
                 <div className="flex justify-between items-start mb-2">
                     <div
@@ -126,16 +126,16 @@ export function ActionCard({
                     >
                         <ChevronDown
                             size={14}
-                            className={`text-slate-400 transition-transform ${!isExpanded ? '-rotate-90' : ''}`}
+                            className={`text-ws-muted transition-transform ${!isExpanded ? '-rotate-90' : ''}`}
                         />
                         <span className="bg-indigo-100 text-indigo-700 border border-indigo-200 text-[10px] font-semibold px-1.5 py-0.5 rounded">
                             ACTION: {action.type}
                         </span>
-                        <span className="text-sm font-medium text-slate-700 truncate max-w-[200px]">
+                        <span className="text-sm font-medium text-ws-text-secondary truncate max-w-[200px]">
                             {getActionTitle(action)}
                         </span>
                     </div>
-                    <div className="text-[10px] text-slate-400 font-mono">
+                    <div className="text-[10px] text-ws-muted font-mono">
                         {action.id.slice(0, 12)} • Manual • {formatTimestamp(action.createdAt)}
                     </div>
                 </div>
@@ -145,20 +145,20 @@ export function ActionCard({
                     <>
                         {/* Field Bindings */}
                         <div className="pl-6 mb-4">
-                            <div className="text-[10px] font-semibold text-slate-400 uppercase mb-1.5 tracking-wider">
+                            <div className="text-[10px] font-semibold text-ws-muted uppercase mb-1.5 tracking-wider">
                                 Field Bindings
                             </div>
                             {displayBindings.length > 0 ? (
-                                <div className="space-y-1 text-xs font-mono text-slate-600">
+                                <div className="space-y-1 text-xs font-mono text-ws-text-secondary">
                                     {displayBindings.map((binding: { fieldKey: string; value?: unknown }) => (
                                         <div key={binding.fieldKey} className="flex gap-2">
-                                            <span className="text-slate-400 w-20 text-right">{binding.fieldKey} →</span>
+                                            <span className="text-ws-muted w-20 text-right">{binding.fieldKey} →</span>
                                             {formatBindingValue(binding.fieldKey, binding.value)}
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <div className="text-xs text-slate-400 italic">No additional bindings</div>
+                                <div className="text-xs text-ws-muted italic">No additional bindings</div>
                             )}
                         </div>
 
@@ -181,7 +181,7 @@ export function ActionCard({
                                         e.stopPropagation();
                                         onAmend();
                                     }}
-                                    className="text-[10px] font-semibold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded transition-colors flex items-center gap-1"
+                                    className="text-[10px] font-semibold text-ws-text-secondary bg-ws-panel-bg hover:bg-ws-bg border border-ws-panel-border px-3 py-1.5 rounded transition-colors flex items-center gap-1"
                                 >
                                     <PencilLine size={12} /> Amend
                                 </button>
@@ -195,9 +195,9 @@ export function ActionCard({
             <div className="card-divider h-px bg-slate-200" />
 
             {/* BOTTOM: IMMUTABLE EVENTS */}
-            <div className="card-events bg-slate-50 p-3 text-xs">
+            <div className="card-events bg-ws-bg p-3 text-xs">
                 <div
-                    className="flex items-center gap-2 mb-3 cursor-pointer text-slate-500 hover:text-slate-700"
+                    className="flex items-center gap-2 mb-3 cursor-pointer text-ws-text-secondary hover:text-ws-text-secondary"
                     onClick={(e) => {
                         e.stopPropagation();
                         setEventsExpanded(!eventsExpanded);
@@ -223,7 +223,7 @@ export function ActionCard({
                                 />
                             ))
                         ) : (
-                            <div className="text-xs text-slate-400 italic py-2 text-center">
+                            <div className="text-xs text-ws-muted italic py-2 text-center">
                                 No events emitted
                             </div>
                         )}

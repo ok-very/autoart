@@ -109,9 +109,9 @@ export function ExportWorkbench({ onExportComplete, onClose }: ExportWorkbenchPr
 
     return (
         <CollectionModeProvider>
-            <div className="flex flex-col h-full bg-slate-50">
+            <div className="flex flex-col h-full bg-ws-bg">
                 {/* Header */}
-                <Card className="border-b border-slate-200 rounded-none shadow-sm z-10 relative">
+                <Card className="border-b border-ws-panel-border rounded-none shadow-sm z-10 relative">
                     <Inline justify="between" className="h-10 px-3">
                         <Inline gap="sm">
                             <Download size={20} className="text-emerald-600" />
@@ -134,17 +134,17 @@ export function ExportWorkbench({ onExportComplete, onClose }: ExportWorkbenchPr
 
                 {/* Main Content - Collection Panel */}
                 <div className="flex-1 overflow-hidden flex">
-                    <div className="w-80 border-r border-slate-200 shadow-[inset_0_-8px_12px_-8px_rgba(0,0,0,0.08)]">
+                    <div className="w-80 border-r border-ws-panel-border shadow-[inset_0_-8px_12px_-8px_rgba(0,0,0,0.08)]">
                         <CollectionPanel />
                     </div>
 
                     {/* Preview Area */}
-                    <div className="flex-1 overflow-hidden bg-white shadow-[inset_0_-8px_12px_-8px_rgba(0,0,0,0.08)]">
+                    <div className="flex-1 overflow-hidden bg-ws-panel-bg shadow-[inset_0_-8px_12px_-8px_rgba(0,0,0,0.08)]">
                         <CollectionPreview />
                     </div>
 
                     {/* Right Sidebar - Output */}
-                    <div className="w-80 border-l border-slate-200 bg-slate-50 shadow-[inset_0_-8px_12px_-8px_rgba(0,0,0,0.08)]">
+                    <div className="w-80 border-l border-ws-panel-border bg-ws-bg shadow-[inset_0_-8px_12px_-8px_rgba(0,0,0,0.08)]">
                         <GenerationPanel />
                     </div>
                 </div>

@@ -115,10 +115,10 @@ export function ProjectLogEventRow({
           {isFactRecorded && summary ? (
             // FACT_RECORDED: narrative as primary text (not truncated, allow wrapping)
             <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-sm text-slate-700">
+              <span className="text-sm text-ws-text-secondary">
                 {summary}
               </span>
-              <span className="text-[10px] text-slate-400 uppercase tracking-wide">
+              <span className="text-[10px] text-ws-muted uppercase tracking-wide">
                 Fact
               </span>
             </div>
@@ -129,13 +129,13 @@ export function ProjectLogEventRow({
                 {formatter.label}
               </span>
               {summary && (
-                <span className="text-xs text-slate-500 truncate">
+                <span className="text-xs text-ws-text-secondary truncate">
                   {summary}
                 </span>
               )}
             </div>
           )}
-          <span className="text-xs font-mono text-slate-400 whitespace-nowrap">
+          <span className="text-xs font-mono text-ws-muted whitespace-nowrap">
             {formatRelativeTime(event.occurredAt instanceof Date ? event.occurredAt.toISOString() : String(event.occurredAt))}
           </span>
         </div>
@@ -155,7 +155,7 @@ export function ProjectLogEventRow({
           <div className="mt-1">
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600"
+              className="flex items-center gap-1 text-xs text-ws-muted hover:text-ws-text-secondary"
             >
               {isExpanded ? (
                 <ChevronDown className="w-3 h-3" />
@@ -165,7 +165,7 @@ export function ProjectLogEventRow({
               <span>Details</span>
             </button>
             {isExpanded && (
-              <div className="mt-1 p-2 bg-slate-50 border border-slate-200 rounded text-xs font-mono text-slate-600 overflow-x-auto">
+              <div className="mt-1 p-2 bg-ws-bg border border-ws-panel-border rounded text-xs font-mono text-ws-text-secondary overflow-x-auto">
                 <pre className="whitespace-pre-wrap">
                   {JSON.stringify(event.payload, null, 2)}
                 </pre>
@@ -176,14 +176,14 @@ export function ProjectLogEventRow({
 
         {/* Special rendering for blocked events with reason */}
         {event.type === 'WORK_BLOCKED' && typeof event.payload.reason === 'string' && (
-          <div className="mt-1 p-2 bg-red-50 border border-red-100 rounded text-xs text-slate-600 italic">
+          <div className="mt-1 p-2 bg-red-50 border border-red-100 rounded text-xs text-ws-text-secondary italic">
             "{event.payload.reason}"
           </div>
         )}
 
         {/* Special rendering for field updates */}
         {event.type === 'FIELD_VALUE_RECORDED' && typeof event.payload.field_key === 'string' && (
-          <div className="mt-1 p-2 bg-slate-50 border border-slate-200 rounded text-xs font-mono text-slate-600 inline-block">
+          <div className="mt-1 p-2 bg-ws-bg border border-ws-panel-border rounded text-xs font-mono text-ws-text-secondary inline-block">
             {String(event.payload.field_key)} = {JSON.stringify(event.payload.value)}
           </div>
         )}

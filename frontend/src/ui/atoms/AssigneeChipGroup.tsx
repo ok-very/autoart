@@ -104,7 +104,7 @@ export function AssigneeChipGroup({
     }, [assignees, assignee]);
 
     if (normalizedAssignees.length === 0) {
-        return <span className="text-xs text-slate-400 italic">Unassigned</span>;
+        return <span className="text-xs text-ws-muted italic">Unassigned</span>;
     }
 
     const visibleAssignees = normalizedAssignees.slice(0, maxVisible);
@@ -135,7 +135,7 @@ export function AssigneeChipGroup({
                             ${SIZE_CLASSES[size]}
                             ${OVERLAP_CLASSES[size]}
                             rounded-full flex items-center justify-center font-medium
-                            bg-slate-300 text-slate-600 border-2 border-white shadow-sm
+                            bg-slate-300 text-ws-text-secondary border-2 border-white shadow-sm
                         `}
                     >
                         +{overflowCount}
@@ -145,7 +145,7 @@ export function AssigneeChipGroup({
 
             {/* Names (optional) */}
             {showNames && (
-                <span className="text-xs text-slate-700 truncate max-w-[120px]">
+                <span className="text-xs text-ws-text-secondary truncate max-w-[120px]">
                     {normalizedAssignees.length === 1
                         ? normalizedAssignees[0].name
                         : `${normalizedAssignees.length} people`}

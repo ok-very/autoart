@@ -36,7 +36,7 @@ const STYLE_COLORS = [
     { name: 'purple', class: 'bg-purple-500' },
     { name: 'green', class: 'bg-green-500' },
     { name: 'red', class: 'bg-red-500' },
-    { name: 'slate', class: 'bg-slate-500' },
+    { name: 'slate', class: 'bg-ws-bg0' },
 ];
 
 export interface SchemaEditorProps {
@@ -268,7 +268,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
             <div className="bg-slate-800 text-slate-100 rounded-lg p-4 shadow-md">
                 <div className="flex justify-between items-start">
                     <div>
-                        <div className="text-[10px] text-slate-400 font-semibold uppercase mb-1">
+                        <div className="text-[10px] text-ws-muted font-semibold uppercase mb-1">
                             Editing Class Definition
                         </div>
                         {isEditingName ? (
@@ -292,7 +292,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
                                 </button>
                                 <button
                                     onClick={() => setIsEditingName(false)}
-                                    className="p-1 text-slate-400 hover:bg-slate-700 rounded"
+                                    className="p-1 text-ws-muted hover:bg-slate-700 rounded"
                                 >
                                     <X size={16} />
                                 </button>
@@ -305,7 +305,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
                                 {definition && (
                                     <button
                                         onClick={startEditingName}
-                                        className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-white transition-opacity"
+                                        className="opacity-0 group-hover:opacity-100 p-1 text-ws-muted hover:text-white transition-opacity"
                                         title="Rename definition"
                                     >
                                         <Edit2 size={14} />
@@ -333,14 +333,14 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
                         </button>
                     </div>
                 </div>
-                <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                <p className="text-xs text-ws-muted mt-2 leading-relaxed">
                     Changes here affect all "{definition?.name || nodeType}" records in this Project
                     unless you fork this type.
                 </p>
             </div>
 
             <div className="space-y-3">
-                <h4 className="text-xs font-semibold text-slate-400 uppercase border-b border-slate-100 pb-2">
+                <h4 className="text-xs font-semibold text-ws-muted uppercase border-b border-ws-panel-border pb-2">
                     Defined Fields
                 </h4>
 
@@ -361,41 +361,41 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
                         )}
                     </div>
                 ) : fields.length === 0 ? (
-                    <p className="text-sm text-slate-400 italic">No fields defined yet.</p>
+                    <p className="text-sm text-ws-muted italic">No fields defined yet.</p>
                 ) : (
                     fields.map((field) => {
                         const isSystem = systemFields.includes(field.key);
                         return (
                             <div
                                 key={field.key}
-                                className={`flex items-center justify-between p-2 ${isSystem ? 'bg-slate-50' : 'bg-white'
-                                    } border border-slate-200 rounded hover:shadow-sm transition-all group`}
+                                className={`flex items-center justify-between p-2 ${isSystem ? 'bg-ws-bg' : 'bg-ws-panel-bg'
+                                    } border border-ws-panel-border rounded hover:shadow-sm transition-all group`}
                             >
                                 <div className="flex items-center gap-2">
                                     <span
-                                        className={`text-xs font-mono ${field.type === 'link' ? 'text-blue-500' : field.type === 'user' ? 'text-purple-500' : field.type === 'status' ? 'text-amber-500' : 'text-slate-400'
+                                        className={`text-xs font-mono ${field.type === 'link' ? 'text-blue-500' : field.type === 'user' ? 'text-purple-500' : field.type === 'status' ? 'text-amber-500' : 'text-ws-muted'
                                             }`}
                                     >
                                         {field.type}
                                     </span>
-                                    <span className="text-sm font-semibold text-slate-700">{field.label}</span>
+                                    <span className="text-sm font-semibold text-ws-text-secondary">{field.label}</span>
                                     {field.required && <span className="text-[10px] text-red-500">*</span>}
                                 </div>
                                 <div className="flex items-center gap-1">
                                     {isSystem ? (
-                                        <span className="text-[10px] text-slate-400">System Required</span>
+                                        <span className="text-[10px] text-ws-muted">System Required</span>
                                     ) : (
                                         <>
                                             <button
                                                 onClick={() => handleDuplicateField(field)}
-                                                className="text-slate-300 hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                                                className="text-ws-muted hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
                                                 title="Duplicate field"
                                             >
                                                 <Copy size={14} />
                                             </button>
                                             <button
                                                 onClick={() => confirmRemoveField(field.key)}
-                                                className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                                                className="text-ws-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
                                                 title="Delete field"
                                             >
                                                 <Trash2 size={14} />
@@ -420,12 +420,12 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
 
             {/* Styling Override */}
             {definition && (
-                <div className="space-y-3 pt-4 border-t border-slate-100">
-                    <h4 className="text-xs font-semibold text-slate-400 uppercase">Class Styling</h4>
+                <div className="space-y-3 pt-4 border-t border-ws-panel-border">
+                    <h4 className="text-xs font-semibold text-ws-muted uppercase">Class Styling</h4>
                     <div className="flex items-center gap-4">
                         {/* Emoji Picker */}
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-400 uppercase font-medium">Icon</span>
+                            <span className="text-[10px] text-ws-muted uppercase font-medium">Icon</span>
                             <EmojiPicker
                                 value={definition.styling?.icon}
                                 onChange={handleEmojiChange}
@@ -435,7 +435,7 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
 
                         {/* Color Picker */}
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-400 uppercase font-medium">Color</span>
+                            <span className="text-[10px] text-ws-muted uppercase font-medium">Color</span>
                             <div className="flex items-center gap-1.5">
                                 {STYLE_COLORS.map((color) => (
                                     <button
@@ -455,8 +455,8 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
                     {/* Pinned Toggle */}
                     <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center gap-2">
-                            <Pin size={14} className={definition.pinned ? 'text-blue-500' : 'text-slate-400'} />
-                            <span className="text-xs text-slate-600">Pin to Quick Create</span>
+                            <Pin size={14} className={definition.pinned ? 'text-blue-500' : 'text-ws-muted'} />
+                            <span className="text-xs text-ws-text-secondary">Pin to Quick Create</span>
                         </div>
                         <button
                             onClick={() => handlePinnedChange(!definition.pinned)}
@@ -467,13 +467,13 @@ export function SchemaEditor({ itemId, isNode }: SchemaEditorProps) {
                         >
                             <span
                                 className={clsx(
-                                    'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform',
+                                    'inline-block h-4 w-4 transform rounded-full bg-ws-panel-bg shadow transition-transform',
                                     definition.pinned ? 'translate-x-4' : 'translate-x-0.5'
                                 )}
                             />
                         </button>
                     </div>
-                    <p className="text-[10px] text-slate-400 leading-relaxed">
+                    <p className="text-[10px] text-ws-muted leading-relaxed">
                         When pinned, this record type appears in the quick create menu in the hierarchy
                         sidebar.
                     </p>

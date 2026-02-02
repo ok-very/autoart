@@ -101,7 +101,7 @@ export function CloneDefinitionView(props: CloneDefinitionViewProps | LegacyClon
           autoFocus
         />
 
-        <Inline justify="end" gap="sm" className="pt-4 border-t border-slate-100">
+        <Inline justify="end" gap="sm" className="pt-4 border-t border-ws-panel-border">
           <Button variant="secondary" onClick={handleClose} disabled={isCloning}>
             Cancel
           </Button>

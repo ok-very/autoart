@@ -322,13 +322,13 @@ export function CommandPalette() {
       />
 
       {/* Palette */}
-      <div className="relative w-full max-w-lg bg-white rounded-lg shadow-2xl border border-slate-200">
+      <div className="relative w-full max-w-lg bg-ws-panel-bg rounded-lg shadow-2xl border border-ws-panel-border">
         {/* Search input */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-200">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-ws-panel-border">
           {mode === 'command' ? (
             <Terminal className="w-5 h-5 text-violet-500" />
           ) : (
-            <Search className="w-5 h-5 text-slate-400" />
+            <Search className="w-5 h-5 text-ws-muted" />
           )}
           <input
             ref={inputRef}
@@ -353,12 +353,12 @@ export function CommandPalette() {
           {mode === 'command' ? (
             // Command mode
             filteredCommands.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-slate-500">
+              <div className="px-4 py-8 text-center text-sm text-ws-text-secondary">
                 No commands found
               </div>
             ) : (
               <div>
-                <div className="px-4 py-1.5 text-xs font-medium text-slate-400 uppercase tracking-wide bg-slate-50">
+                <div className="px-4 py-1.5 text-xs font-medium text-ws-muted uppercase tracking-wide bg-ws-bg">
                   Commands
                 </div>
                 {filteredCommands.map((command, index) => {
@@ -371,7 +371,7 @@ export function CommandPalette() {
                       role="option"
                       aria-selected={index === selectedIndex}
                       onClick={() => handleSelectCommand(command)}
-                      className={`w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-slate-50 ${
+                      className={`w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-ws-bg ${
                         index === selectedIndex ? 'bg-blue-50' : ''
                       }`}
                     >
@@ -385,7 +385,7 @@ export function CommandPalette() {
           ) : (
             // Search mode
             searchResults.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-slate-500">
+              <div className="px-4 py-8 text-center text-sm text-ws-text-secondary">
                 No results found
               </div>
             ) : (
@@ -396,7 +396,7 @@ export function CommandPalette() {
                 return (
                   <div key={group.category}>
                     {/* Category header */}
-                    <div className="px-4 py-1.5 text-xs font-medium text-slate-400 uppercase tracking-wide bg-slate-50">
+                    <div className="px-4 py-1.5 text-xs font-medium text-ws-muted uppercase tracking-wide bg-ws-bg">
                       {config.label}
                     </div>
                     {/* Items */}
@@ -411,17 +411,17 @@ export function CommandPalette() {
                           role="option"
                           aria-selected={currentIndex === selectedIndex}
                           onClick={() => handleSelectSearch(result)}
-                          className={`w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-slate-50 ${
+                          className={`w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-ws-bg ${
                             currentIndex === selectedIndex ? 'bg-blue-50' : ''
                           }`}
                         >
-                          <Icon className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                          <Icon className="w-4 h-4 text-ws-muted flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <span className="text-sm font-medium truncate block">
                               {result.label}
                             </span>
                             {result.sublabel && (
-                              <span className="text-xs text-slate-400 truncate block">
+                              <span className="text-xs text-ws-muted truncate block">
                                 {result.sublabel}
                               </span>
                             )}
@@ -437,7 +437,7 @@ export function CommandPalette() {
         </div>
 
         {/* Footer hints */}
-        <div className="flex items-center gap-4 px-4 py-2 border-t border-slate-100 bg-slate-50 text-xs text-slate-500">
+        <div className="flex items-center gap-4 px-4 py-2 border-t border-ws-panel-border bg-ws-bg text-xs text-ws-text-secondary">
           <span>
             <kbd className="px-1 py-0.5 bg-slate-200 rounded text-[10px]">↑↓</kbd> Navigate
           </span>

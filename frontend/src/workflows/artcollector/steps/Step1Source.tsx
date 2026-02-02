@@ -103,15 +103,15 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
   return (
     <Stack className="h-full" gap="lg">
       {/* Mode Toggle Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 pb-2">
+      <div className="flex gap-2 border-b border-ws-panel-border pb-2">
         <button
           type="button"
           onClick={() => handleModeChange('local')}
           className={clsx(
             'px-4 py-2 rounded-t-lg text-sm font-medium transition-colors',
             activeMode === 'local'
-              ? 'bg-white border border-b-white border-slate-200 -mb-[1px] text-slate-900'
-              : 'text-slate-500 hover:text-slate-700'
+              ? 'bg-ws-panel-bg border border-b-white border-ws-panel-border -mb-[1px] text-ws-fg'
+              : 'text-ws-text-secondary hover:text-ws-text-secondary'
           )}
         >
           <Inline gap="xs" align="center">
@@ -125,8 +125,8 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
           className={clsx(
             'px-4 py-2 rounded-t-lg text-sm font-medium transition-colors',
             activeMode === 'web'
-              ? 'bg-white border border-b-white border-slate-200 -mb-[1px] text-slate-900'
-              : 'text-slate-500 hover:text-slate-700'
+              ? 'bg-ws-panel-bg border border-b-white border-ws-panel-border -mb-[1px] text-ws-fg'
+              : 'text-ws-text-secondary hover:text-ws-text-secondary'
           )}
         >
           <Inline gap="xs" align="center">
@@ -147,7 +147,7 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
                 ? 'border-blue-400 bg-blue-50'
                 : sourcePath
                   ? 'border-green-300 bg-green-50'
-                  : 'border-slate-300 hover:border-slate-400 bg-white/50'
+                  : 'border-slate-300 hover:border-slate-400 bg-ws-panel-bg/50'
             )}
             onDragOver={handleDragOver}
             onDragEnter={handleDragOver}
@@ -195,7 +195,7 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
             ) : (
               /* Empty state */
               <>
-                <FolderOpen className="w-12 h-12 mx-auto mb-4 text-slate-400" />
+                <FolderOpen className="w-12 h-12 mx-auto mb-4 text-ws-muted" />
                 <Text weight="medium" className="mb-2">
                   Select from indexed folders or paste a path
                 </Text>
@@ -234,11 +234,11 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
 
                 {/* Divider */}
                 <div className="flex items-center gap-3 my-4">
-                  <div className="flex-1 border-t border-slate-200" />
+                  <div className="flex-1 border-t border-ws-panel-border" />
                   <Text size="xs" color="muted">
                     or paste path
                   </Text>
-                  <div className="flex-1 border-t border-slate-200" />
+                  <div className="flex-1 border-t border-ws-panel-border" />
                 </div>
 
                 {/* Path Input */}
@@ -259,8 +259,8 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
           </div>
         ) : (
           /* Web URL Mode */
-          <div className="border-2 border-dashed rounded-lg p-8 text-center border-slate-300 bg-white/50">
-            <Globe className="w-12 h-12 mx-auto mb-4 text-slate-400" />
+          <div className="border-2 border-dashed rounded-lg p-8 text-center border-slate-300 bg-ws-panel-bg/50">
+            <Globe className="w-12 h-12 mx-auto mb-4 text-ws-muted" />
             <Text weight="medium" className="mb-4">
               Enter artist page URL
             </Text>
@@ -296,7 +296,7 @@ export function Step1Source({ onNext }: ArtCollectorStepProps) {
       </div>
 
       {/* Footer */}
-      <Inline justify="end" className="pt-4 mt-4 border-t border-slate-200 shrink-0">
+      <Inline justify="end" className="pt-4 mt-4 border-t border-ws-panel-border shrink-0">
         <Button onClick={handleNext} disabled={!hasValidSource}>
           Next: Stream & Review
         </Button>

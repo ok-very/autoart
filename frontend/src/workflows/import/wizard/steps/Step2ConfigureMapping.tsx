@@ -205,12 +205,12 @@ function getStageKindLabel(stageKind: StageKind | undefined): string {
 
 function getStageKindColor(stageKind: StageKind | undefined): string {
     switch (stageKind) {
-        case 'todo': return 'text-slate-600 bg-slate-100';
+        case 'todo': return 'text-ws-text-secondary bg-slate-100';
         case 'in_progress': return 'text-blue-600 bg-blue-100';
         case 'blocked': return 'text-red-600 bg-red-100';
         case 'done': return 'text-green-600 bg-green-100';
         case 'archive': return 'text-gray-500 bg-gray-100';
-        default: return 'text-slate-600 bg-slate-100';
+        default: return 'text-ws-text-secondary bg-slate-100';
     }
 }
 
@@ -312,7 +312,7 @@ function TypeBadge({ group, onRoleChange }: TypeBadgeProps) {
             contentClassName="p-1 w-40"
             align="end"
         >
-            <div className="text-[10px] font-semibold text-slate-400 px-2 py-1 uppercase">Convert To</div>
+            <div className="text-[10px] font-semibold text-ws-muted px-2 py-1 uppercase">Convert To</div>
             {TYPE_OPTIONS.map(opt => (
                 <button
                     type="button"
@@ -322,8 +322,8 @@ function TypeBadge({ group, onRoleChange }: TypeBadgeProps) {
                     className={clsx(
                         'w-full text-left px-2 py-1.5 text-xs rounded flex items-center gap-2 transition-colors',
                         opt.value === effectiveRole
-                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                            : 'text-slate-700 hover:bg-indigo-50'
+                            ? 'bg-slate-100 text-ws-muted cursor-not-allowed'
+                            : 'text-ws-text-secondary hover:bg-indigo-50'
                     )}
                 >
                     <span>{opt.icon}</span> {opt.label}
@@ -375,7 +375,7 @@ function StageDropZone({ stageKind, groups, onGroupUpdate, onRoleChange, allGrou
             </Text>
 
             {safeGroups.length === 0 ? (
-                <div className="py-2 px-3 text-xs text-slate-400 italic border border-dashed border-slate-300 rounded bg-white/50">
+                <div className="py-2 px-3 text-xs text-ws-muted italic border border-dashed border-slate-300 rounded bg-ws-panel-bg/50">
                     ↓ Drop items here
                 </div>
             ) : (
@@ -420,14 +420,14 @@ function DroppableSection({ section, groups, children, renderGroupedByStage }: D
         blue: 'bg-blue-50/50 border-blue-200',
         amber: 'bg-amber-50/50 border-amber-200',
         green: 'bg-green-50/50 border-green-200',
-        gray: 'bg-slate-50/50 border-slate-200 opacity-70',
+        gray: 'bg-ws-bg/50 border-ws-panel-border opacity-70',
     };
 
     const iconColors: Record<SectionConfig['variant'], string> = {
         blue: 'text-blue-500',
         amber: 'text-amber-500',
         green: 'text-green-500',
-        gray: 'text-slate-400',
+        gray: 'text-ws-muted',
     };
 
     const ringColors: Record<SectionConfig['variant'], string> = {
@@ -444,7 +444,7 @@ function DroppableSection({ section, groups, children, renderGroupedByStage }: D
                 ref={setNodeRef}
                 className={clsx(
                     'rounded-lg border border-dashed px-3 py-2 transition-all',
-                    section.variant === 'gray' ? 'bg-slate-50/30 border-slate-200' : variantStyles[section.variant],
+                    section.variant === 'gray' ? 'bg-ws-bg/30 border-ws-panel-border' : variantStyles[section.variant],
                     isOver && `border-solid ring-2 ring-offset-1 ${ringColors[section.variant]}`
                 )}
             >
@@ -483,7 +483,7 @@ function DroppableSection({ section, groups, children, renderGroupedByStage }: D
                 <Text color="muted" size="xs" className="ml-1">{section.description}</Text>
             </div>
             {groups.length === 0 ? (
-                <div className="py-3 text-center text-slate-400 text-xs border border-dashed border-slate-300 rounded bg-white/50">
+                <div className="py-3 text-center text-ws-muted text-xs border border-dashed border-slate-300 rounded bg-ws-panel-bg/50">
                     Drag groups here
                 </div>
             ) : section.id === 'workflow' && groupedByStageKind && renderGroupedByStage ? (
@@ -520,21 +520,21 @@ function NestedChildDropZone({ parentGroupId, childGroups, onRemoveChild }: Nest
                 'mt-2 border-2 border-dashed rounded-md p-2 transition-all',
                 isOver
                     ? 'border-indigo-400 bg-indigo-50'
-                    : 'border-slate-300 bg-white/50',
+                    : 'border-slate-300 bg-ws-panel-bg/50',
                 childGroups.length === 0 && 'min-h-[40px]'
             )}
         >
-            <div className="text-[10px] text-slate-400 uppercase font-semibold mb-1.5 flex items-center gap-1">
+            <div className="text-[10px] text-ws-muted uppercase font-semibold mb-1.5 flex items-center gap-1">
                 <span>↳</span> Child Groups
                 <span
-                    className="normal-case font-normal text-slate-300 ml-1"
+                    className="normal-case font-normal text-ws-muted ml-1"
                     title="Children retain parent stage context while having their own workflow position"
                 >
                     (inherit context)
                 </span>
             </div>
             {childGroups.length === 0 ? (
-                <div className="text-xs text-slate-400 italic py-1">
+                <div className="text-xs text-ws-muted italic py-1">
                     Drop groups here to nest them under this subprocess
                 </div>
             ) : (
@@ -542,14 +542,14 @@ function NestedChildDropZone({ parentGroupId, childGroups, onRemoveChild }: Nest
                     {childGroups.map((child) => (
                         <div
                             key={child.groupId}
-                            className="flex items-center gap-2 bg-white rounded border border-slate-200 px-2 py-1.5 text-xs"
+                            className="flex items-center gap-2 bg-ws-panel-bg rounded border border-ws-panel-border px-2 py-1.5 text-xs"
                         >
-                            <GripVertical className="w-3 h-3 text-slate-300" />
+                            <GripVertical className="w-3 h-3 text-ws-muted" />
                             <span className="flex-1 truncate font-medium">{child.groupTitle}</span>
                             <button
                                 type="button"
                                 onClick={() => onRemoveChild(child.groupId)}
-                                className="text-slate-400 hover:text-red-500 text-[10px] px-1"
+                                className="text-ws-muted hover:text-red-500 text-[10px] px-1"
                                 title="Remove from parent"
                             >
                                 ✕
@@ -637,7 +637,7 @@ function CollapsibleGroupCard({ group, sectionId, sortableContext, onUpdate, onR
             ref={setNodeRef}
             style={style}
             className={clsx(
-                'bg-white rounded-lg border shadow-sm',
+                'bg-ws-panel-bg rounded-lg border shadow-sm',
                 isDragging && 'shadow-lg z-10 border-blue-400',
                 parentGroup && 'ml-4 border-l-2 border-l-indigo-300' // Indent if this is a child
             )}
@@ -649,7 +649,7 @@ function CollapsibleGroupCard({ group, sectionId, sortableContext, onUpdate, onR
                         type="button"
                         {...attributes}
                         {...listeners}
-                        className="cursor-grab text-slate-300 hover:text-slate-500 shrink-0"
+                        className="cursor-grab text-ws-muted hover:text-ws-text-secondary shrink-0"
                         aria-label={`Drag to reorder ${group.groupTitle}`}
                     >
                         <GripVertical className="w-3 h-3" />
@@ -658,7 +658,7 @@ function CollapsibleGroupCard({ group, sectionId, sortableContext, onUpdate, onR
                     {/* Collapsible trigger with title */}
                     <CollapsiblePrimitive.Trigger asChild>
                         <button type="button" className="flex items-center gap-1 flex-1 min-w-0 text-left group">
-                            <ChevronDown className="w-3 h-3 text-slate-300 group-hover:text-slate-500 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                            <ChevronDown className="w-3 h-3 text-ws-muted group-hover:text-ws-text-secondary shrink-0 transition-transform group-data-[state=open]:rotate-180" />
                             <span className="font-medium text-sm truncate">{group.groupTitle}</span>
                             {childGroups.length > 0 && (
                                 <span className="text-[10px] text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full">
@@ -670,7 +670,7 @@ function CollapsibleGroupCard({ group, sectionId, sortableContext, onUpdate, onR
                                 <span
                                     className={clsx(
                                         'text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-1',
-                                        'bg-slate-100 text-slate-500 border border-slate-200'
+                                        'bg-slate-100 text-ws-text-secondary border border-ws-panel-border'
                                     )}
                                     title={`Nested under "${parentGroup.groupTitle}" (${getStageKindLabel(parentGroup.stageKind)})`}
                                 >
@@ -718,19 +718,19 @@ function CollapsibleGroupCard({ group, sectionId, sortableContext, onUpdate, onR
 
                 {/* Collapsible details */}
                 <CollapsiblePrimitive.Content className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
-                    <div className="px-3 pb-2 pt-0.5 border-t border-slate-100 bg-slate-50/50 text-xs text-slate-600">
+                    <div className="px-3 pb-2 pt-0.5 border-t border-ws-panel-border bg-ws-bg/50 text-xs text-ws-text-secondary">
                         {sectionId === 'workflow' && projectionInfo && (
                             <div className="space-y-1.5">
                                 {parentGroup ? (
                                     <div className="space-y-1.5">
-                                        <div className="flex items-center gap-2 text-slate-600">
+                                        <div className="flex items-center gap-2 text-ws-text-secondary">
                                             <Layers size={12} className="text-indigo-400" />
                                             <span>
                                                 Nested subprocess of{' '}
-                                                <span className="font-semibold text-slate-800">{parentGroup.groupTitle}</span>
+                                                <span className="font-semibold text-ws-fg">{parentGroup.groupTitle}</span>
                                             </span>
                                         </div>
-                                        <div className="ml-5 text-slate-500 text-[11px]">
+                                        <div className="ml-5 text-ws-text-secondary text-[11px]">
                                             Items in this group retain context from parent's{' '}
                                             <span className={clsx(
                                                 'font-medium px-1 py-0.5 rounded',
@@ -743,17 +743,17 @@ function CollapsibleGroupCard({ group, sectionId, sortableContext, onUpdate, onR
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="text-slate-500">
+                                        <div className="text-ws-text-secondary">
                                             This group becomes a <span className="font-semibold text-blue-600">subprocess</span> assigned to:
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className={clsx('px-2 py-0.5 rounded text-xs font-semibold', getStageKindColor(projectionInfo.stageKind))}>
                                                 {projectionInfo.label}
                                             </span>
-                                            <span className="text-slate-400">stage</span>
+                                            <span className="text-ws-muted">stage</span>
                                         </div>
                                         {projectionInfo.siblingCount > 1 && (
-                                            <div className="text-slate-400 text-[11px]">
+                                            <div className="text-ws-muted text-[11px]">
                                                 + {projectionInfo.siblingCount - 1} other subprocess{projectionInfo.siblingCount > 2 ? 'es' : ''} in this stage
                                             </div>
                                         )}
@@ -773,21 +773,21 @@ function CollapsibleGroupCard({ group, sectionId, sortableContext, onUpdate, onR
                         {sectionId === 'references' && (
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-slate-400">Import strategy:</span>
+                                    <span className="text-ws-muted">Import strategy:</span>
                                     <span className="font-medium">{referenceInfo}</span>
                                 </div>
-                                <div className="text-slate-400 italic">
+                                <div className="text-ws-muted italic">
                                     Reference items are stored separately and can be linked across projects
                                 </div>
                             </div>
                         )}
                         {sectionId === 'templates' && (
-                            <div className="text-slate-400 italic">
+                            <div className="text-ws-muted italic">
                                 Templates can be instantiated to create new items with predefined fields
                             </div>
                         )}
                         {sectionId === 'ignored' && (
-                            <div className="text-slate-400 italic">
+                            <div className="text-ws-muted italic">
                                 This group and its items will not be imported
                             </div>
                         )}
@@ -825,7 +825,7 @@ function DraggableTagPill({ group, variant, sortableContext, onRemove }: Draggab
         blue: 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200',
         amber: 'bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200',
         green: 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200',
-        gray: 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200',
+        gray: 'bg-slate-100 text-ws-text-secondary border-ws-panel-border hover:bg-slate-200',
     };
 
     const handleContextMenu = useCallback((e: React.MouseEvent) => {
@@ -989,7 +989,7 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
     return (
         <Stack gap="md" className="h-full overflow-hidden">
             {/* Board Header */}
-            <div className="bg-slate-50 px-4 py-3 rounded-lg border border-slate-200 shrink-0">
+            <div className="bg-ws-bg px-4 py-3 rounded-lg border border-ws-panel-border shrink-0">
                 <div className="flex items-center gap-6">
                     <div className="flex-1 min-w-0">
                         <Text size="xs" color="muted" className="mb-1">Project Title</Text>
@@ -1093,7 +1093,7 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
                                 return (
                                     <div className={clsx(
                                         'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border shadow-lg',
-                                        activeSection?.variant === 'green' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-slate-100 text-slate-600 border-slate-300'
+                                        activeSection?.variant === 'green' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-slate-100 text-ws-text-secondary border-slate-300'
                                     )}>
                                         <GripVertical className="w-2.5 h-2.5 opacity-50" />
                                         <span className="truncate max-w-[150px]">{activeGroup.groupTitle}</span>
@@ -1102,8 +1102,8 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
                             }
 
                             return (
-                                <div className="bg-white rounded-lg border border-blue-400 px-2 py-1.5 shadow-lg flex items-center gap-2 text-sm">
-                                    <GripVertical className="w-3 h-3 text-slate-400" />
+                                <div className="bg-ws-panel-bg rounded-lg border border-blue-400 px-2 py-1.5 shadow-lg flex items-center gap-2 text-sm">
+                                    <GripVertical className="w-3 h-3 text-ws-muted" />
                                     <span className="font-medium text-sm">{activeGroup.groupTitle}</span>
                                 </div>
                             );
@@ -1290,7 +1290,7 @@ export function Step2ConfigureMapping({ onNext, onBack, session, onSessionCreate
             )}
 
             {/* Footer */}
-            <Inline justify="between" className="pt-4 mt-4 border-t border-slate-200 shrink-0">
+            <Inline justify="between" className="pt-4 mt-4 border-t border-ws-panel-border shrink-0">
                 <Button onClick={onBack} variant="secondary" disabled={isRefreshing}>
                     Back
                 </Button>

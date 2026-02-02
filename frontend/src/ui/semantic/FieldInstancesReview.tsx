@@ -145,13 +145,13 @@ export function FieldInstancesReview({ field }: FieldInstancesReviewProps) {
 
     if (!field.sourceDefinitionId) {
         return (
-            <div className="flex-1 flex items-center justify-center text-slate-400">
+            <div className="flex-1 flex items-center justify-center text-ws-muted">
                 <div className="text-center">
-                    <p className="text-ws-body text-slate-600">Node Metadata Field</p>
+                    <p className="text-ws-body text-ws-text-secondary">Node Metadata Field</p>
                     <p className="text-sm mt-1">
                         This field appears in hierarchy nodes, not records.
                     </p>
-                    <p className="text-xs mt-4 text-slate-400">
+                    <p className="text-xs mt-4 text-ws-muted">
                         Instance browsing for node fields is coming soon.
                     </p>
                 </div>
@@ -161,34 +161,34 @@ export function FieldInstancesReview({ field }: FieldInstancesReviewProps) {
 
     if (isLoading) {
         return (
-            <div className="flex-1 flex items-center justify-center text-slate-400">
+            <div className="flex-1 flex items-center justify-center text-ws-muted">
                 <div className="animate-pulse">Loading instances...</div>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col h-full bg-white">
+        <div className="flex flex-col h-full bg-ws-panel-bg">
             {/* Header */}
-            <div className="h-10 px-4 border-b border-slate-200 flex items-center justify-between bg-white">
+            <div className="h-10 px-4 border-b border-ws-panel-border flex items-center justify-between bg-ws-panel-bg">
                 <div>
-                    <h2 className="text-ws-h2 font-semibold text-slate-800">
+                    <h2 className="text-ws-h2 font-semibold text-ws-fg">
                         {field.label} Instances
                     </h2>
-                    <div className="text-xs text-slate-400">
+                    <div className="text-xs text-ws-muted">
                         {records.length} record(s) - {filteredRecords.length} shown
                     </div>
                 </div>
 
                 {/* Search */}
                 <div className="relative">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ws-muted" />
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Filter by name or value..."
-                        className="pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="pl-9 pr-4 py-2 border border-ws-panel-border rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                 </div>
             </div>
@@ -219,7 +219,7 @@ export function FieldInstancesReview({ field }: FieldInstancesReviewProps) {
                             </button>
                             <button
                                 onClick={cancelEdit}
-                                className="p-1.5 text-slate-500 hover:text-slate-700"
+                                className="p-1.5 text-ws-text-secondary hover:text-ws-text-secondary"
                             >
                                 <X size={16} />
                             </button>
@@ -250,7 +250,7 @@ export function FieldInstancesReview({ field }: FieldInstancesReviewProps) {
             {/* Table */}
             <div className="flex-1 overflow-auto">
                 {filteredRecords.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-slate-400">
+                    <div className="flex items-center justify-center h-full text-ws-muted">
                         <p>No records found</p>
                     </div>
                 ) : (
@@ -300,7 +300,7 @@ export function FieldInstancesReview({ field }: FieldInstancesReviewProps) {
                                     <TableCell width={64} className="justify-center" onClick={(e) => e.stopPropagation()}>
                                         <button
                                             onClick={() => handleInlineEdit(record)}
-                                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                            className="p-1.5 text-ws-muted hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                             title="Edit value"
                                         >
                                             <Edit3 size={14} />

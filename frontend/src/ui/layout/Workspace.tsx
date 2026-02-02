@@ -103,7 +103,7 @@ function TaskCard({ task }: TaskCardProps) {
   return (
     <div
       onClick={() => setSelection({ type: 'node', id: task.id })}
-      className={`bg-white border rounded-lg p-4 shadow-sm hover:border-blue-300 transition-all cursor-pointer group ${isCompleted ? 'border-green-200 bg-green-50/50' : 'border-slate-200'
+      className={`bg-ws-panel-bg border rounded-lg p-4 shadow-sm hover:border-blue-300 transition-all cursor-pointer group ${isCompleted ? 'border-green-200 bg-green-50/50' : 'border-ws-panel-border'
         }`}
     >
       <div className="flex items-start gap-3">
@@ -117,7 +117,7 @@ function TaskCard({ task }: TaskCardProps) {
           style={{ backgroundColor: STATUS_COLORS[status] || STATUS_COLORS.default }}
         >
           {Object.entries(STATUS_LABELS).map(([key, label]) => (
-            <option key={key} value={key} className="bg-white text-slate-800">
+            <option key={key} value={key} className="bg-ws-panel-bg text-ws-fg">
               {label || key}
             </option>
           ))}
@@ -130,11 +130,11 @@ function TaskCard({ task }: TaskCardProps) {
             onChange={(e) => setTitle(e.target.value)}
             onBlur={(e) => handleUpdateTitle(e.target.value)}
             onClick={(e) => e.stopPropagation()}
-            className={`w-full text-sm font-semibold border-none bg-transparent focus:outline-none focus:ring-0 ${isCompleted ? 'text-slate-500 line-through' : 'text-slate-800'
+            className={`w-full text-sm font-semibold border-none bg-transparent focus:outline-none focus:ring-0 ${isCompleted ? 'text-ws-text-secondary line-through' : 'text-ws-fg'
               }`}
           />
           {description && (
-            <div className={`text-sm mt-1 leading-relaxed ${isCompleted ? 'text-slate-400' : 'text-slate-600'}`}>
+            <div className={`text-sm mt-1 leading-relaxed ${isCompleted ? 'text-ws-muted' : 'text-ws-text-secondary'}`}>
               <RichTextEditor
                 content={task.description}
                 contextId={task.id}
@@ -145,7 +145,7 @@ function TaskCard({ task }: TaskCardProps) {
           )}
           {taskMeta.dueDate !== undefined && (
             <div className="mt-2 flex items-center gap-2">
-              <span className="text-xs text-slate-500">Due Date:</span>
+              <span className="text-xs text-ws-text-secondary">Due Date:</span>
               <input
                 type="date"
                 value={dueDate}
@@ -162,7 +162,7 @@ function TaskCard({ task }: TaskCardProps) {
                 return (
                   <span
                     key={tagLabel}
-                    className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded"
+                    className="text-[10px] bg-slate-100 text-ws-text-secondary px-1.5 py-0.5 rounded"
                   >
                     {tagLabel}
                   </span>
@@ -186,9 +186,9 @@ function SubprocessSection({ subprocess }: SubprocessSectionProps) {
   const children = getChildren(subprocess.id);
 
   return (
-    <div className="pl-4 border-l border-slate-200 ml-2 mt-4">
+    <div className="pl-4 border-l border-ws-panel-border ml-2 mt-4">
       <div className="flex items-center justify-between mb-3">
-        <h4 className="text-ws-body font-semibold text-slate-700">{subprocess.title}</h4>
+        <h4 className="text-ws-body font-semibold text-ws-text-secondary">{subprocess.title}</h4>
       </div>
       <div className="space-y-3">
         {children.map((task) => (
@@ -214,9 +214,9 @@ function StageSection({ stage }: StageSectionProps) {
   const isCompleted = metadata.status === 'done'; // Assuming stages can also have a status
 
   return (
-    <div className={`mb-8 p-4 rounded-lg border ${isCompleted ? 'border-green-200 bg-green-50/50' : 'border-slate-200 bg-white'}`}>
+    <div className={`mb-8 p-4 rounded-lg border ${isCompleted ? 'border-green-200 bg-green-50/50' : 'border-ws-panel-border bg-ws-panel-bg'}`}>
       <div className="flex items-center justify-between">
-        <h3 className="text-ws-h2 font-semibold text-slate-800 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+        <h3 className="text-ws-h2 font-semibold text-ws-fg cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
           {stage.title}
         </h3>
         <div className="flex items-center gap-2">
@@ -227,12 +227,12 @@ function StageSection({ stage }: StageSectionProps) {
           >
             <Plus size={12} className="inline-block mr-1" /> Add Subprocess
           </button>
-          <button onClick={() => setIsExpanded(!isExpanded)} className="text-slate-400 hover:text-slate-600">
+          <button onClick={() => setIsExpanded(!isExpanded)} className="text-ws-muted hover:text-ws-text-secondary">
             {isExpanded ? 'Collapse' : 'Expand'}
           </button>
         </div>
       </div>
-      {stage.description ? <p className="text-sm text-slate-600 mt-2">{String(stage.description)}</p> : null}
+      {stage.description ? <p className="text-sm text-ws-text-secondary mt-2">{String(stage.description)}</p> : null}
 
       {isExpanded && (
         <div className="mt-6 space-y-6">
@@ -281,8 +281,8 @@ export function Workspace() {
   // Placeholder for when no project is selected or stage is selected
   if (!activeProjectId) {
     return (
-      <main className="flex-1 bg-slate-50 flex items-center justify-center">
-        <div className="text-center text-slate-400">
+      <main className="flex-1 bg-ws-bg flex items-center justify-center">
+        <div className="text-center text-ws-muted">
           <p className="text-sm">Select a project to view its workflow</p>
           <p className="text-sm mt-1">Choose from the top menu</p>
         </div>
@@ -294,19 +294,19 @@ export function Workspace() {
   const project = getChildren(null).find(node => node.id === activeProjectId);
 
   return (
-    <main className="flex-1 bg-white flex flex-col min-w-[400px] border-r border-slate-200 relative">
+    <main className="flex-1 bg-ws-panel-bg flex flex-col min-w-[400px] border-r border-ws-panel-border relative">
       {/* Project Header - could be more elaborate */}
       {project && (
-        <div className="px-6 py-4 border-b border-slate-100 bg-white flex-shrink-0">
-          <h1 className="text-ws-h1 font-semibold text-slate-800">{project.title} Workflow</h1>
-          {project.description ? <p className="text-sm text-slate-600">{String(project.description)}</p> : null}
+        <div className="px-6 py-4 border-b border-ws-panel-border bg-ws-panel-bg flex-shrink-0">
+          <h1 className="text-ws-h1 font-semibold text-ws-fg">{project.title} Workflow</h1>
+          {project.description ? <p className="text-sm text-ws-text-secondary">{String(project.description)}</p> : null}
         </div>
       )}
 
       {/* Workflow Content: Stages and Subprocesses */}
-      <div className="flex-1 overflow-y-auto bg-slate-50 p-6 custom-scroll">
+      <div className="flex-1 overflow-y-auto bg-ws-bg p-6 custom-scroll">
         {stages.length === 0 ? (
-          <div className="text-center text-slate-400">
+          <div className="text-center text-ws-muted">
             <p className="text-sm">No stages defined for this project</p>
             {/* Add button to create first stage? */}
           </div>
@@ -320,8 +320,8 @@ export function Workspace() {
       </div>
 
       {/* FOOTER SUMMARY (Progress Widget) */}
-      <div className="flex-shrink-0 bg-white border-t border-slate-200 p-4 flex items-center justify-between sticky bottom-0 z-10">
-        <span className="text-sm font-semibold text-slate-700">Total Task Progress ({allTasks.length} tasks)</span>
+      <div className="flex-shrink-0 bg-ws-panel-bg border-t border-ws-panel-border p-4 flex items-center justify-between sticky bottom-0 z-10">
+        <span className="text-sm font-semibold text-ws-text-secondary">Total Task Progress ({allTasks.length} tasks)</span>
         <div className="w-48">
           <ProgressBar
             segments={statusDistribution.map(d => ({

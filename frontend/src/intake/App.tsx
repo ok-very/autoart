@@ -5,7 +5,7 @@ import { NotFoundPage } from './components/NotFoundPage';
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-ws-bg">
       <Routes>
         <Route path="/:uniqueId" element={<FormPage />} />
         <Route path="/:uniqueId/success" element={<SuccessPage />} />

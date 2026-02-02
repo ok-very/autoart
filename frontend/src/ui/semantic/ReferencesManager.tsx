@@ -42,7 +42,7 @@ export function ReferencesManager({ actionId }: ReferencesManagerProps) {
     if (isLoading) {
         return (
             <div className="fade-in flex items-center justify-center py-8">
-                <div className="text-sm text-slate-400">Loading references...</div>
+                <div className="text-sm text-ws-muted">Loading references...</div>
             </div>
         );
     }
@@ -63,17 +63,17 @@ export function ReferencesManager({ actionId }: ReferencesManagerProps) {
 
             {/* References List */}
             <div className="space-y-3">
-                <h4 className="text-xs font-semibold text-slate-400 uppercase border-b border-slate-100 pb-2">
+                <h4 className="text-xs font-semibold text-ws-muted uppercase border-b border-ws-panel-border pb-2">
                     Linked References ({references?.length || 0})
                 </h4>
 
                 {!references || references.length === 0 ? (
                     <div className="text-center py-6">
-                        <div className="text-slate-300 mb-2">
+                        <div className="text-ws-muted mb-2">
                             <Link2 size={32} className="mx-auto" />
                         </div>
-                        <p className="text-sm text-slate-400">No references yet</p>
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-sm text-ws-muted">No references yet</p>
+                        <p className="text-xs text-ws-muted mt-1">
                             Use <code className="bg-slate-100 px-1 rounded">#recordname:field</code> in the
                             description to create references
                         </p>
@@ -123,12 +123,12 @@ function ReferenceCard({ reference, actionId }: ReferenceCardProps) {
     };
 
     return (
-        <div className="border rounded-lg p-3 transition-all group border-slate-200 bg-white">
+        <div className="border rounded-lg p-3 transition-all group border-ws-panel-border bg-ws-panel-bg">
             {/* Reference Header */}
             <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2 min-w-0">
                     <Link2 size={14} className="text-blue-500 shrink-0" />
-                    <code className="text-xs font-mono text-slate-700 truncate">{label}</code>
+                    <code className="text-xs font-mono text-ws-text-secondary truncate">{label}</code>
                 </div>
                 <div className="flex items-center gap-1">
                     <span className={clsx(
@@ -140,7 +140,7 @@ function ReferenceCard({ reference, actionId }: ReferenceCardProps) {
                     <button
                         onClick={handleDelete}
                         disabled={!canDelete}
-                        className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1 rounded hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="text-ws-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1 rounded hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
                         title={canDelete ? 'Delete reference' : 'Cannot delete: missing source or target'}
                     >
                         <Trash2 size={12} />
@@ -149,9 +149,9 @@ function ReferenceCard({ reference, actionId }: ReferenceCardProps) {
             </div>
 
             {/* Current Value */}
-            <div className="bg-slate-50 rounded p-2">
-                <div className="text-[10px] text-slate-400 uppercase mb-1">Snapshot Value</div>
-                <div className="text-sm text-slate-700 font-medium truncate">
+            <div className="bg-ws-bg rounded p-2">
+                <div className="text-[10px] text-ws-muted uppercase mb-1">Snapshot Value</div>
+                <div className="text-sm text-ws-text-secondary font-medium truncate">
                     {reference.snapshot_value !== undefined && reference.snapshot_value !== null ? (
                         typeof reference.snapshot_value === 'object' ? (
                             JSON.stringify(reference.snapshot_value)
@@ -159,7 +159,7 @@ function ReferenceCard({ reference, actionId }: ReferenceCardProps) {
                             String(reference.snapshot_value)
                         )
                     ) : (
-                        <span className="text-slate-400 italic">null</span>
+                        <span className="text-ws-muted italic">null</span>
                     )}
                 </div>
             </div>

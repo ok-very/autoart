@@ -61,28 +61,28 @@ export function ProjectLibraryOverlay({ projectId, projectTitle }: ProjectLibrar
           <Library className="w-5 h-5 text-purple-600" />
         </div>
         <div>
-          <h2 className="text-ws-h2 font-semibold text-slate-800">
+          <h2 className="text-ws-h2 font-semibold text-ws-fg">
             Project Template Library
           </h2>
           {projectTitle && (
-            <p className="text-sm text-slate-500">{projectTitle}</p>
+            <p className="text-sm text-ws-text-secondary">{projectTitle}</p>
           )}
         </div>
       </div>
 
       {/* Description */}
-      <div className="mb-6 p-4 bg-slate-50 rounded-lg">
-        <p className="text-sm text-slate-600">
+      <div className="mb-6 p-4 bg-ws-bg rounded-lg">
+        <p className="text-sm text-ws-text-secondary">
           Record definition templates saved to this project's library. These templates are included when cloning this project.
         </p>
       </div>
 
       {/* Templates List */}
       {!templates || templates.length === 0 ? (
-        <div className="text-center py-12 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-          <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500 font-medium">No templates yet</p>
-          <p className="text-sm text-slate-400 mt-1">
+        <div className="text-center py-12 bg-ws-bg rounded-lg border border-dashed border-ws-panel-border">
+          <FileText className="w-12 h-12 text-ws-muted mx-auto mb-3" />
+          <p className="text-ws-text-secondary font-medium">No templates yet</p>
+          <p className="text-sm text-ws-muted mt-1">
             Save record definitions to this library from the Schema tab in the inspector
           </p>
         </div>
@@ -91,7 +91,7 @@ export function ProjectLibraryOverlay({ projectId, projectTitle }: ProjectLibrar
           {templates.map((template) => (
             <div
               key={template.id}
-              className="flex items-center gap-4 p-4 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors"
+              className="flex items-center gap-4 p-4 bg-ws-panel-bg border border-ws-panel-border rounded-lg hover:border-slate-300 transition-colors"
             >
               {/* Icon/Emoji Badge */}
               <div
@@ -106,10 +106,10 @@ export function ProjectLibraryOverlay({ projectId, projectTitle }: ProjectLibrar
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-slate-800 truncate">
+                <div className="font-medium text-ws-fg truncate">
                   {template.name}
                 </div>
-                <div className="text-xs text-slate-400">
+                <div className="text-xs text-ws-muted">
                   {template.schema_config?.fields?.length || 0} fields
                 </div>
               </div>
@@ -118,7 +118,7 @@ export function ProjectLibraryOverlay({ projectId, projectTitle }: ProjectLibrar
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleViewDefinition(template.id)}
-                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  className="p-2 text-ws-muted hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                   title="View definition"
                 >
                   <ExternalLink size={16} />
@@ -130,7 +130,7 @@ export function ProjectLibraryOverlay({ projectId, projectTitle }: ProjectLibrar
                     setTimeout(() => setCopiedId(null), 2000);
                   }}
                   disabled={createDefinition.isPending}
-                  className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
+                  className="p-2 text-ws-muted hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
                   title="Create new definition from this template"
                 >
                   <Copy size={16} />
@@ -138,7 +138,7 @@ export function ProjectLibraryOverlay({ projectId, projectTitle }: ProjectLibrar
                 <button
                   onClick={() => handleRemoveFromLibrary(template.id)}
                   disabled={removeFromLibrary.isPending}
-                  className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                  className="p-2 text-ws-muted hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                   title="Remove from library"
                 >
                   <Trash2 size={16} />
@@ -161,10 +161,10 @@ export function ProjectLibraryOverlay({ projectId, projectTitle }: ProjectLibrar
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-slate-100">
+      <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-ws-panel-border">
         <button
           onClick={closeOverlay}
-          className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+          className="px-4 py-2 text-sm font-medium text-ws-text-secondary bg-ws-panel-bg border border-slate-300 rounded-md hover:bg-ws-bg transition-colors"
         >
           Close
         </button>

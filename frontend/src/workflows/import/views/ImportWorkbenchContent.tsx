@@ -27,7 +27,7 @@ type PreviewMode = 'hierarchy' | 'stage';
 const OUTCOME_COLORS: Record<string, { bg: string; text: string }> = {
     FACT_EMITTED: { bg: 'bg-emerald-100', text: 'text-emerald-700' },
     DERIVED_STATE: { bg: 'bg-blue-100', text: 'text-blue-700' },
-    INTERNAL_WORK: { bg: 'bg-slate-100', text: 'text-slate-600' },
+    INTERNAL_WORK: { bg: 'bg-slate-100', text: 'text-ws-text-secondary' },
     EXTERNAL_WORK: { bg: 'bg-purple-100', text: 'text-purple-700' },
     AMBIGUOUS: { bg: 'bg-amber-100', text: 'text-amber-700' },
     UNCLASSIFIED: { bg: 'bg-red-100', text: 'text-red-700' },
@@ -77,15 +77,15 @@ export function ImportWorkbenchContent() {
     // Empty state
     if (!session || !plan) {
         return (
-            <div className="flex-1 flex items-center justify-center bg-slate-50">
+            <div className="flex-1 flex items-center justify-center bg-ws-bg">
                 <div className="text-center max-w-md">
                     <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                        <FileSpreadsheet className="w-8 h-8 text-slate-400" />
+                        <FileSpreadsheet className="w-8 h-8 text-ws-muted" />
                     </div>
-                    <p className="text-ws-body text-slate-500 mb-2">
+                    <p className="text-ws-body text-ws-text-secondary mb-2">
                         No import session active
                     </p>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-ws-muted">
                         Upload a file or connect to Monday.com to start importing data.
                     </p>
                 </div>
@@ -94,9 +94,9 @@ export function ImportWorkbenchContent() {
     }
 
     return (
-        <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
+        <div className="flex-1 flex flex-col overflow-hidden bg-ws-bg">
             {/* Preview Mode Tabs */}
-            <div className="border-b border-slate-200 bg-white px-4">
+            <div className="border-b border-ws-panel-border bg-ws-panel-bg px-4">
                 <div className="flex items-center gap-1 h-10">
                     <button
                         onClick={() => setPreviewMode('hierarchy')}
@@ -104,7 +104,7 @@ export function ImportWorkbenchContent() {
                             'flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors',
                             previewMode === 'hierarchy'
                                 ? 'bg-blue-100 text-blue-700'
-                                : 'text-slate-600 hover:bg-slate-100'
+                                : 'text-ws-text-secondary hover:bg-slate-100'
                         )}
                     >
                         <Columns className="w-4 h-4" />
@@ -116,7 +116,7 @@ export function ImportWorkbenchContent() {
                             'flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors',
                             previewMode === 'stage'
                                 ? 'bg-blue-100 text-blue-700'
-                                : 'text-slate-600 hover:bg-slate-100'
+                                : 'text-ws-text-secondary hover:bg-slate-100'
                         )}
                     >
                         <Layers className="w-4 h-4" />
@@ -130,7 +130,7 @@ export function ImportWorkbenchContent() {
                             'flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors',
                             unresolvedCount > 0
                                 ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                                : 'text-slate-600 hover:bg-slate-100'
+                                : 'text-ws-text-secondary hover:bg-slate-100'
                         )}
                     >
                         <Tag className="w-4 h-4" />
@@ -146,7 +146,7 @@ export function ImportWorkbenchContent() {
                     {/* Classification Summary Badges */}
                     <div className="ml-auto flex items-center gap-2">
                         {Object.entries(outcomeCounts).map(([outcome, count]) => {
-                            const colors = OUTCOME_COLORS[outcome] || { bg: 'bg-slate-100', text: 'text-slate-600' };
+                            const colors = OUTCOME_COLORS[outcome] || { bg: 'bg-slate-100', text: 'text-ws-text-secondary' };
                             return (
                                 <span
                                     key={outcome}

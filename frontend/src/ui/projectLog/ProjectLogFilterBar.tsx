@@ -43,10 +43,10 @@ export function ProjectLogFilterBar({
   const hasActiveFilters = selectedCategories.length > 0;
 
   return (
-    <div className="flex items-center justify-between gap-4 px-4 py-2 bg-white border-b border-slate-200">
+    <div className="flex items-center justify-between gap-4 px-4 py-2 bg-ws-panel-bg border-b border-ws-panel-border">
       {/* Left: Category chips */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-slate-500 font-medium">Filter:</span>
+        <span className="text-xs text-ws-text-secondary font-medium">Filter:</span>
 
         {EVENT_CATEGORIES.filter((cat) => cat.value !== 'system').map((category) => {
           const isSelected = selectedCategories.includes(category.value);
@@ -58,7 +58,7 @@ export function ProjectLogFilterBar({
                 'px-2.5 py-1 rounded-full text-xs font-medium transition-colors',
                 isSelected
                   ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  : 'bg-slate-100 text-ws-text-secondary hover:bg-slate-200'
               )}
             >
               {category.label}
@@ -69,7 +69,7 @@ export function ProjectLogFilterBar({
         {hasActiveFilters && (
           <button
             onClick={onClearFilters}
-            className="text-xs text-slate-400 hover:text-slate-600 underline"
+            className="text-xs text-ws-muted hover:text-ws-text-secondary underline"
           >
             Clear
           </button>
@@ -80,7 +80,7 @@ export function ProjectLogFilterBar({
       <div className="flex items-center gap-3">
         {/* Event count */}
         {totalEvents !== undefined && (
-          <span className="text-xs text-slate-400 font-mono">
+          <span className="text-xs text-ws-muted font-mono">
             {totalEvents} event{totalEvents !== 1 ? 's' : ''}
           </span>
         )}
@@ -92,7 +92,7 @@ export function ProjectLogFilterBar({
             'flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors',
             groupByAction
               ? 'bg-amber-100 text-amber-700'
-              : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+              : 'bg-slate-100 text-ws-text-secondary hover:bg-slate-200'
           )}
           title={groupByAction ? 'Grouped by action' : 'Chronological order'}
         >
@@ -106,8 +106,8 @@ export function ProjectLogFilterBar({
           className={clsx(
             'flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors',
             includeSystemEventsInLog
-              ? 'bg-slate-200 text-slate-700'
-              : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+              ? 'bg-slate-200 text-ws-text-secondary'
+              : 'bg-slate-100 text-ws-muted hover:bg-slate-200'
           )}
           title={includeSystemEventsInLog ? 'System events visible' : 'System events hidden'}
         >

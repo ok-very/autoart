@@ -30,7 +30,7 @@ export const TableHeaderRow = forwardRef<HTMLDivElement, TableHeaderRowProps>(
         ref={ref}
         role="row"
         className={clsx(
-          'flex items-center bg-slate-50 border-b border-slate-200',
+          'flex items-center bg-ws-bg border-b border-ws-panel-border',
           ROW_HEIGHTS[size],
           sticky && 'sticky top-0 z-10',
           className
@@ -72,9 +72,9 @@ export const TableRow = forwardRef<HTMLDivElement, TableRowProps>(
         onDoubleClick={onDoubleClick}
         onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
         className={clsx(
-          'flex items-center border-b border-slate-100 transition-colors',
+          'flex items-center border-b border-ws-panel-border transition-colors',
           ROW_HEIGHTS[size],
-          hoverable && 'hover:bg-slate-50',
+          hoverable && 'hover:bg-ws-bg',
           selected && 'bg-blue-50 hover:bg-blue-100',
           onClick && 'cursor-pointer',
           onClick && 'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset',

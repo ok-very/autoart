@@ -83,19 +83,19 @@ function EventRow({ event }: { event: Event }) {
                         {formatter.label}
                     </span>
                     <span
-                        className="text-xs text-slate-400"
+                        className="text-xs text-ws-muted"
                         title={occurredAt.absolute}
                     >
                         {occurredAt.relative}
                     </span>
                 </div>
                 {summary && (
-                    <p className="text-sm text-slate-600 truncate mt-0.5">
+                    <p className="text-sm text-ws-text-secondary truncate mt-0.5">
                         {summary}
                     </p>
                 )}
                 {event.actorId && (
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-ws-muted mt-0.5">
                         by {event.actorId}
                     </p>
                 )}
@@ -149,7 +149,7 @@ export function NarrativeThreadPanel({
     // Empty state
     if (!actionId) {
         return (
-            <div className={clsx('text-center py-8 text-slate-400', className)}>
+            <div className={clsx('text-center py-8 text-ws-muted', className)}>
                 <Clock size={24} className="mx-auto mb-2 opacity-50" />
                 <p className="text-sm">Select an action to view its narrative</p>
             </div>
@@ -160,8 +160,8 @@ export function NarrativeThreadPanel({
     if (isLoading) {
         return (
             <div className={clsx('flex items-center justify-center py-8', className)}>
-                <RefreshCw size={16} className="animate-spin mr-2 text-slate-400" />
-                <span className="text-sm text-slate-400">Loading timeline...</span>
+                <RefreshCw size={16} className="animate-spin mr-2 text-ws-muted" />
+                <span className="text-sm text-ws-muted">Loading timeline...</span>
             </div>
         );
     }
@@ -178,7 +178,7 @@ export function NarrativeThreadPanel({
     // No events state
     if (sortedEvents.length === 0) {
         return (
-            <div className={clsx('text-center py-8 text-slate-400', className)}>
+            <div className={clsx('text-center py-8 text-ws-muted', className)}>
                 <Clock size={24} className="mx-auto mb-2 opacity-50" />
                 <p className="text-sm">No events recorded yet</p>
             </div>
@@ -189,7 +189,7 @@ export function NarrativeThreadPanel({
         <div className={clsx('space-y-4', className)}>
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-700">
+                <h3 className="text-sm font-semibold text-ws-text-secondary">
                     Narrative Thread
                 </h3>
                 <Badge variant="neutral" size="xs">
@@ -233,8 +233,8 @@ export function NarrativeThreadPanel({
 
             {/* Category breakdown */}
             {Object.keys(eventsByCategory).length > 1 && (
-                <div className="pt-4 border-t border-slate-100">
-                    <p className="text-xs text-slate-500 mb-2">By category</p>
+                <div className="pt-4 border-t border-ws-panel-border">
+                    <p className="text-xs text-ws-text-secondary mb-2">By category</p>
                     <div className="flex flex-wrap gap-1.5">
                         {Object.entries(eventsByCategory).map(([category, catEvents]) => (
                             <Badge

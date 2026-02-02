@@ -49,7 +49,7 @@ export function ActionsPanel() {
     };
 
     return (
-        <div className="flex flex-col h-full overflow-hidden bg-white">
+        <div className="flex flex-col h-full overflow-hidden bg-ws-panel-bg">
             <div className="flex flex-1 overflow-hidden">
                 {/* Definition Sidebar - Actions only */}
                 <DefinitionListSidebar
@@ -77,9 +77,9 @@ export function ActionsPanel() {
                     {/* Content based on tab */}
                     <div className="flex-1 overflow-hidden">
                         {activeTab === 'definitions' ? (
-                            <div className="h-full flex items-center justify-center text-slate-400">
+                            <div className="h-full flex items-center justify-center text-ws-muted">
                                 <div className="text-center">
-                                    <p className="text-ws-body text-slate-600">Action Definitions</p>
+                                    <p className="text-ws-body text-ws-text-secondary">Action Definitions</p>
                                     <p>Select a definition from the sidebar to view its schema.</p>
                                     <p className="text-xs mt-2">Use the Composer panel to create new definitions.</p>
                                 </div>

@@ -122,15 +122,15 @@ export function PersonFieldEditor({
                 >
                     {selectedPersons.length === 0 ? (
                         <>
-                            <User className={clsx('text-slate-400', compact ? 'w-4 h-4' : 'w-5 h-5')} />
-                            <span className={clsx('text-slate-400', compact ? 'text-xs' : 'text-sm')}>
+                            <User className={clsx('text-ws-muted', compact ? 'w-4 h-4' : 'w-5 h-5')} />
+                            <span className={clsx('text-ws-muted', compact ? 'text-xs' : 'text-sm')}>
                                 Unassigned
                             </span>
                         </>
                     ) : selectedPersons.length === 1 ? (
                         <>
                             <Avatar person={selectedPersons[0]} size={compact ? 'sm' : 'md'} />
-                            <span className={clsx('font-medium text-slate-700', compact ? 'text-xs' : 'text-sm')}>
+                            <span className={clsx('font-medium text-ws-text-secondary', compact ? 'text-xs' : 'text-sm')}>
                                 {selectedPersons[0].name}
                             </span>
                         </>
@@ -141,7 +141,7 @@ export function PersonFieldEditor({
                                     <Avatar key={person.id} person={person} size="sm" />
                                 ))}
                             </div>
-                            <span className={clsx('text-slate-600', compact ? 'text-xs' : 'text-sm')}>
+                            <span className={clsx('text-ws-text-secondary', compact ? 'text-xs' : 'text-sm')}>
                                 {selectedPersons.length} people
                             </span>
                         </>
@@ -165,15 +165,15 @@ export function PersonFieldEditor({
                     >
                         {selectedPersons.length === 0 ? (
                             <>
-                                <User className={clsx('text-slate-400', compact ? 'w-4 h-4' : 'w-5 h-5')} />
-                                <span className={clsx('text-slate-400', compact ? 'text-xs' : 'text-sm')}>
+                                <User className={clsx('text-ws-muted', compact ? 'w-4 h-4' : 'w-5 h-5')} />
+                                <span className={clsx('text-ws-muted', compact ? 'text-xs' : 'text-sm')}>
                                     Assign...
                                 </span>
                             </>
                         ) : selectedPersons.length === 1 ? (
                             <>
                                 <Avatar person={selectedPersons[0]} size={compact ? 'sm' : 'md'} />
-                                <span className={clsx('font-medium text-slate-700', compact ? 'text-xs' : 'text-sm')}>
+                                <span className={clsx('font-medium text-ws-text-secondary', compact ? 'text-xs' : 'text-sm')}>
                                     {selectedPersons[0].name}
                                 </span>
                             </>
@@ -184,7 +184,7 @@ export function PersonFieldEditor({
                                         <Avatar key={person.id} person={person} size="sm" />
                                     ))}
                                 </div>
-                                <span className={clsx('text-slate-600', compact ? 'text-xs' : 'text-sm')}>
+                                <span className={clsx('text-ws-text-secondary', compact ? 'text-xs' : 'text-sm')}>
                                     {selectedPersons.length} people
                                 </span>
                             </>
@@ -192,7 +192,7 @@ export function PersonFieldEditor({
 
                         <ChevronDown
                             className={clsx(
-                                'ml-auto text-slate-400',
+                                'ml-auto text-ws-muted',
                                 compact ? 'w-3 h-3' : 'w-4 h-4'
                             )}
                         />
@@ -201,7 +201,7 @@ export function PersonFieldEditor({
                             <button
                                 type="button"
                                 onClick={handleClear}
-                                className="p-0.5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                                className="p-0.5 rounded-full hover:bg-slate-200 text-ws-muted hover:text-ws-text-secondary"
                             >
                                 <X className="w-3 h-3" />
                             </button>
@@ -211,7 +211,7 @@ export function PersonFieldEditor({
 
                 <DropdownContent align="start" className="min-w-[200px] max-h-64 overflow-auto">
                     {options.length === 0 ? (
-                        <div className="px-3 py-2 text-sm text-slate-400">
+                        <div className="px-3 py-2 text-sm text-ws-muted">
                             No people available
                         </div>
                     ) : (
@@ -226,11 +226,11 @@ export function PersonFieldEditor({
                                 >
                                     <Avatar person={person} size="sm" />
                                     <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-medium text-slate-700 truncate">
+                                        <div className="text-sm font-medium text-ws-text-secondary truncate">
                                             {person.name}
                                         </div>
                                         {person.email && (
-                                            <div className="text-xs text-slate-400 truncate">
+                                            <div className="text-xs text-ws-muted truncate">
                                                 {person.email}
                                             </div>
                                         )}

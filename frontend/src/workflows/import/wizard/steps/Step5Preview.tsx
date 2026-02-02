@@ -29,9 +29,9 @@ export function Step5Preview({ onNext, onBack }: StepProps) {
     }
 
     return (
-        <div className="flex flex-col h-full bg-slate-50">
+        <div className="flex flex-col h-full bg-ws-bg">
             {/* Header / Toolbar */}
-            <div className="shrink-0 px-6 py-3 bg-white border-b border-slate-200 flex items-center justify-between">
+            <div className="shrink-0 px-6 py-3 bg-ws-panel-bg border-b border-ws-panel-border flex items-center justify-between">
                 <Stack gap="xs">
                     <Text size="lg" weight="bold">Review & Reconcile</Text>
                     <Text size="sm" color="muted">
@@ -44,21 +44,21 @@ export function Step5Preview({ onNext, onBack }: StepProps) {
                     <div className="flex bg-slate-100 p-1 rounded-lg">
                         <button
                             onClick={() => setProjection('hierarchy-projection')}
-                            className={`p-1.5 rounded ${projection === 'hierarchy-projection' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`p-1.5 rounded ${projection === 'hierarchy-projection' ? 'bg-ws-panel-bg shadow-sm text-blue-600' : 'text-ws-text-secondary hover:text-ws-text-secondary'}`}
                             title="Hierarchy View"
                         >
                             <Columns size={16} />
                         </button>
                         <button
                             onClick={() => setProjection('stage-projection')}
-                            className={`p-1.5 rounded ${projection === 'stage-projection' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`p-1.5 rounded ${projection === 'stage-projection' ? 'bg-ws-panel-bg shadow-sm text-blue-600' : 'text-ws-text-secondary hover:text-ws-text-secondary'}`}
                             title="Process View"
                         >
                             <Layers size={16} />
                         </button>
                         <button
                             onClick={() => setProjection('table-projection')}
-                            className={`p-1.5 rounded ${projection === 'table-projection' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                            className={`p-1.5 rounded ${projection === 'table-projection' ? 'bg-ws-panel-bg shadow-sm text-blue-600' : 'text-ws-text-secondary hover:text-ws-text-secondary'}`}
                             title="Table View"
                         >
                             <TableIcon size={16} />
@@ -76,7 +76,7 @@ export function Step5Preview({ onNext, onBack }: StepProps) {
             </div>
 
             {/* Main Preview Area */}
-            <div className="flex-1 overflow-auto bg-white">
+            <div className="flex-1 overflow-auto bg-ws-panel-bg">
                 <ImportPreview
                     plan={plan}
                     projectionId={projection}

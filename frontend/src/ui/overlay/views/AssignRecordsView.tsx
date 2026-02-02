@@ -161,7 +161,7 @@ export function AssignRecordsView(props: AssignRecordsViewProps | LegacyAssignRe
                 >
                     <Inline gap="xs" wrap={false}>
                         {node.children.length > 0 && (
-                            <ChevronRight size={14} className="text-slate-400" />
+                            <ChevronRight size={14} className="text-ws-muted" />
                         )}
                         <Text size="sm" truncate className="flex-1">{node.title}</Text>
                         <Text size="xs" color="muted" className="capitalize">{node.type}</Text>
@@ -189,7 +189,7 @@ export function AssignRecordsView(props: AssignRecordsViewProps | LegacyAssignRe
 
             {/* Node selection tree */}
             <div
-                className="bg-slate-50 border border-slate-200 rounded-lg p-2 overflow-y-auto mb-4"
+                className="bg-ws-bg border border-ws-panel-border rounded-lg p-2 overflow-y-auto mb-4"
                 style={{ maxHeight: 256 }}
             >
                 {tree.length === 0 ? (
@@ -213,7 +213,7 @@ export function AssignRecordsView(props: AssignRecordsViewProps | LegacyAssignRe
                 </Alert>
             )}
 
-            <Inline justify="between" className="pt-4 border-t border-slate-100">
+            <Inline justify="between" className="pt-4 border-t border-ws-panel-border">
                 <Button
                     variant="ghost"
                     onClick={handleRemoveAssignment}

@@ -18,27 +18,27 @@ export function EventsPanel() {
     const [typeFilter, setTypeFilter] = useState<string>('');
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
+        <div className="flex flex-col h-full bg-ws-bg overflow-hidden">
             {/* Page Header */}
-            <div className="h-10 border-b border-slate-200 bg-white flex items-center justify-between px-3 shrink-0">
-                <h1 className="text-ws-h1 font-semibold text-slate-800 flex items-center gap-2">
+            <div className="h-10 border-b border-ws-panel-border bg-ws-panel-bg flex items-center justify-between px-3 shrink-0">
+                <h1 className="text-ws-h1 font-semibold text-ws-fg flex items-center gap-2">
                     <Activity size={20} className="text-emerald-500" />
                     Events
                 </h1>
-                <div className="flex items-center gap-2 text-xs text-slate-400">
+                <div className="flex items-center gap-2 text-xs text-ws-muted">
                     <Filter size={14} />
                     Instances only
                 </div>
             </div>
 
             {/* Filters Bar */}
-            <div className="h-8 border-b border-slate-100 bg-slate-50 flex items-center gap-4 px-3 shrink-0">
+            <div className="h-8 border-b border-ws-panel-border bg-ws-bg flex items-center gap-4 px-3 shrink-0">
                 <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500">Context:</span>
+                    <span className="text-xs text-ws-text-secondary">Context:</span>
                     <select
                         value={contextFilter}
                         onChange={(e) => setContextFilter(e.target.value)}
-                        className="text-xs border border-slate-200 rounded px-2 py-1 bg-white"
+                        className="text-xs border border-ws-panel-border rounded px-2 py-1 bg-ws-panel-bg"
                     >
                         <option value="">All</option>
                         <option value="project">Project</option>
@@ -48,11 +48,11 @@ export function EventsPanel() {
                     </select>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500">Type:</span>
+                    <span className="text-xs text-ws-text-secondary">Type:</span>
                     <select
                         value={typeFilter}
                         onChange={(e) => setTypeFilter(e.target.value)}
-                        className="text-xs border border-slate-200 rounded px-2 py-1 bg-white"
+                        className="text-xs border border-ws-panel-border rounded px-2 py-1 bg-ws-panel-bg"
                     >
                         <option value="">All</option>
                         <option value="ACTION_DECLARED">ACTION_DECLARED</option>

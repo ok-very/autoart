@@ -42,8 +42,8 @@ export function StartCollectionModal({ onClose, onSubmit }: StartCollectionModal
                     <FolderPlus size={24} className="text-amber-600" />
                 </div>
                 <div>
-                    <h2 className="text-ws-h2 font-semibold text-slate-800">Start New Collection</h2>
-                    <p className="text-sm text-slate-500">
+                    <h2 className="text-ws-h2 font-semibold text-ws-fg">Start New Collection</h2>
+                    <p className="text-sm text-ws-text-secondary">
                         Create a collection to gather items for export
                     </p>
                 </div>
@@ -51,8 +51,8 @@ export function StartCollectionModal({ onClose, onSubmit }: StartCollectionModal
 
             {/* Name Input */}
             <div className="mb-6">
-                <label className="block text-xs font-medium text-slate-600 mb-2">
-                    Collection Name <span className="text-slate-400 font-normal">(optional)</span>
+                <label className="block text-xs font-medium text-ws-text-secondary mb-2">
+                    Collection Name <span className="text-ws-muted font-normal">(optional)</span>
                 </label>
                 <input
                     type="text"
@@ -60,14 +60,14 @@ export function StartCollectionModal({ onClose, onSubmit }: StartCollectionModal
                     onChange={(e) => setName(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="e.g., Q1 Report Data"
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                    className="w-full px-3 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
                     autoFocus
                 />
             </div>
 
             {/* Info */}
-            <div className="mb-6 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                <p className="text-xs text-slate-600">
+            <div className="mb-6 p-3 bg-ws-bg rounded-lg border border-ws-panel-border">
+                <p className="text-xs text-ws-text-secondary">
                     Once started, click on fields or records to add them to your collection.
                     Items will appear in the Export panel with <span className="text-amber-600 font-medium">amber highlighting</span>.
                 </p>
@@ -78,7 +78,7 @@ export function StartCollectionModal({ onClose, onSubmit }: StartCollectionModal
                 <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-ws-text-secondary hover:text-ws-fg transition-colors"
                 >
                     Cancel
                 </button>
@@ -93,8 +93,8 @@ export function StartCollectionModal({ onClose, onSubmit }: StartCollectionModal
             </div>
 
             {/* Keyboard hint */}
-            <div className="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-400 text-center">
-                Press <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">Enter</kbd> to start, <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">Esc</kbd> to cancel
+            <div className="mt-4 pt-4 border-t border-ws-panel-border text-xs text-ws-muted text-center">
+                Press <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-ws-text-secondary">Enter</kbd> to start, <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-ws-text-secondary">Esc</kbd> to cancel
             </div>
         </div>
     );

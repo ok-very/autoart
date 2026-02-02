@@ -43,9 +43,9 @@ export function ExportWorkbenchView({
     const selectedCount = selectedProjectIds.size;
 
     return (
-        <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
+        <div className="flex-1 flex flex-col overflow-hidden bg-ws-bg">
             {/* Format Selector Bar */}
-            <div className="border-b border-slate-200 bg-white px-4">
+            <div className="border-b border-ws-panel-border bg-ws-panel-bg px-4">
                 <div className="flex items-center gap-4 h-10">
                     <Text size="xs" weight="semibold" color="muted" className="uppercase">
                         Format
@@ -57,7 +57,7 @@ export function ExportWorkbenchView({
                                 onClick={() => onFormatChange(fmt.id)}
                                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${format === fmt.id
                                         ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-transparent'
+                                        : 'bg-slate-100 text-ws-text-secondary hover:bg-slate-200 border border-transparent'
                                     }`}
                             >
                                 {fmt.label}
@@ -67,7 +67,7 @@ export function ExportWorkbenchView({
 
                     {/* Selection indicator */}
                     <div className="ml-auto flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-slate-400" />
+                        <FileText className="w-4 h-4 text-ws-muted" />
                         <Text size="sm" color="muted">
                             {selectedCount} project{selectedCount !== 1 ? 's' : ''} selected
                         </Text>
@@ -88,7 +88,7 @@ export function ExportWorkbenchView({
                     <div className="h-full flex items-center justify-center">
                         <Stack gap="md" className="text-center max-w-md">
                             <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center">
-                                <Eye size={24} className="text-slate-400" />
+                                <Eye size={24} className="text-ws-muted" />
                             </div>
                             <Text size="lg" weight="medium" color="dimmed">
                                 Select a project to preview

@@ -186,7 +186,7 @@ export function ExecutionControls({
     // No session yet
     if (!session || !plan) {
         return (
-            <Card className="h-16 border-t border-slate-200 rounded-none shadow-none">
+            <Card className="h-16 border-t border-ws-panel-border rounded-none shadow-none">
                 <Inline justify="end" className="h-full px-4">
                     <Text size="sm" color="dimmed">
                         Configure and parse data to continue
@@ -197,21 +197,21 @@ export function ExecutionControls({
     }
 
     return (
-        <Card className="h-16 border-t border-slate-200 rounded-none shadow-none">
+        <Card className="h-16 border-t border-ws-panel-border rounded-none shadow-none">
             <Inline justify="between" className="h-full px-4">
                 {/* Stats summary */}
                 <Inline gap="md">
                     <Text size="sm" color="dimmed">
                         Ready to import{' '}
-                        <span className="font-medium text-slate-800">{plan.items.length}</span> items
+                        <span className="font-medium text-ws-fg">{plan.items.length}</span> items
                         {plan.containers.length > 0 && (
-                            <> in <span className="font-medium text-slate-800">{plan.containers.length}</span> containers</>
+                            <> in <span className="font-medium text-ws-fg">{plan.containers.length}</span> containers</>
                         )}
                     </Text>
 
                     {/* Commit will produce */}
-                    <Text size="sm" color="dimmed" className="border-l border-slate-200 pl-4">
-                        Will commit: <span className="font-medium text-slate-800">{commitSummary}</span>
+                    <Text size="sm" color="dimmed" className="border-l border-ws-panel-border pl-4">
+                        Will commit: <span className="font-medium text-ws-fg">{commitSummary}</span>
                     </Text>
 
                     {/* Pending items warning */}

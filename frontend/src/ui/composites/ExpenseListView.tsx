@@ -50,12 +50,12 @@ export function ExpenseListView() {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="h-10 shrink-0 flex items-center justify-between px-3 border-b border-slate-200 bg-white">
+      <header className="h-10 shrink-0 flex items-center justify-between px-3 border-b border-ws-panel-border bg-ws-panel-bg">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-slate-700">Expenses</h2>
-          <span className="text-xs text-slate-400">{expenses.length}</span>
+          <h2 className="text-sm font-semibold text-ws-text-secondary">Expenses</h2>
+          <span className="text-xs text-ws-muted">{expenses.length}</span>
           {expenses.length > 0 && (
-            <span className="text-xs font-mono text-slate-500 ml-2">
+            <span className="text-xs font-mono text-ws-text-secondary ml-2">
               Total: {formatCurrency({ amount: total, currency: 'CAD' })}
             </span>
           )}
@@ -67,30 +67,30 @@ export function ExpenseListView() {
 
       <div className="flex-1 overflow-auto">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-slate-400">Loading expenses...</div>
+          <div className="p-8 text-center text-sm text-ws-muted">Loading expenses...</div>
         ) : expenses.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-400">No expenses recorded</div>
+          <div className="p-8 text-center text-sm text-ws-muted">No expenses recorded</div>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-100 text-left">
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs">Description</th>
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs">Date</th>
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs">Category</th>
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs text-right">Amount</th>
-                <th className="px-4 py-2 font-medium text-slate-500 text-xs w-16">Receipt</th>
+              <tr className="border-b border-ws-panel-border text-left">
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs">Description</th>
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs">Date</th>
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs">Category</th>
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs text-right">Amount</th>
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs w-16">Receipt</th>
               </tr>
             </thead>
             <tbody>
               {expenses.map((expense) => (
                 <tr
                   key={expense.id}
-                  className="border-b border-slate-50 hover:bg-slate-50 transition-colors"
+                  className="border-b border-slate-50 hover:bg-ws-bg transition-colors"
                 >
-                  <td className="px-4 py-2.5 text-slate-700">{expense.description}</td>
-                  <td className="px-4 py-2.5 text-slate-600">{expense.date}</td>
-                  <td className="px-4 py-2.5 text-slate-600">{expense.category}</td>
-                  <td className="px-4 py-2.5 text-right font-mono text-slate-700">
+                  <td className="px-4 py-2.5 text-ws-text-secondary">{expense.description}</td>
+                  <td className="px-4 py-2.5 text-ws-text-secondary">{expense.date}</td>
+                  <td className="px-4 py-2.5 text-ws-text-secondary">{expense.category}</td>
+                  <td className="px-4 py-2.5 text-right font-mono text-ws-text-secondary">
                     {formatCurrency({ amount: expense.amount, currency: expense.currency })}
                   </td>
                   <td className="px-4 py-2.5 text-center">

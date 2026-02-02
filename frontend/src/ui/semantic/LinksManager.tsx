@@ -41,7 +41,7 @@ export function LinksManager({ recordId }: LinksManagerProps) {
     if (isLoading) {
         return (
             <div className="fade-in flex items-center justify-center py-8">
-                <div className="text-sm text-slate-400">Loading links...</div>
+                <div className="text-sm text-ws-muted">Loading links...</div>
             </div>
         );
     }
@@ -78,7 +78,7 @@ export function LinksManager({ recordId }: LinksManagerProps) {
 
                 <button
                     onClick={() => openOverlay('create-link', { sourceRecordId: recordId })}
-                    className="w-full py-2 bg-white border border-purple-200 text-purple-700 rounded text-xs font-semibold hover:bg-purple-50 hover:border-purple-300 transition-all flex items-center justify-center gap-2 shadow-sm"
+                    className="w-full py-2 bg-ws-panel-bg border border-purple-200 text-purple-700 rounded text-xs font-semibold hover:bg-purple-50 hover:border-purple-300 transition-all flex items-center justify-center gap-2 shadow-sm"
                 >
                     <ExternalLink size={12} />
                     Link Another Record
@@ -91,7 +91,7 @@ export function LinksManager({ recordId }: LinksManagerProps) {
                     {linkTypes.map((type) => (
                         <span
                             key={type}
-                            className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded"
+                            className="text-[10px] bg-slate-100 text-ws-text-secondary px-2 py-0.5 rounded"
                         >
                             {type}
                         </span>
@@ -101,12 +101,12 @@ export function LinksManager({ recordId }: LinksManagerProps) {
 
             {/* Outgoing Links */}
             <div className="space-y-3">
-                <h4 className="text-xs font-semibold text-slate-400 uppercase border-b border-slate-100 pb-2 flex items-center gap-2">
+                <h4 className="text-xs font-semibold text-ws-muted uppercase border-b border-ws-panel-border pb-2 flex items-center gap-2">
                     <span className="text-blue-500">→</span> Outgoing Links ({outgoing.length})
                 </h4>
 
                 {outgoing.length === 0 ? (
-                    <p className="text-sm text-slate-400 italic py-2">No outgoing links</p>
+                    <p className="text-sm text-ws-muted italic py-2">No outgoing links</p>
                 ) : (
                     outgoing.map((link) => (
                         <LinkCard
@@ -121,12 +121,12 @@ export function LinksManager({ recordId }: LinksManagerProps) {
 
             {/* Incoming Links */}
             <div className="space-y-3">
-                <h4 className="text-xs font-semibold text-slate-400 uppercase border-b border-slate-100 pb-2 flex items-center gap-2">
+                <h4 className="text-xs font-semibold text-ws-muted uppercase border-b border-ws-panel-border pb-2 flex items-center gap-2">
                     <span className="text-green-500">←</span> Incoming Links ({incoming.length})
                 </h4>
 
                 {incoming.length === 0 ? (
-                    <p className="text-sm text-slate-400 italic py-2">No incoming links</p>
+                    <p className="text-sm text-ws-muted italic py-2">No incoming links</p>
                 ) : (
                     incoming.map((link) => (
                         <LinkCard
@@ -141,12 +141,12 @@ export function LinksManager({ recordId }: LinksManagerProps) {
 
             {/* Empty State */}
             {totalLinks === 0 && (
-                <div className="text-center py-6 border border-dashed border-slate-200 rounded-lg">
-                    <div className="text-slate-300 mb-2">
+                <div className="text-center py-6 border border-dashed border-ws-panel-border rounded-lg">
+                    <div className="text-ws-muted mb-2">
                         <ExternalLink size={32} className="mx-auto" />
                     </div>
-                    <p className="text-sm text-slate-400">No links yet</p>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-sm text-ws-muted">No links yet</p>
+                    <p className="text-xs text-ws-muted mt-1">
                         Links are created when you reference other records
                     </p>
                 </div>
@@ -174,7 +174,7 @@ function LinkCard({ link, direction, onDelete }: LinkCardProps) {
     };
 
     return (
-        <div className="border border-slate-200 rounded-lg p-3 bg-white hover:shadow-sm transition-all group">
+        <div className="border border-ws-panel-border rounded-lg p-3 bg-ws-panel-bg hover:shadow-sm transition-all group">
             <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                     {/* Link Type Badge */}
@@ -185,10 +185,10 @@ function LinkCard({ link, direction, onDelete }: LinkCardProps) {
                     {/* Record Info */}
                     <button
                         onClick={handleNavigate}
-                        className="mt-2 block text-left w-full hover:bg-slate-50 rounded p-1 -m-1 transition-colors"
+                        className="mt-2 block text-left w-full hover:bg-ws-bg rounded p-1 -m-1 transition-colors"
                     >
-                        <div className="text-sm font-medium text-slate-900 truncate">{recordName}</div>
-                        <div className="text-xs text-slate-400 truncate">{definitionName}</div>
+                        <div className="text-sm font-medium text-ws-fg truncate">{recordName}</div>
+                        <div className="text-xs text-ws-muted truncate">{definitionName}</div>
                     </button>
                 </div>
 
@@ -196,14 +196,14 @@ function LinkCard({ link, direction, onDelete }: LinkCardProps) {
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                         onClick={handleNavigate}
-                        className="p-1 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
+                        className="p-1 text-ws-muted hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
                         title="View record"
                     >
                         <ExternalLink size={14} />
                     </button>
                     <button
                         onClick={onDelete}
-                        className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                        className="p-1 text-ws-muted hover:text-red-500 hover:bg-red-50 rounded transition-colors"
                         title="Delete link"
                     >
                         <Trash2 size={14} />
@@ -213,16 +213,16 @@ function LinkCard({ link, direction, onDelete }: LinkCardProps) {
 
             {/* Metadata preview if any */}
             {Object.keys(link.metadata).length > 0 && (
-                <div className="mt-2 pt-2 border-t border-slate-100">
-                    <div className="text-[10px] text-slate-400 uppercase mb-1">Metadata</div>
-                    <div className="text-xs text-slate-600 font-mono bg-slate-50 rounded p-1 truncate">
+                <div className="mt-2 pt-2 border-t border-ws-panel-border">
+                    <div className="text-[10px] text-ws-muted uppercase mb-1">Metadata</div>
+                    <div className="text-xs text-ws-text-secondary font-mono bg-ws-bg rounded p-1 truncate">
                         {JSON.stringify(link.metadata)}
                     </div>
                 </div>
             )}
 
             {/* Created timestamp */}
-            <div className="mt-2 text-[10px] text-slate-400">
+            <div className="mt-2 text-[10px] text-ws-muted">
                 Created {new Date(link.created_at).toLocaleDateString()}
             </div>
         </div>

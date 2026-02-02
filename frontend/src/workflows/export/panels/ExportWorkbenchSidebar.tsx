@@ -48,11 +48,11 @@ export function ExportWorkbenchSidebar() {
     return (
         <div className="flex flex-col h-full">
             {/* Header */}
-            <div className="p-3 border-b border-slate-200">
+            <div className="p-3 border-b border-ws-panel-border">
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                        <FolderOpen className="w-4 h-4 text-slate-500" />
-                        <span className="text-sm font-semibold text-slate-700">Projects</span>
+                        <FolderOpen className="w-4 h-4 text-ws-text-secondary" />
+                        <span className="text-sm font-semibold text-ws-text-secondary">Projects</span>
                         {selectedCount > 0 && (
                             <span className="px-1.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 rounded">
                                 {selectedCount}
@@ -66,7 +66,7 @@ export function ExportWorkbenchSidebar() {
                         >
                             All
                         </button>
-                        <span className="text-slate-300">|</span>
+                        <span className="text-ws-muted">|</span>
                         <button
                             className="text-blue-600 hover:underline"
                             onClick={selectNone}
@@ -77,14 +77,14 @@ export function ExportWorkbenchSidebar() {
                 </div>
 
                 {/* Filter */}
-                <div className="flex items-center gap-2 px-2 py-1.5 bg-slate-50 rounded-lg">
-                    <Filter className="w-3.5 h-3.5 text-slate-400" />
+                <div className="flex items-center gap-2 px-2 py-1.5 bg-ws-bg rounded-lg">
+                    <Filter className="w-3.5 h-3.5 text-ws-muted" />
                     <input
                         type="text"
                         value={filterQuery}
                         onChange={(e) => setFilterQuery(e.target.value)}
                         placeholder="Filter projects..."
-                        className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                        className="flex-1 bg-transparent text-sm outline-none placeholder:text-ws-muted"
                     />
                 </div>
             </div>
@@ -93,11 +93,11 @@ export function ExportWorkbenchSidebar() {
             <div className="flex-1 overflow-auto">
                 {isLoading ? (
                     <div className="p-4 text-center">
-                        <span className="text-sm text-slate-400">Loading projects...</span>
+                        <span className="text-sm text-ws-muted">Loading projects...</span>
                     </div>
                 ) : filteredProjects.length === 0 ? (
                     <div className="p-4 text-center">
-                        <span className="text-sm text-slate-400">No projects found</span>
+                        <span className="text-sm text-ws-muted">No projects found</span>
                     </div>
                 ) : (
                     <div className="divide-y divide-slate-100">
@@ -110,7 +110,7 @@ export function ExportWorkbenchSidebar() {
                                 <div
                                     key={project.id}
                                     className={clsx(
-                                        'px-3 py-2 hover:bg-slate-50 transition-colors cursor-pointer',
+                                        'px-3 py-2 hover:bg-ws-bg transition-colors cursor-pointer',
                                         isSelected && 'bg-emerald-50',
                                         isPreviewing && 'ring-2 ring-inset ring-blue-400'
                                     )}
@@ -132,11 +132,11 @@ export function ExportWorkbenchSidebar() {
 
                                             {/* Project Info */}
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-slate-700 truncate">
+                                                <p className="text-sm font-medium text-ws-text-secondary truncate">
                                                     {project.title}
                                                 </p>
                                                 {typeof metadata?.client === 'string' && metadata.client && (
-                                                    <p className="text-xs text-slate-400 truncate">
+                                                    <p className="text-xs text-ws-muted truncate">
                                                         {metadata.client}
                                                     </p>
                                                 )}
@@ -153,7 +153,7 @@ export function ExportWorkbenchSidebar() {
                                                 'p-1.5 rounded-md transition-colors',
                                                 isPreviewing
                                                     ? 'bg-blue-100 text-blue-600'
-                                                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                                                    : 'text-ws-muted hover:text-ws-text-secondary hover:bg-slate-100'
                                             )}
                                             title="Preview export"
                                         >
@@ -168,8 +168,8 @@ export function ExportWorkbenchSidebar() {
             </div>
 
             {/* Footer Stats */}
-            <div className="p-3 border-t border-slate-200 bg-slate-50">
-                <span className="text-xs text-slate-400">
+            <div className="p-3 border-t border-ws-panel-border bg-ws-bg">
+                <span className="text-xs text-ws-muted">
                     {filteredProjects.length} projects
                     {filterQuery && ` (filtered from ${projects?.length || 0})`}
                 </span>

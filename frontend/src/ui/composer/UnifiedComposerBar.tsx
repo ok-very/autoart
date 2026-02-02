@@ -181,7 +181,7 @@ export function UnifiedComposerBar({
     return (
         <div className={clsx(
             'fixed bottom-0 left-0 right-0 z-40',
-            'bg-white border-t border-slate-200 shadow-lg',
+            'bg-ws-panel-bg border-t border-ws-panel-border shadow-lg',
             'transition-all duration-200',
             className
         )}>
@@ -189,7 +189,7 @@ export function UnifiedComposerBar({
             <button
                 type="button"
                 onClick={() => setExpanded((e) => !e)}
-                className="absolute -top-8 left-1/2 -translate-x-1/2 px-4 py-1 bg-white border border-b-0 border-slate-200 rounded-t-lg text-slate-500 hover:text-slate-700 transition-colors"
+                className="absolute -top-8 left-1/2 -translate-x-1/2 px-4 py-1 bg-ws-panel-bg border border-b-0 border-ws-panel-border rounded-t-lg text-ws-text-secondary hover:text-ws-text-secondary transition-colors"
             >
                 {expanded ? (
                     <ChevronDown size={16} />
@@ -226,9 +226,9 @@ export function UnifiedComposerBar({
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder={`New ${selectedRecipe?.name || 'action'}...`}
                                 className={clsx(
-                                    'w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg',
+                                    'w-full px-3 py-2 text-sm bg-ws-bg border border-ws-panel-border rounded-lg',
                                     'focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100',
-                                    'placeholder:text-slate-400'
+                                    'placeholder:text-ws-muted'
                                 )}
                                 disabled={isLoading}
                             />
@@ -255,7 +255,7 @@ export function UnifiedComposerBar({
                             <button
                                 type="button"
                                 onClick={() => setExpanded(true)}
-                                className="shrink-0 p-2 text-slate-400 hover:text-slate-600 transition-colors"
+                                className="shrink-0 p-2 text-ws-muted hover:text-ws-text-secondary transition-colors"
                             >
                                 <Plus size={16} />
                             </button>
@@ -267,7 +267,7 @@ export function UnifiedComposerBar({
                         <div className="mt-4 space-y-4">
                             {/* Recipe Selector */}
                             <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium text-slate-500 shrink-0">
+                                <span className="text-xs font-medium text-ws-text-secondary shrink-0">
                                     Type:
                                 </span>
                                 <div className="flex flex-wrap gap-1.5">
@@ -283,7 +283,7 @@ export function UnifiedComposerBar({
                                                     'px-2.5 py-1 text-xs font-medium rounded-full border transition-colors',
                                                     isSelected
                                                         ? 'bg-blue-600 text-white border-blue-600'
-                                                        : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'
+                                                        : 'bg-ws-panel-bg text-ws-text-secondary border-ws-panel-border hover:border-blue-300'
                                                 )}
                                             >
                                                 {styling?.icon && <span className="mr-1">{styling.icon}</span>}
@@ -296,7 +296,7 @@ export function UnifiedComposerBar({
 
                             {/* Description Input */}
                             <div>
-                                <label className="block text-xs font-medium text-slate-500 mb-1">
+                                <label className="block text-xs font-medium text-ws-text-secondary mb-1">
                                     Description (optional)
                                 </label>
                                 <textarea
@@ -304,9 +304,9 @@ export function UnifiedComposerBar({
                                     onChange={(e) => setDescription(e.target.value)}
                                     placeholder="Add details..."
                                     className={clsx(
-                                        'w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg',
+                                        'w-full px-3 py-2 text-sm bg-ws-bg border border-ws-panel-border rounded-lg',
                                         'focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100',
-                                        'placeholder:text-slate-400 resize-none'
+                                        'placeholder:text-ws-muted resize-none'
                                     )}
                                     rows={2}
                                     disabled={isLoading}
@@ -324,7 +324,7 @@ export function UnifiedComposerBar({
                                     <button
                                         type="button"
                                         onClick={() => setShowEventPreview(false)}
-                                        className="absolute top-2 right-2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                                        className="absolute top-2 right-2 p-1 text-ws-muted hover:text-ws-text-secondary transition-colors"
                                     >
                                         <X size={12} />
                                     </button>
@@ -334,7 +334,7 @@ export function UnifiedComposerBar({
                             {/* Suggestions */}
                             {suggestions.length > 0 && (
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <div className="flex items-center gap-1.5 text-xs text-slate-500 shrink-0">
+                                    <div className="flex items-center gap-1.5 text-xs text-ws-text-secondary shrink-0">
                                         <Lightbulb size={12} />
                                         <span>Suggestions:</span>
                                     </div>
@@ -349,9 +349,9 @@ export function UnifiedComposerBar({
                             )}
 
                             {/* Keyboard Shortcut Hint */}
-                            <div className="flex items-center justify-between text-xs text-slate-400">
+                            <div className="flex items-center justify-between text-xs text-ws-muted">
                                 <span>
-                                    Press <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600 font-mono">Ctrl+Enter</kbd> to declare
+                                    Press <kbd className="px-1.5 py-0.5 bg-slate-100 rounded text-ws-text-secondary font-mono">Ctrl+Enter</kbd> to declare
                                 </span>
                                 {derivedContext.parentActionId && (
                                     <span className="text-amber-600">

@@ -237,7 +237,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
             }
           }}
           onClick={(e) => e.stopPropagation()}
-          className="text-sm border border-blue-400 rounded px-1.5 py-0.5 min-w-[80px] max-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          className="text-sm border border-blue-400 rounded px-1.5 py-0.5 min-w-[80px] max-w-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500 bg-ws-panel-bg"
         />
       </NodeViewWrapper>
     );
@@ -284,14 +284,14 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
           <span className="absolute inset-0" />
         </PopoverTrigger>
         <PopoverContent className="min-w-[200px] p-0" align="start" sideOffset={8}>
-          <div className="px-3 py-1.5 text-[10px] text-slate-400 uppercase font-semibold border-b border-slate-100">
+          <div className="px-3 py-1.5 text-[10px] text-ws-muted uppercase font-semibold border-b border-ws-panel-border">
             Reference Actions
           </div>
 
           {/* Inspect Record */}
           <button
             onClick={handleInspectRecord}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
+            className="w-full px-3 py-2 text-left text-sm hover:bg-ws-bg flex items-center gap-2"
           >
             <ExternalLink size={14} className="text-blue-500" />
             <span>Inspect Record</span>
@@ -303,12 +303,12 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
               setDisplayMode(prev => prev === 'label' ? 'value' : 'label');
               setShowMenu(false);
             }}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
+            className="w-full px-3 py-2 text-left text-sm hover:bg-ws-bg flex items-center gap-2"
           >
             {displayMode === 'label' ? (
-              <FileCode size={14} className="text-slate-500" />
+              <FileCode size={14} className="text-ws-text-secondary" />
             ) : (
-              <Type size={14} className="text-slate-500" />
+              <Type size={14} className="text-ws-text-secondary" />
             )}
             <span>Show {displayMode === 'label' ? 'Value' : 'Label'}</span>
           </button>
@@ -316,30 +316,30 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
           {/* View Definition */}
           <button
             onClick={handleViewDefinition}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
+            className="w-full px-3 py-2 text-left text-sm hover:bg-ws-bg flex items-center gap-2"
           >
             <FileCode size={14} className="text-purple-500" />
             <span>View Definition</span>
           </button>
 
-          <div className="border-t border-slate-100 my-1" />
+          <div className="border-t border-ws-panel-border my-1" />
 
           {/* Unlink Value */}
           <button
             onClick={handleUnlink}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
+            className="w-full px-3 py-2 text-left text-sm hover:bg-ws-bg flex items-center gap-2"
           >
             <Type size={14} className="text-orange-500" />
             <span>Unlink Value</span>
-            <span className="text-[10px] text-slate-400 ml-auto">→ text</span>
+            <span className="text-[10px] text-ws-muted ml-auto">→ text</span>
           </button>
 
-          <div className="border-t border-slate-100 my-1" />
+          <div className="border-t border-ws-panel-border my-1" />
 
           {/* Mode Toggle */}
           <button
             onClick={handleToggleMode}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2"
+            className="w-full px-3 py-2 text-left text-sm hover:bg-ws-bg flex items-center gap-2"
           >
             {currentMode === 'static' ? (
               <>
@@ -358,7 +358,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
           {hasDrift && (
             <button
               onClick={handleSyncToLive}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-amber-600"
+              className="w-full px-3 py-2 text-left text-sm hover:bg-ws-bg flex items-center gap-2 text-amber-600"
             >
               <RefreshCw size={14} />
               <span>Sync to Live Value</span>
@@ -366,7 +366,7 @@ export function MentionChip({ node, updateAttributes, editor, getPos }: NodeView
           )}
 
           {/* Mode info footer */}
-          <div className="px-3 py-1.5 text-[10px] text-slate-400 border-t border-slate-100 mt-1">
+          <div className="px-3 py-1.5 text-[10px] text-ws-muted border-t border-ws-panel-border mt-1">
             {currentMode === 'static' ? (
               <span>Snapshot: won't update when source changes</span>
             ) : (

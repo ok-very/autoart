@@ -51,7 +51,7 @@ export function ProjectContentAdapter() {
     return (
         <div className="flex flex-col h-full">
             {/* View Toggle Header - Top Right */}
-            <div className="flex items-center justify-end px-4 py-2 border-b border-slate-200 bg-white">
+            <div className="flex items-center justify-end px-4 py-2 border-b border-ws-panel-border bg-ws-panel-bg">
                 <SegmentedControl
                     size="xs"
                     value={projectViewMode}

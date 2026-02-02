@@ -38,12 +38,12 @@ export interface StatusColumnSummaryProps {
 
 // Default status color configuration
 const DEFAULT_STATUS_COLORS: Record<string, StatusColorConfig> = {
-    'not-started': { bgClass: 'bg-slate-300', textClass: 'text-slate-700' },
+    'not-started': { bgClass: 'bg-slate-300', textClass: 'text-ws-text-secondary' },
     'in-progress': { bgClass: 'bg-blue-400', textClass: 'text-blue-900' },
     'blocked': { bgClass: 'bg-red-400', textClass: 'text-red-900' },
     'on-hold': { bgClass: 'bg-amber-400', textClass: 'text-amber-900' },
     'complete': { bgClass: 'bg-green-400', textClass: 'text-green-900' },
-    'cancelled': { bgClass: 'bg-slate-400', textClass: 'text-slate-700' },
+    'cancelled': { bgClass: 'bg-slate-400', textClass: 'text-ws-text-secondary' },
 };
 
 // ==================== COMPONENT ====================
@@ -72,7 +72,7 @@ export function StatusColumnSummary({
             )}
         >
             {nonZeroCounts.map(({ status, count }) => {
-                const colors = colorConfig[status] || { bgClass: 'bg-slate-400', textClass: 'text-slate-700' };
+                const colors = colorConfig[status] || { bgClass: 'bg-slate-400', textClass: 'text-ws-text-secondary' };
                 const percentage = (count / total) * 100;
 
                 // Only show segments that are at least 1% to avoid tiny slivers

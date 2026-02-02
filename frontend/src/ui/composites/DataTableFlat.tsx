@@ -126,7 +126,7 @@ function ColumnPicker({ allColumns, visibleKeys, onToggle }: ColumnPickerProps) 
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="p-2 rounded hover:bg-slate-100 text-slate-500"
+                className="p-2 rounded hover:bg-slate-100 text-ws-text-secondary"
                 title="Toggle columns"
             >
                 <Columns size={16} />
@@ -135,14 +135,14 @@ function ColumnPicker({ allColumns, visibleKeys, onToggle }: ColumnPickerProps) 
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-                    <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
-                        <div className="px-3 py-1.5 text-[10px] font-semibold text-slate-400 uppercase">
+                    <div className="absolute top-full right-0 mt-1 w-48 bg-ws-panel-bg border border-ws-panel-border rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
+                        <div className="px-3 py-1.5 text-[10px] font-semibold text-ws-muted uppercase">
                             Visible Columns
                         </div>
                         {allColumns.map((col) => (
                             <label
                                 key={col.key}
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-50 cursor-pointer"
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-ws-bg cursor-pointer"
                             >
                                 <input
                                     type="checkbox"
@@ -446,7 +446,7 @@ export function DataTableFlat({
                     else if (col.key === 'updated_at') {
                         const date = record.updated_at ? new Date(record.updated_at) : null;
                         cellContent = (
-                            <div className="text-xs text-slate-500">
+                            <div className="text-xs text-ws-text-secondary">
                                 {date ? date.toLocaleDateString() : '-'}
                             </div>
                         );
@@ -552,7 +552,7 @@ export function DataTableFlat({
         if (statusColumns.length === 0) return null;
 
         return (
-            <div className="flex items-center h-8 border-t border-slate-200">
+            <div className="flex items-center h-8 border-t border-ws-panel-border">
                 {/* Checkbox placeholder */}
                 {multiSelect && <div className="w-10 px-3" />}
 
@@ -616,25 +616,25 @@ export function DataTableFlat({
                         selectedIds,
                     })
                 ) : hasPagination && (
-                    <div className="flex items-center justify-between px-4 py-2 bg-slate-50 border-t border-slate-200">
-                        <span className="text-xs text-slate-500">
+                    <div className="flex items-center justify-between px-4 py-2 bg-ws-bg border-t border-ws-panel-border">
+                        <span className="text-xs text-ws-text-secondary">
                             {records.length} record{records.length !== 1 ? 's' : ''}
                         </span>
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                                 disabled={page === 0}
-                                className="px-2 py-1 text-xs rounded border border-slate-200 hover:bg-slate-100 disabled:opacity-50"
+                                className="px-2 py-1 text-xs rounded border border-ws-panel-border hover:bg-slate-100 disabled:opacity-50"
                             >
                                 Prev
                             </button>
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-ws-text-secondary">
                                 Page {page + 1} of {totalPages}
                             </span>
                             <button
                                 onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                                 disabled={page >= totalPages - 1}
-                                className="px-2 py-1 text-xs rounded border border-slate-200 hover:bg-slate-100 disabled:opacity-50"
+                                className="px-2 py-1 text-xs rounded border border-ws-panel-border hover:bg-slate-100 disabled:opacity-50"
                             >
                                 Next
                             </button>
@@ -648,7 +648,7 @@ export function DataTableFlat({
     // Loading state
     if (isLoading) {
         return (
-            <div className={clsx('flex items-center justify-center h-64 text-slate-400', className)}>
+            <div className={clsx('flex items-center justify-center h-64 text-ws-muted', className)}>
                 <div className="animate-spin w-8 h-8 border-2 border-slate-300 border-t-blue-500 rounded-full" />
             </div>
         );
@@ -657,7 +657,7 @@ export function DataTableFlat({
     // Empty state - no definition
     if (!definition) {
         return (
-            <div className={clsx('flex flex-col items-center justify-center h-64 text-slate-400', className)}>
+            <div className={clsx('flex flex-col items-center justify-center h-64 text-ws-muted', className)}>
                 <p className="text-ws-body">No definition</p>
                 <p className="text-sm">Select a record type to view</p>
             </div>
@@ -667,7 +667,7 @@ export function DataTableFlat({
     // Empty state - no records
     if (records.length === 0) {
         return (
-            <div className={clsx('flex flex-col items-center justify-center h-64 text-slate-400', className)}>
+            <div className={clsx('flex flex-col items-center justify-center h-64 text-ws-muted', className)}>
                 <p className="text-ws-body">{emptyMessage}</p>
             </div>
         );
@@ -697,7 +697,7 @@ export function DataTableFlat({
             {onAddRecord && (
                 <button
                     onClick={onAddRecord}
-                    className="w-full flex items-center justify-center gap-2 py-2 text-sm text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors border-t border-slate-200"
+                    className="w-full flex items-center justify-center gap-2 py-2 text-sm text-ws-text-secondary hover:bg-ws-bg hover:text-ws-text-secondary transition-colors border-t border-ws-panel-border"
                 >
                     <Plus size={14} />
                     <span>Add {definition?.name || 'Record'}</span>

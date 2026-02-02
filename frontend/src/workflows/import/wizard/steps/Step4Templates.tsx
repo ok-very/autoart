@@ -96,9 +96,9 @@ export function Step4Templates({ onNext, onBack, session, onSessionCreated }: St
                 </Text>
             </Stack>
 
-            <div className="flex-1 overflow-auto border border-slate-200 rounded-lg bg-white mt-4 min-h-0">
+            <div className="flex-1 overflow-auto border border-ws-panel-border rounded-lg bg-ws-panel-bg mt-4 min-h-0">
                 <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
+                    <thead className="bg-ws-bg border-b border-ws-panel-border text-ws-text-secondary font-medium">
                         <tr>
                             <th className="px-4 py-3 w-1/3">Board Name</th>
                             <th className="px-4 py-3 w-1/4">Role</th>
@@ -110,8 +110,8 @@ export function Step4Templates({ onNext, onBack, session, onSessionCreated }: St
                             const isTemplate = config.role === 'template_board';
 
                             return (
-                                <tr key={config.boardId} className="hover:bg-slate-50">
-                                    <td className="px-4 py-3 font-medium text-slate-800">
+                                <tr key={config.boardId} className="hover:bg-ws-bg">
+                                    <td className="px-4 py-3 font-medium text-ws-fg">
                                         {config.boardName}
                                     </td>
                                     <td className="px-4 py-3">
@@ -154,7 +154,7 @@ export function Step4Templates({ onNext, onBack, session, onSessionCreated }: St
                 </table>
             </div>
 
-            <Inline justify="between" className="pt-4 mt-4 border-t border-slate-200 shrink-0">
+            <Inline justify="between" className="pt-4 mt-4 border-t border-ws-panel-border shrink-0">
                 <Button onClick={onBack} variant="secondary" disabled={isRefreshing}>
                     Back
                 </Button>

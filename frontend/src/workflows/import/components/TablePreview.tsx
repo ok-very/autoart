@@ -64,8 +64,8 @@ export function TablePreview({ plan, selectedRecordId, onSelect }: TablePreviewP
         return (
             <div className="flex-1 flex items-center justify-center p-8">
                 <div className="text-center">
-                    <TableIcon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-500 font-medium">No items to display</p>
+                    <TableIcon className="w-12 h-12 text-ws-muted mx-auto mb-3" />
+                    <p className="text-ws-text-secondary font-medium">No items to display</p>
                 </div>
             </div>
         );
@@ -101,7 +101,7 @@ export function TablePreview({ plan, selectedRecordId, onSelect }: TablePreviewP
                             selected={isSelected}
                             onClick={() => onSelect(rowId)}
                         >
-                            <TableCell width={200} className="font-medium text-slate-800">
+                            <TableCell width={200} className="font-medium text-ws-fg">
                                 {String(row._title)}
                             </TableCell>
                             {columns.map((col) => (

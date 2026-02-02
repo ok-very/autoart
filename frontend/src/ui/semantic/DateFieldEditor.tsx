@@ -68,10 +68,10 @@ function formatDisplayDate(value: string | Date | null | undefined): string {
  * Get date color class based on proximity
  */
 function getDateColorClass(value: string | Date | null | undefined): string {
-    if (!value) return 'text-slate-400';
+    if (!value) return 'text-ws-muted';
 
     const date = typeof value === 'string' ? new Date(value) : value;
-    if (isNaN(date.getTime())) return 'text-slate-400';
+    if (isNaN(date.getTime())) return 'text-ws-muted';
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -83,7 +83,7 @@ function getDateColorClass(value: string | Date | null | undefined): string {
     if (diffDays < 0) return 'text-red-600'; // Overdue
     if (diffDays === 0) return 'text-amber-600'; // Today
     if (diffDays <= 2) return 'text-blue-600'; // Soon
-    return 'text-slate-600'; // Future
+    return 'text-ws-text-secondary'; // Future
 }
 
 /**
@@ -156,7 +156,7 @@ export function DateFieldEditor({
                     <button
                         type="button"
                         onClick={handleClear}
-                        className="ml-1 p-0.5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                        className="ml-1 p-0.5 rounded-full hover:bg-slate-200 text-ws-muted hover:text-ws-text-secondary"
                     >
                         <X className="w-3 h-3" />
                     </button>

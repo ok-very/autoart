@@ -46,7 +46,7 @@ export function FieldGroup({
                         {label}
                     </Label>
                     {helpText && (
-                        <p className="text-xs text-slate-400 mt-0.5">{helpText}</p>
+                        <p className="text-xs text-ws-muted mt-0.5">{helpText}</p>
                     )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -64,7 +64,7 @@ export function FieldGroup({
                     {label}
                 </Label>
                 {helpText && (
-                    <span className="text-xs text-slate-400">({helpText})</span>
+                    <span className="text-xs text-ws-muted">({helpText})</span>
                 )}
             </div>
             {children}
