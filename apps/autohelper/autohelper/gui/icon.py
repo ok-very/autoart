@@ -7,6 +7,7 @@ Menu:
   - AutoHelper Service      (disabled label)
   - Status: Idle/Working...  (disabled label)
   - Paired / Not paired      (disabled, validated against backend every 3 s)
+  - Pair                     (visible only when not paired)
   - Unpair                   (visible only when paired)
   - ---
   - Open Settings
@@ -16,6 +17,8 @@ Menu:
 
 import json
 import threading
+import tkinter as tk
+from tkinter import simpledialog
 import urllib.request
 from collections.abc import Callable
 
@@ -124,6 +127,11 @@ class AutoHelperIcon:
                 enabled=False,
             ),
             item(
+                "Pair...",
+                self._on_pair,
+                visible=lambda _: not self._paired,
+            ),
+            item(
                 "Unpair",
                 self._on_unpair,
                 visible=lambda _: self._paired,
@@ -136,6 +144,82 @@ class AutoHelperIcon:
         self.icon = pystray.Icon("AutoHelper", image, "AutoHelper Service", menu)
 
     # ── Menu actions ─────────────────────────────────────────────────
+
+    def _on_pair(self, icon: pystray.Icon, menu_item: pystray.MenuItem) -> None:
+        """Open a dialog to enter the pairing code, then redeem it."""
+        # Run tkinter dialog in a separate thread to avoid blocking pystray
+        def do_pair():
+            root = tk.Tk()
+            root.withdraw()  # Hide the main window
+
+            # Bring the dialog to the front
+            root.attributes("-topmost", True)
+            root.focus_force()
+
+            code = simpledialog.askstring(
+                "Pair AutoHelper",
+                "Enter the 6-character pairing code from AutoArt:",
+                parent=root,
+            )
+
+            root.destroy()
+
+            if not code:
+                return  # User cancelled
+
+            code = code.strip().upper()
+            if len(code) != 6:
+                logger.warning("Invalid pairing code length: %d", len(code))
+                return
+
+            # Redeem the code via backend
+            try:
+                from autohelper.config import get_settings
+
+                settings = get_settings()
+                url = f"{settings.autoart_api_url}/pair/redeem"
+                data = json.dumps({"code": code}).encode("utf-8")
+                req = urllib.request.Request(url, data=data, method="POST")
+                req.add_header("Content-Type", "application/json")
+
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    result = json.loads(resp.read())
+                    key = result.get("key")
+
+                if not key:
+                    logger.error("Backend did not return a key")
+                    return
+
+                # Persist the key to config
+                from autohelper.config import reset_settings
+                from autohelper.config.store import ConfigStore
+
+                store = ConfigStore()
+                cfg = store.load()
+                cfg["autoart_link_key"] = key
+                cfg.pop("autoart_session_id", None)  # Clean up legacy
+                store.save(cfg)
+                reset_settings()
+
+                # Reinit context service
+                try:
+                    from autohelper.modules.context.service import ContextService
+                    ContextService().reinit_clients()
+                except Exception as exc:
+                    logger.warning("Failed to reinit context service: %s", exc)
+
+                self._paired = True
+                if self.icon:
+                    self.icon.update_menu()
+
+                logger.info("Paired via tray menu")
+
+            except urllib.error.HTTPError as e:
+                logger.error("Pairing failed: HTTP %d", e.code)
+            except Exception:
+                logger.exception("Pairing failed")
+
+        threading.Thread(target=do_pair, daemon=True).start()
 
     def _on_unpair(self, icon: pystray.Icon, menu_item: pystray.MenuItem) -> None:
         """Hit the local /pair/unpair endpoint to clear session on both sides."""

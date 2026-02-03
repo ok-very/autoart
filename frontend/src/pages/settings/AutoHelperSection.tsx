@@ -20,7 +20,6 @@ import {
     CheckCircle2,
     XCircle,
     AlertTriangle,
-    AlertCircle,
     Mail,
     HardDrive,
     Link,
@@ -28,8 +27,7 @@ import {
 } from 'lucide-react';
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
-import { RequestTimeoutError } from '../../api/autohelperClient';
-import { usePairAutoHelper, useUnpairAutoHelper } from '../../api/connections';
+import { useClaimPairing, usePairingStatus, useUnpairAutoHelper } from '../../api/connections';
 import {
     useAutoHelperHealth,
     useAutoHelperStatus,
@@ -137,28 +135,48 @@ function SmallButton({
 // CARDS
 // ============================================================================
 
-function PairCard({ autohelperStatus, healthOk }: { autohelperStatus: { connected: boolean }; healthOk: boolean }) {
-    const pairAutoHelper = usePairAutoHelper();
+function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean } }) {
+    const claimPairing = useClaimPairing();
     const unpairAutoHelper = useUnpairAutoHelper();
-    const [error, setError] = useState<string | null>(null);
+    const [claimCode, setClaimCode] = useState<string | null>(null);
+    const [expiresAt, setExpiresAt] = useState<Date | null>(null);
 
-    const handlePair = useCallback(async () => {
-        setError(null);
-        try {
-            const result = await pairAutoHelper.mutateAsync();
-            if (result.paired) {
-                toast.success('AutoHelper paired');
-            } else {
-                setError(result.error ?? 'Pairing failed');
+    // Poll for claim status while showing a code
+    const { data: pairingStatus } = usePairingStatus(!!claimCode);
+
+    // When claim is redeemed, clear the code display
+    useEffect(() => {
+        if (pairingStatus?.claimed && claimCode) {
+            setClaimCode(null);
+            setExpiresAt(null);
+            toast.success('AutoHelper paired');
+        }
+    }, [pairingStatus?.claimed, claimCode]);
+
+    // Check for code expiration
+    useEffect(() => {
+        if (!expiresAt) return;
+        const checkExpiry = () => {
+            if (new Date() >= expiresAt) {
+                setClaimCode(null);
+                setExpiresAt(null);
+                toast.warning('Pairing code expired');
             }
+        };
+        const interval = setInterval(checkExpiry, 1000);
+        return () => clearInterval(interval);
+    }, [expiresAt]);
+
+    const handleGenerateCode = useCallback(async () => {
+        try {
+            const result = await claimPairing.mutateAsync();
+            setClaimCode(result.code);
+            setExpiresAt(new Date(result.expiresAt));
         } catch (err) {
-            const msg = err instanceof RequestTimeoutError
-                ? 'AutoHelper not responding — is it running?'
-                : err instanceof Error ? err.message : 'Pairing failed';
-            setError(msg);
+            const msg = err instanceof Error ? err.message : 'Failed to generate pairing code';
             toast.error(msg);
         }
-    }, [pairAutoHelper]);
+    }, [claimPairing]);
 
     const handleUnpair = useCallback(async () => {
         try {
@@ -169,6 +187,11 @@ function PairCard({ autohelperStatus, healthOk }: { autohelperStatus: { connecte
             toast.error(msg);
         }
     }, [unpairAutoHelper]);
+
+    const handleCancel = useCallback(() => {
+        setClaimCode(null);
+        setExpiresAt(null);
+    }, []);
 
     return (
         <CardShell
@@ -182,11 +205,11 @@ function PairCard({ autohelperStatus, healthOk }: { autohelperStatus: { connecte
                 />
             }
         >
-            {autohelperStatus.connected && healthOk ? (
+            {autohelperStatus.connected ? (
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm text-[var(--ws-color-success)]">
                         <CheckCircle2 className="w-4 h-4" />
-                        AutoHelper is connected
+                        AutoHelper is paired
                     </div>
                     <Button
                         onClick={handleUnpair}
@@ -198,56 +221,47 @@ function PairCard({ autohelperStatus, healthOk }: { autohelperStatus: { connecte
                         Unpair
                     </Button>
                 </div>
-            ) : autohelperStatus.connected && !healthOk ? (
-                <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm text-[var(--ws-color-warning)]">
-                        <AlertTriangle className="w-4 h-4" />
-                        Paired on backend, but AutoHelper is not responding
+            ) : claimCode ? (
+                <div className="space-y-4">
+                    <div className="text-sm text-ws-text-secondary">
+                        Enter this code in AutoHelper's tray menu:
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <code className="text-2xl font-mono font-bold tracking-widest text-[var(--ws-accent)] bg-[var(--ws-accent)]/5 px-4 py-2 rounded-lg border border-[var(--ws-accent)]/20">
+                            {claimCode}
+                        </code>
+                        <div className="flex items-center gap-2 text-sm text-ws-text-secondary">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Waiting...
+                        </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <Button
-                            onClick={handlePair}
-                            disabled={pairAutoHelper.isPending}
-                            variant="primary"
+                            onClick={handleCancel}
+                            variant="secondary"
                             size="xs"
-                            leftSection={pairAutoHelper.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Link className="w-3 h-3" />}
                         >
-                            Re-pair
+                            Cancel
                         </Button>
-                        <Button
-                            onClick={handleUnpair}
-                            disabled={unpairAutoHelper.isPending}
-                            variant="danger"
-                            size="xs"
-                            leftSection={unpairAutoHelper.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Unplug className="w-3 h-3" />}
-                        >
-                            Unpair
-                        </Button>
+                        <span className="text-xs text-ws-muted">
+                            Code expires in 5 minutes
+                        </span>
                     </div>
-                    {error && (
-                        <div className="flex items-center gap-2 text-sm text-[var(--ws-color-error)]">
-                            <AlertCircle className="w-4 h-4" />
-                            {error}
-                        </div>
-                    )}
                 </div>
             ) : (
                 <div className="space-y-3">
+                    <p className="text-sm text-ws-text-secondary">
+                        Click below to generate a pairing code, then enter it in AutoHelper's system tray.
+                    </p>
                     <Button
-                        onClick={handlePair}
-                        disabled={pairAutoHelper.isPending}
+                        onClick={handleGenerateCode}
+                        disabled={claimPairing.isPending}
                         variant="primary"
                         size="sm"
-                        leftSection={pairAutoHelper.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link className="w-4 h-4" />}
+                        leftSection={claimPairing.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link className="w-4 h-4" />}
                     >
-                        Pair
+                        Generate Pairing Code
                     </Button>
-                    {error && (
-                        <div className="flex items-center gap-2 text-sm text-[var(--ws-color-error)]">
-                            <AlertCircle className="w-4 h-4" />
-                            {error}
-                        </div>
-                    )}
                 </div>
             )}
         </CardShell>
@@ -673,10 +687,8 @@ export function AutoHelperSection({
         prevConnected.current = connected;
     }, [autohelperStatus.connected]);
 
-    const healthOk = !healthError && !healthLoading;
-
     // Pairing card always renders — works regardless of AutoHelper connectivity.
-    const pairingCard = <PairCard autohelperStatus={autohelperStatus} healthOk={healthOk} />;
+    const pairingCard = <PairCard autohelperStatus={autohelperStatus} />;
 
     if (healthLoading) {
         return (

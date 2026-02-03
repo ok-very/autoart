@@ -10,6 +10,5 @@
     "node_modules"
   ],
   "mail_enabled": false,
-  "mail_poll_interval": 30,
-  "autoart_session_id": "7fe70b33f9fc1524aa31bce9a5044b5e2357fa382c4088e9ca4bcbc5d11c9831"
+  "mail_poll_interval": 30
 }
