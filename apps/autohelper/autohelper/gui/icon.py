@@ -33,22 +33,22 @@ logger = get_logger(__name__)
 
 
 def _show_dialog(title: str, message: str, kind: str = "error") -> None:
-    """Show a dialog. Handles Tk boilerplate for Windows focus."""
+    """Show a dialog with AutoHelper branding."""
     root = tk.Tk()
-    # Set AutoHelper smiley as window/taskbar icon
+    root.withdraw()  # Hide root window immediately
+
+    # Set icon for any child windows (including the messagebox)
     icon_image = _make_icon(wearing_hat=False)
     photo = ImageTk.PhotoImage(icon_image)
     root.iconphoto(True, photo)
-    root._icon_photo = photo  # Keep reference to prevent GC
-    root.deiconify()
-    root.attributes("-topmost", True)
-    root.focus_force()
-    root.update_idletasks()
-    root.withdraw()
+    root._icon_photo = photo  # prevent GC
+
+    # Show the dialog (messagebox handles its own focus)
     if kind == "info":
         messagebox.showinfo(title, message, parent=root)
     else:
         messagebox.showerror(title, message, parent=root)
+
     root.destroy()
 
 
@@ -198,25 +198,20 @@ class AutoHelperIcon:
             try:
                 logger.info("Opening pairing dialog...")
                 root = tk.Tk()
-                # Set AutoHelper smiley as window/taskbar icon
+                root.withdraw()  # Hide root window immediately
+
+                # Set icon for the dialog
                 icon_image = _make_icon(wearing_hat=False)
                 photo = ImageTk.PhotoImage(icon_image)
                 root.iconphoto(True, photo)
-                root._icon_photo = photo  # Keep reference to prevent GC
-                # Windows: briefly show then withdraw to claim focus
-                root.deiconify()
-                root.attributes("-topmost", True)
-                root.focus_force()
-                root.update_idletasks()
-                root.withdraw()
+                root._icon_photo = photo  # prevent GC
 
-                # Create dialog with explicit topmost
-                dialog = simpledialog.askstring(
+                # Show pairing dialog
+                code = simpledialog.askstring(
                     "Pair AutoHelper",
                     "Enter the 6-character pairing code from AutoArt:\n(Code expires in 5 minutes)",
                     parent=root,
                 )
-                code = dialog
                 logger.info("Dialog returned: %s", "cancelled" if code is None else "got input")
             except Exception:
                 logger.exception("Failed to show pairing dialog")
