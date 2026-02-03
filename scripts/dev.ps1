@@ -7,7 +7,7 @@
 # Services started:
 #   - Backend API (port 3001)
 #   - Frontend (port 5173)
-#   - AutoHelper Python service (port 8000)
+#   - AutoHelper Python service (port 8100)
 #   - Forms app (port 5174) - optional
 
 $ErrorActionPreference = "Stop"
@@ -29,6 +29,11 @@ Write-Host ""
 Write-Host "======================================" -ForegroundColor Cyan
 Write-Host "  AutoArt Development Environment" -ForegroundColor Cyan
 Write-Host "======================================" -ForegroundColor Cyan
+Write-Host ""
+
+# Kill any lingering dev processes from previous runs
+Write-Host "[*] Cleaning up previous sessions..." -ForegroundColor Yellow
+& "$ScriptDir\kill-dev.ps1" 2>&1 | Out-Null
 Write-Host ""
 
 # Check if pnpm is installed
