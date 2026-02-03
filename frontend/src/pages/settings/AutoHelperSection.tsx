@@ -730,18 +730,35 @@ function RootsCard() {
 
     const handleAdd = useCallback(() => {
         const trimmed = newRoot.trim();
-        if (!trimmed || roots.includes(trimmed)) return;
-        updateSettings.mutate({ allowed_roots: [...roots, trimmed] });
-        setNewRoot('');
-        toast.success('Root added');
-        // Keep focus on input for adding multiple roots
-        inputRef.current?.focus();
+        if (!trimmed) return;
+        if (roots.includes(trimmed)) {
+            toast.warning('Path already exists');
+            return;
+        }
+        updateSettings.mutate(
+            { allowed_roots: [...roots, trimmed] },
+            {
+                onSuccess: () => {
+                    setNewRoot('');
+                    toast.success('Root added');
+                    inputRef.current?.focus();
+                },
+                onError: (err) => {
+                    toast.error(err instanceof Error ? err.message : 'Failed to add root');
+                },
+            }
+        );
     }, [newRoot, roots, updateSettings]);
 
     const handleRemove = useCallback(
         (root: string) => {
-            updateSettings.mutate({ allowed_roots: roots.filter((r) => r !== root) });
-            toast.info('Root removed');
+            updateSettings.mutate(
+                { allowed_roots: roots.filter((r) => r !== root) },
+                {
+                    onSuccess: () => toast.info('Root removed'),
+                    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to remove root'),
+                }
+            );
         },
         [roots, updateSettings],
     );
@@ -772,7 +789,8 @@ function RootsCard() {
                             <span className="text-sm text-ws-fg font-mono truncate flex-1">{root}</span>
                             <button
                                 onClick={() => handleRemove(root)}
-                                className="opacity-0 group-hover:opacity-100 text-ws-muted hover:text-[var(--ws-color-error)] transition-opacity"
+                                disabled={updateSettings.isPending}
+                                className="opacity-0 group-hover:opacity-100 text-ws-muted hover:text-[var(--ws-color-error)] transition-opacity disabled:opacity-30 disabled:cursor-not-allowed"
                                 aria-label={`Remove ${root}`}
                             >
                                 <X className="w-4 h-4" />
@@ -792,8 +810,13 @@ function RootsCard() {
                     onKeyDown={handleKeyDown}
                     className="flex-1"
                     autoComplete="off"
+                    disabled={updateSettings.isPending}
                 />
-                <SmallButton onClick={handleAdd} disabled={!newRoot.trim()}>
+                <SmallButton
+                    onClick={handleAdd}
+                    disabled={!newRoot.trim()}
+                    loading={updateSettings.isPending}
+                >
                     <Plus className="w-3 h-3" /> Add
                 </SmallButton>
             </div>
