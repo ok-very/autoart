@@ -404,11 +404,21 @@ const CLAIM_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No 0, O, 1, I
  * 5-minute TTL.
  */
 export async function generateClaimToken(userId: string): Promise<{ code: string; expiresAt: Date }> {
-    // Generate 6-char code from safe alphabet
-    const bytes = randomBytes(6);
-    const code = Array.from(bytes)
-        .map(b => CLAIM_ALPHABET[b % CLAIM_ALPHABET.length])
-        .join('');
+    // Generate 6-char code from safe alphabet, retry on collision
+    let code: string;
+    let collision: { id: string } | undefined;
+    do {
+        const bytes = randomBytes(6);
+        code = Array.from(bytes)
+            .map(b => CLAIM_ALPHABET[b % CLAIM_ALPHABET.length])
+            .join('');
+        collision = await db
+            .selectFrom('connection_credentials')
+            .select(['id'])
+            .where('provider', '=', 'autohelper_claim')
+            .where('access_token', '=', code)
+            .executeTakeFirst();
+    } while (collision);
 
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
@@ -467,14 +477,20 @@ export async function redeemClaimToken(code: string): Promise<{ key: string; use
         return null;
     }
 
-    // Generate the actual link key
-    const key = await generateLinkKey(claim.user_id);
-
-    // Delete the claim token (one-time use)
-    await db
+    // Delete-first to prevent race condition: only the first concurrent redeem succeeds
+    const deletedClaim = await db
         .deleteFrom('connection_credentials')
         .where('id', '=', claim.id)
-        .execute();
+        .returning(['id'])
+        .executeTakeFirst();
+
+    if (!deletedClaim) {
+        // Already redeemed by another concurrent request
+        return null;
+    }
+
+    // Generate the actual link key
+    const key = await generateLinkKey(claim.user_id);
 
     return { key, userId: claim.user_id };
 }
@@ -500,8 +516,12 @@ export async function getClaimStatus(userId: string): Promise<{ claimed: boolean
         .where('provider', '=', 'autohelper_claim')
         .executeTakeFirst();
 
-    // Claimed = link key exists AND no pending claim token (or claim expired)
-    const claimed = !!linkKey && (!pendingClaim || (pendingClaim.expires_at && pendingClaim.expires_at < new Date()));
+    // Expired claim = not claimed, clean it up
+    if (pendingClaim && pendingClaim.expires_at && pendingClaim.expires_at < new Date()) {
+        await db.deleteFrom('connection_credentials').where('id', '=', pendingClaim.id).execute();
+        return { claimed: false };
+    }
 
-    return { claimed };
+    // Claimed = link key exists AND no pending claim
+    return { claimed: !!linkKey && !pendingClaim };
 }

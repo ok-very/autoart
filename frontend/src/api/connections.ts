@@ -310,16 +310,11 @@ export interface ClaimStatusResult {
  * User displays this code and enters it in AutoHelper's tray menu.
  */
 export function useClaimPairing() {
-    const queryClient = useQueryClient();
-
     return useMutation({
         mutationFn: async (): Promise<ClaimTokenResult> => {
             return api.post<ClaimTokenResult>('/pair/claim', {});
         },
-        onSuccess: () => {
-            // Invalidate connections to trigger re-fetch when polling completes
-            queryClient.invalidateQueries({ queryKey: ['connections'] });
-        },
+        // Invalidation happens in component when claimed: true is detected
     });
 }
 

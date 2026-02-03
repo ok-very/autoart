@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
+import { useQueryClient } from '@tanstack/react-query';
+
 import { useClaimPairing, usePairingStatus, useUnpairAutoHelper } from '../../api/connections';
 import {
     useAutoHelperHealth,
@@ -136,6 +138,7 @@ function SmallButton({
 // ============================================================================
 
 function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean } }) {
+    const queryClient = useQueryClient();
     const claimPairing = useClaimPairing();
     const unpairAutoHelper = useUnpairAutoHelper();
     const [claimCode, setClaimCode] = useState<string | null>(null);
@@ -144,14 +147,15 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
     // Poll for claim status while showing a code
     const { data: pairingStatus } = usePairingStatus(!!claimCode);
 
-    // When claim is redeemed, clear the code display
+    // When claim is redeemed, clear the code display and invalidate connections
     useEffect(() => {
         if (pairingStatus?.claimed && claimCode) {
+            queryClient.invalidateQueries({ queryKey: ['connections'] });
             setClaimCode(null);
             setExpiresAt(null);
             toast.success('AutoHelper paired');
         }
-    }, [pairingStatus?.claimed, claimCode]);
+    }, [pairingStatus?.claimed, claimCode, queryClient]);
 
     // Check for code expiration
     useEffect(() => {

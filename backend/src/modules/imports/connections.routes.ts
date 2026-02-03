@@ -519,7 +519,8 @@ export async function connectionsRoutes(app: FastifyInstance) {
      * Used by AutoHelper during pairing to confirm the key is recognized.
      */
     app.get('/connections/autohelper/verify', async (request, reply) => {
-        const key = (request.headers['x-autohelper-key'] as string) || '';
+        const keyHeader = request.headers['x-autohelper-key'];
+        const key = Array.isArray(keyHeader) ? keyHeader[0] ?? '' : keyHeader ?? '';
 
         if (!key) {
             return reply.status(401).send({ error: 'Link key required' });
@@ -538,7 +539,8 @@ export async function connectionsRoutes(app: FastifyInstance) {
      * Returns Monday API token (single source of truth).
      */
     app.get('/connections/autohelper/credentials', async (request, reply) => {
-        const key = (request.headers['x-autohelper-key'] as string) || '';
+        const keyHeader = request.headers['x-autohelper-key'];
+        const key = Array.isArray(keyHeader) ? keyHeader[0] ?? '' : keyHeader ?? '';
 
         if (!key) {
             return reply.status(401).send({ error: 'Link key required in X-AutoHelper-Key header' });
