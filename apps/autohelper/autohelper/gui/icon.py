@@ -32,16 +32,29 @@ from autohelper.shared.logging import get_logger
 logger = get_logger(__name__)
 
 
-def _show_error(title: str, message: str) -> None:
-    """Show an error dialog. Handles Tk boilerplate."""
+def _show_dialog(title: str, message: str, kind: str = "error") -> None:
+    """Show a dialog. Handles Tk boilerplate for Windows focus."""
     root = tk.Tk()
     root.deiconify()
     root.attributes("-topmost", True)
     root.focus_force()
     root.update_idletasks()
     root.withdraw()
-    messagebox.showerror(title, message, parent=root)
+    if kind == "info":
+        messagebox.showinfo(title, message, parent=root)
+    else:
+        messagebox.showerror(title, message, parent=root)
     root.destroy()
+
+
+def _show_error(title: str, message: str) -> None:
+    """Show an error dialog."""
+    _show_dialog(title, message, "error")
+
+
+def _show_success(title: str, message: str) -> None:
+    """Show a success/info dialog."""
+    _show_dialog(title, message, "info")
 
 # ── Colours ──────────────────────────────────────────────────────────
 _BG = (43, 85, 128)        # AutoHelper Blue
@@ -130,8 +143,11 @@ class AutoHelperIcon:
             from autohelper.config.store import ConfigStore
 
             cfg = ConfigStore().load()
-            return bool(cfg.get("autoart_link_key"))
+            has_key = bool(cfg.get("autoart_link_key"))
+            logger.debug("_check_paired: has_key=%s", has_key)
+            return has_key
         except Exception:
+            logger.exception("_check_paired failed")
             return False
 
     # ── Icon setup ───────────────────────────────────────────────────
@@ -173,21 +189,35 @@ class AutoHelperIcon:
         """Open a dialog to enter the pairing code, then redeem it."""
         # Run tkinter dialog in a separate thread to avoid blocking pystray
         def do_pair():
-            root = tk.Tk()
-            # Windows: briefly show then withdraw to claim focus
-            root.deiconify()
-            root.attributes("-topmost", True)
-            root.focus_force()
-            root.update_idletasks()
-            root.withdraw()
+            root = None
+            try:
+                logger.info("Opening pairing dialog...")
+                root = tk.Tk()
+                # Windows: briefly show then withdraw to claim focus
+                root.deiconify()
+                root.attributes("-topmost", True)
+                root.focus_force()
+                root.update_idletasks()
+                root.withdraw()
 
-            code = simpledialog.askstring(
-                "Pair AutoHelper",
-                "Enter the 6-character pairing code from AutoArt:\n(Code expires in 5 minutes)",
-                parent=root,
-            )
-
-            root.destroy()
+                # Create dialog with explicit topmost
+                dialog = simpledialog.askstring(
+                    "Pair AutoHelper",
+                    "Enter the 6-character pairing code from AutoArt:\n(Code expires in 5 minutes)",
+                    parent=root,
+                )
+                code = dialog
+                logger.info("Dialog returned: %s", "cancelled" if code is None else "got input")
+            except Exception:
+                logger.exception("Failed to show pairing dialog")
+                _show_error("Pairing Error", "Could not open pairing dialog. Check the logs.")
+                return
+            finally:
+                if root:
+                    try:
+                        root.destroy()
+                    except Exception:
+                        pass
 
             if not code:
                 return  # User cancelled
@@ -239,6 +269,9 @@ class AutoHelperIcon:
                     self.icon.update_menu()
 
                 logger.info("Paired via tray menu")
+
+                # Show success feedback
+                _show_success("Paired", "AutoHelper is now paired with AutoArt.")
 
             except urllib.error.HTTPError as e:
                 logger.error("Pairing failed: HTTP %d", e.code)
