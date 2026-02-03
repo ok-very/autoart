@@ -433,14 +433,11 @@ function ServiceStatusCard({ lastSeen }: { lastSeen: string | null }) {
     );
 }
 
-/** Canonical adapter list with backend fallback info */
+/** Canonical adapter list - actual AutoHelper capabilities */
 const CANONICAL_ADAPTERS = [
-    { name: 'PDF', backendFallback: false },
-    { name: 'DOCX', backendFallback: true },
-    { name: 'CSV', backendFallback: true },
-    { name: 'XLSX', backendFallback: true },
     { name: 'Web Collector', backendFallback: false },
     { name: 'Mail Poller', backendFallback: true },
+    { name: 'File Indexer', backendFallback: false },
 ];
 
 interface ResolvedAdapter {
@@ -455,58 +452,21 @@ function AdaptersCard({ autohelperOnline }: { autohelperOnline: boolean }) {
 
     const reportedAdapters = bridgeStatus?.status?.adapters ?? [];
 
-    // Resolve actual availability: what can the user USE right now?
+    // Resolve availability based on AutoHelper connection status
     const adapters = useMemo((): ResolvedAdapter[] => {
         return CANONICAL_ADAPTERS.map(canonical => {
             const reported = reportedAdapters.find(a => a.name === canonical.name);
 
-            // AutoHelper reports this adapter
-            if (reported) {
-                if (reported.available) {
-                    // AutoHelper can handle it
-                    return {
-                        name: canonical.name,
-                        available: true,
-                        handler: 'autohelper',
-                    };
-                }
-                // AutoHelper says unavailable - check for backend fallback
-                if (canonical.backendFallback) {
-                    return {
-                        name: canonical.name,
-                        available: true,
-                        handler: 'backend',
-                        reason: 'AutoHelper missing dependency',
-                    };
-                }
-                // No fallback
+            // AutoHelper is online and reports this adapter
+            if (reported && autohelperOnline) {
                 return {
                     name: canonical.name,
-                    available: false,
-                    handler: null,
-                    reason: 'Not installed in AutoHelper',
+                    available: reported.available,
+                    handler: reported.handler as 'autohelper' | 'backend',
                 };
             }
 
-            // AutoHelper didn't report this adapter
-            if (!autohelperOnline) {
-                // Offline - use backend fallback if available
-                if (canonical.backendFallback) {
-                    return {
-                        name: canonical.name,
-                        available: true,
-                        handler: 'backend',
-                    };
-                }
-                return {
-                    name: canonical.name,
-                    available: false,
-                    handler: null,
-                    reason: 'Requires AutoHelper',
-                };
-            }
-
-            // Online but not reported - shouldn't happen, but handle it
+            // AutoHelper offline - check for backend fallback
             if (canonical.backendFallback) {
                 return {
                     name: canonical.name,
@@ -514,11 +474,13 @@ function AdaptersCard({ autohelperOnline }: { autohelperOnline: boolean }) {
                     handler: 'backend',
                 };
             }
+
+            // No fallback, requires AutoHelper
             return {
                 name: canonical.name,
                 available: false,
                 handler: null,
-                reason: 'Not available',
+                reason: 'Requires AutoHelper',
             };
         });
     }, [reportedAdapters, autohelperOnline]);

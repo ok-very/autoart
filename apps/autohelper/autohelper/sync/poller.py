@@ -195,44 +195,19 @@ class BackendPoller:
         """Gather available adapter information."""
         adapters: list[dict[str, Any]] = []
 
-        # PDF - AutoHelper only (uses pdfplumber)
-        try:
-            import pdfplumber
-            adapters.append({"name": "PDF", "available": True, "handler": "autohelper"})
-        except ImportError:
-            adapters.append({"name": "PDF", "available": False, "handler": "autohelper"})
+        # Web Collector - core AutoHelper functionality (autocollector runner)
+        # Always available since it's built into AutoHelper
+        adapters.append({
+            "name": "Web Collector",
+            "available": True,
+            "handler": "autohelper",
+        })
 
-        # DOCX - backend fallback available
-        try:
-            import docx
-            adapters.append({"name": "DOCX", "available": True, "handler": "autohelper"})
-        except ImportError:
-            adapters.append({"name": "DOCX", "available": True, "handler": "backend"})
-
-        # CSV - backend handles this
-        adapters.append({"name": "CSV", "available": True, "handler": "backend"})
-
-        # XLSX - backend handles this
-        adapters.append({"name": "XLSX", "available": True, "handler": "backend"})
-
-        # Web Collector - AutoHelper only
-        try:
-            from autohelper.modules.runner import get_runner_service
-            from autohelper.modules.runner.types import RunnerId
-
-            runner_svc = get_runner_service()
-            runners = runner_svc.list_runners()
-            has_autocollector = RunnerId.AUTOCOLLECTOR.value in runners
-            adapters.append({"name": "Web Collector", "available": has_autocollector, "handler": "autohelper"})
-        except Exception:
-            adapters.append({"name": "Web Collector", "available": False, "handler": "autohelper"})
-
-        # Mail Poller - AutoHelper with backend MS Graph fallback
+        # Mail Poller - core AutoHelper functionality
+        # Always available as capability, handler depends on runtime state
         try:
             from autohelper.modules.mail import MailService
-
             mail_svc = MailService()
-            # If mail is running, report as autohelper; otherwise backend may have MS Graph
             running = mail_svc.is_running()
             adapters.append({
                 "name": "Mail Poller",
@@ -240,7 +215,18 @@ class BackendPoller:
                 "handler": "autohelper" if running else "backend",
             })
         except Exception:
-            adapters.append({"name": "Mail Poller", "available": True, "handler": "backend"})
+            adapters.append({
+                "name": "Mail Poller",
+                "available": True,
+                "handler": "backend",
+            })
+
+        # File Indexer - core AutoHelper functionality
+        adapters.append({
+            "name": "File Indexer",
+            "available": True,
+            "handler": "autohelper",
+        })
 
         return adapters
 
