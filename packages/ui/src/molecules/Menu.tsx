@@ -55,14 +55,7 @@ function MenuDropdown({
         <DropdownMenu.Portal>
             <DropdownMenu.Content
                 className={clsx(
-                    'z-50 min-w-[160px] py-1 bg-[var(--ws-panel-bg,#fff)] rounded-lg border border-[var(--ws-panel-border,#e2e8f0)] shadow-lg font-sans',
-                    'data-[state=open]:animate-in data-[state=closed]:animate-out',
-                    'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-                    'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-                    'data-[side=bottom]:slide-in-from-top-2',
-                    'data-[side=left]:slide-in-from-right-2',
-                    'data-[side=right]:slide-in-from-left-2',
-                    'data-[side=top]:slide-in-from-bottom-2',
+                    'z-50 min-w-[160px] py-1 bg-ws-panel-bg rounded-lg border border-ws-panel-border shadow-lg font-sans',
                     className
                 )}
                 align={align}
@@ -114,15 +107,15 @@ function MenuItem<C extends ElementType = 'button'>({
                 {...rest}
                 className={clsx(
                     'w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors outline-none',
-                    'focus:bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))] cursor-pointer',
-                    'data-[disabled]:text-[var(--ws-text-disabled,#8c8c88)] data-[disabled]:cursor-not-allowed data-[disabled]:pointer-events-none',
-                    !disabled && 'text-[var(--ws-fg,#2e2e2c)]',
+                    'focus:bg-ws-row-expanded-bg cursor-pointer',
+                    'data-[disabled]:text-ws-text-disabled data-[disabled]:cursor-not-allowed data-[disabled]:pointer-events-none',
+                    !disabled && 'text-ws-fg',
                     className
                 )}
             >
                 {leftSection && <span className="flex-shrink-0">{leftSection}</span>}
                 <span className="flex-1">{children}</span>
-                {rightSection && <span className="flex-shrink-0 text-[var(--ws-text-disabled,#8c8c88)]">{rightSection}</span>}
+                {rightSection && <span className="flex-shrink-0 text-ws-text-disabled">{rightSection}</span>}
             </Component>
         </DropdownMenu.Item>
     );
@@ -137,7 +130,7 @@ function MenuLabel({ children, className }: MenuLabelProps) {
     return (
         <DropdownMenu.Label
             className={clsx(
-                'px-3 py-1.5 text-xs font-medium text-[var(--ws-text-secondary,#5a5a57)] uppercase tracking-wider',
+                'px-3 py-1.5 text-xs font-medium text-ws-text-secondary uppercase tracking-wider',
                 className
             )}
         >
@@ -151,7 +144,7 @@ export interface MenuDividerProps {
 }
 
 function MenuDivider({ className }: MenuDividerProps) {
-    return <DropdownMenu.Separator className={clsx('my-1 h-px bg-[var(--ws-panel-border,#e2e8f0)]', className)} />;
+    return <DropdownMenu.Separator className={clsx('my-1 h-px bg-ws-panel-border', className)} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -185,16 +178,16 @@ function MenuSubTrigger({ children, leftSection, className, disabled }: MenuSubT
             disabled={disabled}
             className={clsx(
                 'w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors outline-none',
-                'focus:bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))] cursor-pointer',
-                'data-[state=open]:bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))]',
-                'data-[disabled]:text-[var(--ws-text-disabled,#8c8c88)] data-[disabled]:cursor-not-allowed data-[disabled]:pointer-events-none',
-                !disabled && 'text-[var(--ws-fg,#2e2e2c)]',
+                'focus:bg-ws-row-expanded-bg cursor-pointer',
+                'data-[state=open]:bg-ws-row-expanded-bg',
+                'data-[disabled]:text-ws-text-disabled data-[disabled]:cursor-not-allowed data-[disabled]:pointer-events-none',
+                !disabled && 'text-ws-fg',
                 className
             )}
         >
             {leftSection && <span className="flex-shrink-0">{leftSection}</span>}
             <span className="flex-1">{children}</span>
-            <ChevronRight size={14} className="flex-shrink-0 text-[var(--ws-text-disabled,#8c8c88)]" />
+            <ChevronRight size={14} className="flex-shrink-0 text-ws-text-disabled" />
         </DropdownMenu.SubTrigger>
     );
 }
@@ -211,14 +204,7 @@ function MenuSubContent({ children, className, sideOffset = 2, alignOffset = -5 
         <DropdownMenu.Portal>
             <DropdownMenu.SubContent
                 className={clsx(
-                    'z-50 min-w-[160px] py-1 bg-[var(--ws-panel-bg,#fff)] rounded-lg border border-[var(--ws-panel-border,#e2e8f0)] shadow-lg font-sans',
-                    'data-[state=open]:animate-in data-[state=closed]:animate-out',
-                    'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-                    'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-                    'data-[side=bottom]:slide-in-from-top-2',
-                    'data-[side=left]:slide-in-from-right-2',
-                    'data-[side=right]:slide-in-from-left-2',
-                    'data-[side=top]:slide-in-from-bottom-2',
+                    'z-50 min-w-[160px] py-1 bg-ws-panel-bg rounded-lg border border-ws-panel-border shadow-lg font-sans',
                     className
                 )}
                 sideOffset={sideOffset}
