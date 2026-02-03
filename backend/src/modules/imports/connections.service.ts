@@ -397,6 +397,7 @@ export async function getProxiedMondayToken(key: string): Promise<string | null>
 
 // Alphabet for claim codes: uppercase alphanumeric, excluding ambiguous chars
 const CLAIM_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No 0, O, 1, I
+const MAX_CLAIM_CODE_ATTEMPTS = 10;
 
 /**
  * Generate a 6-character claim code for pairing.
@@ -407,7 +408,11 @@ export async function generateClaimToken(userId: string): Promise<{ code: string
     // Generate 6-char code from safe alphabet, retry on collision
     let code: string;
     let collision: { id: string } | undefined;
+    let attempts = 0;
     do {
+        if (attempts >= MAX_CLAIM_CODE_ATTEMPTS) {
+            throw new Error('Failed to generate unique claim code after maximum attempts');
+        }
         const bytes = randomBytes(6);
         code = Array.from(bytes)
             .map(b => CLAIM_ALPHABET[b % CLAIM_ALPHABET.length])
@@ -418,6 +423,7 @@ export async function generateClaimToken(userId: string): Promise<{ code: string
             .where('provider', '=', 'autohelper_claim')
             .where('access_token', '=', code)
             .executeTakeFirst();
+        attempts++;
     } while (collision);
 
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes

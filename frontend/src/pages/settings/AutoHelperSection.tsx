@@ -143,6 +143,8 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
     const unpairAutoHelper = useUnpairAutoHelper();
     const [claimCode, setClaimCode] = useState<string | null>(null);
     const [expiresAt, setExpiresAt] = useState<Date | null>(null);
+    const [secondsLeft, setSecondsLeft] = useState<number>(0);
+    const [confirmUnpair, setConfirmUnpair] = useState(false);
 
     // Poll for claim status while showing a code
     const { data: pairingStatus } = usePairingStatus(!!claimCode);
@@ -153,23 +155,34 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
             queryClient.invalidateQueries({ queryKey: ['connections'] });
             setClaimCode(null);
             setExpiresAt(null);
+            setSecondsLeft(0);
             toast.success('AutoHelper paired');
         }
     }, [pairingStatus?.claimed, claimCode, queryClient]);
 
-    // Check for code expiration
+    // Check for code expiration and update countdown
     useEffect(() => {
         if (!expiresAt) return;
-        const checkExpiry = () => {
-            if (new Date() >= expiresAt) {
+        const updateCountdown = () => {
+            const remaining = Math.max(0, Math.floor((expiresAt.getTime() - Date.now()) / 1000));
+            setSecondsLeft(remaining);
+            if (remaining <= 0) {
                 setClaimCode(null);
                 setExpiresAt(null);
                 toast.warning('Pairing code expired');
             }
         };
-        const interval = setInterval(checkExpiry, 1000);
+        updateCountdown(); // Initial call
+        const interval = setInterval(updateCountdown, 1000);
         return () => clearInterval(interval);
     }, [expiresAt]);
+
+    // Format seconds as MM:SS
+    const formatTime = (seconds: number): string => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
 
     const handleGenerateCode = useCallback(async () => {
         try {
@@ -183,18 +196,28 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
     }, [claimPairing]);
 
     const handleUnpair = useCallback(async () => {
+        if (!confirmUnpair) {
+            setConfirmUnpair(true);
+            return;
+        }
         try {
             await unpairAutoHelper.mutateAsync();
             toast.info('AutoHelper unpaired');
+            setConfirmUnpair(false);
         } catch (err) {
             const msg = err instanceof Error ? err.message : 'Unpair failed';
             toast.error(msg);
         }
-    }, [unpairAutoHelper]);
+    }, [unpairAutoHelper, confirmUnpair]);
+
+    const handleCancelUnpair = useCallback(() => {
+        setConfirmUnpair(false);
+    }, []);
 
     const handleCancel = useCallback(() => {
         setClaimCode(null);
         setExpiresAt(null);
+        setSecondsLeft(0);
     }, []);
 
     return (
@@ -215,15 +238,36 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
                         <CheckCircle2 className="w-4 h-4" />
                         AutoHelper is paired
                     </div>
-                    <Button
-                        onClick={handleUnpair}
-                        disabled={unpairAutoHelper.isPending}
-                        variant="danger"
-                        size="xs"
-                        leftSection={unpairAutoHelper.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Unplug className="w-3 h-3" />}
-                    >
-                        Unpair
-                    </Button>
+                    {confirmUnpair ? (
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-[var(--ws-color-error)]">Unpair AutoHelper?</span>
+                            <Button
+                                onClick={handleUnpair}
+                                disabled={unpairAutoHelper.isPending}
+                                variant="danger"
+                                size="xs"
+                                leftSection={unpairAutoHelper.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : undefined}
+                            >
+                                Confirm
+                            </Button>
+                            <Button
+                                onClick={handleCancelUnpair}
+                                variant="secondary"
+                                size="xs"
+                            >
+                                Cancel
+                            </Button>
+                        </div>
+                    ) : (
+                        <Button
+                            onClick={handleUnpair}
+                            variant="secondary"
+                            size="xs"
+                            leftSection={<Unplug className="w-3 h-3" />}
+                        >
+                            Unpair
+                        </Button>
+                    )}
                 </div>
             ) : claimCode ? (
                 <div className="space-y-4">
@@ -248,7 +292,7 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
                             Cancel
                         </Button>
                         <span className="text-xs text-ws-muted">
-                            Code expires in 5 minutes
+                            Expires in {formatTime(secondsLeft)}
                         </span>
                     </div>
                 </div>

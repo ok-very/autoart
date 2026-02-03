@@ -18,7 +18,7 @@ Menu:
 import json
 import threading
 import tkinter as tk
-from tkinter import simpledialog
+from tkinter import messagebox, simpledialog
 import urllib.request
 from collections.abc import Callable
 
@@ -30,6 +30,15 @@ from autohelper.gui.popup import open_settings_in_browser
 from autohelper.shared.logging import get_logger
 
 logger = get_logger(__name__)
+
+
+def _show_error(title: str, message: str) -> None:
+    """Show an error dialog. Handles Tk boilerplate."""
+    root = tk.Tk()
+    root.withdraw()
+    root.attributes("-topmost", True)
+    messagebox.showerror(title, message, parent=root)
+    root.destroy()
 
 # ── Colours ──────────────────────────────────────────────────────────
 _BG = (43, 85, 128)        # AutoHelper Blue
@@ -158,7 +167,7 @@ class AutoHelperIcon:
 
             code = simpledialog.askstring(
                 "Pair AutoHelper",
-                "Enter the 6-character pairing code from AutoArt:",
+                "Enter the 6-character pairing code from AutoArt:\n(Code expires in 5 minutes)",
                 parent=root,
             )
 
@@ -170,6 +179,7 @@ class AutoHelperIcon:
             code = code.strip().upper()
             if len(code) != 6:
                 logger.warning("Invalid pairing code length: %d", len(code))
+                _show_error("Invalid Code", "Pairing code must be exactly 6 characters.")
                 return
 
             # Redeem the code via backend
@@ -216,8 +226,16 @@ class AutoHelperIcon:
 
             except urllib.error.HTTPError as e:
                 logger.error("Pairing failed: HTTP %d", e.code)
+                if e.code == 400:
+                    _show_error("Pairing Failed", "Invalid or expired code. Generate a new code and try again.")
+                else:
+                    _show_error("Pairing Failed", f"Server error (HTTP {e.code}). Please try again.")
+            except urllib.error.URLError as e:
+                logger.error("Pairing failed: network error: %s", e.reason)
+                _show_error("Pairing Failed", f"Could not connect to server: {e.reason}")
             except Exception:
                 logger.exception("Pairing failed")
+                _show_error("Pairing Failed", "An unexpected error occurred. Check the logs for details.")
 
         threading.Thread(target=do_pair, daemon=True).start()
 

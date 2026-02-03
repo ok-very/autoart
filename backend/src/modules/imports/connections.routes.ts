@@ -479,7 +479,7 @@ export async function connectionsRoutes(app: FastifyInstance) {
      * Validates the code, generates a link key, returns it to AutoHelper.
      */
     app.post('/pair/redeem', async (request, reply) => {
-        const { code } = z.object({ code: z.string().min(1) }).parse(request.body);
+        const { code } = z.object({ code: z.string().trim().min(1) }).parse(request.body);
 
         const result = await connectionsService.redeemClaimToken(code);
 
