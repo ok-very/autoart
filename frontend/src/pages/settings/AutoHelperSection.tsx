@@ -10,8 +10,6 @@ import {
     Server,
     Database,
     RefreshCw,
-    Play,
-    Square,
     Trash2,
     Plus,
     X,
@@ -40,6 +38,9 @@ import {
     useBridgeStatus,
     useQueueCommand,
     useSelectFolder,
+    useStartMail,
+    useStopMail,
+    useMailStatus,
 } from '../../api/hooks/autohelper';
 import { toast } from '../../stores/toastStore';
 import { Badge, Button, TextInput, Toggle } from '@autoart/ui';
@@ -581,43 +582,52 @@ function AdaptersCard({ autohelperOnline }: { autohelperOnline: boolean }) {
 }
 
 function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
-    const { data: bridgeSettings } = useBridgeSettings();
-    const { data: bridgeStatus } = useBridgeStatus();
+    const startMail = useStartMail();
+    const stopMail = useStopMail();
+    const { data: mailStatus, refetch: refetchStatus } = useMailStatus();
     const updateSettings = useUpdateBridgeSettings();
-    const queueCommand = useQueueCommand();
+    const { data: bridgeSettings } = useBridgeSettings();
 
-    const settings = bridgeSettings?.settings;
-    const status = bridgeStatus?.status;
+    const running = mailStatus?.running ?? false;
+    const [connecting, setConnecting] = useState(false);
 
-    const [pollInterval, setPollInterval] = useState<number | ''>(settings?.mail_poll_interval ?? 30);
-    const [localEnabled, setLocalEnabled] = useState<boolean | null>(null);
-    // Track if settings changed but not yet saved
+    // Poll interval from settings
+    const [pollInterval, setPollInterval] = useState<number | ''>(
+        bridgeSettings?.settings?.mail_poll_interval ?? 30
+    );
     const [dirty, setDirty] = useState(false);
 
-    const enabled = localEnabled ?? settings?.mail_enabled ?? false;
-    const running = status?.mail?.running ?? false;
-
-    // Sync poll interval from settings on first load
     useEffect(() => {
-        if (settings?.mail_poll_interval != null && pollInterval !== settings.mail_poll_interval) {
-            setPollInterval(settings.mail_poll_interval);
+        if (bridgeSettings?.settings?.mail_poll_interval != null) {
+            setPollInterval(bridgeSettings.settings.mail_poll_interval);
         }
-        // Only sync on settings change, not pollInterval
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [settings?.mail_poll_interval]);
+    }, [bridgeSettings?.settings?.mail_poll_interval]);
 
-    const pendingMailCmd = bridgeStatus?.pendingCommands?.find(
-        c => c.type === 'start_mail' || c.type === 'stop_mail'
-    );
-
-    const handleToggleEnabled = useCallback((next: boolean) => {
-        setLocalEnabled(next);
-        updateSettings.mutate({ mail_enabled: next });
-        // If disabling and running, auto-queue stop
-        if (!next && running) {
-            queueCommand.mutate({ commandType: 'stop_mail' });
+    // Toggle calls AutoHelper directly
+    const handleToggle = useCallback(async (enable: boolean) => {
+        setConnecting(true);
+        try {
+            if (enable) {
+                await startMail.mutateAsync();
+                toast.success('Mail service started');
+            } else {
+                await stopMail.mutateAsync();
+                toast.info('Mail service stopped');
+            }
+            // Persist the setting
+            updateSettings.mutate({ mail_enabled: enable });
+            // Refetch to confirm state
+            refetchStatus();
+        } catch (err) {
+            toast.error(
+                err instanceof Error
+                    ? `Connection failed: ${err.message}`
+                    : 'Failed to connect to AutoHelper'
+            );
+        } finally {
+            setConnecting(false);
         }
-    }, [updateSettings, queueCommand, running]);
+    }, [startMail, stopMail, updateSettings, refetchStatus]);
 
     const handlePollIntervalChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value ? Number(e.target.value) : '';
@@ -638,96 +648,48 @@ function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
         }
     }, [savePollInterval]);
 
-    const handleStart = useCallback(() => {
-        queueCommand.mutate({ commandType: 'start_mail' });
-        toast.info('Mail start queued');
-    }, [queueCommand]);
-
-    const handleStop = useCallback(() => {
-        queueCommand.mutate({ commandType: 'stop_mail' });
-        toast.info('Mail stop queued');
-    }, [queueCommand]);
-
-    // Derive state label - simple: Disabled / Stopped / Running
-    const getStateLabel = (): { label: string; variant: 'success' | 'neutral' | 'warning' } => {
-        if (!enabled) return { label: 'Disabled', variant: 'neutral' };
-        if (running) return { label: 'Running', variant: 'success' };
-        return { label: 'Stopped', variant: 'warning' };
-    };
-    const stateInfo = getStateLabel();
-
     return (
         <CardShell
             icon={<Mail className="w-5 h-5 text-[var(--ws-color-info)]" />}
             iconBg="bg-[var(--ws-color-info)]/10"
             title="Mail"
             badge={
-                pendingMailCmd ? (
-                    <PendingCommandBadge type={pendingMailCmd.type} status={pendingMailCmd.status} />
-                ) : (
-                    <Badge variant={stateInfo.variant} size="sm" className="gap-1">
-                        {stateInfo.variant === 'success' ? (
-                            <CheckCircle2 className="w-3 h-3" />
-                        ) : stateInfo.variant === 'warning' ? (
-                            <AlertTriangle className="w-3 h-3" />
-                        ) : (
-                            <XCircle className="w-3 h-3" />
-                        )}
-                        {stateInfo.label}
-                    </Badge>
-                )
+                <Badge variant={running ? 'success' : 'neutral'} size="sm" className="gap-1">
+                    {connecting ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : running ? (
+                        <CheckCircle2 className="w-3 h-3" />
+                    ) : (
+                        <XCircle className="w-3 h-3" />
+                    )}
+                    {connecting ? 'Connecting...' : running ? 'Running' : 'Stopped'}
+                </Badge>
             }
         >
-            <FieldRow label="Enabled">
-                <div className="flex items-center gap-3">
-                    <Toggle checked={enabled} onChange={handleToggleEnabled} />
-                    {!enabled && (
-                        <span className="text-xs text-ws-text-secondary">
-                            Enable to allow mail polling
-                        </span>
-                    )}
-                </div>
-            </FieldRow>
-            <FieldRow label="Poll interval (s)">
-                <TextInput
-                    type="number"
-                    size="sm"
-                    value={String(pollInterval)}
-                    onChange={handlePollIntervalChange}
-                    onBlur={savePollInterval}
-                    onKeyDown={handleKeyDown}
-                    className="w-24"
-                    disabled={!enabled}
+            <FieldRow label="Mail polling">
+                <Toggle
+                    checked={running}
+                    onChange={handleToggle}
+                    disabled={connecting}
                 />
             </FieldRow>
 
-            <div className="flex items-center gap-2 pt-2">
-                {running ? (
-                    <SmallButton
-                        onClick={handleStop}
-                        loading={queueCommand.isPending}
-                        disabled={!!pendingMailCmd}
-                        variant="danger"
-                    >
-                        <Square className="w-3 h-3" /> Stop
-                    </SmallButton>
-                ) : (
-                    <SmallButton
-                        onClick={handleStart}
-                        loading={queueCommand.isPending}
-                        disabled={!enabled || !!pendingMailCmd}
-                        variant="primary"
-                    >
-                        <Play className="w-3 h-3" /> Start
-                    </SmallButton>
-                )}
-                {!enabled && !running && (
-                    <span className="text-xs text-ws-muted">Enable mail to start polling</span>
-                )}
-            </div>
+            {running && (
+                <FieldRow label="Poll interval (s)">
+                    <TextInput
+                        type="number"
+                        size="sm"
+                        value={String(pollInterval)}
+                        onChange={handlePollIntervalChange}
+                        onBlur={savePollInterval}
+                        onKeyDown={handleKeyDown}
+                        className="w-24"
+                    />
+                </FieldRow>
+            )}
 
             {/* MS Graph fallback indicator */}
-            {microsoftConnected && (
+            {microsoftConnected && !running && (
                 <div className="pt-3 mt-3 border-t border-ws-panel-border">
                     <div className="flex items-center gap-2 text-sm">
                         <CheckCircle2 className="w-4 h-4 text-[var(--ws-color-success)]" />
