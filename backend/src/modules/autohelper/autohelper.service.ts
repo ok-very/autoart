@@ -34,11 +34,11 @@ export interface AutoHelperSettings {
 /** Status shape stored in autohelper_instances.status */
 export interface AutoHelperStatus {
   database?: { connected: boolean; path: string; migration_status: string };
-  roots?: Array<{ path: string; accessible: boolean; file_count?: number }>;
-  runner?: { active: boolean; current_runner?: string };
+  roots?: Array<{ path: string; accessible: boolean; file_count?: number | null }>;
+  runner?: { active: boolean; current_runner?: string | null };
   mail?: { enabled: boolean; running: boolean };
-  index?: { status: string; total_files?: number; last_run?: string };
-  gc?: { enabled: boolean; last_run?: string };
+  index?: { status: string; total_files?: number | null; last_run?: string | null };
+  gc?: { enabled: boolean; last_run?: string | null };
 }
 
 /** Command types that can be queued */

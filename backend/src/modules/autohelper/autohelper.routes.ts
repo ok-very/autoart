@@ -61,14 +61,14 @@ const HeartbeatSchema = z.object({
         z.object({
           path: z.string(),
           accessible: z.boolean(),
-          file_count: z.number().optional(),
+          file_count: z.number().nullish(),
         })
       )
       .optional(),
     runner: z
       .object({
         active: z.boolean(),
-        current_runner: z.string().optional(),
+        current_runner: z.string().nullish(),
       })
       .optional(),
     mail: z
@@ -80,14 +80,14 @@ const HeartbeatSchema = z.object({
     index: z
       .object({
         status: z.string(),
-        total_files: z.number().optional(),
-        last_run: z.string().optional(),
+        total_files: z.number().nullish(),
+        last_run: z.string().nullish(),
       })
       .optional(),
     gc: z
       .object({
         enabled: z.boolean(),
-        last_run: z.string().optional(),
+        last_run: z.string().nullish(),
       })
       .optional(),
   }),
