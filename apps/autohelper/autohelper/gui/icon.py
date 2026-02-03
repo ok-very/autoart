@@ -177,7 +177,7 @@ class AutoHelperIcon:
                 from autohelper.config import get_settings
 
                 settings = get_settings()
-                url = f"{settings.autoart_api_url}/pair/redeem"
+                url = f"{settings.autoart_api_url}/api/pair/redeem"
                 data = json.dumps({"code": code}).encode("utf-8")
                 req = urllib.request.Request(url, data=data, method="POST")
                 req.add_header("Content-Type", "application/json")
