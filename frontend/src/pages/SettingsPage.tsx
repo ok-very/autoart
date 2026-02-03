@@ -161,6 +161,7 @@ export function SettingsPage() {
                             ) : derivedTab === 'autohelper' ? (
                                 <AutoHelperSection
                                     autohelperStatus={{ connected: connections?.autohelper?.connected ?? false }}
+                                    microsoftConnected={connections?.microsoft?.connected ?? false}
                                 />
                             ) : derivedTab === 'integrations' ? (
                                 <IntegrationsSection
