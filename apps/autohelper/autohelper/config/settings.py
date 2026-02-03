@@ -64,8 +64,7 @@ class Settings(BaseSettings):
     # Context Layer / External Data Sources
     autoart_frontend_url: str = "http://localhost:5173"
     autoart_api_url: str = "http://localhost:3001"
-    autoart_api_key: str = ""  # Optional API key for AutoArt
-    autoart_session_id: str = ""  # Session ID from AutoArt pairing (Monday token proxied via this)
+    autoart_link_key: str = ""  # Persistent link key from AutoArt pairing
     context_providers: list[str] = Field(default=["autoart", "monday"])  # Priority order
 
     # Artifact Storage Settings

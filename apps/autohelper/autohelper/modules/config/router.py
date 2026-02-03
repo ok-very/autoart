@@ -55,7 +55,7 @@ async def put_config(body: dict[str, Any]) -> dict[str, Any]:
     except Exception as exc:
         logger.warning("Failed to reinit mail service after config change: %s", exc)
 
-    # Reinitialise context service so autoart_session_id and other
+    # Reinitialise context service so link key and other
     # context-layer settings take effect without a restart.
     try:
         from autohelper.modules.context.service import ContextService

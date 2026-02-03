@@ -30,8 +30,7 @@ def cleanup_import_sessions(
         settings = get_settings()
         client = AutoArtClient(
             api_url=settings.autoart_api_url,
-            api_key=settings.autoart_api_key,
-            session_id=settings.autoart_session_id,
+            link_key=settings.autoart_link_key or None,
         )
 
     # Check if backend is reachable
@@ -74,8 +73,7 @@ def cleanup_export_sessions(
         settings = get_settings()
         client = AutoArtClient(
             api_url=settings.autoart_api_url,
-            api_key=settings.autoart_api_key,
-            session_id=settings.autoart_session_id,
+            link_key=settings.autoart_link_key or None,
         )
 
     # Check if backend is reachable

@@ -77,8 +77,7 @@ class GarbageCollectionService:
         if self._client is None:
             self._client = AutoArtClient(
                 api_url=self._settings.autoart_api_url,
-                api_key=self._settings.autoart_api_key,
-                session_id=self._settings.autoart_session_id,
+                link_key=self._settings.autoart_link_key or None,
             )
         return self._client
 

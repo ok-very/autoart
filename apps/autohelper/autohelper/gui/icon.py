@@ -16,7 +16,6 @@ Menu:
 
 import json
 import threading
-import urllib.error
 import urllib.request
 from collections.abc import Callable
 
@@ -93,77 +92,20 @@ class AutoHelperIcon:
 
     @staticmethod
     def _check_paired() -> bool:
-        """Fast config-only check — used for initial state before the poll loop starts."""
+        """Check if a link key is present in config."""
         try:
             from autohelper.config.store import ConfigStore
 
             cfg = ConfigStore().load()
-            if cfg.get("autoart_session_id"):
+            if cfg.get("autoart_link_key"):
                 return True
 
             from autohelper.config import get_settings
 
             settings = get_settings()
-            return bool(getattr(settings, "autoart_session_id", ""))
+            return bool(getattr(settings, "autoart_link_key", ""))
         except Exception:
             return False
-
-    @staticmethod
-    def _get_session_id() -> str:
-        """Return the persisted session ID, or empty string if absent."""
-        try:
-            from autohelper.config.store import ConfigStore
-
-            cfg = ConfigStore().load()
-            sid = cfg.get("autoart_session_id", "")
-            if sid:
-                return sid
-
-            from autohelper.config import get_settings
-
-            settings = get_settings()
-            return getattr(settings, "autoart_session_id", "") or ""
-        except Exception:
-            return ""
-
-    @staticmethod
-    def _verify_paired() -> bool | None:
-        """Verify session against the AutoArt backend (2 s timeout).
-
-        Returns True/False for definitive answers, None if inconclusive
-        (network error, timeout, server error).
-        """
-        try:
-            sid = AutoHelperIcon._get_session_id()
-            if not sid:
-                return False
-
-            from autohelper.config import get_settings
-
-            settings = get_settings()
-            url = f"{settings.autoart_api_url}/api/connections/autohelper/credentials"
-            req = urllib.request.Request(url)
-            req.add_header("X-AutoHelper-Session", sid)
-            if settings.autoart_api_key:
-                req.add_header("X-API-Key", settings.autoart_api_key)
-
-            with urllib.request.urlopen(req, timeout=2) as resp:
-                return resp.status == 200
-        except urllib.error.HTTPError as e:
-            if 400 <= e.code < 500:
-                # Session rejected — clear stale config
-                try:
-                    from autohelper.config.store import ConfigStore
-
-                    cfg = ConfigStore().load()
-                    cfg.pop("autoart_session_id", None)
-                    ConfigStore().save(cfg)
-                except Exception:
-                    pass
-                return False
-            return None  # 5xx — inconclusive
-        except Exception:
-            return None  # timeout, connection refused, DNS, etc.
 
     # ── Icon setup ───────────────────────────────────────────────────
 
@@ -244,8 +186,8 @@ class AutoHelperIcon:
                     self.icon.icon = _make_icon(wearing_hat=active)
                 menu_dirty = True
 
-            paired = self._verify_paired()
-            if paired is not None and paired != self._paired:
+            paired = self._check_paired()
+            if paired != self._paired:
                 self._paired = paired
                 menu_dirty = True
 
