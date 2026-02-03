@@ -39,6 +39,49 @@ Quality and consistency matter more than speed. Check references before acting.
 
 ---
 
+## Architectural Coherence
+
+**Multi-part features rot when each commit solves only its immediate problem.**
+
+### Before Starting
+
+For any feature that spans systems (frontend → backend → service):
+
+1. **Write the "done" sentence.** What can the user do that they couldn't before? One sentence, no jargon.
+2. **Draw the data flow.** When the user acts, what calls what? Name the endpoints, the payloads, the stored state.
+3. **Identify the hard part.** Which layer is the riskiest? That's where the architecture will pivot. Know it before you start.
+
+### During Development
+
+When fixing an error or unblocking yourself:
+
+- **Ask: "Am I solving the problem or routing around it?"** Routing around is sometimes correct, but say so explicitly.
+- **Ask: "Does my 'done' sentence still work after this change?"** If not, update the sentence or revert the change.
+- **Ask: "Did I just break a different use case?"** Check adjacent features, not just the one you're fixing.
+
+When pivoting architecture (push → pull, direct → proxied, sync → async):
+
+1. **STOP.** List every use case that depended on the old architecture.
+2. For each: does the new architecture serve it? If not, defer it explicitly or fix the design.
+3. If a use case becomes impossible, say so out loud before proceeding. Silent breakage is how 25-commit gaps happen.
+
+### After Each PR
+
+1. **Trace the full path again.** Click the button. Does the thing happen?
+2. If layers are disconnected (UI calls a service that isn't reachable), that's not "needs polish." The feature is broken.
+
+### The Pairing/Settings Gap (Feb 2026)
+
+This happened because:
+- Pairing was rewritten 3× to solve connection problems
+- Each rewrite narrowed scope to "can AutoHelper authenticate to backend?"
+- Nobody checked whether the *original goal* (control AutoHelper settings from web UI) still worked
+- 25 commits later: pairing works, settings UI exists, but they're in different universes
+
+The lesson: **check the full path after every pivot.** Especially when the pivot felt like progress.
+
+---
+
 ## Non-Negotiable Rules
 
 **These rules override all other priorities. Violations waste tokens and break the codebase.**
