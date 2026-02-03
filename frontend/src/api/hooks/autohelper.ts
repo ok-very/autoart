@@ -170,6 +170,23 @@ export function useUpdateAutoHelperConfig() {
     });
 }
 
+/**
+ * Open native folder picker dialog on AutoHelper machine.
+ * Returns selected path or null if cancelled.
+ */
+export function useSelectFolder() {
+    return useMutation({
+        mutationFn: async () => {
+            const result = await autohelperApi.post<{ path: string | null }>(
+                '/config/select-folder',
+                {},
+                { timeout: 130_000 } // 2+ minutes for user to select
+            );
+            return result.path;
+        },
+    });
+}
+
 // ==================== INDEX HOOKS ====================
 
 export interface IndexStatusResponse {

@@ -27,6 +27,7 @@ import {
     Puzzle,
     Cloud,
     Monitor,
+    FolderOpen,
 } from 'lucide-react';
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
@@ -38,6 +39,7 @@ import {
     useUpdateBridgeSettings,
     useBridgeStatus,
     useQueueCommand,
+    useSelectFolder,
 } from '../../api/hooks/autohelper';
 import { toast } from '../../stores/toastStore';
 import { Badge, Button, TextInput, Toggle } from '@autoart/ui';
@@ -440,42 +442,82 @@ const CANONICAL_ADAPTERS = [
     { name: 'Mail Poller', backendFallback: true },
 ];
 
+interface ResolvedAdapter {
+    name: string;
+    available: boolean;
+    handler: 'autohelper' | 'backend' | null; // null when unavailable
+    reason?: string; // why unavailable
+}
+
 function AdaptersCard({ autohelperOnline }: { autohelperOnline: boolean }) {
     const { data: bridgeStatus } = useBridgeStatus();
 
-    // Get reported adapters from heartbeat, or use defaults when offline
     const reportedAdapters = bridgeStatus?.status?.adapters ?? [];
 
-    // Merge canonical list with reported status
-    const adapters = useMemo(() => {
+    // Resolve actual availability: what can the user USE right now?
+    const adapters = useMemo((): ResolvedAdapter[] => {
         return CANONICAL_ADAPTERS.map(canonical => {
             const reported = reportedAdapters.find(a => a.name === canonical.name);
 
+            // AutoHelper reports this adapter
             if (reported) {
+                if (reported.available) {
+                    // AutoHelper can handle it
+                    return {
+                        name: canonical.name,
+                        available: true,
+                        handler: 'autohelper',
+                    };
+                }
+                // AutoHelper says unavailable - check for backend fallback
+                if (canonical.backendFallback) {
+                    return {
+                        name: canonical.name,
+                        available: true,
+                        handler: 'backend',
+                        reason: 'AutoHelper missing dependency',
+                    };
+                }
+                // No fallback
                 return {
                     name: canonical.name,
-                    available: reported.available,
-                    handler: reported.handler,
-                    backendFallback: canonical.backendFallback,
+                    available: false,
+                    handler: null,
+                    reason: 'Not installed in AutoHelper',
                 };
             }
 
-            // AutoHelper offline — show backend fallback if available
+            // AutoHelper didn't report this adapter
             if (!autohelperOnline) {
+                // Offline - use backend fallback if available
+                if (canonical.backendFallback) {
+                    return {
+                        name: canonical.name,
+                        available: true,
+                        handler: 'backend',
+                    };
+                }
                 return {
                     name: canonical.name,
-                    available: canonical.backendFallback,
-                    handler: canonical.backendFallback ? 'backend' as const : 'autohelper' as const,
-                    backendFallback: canonical.backendFallback,
+                    available: false,
+                    handler: null,
+                    reason: 'Requires AutoHelper',
                 };
             }
 
-            // AutoHelper online but adapter not reported — assume unavailable
+            // Online but not reported - shouldn't happen, but handle it
+            if (canonical.backendFallback) {
+                return {
+                    name: canonical.name,
+                    available: true,
+                    handler: 'backend',
+                };
+            }
             return {
                 name: canonical.name,
                 available: false,
-                handler: 'autohelper' as const,
-                backendFallback: canonical.backendFallback,
+                handler: null,
+                reason: 'Not available',
             };
         });
     }, [reportedAdapters, autohelperOnline]);
@@ -486,24 +528,19 @@ function AdaptersCard({ autohelperOnline }: { autohelperOnline: boolean }) {
         <CardShell
             icon={<Puzzle className="w-5 h-5 text-[var(--ws-accent)]" />}
             iconBg="bg-[var(--ws-accent)]/10"
-            title="Adapters"
+            title="Capabilities"
             badge={
                 <Badge variant="neutral" size="sm">
-                    {availableCount}/{adapters.length} available
+                    {availableCount}/{adapters.length}
                 </Badge>
             }
         >
-            <p className="text-xs text-ws-text-secondary mb-3">
-                File handlers and services available for processing.
-            </p>
-
             <div className="overflow-hidden rounded-lg border border-ws-panel-border">
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))]">
-                            <th className="text-left px-3 py-2 font-medium text-ws-text-secondary">Adapter</th>
+                            <th className="text-left px-3 py-2 font-medium text-ws-text-secondary">Type</th>
                             <th className="text-left px-3 py-2 font-medium text-ws-text-secondary">Status</th>
-                            <th className="text-left px-3 py-2 font-medium text-ws-text-secondary">Handler</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -515,43 +552,30 @@ function AdaptersCard({ autohelperOnline }: { autohelperOnline: boolean }) {
                                 <td className="px-3 py-2 text-ws-fg">{adapter.name}</td>
                                 <td className="px-3 py-2">
                                     {adapter.available ? (
-                                        <span className="inline-flex items-center gap-1 text-[var(--ws-color-success)]">
+                                        <span className="inline-flex items-center gap-1.5 text-[var(--ws-color-success)]">
                                             <CheckCircle2 className="w-3 h-3" />
-                                            Available
+                                            {adapter.handler === 'autohelper' ? (
+                                                <span className="inline-flex items-center gap-1">
+                                                    <Monitor className="w-3 h-3" /> AutoHelper
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1">
+                                                    <Cloud className="w-3 h-3" /> Backend
+                                                </span>
+                                            )}
                                         </span>
                                     ) : (
-                                        <span className="inline-flex items-center gap-1 text-ws-text-secondary">
+                                        <span className="inline-flex items-center gap-1 text-ws-muted">
                                             <XCircle className="w-3 h-3" />
-                                            Unavailable
+                                            {adapter.reason || 'Unavailable'}
                                         </span>
                                     )}
-                                </td>
-                                <td className="px-3 py-2">
-                                    <span className="inline-flex items-center gap-1 text-ws-text-secondary">
-                                        {adapter.handler === 'autohelper' ? (
-                                            <>
-                                                <Monitor className="w-3 h-3" />
-                                                AutoHelper
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Cloud className="w-3 h-3" />
-                                                Backend
-                                            </>
-                                        )}
-                                    </span>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
-
-            {!autohelperOnline && (
-                <p className="text-xs text-ws-muted mt-3">
-                    AutoHelper offline. Backend fallbacks active where available.
-                </p>
-            )}
         </CardShell>
     );
 }
@@ -624,11 +648,11 @@ function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
         toast.info('Mail stop queued');
     }, [queueCommand]);
 
-    // Derive state label
+    // Derive state label - simple: Disabled / Stopped / Running
     const getStateLabel = (): { label: string; variant: 'success' | 'neutral' | 'warning' } => {
         if (!enabled) return { label: 'Disabled', variant: 'neutral' };
         if (running) return { label: 'Running', variant: 'success' };
-        return { label: 'Enabled (stopped)', variant: 'warning' };
+        return { label: 'Stopped', variant: 'warning' };
     };
     const stateInfo = getStateLabel();
 
@@ -720,6 +744,7 @@ function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
 function RootsCard() {
     const { data: bridgeSettings } = useBridgeSettings();
     const updateSettings = useUpdateBridgeSettings();
+    const selectFolder = useSelectFolder();
     const [newRoot, setNewRoot] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -728,8 +753,8 @@ function RootsCard() {
         [bridgeSettings?.settings?.allowed_roots],
     );
 
-    const handleAdd = useCallback(() => {
-        const trimmed = newRoot.trim();
+    const addRoot = useCallback((path: string) => {
+        const trimmed = path.trim();
         if (!trimmed) return;
         if (roots.includes(trimmed)) {
             toast.warning('Path already exists');
@@ -741,14 +766,31 @@ function RootsCard() {
                 onSuccess: () => {
                     setNewRoot('');
                     toast.success('Root added');
-                    inputRef.current?.focus();
                 },
                 onError: (err) => {
                     toast.error(err instanceof Error ? err.message : 'Failed to add root');
                 },
             }
         );
-    }, [newRoot, roots, updateSettings]);
+    }, [roots, updateSettings]);
+
+    const handleAdd = useCallback(() => {
+        addRoot(newRoot);
+        inputRef.current?.focus();
+    }, [addRoot, newRoot]);
+
+    const handleBrowse = useCallback(() => {
+        selectFolder.mutate(undefined, {
+            onSuccess: (path) => {
+                if (path) {
+                    addRoot(path);
+                }
+            },
+            onError: (err) => {
+                toast.error(err instanceof Error ? err.message : 'Failed to open folder picker');
+            },
+        });
+    }, [selectFolder, addRoot]);
 
     const handleRemove = useCallback(
         (root: string) => {
@@ -770,6 +812,8 @@ function RootsCard() {
         }
     }, [handleAdd]);
 
+    const isBusy = updateSettings.isPending || selectFolder.isPending;
+
     return (
         <CardShell
             icon={<HardDrive className="w-5 h-5 text-ws-text-secondary" />}
@@ -789,7 +833,7 @@ function RootsCard() {
                             <span className="text-sm text-ws-fg font-mono truncate flex-1">{root}</span>
                             <button
                                 onClick={() => handleRemove(root)}
-                                disabled={updateSettings.isPending}
+                                disabled={isBusy}
                                 className="opacity-0 group-hover:opacity-100 text-ws-muted hover:text-[var(--ws-color-error)] transition-opacity disabled:opacity-30 disabled:cursor-not-allowed"
                                 aria-label={`Remove ${root}`}
                             >
@@ -801,21 +845,28 @@ function RootsCard() {
             )}
 
             <div className="flex gap-2">
+                <SmallButton
+                    onClick={handleBrowse}
+                    loading={selectFolder.isPending}
+                    disabled={updateSettings.isPending}
+                >
+                    <FolderOpen className="w-3 h-3" /> Browse
+                </SmallButton>
                 <TextInput
                     ref={inputRef}
                     size="sm"
                     value={newRoot}
                     onChange={(e) => setNewRoot(e.target.value)}
-                    placeholder="Type a path, then press Enter or click Add"
+                    placeholder="Or type path manually"
                     onKeyDown={handleKeyDown}
                     className="flex-1"
                     autoComplete="off"
-                    disabled={updateSettings.isPending}
+                    disabled={isBusy}
                 />
                 <SmallButton
                     onClick={handleAdd}
-                    disabled={!newRoot.trim()}
-                    loading={updateSettings.isPending}
+                    disabled={!newRoot.trim() || isBusy}
+                    loading={updateSettings.isPending && newRoot.trim() !== ''}
                 >
                     <Plus className="w-3 h-3" /> Add
                 </SmallButton>
