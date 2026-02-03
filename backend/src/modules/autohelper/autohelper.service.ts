@@ -97,8 +97,8 @@ export async function getOrCreateInstance(
     .insertInto('autohelper_instances')
     .values({
       user_id: userId,
-      settings: JSON.stringify(defaultSettings),
-      status: JSON.stringify({}),
+      settings: defaultSettings,
+      status: {},
     })
     .returningAll()
     .execute();
@@ -141,7 +141,7 @@ export async function updateSettings(
   const [updated] = await db
     .updateTable('autohelper_instances')
     .set({
-      settings: JSON.stringify(newSettings),
+      settings: newSettings,
       settings_version: instance.settings_version + 1,
       updated_at: new Date(),
     })
@@ -203,7 +203,7 @@ export async function updateStatus(
   await db
     .updateTable('autohelper_instances')
     .set({
-      status: JSON.stringify(status),
+      status: status,
       last_seen: new Date(),
       updated_at: new Date(),
     })
@@ -227,7 +227,7 @@ export async function queueCommand(
   const newCommand: NewAutoHelperCommand = {
     user_id: userId,
     command_type: commandType,
-    payload: JSON.stringify(payload),
+    payload: payload,
     status: 'pending',
   };
 
@@ -295,7 +295,7 @@ export async function acknowledgeCommand(
     .updateTable('autohelper_commands')
     .set({
       status: success ? 'completed' : 'failed',
-      result: result ? JSON.stringify(result) : null,
+      result: result ?? null,
       acknowledged_at: new Date(),
     })
     .where('id', '=', commandId)
