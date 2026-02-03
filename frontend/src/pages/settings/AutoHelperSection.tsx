@@ -26,11 +26,10 @@ import {
     Link,
     Unplug,
 } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
 import { RequestTimeoutError } from '../../api/autohelperClient';
-import { useAutoHelperInstances, useDisconnectAutoHelper, useGeneratePairingCode } from '../../api/connections';
+import { usePairAutoHelper, useUnpairAutoHelper } from '../../api/connections';
 import {
     useAutoHelperHealth,
     useAutoHelperStatus,
@@ -46,8 +45,6 @@ import {
     useStopMail,
     useGCStatus,
     useRunGC,
-    usePairAutoHelper,
-    useUnpairAutoHelper,
 } from '../../api/hooks/autohelper';
 import { toast } from '../../stores/toastStore';
 import { Badge, Button, TextInput, Toggle } from '@autoart/ui';
@@ -141,24 +138,14 @@ function SmallButton({
 // ============================================================================
 
 function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean } }) {
-    const generateCode = useGeneratePairingCode();
     const pairAutoHelper = usePairAutoHelper();
     const unpairAutoHelper = useUnpairAutoHelper();
-    const disconnectAutoHelper = useDisconnectAutoHelper();
-    const { data: instanceData } = useAutoHelperInstances();
-    const queryClient = useQueryClient();
     const [error, setError] = useState<string | null>(null);
-
-    const isPairing = generateCode.isPending || pairAutoHelper.isPending;
-    const isUnpairing = unpairAutoHelper.isPending || disconnectAutoHelper.isPending;
 
     const handlePair = useCallback(async () => {
         setError(null);
         try {
-            // 1. Generate code from the backend
-            const { code } = await generateCode.mutateAsync();
-            // 2. Send code to the AutoHelper Python service
-            const result = await pairAutoHelper.mutateAsync(code);
+            const result = await pairAutoHelper.mutateAsync();
             if (result.paired) {
                 toast.success('AutoHelper paired');
             } else {
@@ -171,25 +158,17 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
             setError(msg);
             toast.error(msg);
         }
-    }, [generateCode, pairAutoHelper]);
+    }, [pairAutoHelper]);
 
     const handleUnpair = useCallback(async () => {
         try {
-            // Disconnect all instances on the backend
-            const instances = instanceData?.instances ?? [];
-            for (const inst of instances) {
-                await disconnectAutoHelper.mutateAsync(inst.displayId);
-            }
-            // Tell the Python app to clear its session
             await unpairAutoHelper.mutateAsync();
-            queryClient.invalidateQueries({ queryKey: ['connections'] });
-            queryClient.invalidateQueries({ queryKey: ['connections', 'autohelper'] });
             toast.info('AutoHelper unpaired');
         } catch (err) {
             const msg = err instanceof Error ? err.message : 'Unpair failed';
             toast.error(msg);
         }
-    }, [disconnectAutoHelper, unpairAutoHelper, instanceData, queryClient]);
+    }, [unpairAutoHelper]);
 
     return (
         <CardShell
@@ -211,10 +190,10 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
                     </div>
                     <Button
                         onClick={handleUnpair}
-                        disabled={isUnpairing}
+                        disabled={unpairAutoHelper.isPending}
                         variant="danger"
                         size="xs"
-                        leftSection={isUnpairing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Unplug className="w-3 h-3" />}
+                        leftSection={unpairAutoHelper.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Unplug className="w-3 h-3" />}
                     >
                         Unpair
                     </Button>
@@ -223,10 +202,10 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
                 <div className="space-y-3">
                     <Button
                         onClick={handlePair}
-                        disabled={isPairing}
+                        disabled={pairAutoHelper.isPending}
                         variant="primary"
                         size="sm"
-                        leftSection={isPairing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link className="w-4 h-4" />}
+                        leftSection={pairAutoHelper.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link className="w-4 h-4" />}
                     >
                         Pair
                     </Button>
@@ -238,62 +217,6 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
                     )}
                 </div>
             )}
-        </CardShell>
-    );
-}
-
-function ConnectedInstancesCard() {
-    const { data } = useAutoHelperInstances();
-    const disconnect = useDisconnectAutoHelper();
-    const unpair = useUnpairAutoHelper();
-    const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
-
-    const instances = data?.instances ?? [];
-    if (instances.length === 0) return null;
-
-    const handleDisconnect = useCallback((displayId: string) => {
-        setDisconnectingId(displayId);
-        disconnect.mutate(displayId, {
-            onSuccess: () => {
-                // Fire-and-forget: tell the Python app to clear its session
-                unpair.mutate();
-                toast.info('Instance disconnected');
-            },
-            onSettled: () => {
-                setDisconnectingId(null);
-            },
-        });
-    }, [disconnect, unpair]);
-
-    return (
-        <CardShell
-            icon={<Server className="w-5 h-5 text-[var(--ws-accent)]" />}
-            iconBg="bg-[var(--ws-accent)]/10"
-            title="Connected Instances"
-            badge={<Badge variant="info" size="sm">{instances.length}</Badge>}
-        >
-            <ul className="divide-y divide-ws-panel-border">
-                {instances.map((inst) => (
-                    <li key={inst.displayId} className="flex items-center justify-between py-2 first:pt-0 last:pb-0">
-                        <div className="min-w-0">
-                            <p className="text-sm text-ws-fg font-medium truncate">{inst.instanceName}</p>
-                            <p className="text-xs text-ws-text-secondary">
-                                Connected {new Date(inst.connectedAt).toLocaleDateString()}
-                                {' · '}Last seen {new Date(inst.lastSeen).toLocaleTimeString()}
-                            </p>
-                        </div>
-                        <Button
-                            variant="danger"
-                            size="xs"
-                            onClick={() => handleDisconnect(inst.displayId)}
-                            disabled={disconnect.isPending}
-                            leftSection={disconnectingId === inst.displayId ? <Loader2 className="w-3 h-3 animate-spin" /> : <Unplug className="w-3 h-3" />}
-                        >
-                            Disconnect
-                        </Button>
-                    </li>
-                ))}
-            </ul>
         </CardShell>
     );
 }
@@ -717,14 +640,8 @@ export function AutoHelperSection({
         prevConnected.current = connected;
     }, [autohelperStatus.connected]);
 
-    // Pairing and instance cards always render — they're backend operations,
-    // work regardless of AutoHelper connectivity.
-    const pairingCards = (
-        <>
-            <PairCard autohelperStatus={autohelperStatus} />
-            <ConnectedInstancesCard />
-        </>
-    );
+    // Pairing card always renders — works regardless of AutoHelper connectivity.
+    const pairingCard = <PairCard autohelperStatus={autohelperStatus} />;
 
     if (healthLoading) {
         return (
@@ -733,7 +650,7 @@ export function AutoHelperSection({
                     <h2 className="text-ws-h2 font-semibold text-ws-fg">AutoHelper</h2>
                     <p className="text-sm text-ws-text-secondary mt-1">Local service management</p>
                 </div>
-                {pairingCards}
+                {pairingCard}
                 <div className="flex items-center gap-2 text-ws-muted">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="text-sm">Connecting to AutoHelper...</span>
@@ -749,7 +666,7 @@ export function AutoHelperSection({
                     <h2 className="text-ws-h2 font-semibold text-ws-fg">AutoHelper</h2>
                     <p className="text-sm text-ws-text-secondary mt-1">Local service management</p>
                 </div>
-                {pairingCards}
+                {pairingCard}
                 <div className="bg-[var(--ws-color-warning)]/5 border border-[var(--ws-color-warning)]/20 rounded-xl p-4 flex items-start gap-3">
                     <AlertTriangle className="w-5 h-5 text-[var(--ws-color-warning)] flex-shrink-0 mt-0.5" />
                     <div>
@@ -770,7 +687,7 @@ export function AutoHelperSection({
                 <p className="text-sm text-ws-text-secondary mt-1">Local service management</p>
             </div>
 
-            {pairingCards}
+            {pairingCard}
             <ServiceStatusCard />
             <CollectorCard />
             <MailCard />
