@@ -23,7 +23,7 @@ import urllib.request
 from collections.abc import Callable
 
 import pystray
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageTk
 from pystray import MenuItem as item
 
 from autohelper.gui.popup import open_settings_in_browser
@@ -35,6 +35,11 @@ logger = get_logger(__name__)
 def _show_dialog(title: str, message: str, kind: str = "error") -> None:
     """Show a dialog. Handles Tk boilerplate for Windows focus."""
     root = tk.Tk()
+    # Set AutoHelper smiley as window/taskbar icon
+    icon_image = _make_icon(wearing_hat=False)
+    photo = ImageTk.PhotoImage(icon_image)
+    root.iconphoto(True, photo)
+    root._icon_photo = photo  # Keep reference to prevent GC
     root.deiconify()
     root.attributes("-topmost", True)
     root.focus_force()
@@ -193,6 +198,11 @@ class AutoHelperIcon:
             try:
                 logger.info("Opening pairing dialog...")
                 root = tk.Tk()
+                # Set AutoHelper smiley as window/taskbar icon
+                icon_image = _make_icon(wearing_hat=False)
+                photo = ImageTk.PhotoImage(icon_image)
+                root.iconphoto(True, photo)
+                root._icon_photo = photo  # Keep reference to prevent GC
                 # Windows: briefly show then withdraw to claim focus
                 root.deiconify()
                 root.attributes("-topmost", True)
@@ -264,6 +274,13 @@ class AutoHelperIcon:
                 except Exception as exc:
                     logger.warning("Failed to reinit context service: %s", exc)
 
+                # Start backend poller now that we have a key
+                try:
+                    from autohelper.sync import start_backend_poller
+                    start_backend_poller()
+                except Exception as exc:
+                    logger.warning("Failed to start backend poller: %s", exc)
+
                 self._paired = True
                 if self.icon:
                     self.icon.update_menu()
@@ -300,6 +317,13 @@ class AutoHelperIcon:
             cfg.pop("autoart_session_id", None)  # Clean up legacy
             store.save(cfg)
             reset_settings()
+
+            # Stop backend poller since we're no longer paired
+            try:
+                from autohelper.sync import stop_backend_poller
+                stop_backend_poller()
+            except Exception as exc:
+                logger.warning("Failed to stop backend poller: %s", exc)
 
             # Reinit context service in background
             def reinit():
