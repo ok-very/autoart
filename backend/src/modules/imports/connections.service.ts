@@ -5,7 +5,7 @@
  * Supports per-user credentials with fallback to environment variables.
  */
 
-import { randomBytes, randomInt } from 'crypto';
+import { randomBytes } from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 
 import { db } from '../../db/client.js';
@@ -331,144 +331,57 @@ export async function isProviderConnected(
 }
 
 // ============================================================================
-// AUTOHELPER PAIRING
+// AUTOHELPER LINK KEY
 // ============================================================================
 
-// In-memory store for pairing codes (short-lived, 5 min expiry)
-// In production, use Redis or DB with TTL
-interface PairingCode {
-    code: string;
-    userId: string;
-    createdAt: Date;
-    expiresAt: Date;
-}
-
-const pendingPairingCodes = new Map<string, PairingCode>();
-
-// Session TTL: 24 hours
-const AUTOHELPER_SESSION_TTL_MS = 24 * 60 * 60 * 1000;
-
-// Active sessions (AutoHelper instances connected to this AutoArt)
-interface AutoHelperSession {
-    sessionId: string;
-    displayId: string; // First 8 chars for UI display
-    userId: string;
-    instanceName: string;
-    connectedAt: Date;
-    lastSeen: Date;
-    expiresAt: Date;
-}
-
-const autohelperSessions = new Map<string, AutoHelperSession>();
-
 /**
- * Generate a 6-digit pairing code for AutoHelper connection.
- * Code expires in 5 minutes and is single-use.
+ * Generate a persistent link key for AutoHelper and store it in the DB.
+ * Upserts: if a key already exists for this user, it's replaced.
  */
-export function generatePairingCode(userId: string): { code: string; expiresAt: Date } {
-    // Generate 6-digit numeric code using crypto for security
-    let code: string;
-    let attempts = 0;
-    const maxAttempts = 10;
+export async function generateLinkKey(userId: string): Promise<string> {
+    const key = randomBytes(32).toString('hex');
 
-    // Generate unique code with collision detection
-    do {
-        code = randomInt(100000, 1000000).toString();
-        attempts++;
-    } while (pendingPairingCodes.has(code) && attempts < maxAttempts);
-
-    if (attempts >= maxAttempts && pendingPairingCodes.has(code)) {
-        // Extremely unlikely, but handle gracefully
-        throw new Error('Unable to generate unique pairing code, please try again');
-    }
-
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes
-
-    // Clear any existing codes for this user
-    for (const [existingCode, data] of pendingPairingCodes) {
-        if (data.userId === userId) {
-            pendingPairingCodes.delete(existingCode);
-        }
-    }
-
-    pendingPairingCodes.set(code, {
-        code,
-        userId,
-        createdAt: now,
-        expiresAt,
+    await saveCredential({
+        user_id: userId,
+        provider: 'autohelper',
+        access_token: key,
+        refresh_token: null,
+        expires_at: null,
+        scopes: [],
+        metadata: {},
     });
 
-    return { code, expiresAt };
+    return key;
 }
 
 /**
- * Validate a pairing code and exchange it for a session.
- * Returns session ID on success, null on failure.
+ * Validate a link key and return the associated user ID.
+ * Looks up the key in connection_credentials where provider = 'autohelper'.
  */
-export function validatePairingCode(
-    code: string,
-    instanceName: string = 'AutoHelper'
-): { sessionId: string; userId: string } | null {
-    const pairingData = pendingPairingCodes.get(code);
+export async function validateLinkKey(key: string): Promise<string | null> {
+    const credential = await db
+        .selectFrom('connection_credentials')
+        .select(['user_id'])
+        .where('provider', '=', 'autohelper')
+        .where('access_token', '=', key)
+        .executeTakeFirst();
 
-    if (!pairingData) {
-        return null; // Code not found
-    }
-
-    if (new Date() > pairingData.expiresAt) {
-        pendingPairingCodes.delete(code);
-        return null; // Code expired
-    }
-
-    // Code is valid - consume it (single use)
-    pendingPairingCodes.delete(code);
-
-    // Generate session ID
-    const sessionId = randomBytes(32).toString('hex');
-    const displayId = sessionId.substring(0, 8);
-    const sessionExpiresAt = new Date(Date.now() + AUTOHELPER_SESSION_TTL_MS);
-
-    // Create session
-    const session: AutoHelperSession = {
-        sessionId,
-        displayId,
-        userId: pairingData.userId,
-        instanceName,
-        connectedAt: new Date(),
-        lastSeen: new Date(),
-        expiresAt: sessionExpiresAt,
-    };
-
-    autohelperSessions.set(sessionId, session);
-
-    return { sessionId, userId: pairingData.userId };
+    return credential?.user_id ?? null;
 }
 
 /**
- * Validate a session and return the associated user ID.
+ * Revoke (delete) the AutoHelper link key for a user.
  */
-export function validateSession(sessionId: string): string | null {
-    const session = autohelperSessions.get(sessionId);
-    if (!session) return null;
-
-    // Check session expiry
-    if (new Date() > session.expiresAt) {
-        autohelperSessions.delete(sessionId);
-        return null;
-    }
-
-    // Update last seen
-    session.lastSeen = new Date();
-    return session.userId;
+export async function revokeLinkKey(userId: string): Promise<void> {
+    await deleteCredential(userId, 'autohelper');
 }
 
 /**
- * Get Monday API token for a trusted AutoHelper session.
- * This proxies credentials without exposing them to the client.
+ * Get Monday API token for a trusted AutoHelper link key.
+ * Validates the key, then proxies the Monday token for the associated user.
  */
-export async function getProxiedMondayToken(sessionId: string): Promise<string | null> {
-    const userId = validateSession(sessionId);
+export async function getProxiedMondayToken(key: string): Promise<string | null> {
+    const userId = await validateLinkKey(key);
     if (!userId) return null;
 
     try {
@@ -476,75 +389,4 @@ export async function getProxiedMondayToken(sessionId: string): Promise<string |
     } catch {
         return null;
     }
-}
-
-/**
- * List connected AutoHelper instances for a user.
- * Filters out and deletes expired sessions inline.
- */
-export function getAutoHelperSessions(userId: string): AutoHelperSession[] {
-    const now = new Date();
-    const sessions: AutoHelperSession[] = [];
-    for (const [id, session] of autohelperSessions) {
-        if (now > session.expiresAt) {
-            autohelperSessions.delete(id);
-            continue;
-        }
-        if (session.userId === userId) {
-            sessions.push(session);
-        }
-    }
-    return sessions;
-}
-
-/**
- * Disconnect an AutoHelper session.
- */
-export function disconnectAutoHelper(sessionId: string): boolean {
-    return autohelperSessions.delete(sessionId);
-}
-
-/**
- * Get a session by display ID for a specific user.
- * Returns the full session if found and owned by user, null otherwise.
- */
-export function getSessionByDisplayId(userId: string, displayId: string): AutoHelperSession | null {
-    for (const session of autohelperSessions.values()) {
-        if (session.userId === userId && session.displayId === displayId) {
-            return session;
-        }
-    }
-    return null;
-}
-
-/**
- * Cleanup expired pairing codes.
- * Call periodically to prevent memory growth.
- */
-export function cleanupExpiredPairingCodes(): number {
-    const now = new Date();
-    let cleaned = 0;
-    for (const [code, data] of pendingPairingCodes.entries()) {
-        if (now > data.expiresAt) {
-            pendingPairingCodes.delete(code);
-            cleaned++;
-        }
-    }
-    return cleaned;
-}
-
-/**
- * Cleanup expired AutoHelper sessions.
- * Call periodically to prevent memory growth.
- */
-export function cleanupExpiredAutohelperSessions(): number {
-    const now = new Date();
-    let cleaned = 0;
-    for (const [id, session] of autohelperSessions.entries()) {
-        if (now > session.expiresAt) {
-            autohelperSessions.delete(id);
-            cleaned++;
-        }
-    }
-    return cleaned;
 }

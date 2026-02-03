@@ -41,17 +41,16 @@ export async function connectionsRoutes(app: FastifyInstance) {
             connectionsService.isProviderConnected(userId ?? null, 'google'),
         ]);
 
-        // Check AutoHelper connections for this user
-        const autohelperSessions = userId
-            ? connectionsService.getAutoHelperSessions(userId)
-            : [];
+        // Check if AutoHelper has a link key for this user
+        const autohelperConnected = userId
+            ? await connectionsService.isProviderConnected(userId, 'autohelper')
+            : false;
 
         return reply.send({
             monday: { connected: mondayConnected },
             google: { connected: googleConnected },
             autohelper: {
-                connected: autohelperSessions.length > 0,
-                instanceCount: autohelperSessions.length,
+                connected: autohelperConnected,
             },
         });
     });
@@ -454,12 +453,13 @@ export async function connectionsRoutes(app: FastifyInstance) {
     });
 
     // ============================================================================
-    // AUTOHELPER PAIRING ENDPOINTS
+    // AUTOHELPER LINK KEY ENDPOINTS
     // ============================================================================
 
     /**
-     * Generate pairing code for AutoHelper connection
-     * Requires authentication - code is tied to current user
+     * Generate a persistent link key for AutoHelper.
+     * Requires authentication — key is tied to current user.
+     * Upserts: calling again replaces any existing key.
      */
     app.post('/connections/autohelper/pair', {
         preHandler: app.authenticate
@@ -469,60 +469,27 @@ export async function connectionsRoutes(app: FastifyInstance) {
             return reply.status(401).send({ error: 'Authentication required' });
         }
 
-        const { code, expiresAt } = connectionsService.generatePairingCode(userId);
+        const key = await connectionsService.generateLinkKey(userId);
 
-        return reply.send({
-            code,
-            expiresAt: expiresAt.toISOString(),
-            expiresInSeconds: 300, // 5 minutes
-        });
+        return reply.send({ key });
     });
 
     /**
-     * AutoHelper handshake - exchange pairing code for session
-     * No auth required - AutoHelper uses pairing code as proof
-     */
-    app.post('/connections/autohelper/handshake', async (request, reply) => {
-        const body = request.body as { code?: string; instanceName?: string };
-
-        if (!body.code) {
-            return reply.status(400).send({ error: 'Pairing code is required' });
-        }
-
-        const result = connectionsService.validatePairingCode(
-            body.code,
-            body.instanceName || 'AutoHelper'
-        );
-
-        if (!result) {
-            return reply.status(401).send({
-                error: 'Invalid or expired pairing code',
-                message: 'Please generate a new code in AutoArt Settings'
-            });
-        }
-
-        return reply.send({
-            sessionId: result.sessionId,
-            message: 'Connected successfully'
-        });
-    });
-
-    /**
-     * Get proxied credentials for trusted AutoHelper session
-     * Returns Monday API token (single source of truth)
+     * Get proxied credentials for a trusted AutoHelper link key.
+     * Returns Monday API token (single source of truth).
      */
     app.get('/connections/autohelper/credentials', async (request, reply) => {
-        const sessionId = (request.headers['x-autohelper-session'] as string) || '';
+        const key = (request.headers['x-autohelper-key'] as string) || '';
 
-        if (!sessionId) {
-            return reply.status(401).send({ error: 'Session ID required in X-AutoHelper-Session header' });
+        if (!key) {
+            return reply.status(401).send({ error: 'Link key required in X-AutoHelper-Key header' });
         }
 
-        const mondayToken = await connectionsService.getProxiedMondayToken(sessionId);
+        const mondayToken = await connectionsService.getProxiedMondayToken(key);
 
         if (!mondayToken) {
             return reply.status(401).send({
-                error: 'Invalid session or no Monday token configured',
+                error: 'Invalid key or no Monday token configured',
                 message: 'Re-pair with AutoArt or ensure Monday is connected'
             });
         }
@@ -533,94 +500,21 @@ export async function connectionsRoutes(app: FastifyInstance) {
     });
 
     /**
-     * Self-disconnect — AutoHelper invalidates its own session
-     * Uses session auth (X-AutoHelper-Session), not user auth
+     * Revoke the AutoHelper link key for the current user.
+     * Requires authentication.
      */
-    app.post('/connections/autohelper/disconnect', async (request, reply) => {
-        const sessionId = (request.headers['x-autohelper-session'] as string) || '';
-
-        if (!sessionId) {
-            return reply.status(401).send({ error: 'Session ID required in X-AutoHelper-Session header' });
-        }
-
-        const userId = connectionsService.validateSession(sessionId);
+    app.delete('/connections/autohelper', {
+        preHandler: app.authenticate
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
         if (!userId) {
-            // Session already gone or expired — still a success from the caller's perspective
-            return reply.send({ disconnected: true });
+            return reply.status(401).send({ error: 'Authentication required' });
         }
 
-        connectionsService.disconnectAutoHelper(sessionId);
+        await connectionsService.revokeLinkKey(userId);
+
         return reply.send({ disconnected: true });
     });
-
-    /**
-     * List connected AutoHelper instances
-     * Requires authentication
-     */
-    app.get('/connections/autohelper', {
-        preHandler: app.authenticate
-    }, async (request, reply) => {
-        const userId = (request.user as { userId?: string })?.userId;
-        if (!userId) {
-            return reply.status(401).send({ error: 'Authentication required' });
-        }
-
-        const sessions = connectionsService.getAutoHelperSessions(userId);
-
-        return reply.send({
-            connected: sessions.length > 0,
-            instances: sessions.map(s => ({
-                displayId: s.displayId,
-                instanceName: s.instanceName,
-                connectedAt: s.connectedAt.toISOString(),
-                lastSeen: s.lastSeen.toISOString(),
-            })),
-        });
-    });
-
-    /**
-     * Disconnect AutoHelper instance
-     * Requires authentication and verifies session ownership
-     */
-    app.delete('/connections/autohelper/:displayId', {
-        preHandler: app.authenticate
-    }, async (request, reply) => {
-        const userId = (request.user as { userId?: string })?.userId;
-        if (!userId) {
-            return reply.status(401).send({ error: 'Authentication required' });
-        }
-
-        const { displayId } = request.params as { displayId: string };
-
-        // Look up session by displayId and verify ownership
-        const session = connectionsService.getSessionByDisplayId(userId, displayId);
-
-        if (!session) {
-            return reply.status(404).send({
-                error: 'Session not found',
-                message: 'Session not found or you do not have permission to disconnect it'
-            });
-        }
-
-        // Session is verified to belong to this user, disconnect it
-        const success = connectionsService.disconnectAutoHelper(session.sessionId);
-
-        return reply.send({
-            disconnected: success,
-            message: success ? 'AutoHelper disconnected' : 'Failed to disconnect'
-        });
-    });
-
-    // ── Periodic cleanup ─────────────────────────────────────────────
-    // Sweep expired sessions and pairing codes every 60 s to bound
-    // memory growth from entries that nobody queries.
-    const CLEANUP_INTERVAL_MS = 60_000;
-    const cleanupTimer = setInterval(() => {
-        connectionsService.cleanupExpiredAutohelperSessions();
-        connectionsService.cleanupExpiredPairingCodes();
-    }, CLEANUP_INTERVAL_MS);
-
-    app.addHook('onClose', () => clearInterval(cleanupTimer));
 }
 
 export default connectionsRoutes;
