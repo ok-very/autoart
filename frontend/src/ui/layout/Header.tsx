@@ -73,6 +73,7 @@ export function Header() {
 
   // Active state derived from open panels - memoized to prevent re-computation
   const panelStates = useMemo(() => {
+    const isProjectActive = openPanelIds.includes('project-panel');
     const isRecordsActive = openPanelIds.includes('records-list');
     const isFieldsActive = openPanelIds.includes('fields-list');
     const isActionsActive = openPanelIds.includes('actions-list');
@@ -83,6 +84,7 @@ export function Header() {
     const isIntakeActive = openPanelIds.includes('intake-workbench');
 
     return {
+      isProjectActive,
       isRecordsActive,
       isFieldsActive,
       isActionsActive,
@@ -97,6 +99,7 @@ export function Header() {
   }, [openPanelIds]);
 
   const {
+    isProjectActive,
     isRecordsActive,
     isFieldsActive,
     isActionsActive,
@@ -153,11 +156,11 @@ export function Header() {
 
           {/* Projects - primary navigation home */}
           <Button
-            variant={location.pathname === '/' ? 'light' : 'subtle'}
+            variant={isProjectActive ? 'light' : 'subtle'}
             color="gray"
             size="sm"
             leftSection={<LayoutGrid size={14} />}
-            onClick={() => { navigate('/'); setCenterContentType('projects'); }}
+            onClick={() => handleOpenPanel('project-panel')}
           >
             Projects
           </Button>
