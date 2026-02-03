@@ -29,6 +29,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
+import { RequestTimeoutError } from '../../api/autohelperClient';
 import { useAutoHelperInstances, useDisconnectAutoHelper, useGeneratePairingCode } from '../../api/connections';
 import {
     useAutoHelperHealth,
@@ -164,7 +165,9 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
                 setError(result.error ?? 'Pairing failed');
             }
         } catch (err) {
-            const msg = err instanceof Error ? err.message : 'Pairing failed — is AutoHelper running?';
+            const msg = err instanceof RequestTimeoutError
+                ? 'AutoHelper not responding — is it running?'
+                : err instanceof Error ? err.message : 'Pairing failed';
             setError(msg);
             toast.error(msg);
         }

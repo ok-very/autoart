@@ -44,10 +44,10 @@ def pair(body: PairRequest) -> PairResponse:
         )
 
         hostname = socket.gethostname()
-        session_id = client.pair_with_code(body.code, instance_name=hostname)
+        session_id, error = client.pair_with_code(body.code, instance_name=hostname)
 
         if not session_id:
-            return PairResponse(paired=False, error="Handshake failed — check the code and try again")
+            return PairResponse(paired=False, error=error or "Handshake failed — check the code and try again")
 
         # Persist to config.json
         store = ConfigStore()
