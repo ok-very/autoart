@@ -2,8 +2,8 @@
  * AutoHelperSection
  *
  * Settings section for operating the AutoHelper service.
- * Five cards: Service Status, Collector, Mail, Roots, Advanced.
- * Shows a connectivity guard if the service is not reachable.
+ * Uses backend bridge for settings/commands (works even when AutoHelper is remote).
+ * Falls back gracefully when AutoHelper is offline.
  */
 
 import {
@@ -24,6 +24,7 @@ import {
     HardDrive,
     Link,
     Unplug,
+    Clock,
 } from 'lucide-react';
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
@@ -31,23 +32,32 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { useClaimPairing, usePairingStatus, useUnpairAutoHelper } from '../../api/connections';
 import {
-    useAutoHelperHealth,
-    useAutoHelperStatus,
-    useAutoHelperConfig,
-    useUpdateAutoHelperConfig,
-    useIndexStatus,
-    useRescanIndex,
-    useRebuildIndex,
-    useRunnerStatus,
-    useInvokeRunner,
-    useMailStatus,
-    useStartMail,
-    useStopMail,
-    useGCStatus,
-    useRunGC,
+    useBridgeSettings,
+    useUpdateBridgeSettings,
+    useBridgeStatus,
+    useQueueCommand,
 } from '../../api/hooks/autohelper';
 import { toast } from '../../stores/toastStore';
 import { Badge, Button, TextInput, Toggle } from '@autoart/ui';
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+function formatLastSeen(lastSeen: string | null): string {
+    if (!lastSeen) return 'Never connected';
+
+    const date = new Date(lastSeen);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+
+    if (diffSec < 10) return 'Just now';
+    if (diffSec < 60) return `${diffSec}s ago`;
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+    return date.toLocaleDateString();
+}
 
 // ============================================================================
 // SUB-COMPONENTS
@@ -133,6 +143,17 @@ function SmallButton({
     );
 }
 
+/** Shows pending command indicator */
+function PendingCommandBadge({ type, status }: { type: string; status: string }) {
+    const label = status === 'running' ? `Running: ${type}` : `Pending: ${type}`;
+    return (
+        <Badge variant="warning" size="sm" className="gap-1">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            {label}
+        </Badge>
+    );
+}
+
 // ============================================================================
 // CARDS
 // ============================================================================
@@ -149,14 +170,18 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
     // Poll for claim status while showing a code
     const { data: pairingStatus } = usePairingStatus(!!claimCode);
 
-    // When claim is redeemed, clear the code display and invalidate connections
+    // When claim is redeemed, refetch connections then show toast
+    // Clear state immediately to prevent re-triggering from re-renders (e.g., countdown timer)
     useEffect(() => {
         if (pairingStatus?.claimed && claimCode) {
-            queryClient.invalidateQueries({ queryKey: ['connections'] });
+            // Clear state synchronously to prevent effect re-entry
             setClaimCode(null);
             setExpiresAt(null);
             setSecondsLeft(0);
-            toast.success('AutoHelper paired');
+            // Refetch connections so autohelperStatus.connected updates, then toast
+            queryClient.refetchQueries({ queryKey: ['connections'] }).then(() => {
+                toast.success('AutoHelper paired');
+            });
         }
     }, [pairingStatus?.claimed, claimCode, queryClient]);
 
@@ -172,12 +197,11 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
                 toast.warning('Pairing code expired');
             }
         };
-        updateCountdown(); // Initial call
+        updateCountdown();
         const interval = setInterval(updateCountdown, 1000);
         return () => clearInterval(interval);
     }, [expiresAt]);
 
-    // Format seconds as MM:SS
     const formatTime = (seconds: number): string => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -284,11 +308,7 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button
-                            onClick={handleCancel}
-                            variant="secondary"
-                            size="xs"
-                        >
+                        <Button onClick={handleCancel} variant="secondary" size="xs">
                             Cancel
                         </Button>
                         <span className="text-xs text-ws-muted">
@@ -316,22 +336,51 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
     );
 }
 
-function ServiceStatusCard() {
-    const { data: status } = useAutoHelperStatus();
-    const { data: indexStatus } = useIndexStatus();
-    const rescan = useRescanIndex();
-    const rebuild = useRebuildIndex();
+function ServiceStatusCard({ lastSeen }: { lastSeen: string | null }) {
+    const { data: bridgeStatus } = useBridgeStatus();
+    const queueCommand = useQueueCommand();
+
     const [confirmRebuild, setConfirmRebuild] = useState(false);
 
+    const status = bridgeStatus?.status;
     const dbOk = status?.database?.connected ?? false;
+    const isOnline = lastSeen && (Date.now() - new Date(lastSeen).getTime()) < 30000;
+
+    // Check for pending index commands
+    const pendingIndexCmd = bridgeStatus?.pendingCommands?.find(
+        c => c.type === 'rescan_index' || c.type === 'rebuild_index'
+    );
+
+    const handleRescan = useCallback(() => {
+        queueCommand.mutate({ commandType: 'rescan_index' });
+        toast.info('Rescan queued');
+    }, [queueCommand]);
+
+    const handleRebuild = useCallback(() => {
+        queueCommand.mutate({ commandType: 'rebuild_index' });
+        setConfirmRebuild(false);
+        toast.info('Rebuild queued');
+    }, [queueCommand]);
 
     return (
         <CardShell
             icon={<Server className="w-5 h-5 text-[var(--ws-accent)]" />}
             iconBg="bg-[var(--ws-accent)]/10"
             title="Service Status"
-            badge={<StatusBadge ok={dbOk} label={dbOk ? 'Connected' : 'DB offline'} />}
+            badge={
+                pendingIndexCmd ? (
+                    <PendingCommandBadge type={pendingIndexCmd.type} status={pendingIndexCmd.status} />
+                ) : (
+                    <StatusBadge ok={dbOk} label={dbOk ? 'Connected' : 'DB offline'} />
+                )
+            }
         >
+            <FieldRow label="Last seen">
+                <span className={`text-sm ${isOnline ? 'text-[var(--ws-color-success)]' : 'text-ws-text-secondary'}`}>
+                    <Clock className="w-3 h-3 inline mr-1" />
+                    {formatLastSeen(lastSeen)}
+                </span>
+            </FieldRow>
             <FieldRow label="Database">
                 <span className="text-sm text-ws-fg">{status?.database?.path ?? '—'}</span>
             </FieldRow>
@@ -340,18 +389,18 @@ function ServiceStatusCard() {
             </FieldRow>
             <FieldRow label="Indexed files">
                 <span className="text-sm text-ws-fg">
-                    {indexStatus?.total_files != null ? indexStatus.total_files.toLocaleString() : '—'}
+                    {status?.index?.total_files != null ? status.index.total_files.toLocaleString() : '—'}
                 </span>
             </FieldRow>
             <FieldRow label="Last index run">
-                <span className="text-sm text-ws-fg">{indexStatus?.last_run ?? '—'}</span>
+                <span className="text-sm text-ws-fg">{status?.index?.last_run ?? '—'}</span>
             </FieldRow>
 
             <div className="flex gap-2 pt-2">
                 <SmallButton
-                    onClick={() => rescan.mutate()}
-                    loading={rescan.isPending}
-                    disabled={rescan.isPending}
+                    onClick={handleRescan}
+                    loading={queueCommand.isPending}
+                    disabled={!!pendingIndexCmd}
                 >
                     <RefreshCw className="w-3 h-3" /> Rescan
                 </SmallButton>
@@ -359,20 +408,14 @@ function ServiceStatusCard() {
                     <SmallButton
                         onClick={() => setConfirmRebuild(true)}
                         variant="danger"
+                        disabled={!!pendingIndexCmd}
                     >
                         <Trash2 className="w-3 h-3" /> Rebuild
                     </SmallButton>
                 ) : (
                     <div className="flex items-center gap-2">
                         <span className="text-xs text-[var(--ws-color-error)]">Rebuild entire index?</span>
-                        <SmallButton
-                            onClick={() => {
-                                rebuild.mutate();
-                                setConfirmRebuild(false);
-                            }}
-                            loading={rebuild.isPending}
-                            variant="danger"
-                        >
+                        <SmallButton onClick={handleRebuild} variant="danger">
                             Confirm
                         </SmallButton>
                         <SmallButton onClick={() => setConfirmRebuild(false)}>
@@ -386,10 +429,10 @@ function ServiceStatusCard() {
 }
 
 function CollectorCard() {
-    const { data: config } = useAutoHelperConfig();
-    const updateConfig = useUpdateAutoHelperConfig();
-    const invoke = useInvokeRunner();
-    const { data: runnerStatus } = useRunnerStatus();
+    const { data: bridgeSettings } = useBridgeSettings();
+    const updateSettings = useUpdateBridgeSettings();
+    const queueCommand = useQueueCommand();
+    const { data: bridgeStatus } = useBridgeStatus();
 
     const [url, setUrl] = useState('');
     const [outputPath, setOutputPath] = useState('');
@@ -402,20 +445,22 @@ function CollectorCard() {
     const [maxFilesize, setMaxFilesize] = useState<number | ''>('');
     const [loaded, setLoaded] = useState(false);
 
-    // Seed local state from config on first load
-    if (config && !loaded) {
-        setCrawlDepth(config.crawl_depth as number ?? 20);
-        setMinWidth(config.min_width as number ?? 100);
-        setMaxWidth(config.max_width as number ?? 5000);
-        setMinHeight(config.min_height as number ?? 100);
-        setMaxHeight(config.max_height as number ?? 5000);
-        setMinFilesize(config.min_filesize_kb as number ?? 100);
-        setMaxFilesize(config.max_filesize_kb as number ?? 12000);
+    const settings = bridgeSettings?.settings;
+
+    // Seed local state from settings on first load
+    if (settings && !loaded) {
+        setCrawlDepth(settings.crawl_depth ?? 20);
+        setMinWidth(settings.min_width ?? 100);
+        setMaxWidth(settings.max_width ?? 5000);
+        setMinHeight(settings.min_height ?? 100);
+        setMaxHeight(settings.max_height ?? 5000);
+        setMinFilesize(settings.min_filesize_kb ?? 100);
+        setMaxFilesize(settings.max_filesize_kb ?? 12000);
         setLoaded(true);
     }
 
     const handleSave = useCallback(() => {
-        updateConfig.mutate({
+        updateSettings.mutate({
             crawl_depth: crawlDepth || 20,
             min_width: minWidth || 100,
             max_width: maxWidth || 5000,
@@ -424,21 +469,33 @@ function CollectorCard() {
             min_filesize_kb: minFilesize || 100,
             max_filesize_kb: maxFilesize || 12000,
         });
-    }, [updateConfig, crawlDepth, minWidth, maxWidth, minHeight, maxHeight, minFilesize, maxFilesize]);
+        toast.success('Settings saved');
+    }, [updateSettings, crawlDepth, minWidth, maxWidth, minHeight, maxHeight, minFilesize, maxFilesize]);
 
     const handleRun = useCallback(() => {
         if (!url.trim()) return;
-        invoke.mutate({ url: url.trim(), output_path: outputPath || undefined });
-    }, [invoke, url, outputPath]);
+        queueCommand.mutate({
+            commandType: 'run_collector',
+            payload: { url: url.trim(), output_path: outputPath || undefined },
+        });
+        toast.info('Collector queued');
+    }, [queueCommand, url, outputPath]);
 
-    const active = runnerStatus?.active ?? false;
+    const active = bridgeStatus?.status?.runner?.active ?? false;
+    const pendingCollectorCmd = bridgeStatus?.pendingCommands?.find(c => c.type === 'run_collector');
 
     return (
         <CardShell
             icon={<FolderSearch className="w-5 h-5 text-[var(--ws-color-warning)]" />}
             iconBg="bg-[var(--ws-color-warning)]/10"
             title="Collector"
-            badge={active ? <StatusBadge ok label="Running" /> : undefined}
+            badge={
+                pendingCollectorCmd ? (
+                    <PendingCommandBadge type="collector" status={pendingCollectorCmd.status} />
+                ) : active ? (
+                    <StatusBadge ok label="Running" />
+                ) : undefined
+            }
         >
             <FieldRow label="URL">
                 <TextInput
@@ -489,66 +546,76 @@ function CollectorCard() {
             </div>
 
             <div className="flex gap-2 pt-2">
-                <SmallButton onClick={handleSave} loading={updateConfig.isPending} variant="default">
+                <SmallButton onClick={handleSave} loading={updateSettings.isPending} variant="default">
                     Save Settings
                 </SmallButton>
                 <SmallButton
                     onClick={handleRun}
-                    loading={invoke.isPending}
-                    disabled={!url.trim() || invoke.isPending}
+                    loading={queueCommand.isPending}
+                    disabled={!url.trim() || !!pendingCollectorCmd || active}
                     variant="primary"
                 >
                     <Play className="w-3 h-3" /> Run Collector
                 </SmallButton>
             </div>
-
-            {invoke.isSuccess && (
-                <p className={`text-xs ${invoke.data?.success ? 'text-[var(--ws-color-success)]' : 'text-[var(--ws-color-error)]'}`}>
-                    {invoke.data?.success
-                        ? `Done — ${invoke.data.artifacts?.length ?? 0} artifacts collected`
-                        : `Failed: ${invoke.data?.error ?? 'unknown error'}`}
-                </p>
-            )}
-            {invoke.isError && (
-                <p className="text-xs text-[var(--ws-color-error)]">Error: {(invoke.error as Error).message}</p>
-            )}
         </CardShell>
     );
 }
 
 function MailCard() {
-    const { data: mailStatus } = useMailStatus();
-    const { data: config } = useAutoHelperConfig();
-    const updateConfig = useUpdateAutoHelperConfig();
-    const startMail = useStartMail();
-    const stopMail = useStopMail();
+    const { data: bridgeSettings } = useBridgeSettings();
+    const { data: bridgeStatus } = useBridgeStatus();
+    const updateSettings = useUpdateBridgeSettings();
+    const queueCommand = useQueueCommand();
 
-    const [pollInterval, setPollInterval] = useState<number | ''>(
-        (config?.mail_poll_interval as number) ?? 30,
-    );
+    const settings = bridgeSettings?.settings;
+    const status = bridgeStatus?.status;
+
+    const [pollInterval, setPollInterval] = useState<number | ''>(settings?.mail_poll_interval ?? 30);
     const [localEnabled, setLocalEnabled] = useState<boolean | null>(null);
 
-    const enabled = localEnabled ?? mailStatus?.enabled ?? false;
-    const running = mailStatus?.running ?? false;
+    const enabled = localEnabled ?? settings?.mail_enabled ?? false;
+    const running = status?.mail?.running ?? false;
+
+    const pendingMailCmd = bridgeStatus?.pendingCommands?.find(
+        c => c.type === 'start_mail' || c.type === 'stop_mail'
+    );
 
     const handleToggleEnabled = useCallback((next: boolean) => {
         setLocalEnabled(next);
-        updateConfig.mutate({ mail_enabled: next });
-    }, [updateConfig]);
+        updateSettings.mutate({ mail_enabled: next });
+    }, [updateSettings]);
 
     const handleSave = useCallback(() => {
-        updateConfig.mutate({
+        updateSettings.mutate({
             mail_enabled: enabled,
             mail_poll_interval: pollInterval || 30,
         });
-    }, [updateConfig, enabled, pollInterval]);
+        toast.success('Mail settings saved');
+    }, [updateSettings, enabled, pollInterval]);
+
+    const handleStart = useCallback(() => {
+        queueCommand.mutate({ commandType: 'start_mail' });
+        toast.info('Mail start queued');
+    }, [queueCommand]);
+
+    const handleStop = useCallback(() => {
+        queueCommand.mutate({ commandType: 'stop_mail' });
+        toast.info('Mail stop queued');
+    }, [queueCommand]);
 
     return (
         <CardShell
             icon={<Mail className="w-5 h-5 text-[var(--ws-color-info)]" />}
             iconBg="bg-[var(--ws-color-info)]/10"
             title="Mail"
-            badge={<StatusBadge ok={running} label={running ? 'Running' : 'Stopped'} />}
+            badge={
+                pendingMailCmd ? (
+                    <PendingCommandBadge type={pendingMailCmd.type} status={pendingMailCmd.status} />
+                ) : (
+                    <StatusBadge ok={running} label={running ? 'Running' : 'Stopped'} />
+                )
+            }
         >
             <FieldRow label="Enabled">
                 <Toggle checked={enabled} onChange={handleToggleEnabled} />
@@ -562,23 +629,27 @@ function MailCard() {
                     className="w-24"
                 />
             </FieldRow>
-            <FieldRow label="Output path">
-                <span className="text-sm text-ws-fg truncate block">{mailStatus?.output_path ?? '—'}</span>
-            </FieldRow>
-            <FieldRow label="Ingest path">
-                <span className="text-sm text-ws-fg truncate block">{mailStatus?.ingest_path ?? '—'}</span>
-            </FieldRow>
 
             <div className="flex gap-2 pt-2">
-                <SmallButton onClick={handleSave} loading={updateConfig.isPending}>
+                <SmallButton onClick={handleSave} loading={updateSettings.isPending}>
                     Save
                 </SmallButton>
                 {running ? (
-                    <SmallButton onClick={() => stopMail.mutate()} loading={stopMail.isPending} variant="danger">
+                    <SmallButton
+                        onClick={handleStop}
+                        loading={queueCommand.isPending}
+                        disabled={!!pendingMailCmd}
+                        variant="danger"
+                    >
                         <Square className="w-3 h-3" /> Stop
                     </SmallButton>
                 ) : (
-                    <SmallButton onClick={() => startMail.mutate()} loading={startMail.isPending} variant="primary">
+                    <SmallButton
+                        onClick={handleStart}
+                        loading={queueCommand.isPending}
+                        disabled={!!pendingMailCmd}
+                        variant="primary"
+                    >
                         <Play className="w-3 h-3" /> Start
                     </SmallButton>
                 )}
@@ -588,27 +659,29 @@ function MailCard() {
 }
 
 function RootsCard() {
-    const { data: config } = useAutoHelperConfig();
-    const updateConfig = useUpdateAutoHelperConfig();
+    const { data: bridgeSettings } = useBridgeSettings();
+    const updateSettings = useUpdateBridgeSettings();
     const [newRoot, setNewRoot] = useState('');
 
     const roots: string[] = useMemo(
-        () => (config?.allowed_roots as string[]) ?? [],
-        [config?.allowed_roots],
+        () => bridgeSettings?.settings?.allowed_roots ?? [],
+        [bridgeSettings?.settings?.allowed_roots],
     );
 
     const handleAdd = useCallback(() => {
         const trimmed = newRoot.trim();
         if (!trimmed || roots.includes(trimmed)) return;
-        updateConfig.mutate({ allowed_roots: [...roots, trimmed] });
+        updateSettings.mutate({ allowed_roots: [...roots, trimmed] });
         setNewRoot('');
-    }, [newRoot, roots, updateConfig]);
+        toast.success('Root added');
+    }, [newRoot, roots, updateSettings]);
 
     const handleRemove = useCallback(
         (root: string) => {
-            updateConfig.mutate({ allowed_roots: roots.filter((r) => r !== root) });
+            updateSettings.mutate({ allowed_roots: roots.filter((r) => r !== root) });
+            toast.info('Root removed');
         },
-        [roots, updateConfig],
+        [roots, updateSettings],
     );
 
     return (
@@ -653,10 +726,16 @@ function RootsCard() {
 }
 
 function AdvancedCard() {
-    const { data: status } = useAutoHelperStatus();
-    const { data: config } = useAutoHelperConfig();
-    const { data: gcStatus } = useGCStatus();
-    const runGC = useRunGC();
+    const { data: bridgeStatus } = useBridgeStatus();
+    const queueCommand = useQueueCommand();
+
+    const status = bridgeStatus?.status;
+    const pendingGcCmd = bridgeStatus?.pendingCommands?.find(c => c.type === 'run_gc');
+
+    const handleRunGC = useCallback(() => {
+        queueCommand.mutate({ commandType: 'run_gc' });
+        toast.info('GC queued');
+    }, [queueCommand]);
 
     return (
         <CardShell
@@ -664,18 +743,6 @@ function AdvancedCard() {
             iconBg="bg-[var(--ws-bg)]"
             title="Advanced"
         >
-            <FieldRow label="Host">
-                <span className="text-sm text-ws-fg font-mono">
-                    {(config as Record<string, unknown>)?.host as string ?? '127.0.0.1'}
-                </span>
-            </FieldRow>
-            <FieldRow label="CORS origins">
-                <span className="text-sm text-ws-fg font-mono truncate block">
-                    {Array.isArray((config as Record<string, unknown>)?.cors_origins)
-                        ? ((config as Record<string, unknown>).cors_origins as string[]).join(', ')
-                        : '—'}
-                </span>
-            </FieldRow>
             <FieldRow label="DB path">
                 <span className="text-sm text-ws-fg font-mono truncate block">
                     {status?.database?.path ?? '—'}
@@ -687,22 +754,18 @@ function AdvancedCard() {
                     <div>
                         <p className="text-sm font-medium text-ws-fg">Garbage Collection</p>
                         <p className="text-xs text-ws-text-secondary">
-                            {gcStatus?.enabled ? 'Enabled' : 'Disabled'}
-                            {gcStatus?.last_run ? ` — last run ${gcStatus.last_run}` : ''}
+                            {status?.gc?.enabled ? 'Enabled' : 'Disabled'}
+                            {status?.gc?.last_run ? ` — last run ${status.gc.last_run}` : ''}
                         </p>
                     </div>
-                    <SmallButton onClick={() => runGC.mutate()} loading={runGC.isPending}>
+                    <SmallButton
+                        onClick={handleRunGC}
+                        loading={queueCommand.isPending}
+                        disabled={!!pendingGcCmd}
+                    >
                         Run GC
                     </SmallButton>
                 </div>
-                {runGC.isSuccess && (
-                    <p className="text-xs text-[var(--ws-color-success)] mt-1">GC started</p>
-                )}
-                {runGC.isError && (
-                    <p className="text-xs text-[var(--ws-color-error)] mt-1">
-                        {(runGC.error as Error).message}
-                    </p>
-                )}
             </div>
         </CardShell>
     );
@@ -719,7 +782,10 @@ interface AutoHelperSectionProps {
 export function AutoHelperSection({
     autohelperStatus = { connected: false },
 }: AutoHelperSectionProps) {
-    const { isError: healthError, isLoading: healthLoading } = useAutoHelperHealth();
+    const { data: bridgeStatus, isLoading: statusLoading } = useBridgeStatus({
+        enabled: autohelperStatus.connected,
+        refetchInterval: 5000, // Poll every 5 seconds when connected
+    });
 
     // Toast on pairing status transitions (not on initial load)
     const prevConnected = useRef<boolean | null>(null);
@@ -738,23 +804,8 @@ export function AutoHelperSection({
     // Pairing card always renders — works regardless of AutoHelper connectivity.
     const pairingCard = <PairCard autohelperStatus={autohelperStatus} />;
 
-    if (healthLoading) {
-        return (
-            <div className="space-y-6">
-                <div>
-                    <h2 className="text-ws-h2 font-semibold text-ws-fg">AutoHelper</h2>
-                    <p className="text-sm text-ws-text-secondary mt-1">Local service management</p>
-                </div>
-                {pairingCard}
-                <div className="flex items-center gap-2 text-ws-muted">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-sm">Connecting to AutoHelper...</span>
-                </div>
-            </div>
-        );
-    }
-
-    if (healthError) {
+    // Not paired - show pairing card only
+    if (!autohelperStatus.connected) {
         return (
             <div className="space-y-6">
                 <div>
@@ -765,15 +816,34 @@ export function AutoHelperSection({
                 <div className="bg-[var(--ws-color-warning)]/5 border border-[var(--ws-color-warning)]/20 rounded-xl p-4 flex items-start gap-3">
                     <AlertTriangle className="w-5 h-5 text-[var(--ws-color-warning)] flex-shrink-0 mt-0.5" />
                     <div>
-                        <p className="text-sm font-medium text-ws-fg">AutoHelper is not running</p>
+                        <p className="text-sm font-medium text-ws-fg">AutoHelper is not paired</p>
                         <p className="text-xs text-[var(--ws-color-warning)] mt-1">
-                            Start the service to manage indexing, mail, and collector settings.
+                            Pair AutoHelper to manage settings, indexing, mail, and collector from this dashboard.
                         </p>
                     </div>
                 </div>
             </div>
         );
     }
+
+    // Loading state
+    if (statusLoading) {
+        return (
+            <div className="space-y-6">
+                <div>
+                    <h2 className="text-ws-h2 font-semibold text-ws-fg">AutoHelper</h2>
+                    <p className="text-sm text-ws-text-secondary mt-1">Local service management</p>
+                </div>
+                {pairingCard}
+                <div className="flex items-center gap-2 text-ws-muted">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Loading AutoHelper status...</span>
+                </div>
+            </div>
+        );
+    }
+
+    const lastSeen = bridgeStatus?.lastSeen ?? null;
 
     return (
         <div className="space-y-6">
@@ -783,7 +853,7 @@ export function AutoHelperSection({
             </div>
 
             {pairingCard}
-            <ServiceStatusCard />
+            <ServiceStatusCard lastSeen={lastSeen} />
             <CollectorCard />
             <MailCard />
             <RootsCard />

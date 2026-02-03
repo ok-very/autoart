@@ -20,6 +20,7 @@ from autohelper.modules.export.router import router as export_router
 from autohelper.modules.filetree.router import router as filetree_router
 from autohelper.modules.gc.router import router as gc_router
 from autohelper.modules.gc.scheduler import start_gc_scheduler, stop_gc_scheduler
+from autohelper.sync import start_backend_poller, stop_backend_poller
 
 # Import routers
 from autohelper.modules.health.router import router as health_router
@@ -72,10 +73,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Start GC Scheduler
     start_gc_scheduler()
 
+    # Start Backend Poller (syncs settings with AutoArt backend)
+    start_backend_poller()
+
     yield
 
     # Shutdown
     logger.info("Shutting down AutoHelper...")
+    stop_backend_poller()
     stop_gc_scheduler()
     MailService().stop()
     db = get_db()

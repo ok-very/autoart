@@ -1,10 +1,15 @@
 /**
  * AutoHelper API Hooks
  * React Query hooks for AutoHelper endpoints
+ *
+ * This file contains two sets of hooks:
+ * 1. Direct localhost hooks (legacy, for when AutoHelper is local)
+ * 2. Backend bridge hooks (new, for remote AutoHelper control via backend)
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { api } from '../client';
 import { autohelperApi } from '../autohelperClient';
 
 // ==================== TYPES ====================
@@ -315,6 +320,144 @@ export function useRunGC() {
         mutationFn: () => autohelperApi.post<{ status: string; message: string }>('/gc/run'),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['autohelper-gc-status'] });
+        },
+    });
+}
+
+// ====================================================================================
+// BACKEND BRIDGE HOOKS (New)
+// These route through the AutoArt backend to control AutoHelper remotely
+// ====================================================================================
+
+export interface BridgeSettings {
+    allowed_roots?: string[];
+    excludes?: string[];
+    mail_enabled?: boolean;
+    mail_poll_interval?: number;
+    crawl_depth?: number;
+    min_width?: number;
+    max_width?: number;
+    min_height?: number;
+    max_height?: number;
+    min_filesize_kb?: number;
+    max_filesize_kb?: number;
+}
+
+export interface BridgeSettingsResponse {
+    settings: BridgeSettings;
+    version: number;
+}
+
+export interface BridgeStatusResponse {
+    status: {
+        database?: { connected: boolean; path: string; migration_status: string };
+        roots?: Array<{ path: string; accessible: boolean; file_count?: number }>;
+        runner?: { active: boolean; current_runner?: string };
+        mail?: { enabled: boolean; running: boolean };
+        index?: { status: string; total_files?: number; last_run?: string };
+        gc?: { enabled: boolean; last_run?: string };
+    };
+    lastSeen: string | null;
+    pendingCommands: Array<{ id: string; type: string; status: string }>;
+}
+
+export type CommandType =
+    | 'rescan_index'
+    | 'rebuild_index'
+    | 'run_collector'
+    | 'start_mail'
+    | 'stop_mail'
+    | 'run_gc';
+
+export interface QueueCommandRequest {
+    commandType: CommandType;
+    payload?: {
+        url?: string;
+        output_path?: string;
+    };
+}
+
+export interface CommandResponse {
+    id: string;
+    type: string;
+    status: string;
+    payload?: unknown;
+    result?: unknown;
+    createdAt?: string;
+    acknowledgedAt?: string | null;
+}
+
+/**
+ * Get settings from backend bridge.
+ * Works even when AutoHelper is offline.
+ */
+export function useBridgeSettings() {
+    return useQuery({
+        queryKey: ['autohelper-bridge-settings'],
+        queryFn: () => api.get<BridgeSettingsResponse>('/autohelper/settings'),
+        staleTime: 30_000,
+    });
+}
+
+/**
+ * Update settings via backend bridge.
+ * Settings sync to AutoHelper when it polls.
+ */
+export function useUpdateBridgeSettings() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (settings: Partial<BridgeSettings>) =>
+            api.put<BridgeSettingsResponse>('/autohelper/settings', settings),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['autohelper-bridge-settings'] });
+        },
+    });
+}
+
+/**
+ * Get cached status from backend bridge.
+ * Returns last known status even when AutoHelper is offline.
+ */
+export function useBridgeStatus(options?: { enabled?: boolean; refetchInterval?: number }) {
+    return useQuery({
+        queryKey: ['autohelper-bridge-status'],
+        queryFn: () => api.get<BridgeStatusResponse>('/autohelper/status'),
+        staleTime: 5_000,
+        enabled: options?.enabled ?? true,
+        refetchInterval: options?.refetchInterval,
+    });
+}
+
+/**
+ * Queue a command for AutoHelper execution.
+ * Command executes when AutoHelper polls.
+ */
+export function useQueueCommand() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (request: QueueCommandRequest) =>
+            api.post<CommandResponse>('/autohelper/commands', request),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['autohelper-bridge-status'] });
+        },
+    });
+}
+
+/**
+ * Get command status and result.
+ */
+export function useCommandStatus(commandId: string | null) {
+    return useQuery({
+        queryKey: ['autohelper-command', commandId],
+        queryFn: () => api.get<CommandResponse>(`/autohelper/commands/${commandId}`),
+        enabled: !!commandId,
+        refetchInterval: (query) => {
+            // Stop polling once completed/failed
+            const status = query.state.data?.status;
+            if (status === 'completed' || status === 'failed') {
+                return false;
+            }
+            return 2000; // Poll every 2 seconds while pending/running
         },
     });
 }

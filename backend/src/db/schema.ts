@@ -672,6 +672,43 @@ export interface MailLinksTable {
 export type MailLink = Selectable<MailLinksTable>;
 export type NewMailLink = Insertable<MailLinksTable>;
 
+// ============================================
+// AUTOHELPER TABLES (Migration 054)
+// Settings bridge for remote AutoHelper management
+// ============================================
+
+export interface AutoHelperInstancesTable {
+  id: Generated<string>;
+  user_id: string;
+  settings: Generated<unknown>; // JSONB - AutoHelper config
+  settings_version: Generated<number>;
+  status: Generated<unknown>; // JSONB - cached health/status
+  last_seen: Date | null;
+  created_at: Generated<Date>;
+  updated_at: Generated<Date>;
+}
+
+export type AutoHelperInstance = Selectable<AutoHelperInstancesTable>;
+export type NewAutoHelperInstance = Insertable<AutoHelperInstancesTable>;
+export type AutoHelperInstanceUpdate = Updateable<AutoHelperInstancesTable>;
+
+export type CommandStatus = 'pending' | 'running' | 'completed' | 'failed';
+
+export interface AutoHelperCommandsTable {
+  id: Generated<string>;
+  user_id: string;
+  command_type: string;
+  payload: Generated<unknown>; // JSONB
+  status: Generated<string>; // CommandStatus
+  result: unknown | null; // JSONB
+  created_at: Generated<Date>;
+  acknowledged_at: Date | null;
+}
+
+export type AutoHelperCommand = Selectable<AutoHelperCommandsTable>;
+export type NewAutoHelperCommand = Insertable<AutoHelperCommandsTable>;
+export type AutoHelperCommandUpdate = Updateable<AutoHelperCommandsTable>;
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -709,6 +746,8 @@ export interface Database {
   project_members: ProjectMembersTable;
   mail_messages: MailMessagesTable;
   mail_links: MailLinksTable;
+  autohelper_instances: AutoHelperInstancesTable;
+  autohelper_commands: AutoHelperCommandsTable;
 }
 
 
