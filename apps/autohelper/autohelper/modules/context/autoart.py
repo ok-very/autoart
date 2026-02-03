@@ -202,6 +202,18 @@ class AutoArtClient:
             logger.error(f"Credential fetch failed: {e}")
             return None
 
+    def verify_key(self) -> bool:
+        """Check if the link key is recognized by the backend (no Monday dependency)."""
+        try:
+            response = requests.get(
+                f"{self.api_url}/api/connections/autohelper/verify",
+                headers=self._get_headers(),
+                timeout=10,
+            )
+            return response.status_code == 200
+        except requests.RequestException:
+            return False
+
     # =========================================================================
     # GARBAGE COLLECTION
     # =========================================================================

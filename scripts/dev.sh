@@ -8,7 +8,7 @@
 # Services started:
 #   - Backend API (port 3001)
 #   - Frontend (port 5173)
-#   - AutoHelper Python service (port 8000)
+#   - AutoHelper Python service (port 8100)
 #   - Forms app (port 5174) - optional
 
 set -euo pipefail
