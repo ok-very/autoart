@@ -9,7 +9,6 @@
 import {
     Server,
     Database,
-    FolderSearch,
     RefreshCw,
     Play,
     Square,
@@ -25,6 +24,9 @@ import {
     Link,
     Unplug,
     Clock,
+    Puzzle,
+    Cloud,
+    Monitor,
 } from 'lucide-react';
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
@@ -428,136 +430,128 @@ function ServiceStatusCard({ lastSeen }: { lastSeen: string | null }) {
     );
 }
 
-function CollectorCard() {
-    const { data: bridgeSettings } = useBridgeSettings();
-    const updateSettings = useUpdateBridgeSettings();
-    const queueCommand = useQueueCommand();
+/** Canonical adapter list with backend fallback info */
+const CANONICAL_ADAPTERS = [
+    { name: 'PDF', backendFallback: false },
+    { name: 'DOCX', backendFallback: true },
+    { name: 'CSV', backendFallback: true },
+    { name: 'XLSX', backendFallback: true },
+    { name: 'Web Collector', backendFallback: false },
+    { name: 'Mail Poller', backendFallback: true },
+];
+
+function AdaptersCard({ autohelperOnline }: { autohelperOnline: boolean }) {
     const { data: bridgeStatus } = useBridgeStatus();
 
-    const [url, setUrl] = useState('');
-    const [outputPath, setOutputPath] = useState('');
-    const [crawlDepth, setCrawlDepth] = useState<number | ''>('');
-    const [minWidth, setMinWidth] = useState<number | ''>('');
-    const [maxWidth, setMaxWidth] = useState<number | ''>('');
-    const [minHeight, setMinHeight] = useState<number | ''>('');
-    const [maxHeight, setMaxHeight] = useState<number | ''>('');
-    const [minFilesize, setMinFilesize] = useState<number | ''>('');
-    const [maxFilesize, setMaxFilesize] = useState<number | ''>('');
-    const [loaded, setLoaded] = useState(false);
+    // Get reported adapters from heartbeat, or use defaults when offline
+    const reportedAdapters = bridgeStatus?.status?.adapters ?? [];
 
-    const settings = bridgeSettings?.settings;
+    // Merge canonical list with reported status
+    const adapters = useMemo(() => {
+        return CANONICAL_ADAPTERS.map(canonical => {
+            const reported = reportedAdapters.find(a => a.name === canonical.name);
 
-    // Seed local state from settings on first load
-    if (settings && !loaded) {
-        setCrawlDepth(settings.crawl_depth ?? 20);
-        setMinWidth(settings.min_width ?? 100);
-        setMaxWidth(settings.max_width ?? 5000);
-        setMinHeight(settings.min_height ?? 100);
-        setMaxHeight(settings.max_height ?? 5000);
-        setMinFilesize(settings.min_filesize_kb ?? 100);
-        setMaxFilesize(settings.max_filesize_kb ?? 12000);
-        setLoaded(true);
-    }
+            if (reported) {
+                return {
+                    name: canonical.name,
+                    available: reported.available,
+                    handler: reported.handler,
+                    backendFallback: canonical.backendFallback,
+                };
+            }
 
-    const handleSave = useCallback(() => {
-        updateSettings.mutate({
-            crawl_depth: crawlDepth || 20,
-            min_width: minWidth || 100,
-            max_width: maxWidth || 5000,
-            min_height: minHeight || 100,
-            max_height: maxHeight || 5000,
-            min_filesize_kb: minFilesize || 100,
-            max_filesize_kb: maxFilesize || 12000,
+            // AutoHelper offline — show backend fallback if available
+            if (!autohelperOnline) {
+                return {
+                    name: canonical.name,
+                    available: canonical.backendFallback,
+                    handler: canonical.backendFallback ? 'backend' as const : 'autohelper' as const,
+                    backendFallback: canonical.backendFallback,
+                };
+            }
+
+            // AutoHelper online but adapter not reported — assume unavailable
+            return {
+                name: canonical.name,
+                available: false,
+                handler: 'autohelper' as const,
+                backendFallback: canonical.backendFallback,
+            };
         });
-        toast.success('Settings saved');
-    }, [updateSettings, crawlDepth, minWidth, maxWidth, minHeight, maxHeight, minFilesize, maxFilesize]);
+    }, [reportedAdapters, autohelperOnline]);
 
-    const handleRun = useCallback(() => {
-        if (!url.trim()) return;
-        queueCommand.mutate({
-            commandType: 'run_collector',
-            payload: { url: url.trim(), output_path: outputPath || undefined },
-        });
-        toast.info('Collector queued');
-    }, [queueCommand, url, outputPath]);
-
-    const active = bridgeStatus?.status?.runner?.active ?? false;
-    const pendingCollectorCmd = bridgeStatus?.pendingCommands?.find(c => c.type === 'run_collector');
+    const availableCount = adapters.filter(a => a.available).length;
 
     return (
         <CardShell
-            icon={<FolderSearch className="w-5 h-5 text-[var(--ws-color-warning)]" />}
-            iconBg="bg-[var(--ws-color-warning)]/10"
-            title="Collector"
+            icon={<Puzzle className="w-5 h-5 text-[var(--ws-accent)]" />}
+            iconBg="bg-[var(--ws-accent)]/10"
+            title="Adapters"
             badge={
-                pendingCollectorCmd ? (
-                    <PendingCommandBadge type="collector" status={pendingCollectorCmd.status} />
-                ) : active ? (
-                    <StatusBadge ok label="Running" />
-                ) : undefined
+                <Badge variant="neutral" size="sm">
+                    {availableCount}/{adapters.length} available
+                </Badge>
             }
         >
-            <FieldRow label="URL">
-                <TextInput
-                    type="url"
-                    size="sm"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://example.com/gallery"
-                />
-            </FieldRow>
-            <FieldRow label="Output path">
-                <TextInput
-                    size="sm"
-                    value={outputPath}
-                    onChange={(e) => setOutputPath(e.target.value)}
-                    placeholder="(default)"
-                />
-            </FieldRow>
-            <FieldRow label="Crawl depth">
-                <TextInput
-                    type="number"
-                    size="sm"
-                    value={String(crawlDepth)}
-                    onChange={(e) => setCrawlDepth(e.target.value ? Number(e.target.value) : '')}
-                    className="w-24"
-                />
-            </FieldRow>
+            <p className="text-xs text-ws-text-secondary mb-3">
+                File handlers and services available for processing.
+            </p>
 
-            <div className="grid grid-cols-2 gap-4">
-                <FieldRow label="Min width">
-                    <TextInput type="number" size="sm" value={String(minWidth)} onChange={(e) => setMinWidth(e.target.value ? Number(e.target.value) : '')} className="w-24" />
-                </FieldRow>
-                <FieldRow label="Max width">
-                    <TextInput type="number" size="sm" value={String(maxWidth)} onChange={(e) => setMaxWidth(e.target.value ? Number(e.target.value) : '')} className="w-24" />
-                </FieldRow>
-                <FieldRow label="Min height">
-                    <TextInput type="number" size="sm" value={String(minHeight)} onChange={(e) => setMinHeight(e.target.value ? Number(e.target.value) : '')} className="w-24" />
-                </FieldRow>
-                <FieldRow label="Max height">
-                    <TextInput type="number" size="sm" value={String(maxHeight)} onChange={(e) => setMaxHeight(e.target.value ? Number(e.target.value) : '')} className="w-24" />
-                </FieldRow>
-                <FieldRow label="Min size (KB)">
-                    <TextInput type="number" size="sm" value={String(minFilesize)} onChange={(e) => setMinFilesize(e.target.value ? Number(e.target.value) : '')} className="w-24" />
-                </FieldRow>
-                <FieldRow label="Max size (KB)">
-                    <TextInput type="number" size="sm" value={String(maxFilesize)} onChange={(e) => setMaxFilesize(e.target.value ? Number(e.target.value) : '')} className="w-24" />
-                </FieldRow>
+            <div className="overflow-hidden rounded-lg border border-ws-panel-border">
+                <table className="w-full text-sm">
+                    <thead>
+                        <tr className="bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))]">
+                            <th className="text-left px-3 py-2 font-medium text-ws-text-secondary">Adapter</th>
+                            <th className="text-left px-3 py-2 font-medium text-ws-text-secondary">Status</th>
+                            <th className="text-left px-3 py-2 font-medium text-ws-text-secondary">Handler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {adapters.map((adapter, idx) => (
+                            <tr
+                                key={adapter.name}
+                                className={idx !== adapters.length - 1 ? 'border-b border-ws-panel-border' : ''}
+                            >
+                                <td className="px-3 py-2 text-ws-fg">{adapter.name}</td>
+                                <td className="px-3 py-2">
+                                    {adapter.available ? (
+                                        <span className="inline-flex items-center gap-1 text-[var(--ws-color-success)]">
+                                            <CheckCircle2 className="w-3 h-3" />
+                                            Available
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1 text-ws-text-secondary">
+                                            <XCircle className="w-3 h-3" />
+                                            Unavailable
+                                        </span>
+                                    )}
+                                </td>
+                                <td className="px-3 py-2">
+                                    <span className="inline-flex items-center gap-1 text-ws-text-secondary">
+                                        {adapter.handler === 'autohelper' ? (
+                                            <>
+                                                <Monitor className="w-3 h-3" />
+                                                AutoHelper
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Cloud className="w-3 h-3" />
+                                                Backend
+                                            </>
+                                        )}
+                                    </span>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
 
-            <div className="flex gap-2 pt-2">
-                <SmallButton onClick={handleSave} loading={updateSettings.isPending} variant="default">
-                    Save Settings
-                </SmallButton>
-                <SmallButton
-                    onClick={handleRun}
-                    loading={queueCommand.isPending}
-                    disabled={!url.trim() || !!pendingCollectorCmd || active}
-                    variant="primary"
-                >
-                    <Play className="w-3 h-3" /> Run Collector
-                </SmallButton>
-            </div>
+            {!autohelperOnline && (
+                <p className="text-xs text-ws-muted mt-3">
+                    AutoHelper offline. Backend fallbacks active where available.
+                </p>
+            )}
         </CardShell>
     );
 }
@@ -938,7 +932,7 @@ export function AutoHelperSection({
 
             {pairingCard}
             <ServiceStatusCard lastSeen={lastSeen} />
-            <CollectorCard />
+            <AdaptersCard autohelperOnline={autohelperStatus.connected} />
             <MailCard microsoftConnected={microsoftConnected} />
             <RootsCard />
             <AdvancedCard />

@@ -90,6 +90,15 @@ const HeartbeatSchema = z.object({
         last_run: z.string().nullish(),
       })
       .optional(),
+    adapters: z
+      .array(
+        z.object({
+          name: z.string(),
+          available: z.boolean(),
+          handler: z.enum(['autohelper', 'backend']),
+        })
+      )
+      .optional(),
   }),
 });
 

@@ -348,6 +348,12 @@ export interface BridgeSettingsResponse {
     version: number;
 }
 
+export interface AdapterInfo {
+    name: string;
+    available: boolean;
+    handler: 'autohelper' | 'backend';
+}
+
 export interface BridgeStatusResponse {
     status: {
         database?: { connected: boolean; path: string; migration_status: string };
@@ -356,6 +362,7 @@ export interface BridgeStatusResponse {
         mail?: { enabled: boolean; running: boolean };
         index?: { status: string; total_files?: number; last_run?: string };
         gc?: { enabled: boolean; last_run?: string };
+        adapters?: AdapterInfo[];
     };
     lastSeen: string | null;
     pendingCommands: Array<{ id: string; type: string; status: string }>;

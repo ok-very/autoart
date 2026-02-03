@@ -186,7 +186,63 @@ class BackendPoller:
         except Exception:
             status["gc"] = {"enabled": False}
 
+        # Adapter availability
+        status["adapters"] = self._gather_adapters()
+
         return status
+
+    def _gather_adapters(self) -> list[dict[str, Any]]:
+        """Gather available adapter information."""
+        adapters: list[dict[str, Any]] = []
+
+        # PDF - AutoHelper only (uses pdfplumber)
+        try:
+            import pdfplumber
+            adapters.append({"name": "PDF", "available": True, "handler": "autohelper"})
+        except ImportError:
+            adapters.append({"name": "PDF", "available": False, "handler": "autohelper"})
+
+        # DOCX - backend fallback available
+        try:
+            import docx
+            adapters.append({"name": "DOCX", "available": True, "handler": "autohelper"})
+        except ImportError:
+            adapters.append({"name": "DOCX", "available": True, "handler": "backend"})
+
+        # CSV - backend handles this
+        adapters.append({"name": "CSV", "available": True, "handler": "backend"})
+
+        # XLSX - backend handles this
+        adapters.append({"name": "XLSX", "available": True, "handler": "backend"})
+
+        # Web Collector - AutoHelper only
+        try:
+            from autohelper.modules.runner import get_runner_service
+            from autohelper.modules.runner.types import RunnerId
+
+            runner_svc = get_runner_service()
+            runners = runner_svc.list_runners()
+            has_autocollector = RunnerId.AUTOCOLLECTOR.value in runners
+            adapters.append({"name": "Web Collector", "available": has_autocollector, "handler": "autohelper"})
+        except Exception:
+            adapters.append({"name": "Web Collector", "available": False, "handler": "autohelper"})
+
+        # Mail Poller - AutoHelper with backend MS Graph fallback
+        try:
+            from autohelper.modules.mail import MailService
+
+            mail_svc = MailService()
+            # If mail is running, report as autohelper; otherwise backend may have MS Graph
+            running = mail_svc.is_running()
+            adapters.append({
+                "name": "Mail Poller",
+                "available": True,
+                "handler": "autohelper" if running else "backend",
+            })
+        except Exception:
+            adapters.append({"name": "Mail Poller", "available": True, "handler": "backend"})
+
+        return adapters
 
     def _apply_settings(self, new_settings: dict[str, Any]) -> None:
         """Apply settings from backend to local config."""

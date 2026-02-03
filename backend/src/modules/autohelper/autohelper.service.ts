@@ -31,6 +31,13 @@ export interface AutoHelperSettings {
   max_filesize_kb?: number;
 }
 
+/** Adapter availability info */
+export interface AdapterInfo {
+  name: string;
+  available: boolean;
+  handler: 'autohelper' | 'backend';
+}
+
 /** Status shape stored in autohelper_instances.status */
 export interface AutoHelperStatus {
   database?: { connected: boolean; path: string; migration_status: string };
@@ -39,6 +46,7 @@ export interface AutoHelperStatus {
   mail?: { enabled: boolean; running: boolean };
   index?: { status: string; total_files?: number | null; last_run?: string | null };
   gc?: { enabled: boolean; last_run?: string | null };
+  adapters?: AdapterInfo[];
 }
 
 /** Command types that can be queued */
