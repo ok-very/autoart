@@ -10,6 +10,7 @@
  */
 
 import { clsx } from 'clsx';
+import DOMPurify from 'dompurify';
 
 import {
     Link2,
@@ -228,6 +229,11 @@ function SectionHeader({
     );
 }
 
+const PURIFY_CONFIG = {
+    FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'form'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick'],
+};
+
 /**
  * Email mapping row with expand/collapse and HTML rendering.
  * File-local — only used in ActionMappingsPanel.
@@ -305,11 +311,11 @@ function EmailMappingRow({
                     <div className="px-3 pb-3 pt-1 ml-11 space-y-2">
                         {/* Body content */}
                         {message.body_html ? (
-                            <iframe
-                                srcDoc={message.body_html}
-                                sandbox=""
-                                className="w-full max-h-60 border border-[var(--ws-panel-border)] rounded"
-                                title="Email content"
+                            <div
+                                className="text-xs text-[var(--ws-text-secondary)] max-h-60 overflow-auto [&_*]:max-w-full"
+                                dangerouslySetInnerHTML={{
+                                    __html: DOMPurify.sanitize(message.body_html, PURIFY_CONFIG),
+                                }}
                             />
                         ) : message.body_preview ? (
                             <p className="text-xs text-[var(--ws-text-secondary)] whitespace-pre-line line-clamp-3">
