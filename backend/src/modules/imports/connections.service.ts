@@ -37,6 +37,10 @@ export async function getCredential(
             .where('provider', '=', provider)
             .executeTakeFirst();
 
+        if (provider === 'autohelper') {
+            console.log('[getCredential] autohelper userId=%s found=%s', userId, !!userCred);
+        }
+
         if (userCred) return userCred;
     }
 
@@ -341,6 +345,8 @@ export async function isProviderConnected(
 export async function generateLinkKey(userId: string): Promise<string> {
     const key = randomBytes(32).toString('hex');
 
+    console.log('[generateLinkKey] Creating link key for userId=%s', userId);
+
     await saveCredential({
         user_id: userId,
         provider: 'autohelper',
@@ -350,6 +356,8 @@ export async function generateLinkKey(userId: string): Promise<string> {
         scopes: [],
         metadata: {},
     });
+
+    console.log('[generateLinkKey] Link key saved for userId=%s', userId);
 
     return key;
 }
@@ -374,6 +382,20 @@ export async function validateLinkKey(key: string): Promise<string | null> {
  */
 export async function revokeLinkKey(userId: string): Promise<void> {
     await deleteCredential(userId, 'autohelper');
+}
+
+/**
+ * Revoke (delete) an AutoHelper link key by its value.
+ * Used by AutoHelper self-unpair (tray knows the key, not the userId).
+ */
+export async function revokeLinkKeyByValue(key: string): Promise<boolean> {
+    const result = await db
+        .deleteFrom('connection_credentials')
+        .where('provider', '=', 'autohelper')
+        .where('access_token', '=', key)
+        .executeTakeFirst();
+
+    return Number(result.numDeletedRows) > 0;
 }
 
 /**

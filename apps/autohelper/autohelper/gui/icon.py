@@ -306,13 +306,29 @@ class AutoHelperIcon:
         threading.Thread(target=do_pair, daemon=True).start()
 
     def _on_unpair(self, icon: pystray.Icon, menu_item: pystray.MenuItem) -> None:
-        """Clear the local link key directly (no HTTP round-trip)."""
+        """Revoke the link key on backend, then clear local config."""
         try:
-            from autohelper.config import reset_settings
+            from autohelper.config import get_settings, reset_settings
             from autohelper.config.store import ConfigStore
 
             store = ConfigStore()
             cfg = store.load()
+            link_key = cfg.get("autoart_link_key")
+
+            # Notify backend to revoke the key (best-effort)
+            if link_key:
+                try:
+                    settings = get_settings()
+                    url = f"{settings.autoart_api_url}/api/autohelper/unpair"
+                    req = urllib.request.Request(url, method="DELETE")
+                    req.add_header("x-autohelper-key", link_key)
+                    urllib.request.urlopen(req, timeout=5)
+                    logger.info("Backend notified of unpair")
+                except Exception as exc:
+                    # Don't block local unpair if backend unreachable
+                    logger.warning("Failed to notify backend of unpair: %s", exc)
+
+            # Local cleanup (always, even if backend call failed)
             cfg.pop("autoart_link_key", None)
             cfg.pop("autoart_session_id", None)  # Clean up legacy
             store.save(cfg)

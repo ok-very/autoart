@@ -46,6 +46,9 @@ export async function connectionsRoutes(app: FastifyInstance) {
             ? await connectionsService.isProviderConnected(userId, 'autohelper')
             : false;
 
+        // Debug: log connection check result
+        console.log('[/connections] userId=%s autohelper=%s', userId, autohelperConnected);
+
         return reply.send({
             monday: { connected: mondayConnected },
             google: { connected: googleConnected },
