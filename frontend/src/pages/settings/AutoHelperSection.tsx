@@ -137,7 +137,7 @@ function SmallButton({
 // CARDS
 // ============================================================================
 
-function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean } }) {
+function PairCard({ autohelperStatus, healthOk }: { autohelperStatus: { connected: boolean }; healthOk: boolean }) {
     const pairAutoHelper = usePairAutoHelper();
     const unpairAutoHelper = useUnpairAutoHelper();
     const [error, setError] = useState<string | null>(null);
@@ -182,7 +182,7 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
                 />
             }
         >
-            {autohelperStatus.connected ? (
+            {autohelperStatus.connected && healthOk ? (
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm text-[var(--ws-color-success)]">
                         <CheckCircle2 className="w-4 h-4" />
@@ -197,6 +197,39 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
                     >
                         Unpair
                     </Button>
+                </div>
+            ) : autohelperStatus.connected && !healthOk ? (
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm text-[var(--ws-color-warning)]">
+                        <AlertTriangle className="w-4 h-4" />
+                        Paired on backend, but AutoHelper is not responding
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            onClick={handlePair}
+                            disabled={pairAutoHelper.isPending}
+                            variant="primary"
+                            size="xs"
+                            leftSection={pairAutoHelper.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Link className="w-3 h-3" />}
+                        >
+                            Re-pair
+                        </Button>
+                        <Button
+                            onClick={handleUnpair}
+                            disabled={unpairAutoHelper.isPending}
+                            variant="danger"
+                            size="xs"
+                            leftSection={unpairAutoHelper.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Unplug className="w-3 h-3" />}
+                        >
+                            Unpair
+                        </Button>
+                    </div>
+                    {error && (
+                        <div className="flex items-center gap-2 text-sm text-[var(--ws-color-error)]">
+                            <AlertCircle className="w-4 h-4" />
+                            {error}
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -640,8 +673,10 @@ export function AutoHelperSection({
         prevConnected.current = connected;
     }, [autohelperStatus.connected]);
 
+    const healthOk = !healthError && !healthLoading;
+
     // Pairing card always renders — works regardless of AutoHelper connectivity.
-    const pairingCard = <PairCard autohelperStatus={autohelperStatus} />;
+    const pairingCard = <PairCard autohelperStatus={autohelperStatus} healthOk={healthOk} />;
 
     if (healthLoading) {
         return (

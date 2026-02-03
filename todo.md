@@ -6,15 +6,18 @@
 
 **Active blocking:**
 - **AutoHelper pairing times out** — service is open but pairing request never completes (frontend or AutoHelper service issue)
-
-**Needs manual verification:**
-- Login fails with demo account credentials — `seed:dev` creates the user, but default `db:rebuild` workflow may not
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
 - "Save current" in menu doesn't activate save workspace prompt — handler chain exists, not confirmed working
 - **AutoHelper sessions lost on backend restart** — sessions stored in-memory; backend restart wipes them but AutoHelper tray still shows "Paired" (reads local config). Frontend shows disconnected. Workaround: re-pair or delete `autoart_session_id` from config. Fix: persist to DB. (#340)
+- Fields from seed data rendering as `[object Object]` in tables
+- Subprocesses and stages not populating from seed projections
+- Poll editor missing — "New poll" has no editor attached; clicking existing spawned poll yields full page roundtrip (polls editor shipped in PRs #271-273, possible regression)
+- Finance overlay "client" field breaks when querying contacts — placeholder query not wired
 
 **UX polish:**
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
+- Emoji/icon selector overlay — search doesn't work; consider switching to Phosphor Icons
+- Glassmorphism missing from tab strip where it was implemented — should be doable now with first-class theme variables
 
 **Confirmed resolved (PRs #337-339, #353, #355, #357-359):**
 - ~~Dropdowns rendering transparent backgrounds~~ — arbitrary-value `var()` colors broke under Tailwind v4 oklch pipeline, migrated to theme classes (PR #357)
@@ -54,6 +57,7 @@
 | 237 | Performance Optimization & Caching | Backend + Frontend |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 79 | Enhance Workflow View Interactions | Feature |
+| — | Classification Panel: proper bindings on import | Import |
 
 ---
 
@@ -62,7 +66,8 @@
 | # | Issue | Category |
 |---|-------|----------|
 | 340 | Persist AutoHelper sessions to database (in-memory sessions lost on backend restart) | Backend |
-| 173 | Epic: Finance Management System (Invoices + Budgets + Vendor Bills + Reconciliation) | Epic |
+| — | Forms blocks: proper designs + wire to Fields/records system, submission + completion flow | Intake |
+| 173 | Epic: Finance Management System — rename "client" to "contact"; support progressive billing, budget allocation, developer record emulation | Epic |
 | 182 | Workspace modification tracking and save workflow | Workspace |
 | 180 | Add route/project context to workspace system | Workspace |
 | 179 | Context-driven automatic panel reconciliation | Workspace |
@@ -87,6 +92,7 @@
 | Records view | Align layout with Fields view: definitions filter + search bar, no redundant dropdown title |
 | `packages/ui/src/molecules/SegmentedControl.tsx` | Still using glassmorphism (`bg-[var(--ws-tabstrip-bg,#f1f5f9)]` with translucent styling) — not in DESIGN.md, should be solid background |
 | Intake forms + poll deployments | Need verification: localhost vs production endpoint config (forms and poll submit endpoints may be hardcoded or misconfigured for dev vs prod) |
+| Future outbound subdomains | `polls.autoart.work`, `forms.autoart.work` endpoint routing not wired — debug and configure for dev vs prod |
 | SelectionInspector / Record view | Handle `definition_kind` system for filtering/classification — arrangement vs container vs record kinds should drive what's shown and how |
 | ~~Selection editor / Schema editor~~ | ~~"Quick create" pin toggle removed (PR #339)~~ |
 | Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate — shared field component needs expanded options for where/how combobox is invoked |
