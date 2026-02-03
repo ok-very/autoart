@@ -35,8 +35,11 @@ logger = get_logger(__name__)
 def _show_error(title: str, message: str) -> None:
     """Show an error dialog. Handles Tk boilerplate."""
     root = tk.Tk()
-    root.withdraw()
+    root.deiconify()
     root.attributes("-topmost", True)
+    root.focus_force()
+    root.update_idletasks()
+    root.withdraw()
     messagebox.showerror(title, message, parent=root)
     root.destroy()
 
@@ -153,11 +156,12 @@ class AutoHelperIcon:
         # Run tkinter dialog in a separate thread to avoid blocking pystray
         def do_pair():
             root = tk.Tk()
-            root.withdraw()  # Hide the main window
-
-            # Bring the dialog to the front
+            # Windows: briefly show then withdraw to claim focus
+            root.deiconify()
             root.attributes("-topmost", True)
             root.focus_force()
+            root.update_idletasks()
+            root.withdraw()
 
             code = simpledialog.askstring(
                 "Pair AutoHelper",
