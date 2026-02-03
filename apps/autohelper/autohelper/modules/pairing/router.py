@@ -6,6 +6,8 @@ Note: Pairing now happens via claim token flow — AutoHelper talks directly
 to the backend /pair/redeem endpoint. The tray menu handles the dialog.
 """
 
+import threading
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
@@ -22,6 +24,16 @@ class UnpairResponse(BaseModel):
     paired: bool
 
 
+def _reinit_clients_background() -> None:
+    """Reinit context clients in background thread."""
+    try:
+        from autohelper.modules.context.service import ContextService
+
+        ContextService().reinit_clients()
+    except Exception as exc:
+        logger.warning("Failed to reinit context service after unpair: %s", exc)
+
+
 @router.post("/unpair", response_model=UnpairResponse)
 def unpair() -> UnpairResponse:
     """Clear the local link key."""
@@ -36,12 +48,8 @@ def unpair() -> UnpairResponse:
 
     reset_settings()
 
-    try:
-        from autohelper.modules.context.service import ContextService
-
-        ContextService().reinit_clients()
-    except Exception as exc:
-        logger.warning("Failed to reinit context service after unpair: %s", exc)
+    # Reinit in background to avoid blocking the HTTP response
+    threading.Thread(target=_reinit_clients_background, daemon=True).start()
 
     logger.info("Unpaired via HTTP endpoint")
     return UnpairResponse(paired=False)

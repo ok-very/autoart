@@ -109,13 +109,7 @@ class AutoHelperIcon:
             from autohelper.config.store import ConfigStore
 
             cfg = ConfigStore().load()
-            if cfg.get("autoart_link_key"):
-                return True
-
-            from autohelper.config import get_settings
-
-            settings = get_settings()
-            return bool(getattr(settings, "autoart_link_key", ""))
+            return bool(cfg.get("autoart_link_key"))
         except Exception:
             return False
 
