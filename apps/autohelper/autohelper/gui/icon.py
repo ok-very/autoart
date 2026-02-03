@@ -78,12 +78,30 @@ def _draw_cowboy_hat(dc: ImageDraw.ImageDraw) -> None:
     dc.rectangle([17, 11, 47, 14], fill=_BAND)
 
 
-def _make_icon(wearing_hat: bool = False) -> Image.Image:
+def _draw_glow(image: Image.Image, size: int) -> None:
+    """Draw a radial gradient glow behind the smiley when running."""
+    # Glow color: a soft blue-ish tint over the background
+    glow_center = (80, 120, 180)  # Brighter blue center
+    for y in range(size):
+        for x in range(size):
+            dist = ((x - 32) ** 2 + (y - 32) ** 2) ** 0.5
+            factor = min(1.0, dist / 40)  # Fade to background at radius 40
+            r = int(_BG[0] + (glow_center[0] - _BG[0]) * (1 - factor))
+            g = int(_BG[1] + (glow_center[1] - _BG[1]) * (1 - factor))
+            b = int(_BG[2] + (glow_center[2] - _BG[2]) * (1 - factor))
+            image.putpixel((x, y), (r, g, b))
+
+
+def _make_icon(wearing_hat: bool = False, running: bool = False) -> Image.Image:
     """Render the 64×64 tray icon."""
     size = 64
     image = Image.new("RGB", (size, size), _BG)
-    dc = ImageDraw.Draw(image)
 
+    # Draw glow when running (before the face)
+    if running:
+        _draw_glow(image, size)
+
+    dc = ImageDraw.Draw(image)
     _draw_smiley(dc, size, size)
 
     if wearing_hat:
@@ -238,19 +256,28 @@ class AutoHelperIcon:
         threading.Thread(target=do_pair, daemon=True).start()
 
     def _on_unpair(self, icon: pystray.Icon, menu_item: pystray.MenuItem) -> None:
-        """Hit the local /pair/unpair endpoint to clear session on both sides."""
+        """Clear the local link key directly (no HTTP round-trip)."""
         try:
-            from autohelper.config import get_settings
+            from autohelper.config import reset_settings
+            from autohelper.config.store import ConfigStore
 
-            settings = get_settings()
-            host = settings.host
-            if host in ("0.0.0.0", "::"):
-                host = "127.0.0.1"
-            url = f"http://{host}:{settings.port}/pair/unpair"
-            req = urllib.request.Request(url, data=b"", method="POST")
-            req.add_header("Content-Type", "application/json")
-            with urllib.request.urlopen(req, timeout=5):
-                pass
+            store = ConfigStore()
+            cfg = store.load()
+            cfg.pop("autoart_link_key", None)
+            cfg.pop("autoart_session_id", None)  # Clean up legacy
+            store.save(cfg)
+            reset_settings()
+
+            # Reinit context service in background
+            def reinit():
+                try:
+                    from autohelper.modules.context.service import ContextService
+                    ContextService().reinit_clients()
+                except Exception as exc:
+                    logger.warning("Failed to reinit context service: %s", exc)
+
+            threading.Thread(target=reinit, daemon=True).start()
+
             self._paired = False
             if self.icon:
                 self.icon.update_menu()
@@ -283,7 +310,7 @@ class AutoHelperIcon:
             if active != self._hat_on:
                 self._hat_on = active
                 if self.icon:
-                    self.icon.icon = _make_icon(wearing_hat=active)
+                    self.icon.icon = _make_icon(wearing_hat=active, running=active)
                 menu_dirty = True
 
             paired = self._check_paired()
