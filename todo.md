@@ -105,14 +105,14 @@
 | `apps/autohelper/autohelper/modules/mail/router.py` | `_update_triage` shorthand endpoints (`archive`, `mark-action-required`, `mark-informational`) silently erase existing `triage_notes` when passing `None` — preserve existing notes (CodeAnt #346) |
 | `apps/autohelper/autohelper/modules/mail/schemas.py` | `TriageResponse.triaged_at` typed as `str | None` but `TransientEmail.triaged_at` is `datetime | None` — inconsistent API contract (CodeAnt #346) |
 | `frontend/src/api/types/mail.ts` | Frontend `triage_status` typed as `TriageStatus` union but backend schema is plain `str | None` — type mismatch if backend sends unexpected value (CodeAnt #346) |
-| `frontend/src/api/hooks/mailMessages.ts` | `usePromoteEmail` invalidates `messages()` with no args — filtered queries (project/pagination) stay stale; invalidate `['mailMessages', 'list']` prefix (CodeAnt #347) |
-| `frontend/src/api/hooks/mailMessages.ts` | `useUnlinkEmail` only invalidates generic `mailMessages` key, not specific `links` queries — `useMailLinksForTarget` consumers keep showing removed links (CodeAnt #347) |
+| ~~`frontend/src/api/hooks/mailMessages.ts`~~ | ~~`usePromoteEmail` cache invalidation~~ — fixed to invalidate `['mailMessages', 'list']` prefix |
+| ~~`frontend/src/api/hooks/mailMessages.ts`~~ | ~~`useUnlinkEmail` cache invalidation~~ — fixed to also invalidate links queries |
 | `frontend/src/api/types/mail.ts` | `MailMessage.metadata` typed as `Record<string, unknown>` but backend stores via `JSON.stringify` — could be any JSON value, use `unknown` (CodeAnt #347) |
 | `backend/src/db/migrations/052_mail_messages.ts` | Explicit index on `external_id` redundant (UNIQUE already creates one) — extra write overhead (CodeAnt #348) |
 | `backend/src/db/migrations/052_mail_messages.ts` | Explicit index on `mail_message_id` redundant (composite unique constraint already covers it as leading column) — extra write overhead (CodeAnt #348) |
-| `frontend/src/api/hooks/search.ts` | `useSearch` second param repurposed from `projectId` to `type` — `MentionSuggestion.tsx` still passes project UUID, returns empty results (CodeAnt #349) |
-| `frontend/src/ui/admin/AdminUsersPanel.tsx` | Create-user handler lacks `isPending` guard — rapid Enter presses can fire duplicate create requests (CodeAnt #349) |
-| `frontend/src/ui/admin/AdminUsersPanel.tsx` | Role-change empty `catch` doesn't reopen edit UI after failure when `onBlur` already closed it — suggest `setEditingRole(true)` in catch (CodeAnt #349) |
+| ~~`frontend/src/api/hooks/search.ts`~~ | ~~`useSearch` projectId param~~ — fixed to properly pass projectId to backend |
+| ~~`frontend/src/ui/admin/AdminUsersPanel.tsx`~~ | ~~Create-user `isPending` guard~~ — fixed |
+| ~~`frontend/src/ui/admin/AdminUsersPanel.tsx`~~ | ~~Role-change catch reopen~~ — fixed to call `setEditingRole(true)` |
 | `packages/ui/src/atoms/Button.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes like `bg-ws-panel-bg` (same issue fixed in Menu/Dropdown via PR #357) |
 | `packages/ui/src/atoms/Card.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
 | `packages/ui/src/atoms/Toggle.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
