@@ -29,6 +29,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { buildFieldViewModel, type FieldViewModel, type FieldDefinition, type ProjectState, type EntityContext } from '@autoart/shared/domain';
 
 import type { DataRecord, RecordDefinition, FieldDef } from '../../types';
+import { stringifyFieldValue } from '../../utils/stringifyFieldValue';
 import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
 import { EditableCell } from '../../ui/molecules/EditableCell';
 import { StatusColumnSummary } from '../../ui/molecules/StatusColumnSummary';
@@ -429,7 +430,7 @@ export function DataTableFlat({
                     if (col.key === 'unique_name') return record.unique_name;
                     if (col.key === 'updated_at') return record.updated_at || '';
                     const val = record.data?.[col.key];
-                    return val == null ? null : String(val);
+                    return stringifyFieldValue(val);
                 } : undefined,
                 // cell renderer with EditableCell
                 cell: (row: TableRow) => {

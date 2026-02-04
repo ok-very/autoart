@@ -21,6 +21,7 @@ import { useState, useMemo, useCallback } from 'react';
 import type { Action } from '@autoart/shared';
 
 import type { RecordDefinition } from '../../types';
+import { stringifyFieldValue } from '../../utils/stringifyFieldValue';
 import { UniversalTableCore, makeFlatRowModel, type TableColumn as CoreTableColumn, type TableRow } from '../table-core';
 
 // ==================== TYPES ====================
@@ -223,9 +224,8 @@ export function ActionsTableFlat({
                     // Show first 2 bindings with labels
                     const preview = nonTitleBindings.slice(0, 2).map((b: { fieldKey: string; value?: unknown }) => {
                         const value = b.value;
-                        const displayValue = typeof value === 'string'
-                            ? value.length > 20 ? value.slice(0, 20) + '…' : value
-                            : String(value ?? '');
+                        const str = stringifyFieldValue(value) ?? '';
+                        const displayValue = str.length > 20 ? str.slice(0, 20) + '…' : str;
                         return (
                             <span key={b.fieldKey} className="inline-flex items-center gap-1 mr-2">
                                 <Tag size={10} className="text-ws-muted" />
