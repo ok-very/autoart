@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-03*
+*Last Updated: 2026-02-03 (evening)*
 
 ## Bug List
 
@@ -163,9 +163,6 @@
 
 | PRs | Description |
 |-----|-------------|
-| #360-364 | **AutoHelper Pairing Odyssey:** Replace ephemeral push-to-localhost pattern with claim-token flow — in-memory sessions → persistent link keys, frontend push → user-entered 6-char code w/ TTL, localhost HTTP dependency eliminated; AutoHelper tray menu pairing dialog; validation + timeout fixes; alignment to port 8100 + Vite proxy |
-| #354-356 | Fix theme registry readonly cache mutation; restore DOMPurify for email HTML; propagate AutoHelper pairing errors to frontend |
-| #357-359 | Fix dropdown transparent backgrounds (theme class migration); Projects button spawns panel; Miller Columns project selection |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
 
 ---
@@ -174,6 +171,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **AutoHelper Pairing Odyssey + Bug Fixes:** Replaced push-to-localhost pattern with claim-token flow (in-memory sessions → persistent link keys, 6-char codes w/ TTL); tray menu pairing dialog; port alignment to 8100 + Vite proxy; fixed `is_running()` AttributeError, routed mail/folder controls through backend bridge, explicit Web Collector dependency checks; AdaptersCard showing real capability status | PRs #354-368 (14 PRs) |
 | 83 | Email Section Redesign + Email Logging System: Table atom primitives, body_html capture, MappingsPanel expand/collapse HTML rendering, triage endpoints, mail_messages/mail_links persistence, frontend linking, promoted badges, CodeAnt review fixes | PRs #346-353 |
 | 82a-82e | User Profiles System: schema + role middleware, avatar upload + password change + admin CRUD, account settings UI + admin panel + header avatar, UserChip photo support, project assignment + deactivation reassignment | PRs #341-345 |
 | — | UX polish: Menu/Dropdown `--ws-*` token migration + glassmorphism | PR #337 |
