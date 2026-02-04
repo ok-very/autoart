@@ -190,6 +190,30 @@ gh pr merge <number> --merge
 - NEVER amend pushed commits in a stack
 - NEVER close and recreate PRs to "fix" stack state — use `stackit sync`
 
+### Parallel Stacks (Forks)
+
+**Don't let parallel forks run long without merging.** When `stackit log` shows a fork (two branches sharing a parent), merge the shared base ASAP, then immediately handle the side fork before continuing up the main line.
+
+```
+  ◯ feat/main-work-3
+  │
+  ◯ feat/main-work-2      ← DON'T merge 10 PRs here while ignoring the fork
+  │
+  │  ◯ feat/side-work-2   ← This will diverge and conflict
+  │  │
+  │  ◯ feat/side-work-1
+  │
+  ├──┘
+  ◯ feat/shared-base      ← Merge this, then IMMEDIATELY handle the fork
+  │
+  ◯ main
+```
+
+**If a side fork conflicts after main-line merges:**
+- Close the conflicted PRs rather than fight cascading rebases
+- Re-apply the changes on main with fresh commits
+- Resolving 5+ conflict rounds wastes more time than starting fresh
+
 ### Fixing Review Comments
 
 **Just commit and push normally. Do NOT rebase or force push.**
@@ -318,6 +342,9 @@ worktree:
 | Using `gh pr create` | Use `stackit submit` — it handles stacked PR dependencies |
 | Amending wrong commit | Use `stackit absorb` to auto-route changes to correct commits |
 | Stack out of sync after merge | Run `stackit sync` to cleanup and update trunk |
+| `gh pr edit --base` throws Projects Classic error | Ignore the GraphQL error — the command still works. Verify with `gh pr view --json baseRefName` |
+| Parallel fork diverged too far | Close conflicted PRs and re-apply changes on main. Don't fight cascading rebases |
+| Migration file missing error | Database has migration your branch doesn't. Restore file or `DELETE FROM kysely_migration WHERE name = 'X'` |
 
 ---
 
