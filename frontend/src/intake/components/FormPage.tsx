@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { FormProvider } from 'react-hook-form';
 import { fetchForm, submitForm } from '../api';
@@ -14,7 +14,6 @@ import type { IntakeFormConfig } from '@autoart/shared';
 
 export function FormPage() {
   const { uniqueId } = useParams<{ uniqueId: string }>();
-  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(0);
 
   const {
@@ -49,14 +48,11 @@ export function FormPage() {
     config: config ?? { blocks: [] },
     submitFn: async (data) => {
       const uploadCode = (data.upload_code as string) || `UC-${Date.now()}`;
-      await submitForm(uniqueId!, uploadCode, data);
-    },
-    onSubmitSuccess: () => {
-      navigate(`/${uniqueId}/success`);
+      return await submitForm(uniqueId!, uploadCode, data);
     },
   });
 
-  const { rhf, onSubmit, isSubmitting, submitError, isSubmitted } = formEngine;
+  const { rhf, onSubmit, isSubmitting, submitError, isSubmitted, submissionResult } = formEngine;
 
   // Handle redirect on successful submission
   useEffect(() => {
@@ -64,12 +60,19 @@ export function FormPage() {
       const redirectUrl = config?.settings?.redirectUrl;
       if (redirectUrl) {
         const timer = setTimeout(() => {
-          window.location.href = redirectUrl;
+          // Append record IDs if any were created
+          let finalUrl = redirectUrl;
+          if (submissionResult?.created_records && submissionResult.created_records.length > 0) {
+            const recordIds = submissionResult.created_records.map(r => r.recordId).join(',');
+            const separator = redirectUrl.includes('?') ? '&' : '?';
+            finalUrl = `${redirectUrl}${separator}records=${recordIds}`;
+          }
+          window.location.href = finalUrl;
         }, 2000);
         return () => clearTimeout(timer);
       }
     }
-  }, [isSubmitted, config]);
+  }, [isSubmitted, config, submissionResult]);
 
   // Validation for page navigation
   const validateCurrentPage = async (): Promise<boolean> => {
@@ -128,6 +131,7 @@ export function FormPage() {
     const confirmationMessage = config?.settings?.confirmationMessage
       ?? 'Thank you! Your response has been recorded.';
     const redirectUrl = config?.settings?.redirectUrl;
+    const createdRecords = submissionResult?.created_records;
 
     return (
       <div className="flex items-center justify-center min-h-screen bg-pub-bg">
@@ -139,6 +143,23 @@ export function FormPage() {
           </div>
           <h1 className="text-pub-h1 font-semibold text-pub-fg mb-pub-2">Submitted!</h1>
           <p className="text-pub-text-secondary">{confirmationMessage}</p>
+
+          {/* Created records list */}
+          {createdRecords && createdRecords.length > 0 && (
+            <div className="mt-pub-6 p-pub-4 bg-pub-section-bg rounded-pub-base border border-pub-panel-border text-left">
+              <p className="text-pub-meta text-pub-text-secondary mb-pub-2">
+                {createdRecords.length === 1 ? 'Record created:' : 'Records created:'}
+              </p>
+              <ul className="space-y-1">
+                {createdRecords.map((record) => (
+                  <li key={record.recordId} className="text-pub-body text-pub-fg">
+                    {record.uniqueName}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {redirectUrl && (
             <p className="text-pub-meta text-pub-muted mt-pub-4">Redirecting...</p>
           )}

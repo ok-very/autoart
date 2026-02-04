@@ -79,7 +79,6 @@ plugins: [react(), tailwindcss()]
 
 ## Key Coding Principles
 
-- **No Mantine** - use bespoke atoms/molecules from `ui/atoms/` and `ui/molecules/`
 - **Enforce schema** - Zod validation in `shared/`
 - **Soft-intrinsic types** - derive types from relationships, not explicit checks
 - **Action/Event flow** - all mutations go through Actions which produce Events
