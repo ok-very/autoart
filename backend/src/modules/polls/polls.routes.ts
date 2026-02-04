@@ -185,6 +185,36 @@ export async function pollRoutes(app: FastifyInstance) {
       }
     }
   );
+
+  // Get poll results (authenticated, for poll creator)
+  fastify.get(
+    '/:id/results',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        params: z.object({ id: z.string().uuid() }),
+      },
+    },
+    async (request, reply) => {
+      try {
+        const poll = await pollsService.getPollById(request.params.id);
+        if (!poll) {
+          return reply.code(404).send({ error: 'NOT_FOUND', message: 'Poll not found' });
+        }
+        if (poll.created_by !== request.user!.userId) {
+          return reply.code(403).send({ error: 'FORBIDDEN', message: 'Not authorized to view results' });
+        }
+
+        const results = await pollsService.getResults(poll.id);
+        return reply.send({ results });
+      } catch (err) {
+        if (err instanceof AppError) {
+          return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+        }
+        throw err;
+      }
+    }
+  );
 }
 
 export async function pollPublicRoutes(app: FastifyInstance) {
