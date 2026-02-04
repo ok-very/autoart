@@ -1,4 +1,4 @@
-import { generateUniqueId, RecordBlockSchema, IntakeFormConfigSchema } from '@autoart/shared';
+import { generateUniqueId, IntakeFormConfigSchema } from '@autoart/shared';
 
 import { db } from '../../db/client.js';
 import type {
@@ -251,7 +251,7 @@ export async function getDefinitionForForm(
       ? JSON.parse(definition.schema_config)
       : definition.schema_config;
 
-    fields = schemaConfig?.fields || [];
+    fields = Array.isArray(schemaConfig?.fields) ? schemaConfig.fields : [];
   } catch {
     // Invalid schema_config
     fields = [];
