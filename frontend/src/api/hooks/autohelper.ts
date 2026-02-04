@@ -171,18 +171,45 @@ export function useUpdateAutoHelperConfig() {
 }
 
 /**
- * Open native folder picker dialog on AutoHelper machine.
+ * Open native folder picker dialog on AutoHelper machine via backend bridge.
+ * Queues a select_folder command and polls for result.
  * Returns selected path or null if cancelled.
  */
 export function useSelectFolder() {
+    const qc = useQueryClient();
+
     return useMutation({
-        mutationFn: async () => {
-            const result = await autohelperApi.post<{ path: string | null }>(
-                '/config/select-folder',
-                {},
-                { timeout: 130_000 } // 2+ minutes for user to select
-            );
-            return result.path;
+        mutationFn: async (): Promise<string | null> => {
+            // Queue the select_folder command
+            const cmd = await api.post<CommandResponse>('/autohelper/commands', {
+                commandType: 'select_folder',
+            });
+
+            // Poll for completion (user may take a while to select)
+            const maxWaitMs = 120_000; // 2 minutes
+            const pollIntervalMs = 500;
+            const startTime = Date.now();
+
+            while (Date.now() - startTime < maxWaitMs) {
+                const status = await api.get<CommandResponse>(`/autohelper/commands/${cmd.id}`);
+
+                if (status.status === 'completed') {
+                    const result = status.result as { path?: string | null } | null;
+                    return result?.path ?? null;
+                }
+
+                if (status.status === 'failed') {
+                    throw new Error('Folder selection failed');
+                }
+
+                // Wait before next poll
+                await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+            }
+
+            throw new Error('Folder selection timed out');
+        },
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['autohelper-bridge-status'] });
         },
     });
 }
@@ -391,7 +418,8 @@ export type CommandType =
     | 'run_collector'
     | 'start_mail'
     | 'stop_mail'
-    | 'run_gc';
+    | 'run_gc'
+    | 'select_folder';
 
 export interface QueueCommandRequest {
     commandType: CommandType;

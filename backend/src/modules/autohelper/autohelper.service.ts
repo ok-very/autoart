@@ -56,7 +56,8 @@ export type CommandType =
   | 'run_collector'
   | 'start_mail'
   | 'stop_mail'
-  | 'run_gc';
+  | 'run_gc'
+  | 'select_folder';
 
 /** Payload varies by command type */
 export interface CommandPayload {

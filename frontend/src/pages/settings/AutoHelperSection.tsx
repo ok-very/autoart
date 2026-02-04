@@ -34,13 +34,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useClaimPairing, usePairingStatus, useUnpairAutoHelper } from '../../api/connections';
 import {
     useBridgeSettings,
-    useUpdateBridgeSettings,
     useBridgeStatus,
     useQueueCommand,
     useSelectFolder,
-    useStartMail,
-    useStopMail,
-    useMailStatus,
+    useUpdateBridgeSettings,
 } from '../../api/hooks/autohelper';
 import { toast } from '../../stores/toastStore';
 import { Badge, Button, TextInput, Toggle } from '@autoart/ui';
@@ -582,14 +579,19 @@ function AdaptersCard({ autohelperOnline }: { autohelperOnline: boolean }) {
 }
 
 function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
-    const startMail = useStartMail();
-    const stopMail = useStopMail();
-    const { data: mailStatus, refetch: refetchStatus } = useMailStatus();
+    const { data: bridgeStatus } = useBridgeStatus();
+    const queueCommand = useQueueCommand();
     const updateSettings = useUpdateBridgeSettings();
     const { data: bridgeSettings } = useBridgeSettings();
 
-    const running = mailStatus?.running ?? false;
-    const [connecting, setConnecting] = useState(false);
+    // Get mail status from heartbeat (works even when AutoHelper is remote)
+    const running = bridgeStatus?.status?.mail?.running ?? false;
+    const [actionPending, setActionPending] = useState(false);
+
+    // Check for pending mail commands
+    const pendingMailCmd = bridgeStatus?.pendingCommands?.find(
+        c => c.type === 'start_mail' || c.type === 'stop_mail'
+    );
 
     // Poll interval from settings
     const [pollInterval, setPollInterval] = useState<number | ''>(
@@ -603,31 +605,45 @@ function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
         }
     }, [bridgeSettings?.settings?.mail_poll_interval]);
 
-    // Toggle calls AutoHelper directly
+    // Clear action pending when command completes
+    useEffect(() => {
+        if (!pendingMailCmd && actionPending) {
+            setActionPending(false);
+        }
+    }, [pendingMailCmd, actionPending]);
+
+    // Toggle routes through backend bridge
     const handleToggle = useCallback(async (enable: boolean) => {
-        setConnecting(true);
+        setActionPending(true);
         try {
-            if (enable) {
-                await startMail.mutateAsync();
-                toast.success('Mail service started');
-            } else {
-                await stopMail.mutateAsync();
-                toast.info('Mail service stopped');
-            }
-            // Persist the setting
-            updateSettings.mutate({ mail_enabled: enable });
-            // Refetch to confirm state
-            refetchStatus();
+            // Queue the command - AutoHelper will pick it up on next poll
+            queueCommand.mutate(
+                { commandType: enable ? 'start_mail' : 'stop_mail' },
+                {
+                    onSuccess: () => {
+                        toast.info(enable ? 'Mail start queued' : 'Mail stop queued');
+                        // Persist the setting so it survives restarts
+                        updateSettings.mutate({ mail_enabled: enable });
+                    },
+                    onError: (err) => {
+                        setActionPending(false);
+                        toast.error(
+                            err instanceof Error
+                                ? `Failed: ${err.message}`
+                                : 'Failed to queue mail command'
+                        );
+                    },
+                }
+            );
         } catch (err) {
+            setActionPending(false);
             toast.error(
                 err instanceof Error
-                    ? `Connection failed: ${err.message}`
-                    : 'Failed to connect to AutoHelper'
+                    ? `Failed: ${err.message}`
+                    : 'Failed to queue mail command'
             );
-        } finally {
-            setConnecting(false);
         }
-    }, [startMail, stopMail, updateSettings, refetchStatus]);
+    }, [queueCommand, updateSettings]);
 
     const handlePollIntervalChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value ? Number(e.target.value) : '';
@@ -648,29 +664,33 @@ function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
         }
     }, [savePollInterval]);
 
+    const isActioning = actionPending || !!pendingMailCmd;
+
     return (
         <CardShell
             icon={<Mail className="w-5 h-5 text-[var(--ws-color-info)]" />}
             iconBg="bg-[var(--ws-color-info)]/10"
             title="Mail"
             badge={
-                <Badge variant={running ? 'success' : 'neutral'} size="sm" className="gap-1">
-                    {connecting ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : running ? (
-                        <CheckCircle2 className="w-3 h-3" />
-                    ) : (
-                        <XCircle className="w-3 h-3" />
-                    )}
-                    {connecting ? 'Connecting...' : running ? 'Running' : 'Stopped'}
-                </Badge>
+                pendingMailCmd ? (
+                    <PendingCommandBadge type={pendingMailCmd.type} status={pendingMailCmd.status} />
+                ) : (
+                    <Badge variant={running ? 'success' : 'neutral'} size="sm" className="gap-1">
+                        {running ? (
+                            <CheckCircle2 className="w-3 h-3" />
+                        ) : (
+                            <XCircle className="w-3 h-3" />
+                        )}
+                        {running ? 'Running' : 'Stopped'}
+                    </Badge>
+                )
             }
         >
             <FieldRow label="Mail polling">
                 <Toggle
                     checked={running}
                     onChange={handleToggle}
-                    disabled={connecting}
+                    disabled={isActioning}
                 />
             </FieldRow>
 
@@ -703,7 +723,7 @@ function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
     );
 }
 
-function RootsCard() {
+function RootsCard({ autohelperOnline }: { autohelperOnline: boolean }) {
     const { data: bridgeSettings } = useBridgeSettings();
     const updateSettings = useUpdateBridgeSettings();
     const selectFolder = useSelectFolder();
@@ -775,6 +795,7 @@ function RootsCard() {
     }, [handleAdd]);
 
     const isBusy = updateSettings.isPending || selectFolder.isPending;
+    const browseDisabled = !autohelperOnline || updateSettings.isPending;
 
     return (
         <CardShell
@@ -806,32 +827,41 @@ function RootsCard() {
                 </ul>
             )}
 
-            <div className="flex gap-2">
-                <SmallButton
-                    onClick={handleBrowse}
-                    loading={selectFolder.isPending}
-                    disabled={updateSettings.isPending}
-                >
-                    <FolderOpen className="w-3 h-3" /> Browse
-                </SmallButton>
-                <TextInput
-                    ref={inputRef}
-                    size="sm"
-                    value={newRoot}
-                    onChange={(e) => setNewRoot(e.target.value)}
-                    placeholder="Or type path manually"
-                    onKeyDown={handleKeyDown}
-                    className="flex-1"
-                    autoComplete="off"
-                    disabled={isBusy}
-                />
-                <SmallButton
-                    onClick={handleAdd}
-                    disabled={!newRoot.trim() || isBusy}
-                    loading={updateSettings.isPending && newRoot.trim() !== ''}
-                >
-                    <Plus className="w-3 h-3" /> Add
-                </SmallButton>
+            <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                    <SmallButton
+                        onClick={handleBrowse}
+                        loading={selectFolder.isPending}
+                        disabled={browseDisabled}
+                    >
+                        <FolderOpen className="w-3 h-3" /> Browse
+                    </SmallButton>
+                    {!autohelperOnline && (
+                        <span className="text-xs text-ws-muted self-center">
+                            Start AutoHelper to browse local folders
+                        </span>
+                    )}
+                </div>
+                <div className="flex gap-2 flex-1">
+                    <TextInput
+                        ref={inputRef}
+                        size="sm"
+                        value={newRoot}
+                        onChange={(e) => setNewRoot(e.target.value)}
+                        placeholder="Or type path manually"
+                        onKeyDown={handleKeyDown}
+                        className="flex-1"
+                        autoComplete="off"
+                        disabled={isBusy}
+                    />
+                    <SmallButton
+                        onClick={handleAdd}
+                        disabled={!newRoot.trim() || isBusy}
+                        loading={updateSettings.isPending && newRoot.trim() !== ''}
+                    >
+                        <Plus className="w-3 h-3" /> Add
+                    </SmallButton>
+                </div>
             </div>
         </CardShell>
     );
@@ -959,6 +989,11 @@ export function AutoHelperSection({
 
     const lastSeen = bridgeStatus?.lastSeen ?? null;
 
+    // AutoHelper is "online" if we've heard from it in the last 30 seconds
+    const autohelperOnline = lastSeen
+        ? Date.now() - new Date(lastSeen).getTime() < 30000
+        : false;
+
     return (
         <div className="space-y-6">
             <div>
@@ -968,9 +1003,9 @@ export function AutoHelperSection({
 
             {pairingCard}
             <ServiceStatusCard lastSeen={lastSeen} />
-            <AdaptersCard autohelperOnline={autohelperStatus.connected} />
+            <AdaptersCard autohelperOnline={autohelperOnline} />
             <MailCard microsoftConnected={microsoftConnected} />
-            <RootsCard />
+            <RootsCard autohelperOnline={autohelperOnline} />
             <AdvancedCard />
         </div>
     );

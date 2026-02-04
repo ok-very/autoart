@@ -167,7 +167,7 @@ class BackendPoller:
             mail_svc = MailService()
             status["mail"] = {
                 "enabled": get_settings().mail_enabled,
-                "running": mail_svc.is_running(),
+                "running": mail_svc.running,
             }
         except Exception:
             status["mail"] = {"enabled": False, "running": False}
@@ -215,19 +215,31 @@ class BackendPoller:
         # XLSX - backend handles this
         adapters.append({"name": "XLSX", "available": True, "handler": "backend"})
 
-        # Web Collector - AutoHelper only
-        try:
-            from autohelper.modules.runner import get_runner_service
-            from autohelper.modules.runner.types import RunnerId
+        # Web Collector - check actual dependencies directly
+        web_collector_available = True
+        web_collector_missing: list[str] = []
 
-            runner_svc = get_runner_service()
-            runners = runner_svc.list_runners()
-            logger.debug("Registered runners: %s", runners)
-            has_autocollector = RunnerId.AUTOCOLLECTOR.value in runners
-            adapters.append({"name": "Web Collector", "available": has_autocollector, "handler": "autohelper"})
-        except Exception as e:
-            logger.warning("Web Collector detection failed: %s", e)
-            adapters.append({"name": "Web Collector", "available": False, "handler": "autohelper"})
+        try:
+            import httpx  # noqa: F401
+        except ImportError:
+            web_collector_available = False
+            web_collector_missing.append("httpx")
+
+        try:
+            from bs4 import BeautifulSoup  # noqa: F401
+        except ImportError:
+            web_collector_available = False
+            web_collector_missing.append("beautifulsoup4")
+
+        # lxml is optional, falls back to html.parser
+        if web_collector_missing:
+            logger.warning("Web Collector unavailable, missing: %s", web_collector_missing)
+
+        adapters.append({
+            "name": "Web Collector",
+            "available": web_collector_available,
+            "handler": "autohelper",
+        })
 
         # Mail Poller - AutoHelper with backend MS Graph fallback
         try:
@@ -235,11 +247,10 @@ class BackendPoller:
 
             mail_svc = MailService()
             # If mail is running, report as autohelper; otherwise backend may have MS Graph
-            running = mail_svc.is_running()
             adapters.append({
                 "name": "Mail Poller",
                 "available": True,
-                "handler": "autohelper" if running else "backend",
+                "handler": "autohelper" if mail_svc.running else "backend",
             })
         except Exception:
             adapters.append({"name": "Mail Poller", "available": True, "handler": "backend"})
@@ -282,9 +293,9 @@ class BackendPoller:
 
             mail_svc = MailService()
             new_mail_enabled = new_settings.get("mail_enabled", False)
-            if new_mail_enabled and not mail_svc.is_running():
+            if new_mail_enabled and not mail_svc.running:
                 mail_svc.start()
-            elif not new_mail_enabled and mail_svc.is_running():
+            elif not new_mail_enabled and mail_svc.running:
                 mail_svc.stop()
         except Exception as e:
             logger.warning("Failed to update mail service: %s", e)
@@ -331,6 +342,9 @@ class BackendPoller:
                     success = True
                 elif cmd_type == "run_gc":
                     result = self._cmd_run_gc()
+                    success = True
+                elif cmd_type == "select_folder":
+                    result = self._cmd_select_folder()
                     success = True
                 else:
                     logger.warning("Unknown command type: %s", cmd_type)
@@ -424,6 +438,13 @@ class BackendPoller:
 
         triggered = trigger_gc_now()
         return {"triggered": triggered}
+
+    def _cmd_select_folder(self) -> dict[str, Any]:
+        """Execute select_folder command - opens native folder picker dialog."""
+        from autohelper.modules.config.router import _open_folder_dialog
+
+        path = _open_folder_dialog()
+        return {"path": path}
 
     def _clear_pairing(self) -> None:
         """Clear the local pairing key."""
