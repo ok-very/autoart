@@ -106,7 +106,7 @@ export function useWorkspaceTheme(): WorkspaceThemeModule | undefined {
 /**
  * Get all available themes
  */
-export function useAvailableThemes(): WorkspaceThemeModule[] {
+export function useAvailableThemes(): readonly WorkspaceThemeModule[] {
   return useSyncExternalStore(
     (cb) => workspaceThemeRegistry.subscribe(cb),
     () => workspaceThemeRegistry.list(),
