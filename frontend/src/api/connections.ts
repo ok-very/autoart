@@ -39,8 +39,6 @@ export function useConnections() {
         queryFn: async (): Promise<ConnectionsStatus> => {
             return api.get<ConnectionsStatus>('/connections');
         },
-        // Poll every 5 seconds to detect new AutoHelper connections
-        refetchInterval: 5000,
     });
 }
 
@@ -293,69 +291,58 @@ export function useMondayBoards() {
 }
 
 // ============================================================================
-// AUTOHELPER PAIRING
+// AUTOHELPER LINK KEY
 // ============================================================================
 
-export interface AutoHelperStatus extends ConnectionStatus {
-    instanceCount?: number;
-}
-
-export interface AutoHelperInstance {
-    displayId: string;
-    instanceName: string;
-    connectedAt: string;
-    lastSeen: string;
-}
-
-interface PairingCodeResult {
-    code: string;
-    expiresAt: string;
-    expiresInSeconds: number;
-}
-
-interface AutoHelperListResult {
-    connected: boolean;
-    instances: AutoHelperInstance[];
-}
+export interface AutoHelperStatus extends ConnectionStatus {}
 
 /**
- * Generate a pairing code for AutoHelper connection
+ * Pair AutoHelper: generate a link key on the backend, push it to AutoHelper.
+ * Single-click operation — no codes, no handshakes.
  */
-export function useGeneratePairingCode() {
-    return useMutation({
-        mutationFn: async (): Promise<PairingCodeResult> => {
-            return api.post<PairingCodeResult>('/connections/autohelper/pair', {});
-        },
-    });
-}
-
-/**
- * Get list of connected AutoHelper instances
- */
-export function useAutoHelperInstances() {
-    return useQuery({
-        queryKey: ['connections', 'autohelper'],
-        queryFn: async (): Promise<AutoHelperListResult> => {
-            return api.get<AutoHelperListResult>('/connections/autohelper');
-        },
-        // Poll every 5 seconds to detect new connections from AutoHelper
-        refetchInterval: 5000,
-    });
-}
-
-/**
- * Disconnect an AutoHelper instance
- */
-export function useDisconnectAutoHelper() {
+export function usePairAutoHelper() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (displayId: string): Promise<{ disconnected: boolean }> => {
-            return api.delete<{ disconnected: boolean }>(`/connections/autohelper/${displayId}`);
+        mutationFn: async (): Promise<{ paired: boolean; error?: string }> => {
+            // 1. Generate link key on backend
+            const { key } = await api.post<{ key: string }>('/connections/autohelper/pair', {});
+
+            // 2. Push key to AutoHelper's local HTTP API
+            const { autohelperApi } = await import('./autohelperClient');
+            const result = await autohelperApi.post<{ paired: boolean; error?: string }>(
+                '/pair', { key }
+            );
+
+            return result;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['connections'] });
-            queryClient.invalidateQueries({ queryKey: ['connections', 'autohelper'] });
+        },
+    });
+}
+
+/**
+ * Unpair AutoHelper: tell local service to forget key, then revoke on backend.
+ */
+export function useUnpairAutoHelper() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (): Promise<{ disconnected: boolean }> => {
+            // 1. Tell AutoHelper to clear local key (best-effort)
+            try {
+                const { autohelperApi } = await import('./autohelperClient');
+                await autohelperApi.post('/pair/unpair');
+            } catch {
+                // AutoHelper might not be running — proceed with backend cleanup
+            }
+
+            // 2. Revoke key on backend
+            return api.delete<{ disconnected: boolean }>('/connections/autohelper');
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['connections'] });
         },
     });
 }
