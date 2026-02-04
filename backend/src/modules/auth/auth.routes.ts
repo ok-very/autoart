@@ -4,6 +4,7 @@ import { registerSchema, loginSchema, RegisterInput, LoginInput, RefreshInput } 
 import * as authService from './auth.service.js';
 import * as avatarService from './avatar.service.js';
 import * as microsoftOAuthService from './microsoft-oauth.service.js';
+import * as mondayOAuthService from '../imports/monday-oauth.service.js';
 import * as oauthService from './oauth.service.js';
 import * as settingsService from './settings.service.js';
 import { requireRole } from '../../plugins/requireRole.js';
@@ -394,6 +395,161 @@ export async function authRoutes(fastify: FastifyInstance) {
       });
     } catch (err) {
       if (err instanceof AppError) {
+        return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+      }
+      throw err;
+    }
+  });
+
+  // ============================================================================
+  // MONDAY OAUTH ENDPOINTS
+  // ============================================================================
+
+  // Check if Monday OAuth is available
+  fastify.get('/monday/status', async (_request, reply) => {
+    return reply.send({ available: mondayOAuthService.isMondayOAuthConfigured() });
+  });
+
+  // Initiate Monday OAuth flow
+  // Without auth: login mode (create/find user)
+  // With auth: link mode (connect Monday to existing user)
+  fastify.get('/monday', { preHandler: fastify.authenticateOptional }, async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      if (!mondayOAuthService.isMondayOAuthConfigured()) {
+        return reply.code(501).send({
+          error: 'Monday OAuth not configured',
+          message: 'Set MONDAY_CLIENT_ID and MONDAY_CLIENT_SECRET environment variables'
+        });
+      }
+
+      const userId = (request.user as { userId?: string })?.userId;
+      const { url, state } = mondayOAuthService.getMondayAuthUrl(userId);
+      return reply.send({ url, state });
+    } catch (err) {
+      if (err instanceof AppError) {
+        return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+      }
+      throw err;
+    }
+  });
+
+  // Handle Monday OAuth callback
+  interface MondayCallbackQuery {
+    Querystring: { code?: string; state?: string; error?: string };
+  }
+  fastify.get<MondayCallbackQuery>('/monday/callback', async (request, reply) => {
+    const { code, state, error } = request.query;
+
+    // Helper to send popup close response for link mode
+    const sendPopupResponse = (success: boolean, message?: string) => {
+      const targetOrigin = process.env.CLIENT_ORIGIN;
+
+      if (!targetOrigin) {
+        console.error('Monday OAuth callback: CLIENT_ORIGIN not set');
+        return reply.type('text/html').status(500).send(`
+<!DOCTYPE html>
+<html>
+<head><title>Monday OAuth Error</title></head>
+<body>
+<h1>Configuration Error</h1>
+<p>OAuth callback cannot complete: CLIENT_ORIGIN is not configured.</p>
+</body>
+</html>`);
+      }
+
+      let safeTargetOrigin: string;
+      try {
+        const originUrl = new URL(targetOrigin);
+        const isLocalhost = originUrl.hostname === 'localhost' || originUrl.hostname === '127.0.0.1';
+        if (originUrl.protocol === 'http:' && !isLocalhost) {
+          throw new Error('HTTP only allowed for localhost');
+        }
+        safeTargetOrigin = originUrl.origin;
+      } catch {
+        console.error('Monday OAuth callback: Invalid CLIENT_ORIGIN:', targetOrigin);
+        return reply.type('text/html').status(500).send(`
+<!DOCTYPE html>
+<html>
+<head><title>Monday OAuth Error</title></head>
+<body>
+<h1>Configuration Error</h1>
+<p>OAuth callback cannot complete: CLIENT_ORIGIN is misconfigured.</p>
+</body>
+</html>`);
+      }
+
+      const safeMessage = message ? message.replace(/[<>"'&]/g, c => ({
+        '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;'
+      })[c] || c) : '';
+
+      return reply.type('text/html').send(`
+<!DOCTYPE html>
+<html>
+<head><title>Monday OAuth</title></head>
+<body>
+<script>
+(function() {
+  var targetOrigin = ${JSON.stringify(safeTargetOrigin)};
+  if (window.opener && targetOrigin) {
+    window.opener.postMessage({
+      type: 'monday-oauth-callback',
+      success: ${success},
+      message: ${JSON.stringify(safeMessage)}
+    }, targetOrigin);
+  }
+  window.close();
+})();
+</script>
+<p>${success ? 'Connected! This window will close.' : `Error: ${safeMessage}`}</p>
+</body>
+</html>`);
+    };
+
+    // User denied consent
+    if (error) {
+      const knownErrors: Record<string, string> = {
+        'access_denied': 'Authorization was denied.',
+        'invalid_request': 'Invalid authorization request.',
+        'unauthorized_client': 'This application is not authorized.',
+      };
+      const message = knownErrors[error.toLowerCase()] || 'Authorization failed.';
+      return reply.code(400).send({ error: 'OAUTH_DENIED', message });
+    }
+
+    if (!code || !state) {
+      return reply.code(400).send({ error: 'BAD_REQUEST', message: 'Missing code or state parameter' });
+    }
+
+    try {
+      const result = await mondayOAuthService.handleMondayCallback(code, state);
+
+      // Link mode: return HTML that closes the popup
+      if (result.mode === 'link') {
+        return sendPopupResponse(true, 'Monday account connected successfully');
+      }
+
+      // Login mode: return JSON with session tokens
+      if (!result.user) {
+        return reply.code(500).send({ error: 'INTERNAL_ERROR', message: 'User not found after OAuth' });
+      }
+
+      const user = await authService.getUserById(result.user.id);
+      if (!user) {
+        return reply.code(404).send({ error: 'NOT_FOUND', message: 'User not found' });
+      }
+
+      const refreshToken = await authService.createSession(user.id);
+      const accessToken = fastify.jwt.sign({ userId: user.id, email: user.email });
+
+      return reply.send({
+        user: { id: user.id, email: user.email, name: user.name, role: user.role, avatar_url: user.avatar_url },
+        accessToken,
+        refreshToken,
+      });
+    } catch (err) {
+      if (err instanceof AppError) {
+        // For link mode, return popup close with error
+        // Check if this was a link mode request by examining error context
         return reply.code(err.statusCode).send({ error: err.code, message: err.message });
       }
       throw err;

@@ -2,24 +2,24 @@
  * Monday OAuth Service
  *
  * Handles Monday.com OAuth 2.0 authentication flow.
- * Monday uses a simple OAuth flow similar to Google.
+ * Supports both login mode (create/find user) and link mode (connect to existing user).
  *
  * Flow:
  * 1. Generate auth URL with client_id and redirect_uri
  * 2. User authorizes in Monday.com
  * 3. Monday redirects back with authorization code
  * 4. Exchange code for access token
- * 5. Store token in connection_credentials table
+ * 5. Login mode: find/create user by email, return session data
+ * 6. Link mode: store token in connection_credentials table
  *
  * Docs: https://developer.monday.com/apps/docs/oauth
  */
-
-import crypto from 'crypto';
 
 import { MondayClient } from './connectors/monday-client.js';
 import { env } from '../../config/env.js';
 import { db } from '../../db/client.js';
 import { AppError } from '../../utils/errors.js';
+import { generateOAuthState, validateOAuthState, type OAuthMode } from '../auth/oauth-state.js';
 
 /**
  * Check if Monday OAuth is configured
@@ -29,67 +29,20 @@ export function isMondayOAuthConfigured(): boolean {
 }
 
 /**
- * Generate a signed state parameter for CSRF protection
- * Payload: userId:timestamp:entropy
- * Signature: HMAC(payload, secret)
+ * Generate OAuth authorization URL.
+ * If userId is provided, uses 'link' mode to connect Monday to an existing user.
+ * Otherwise, uses 'login' mode to create/find a user.
  */
-function generateState(userId: string): string {
-    const timestamp = Date.now();
-    const entropy = crypto.randomBytes(8).toString('hex');
-    const payload = `${userId}:${timestamp}:${entropy}`;
-
-    // Sign the payload
-    const signature = crypto
-        .createHmac('sha256', env.JWT_SECRET)
-        .update(payload)
-        .digest('base64url');
-
-    return `${Buffer.from(payload).toString('base64url')}.${signature}`;
-}
-
-/**
- * Validate the state parameter and return the userId
- */
-function validateState(state: string): string {
-    const [payloadBase64, providedSignature] = state.split('.');
-
-    if (!payloadBase64 || !providedSignature) {
-        throw new AppError(400, 'Invalid state format', 'INVALID_STATE');
-    }
-
-    // Verify signature
-    const payload = Buffer.from(payloadBase64, 'base64url').toString('utf8');
-    const expectedSignature = crypto
-        .createHmac('sha256', env.JWT_SECRET)
-        .update(payload)
-        .digest('base64url');
-
-    if (providedSignature !== expectedSignature) {
-        throw new AppError(400, 'Invalid state signature', 'INVALID_STATE');
-    }
-
-    const [userId, timestampStr] = payload.split(':');
-    const timestamp = parseInt(timestampStr, 10);
-
-    // Check expiration (10 minutes)
-    if (Date.now() - timestamp > 10 * 60 * 1000) {
-        throw new AppError(400, 'State expired', 'STATE_EXPIRED');
-    }
-
-    return userId;
-}
-
-/**
- * Generate OAuth authorization URL
- */
-export function getMondayAuthUrl(userId: string): { url: string; state: string } {
+export function getMondayAuthUrl(userId?: string): { url: string; state: string } {
     if (!env.MONDAY_CLIENT_ID) {
         throw new AppError(500, 'Monday OAuth is not configured', 'MONDAY_OAUTH_NOT_CONFIGURED');
     }
 
-    // Generate stateless CSRF token
-    const state = generateState(userId);
-    const redirectUri = env.MONDAY_REDIRECT_URI || 'http://localhost:3001/api/connections/monday/callback';
+    const mode: OAuthMode = userId ? 'link' : 'login';
+    const state = generateOAuthState(mode, userId);
+
+    // Use new unified route, with fallback for backward compatibility
+    const redirectUri = env.MONDAY_REDIRECT_URI || `${env.CLIENT_ORIGIN || 'http://localhost:3001'}/api/auth/monday/callback`;
 
     const params = new URLSearchParams({
         client_id: env.MONDAY_CLIENT_ID,
@@ -102,17 +55,27 @@ export function getMondayAuthUrl(userId: string): { url: string; state: string }
     return { url, state };
 }
 
+export interface MondayCallbackResult {
+    mode: OAuthMode;
+    user?: { id: string; email: string; name: string };
+    profile: { id: string; email: string; name: string };
+    connected: boolean;
+}
+
 /**
- * Exchange authorization code for access token
+ * Exchange authorization code for access token.
+ * In 'login' mode: creates/finds user and returns user data.
+ * In 'link' mode: stores credentials for existing user.
  */
-export async function handleMondayCallback(code: string, state: string) {
+export async function handleMondayCallback(code: string, state: string): Promise<MondayCallbackResult> {
     if (!env.MONDAY_CLIENT_ID || !env.MONDAY_CLIENT_SECRET) {
         throw new AppError(500, 'Monday OAuth is not configured', 'MONDAY_OAUTH_NOT_CONFIGURED');
     }
 
     // Validate state (CSRF protection)
-    const userId = validateState(state);
-    const redirectUri = env.MONDAY_REDIRECT_URI || 'http://localhost:3001/api/connections/monday/callback';
+    const statePayload = validateOAuthState(state);
+
+    const redirectUri = env.MONDAY_REDIRECT_URI || `${env.CLIENT_ORIGIN || 'http://localhost:3001'}/api/auth/monday/callback`;
 
     // Debug: log what credentials are being used (masked)
     console.log('[Monday OAuth] Exchanging code with:', {
@@ -120,6 +83,7 @@ export async function handleMondayCallback(code: string, state: string) {
         client_secret_length: env.MONDAY_CLIENT_SECRET?.length,
         client_secret_prefix: env.MONDAY_CLIENT_SECRET?.slice(0, 4) + '...',
         redirect_uri: redirectUri,
+        mode: statePayload.mode,
     });
 
     // Exchange code for tokens
@@ -163,6 +127,44 @@ export async function handleMondayCallback(code: string, state: string) {
         }
     `);
 
+    const profile = {
+        id: meResult.me.id,
+        email: meResult.me.email,
+        name: meResult.me.name,
+    };
+
+    let userId: string;
+    let user: { id: string; email: string; name: string } | undefined;
+
+    if (statePayload.mode === 'link') {
+        // Link mode: use the userId from state
+        userId = statePayload.userId!;
+    } else {
+        // Login mode: find or create user by Monday email
+        const dbUser = await db
+            .insertInto('users')
+            .values({
+                email: profile.email,
+                name: profile.name,
+                password_hash: '', // OAuth users have no password
+            })
+            .onConflict((oc) =>
+                oc.column('email').doUpdateSet({
+                    name: profile.name,
+                })
+            )
+            .returningAll()
+            .executeTakeFirstOrThrow();
+
+        // Verify user is not soft-deleted
+        if (dbUser.deleted_at !== null) {
+            throw new AppError(403, 'This account has been deactivated', 'ACCOUNT_DEACTIVATED');
+        }
+
+        userId = dbUser.id;
+        user = { id: dbUser.id, email: dbUser.email, name: dbUser.name };
+    }
+
     // Store token in connection_credentials table
     // First delete any existing credential for this user/provider
     await db
@@ -183,15 +185,17 @@ export async function handleMondayCallback(code: string, state: string) {
             scopes: JSON.stringify(tokens.scope?.split(',') || []),
             metadata: JSON.stringify({
                 token_type: tokens.token_type,
-                monday_user_id: meResult.me.id,
-                monday_user_name: meResult.me.name,
-                monday_user_email: meResult.me.email,
+                monday_user_id: profile.id,
+                monday_user_name: profile.name,
+                monday_user_email: profile.email,
             }),
         })
         .execute();
 
     return {
-        user: meResult.me,
+        mode: statePayload.mode,
+        user,
+        profile,
         connected: true,
     };
 }

@@ -28,6 +28,9 @@ const envSchema = z.object({
   // CORS
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
 
+  // Client Origin (for OAuth popup callbacks)
+  CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
+
   // External Services
   AUTOHELPER_URL: z.string().default('http://localhost:8100'),
 
