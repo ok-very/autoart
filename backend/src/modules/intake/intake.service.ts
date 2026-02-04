@@ -1,4 +1,4 @@
-import { generateUniqueId } from '@autoart/shared';
+import { generateUniqueId, RecordBlockSchema, IntakeFormConfigSchema } from '@autoart/shared';
 
 import { db } from '../../db/client.js';
 import type {
@@ -11,6 +11,7 @@ import type {
   IntakeFormUpdate,
 } from '../../db/schema.js';
 import { NotFoundError, ConflictError } from '../../utils/errors.js';
+import * as recordsService from '../records/records.service.js';
 
 const MAX_UNIQUE_ID_RETRIES = 5;
 
@@ -192,4 +193,74 @@ export async function getSubmissionById(id: string): Promise<IntakeSubmission | 
     .selectAll()
     .where('id', '=', id)
     .executeTakeFirst();
+}
+
+/**
+ * Get a record definition that is referenced by a form's RecordBlock.
+ * Returns sanitized definition with only public fields (id, name, fields).
+ *
+ * Security: Only returns definition if it's actually referenced by the form.
+ * This prevents enumeration of all definitions via the public API.
+ */
+export async function getDefinitionForForm(
+  uniqueId: string,
+  definitionId: string
+): Promise<{ id: string; name: string; fields: unknown[] } | null> {
+  // Get form with pages
+  const form = await getFormWithPagesByUniqueId(uniqueId);
+  if (!form || form.status !== 'active') {
+    return null;
+  }
+
+  // Check if any page's blocks reference this definition
+  let definitionReferenced = false;
+  for (const page of form.pages) {
+    try {
+      // Parse blocks_config as IntakeFormConfig
+      const config = IntakeFormConfigSchema.parse(page.blocks_config);
+
+      // Check if any RecordBlock references this definitionId
+      for (const block of config.blocks) {
+        if (block.kind === 'record' && block.definitionId === definitionId) {
+          definitionReferenced = true;
+          break;
+        }
+      }
+
+      if (definitionReferenced) break;
+    } catch {
+      // Invalid blocks_config - skip this page
+      continue;
+    }
+  }
+
+  if (!definitionReferenced) {
+    return null;
+  }
+
+  // Fetch the definition
+  const definition = await recordsService.getDefinitionById(definitionId);
+  if (!definition) {
+    return null;
+  }
+
+  // Parse schema_config to extract fields
+  let fields: unknown[] = [];
+  try {
+    const schemaConfig = typeof definition.schema_config === 'string'
+      ? JSON.parse(definition.schema_config)
+      : definition.schema_config;
+
+    fields = schemaConfig?.fields || [];
+  } catch {
+    // Invalid schema_config
+    fields = [];
+  }
+
+  // Return sanitized definition
+  return {
+    id: definition.id,
+    name: definition.name,
+    fields,
+  };
 }
