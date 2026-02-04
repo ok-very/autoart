@@ -74,11 +74,46 @@ export const FormBlockSchema = z.discriminatedUnion('kind', [
 
 export type FormBlock = z.infer<typeof FormBlockSchema>;
 
+// ==================== RECORD MAPPING ====================
+
+/**
+ * Maps a single ModuleBlock to a field in a RecordDefinition.
+ * Allows form blocks to populate record fields on submission.
+ */
+export const FieldMappingSchema = z.object({
+    /** FieldDef.key in the target RecordDefinition */
+    fieldKey: z.string(),
+    /** ModuleBlock.id to pull the value from */
+    blockId: z.string().uuid(),
+});
+
+export type FieldMapping = z.infer<typeof FieldMappingSchema>;
+
+/**
+ * Configures how form blocks map to a RecordDefinition.
+ * Staff can map multiple blocks to create a single record on submission.
+ */
+export const RecordMappingSchema = z.object({
+    id: z.string().uuid(),
+    /** Target RecordDefinition.id */
+    definitionId: z.string().uuid(),
+    /** Create record instance on submit (default: true) */
+    createInstance: z.boolean().default(true),
+    /** Field key to use as the record's unique_name */
+    nameFieldKey: z.string().optional(),
+    /** Block → field mappings */
+    fieldMappings: z.array(FieldMappingSchema),
+});
+
+export type RecordMapping = z.infer<typeof RecordMappingSchema>;
+
 // ==================== INTAKE FORM CONFIG ====================
 
 export const IntakeFormConfigSchema = z.object({
     /** Ordered list of blocks */
     blocks: z.array(FormBlockSchema),
+    /** Record mappings: connect form blocks to record fields */
+    recordMappings: z.array(RecordMappingSchema).optional(),
     /** Form-level settings */
     settings: z.object({
         /** Show progress bar */
