@@ -35,6 +35,11 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
+      '/autohelper': {
+        target: 'http://localhost:8100',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/autohelper/, ''),
+      },
     },
   },
   optimizeDeps: {

@@ -3,7 +3,9 @@
  * Connects to the AutoHelper backend for mail operations
  */
 
-const AUTOHELPER_BASE = import.meta.env.VITE_AUTOHELPER_URL || 'http://localhost:8100';
+const AUTOHELPER_BASE = import.meta.env.DEV
+  ? '/autohelper'
+  : (import.meta.env.VITE_AUTOHELPER_URL || 'http://localhost:8100');
 
 interface FetchOptions extends RequestInit {
   timeout?: number;

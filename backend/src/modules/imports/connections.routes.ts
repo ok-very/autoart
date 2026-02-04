@@ -475,6 +475,25 @@ export async function connectionsRoutes(app: FastifyInstance) {
     });
 
     /**
+     * Verify an AutoHelper link key is valid (no Monday dependency).
+     * Used by AutoHelper during pairing to confirm the key is recognized.
+     */
+    app.get('/connections/autohelper/verify', async (request, reply) => {
+        const key = (request.headers['x-autohelper-key'] as string) || '';
+
+        if (!key) {
+            return reply.status(401).send({ error: 'Link key required' });
+        }
+
+        const userId = await connectionsService.validateLinkKey(key);
+        if (!userId) {
+            return reply.status(401).send({ error: 'Invalid link key' });
+        }
+
+        return reply.send({ valid: true });
+    });
+
+    /**
      * Get proxied credentials for a trusted AutoHelper link key.
      * Returns Monday API token (single source of truth).
      */

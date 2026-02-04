@@ -309,15 +309,20 @@ export function usePairAutoHelper() {
             const { key } = await api.post<{ key: string }>('/connections/autohelper/pair', {});
 
             // 2. Push key to AutoHelper's local HTTP API
-            const { autohelperApi } = await import('./autohelperClient');
-            const result = await autohelperApi.post<{ paired: boolean; error?: string }>(
-                '/pair', { key }
-            );
-
-            return result;
+            try {
+                const { autohelperApi } = await import('./autohelperClient');
+                return await autohelperApi.post<{ paired: boolean; error?: string }>(
+                    '/pair', { key },
+                );
+            } catch (err) {
+                // AutoHelper didn't accept — revoke so backend doesn't think we're paired
+                await api.delete('/connections/autohelper').catch(() => {});
+                throw err;
+            }
         },
-        onSuccess: () => {
+        onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['connections'] });
+            queryClient.invalidateQueries({ queryKey: ['autohelper-health'] });
         },
     });
 }
@@ -341,8 +346,9 @@ export function useUnpairAutoHelper() {
             // 2. Revoke key on backend
             return api.delete<{ disconnected: boolean }>('/connections/autohelper');
         },
-        onSuccess: () => {
+        onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['connections'] });
+            queryClient.invalidateQueries({ queryKey: ['autohelper-health'] });
         },
     });
 }

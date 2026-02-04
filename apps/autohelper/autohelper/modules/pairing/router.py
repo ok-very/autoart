@@ -40,10 +40,9 @@ def pair(body: PairRequest) -> PairResponse:
             link_key=body.key,
         )
 
-        # Verify the key works by hitting the credentials endpoint
-        token = client.get_monday_token()
-        if not token:
-            return PairResponse(paired=False, error="Key rejected by backend — is Monday connected?")
+        # Verify the key is recognized by the backend (independent of Monday)
+        if not client.verify_key():
+            return PairResponse(paired=False, error="Key rejected by backend")
 
         # Persist to config.json
         store = ConfigStore()
