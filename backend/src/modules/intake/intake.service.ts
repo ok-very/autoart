@@ -1,4 +1,4 @@
-import { generateUniqueId, IntakeFormConfigSchema } from '@autoart/shared';
+import { generateUniqueId, IntakeFormConfigSchema, type CreatedRecord } from '@autoart/shared';
 
 import { db } from '../../db/client.js';
 import type {
@@ -7,7 +7,6 @@ import type {
   IntakeSubmission,
   NewIntakeForm,
   NewIntakeFormPage,
-  NewIntakeSubmission,
   IntakeFormUpdate,
 } from '../../db/schema.js';
 import { NotFoundError, ConflictError } from '../../utils/errors.js';
@@ -156,20 +155,129 @@ export async function deletePage(formId: string, pageIndex: number): Promise<voi
     .execute();
 }
 
+export interface SubmissionWithRecords extends IntakeSubmission {
+  createdRecords: CreatedRecord[];
+}
+
+/**
+ * Process RecordBlocks in a form submission.
+ * Extracts field values from metadata using {blockId}:{fieldKey} pattern
+ * and creates records for each RecordBlock with createInstance: true.
+ */
+async function processRecordBlocks(
+  formId: string,
+  metadata: Record<string, unknown>,
+  trx: typeof db
+): Promise<CreatedRecord[]> {
+  const createdRecords: CreatedRecord[] = [];
+
+  // Get form pages to find RecordBlocks
+  const pages = await trx
+    .selectFrom('intake_form_pages')
+    .selectAll()
+    .where('form_id', '=', formId)
+    .execute();
+
+  for (const page of pages) {
+    let config;
+    try {
+      config = IntakeFormConfigSchema.parse(page.blocks_config);
+    } catch {
+      continue; // Skip invalid config
+    }
+
+    for (const block of config.blocks) {
+      if (block.kind !== 'record' || !block.createInstance) {
+        continue;
+      }
+
+      // Get definition to get the name
+      const definition = await recordsService.getDefinitionById(block.definitionId);
+      if (!definition) {
+        continue; // Skip if definition doesn't exist
+      }
+
+      // Extract field values from metadata using {blockId}:{fieldKey} pattern
+      const recordData: Record<string, unknown> = {};
+      const blockPrefix = `${block.id}:`;
+
+      for (const [key, value] of Object.entries(metadata)) {
+        if (key.startsWith(blockPrefix)) {
+          const fieldKey = key.slice(blockPrefix.length);
+          recordData[fieldKey] = value;
+        }
+      }
+
+      // Generate unique name: {definitionName}-{timestamp}
+      const timestamp = Date.now();
+      const uniqueName = `${definition.name}-${timestamp}`;
+
+      // Create the record
+      try {
+        const record = await recordsService.createRecord({
+          definitionId: block.definitionId,
+          uniqueName,
+          data: recordData,
+        });
+
+        createdRecords.push({
+          definitionId: block.definitionId,
+          recordId: record.id,
+          uniqueName: record.unique_name,
+        });
+      } catch (err) {
+        // Log but don't fail - continue processing other blocks
+        console.error(`Failed to create record for block ${block.id}:`, err);
+      }
+    }
+  }
+
+  return createdRecords;
+}
+
+/**
+ * Create a form submission with optional record creation.
+ * Wraps submission insert and record creation in a transaction.
+ */
 export async function createSubmission(
   formId: string,
   uploadCode: string,
   metadata: unknown
-): Promise<IntakeSubmission> {
-  return db
-    .insertInto('intake_submissions')
-    .values({
-      form_id: formId,
-      upload_code: uploadCode,
-      metadata,
-    } satisfies NewIntakeSubmission)
-    .returningAll()
-    .executeTakeFirstOrThrow();
+): Promise<SubmissionWithRecords> {
+  return await db.transaction().execute(async (trx) => {
+    // Insert the submission first
+    const submission = await trx
+      .insertInto('intake_submissions')
+      .values({
+        form_id: formId,
+        upload_code: uploadCode,
+        metadata,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow();
+
+    // Process RecordBlocks and create records
+    const metadataObj = (typeof metadata === 'object' && metadata !== null)
+      ? metadata as Record<string, unknown>
+      : {};
+
+    const createdRecords = await processRecordBlocks(formId, metadataObj, trx);
+
+    // Update submission with created records
+    if (createdRecords.length > 0) {
+      await trx
+        .updateTable('intake_submissions')
+        .set({ created_records: JSON.stringify(createdRecords) })
+        .where('id', '=', submission.id)
+        .execute();
+    }
+
+    return {
+      ...submission,
+      created_records: createdRecords,
+      createdRecords,
+    };
+  });
 }
 
 export async function listSubmissions(

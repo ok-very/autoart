@@ -555,6 +555,7 @@ export interface IntakeSubmissionsTable {
   form_id: string;
   upload_code: string;
   metadata: unknown; // JSONB
+  created_records: Generated<unknown>; // JSONB - [{ definitionId, recordId, uniqueName }]
   created_at: Generated<Date>;
 }
 

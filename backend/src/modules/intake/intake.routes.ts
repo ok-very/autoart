@@ -249,6 +249,9 @@ export async function intakePublicRoutes(app: FastifyInstance) {
           id: submission.id,
           upload_code: submission.upload_code,
           created_at: submission.created_at,
+          created_records: submission.createdRecords.length > 0
+            ? submission.createdRecords
+            : undefined,
         },
       });
     }

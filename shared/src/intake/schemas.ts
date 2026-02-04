@@ -91,3 +91,28 @@ export const IntakeFormConfigSchema = z.object({
 });
 
 export type IntakeFormConfig = z.infer<typeof IntakeFormConfigSchema>;
+
+// ==================== SUBMISSION RESULT ====================
+
+/**
+ * Record created from a RecordBlock during form submission
+ */
+export const CreatedRecordSchema = z.object({
+    definitionId: z.string().uuid(),
+    recordId: z.string().uuid(),
+    uniqueName: z.string(),
+});
+
+export type CreatedRecord = z.infer<typeof CreatedRecordSchema>;
+
+/**
+ * Result returned after successful form submission
+ */
+export const IntakeSubmissionResultSchema = z.object({
+    id: z.string().uuid(),
+    upload_code: z.string(),
+    created_at: z.string().datetime(),
+    created_records: z.array(CreatedRecordSchema).optional(),
+});
+
+export type IntakeSubmissionResult = z.infer<typeof IntakeSubmissionResultSchema>;
