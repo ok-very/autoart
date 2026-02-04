@@ -291,64 +291,63 @@ export function useMondayBoards() {
 }
 
 // ============================================================================
-// AUTOHELPER LINK KEY
+// AUTOHELPER CLAIM TOKEN PAIRING
 // ============================================================================
 
 export interface AutoHelperStatus extends ConnectionStatus {}
 
+export interface ClaimTokenResult {
+    code: string;
+    expiresAt: string;
+}
+
+export interface ClaimStatusResult {
+    claimed: boolean;
+}
+
 /**
- * Pair AutoHelper: generate a link key on the backend, push it to AutoHelper.
- * Single-click operation — no codes, no handshakes.
+ * Generate a claim code for pairing.
+ * User displays this code and enters it in AutoHelper's tray menu.
  */
-export function usePairAutoHelper() {
-    const queryClient = useQueryClient();
-
+export function useClaimPairing() {
     return useMutation({
-        mutationFn: async (): Promise<{ paired: boolean; error?: string }> => {
-            // 1. Generate link key on backend
-            const { key } = await api.post<{ key: string }>('/connections/autohelper/pair', {});
-
-            // 2. Push key to AutoHelper's local HTTP API
-            try {
-                const { autohelperApi } = await import('./autohelperClient');
-                return await autohelperApi.post<{ paired: boolean; error?: string }>(
-                    '/pair', { key },
-                );
-            } catch (err) {
-                // AutoHelper didn't accept — revoke so backend doesn't think we're paired
-                await api.delete('/connections/autohelper').catch(() => {});
-                throw err;
-            }
+        mutationFn: async (): Promise<ClaimTokenResult> => {
+            return api.post<ClaimTokenResult>('/pair/claim', {});
         },
-        onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['connections'] });
-            queryClient.invalidateQueries({ queryKey: ['autohelper-health'] });
-        },
+        // Invalidation happens in component when claimed: true is detected
     });
 }
 
 /**
- * Unpair AutoHelper: tell local service to forget key, then revoke on backend.
+ * Poll for claim status — has the code been redeemed?
+ */
+export function usePairingStatus(enabled: boolean) {
+    return useQuery({
+        queryKey: ['pairing-status'],
+        queryFn: async (): Promise<ClaimStatusResult> => {
+            return api.get<ClaimStatusResult>('/pair/status');
+        },
+        enabled,
+        refetchInterval: 2000, // Poll every 2 seconds
+        refetchIntervalInBackground: false,
+    });
+}
+
+/**
+ * Unpair AutoHelper: revoke key on backend.
+ * AutoHelper clears its own key when user clicks "Unpair" in tray.
  */
 export function useUnpairAutoHelper() {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async (): Promise<{ disconnected: boolean }> => {
-            // 1. Tell AutoHelper to clear local key (best-effort)
-            try {
-                const { autohelperApi } = await import('./autohelperClient');
-                await autohelperApi.post('/pair/unpair');
-            } catch {
-                // AutoHelper might not be running — proceed with backend cleanup
-            }
-
-            // 2. Revoke key on backend
             return api.delete<{ disconnected: boolean }>('/connections/autohelper');
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['connections'] });
             queryClient.invalidateQueries({ queryKey: ['autohelper-health'] });
+            queryClient.invalidateQueries({ queryKey: ['pairing-status'] });
         },
     });
 }

@@ -77,6 +77,36 @@ const hasParent = item.parentTempId && itemsByTempId.has(item.parentTempId);
 
 ---
 
+## Cross-Service Communication (AutoHelper)
+
+AutoHelper is a local Python service that runs on user machines. The frontend cannot reliably reach it directly (NAT, firewalls, different machine, not running).
+
+### Communication Patterns
+
+| Direction | Transport | Auth | Use Case |
+|-----------|-----------|------|----------|
+| AutoHelper → Backend | HTTPS | `x-autohelper-key` header | Report status, fetch config, sync state |
+| Frontend → Backend → AutoHelper | Backend proxies | Link key in DB | User controls AutoHelper from web UI |
+| Frontend → AutoHelper | localhost HTTP | None | **Dev-only.** Never assume this works in prod. |
+
+### Design Principle
+
+If the user should be able to do something to AutoHelper from the web UI, the request **must** go through the backend. The backend holds the link key and can reach AutoHelper when AutoHelper polls or connects.
+
+Direct frontend → AutoHelper is a dev convenience. It breaks when:
+- AutoHelper is on a different machine
+- AutoHelper is behind NAT/firewall
+- AutoHelper isn't running when the user opens settings
+- User is on mobile or a different network
+
+### Current Gap (Feb 2026)
+
+Pairing exists: AutoHelper can authenticate to backend using a link key. But no reverse channel exists: backend cannot push config to AutoHelper, and frontend cannot control AutoHelper through backend.
+
+The settings UI (`AutoHelperSection.tsx`) calls `localhost:8100` directly and fails unless AutoHelper is local and running.
+
+---
+
 ## Common Commands
 
 ```bash

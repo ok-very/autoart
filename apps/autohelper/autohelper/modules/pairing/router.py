@@ -1,15 +1,18 @@
-"""Pairing router — lets the frontend pair/unpair AutoHelper over HTTP.
+"""Pairing router — local unpair endpoint for tray menu.
 
-POST /pair         Accept a link key, verify it, persist to config.
 POST /pair/unpair  Clear the local link key so the tray updates immediately.
+
+Note: Pairing now happens via claim token flow — AutoHelper talks directly
+to the backend /pair/redeem endpoint. The tray menu handles the dialog.
 """
+
+import threading
 
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from autohelper.config import get_settings, reset_settings
+from autohelper.config import reset_settings
 from autohelper.config.store import ConfigStore
-from autohelper.modules.context.autoart import AutoArtClient
 from autohelper.shared.logging import get_logger
 
 logger = get_logger(__name__)
@@ -17,59 +20,18 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/pair", tags=["pairing"])
 
 
-class PairRequest(BaseModel):
-    key: str
-
-
-class PairResponse(BaseModel):
-    paired: bool
-    error: str | None = None
-
-
 class UnpairResponse(BaseModel):
     paired: bool
 
 
-@router.post("", response_model=PairResponse)
-def pair(body: PairRequest) -> PairResponse:
-    """Accept a link key from the frontend, verify it against the backend, persist it."""
+def _reinit_clients_background() -> None:
+    """Reinit context clients in background thread."""
     try:
-        settings = get_settings()
-        client = AutoArtClient(
-            api_url=settings.autoart_api_url,
-            link_key=body.key,
-        )
+        from autohelper.modules.context.service import ContextService
 
-        # Verify the key is recognized by the backend (independent of Monday)
-        if not client.verify_key():
-            return PairResponse(paired=False, error="Key rejected by backend")
-
-        # Persist to config.json
-        store = ConfigStore()
-        cfg = store.load()
-        cfg["autoart_link_key"] = body.key
-        # Clean up legacy keys
-        cfg.pop("autoart_session_id", None)
-        cfg.pop("autoart_api_key", None)
-        store.save(cfg)
-
-        # Clear cached Settings so dependents pick up the new key
-        reset_settings()
-
-        # Reinitialise the context service
-        try:
-            from autohelper.modules.context.service import ContextService
-
-            ContextService().reinit_clients()
-        except Exception as exc:
-            logger.warning("Failed to reinit context service after pairing: %s", exc)
-
-        logger.info("Paired via HTTP endpoint")
-        return PairResponse(paired=True)
-
+        ContextService().reinit_clients()
     except Exception as exc:
-        logger.error("Pairing failed: %s", exc)
-        return PairResponse(paired=False, error="Internal error during pairing")
+        logger.warning("Failed to reinit context service after unpair: %s", exc)
 
 
 @router.post("/unpair", response_model=UnpairResponse)
@@ -86,12 +48,8 @@ def unpair() -> UnpairResponse:
 
     reset_settings()
 
-    try:
-        from autohelper.modules.context.service import ContextService
-
-        ContextService().reinit_clients()
-    except Exception as exc:
-        logger.warning("Failed to reinit context service after unpair: %s", exc)
+    # Reinit in background to avoid blocking the HTTP response
+    threading.Thread(target=_reinit_clients_background, daemon=True).start()
 
     logger.info("Unpaired via HTTP endpoint")
     return UnpairResponse(paired=False)

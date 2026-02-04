@@ -102,9 +102,9 @@ export function SettingsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-ws-bg">
+        <div className="h-screen flex flex-col bg-ws-bg overflow-hidden">
             {/* Header */}
-            <header className="bg-ws-panel-bg border-b border-ws-panel-border">
+            <header className="flex-shrink-0 bg-ws-panel-bg border-b border-ws-panel-border">
                 <div className="max-w-5xl mx-auto px-6 py-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-[var(--ws-accent)] rounded-lg flex items-center justify-center">
@@ -119,65 +119,67 @@ export function SettingsPage() {
             </header>
 
             {/* Content */}
-            <main className="max-w-5xl mx-auto px-6 py-8">
-                <div className="flex gap-8">
-                    {/* Sidebar Navigation */}
-                    <nav className="w-48 flex-shrink-0">
-                        <ul className="space-y-1">
-                            {NAV_ITEMS.map((item) => (
-                                <li key={item.id}>
-                                    <button
-                                        onClick={() => navigate(`#${item.id}`)}
-                                        className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${derivedTab === item.id
-                                            ? 'bg-[var(--ws-accent)] text-[var(--ws-accent-fg)]'
-                                            : 'text-ws-text-secondary hover:bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))]'
-                                            }`}
-                                    >
-                                        {item.icon}
-                                        {item.label}
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+            <main className="flex-1 overflow-y-auto">
+                <div className="max-w-5xl mx-auto px-6 py-8">
+                    <div className="flex gap-8">
+                        {/* Sidebar Navigation */}
+                        <nav className="w-48 flex-shrink-0">
+                            <ul className="space-y-1">
+                                {NAV_ITEMS.map((item) => (
+                                    <li key={item.id}>
+                                        <button
+                                            onClick={() => navigate(`#${item.id}`)}
+                                            className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${derivedTab === item.id
+                                                ? 'bg-[var(--ws-accent)] text-[var(--ws-accent-fg)]'
+                                                : 'text-ws-text-secondary hover:bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))]'
+                                                }`}
+                                        >
+                                            {item.icon}
+                                            {item.label}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
 
-                        {/* Back link */}
-                        <div className="mt-8 pt-4 border-t border-ws-panel-border">
-                            <button
-                                onClick={() => navigate('/')}
-                                className="text-sm text-ws-text-secondary hover:text-ws-text-secondary"
-                            >
-                                ← Back to Home
-                            </button>
+                            {/* Back link */}
+                            <div className="mt-8 pt-4 border-t border-ws-panel-border">
+                                <button
+                                    onClick={() => navigate('/')}
+                                    className="text-sm text-ws-text-secondary hover:text-ws-text-secondary"
+                                >
+                                    ← Back to Home
+                                </button>
+                            </div>
+                        </nav>
+
+                        {/* Content Area */}
+                        <div className="flex-1 min-w-0">
+                            {derivedTab === 'account' ? (
+                                <AccountSection />
+                            ) : derivedTab === 'appearance' ? (
+                                <AppearanceSection />
+                            ) : derivedTab === 'autohelper' ? (
+                                <AutoHelperSection
+                                    autohelperStatus={{ connected: connections?.autohelper?.connected ?? false }}
+                                />
+                            ) : derivedTab === 'integrations' ? (
+                                <IntegrationsSection
+                                    microsoftStatus={{ connected: connections?.microsoft?.connected ?? false }}
+                                    mondayStatus={{ connected: connections?.monday?.connected ?? false }}
+                                    googleStatus={{ connected: connections?.google?.connected ?? false }}
+                                    onMicrosoftConnect={handleMicrosoftConnect}
+                                    onMicrosoftDisconnect={handleMicrosoftDisconnect}
+                                    onMondayConnect={handleMondayConnect}
+                                    onMondayOAuthConnect={handleMondayOAuthConnect}
+                                    mondayOAuthAvailable={mondayOAuthStatus?.available ?? false}
+                                    onMondayDisconnect={handleMondayDisconnect}
+                                    onGoogleConnect={handleGoogleConnect}
+                                    onGoogleDisconnect={handleGoogleDisconnect}
+                                />
+                            ) : (
+                                <AccountSection />
+                            )}
                         </div>
-                    </nav>
-
-                    {/* Content Area */}
-                    <div className="flex-1 min-w-0">
-                        {derivedTab === 'account' ? (
-                            <AccountSection />
-                        ) : derivedTab === 'appearance' ? (
-                            <AppearanceSection />
-                        ) : derivedTab === 'autohelper' ? (
-                            <AutoHelperSection
-                                autohelperStatus={{ connected: connections?.autohelper?.connected ?? false }}
-                            />
-                        ) : derivedTab === 'integrations' ? (
-                            <IntegrationsSection
-                                microsoftStatus={{ connected: connections?.microsoft?.connected ?? false }}
-                                mondayStatus={{ connected: connections?.monday?.connected ?? false }}
-                                googleStatus={{ connected: connections?.google?.connected ?? false }}
-                                onMicrosoftConnect={handleMicrosoftConnect}
-                                onMicrosoftDisconnect={handleMicrosoftDisconnect}
-                                onMondayConnect={handleMondayConnect}
-                                onMondayOAuthConnect={handleMondayOAuthConnect}
-                                mondayOAuthAvailable={mondayOAuthStatus?.available ?? false}
-                                onMondayDisconnect={handleMondayDisconnect}
-                                onGoogleConnect={handleGoogleConnect}
-                                onGoogleDisconnect={handleGoogleDisconnect}
-                            />
-                        ) : (
-                            <AccountSection />
-                        )}
                     </div>
                 </div>
             </main>

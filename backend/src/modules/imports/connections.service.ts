@@ -37,6 +37,10 @@ export async function getCredential(
             .where('provider', '=', provider)
             .executeTakeFirst();
 
+        if (provider === 'autohelper') {
+            console.log('[getCredential] autohelper userId=%s found=%s', userId, !!userCred);
+        }
+
         if (userCred) return userCred;
     }
 
@@ -341,6 +345,8 @@ export async function isProviderConnected(
 export async function generateLinkKey(userId: string): Promise<string> {
     const key = randomBytes(32).toString('hex');
 
+    console.log('[generateLinkKey] Creating link key for userId=%s', userId);
+
     await saveCredential({
         user_id: userId,
         provider: 'autohelper',
@@ -350,6 +356,8 @@ export async function generateLinkKey(userId: string): Promise<string> {
         scopes: [],
         metadata: {},
     });
+
+    console.log('[generateLinkKey] Link key saved for userId=%s', userId);
 
     return key;
 }
@@ -377,6 +385,20 @@ export async function revokeLinkKey(userId: string): Promise<void> {
 }
 
 /**
+ * Revoke (delete) an AutoHelper link key by its value.
+ * Used by AutoHelper self-unpair (tray knows the key, not the userId).
+ */
+export async function revokeLinkKeyByValue(key: string): Promise<boolean> {
+    const result = await db
+        .deleteFrom('connection_credentials')
+        .where('provider', '=', 'autohelper')
+        .where('access_token', '=', key)
+        .executeTakeFirst();
+
+    return Number(result.numDeletedRows) > 0;
+}
+
+/**
  * Get Monday API token for a trusted AutoHelper link key.
  * Validates the key, then proxies the Monday token for the associated user.
  */
@@ -389,4 +411,145 @@ export async function getProxiedMondayToken(key: string): Promise<string | null>
     } catch {
         return null;
     }
+}
+
+// ============================================================================
+// CLAIM TOKEN PAIRING (Plex-style)
+// ============================================================================
+
+// Alphabet for claim codes: uppercase alphanumeric, excluding ambiguous chars
+const CLAIM_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No 0, O, 1, I
+const MAX_CLAIM_CODE_ATTEMPTS = 10;
+
+/**
+ * Generate a 6-character claim code for pairing.
+ * Stored in connection_credentials with provider 'autohelper_claim'.
+ * 5-minute TTL.
+ */
+export async function generateClaimToken(userId: string): Promise<{ code: string; expiresAt: Date }> {
+    // Generate 6-char code from safe alphabet, retry on collision
+    let code: string;
+    let collision: { id: string } | undefined;
+    let attempts = 0;
+    do {
+        if (attempts >= MAX_CLAIM_CODE_ATTEMPTS) {
+            throw new Error('Failed to generate unique claim code after maximum attempts');
+        }
+        const bytes = randomBytes(6);
+        code = Array.from(bytes)
+            .map(b => CLAIM_ALPHABET[b % CLAIM_ALPHABET.length])
+            .join('');
+        collision = await db
+            .selectFrom('connection_credentials')
+            .select(['id'])
+            .where('provider', '=', 'autohelper_claim')
+            .where('access_token', '=', code)
+            .executeTakeFirst();
+        attempts++;
+    } while (collision);
+
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    // Delete any existing claim token for this user
+    await db
+        .deleteFrom('connection_credentials')
+        .where('user_id', '=', userId)
+        .where('provider', '=', 'autohelper_claim')
+        .execute();
+
+    // Store the claim token
+    await db
+        .insertInto('connection_credentials')
+        .values({
+            user_id: userId,
+            provider: 'autohelper_claim',
+            access_token: code,
+            refresh_token: null,
+            expires_at: expiresAt,
+            scopes: [],
+            metadata: {},
+        })
+        .execute();
+
+    return { code, expiresAt };
+}
+
+/**
+ * Redeem a claim code: validate it, generate a link key, delete the claim token.
+ * Called by AutoHelper (unauthenticated) after user enters the code.
+ * Returns the link key on success, null if code is invalid/expired.
+ */
+export async function redeemClaimToken(code: string): Promise<{ key: string; userId: string } | null> {
+    // Normalize: uppercase, trim
+    const normalizedCode = code.toUpperCase().trim();
+
+    // Find the claim token
+    const claim = await db
+        .selectFrom('connection_credentials')
+        .selectAll()
+        .where('provider', '=', 'autohelper_claim')
+        .where('access_token', '=', normalizedCode)
+        .executeTakeFirst();
+
+    if (!claim || !claim.user_id) {
+        return null;
+    }
+
+    // Check expiry
+    if (claim.expires_at && claim.expires_at < new Date()) {
+        // Expired — clean it up
+        await db
+            .deleteFrom('connection_credentials')
+            .where('id', '=', claim.id)
+            .execute();
+        return null;
+    }
+
+    // Delete-first to prevent race condition: only the first concurrent redeem succeeds
+    const deletedClaim = await db
+        .deleteFrom('connection_credentials')
+        .where('id', '=', claim.id)
+        .returning(['id'])
+        .executeTakeFirst();
+
+    if (!deletedClaim) {
+        // Already redeemed by another concurrent request
+        return null;
+    }
+
+    // Generate the actual link key
+    const key = await generateLinkKey(claim.user_id);
+
+    return { key, userId: claim.user_id };
+}
+
+/**
+ * Check if a claim token has been redeemed (i.e., user is now paired).
+ * Called by frontend polling.
+ */
+export async function getClaimStatus(userId: string): Promise<{ claimed: boolean }> {
+    // Check if user has an active autohelper link key
+    const linkKey = await db
+        .selectFrom('connection_credentials')
+        .select(['id'])
+        .where('user_id', '=', userId)
+        .where('provider', '=', 'autohelper')
+        .executeTakeFirst();
+
+    // Check if there's still a pending claim token
+    const pendingClaim = await db
+        .selectFrom('connection_credentials')
+        .select(['id', 'expires_at'])
+        .where('user_id', '=', userId)
+        .where('provider', '=', 'autohelper_claim')
+        .executeTakeFirst();
+
+    // Expired claim = not claimed, clean it up
+    if (pendingClaim && pendingClaim.expires_at && pendingClaim.expires_at < new Date()) {
+        await db.deleteFrom('connection_credentials').where('id', '=', pendingClaim.id).execute();
+        return { claimed: false };
+    }
+
+    // Claimed = link key exists AND no pending claim
+    return { claimed: !!linkKey && !pendingClaim };
 }

@@ -109,7 +109,7 @@ class ContextService:
             logger.warning(f"Failed to init AutoArt client: {e}")
             self._autoart_client = None
 
-        # Monday client is now accessed via AutoArt proxy (using session_id)
+        # Monday client is now accessed via AutoArt proxy (using link_key)
         # Direct Monday client is only initialized if we have a direct token in settings
         # (for backward compatibility or direct API access scenarios)
         monday_token = getattr(self.settings, "monday_api_token", None)

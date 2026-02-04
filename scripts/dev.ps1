@@ -7,7 +7,7 @@
 # Services started:
 #   - Backend API (port 3001)
 #   - Frontend (port 5173)
-#   - AutoHelper Python service (port 8000)
+#   - AutoHelper Python service (port 8100)
 #   - Forms app (port 5174) - optional
 
 $ErrorActionPreference = "Stop"
@@ -29,6 +29,11 @@ Write-Host ""
 Write-Host "======================================" -ForegroundColor Cyan
 Write-Host "  AutoArt Development Environment" -ForegroundColor Cyan
 Write-Host "======================================" -ForegroundColor Cyan
+Write-Host ""
+
+# Kill any lingering dev processes from previous runs
+Write-Host "[*] Cleaning up previous sessions..." -ForegroundColor Yellow
+& "$ScriptDir\kill-dev.ps1" 2>&1 | Out-Null
 Write-Host ""
 
 # Check if pnpm is installed
@@ -59,6 +64,18 @@ if (-not (Test-Path "shared\dist")) {
     Pop-Location
     Write-Host "[OK] Shared package built" -ForegroundColor Green
 }
+
+# Run database migrations (fast no-op if already current)
+Write-Host "[*] Checking database migrations..." -ForegroundColor Yellow
+Push-Location backend
+$migrateOutput = pnpm migrate 2>&1
+if ($migrateOutput -match "No pending migrations") {
+    Write-Host "[OK] Database up to date" -ForegroundColor Green
+} else {
+    Write-Host $migrateOutput
+    Write-Host "[OK] Migrations applied" -ForegroundColor Green
+}
+Pop-Location
 
 Write-Host "[*] Starting backend server..." -ForegroundColor Green
 $currentPath = $env:Path

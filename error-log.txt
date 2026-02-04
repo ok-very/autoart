@@ -1,0 +1,644 @@
+API]     reqId: "req-37"
+[API]     req: {
+[API]       "method": "POST",
+[API]       "url": "/api/autohelper/heartbeat",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 51499
+[API]     }
+[API]     res: {
+[API]       "statusCode": 500
+[API]     }
+[API]     err: {
+[API]       "type": "ZodError",
+[API]       "message": "[\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"runner\",\n      \"current_runner\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"index\",\n      \"last_run\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"gc\",\n      \"last_run\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  }\n]",
+[API]       "stack":
+[API]           ZodError: [
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "runner",
+[API]                 "current_runner"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             },
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "index",
+[API]                 "last_run"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             },
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "gc",
+[API]                 "last_run"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             }
+[API]           ]
+[API]               at Object.<anonymous> (C:\Users\Neal\Documents\automatique\autoart\backend\src\modules\autohelper\autohelper.routes.ts:293:40)
+[API]               at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[API]       "name": "ZodError"
+[API]     }
+[API] [09:31:57.040] INFO (16684): request completed
+[API]     reqId: "req-37"
+[API]     res: {
+[API]       "statusCode": 500
+[API]     }
+[API]     responseTime: 52.562200009822845
+[API] [09:31:59.121] INFO (16684): incoming request
+[API]     reqId: "req-38"
+[API]     req: {
+[API]       "method": "GET",
+[API]       "url": "/api/autohelper/poll",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 51501
+[API]     }
+[API] [09:31:59.266] INFO (16684): request completed
+[API]     reqId: "req-38"
+[API]     res: {
+[API]       "statusCode": 200
+[API]     }
+[API]     responseTime: 145.1302000284195
+[API] [09:31:59.407] INFO (16684): incoming request
+[API]     reqId: "req-39"
+[API]     req: {
+[API]       "method": "OPTIONS",
+[API]       "url": "/api/autohelper/status",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 55961
+[API]     }
+[API] [09:31:59.407] INFO (16684): request completed
+[API]     reqId: "req-39"
+[API]     res: {
+[API]       "statusCode": 204
+[API]     }
+[API]     responseTime: 0.145300030708313
+[API] [09:31:59.408] INFO (16684): incoming request
+[API]     reqId: "req-3a"
+[API]     req: {
+[API]       "method": "GET",
+[API]       "url": "/api/autohelper/status",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 55961
+[API]     }
+[API] [09:31:59.501] INFO (16684): request completed
+[API]     reqId: "req-3a"
+[API]     res: {
+[API]       "statusCode": 200
+[API]     }
+[API]     responseTime: 92.93010002374649
+[API] [09:32:04.507] INFO (16684): incoming request
+[API]     reqId: "req-3b"
+[API]     req: {
+[API]       "method": "OPTIONS",
+[API]       "url": "/api/autohelper/status",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 55961
+[API]     }
+[API] [09:32:04.507] INFO (16684): request completed
+[API]     reqId: "req-3b"
+[API]     res: {
+[API]       "statusCode": 204
+[API]     }
+[API]     responseTime: 0.1632000207901001
+[API] [09:32:04.509] INFO (16684): incoming request
+[API]     reqId: "req-3c"
+[API]     req: {
+[API]       "method": "GET",
+[API]       "url": "/api/autohelper/status",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 55961
+[API]     }
+[API] [09:32:04.610] INFO (16684): request completed
+[API]     reqId: "req-3c"
+[API]     res: {
+[API]       "statusCode": 200
+[API]     }
+[API]     responseTime: 101.84650003910065
+[API] [09:32:06.315] INFO (16684): incoming request
+[API]     reqId: "req-3d"
+[API]     req: {
+[API]       "method": "POST",
+[API]       "url": "/api/autohelper/heartbeat",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 51510
+[API]     }
+[API] [09:32:06.363] ERROR (16684): [
+[API]   {
+[API]     "expected": "string",
+[API]     "code": "invalid_type",
+[API]     "path": [
+[API]       "status",
+[API]       "runner",
+[API]       "current_runner"
+[API]     ],
+[API]     "message": "Invalid input: expected string, received null"
+[API]   },
+[API]   {
+[API]     "expected": "string",
+[API]     "code": "invalid_type",
+[API]     "path": [
+[API]       "status",
+[API]       "index",
+[API]       "last_run"
+[API]     ],
+[API]     "message": "Invalid input: expected string, received null"
+[API]   },
+[API]   {
+[API]     "expected": "string",
+[API]     "code": "invalid_type",
+[API]     "path": [
+[API]       "status",
+[API]       "gc",
+[API]       "last_run"
+[API]     ],
+[API]     "message": "Invalid input: expected string, received null"
+[API]   }
+[API] ]
+[API]     reqId: "req-3d"
+[API]     req: {
+[API]       "method": "POST",
+[API]       "url": "/api/autohelper/heartbeat",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 51510
+[API]     }
+[API]     res: {
+[API]       "statusCode": 500
+[API]     }
+[API]     err: {
+[API]       "type": "ZodError",
+[API]       "message": "[\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"runner\",\n      \"current_runner\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"index\",\n      \"last_run\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"gc\",\n      \"last_run\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  }\n]",
+[API]       "stack":
+[API]           ZodError: [
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "runner",
+[API]                 "current_runner"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             },
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "index",
+[API]                 "last_run"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             },
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "gc",
+[API]                 "last_run"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             }
+[API]           ]
+[API]               at Object.<anonymous> (C:\Users\Neal\Documents\automatique\autoart\backend\src\modules\autohelper\autohelper.routes.ts:293:40)
+[API]               at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[API]       "name": "ZodError"
+[API]     }
+[API] [09:32:06.363] INFO (16684): request completed
+[API]     reqId: "req-3d"
+[API]     res: {
+[API]       "statusCode": 500
+[API]     }
+[API]     responseTime: 48.392500042915344
+[API] [09:32:08.414] INFO (16684): incoming request
+[API]     reqId: "req-3e"
+[API]     req: {
+[API]       "method": "GET",
+[API]       "url": "/api/autohelper/poll",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 51512
+[API]     }
+[API] [09:32:08.560] INFO (16684): request completed
+[API]     reqId: "req-3e"
+[API]     res: {
+[API]       "statusCode": 200
+[API]     }
+[API]     responseTime: 145.12870001792908
+[API] [09:32:09.622] INFO (16684): incoming request
+[API]     reqId: "req-3f"
+[API]     req: {
+[API]       "method": "OPTIONS",
+[API]       "url": "/api/autohelper/status",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 55961
+[API]     }
+[API] [09:32:09.623] INFO (16684): request completed
+[API]     reqId: "req-3f"
+[API]     res: {
+[API]       "statusCode": 204
+[API]     }
+[API]     responseTime: 0.1736999750137329
+[API] [09:32:09.624] INFO (16684): incoming request
+[API]     reqId: "req-3g"
+[API]     req: {
+[API]       "method": "GET",
+[API]       "url": "/api/autohelper/status",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 55961
+[API]     }
+[API] [09:32:09.718] INFO (16684): request completed
+[API]     reqId: "req-3g"
+[API]     res: {
+[API]       "statusCode": 200
+[API]     }
+[API]     responseTime: 94.45489996671677
+[API] [09:32:14.723] INFO (16684): incoming request
+[API]     reqId: "req-3h"
+[API]     req: {
+[API]       "method": "OPTIONS",
+[API]       "url": "/api/autohelper/status",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 55961
+[API]     }
+[API] [09:32:14.723] INFO (16684): request completed
+[API]     reqId: "req-3h"
+[API]     res: {
+[API]       "statusCode": 204
+[API]     }
+[API]     responseTime: 0.16350001096725464
+[API] [09:32:14.724] INFO (16684): incoming request
+[API]     reqId: "req-3i"
+[API]     req: {
+[API]       "method": "GET",
+[API]       "url": "/api/autohelper/status",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 55961
+[API]     }
+[API] [09:32:14.820] INFO (16684): request completed
+[API]     reqId: "req-3i"
+[API]     res: {
+[API]       "statusCode": 200
+[API]     }
+[API]     responseTime: 95.69489997625351
+[API] [09:32:15.607] INFO (16684): incoming request
+[API]     reqId: "req-3j"
+[API]     req: {
+[API]       "method": "POST",
+[API]       "url": "/api/autohelper/heartbeat",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 51517
+[API]     }
+[API] [09:32:15.658] ERROR (16684): [
+[API]   {
+[API]     "expected": "string",
+[API]     "code": "invalid_type",
+[API]     "path": [
+[API]       "status",
+[API]       "runner",
+[API]       "current_runner"
+[API]     ],
+[API]     "message": "Invalid input: expected string, received null"
+[API]   },
+[API]   {
+[API]     "expected": "string",
+[API]     "code": "invalid_type",
+[API]     "path": [
+[API]       "status",
+[API]       "index",
+[API]       "last_run"
+[API]     ],
+[API]     "message": "Invalid input: expected string, received null"
+[API]   },
+[API]   {
+[API]     "expected": "string",
+[API]     "code": "invalid_type",
+[API]     "path": [
+[API]       "status",
+[API]       "gc",
+[API]       "last_run"
+[API]     ],
+[API]     "message": "Invalid input: expected string, received null"
+[API]   }
+[API] ]
+[API]     reqId: "req-3j"
+[API]     req: {
+[API]       "method": "POST",
+[API]       "url": "/api/autohelper/heartbeat",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 51517
+[API]     }
+[API]     res: {
+[API]       "statusCode": 500
+[API]     }
+[API]     err: {
+[API]       "type": "ZodError",
+[API]       "message": "[\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"runner\",\n      \"current_runner\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"index\",\n      \"last_run\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"gc\",\n      \"last_run\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  }\n]",
+[API]       "stack":
+[API]           ZodError: [
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "runner",
+[API]                 "current_runner"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             },
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "index",
+[API]                 "last_run"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             },
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "gc",
+[API]                 "last_run"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             }
+[API]           ]
+[API]               at Object.<anonymous> (C:\Users\Neal\Documents\automatique\autoart\backend\src\modules\autohelper\autohelper.routes.ts:293:40)
+[API]               at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[API]       "name": "ZodError"
+[API]     }
+[API] [09:32:15.658] INFO (16684): request completed
+[API]     reqId: "req-3j"
+[API]     res: {
+[API]       "statusCode": 500
+[API]     }
+[API]     responseTime: 51.49279999732971
+[API] [09:32:17.710] INFO (16684): incoming request
+[API]     reqId: "req-3k"
+[API]     req: {
+[API]       "method": "GET",
+[API]       "url": "/api/autohelper/poll",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 51521
+[API]     }
+[API] [09:32:17.861] INFO (16684): request completed
+[API]     reqId: "req-3k"
+[API]     res: {
+[API]       "statusCode": 200
+[API]     }
+[API]     responseTime: 150.62129998207092
+[API] [09:32:24.906] INFO (16684): incoming request
+[API]     reqId: "req-3l"
+[API]     req: {
+[API]       "method": "POST",
+[API]       "url": "/api/autohelper/heartbeat",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 51529
+[API]     }
+[API] [09:32:24.961] ERROR (16684): [
+[API]   {
+[API]     "expected": "string",
+[API]     "code": "invalid_type",
+[API]     "path": [
+[API]       "status",
+[API]       "runner",
+[API]       "current_runner"
+[API]     ],
+[API]     "message": "Invalid input: expected string, received null"
+[API]   },
+[API]   {
+[API]     "expected": "string",
+[API]     "code": "invalid_type",
+[API]     "path": [
+[API]       "status",
+[API]       "index",
+[API]       "last_run"
+[API]     ],
+[API]     "message": "Invalid input: expected string, received null"
+[API]   },
+[API]   {
+[API]     "expected": "string",
+[API]     "code": "invalid_type",
+[API]     "path": [
+[API]       "status",
+[API]       "gc",
+[API]       "last_run"
+[API]     ],
+[API]     "message": "Invalid input: expected string, received null"
+[API]   }
+[API] ]
+[API]     reqId: "req-3l"
+[API]     req: {
+[API]       "method": "POST",
+[API]       "url": "/api/autohelper/heartbeat",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 51529
+[API]     }
+[API]     res: {
+[API]       "statusCode": 500
+[API]     }
+[API]     err: {
+[API]       "type": "ZodError",
+[API]       "message": "[\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"runner\",\n      \"current_runner\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"index\",\n      \"last_run\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"gc\",\n      \"last_run\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  }\n]",
+[API]       "stack":
+[API]           ZodError: [
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "runner",
+[API]                 "current_runner"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             },
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "index",
+[API]                 "last_run"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             },
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "gc",
+[API]                 "last_run"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             }
+[API]           ]
+[API]               at Object.<anonymous> (C:\Users\Neal\Documents\automatique\autoart\backend\src\modules\autohelper\autohelper.routes.ts:293:40)
+[API]               at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[API]       "name": "ZodError"
+[API]     }
+[API] [09:32:24.961] INFO (16684): request completed
+[API]     reqId: "req-3l"
+[API]     res: {
+[API]       "statusCode": 500
+[API]     }
+[API]     responseTime: 55.008399963378906
+[API] [09:32:27.022] INFO (16684): incoming request
+[API]     reqId: "req-3m"
+[API]     req: {
+[API]       "method": "GET",
+[API]       "url": "/api/autohelper/poll",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 51537
+[API]     }
+[API] [09:32:27.160] INFO (16684): request completed
+[API]     reqId: "req-3m"
+[API]     res: {
+[API]       "statusCode": 200
+[API]     }
+[API]     responseTime: 138.024699985981
+[API] [09:32:34.202] INFO (16684): incoming request
+[API]     reqId: "req-3n"
+[API]     req: {
+[API]       "method": "POST",
+[API]       "url": "/api/autohelper/heartbeat",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 51542
+[API]     }
+[API] [09:32:34.257] ERROR (16684): [
+[API]   {
+[API]     "expected": "string",
+[API]     "code": "invalid_type",
+[API]     "path": [
+[API]       "status",
+[API]       "runner",
+[API]       "current_runner"
+[API]     ],
+[API]     "message": "Invalid input: expected string, received null"
+[API]   },
+[API]   {
+[API]     "expected": "string",
+[API]     "code": "invalid_type",
+[API]     "path": [
+[API]       "status",
+[API]       "index",
+[API]       "last_run"
+[API]     ],
+[API]     "message": "Invalid input: expected string, received null"
+[API]   },
+[API]   {
+[API]     "expected": "string",
+[API]     "code": "invalid_type",
+[API]     "path": [
+[API]       "status",
+[API]       "gc",
+[API]       "last_run"
+[API]     ],
+[API]     "message": "Invalid input: expected string, received null"
+[API]   }
+[API] ]
+[API]     reqId: "req-3n"
+[API]     req: {
+[API]       "method": "POST",
+[API]       "url": "/api/autohelper/heartbeat",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 51542
+[API]     }
+[API]     res: {
+[API]       "statusCode": 500
+[API]     }
+[API]     err: {
+[API]       "type": "ZodError",
+[API]       "message": "[\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"runner\",\n      \"current_runner\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"index\",\n      \"last_run\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  },\n  {\n    \"expected\": \"string\",\n    \"code\": \"invalid_type\",\n    \"path\": [\n      \"status\",\n      \"gc\",\n      \"last_run\"\n    ],\n    \"message\": \"Invalid input: expected string, received null\"\n  }\n]",
+[API]       "stack":
+[API]           ZodError: [
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "runner",
+[API]                 "current_runner"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             },
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "index",
+[API]                 "last_run"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             },
+[API]             {
+[API]               "expected": "string",
+[API]               "code": "invalid_type",
+[API]               "path": [
+[API]                 "status",
+[API]                 "gc",
+[API]                 "last_run"
+[API]               ],
+[API]               "message": "Invalid input: expected string, received null"
+[API]             }
+[API]           ]
+[API]               at Object.<anonymous> (C:\Users\Neal\Documents\automatique\autoart\backend\src\modules\autohelper\autohelper.routes.ts:293:40)
+[API]               at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[API]       "name": "ZodError"
+[API]     }
+[API] [09:32:34.257] INFO (16684): request completed
+[API]     reqId: "req-3n"
+[API]     res: {
+[API]       "statusCode": 500
+[API]     }
+[API]     responseTime: 55.38059997558594
+[API] [09:32:36.311] INFO (16684): incoming request
+[API]     reqId: "req-3o"
+[API]     req: {
+[API]       "method": "GET",
+[API]       "url": "/api/autohelper/poll",
+[API]       "host": "localhost:3001",
+[API]       "remoteAddress": "127.0.0.1",
+[API]       "remotePort": 51551
+[API]     }
+[API] [09:32:36.455] INFO (16684): request completed
+[API]     reqId: "req-3o"
+[API]     res: {
+[API]       "statusCode": 200
+[API]     }
+[API]     responseTime: 143.8391000032425

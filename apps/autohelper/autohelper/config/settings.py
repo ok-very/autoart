@@ -1,12 +1,16 @@
 """
 Configuration settings using pydantic-settings.
 Supports env vars and optional .env file.
+
+Config values can also be persisted to config.json via ConfigStore.
+For values that need to persist across restarts (like autoart_link_key),
+we read from config.json during Settings initialization.
 """
 
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from autohelper.shared.paths import data_dir
@@ -83,6 +87,34 @@ class Settings(BaseSettings):
     gc_rtf_temp_path: str | None = None  # Custom RTF temp path (default: system temp)
     gc_cleanup_orphaned_manifests: bool = False  # Disabled by default (risky)
     gc_cleanup_mail_ingest: bool = True  # Clean up processed mail files
+
+    @model_validator(mode="after")
+    def load_from_config_store(self) -> "Settings":
+        """
+        Load persisted values from config.json.
+
+        ConfigStore is the source of truth for values that persist across restarts,
+        like autoart_link_key and user-editable settings.
+        """
+        try:
+            from autohelper.config.store import ConfigStore
+
+            cfg = ConfigStore().load()
+
+            # Link key is only stored in config.json (not env vars)
+            if "autoart_link_key" in cfg and cfg["autoart_link_key"]:
+                object.__setattr__(self, "autoart_link_key", cfg["autoart_link_key"])
+
+            # User-editable settings that exist on Settings class
+            config_keys = ["allowed_roots", "mail_enabled", "mail_poll_interval"]
+            for key in config_keys:
+                if key in cfg:
+                    object.__setattr__(self, key, cfg[key])
+        except Exception:
+            # Don't fail startup if config.json is missing or malformed
+            pass
+
+        return self
 
     def get_allowed_roots(self) -> list[Path]:
         """Parse and validate allowed root paths."""

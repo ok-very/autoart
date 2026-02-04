@@ -5,10 +5,8 @@
 ## Bug List
 
 **Active blocking:**
-- **AutoHelper pairing times out** — service is open but pairing request never completes (frontend or AutoHelper service issue)
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
 - "Save current" in menu doesn't activate save workspace prompt — handler chain exists, not confirmed working
-- **AutoHelper sessions lost on backend restart** — sessions stored in-memory; backend restart wipes them but AutoHelper tray still shows "Paired" (reads local config). Frontend shows disconnected. Workaround: re-pair or delete `autoart_session_id` from config. Fix: persist to DB. (#340)
 - Fields from seed data rendering as `[object Object]` in tables
 - Subprocesses and stages not populating from seed projections
 - Poll editor missing — "New poll" has no editor attached; clicking existing spawned poll yields full page roundtrip (polls editor shipped in PRs #271-273, possible regression)
@@ -65,7 +63,6 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| 340 | Persist AutoHelper sessions to database (in-memory sessions lost on backend restart) | Backend |
 | — | Forms blocks: proper designs + wire to Fields/records system, submission + completion flow | Intake |
 | 173 | Epic: Finance Management System — rename "client" to "contact"; support progressive billing, budget allocation, developer record emulation | Epic |
 | 182 | Workspace modification tracking and save workflow | Workspace |
@@ -128,6 +125,9 @@
 | `packages/ui/src/atoms/RadioGroup.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
 | `packages/ui/src/molecules/PortalSelect.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
 | `packages/ui/src/atoms/CurrencyInput.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| `backend/src/modules/imports/connections.routes.ts` | `/connections/autohelper/credentials` endpoint returns Monday token but nothing calls it — dead code, remove |
+| `apps/autohelper/autohelper/modules/context/autoart.py` | `get_monday_token()` method defined but never called — dead code, remove |
+| `apps/autohelper/autohelper/modules/context/service.py` | Direct Monday client init (lines 112-122) for backward compat token nobody stores — dead code, remove |
 | `packages/ui/src/atoms/ProgressBar.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
 | `packages/ui/src/molecules/SegmentedControl.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes; also using glassmorphism (not in DESIGN.md) |
 | `packages/ui/src/atoms/Table.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
@@ -163,6 +163,7 @@
 
 | PRs | Description |
 |-----|-------------|
+| #360-364 | **AutoHelper Pairing Odyssey:** Replace ephemeral push-to-localhost pattern with claim-token flow — in-memory sessions → persistent link keys, frontend push → user-entered 6-char code w/ TTL, localhost HTTP dependency eliminated; AutoHelper tray menu pairing dialog; validation + timeout fixes; alignment to port 8100 + Vite proxy |
 | #354-356 | Fix theme registry readonly cache mutation; restore DOMPurify for email HTML; propagate AutoHelper pairing errors to frontend |
 | #357-359 | Fix dropdown transparent backgrounds (theme class migration); Projects button spawns panel; Miller Columns project selection |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |

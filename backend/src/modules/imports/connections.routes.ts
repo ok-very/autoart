@@ -46,6 +46,9 @@ export async function connectionsRoutes(app: FastifyInstance) {
             ? await connectionsService.isProviderConnected(userId, 'autohelper')
             : false;
 
+        // Debug: log connection check result
+        console.log('[/connections] userId=%s autohelper=%s', userId, autohelperConnected);
+
         return reply.send({
             monday: { connected: mondayConnected },
             google: { connected: googleConnected },
@@ -453,15 +456,15 @@ export async function connectionsRoutes(app: FastifyInstance) {
     });
 
     // ============================================================================
-    // AUTOHELPER LINK KEY ENDPOINTS
+    // AUTOHELPER CLAIM TOKEN ENDPOINTS (Plex-style pairing)
     // ============================================================================
 
     /**
-     * Generate a persistent link key for AutoHelper.
-     * Requires authentication — key is tied to current user.
-     * Upserts: calling again replaces any existing key.
+     * Generate a claim code for pairing.
+     * User displays this code and enters it into AutoHelper's tray menu.
+     * Code expires in 5 minutes.
      */
-    app.post('/connections/autohelper/pair', {
+    app.post('/pair/claim', {
         preHandler: app.authenticate
     }, async (request, reply) => {
         const userId = (request.user as { userId?: string })?.userId;
@@ -469,17 +472,58 @@ export async function connectionsRoutes(app: FastifyInstance) {
             return reply.status(401).send({ error: 'Authentication required' });
         }
 
-        const key = await connectionsService.generateLinkKey(userId);
+        const { code, expiresAt } = await connectionsService.generateClaimToken(userId);
 
-        return reply.send({ key });
+        return reply.send({ code, expiresAt: expiresAt.toISOString() });
     });
+
+    /**
+     * Redeem a claim code (called by AutoHelper, unauthenticated).
+     * Validates the code, generates a link key, returns it to AutoHelper.
+     */
+    app.post('/pair/redeem', async (request, reply) => {
+        const { code } = z.object({ code: z.string().trim().min(1) }).parse(request.body);
+
+        const result = await connectionsService.redeemClaimToken(code);
+
+        if (!result) {
+            return reply.status(400).send({
+                error: 'Invalid or expired code',
+                message: 'The pairing code is invalid or has expired. Generate a new code and try again.'
+            });
+        }
+
+        return reply.send({ key: result.key });
+    });
+
+    /**
+     * Poll for claim status (called by frontend).
+     * Returns whether the claim has been redeemed.
+     */
+    app.get('/pair/status', {
+        preHandler: app.authenticate
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
+        if (!userId) {
+            return reply.status(401).send({ error: 'Authentication required' });
+        }
+
+        const status = await connectionsService.getClaimStatus(userId);
+
+        return reply.send(status);
+    });
+
+    // ============================================================================
+    // AUTOHELPER LINK KEY ENDPOINTS
+    // ============================================================================
 
     /**
      * Verify an AutoHelper link key is valid (no Monday dependency).
      * Used by AutoHelper during pairing to confirm the key is recognized.
      */
     app.get('/connections/autohelper/verify', async (request, reply) => {
-        const key = (request.headers['x-autohelper-key'] as string) || '';
+        const keyHeader = request.headers['x-autohelper-key'];
+        const key = Array.isArray(keyHeader) ? keyHeader[0] ?? '' : keyHeader ?? '';
 
         if (!key) {
             return reply.status(401).send({ error: 'Link key required' });
@@ -498,7 +542,8 @@ export async function connectionsRoutes(app: FastifyInstance) {
      * Returns Monday API token (single source of truth).
      */
     app.get('/connections/autohelper/credentials', async (request, reply) => {
-        const key = (request.headers['x-autohelper-key'] as string) || '';
+        const keyHeader = request.headers['x-autohelper-key'];
+        const key = Array.isArray(keyHeader) ? keyHeader[0] ?? '' : keyHeader ?? '';
 
         if (!key) {
             return reply.status(401).send({ error: 'Link key required in X-AutoHelper-Key header' });
