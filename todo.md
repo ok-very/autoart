@@ -77,7 +77,7 @@
 | 86 | Monday.com Board Sync Settings | Integration |
 | 291 | Schema editor / Composer relationship-math builder | Feature |
 | — | Composer bar as sleek dockview popout window (replace modal) | UX |
-| — | Action vocabulary: store classification verbs/nouns/adjectives from imports as a heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret what action type is being constructed or referenced | Classification |
+| — | Action Vocabulary System: agent-first natural language parsing for single input bar; vocabulary snapshot + parse endpoint + creation router — see [`docs/VOCABULARY_SYSTEM.md`](docs/VOCABULARY_SYSTEM.md) | Infrastructure |
 
 ---
 
