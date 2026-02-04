@@ -23,45 +23,28 @@ The autocomplete is a derived benefit of building agent-first infrastructure.
 ## Three-Layer Model
 
 ```
-                         ┌─────────────────────┐
-                         │     Vocabulary      │
-                         │ (shared term layer) │
-                         │                     │
-                         │  ┌───────────────┐  │
-                         │  │   Verbage     │  │
-                         │  │ (verb subset) │  │
-                         │  └───────────────┘  │
-                         └──────────┬──────────┘
-                                    │
-                 ┌──────────────────┴──────────────────┐
-                 ▼                                     ▼
-     ┌───────────────────────┐           ┌───────────────────────┐
-     │        Intent         │           │      Inference        │
-     │   "What can I do?"    │           │   "What happened?"    │
-     ├───────────────────────┤           ├───────────────────────┤
-     │ • Action types        │           │ • Fact classification │
-     │ • Field definitions   │           │ • Event detection     │
-     │ • Entity resolution   │           │ • Import mapping      │
-     │ • Creation routing    │           │ • Email parsing       │
-     └───────────────────────┘           └───────────────────────┘
-            │                                     │
-            ▼                                     ▼
-     "invoice henderson"              "invoiced the client" in email
-     → create Invoice action          → INVOICE_SENT fact recorded
+┌───────────────────────┐   ┌───────────────────────┐   ┌───────────────────────┐
+│      Vocabulary       │   │        Intent         │   │      Inference        │
+│  (shared term layer)  │   │ "What can I do?"      │   │ "What happened?"      │
+├───────────────────────┤   ├───────────────────────┤   ├───────────────────────┤
+│ • Terms & aliases     │   │ • Action types        │   │ • Fact classification │
+│ • Verbs & tenses      │──▶│ • Field definitions   │   │ • Event detection     │
+│ • Entity names        │   │ • Entity resolution   │   │ • Import mapping      │
+│ • Synonyms            │──▶│ • Creation routing    │   │ • Email parsing       │
+└───────────────────────┘   └───────────────────────┘   └───────────────────────┘
+                                      │                           │
+                                      ▼                           ▼
+                               "invoice henderson"    "invoiced the client" in email
+                               → create Invoice       → INVOICE_SENT fact recorded
 ```
 
-**Vocabulary** is the shared language layer — the terms, verbs, and nomenclature used in this workspace. **Verbage** is the verb subset within vocabulary — tenses, synonyms, and action mappings for verbs specifically.
+| Layer | Purpose | Examples |
+|-------|---------|----------|
+| **Vocabulary** | Shared term layer — what words exist | "invoice", "bill", "charge" are synonyms; "henderson" → Contact |
+| **Intent** | Action construction — what can the user create | "invoice henderson" → create Invoice action |
+| **Inference** | Fact classification — what happened | "invoiced the client" → INVOICE_SENT event |
 
-| Layer | What It Contains | Consumers |
-|-------|------------------|-----------|
-| **Vocabulary** | All terms: nouns, verbs, aliases, entity names | Intent, Inference |
-| **Verbage** | Verb subset: base forms, tenses, synonyms, action type mappings | Inference (heavily), Intent |
-| **Intent** | Action construction logic | Composer, Command bar, MCP |
-| **Inference** | Fact classification logic | Import pipeline, Email parsing |
-
-Inference leans heavily on verbage (verb tenses for fact labels like "Invoiced"). Intent uses the broader vocabulary (action types, entities, fields).
-
-The vocabulary layer is learned from imports and usage. Intent and Inference become consumers of that shared foundation rather than maintaining separate word lists.
+Vocabulary is learned from imports and usage. Intent and Inference consume vocabulary rather than maintaining separate word lists.
 
 ---
 
@@ -69,11 +52,11 @@ The vocabulary layer is learned from imports and usage. Intent and Inference bec
 
 These files contain the current (import-scoped) inference system that will be extended:
 
-### Verbage (verb subset, currently hardcoded)
+### Vocabulary (verb data, currently hardcoded)
 
 | File | Purpose |
 |------|---------|
-| [`backend/src/modules/interpreter/fact-kind-inferrer.ts`](../backend/src/modules/interpreter/fact-kind-inferrer.ts) | Verb dictionary for past-tense fact labeling. Contains `VERB_TENSES` mapping (~50 verbs). This becomes the seed data for vocabulary's verbage subset. |
+| [`backend/src/modules/interpreter/fact-kind-inferrer.ts`](../backend/src/modules/interpreter/fact-kind-inferrer.ts) | Verb dictionary for past-tense fact labeling. Contains `VERB_TENSES` mapping (~50 verbs). This becomes seed data for vocabulary. |
 
 ### Inference System
 
@@ -137,7 +120,7 @@ interface TermAssociation {
 
 ### Future: Unify Verb Layer
 
-The `VERB_TENSES` dictionary in `fact-kind-inferrer.ts` should become a projection of vocabulary's verbage subset, not a hardcoded source:
+The `VERB_TENSES` dictionary in `fact-kind-inferrer.ts` should become a projection of vocabulary, not a hardcoded source:
 
 **Current (hardcoded):**
 ```typescript
@@ -160,27 +143,27 @@ interface VerbEntry {
 }
 
 // fact-kind-inferrer.ts (refactored)
-import { getVerbage } from '../vocabulary/vocabulary-service.js';
-const VERB_TENSES = getVerbage(); // derived from vocabulary, not hardcoded
+import { getVerbs } from '../vocabulary/vocabulary-service.js';
+const VERB_TENSES = getVerbs(); // derived from vocabulary, not hardcoded
 ```
 
 **Work required:**
-- [ ] Add verbage subset to vocabulary snapshot
-- [ ] `fact-kind-inferrer` consumes vocabulary's verbage instead of hardcoded dict
-- [ ] Intent system consumes same verbage for `ActionTypeEntry.verbs`
+- [ ] Add verb entries to vocabulary snapshot
+- [ ] `fact-kind-inferrer` consumes vocabulary instead of hardcoded dict
+- [ ] Intent system consumes same vocabulary for `ActionTypeEntry.verbs`
 - [ ] Migration to seed initial verb entries from current hardcoded list
 
 ### Email as Capture Point
 
-Email is a rich entry point for the inference system (facts), not intent (creation). When email parsing is wired:
+Email is a rich entry point for inference (facts), not intent (creation). When email parsing is wired:
 
 1. Email text → `intent-mapping-rules.ts` patterns → `fact_candidate`
-2. Fact candidate → `fact-kind-inferrer.ts` → labeled fact (using verbage)
+2. Fact candidate → `fact-kind-inferrer.ts` → labeled fact (using vocabulary)
 3. Labeled fact → event log
 
-Email parsing doesn't touch the intent system directly, but **both consume vocabulary's verbage**. If "invoice" is in verbage, both systems benefit:
-- Inference: "invoiced the client" → INVOICE_SENT fact (past tense from verbage)
-- Intent: "invoice henderson" → create Invoice action (base verb from verbage)
+Email parsing doesn't touch intent directly, but **both consume vocabulary**. If "invoice" is in vocabulary, both systems benefit:
+- Inference: "invoiced the client" → INVOICE_SENT fact (past tense from vocabulary)
+- Intent: "invoice henderson" → create Invoice action (base verb from vocabulary)
 
 ---
 
@@ -520,9 +503,9 @@ Given parsed intent, return a creation plan.
 8. Write snapshot, mark as active, deactivate previous
 ```
 
-### Verb Extraction (Verbage)
+### Verb Extraction
 
-Verbage — the verb subset of vocabulary — is populated from:
+Vocabulary's verb entries are populated from:
 
 1. **Canonical name derivation:** "Invoice" → base verb "invoice"
 2. **Synonym expansion:** "invoice" synonyms include "bill", "charge"
@@ -536,10 +519,10 @@ Verbage — the verb subset of vocabulary — is populated from:
 | Deliverable | deliver | name derivation |
 | Payment | pay | name derivation |
 
-Each verbage entry serves both consuming systems:
+Each verb entry serves both consuming systems:
 
 ```typescript
-// Verbage entry for "invoice" (stored in vocabulary snapshot)
+// Verb entry for "invoice" (stored in vocabulary snapshot)
 {
   base: "invoice",
   synonyms: ["bill", "charge"],
