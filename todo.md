@@ -1,16 +1,17 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-03 (evening)*
+*Last Updated: 2026-02-04*
 
 ## Bug List
 
-**Active blocking:**
-- Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
-- "Save current" in menu doesn't activate save workspace prompt — handler chain exists, not confirmed working
-- Fields from seed data rendering as `[object Object]` in tables
-- Subprocesses and stages not populating from seed projections
-- Poll editor missing — "New poll" has no editor attached; clicking existing spawned poll yields full page roundtrip (polls editor shipped in PRs #271-273, possible regression)
-- Finance overlay "client" field breaks when querying contacts — placeholder query not wired
+**Active blocking (need verification):**
+- Avisina Broadway test seed data — container seeding + idempotency fixes landed, needs end-to-end testing
+- "Save current" in menu — handler chain correctly wired (traced full flow), needs manual verification
+- Subprocesses and stages — depends on Monday CSV having containers; code is correct, needs testing
+
+**Fixed (PR #376):**
+- ~~Fields from seed data rendering as `[object Object]` in tables~~ — added `stringifyFieldValue` utility
+- ~~Finance overlay "client" field breaks when querying contacts~~ — was missing `isLoading` prop to ContactPicker
 
 **UX polish:**
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
@@ -113,25 +114,25 @@
 | `frontend/src/api/hooks/search.ts` | `useSearch` second param repurposed from `projectId` to `type` — `MentionSuggestion.tsx` still passes project UUID, returns empty results (CodeAnt #349) |
 | `frontend/src/ui/admin/AdminUsersPanel.tsx` | Create-user handler lacks `isPending` guard — rapid Enter presses can fire duplicate create requests (CodeAnt #349) |
 | `frontend/src/ui/admin/AdminUsersPanel.tsx` | Role-change empty `catch` doesn't reopen edit UI after failure when `onBlur` already closed it — suggest `setEditingRole(true)` in catch (CodeAnt #349) |
-| `packages/ui/src/atoms/Button.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes like `bg-ws-panel-bg` (same issue fixed in Menu/Dropdown via PR #357) |
-| `packages/ui/src/atoms/Card.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/Toggle.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/Select.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/TextInput.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/Modal.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/Checkbox.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/Label.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/molecules/PortalMenu.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/IconButton.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/RadioGroup.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/molecules/PortalSelect.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/CurrencyInput.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `backend/src/modules/imports/connections.routes.ts` | `/connections/autohelper/credentials` endpoint returns Monday token but nothing calls it — dead code, remove |
-| `apps/autohelper/autohelper/modules/context/autoart.py` | `get_monday_token()` method defined but never called — dead code, remove |
-| `apps/autohelper/autohelper/modules/context/service.py` | Direct Monday client init (lines 112-122) for backward compat token nobody stores — dead code, remove |
-| `packages/ui/src/atoms/ProgressBar.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/molecules/SegmentedControl.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes; also using glassmorphism (not in DESIGN.md) |
-| `packages/ui/src/atoms/Table.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| ~~`packages/ui/src/atoms/Button.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
+| ~~`packages/ui/src/atoms/Card.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
+| ~~`packages/ui/src/atoms/Toggle.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
+| ~~`packages/ui/src/atoms/Select.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
+| ~~`packages/ui/src/atoms/TextInput.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
+| ~~`packages/ui/src/atoms/Modal.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
+| ~~`packages/ui/src/atoms/Checkbox.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
+| ~~`packages/ui/src/atoms/Label.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
+| ~~`packages/ui/src/atoms/IconButton.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
+| ~~`packages/ui/src/atoms/RadioGroup.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
+| ~~`packages/ui/src/atoms/CurrencyInput.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
+| ~~`packages/ui/src/atoms/ProgressBar.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
+| ~~`packages/ui/src/atoms/Table.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
+| ~~`packages/ui/src/molecules/SegmentedControl.tsx`~~ | ~~Tailwind v4 token migration + added tab tokens to @theme~~ (PR #377) |
+| ~~`packages/ui/src/molecules/PortalMenu.tsx`~~ | ~~File doesn't exist — stale entry~~ |
+| ~~`packages/ui/src/molecules/PortalSelect.tsx`~~ | ~~File doesn't exist — stale entry~~ |
+| ~~`backend/src/modules/imports/connections.routes.ts`~~ | ~~/connections/autohelper/credentials endpoint~~ — removed |
+| ~~`apps/autohelper/autohelper/modules/context/autoart.py`~~ | ~~`get_monday_token()` method~~ — removed |
+| ~~`apps/autohelper/autohelper/modules/context/service.py`~~ | ~~Direct Monday client init~~ — removed |
 
 **Low priority (CodeAnt #332 nitpicks):**
 
@@ -164,6 +165,7 @@
 
 | PRs | Description |
 |-----|-------------|
+| #376 | Fix `[object Object]` rendering + ContactPicker loading state |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
 
 ---
@@ -172,6 +174,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Polls Editor (Expanded):** Full poll management with backend CRUD (update, delete, duplicate + confirmation_message field); authenticated results endpoint; editor panel with settings/results tabs; dashboard integration with inline actions (edit, duplicate, delete, close, share) | PRs #373-375 |
 | — | **AutoHelper Pairing Odyssey + Bug Fixes:** Replaced push-to-localhost pattern with claim-token flow (in-memory sessions → persistent link keys, 6-char codes w/ TTL); tray menu pairing dialog; port alignment to 8100 + Vite proxy; fixed `is_running()` AttributeError, routed mail/folder controls through backend bridge, explicit Web Collector dependency checks; AdaptersCard showing real capability status | PRs #354-368 (14 PRs) |
 | 83 | Email Section Redesign + Email Logging System: Table atom primitives, body_html capture, MappingsPanel expand/collapse HTML rendering, triage endpoints, mail_messages/mail_links persistence, frontend linking, promoted badges, CodeAnt review fixes | PRs #346-353 |
 | 82a-82e | User Profiles System: schema + role middleware, avatar upload + password change + admin CRUD, account settings UI + admin panel + header avatar, UserChip photo support, project assignment + deactivation reassignment | PRs #341-345 |

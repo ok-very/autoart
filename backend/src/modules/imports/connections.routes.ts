@@ -538,32 +538,6 @@ export async function connectionsRoutes(app: FastifyInstance) {
     });
 
     /**
-     * Get proxied credentials for a trusted AutoHelper link key.
-     * Returns Monday API token (single source of truth).
-     */
-    app.get('/connections/autohelper/credentials', async (request, reply) => {
-        const keyHeader = request.headers['x-autohelper-key'];
-        const key = Array.isArray(keyHeader) ? keyHeader[0] ?? '' : keyHeader ?? '';
-
-        if (!key) {
-            return reply.status(401).send({ error: 'Link key required in X-AutoHelper-Key header' });
-        }
-
-        const mondayToken = await connectionsService.getProxiedMondayToken(key);
-
-        if (!mondayToken) {
-            return reply.status(401).send({
-                error: 'Invalid key or no Monday token configured',
-                message: 'Re-pair with AutoArt or ensure Monday is connected'
-            });
-        }
-
-        return reply.send({
-            monday_api_token: mondayToken,
-        });
-    });
-
-    /**
      * Revoke the AutoHelper link key for the current user.
      * Requires authentication.
      */

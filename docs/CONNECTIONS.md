@@ -43,7 +43,7 @@ Both stored in `Map<string, T>` in `connections.service.ts`. Not persisted to da
 | `GET /connections` | Optional | Status summary (monday, google, autohelper) |
 | `POST /connections/autohelper/pair` | Required | Generate 6-digit pairing code |
 | `POST /connections/autohelper/handshake` | None | Exchange code for sessionId |
-| `GET /connections/autohelper/credentials` | Session header | Fetch Monday token + validate session |
+| `GET /connections/autohelper/verify` | Link key header | Validate link key |
 | `POST /connections/autohelper/disconnect` | Session header | AutoHelper invalidates its own session |
 | `GET /connections/autohelper` | Required | List connected instances for user |
 | `DELETE /connections/autohelper/:displayId` | Required | User disconnects an instance |
@@ -83,42 +83,36 @@ Session auth uses `X-AutoHelper-Session` header. API key auth uses `X-API-Key` h
 
 ## Implicit Heartbeat
 
-No dedicated heartbeat endpoint. Every `GET /credentials` call triggers `validateSession()`:
+No dedicated heartbeat endpoint. Every `GET /verify` call triggers `validateLinkKey()`:
 
-- Updates `session.lastSeen`
-- Checks `expiresAt` — if expired, deletes session, returns `null` → 401
+- Checks link key validity
 - AutoHelper receives 401 → knows to re-pair
 
 ---
 
-## Session Expiry
+## Link Key Persistence
+
+Link keys are stored in `connection_credentials` table (persistent, survives backend restarts).
 
 | Trigger | Behavior |
 |---------|----------|
-| No API calls for 24h | `expiresAt` passes, next `validateSession()` deletes session |
-| Backend restart | All in-memory sessions lost, AutoHelper gets 401 on next call |
-| User clicks "Disconnect" | `DELETE /connections/autohelper/:displayId` removes session |
-| AutoHelper unpairs | `POST /connections/autohelper/disconnect` removes session |
+| User clicks "Disconnect" | `DELETE /connections/autohelper/:displayId` removes link key |
+| AutoHelper unpairs | `POST /connections/autohelper/disconnect` removes link key |
 
 ---
 
-## Credential Flow
+## Link Key Verification
 
-AutoHelper never stores Monday tokens locally.
+AutoHelper verifies its link key is still valid:
 
 ```
-AutoHelper needs Monday token
-  ├─ GET /api/connections/autohelper/credentials
-  │  Header: X-AutoHelper-Session: "a1b2c3d4..."
-  ├─ Backend: validateSession("a1b2c3d4...")
-  │  ├─ Find in map, check expiry, update lastSeen
-  │  └─ Return userId
-  ├─ Backend: getMondayToken(userId)
-  │  └─ SELECT from connection_credentials WHERE provider='monday'
-  └─ Returns { monday_api_token: "..." }
+AutoHelper checks connection status
+  ├─ GET /api/connections/autohelper/verify
+  │  Header: X-AutoHelper-Key: "link_key_value..."
+  ├─ Backend: validateLinkKey("link_key_value...")
+  │  └─ Verify key exists in connection_credentials
+  └─ Returns { valid: true }
 ```
-
-If user updates their Monday token in Settings, AutoHelper picks it up on the next fetch automatically.
 
 ---
 

@@ -398,21 +398,6 @@ export async function revokeLinkKeyByValue(key: string): Promise<boolean> {
     return Number(result.numDeletedRows) > 0;
 }
 
-/**
- * Get Monday API token for a trusted AutoHelper link key.
- * Validates the key, then proxies the Monday token for the associated user.
- */
-export async function getProxiedMondayToken(key: string): Promise<string | null> {
-    const userId = await validateLinkKey(key);
-    if (!userId) return null;
-
-    try {
-        return await getMondayToken(userId);
-    } catch {
-        return null;
-    }
-}
-
 // ============================================================================
 // CLAIM TOKEN PAIRING (Plex-style)
 // ============================================================================
