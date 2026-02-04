@@ -1005,50 +1005,48 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  // Drop tables in reverse order
-
-  await db.schema.dropTable('monday_sync_states').ifExists().execute();
-  await db.schema.dropTable('monday_group_configs').ifExists().execute();
-  await db.schema.dropTable('monday_column_configs').ifExists().execute();
-  await db.schema.dropTable('import_executions').ifExists().execute();
-  await db.schema.dropTable('record_links').ifExists().execute();
-  await db.schema.dropTable('record_aliases').ifExists().execute();
-  await db.schema.dropTable('action_references').ifExists().execute();
-  await db.schema.dropTable('poll_responses').ifExists().execute();
-  await db.schema.dropTable('monday_board_configs').ifExists().execute();
-  await db.schema.dropTable('external_source_mappings').ifExists().execute();
-  await db.schema.dropTable('mail_links').ifExists().execute();
-  await db.schema.dropTable('import_plans').ifExists().execute();
-  await db.schema.dropTable('records').ifExists().execute();
-  await db.schema.dropTable('project_members').ifExists().execute();
-  await db.schema.dropTable('polls').ifExists().execute();
-  await db.schema.dropTable('monday_workspaces').ifExists().execute();
-  await db.schema.dropTable('mail_messages').ifExists().execute();
-  await db.schema.dropTable('inference_learnings').ifExists().execute();
-  await db.schema.dropTable('import_sessions').ifExists().execute();
-  await db.schema.dropTable('events').ifExists().execute();
-  await db.schema.dropTable('user_settings').ifExists().execute();
-  await db.schema.dropTable('sessions').ifExists().execute();
-  await db.schema.dropTable('hierarchy_nodes').ifExists().execute();
-  await db.schema.dropTable('fact_kind_definitions').ifExists().execute();
-  await db.schema.dropTable('export_sessions').ifExists().execute();
-  await db.schema.dropTable('connection_credentials').ifExists().execute();
-  await db.schema.dropTable('autohelper_instances').ifExists().execute();
-  await db.schema.dropTable('autohelper_commands').ifExists().execute();
-  await db.schema.dropTable('actions').ifExists().execute();
-  await db.schema.dropTable('intake_submissions').ifExists().execute();
-  await db.schema.dropTable('intake_form_pages').ifExists().execute();
-  await db.schema.dropTable('workflow_surface_nodes').ifExists().execute();
-  await db.schema.dropTable('users').ifExists().execute();
-  await db.schema.dropTable('record_definitions').ifExists().execute();
-  await db.schema.dropTable('intake_forms').ifExists().execute();
-  await db.schema.dropTable('engagements').ifExists().execute();
+  // Drop tables with CASCADE to handle foreign key dependencies
+  await db.schema.dropTable('monday_sync_states').ifExists().cascade().execute();
+  await db.schema.dropTable('monday_group_configs').ifExists().cascade().execute();
+  await db.schema.dropTable('monday_column_configs').ifExists().cascade().execute();
+  await db.schema.dropTable('import_executions').ifExists().cascade().execute();
+  await db.schema.dropTable('record_links').ifExists().cascade().execute();
+  await db.schema.dropTable('record_aliases').ifExists().cascade().execute();
+  await db.schema.dropTable('action_references').ifExists().cascade().execute();
+  await db.schema.dropTable('poll_responses').ifExists().cascade().execute();
+  await db.schema.dropTable('monday_board_configs').ifExists().cascade().execute();
+  await db.schema.dropTable('external_source_mappings').ifExists().cascade().execute();
+  await db.schema.dropTable('mail_links').ifExists().cascade().execute();
+  await db.schema.dropTable('import_plans').ifExists().cascade().execute();
+  await db.schema.dropTable('records').ifExists().cascade().execute();
+  await db.schema.dropTable('project_members').ifExists().cascade().execute();
+  await db.schema.dropTable('polls').ifExists().cascade().execute();
+  await db.schema.dropTable('monday_workspaces').ifExists().cascade().execute();
+  await db.schema.dropTable('mail_messages').ifExists().cascade().execute();
+  await db.schema.dropTable('inference_learnings').ifExists().cascade().execute();
+  await db.schema.dropTable('import_sessions').ifExists().cascade().execute();
+  await db.schema.dropTable('events').ifExists().cascade().execute();
+  await db.schema.dropTable('user_settings').ifExists().cascade().execute();
+  await db.schema.dropTable('sessions').ifExists().cascade().execute();
+  await db.schema.dropTable('hierarchy_nodes').ifExists().cascade().execute();
+  await db.schema.dropTable('fact_kind_definitions').ifExists().cascade().execute();
+  await db.schema.dropTable('export_sessions').ifExists().cascade().execute();
+  await db.schema.dropTable('connection_credentials').ifExists().cascade().execute();
+  await db.schema.dropTable('autohelper_instances').ifExists().cascade().execute();
+  await db.schema.dropTable('autohelper_commands').ifExists().cascade().execute();
+  await db.schema.dropTable('actions').ifExists().cascade().execute();
+  await db.schema.dropTable('intake_submissions').ifExists().cascade().execute();
+  await db.schema.dropTable('intake_form_pages').ifExists().cascade().execute();
+  await db.schema.dropTable('workflow_surface_nodes').ifExists().cascade().execute();
+  await db.schema.dropTable('users').ifExists().cascade().execute();
+  await db.schema.dropTable('record_definitions').ifExists().cascade().execute();
+  await db.schema.dropTable('intake_forms').ifExists().cascade().execute();
+  await db.schema.dropTable('engagements').ifExists().cascade().execute();
 
   // Drop enums
-
-  await sql`DROP TYPE IF EXISTS context_type`.execute(db);
-  await sql`DROP TYPE IF EXISTS intake_form_status`.execute(db);
-  await sql`DROP TYPE IF EXISTS node_type`.execute(db);
-  await sql`DROP TYPE IF EXISTS poll_status`.execute(db);
-  await sql`DROP TYPE IF EXISTS ref_mode`.execute(db);
+  await sql`DROP TYPE IF EXISTS context_type CASCADE`.execute(db);
+  await sql`DROP TYPE IF EXISTS intake_form_status CASCADE`.execute(db);
+  await sql`DROP TYPE IF EXISTS node_type CASCADE`.execute(db);
+  await sql`DROP TYPE IF EXISTS poll_status CASCADE`.execute(db);
+  await sql`DROP TYPE IF EXISTS ref_mode CASCADE`.execute(db);
 }
