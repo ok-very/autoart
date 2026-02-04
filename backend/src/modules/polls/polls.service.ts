@@ -1,4 +1,10 @@
-import { generateUniqueId, PollTimeConfigSchema, type EngagementKindType } from '@autoart/shared';
+import {
+  generateUniqueId,
+  PollTimeConfigSchema,
+  type EngagementKindType,
+  type UpdatePollInput,
+  type DuplicatePollInput,
+} from '@autoart/shared';
 
 import { db } from '../../db/client.js';
 import type {
@@ -10,7 +16,7 @@ import type {
   PollResponseUpdate,
   NewEngagement,
 } from '../../db/schema.js';
-import { NotFoundError, ConflictError, ValidationError } from '../../utils/errors.js';
+import { NotFoundError, ConflictError, ValidationError, ForbiddenError } from '../../utils/errors.js';
 
 const MAX_UNIQUE_ID_RETRIES = 5;
 
@@ -240,6 +246,105 @@ export async function closePoll(id: string): Promise<Poll> {
   }
 
   return poll;
+}
+
+export async function updatePoll(
+  id: string,
+  userId: string,
+  updates: UpdatePollInput
+): Promise<Poll> {
+  const poll = await getPollById(id);
+  if (!poll) {
+    throw new NotFoundError('Poll', id);
+  }
+  if (poll.created_by !== userId) {
+    throw new ForbiddenError('Not authorized to edit this poll');
+  }
+  if (poll.status === 'closed') {
+    throw new ValidationError('Cannot edit a closed poll');
+  }
+
+  // Build update object, validating time_config if provided
+  const updateData: PollUpdate = {};
+
+  if (updates.title !== undefined) {
+    updateData.title = updates.title;
+  }
+  if (updates.description !== undefined) {
+    updateData.description = updates.description;
+  }
+  if (updates.confirmation_message !== undefined) {
+    updateData.confirmation_message = updates.confirmation_message;
+  }
+  if (updates.status !== undefined) {
+    updateData.status = updates.status;
+  }
+  if (updates.time_config !== undefined) {
+    const parseResult = PollTimeConfigSchema.safeParse(updates.time_config);
+    if (!parseResult.success) {
+      throw new ValidationError('Invalid time_config: ' + parseResult.error.message);
+    }
+    updateData.time_config = parseResult.data;
+  }
+
+  const updated = await db
+    .updateTable('polls')
+    .set(updateData)
+    .where('id', '=', id)
+    .returningAll()
+    .executeTakeFirstOrThrow();
+
+  return updated;
+}
+
+export async function deletePoll(id: string, userId: string): Promise<void> {
+  const poll = await getPollById(id);
+  if (!poll) {
+    throw new NotFoundError('Poll', id);
+  }
+  if (poll.created_by !== userId) {
+    throw new ForbiddenError('Not authorized to delete this poll');
+  }
+
+  // Responses cascade delete via FK constraint, but we do it in transaction for clarity
+  await db.transaction().execute(async (trx) => {
+    await trx.deleteFrom('poll_responses').where('poll_id', '=', id).execute();
+    await trx.deleteFrom('polls').where('id', '=', id).execute();
+  });
+}
+
+export async function duplicatePoll(
+  id: string,
+  userId: string,
+  input?: DuplicatePollInput
+): Promise<Poll> {
+  const original = await getPollById(id);
+  if (!original) {
+    throw new NotFoundError('Poll', id);
+  }
+  if (original.created_by !== userId) {
+    throw new ForbiddenError('Not authorized to duplicate this poll');
+  }
+
+  const title = input?.title ?? `${original.title} (copy)`;
+
+  // Use createPoll to get proper unique_id generation
+  const newPoll = await createPoll(title, original.time_config, original.project_id ?? undefined, userId);
+
+  // Update with additional fields from original
+  if (original.description || original.confirmation_message) {
+    return db
+      .updateTable('polls')
+      .set({
+        description: original.description,
+        confirmation_message: original.confirmation_message,
+      })
+      .where('id', '=', newPoll.id)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+  }
+
+  return newPoll;
 }
 
 export async function logEngagement(

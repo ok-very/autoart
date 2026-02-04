@@ -39,6 +39,7 @@ export const PollSchema = z.object({
   unique_id: z.string(),
   title: z.string(),
   description: z.string().nullable(),
+  confirmation_message: z.string().nullable(), // Custom message shown after response submission
   status: PollStatusSchema,
   time_config: PollTimeConfigSchema,
   project_id: z.string().uuid().nullable(),
@@ -100,6 +101,26 @@ export const CreatePollInputSchema = z.object({
   project_id: z.string().uuid().optional(),
 });
 export type CreatePollInput = z.infer<typeof CreatePollInputSchema>;
+
+/**
+ * Update poll input
+ */
+export const UpdatePollInputSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).nullish(),
+  confirmation_message: z.string().max(500).nullish(),
+  time_config: PollTimeConfigSchema.optional(),
+  status: z.enum(['active', 'draft']).optional(), // Can't un-close
+});
+export type UpdatePollInput = z.infer<typeof UpdatePollInputSchema>;
+
+/**
+ * Duplicate poll input
+ */
+export const DuplicatePollInputSchema = z.object({
+  title: z.string().min(1).max(200).optional(), // Defaults to "{original} (copy)"
+});
+export type DuplicatePollInput = z.infer<typeof DuplicatePollInputSchema>;
 
 /**
  * Submit poll response input
