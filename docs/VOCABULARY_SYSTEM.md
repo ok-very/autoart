@@ -24,14 +24,19 @@ The autocomplete is a derived benefit of building agent-first infrastructure.
 
 ```
                          ┌─────────────────────┐
-                         │      Verbage        │
-                         │  (shared term layer) │
+                         │     Vocabulary      │
+                         │ (shared term layer) │
+                         │                     │
+                         │  ┌───────────────┐  │
+                         │  │   Verbage     │  │
+                         │  │ (verb subset) │  │
+                         │  └───────────────┘  │
                          └──────────┬──────────┘
                                     │
                  ┌──────────────────┴──────────────────┐
                  ▼                                     ▼
      ┌───────────────────────┐           ┌───────────────────────┐
-     │      Vocabulary       │           │      Inference        │
+     │        Intent         │           │      Inference        │
      │   "What can I do?"    │           │   "What happened?"    │
      ├───────────────────────┤           ├───────────────────────┤
      │ • Action types        │           │ • Fact classification │
@@ -45,15 +50,18 @@ The autocomplete is a derived benefit of building agent-first infrastructure.
      → create Invoice action          → INVOICE_SENT fact recorded
 ```
 
-**Verbage** is the shared language layer — the terms, verbs, and nomenclature used in this workspace. Both systems consume it differently:
+**Vocabulary** is the shared language layer — the terms, verbs, and nomenclature used in this workspace. **Verbage** is the verb subset within vocabulary — tenses, synonyms, and action mappings for verbs specifically.
 
-| Layer | Question | Example |
-|-------|----------|---------|
-| **Verbage** | What words exist? | "invoice", "bill", "charge" are synonyms |
-| **Vocabulary** | What can the user create? | "invoice" → ActionType:Invoice |
-| **Inference** | What fact does this text describe? | "invoiced" → INVOICE_SENT event |
+| Layer | What It Contains | Consumers |
+|-------|------------------|-----------|
+| **Vocabulary** | All terms: nouns, verbs, aliases, entity names | Intent, Inference |
+| **Verbage** | Verb subset: base forms, tenses, synonyms, action type mappings | Inference (heavily), Intent |
+| **Intent** | Action construction logic | Composer, Command bar, MCP |
+| **Inference** | Fact classification logic | Import pipeline, Email parsing |
 
-The verbage layer is learned from imports and usage. Vocabulary and Inference become consumers of that shared foundation rather than maintaining separate word lists.
+Inference leans heavily on verbage (verb tenses for fact labels like "Invoiced"). Intent uses the broader vocabulary (action types, entities, fields).
+
+The vocabulary layer is learned from imports and usage. Intent and Inference become consumers of that shared foundation rather than maintaining separate word lists.
 
 ---
 
@@ -61,11 +69,11 @@ The verbage layer is learned from imports and usage. Vocabulary and Inference be
 
 These files contain the current (import-scoped) inference system that will be extended:
 
-### Verbage (currently hardcoded)
+### Verbage (verb subset, currently hardcoded)
 
 | File | Purpose |
 |------|---------|
-| [`backend/src/modules/interpreter/fact-kind-inferrer.ts`](../backend/src/modules/interpreter/fact-kind-inferrer.ts) | Verb dictionary for past-tense fact labeling. Contains `VERB_TENSES` mapping (~50 verbs). |
+| [`backend/src/modules/interpreter/fact-kind-inferrer.ts`](../backend/src/modules/interpreter/fact-kind-inferrer.ts) | Verb dictionary for past-tense fact labeling. Contains `VERB_TENSES` mapping (~50 verbs). This becomes the seed data for vocabulary's verbage subset. |
 
 ### Inference System
 
@@ -129,7 +137,7 @@ interface TermAssociation {
 
 ### Future: Unify Verb Layer
 
-The `VERB_TENSES` dictionary in `fact-kind-inferrer.ts` should become a projection of verbage, not a hardcoded source:
+The `VERB_TENSES` dictionary in `fact-kind-inferrer.ts` should become a projection of vocabulary's verbage subset, not a hardcoded source:
 
 **Current (hardcoded):**
 ```typescript
@@ -141,38 +149,38 @@ const VERB_TENSES: Record<string, string> = {
 };
 ```
 
-**Future (derived from verbage):**
+**Future (derived from vocabulary):**
 ```typescript
-// verbage-service.ts (new)
+// vocabulary-service.ts (new)
 interface VerbEntry {
   base: string;           // "invoice"
   past_participle: string; // "invoiced"
-  past_tense_label: string; // "Invoiced" (for fact labels)
-  action_types: string[]; // ["Invoice"] (for vocabulary)
+  past_tense_label: string; // "Invoiced" (for fact labels → Inference)
+  action_types: string[]; // ["Invoice"] (for action creation → Intent)
 }
 
 // fact-kind-inferrer.ts (refactored)
-import { getVerbTenses } from '../verbage/verbage-service.js';
-const VERB_TENSES = getVerbTenses(); // derived, not hardcoded
+import { getVerbage } from '../vocabulary/vocabulary-service.js';
+const VERB_TENSES = getVerbage(); // derived from vocabulary, not hardcoded
 ```
 
 **Work required:**
-- [ ] Extract verb data to shared verbage layer
-- [ ] `fact-kind-inferrer` consumes verbage instead of hardcoded dict
-- [ ] Vocabulary builder consumes same verbage for `ActionTypeEntry.verbs`
+- [ ] Add verbage subset to vocabulary snapshot
+- [ ] `fact-kind-inferrer` consumes vocabulary's verbage instead of hardcoded dict
+- [ ] Intent system consumes same verbage for `ActionTypeEntry.verbs`
 - [ ] Migration to seed initial verb entries from current hardcoded list
 
 ### Email as Capture Point
 
-Email is a rich entry point for the inference system (facts), not vocabulary (creation). When email parsing is wired:
+Email is a rich entry point for the inference system (facts), not intent (creation). When email parsing is wired:
 
 1. Email text → `intent-mapping-rules.ts` patterns → `fact_candidate`
-2. Fact candidate → `fact-kind-inferrer.ts` → labeled fact
+2. Fact candidate → `fact-kind-inferrer.ts` → labeled fact (using verbage)
 3. Labeled fact → event log
 
-The vocabulary system doesn't directly touch email parsing, but **shares the verbage layer**. If "invoiced" is recognized as a verb in verbage, both systems benefit:
-- Inference: "invoiced the client" → INVOICE_SENT fact
-- Vocabulary: "invoice henderson" → create Invoice action
+Email parsing doesn't touch the intent system directly, but **both consume vocabulary's verbage**. If "invoice" is in verbage, both systems benefit:
+- Inference: "invoiced the client" → INVOICE_SENT fact (past tense from verbage)
+- Intent: "invoice henderson" → create Invoice action (base verb from verbage)
 
 ---
 
@@ -512,13 +520,14 @@ Given parsed intent, return a creation plan.
 8. Write snapshot, mark as active, deactivate previous
 ```
 
-### Verb Extraction
+### Verb Extraction (Verbage)
 
-Action type verbs are derived from the verbage layer. Initial population comes from:
+Verbage — the verb subset of vocabulary — is populated from:
 
 1. **Canonical name derivation:** "Invoice" → base verb "invoice"
 2. **Synonym expansion:** "invoice" synonyms include "bill", "charge"
 3. **Import learning:** terms frequently mapped to Invoice actions
+4. **Seed data:** migrated from `VERB_TENSES` in `fact-kind-inferrer.ts`
 
 | Canonical Name | Derived Verbs | Source |
 |----------------|---------------|--------|
@@ -527,19 +536,20 @@ Action type verbs are derived from the verbage layer. Initial population comes f
 | Deliverable | deliver | name derivation |
 | Payment | pay | name derivation |
 
-The same verbage entry serves both systems:
+Each verbage entry serves both consuming systems:
 
 ```typescript
-// Verbage entry for "invoice"
+// Verbage entry for "invoice" (stored in vocabulary snapshot)
 {
   base: "invoice",
   synonyms: ["bill", "charge"],
   past_participle: "invoiced",      // → Inference uses for fact labels
-  action_types: ["Invoice"],         // → Vocabulary uses for creation
+  past_tense_label: "Invoiced",     // → Inference uses for display
+  action_types: ["Invoice"],        // → Intent uses for action creation
 }
 ```
 
-Manual overrides for non-obvious mappings (e.g., "AP" → Payment) are stored in verbage, not in consuming systems.
+Manual overrides for non-obvious mappings (e.g., "AP" → Payment) are stored in vocabulary, not in consuming systems.
 
 ---
 
