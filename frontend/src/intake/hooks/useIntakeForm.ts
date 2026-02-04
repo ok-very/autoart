@@ -9,14 +9,11 @@ import { useForm, UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z, ZodTypeAny } from 'zod';
 import { useState, useMemo } from 'react';
-import type { FormBlock, ModuleBlock, IntakeFormConfig, CreatedRecord } from '@autoart/shared';
+import type { FormBlock, ModuleBlock, IntakeFormConfig } from '@autoart/shared';
+import type { SubmissionResult } from '../api';
 
-export interface SubmissionResultData {
-    id: string;
-    upload_code: string;
-    created_at: string;
-    created_records?: CreatedRecord[];
-}
+// Re-export from api.ts to maintain single source of truth
+export type SubmissionResultData = SubmissionResult;
 
 type UseIntakeFormReturn = {
     rhf: UseFormReturn<Record<string, unknown>>;
