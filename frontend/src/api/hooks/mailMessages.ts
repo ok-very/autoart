@@ -154,8 +154,6 @@ export function useUnlinkEmail() {
     mutationFn: ({
       messageId,
       linkId,
-      targetType,
-      targetId,
     }: {
       messageId: string;
       linkId: string;
