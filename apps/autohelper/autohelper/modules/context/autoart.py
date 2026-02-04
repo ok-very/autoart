@@ -175,7 +175,9 @@ class AutoArtClient:
     # PAIRING & CREDENTIAL PROXYING
     # =========================================================================
 
-    def pair_with_code(self, code: str, instance_name: str = "AutoHelper") -> str | None:
+    def pair_with_code(
+        self, code: str, instance_name: str = "AutoHelper"
+    ) -> tuple[str | None, str | None]:
         """
         Exchange a pairing code for a session ID.
 
@@ -184,7 +186,7 @@ class AutoArtClient:
             instance_name: Name to identify this AutoHelper instance
 
         Returns:
-            Session ID on success, None on failure
+            (session_id, None) on success, (None, error_message) on failure
         """
         try:
             response = requests.post(
@@ -198,14 +200,30 @@ class AutoArtClient:
                 result = response.json()
                 session_id = result.get("sessionId")
                 logger.info(f"Paired with AutoArt, session: {session_id[:8]}...")
-                return session_id
-            else:
-                logger.warning(f"Pairing failed: {response.status_code} - {response.text}")
-                return None
+                return session_id, None
+
+            # Extract error from response body when available
+            error_msg = f"Backend returned {response.status_code}"
+            try:
+                body = response.json()
+                if "error" in body:
+                    error_msg = body["error"]
+            except ValueError:
+                pass
+            logger.warning(f"Pairing failed: {response.status_code} - {response.text}")
+            return None, error_msg
+
+        except requests.ConnectionError as e:
+            logger.error(f"Pairing request failed (connection): {e}")
+            return None, "Backend unreachable"
+
+        except requests.Timeout as e:
+            logger.error(f"Pairing request failed (timeout): {e}")
+            return None, "Backend timed out"
 
         except requests.RequestException as e:
             logger.error(f"Pairing request failed: {e}")
-            return None
+            return None, f"Request failed: {e}"
 
     def disconnect_session(self, session_id: str) -> bool:
         """
