@@ -34,7 +34,7 @@ export function isMondayOAuthConfigured(): boolean {
  * Otherwise, uses 'login' mode to create/find a user.
  */
 export function getMondayAuthUrl(userId?: string): { url: string; state: string } {
-    if (!env.MONDAY_CLIENT_ID) {
+    if (!env.MONDAY_CLIENT_ID || !env.MONDAY_CLIENT_SECRET) {
         throw new AppError(500, 'Monday OAuth is not configured', 'MONDAY_OAUTH_NOT_CONFIGURED');
     }
 
@@ -80,8 +80,7 @@ export async function handleMondayCallback(code: string, state: string): Promise
     // Debug: log what credentials are being used (masked)
     console.log('[Monday OAuth] Exchanging code with:', {
         client_id: env.MONDAY_CLIENT_ID,
-        client_secret_length: env.MONDAY_CLIENT_SECRET?.length,
-        client_secret_prefix: env.MONDAY_CLIENT_SECRET?.slice(0, 4) + '...',
+        client_secret_present: Boolean(env.MONDAY_CLIENT_SECRET),
         redirect_uri: redirectUri,
         mode: statePayload.mode,
     });
@@ -138,13 +137,16 @@ export async function handleMondayCallback(code: string, state: string): Promise
 
     if (statePayload.mode === 'link') {
         // Link mode: use the userId from state
-        userId = statePayload.userId!;
+        if (!statePayload.userId) {
+            throw new AppError(400, 'Invalid OAuth state: missing user ID for link mode', 'INVALID_STATE');
+        }
+        userId = statePayload.userId;
     } else {
         // Login mode: find or create user by Monday email
         const dbUser = await db
             .insertInto('users')
             .values({
-                email: profile.email,
+                email: profile.email.toLowerCase(),
                 name: profile.name,
                 password_hash: '', // OAuth users have no password
             })

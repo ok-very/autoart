@@ -513,7 +513,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         'unauthorized_client': 'This application is not authorized.',
       };
       const message = knownErrors[error.toLowerCase()] || 'Authorization failed.';
-      return reply.code(400).send({ error: 'OAUTH_DENIED', message });
+      return sendPopupResponse(false, message);
     }
 
     if (!code || !state) {
