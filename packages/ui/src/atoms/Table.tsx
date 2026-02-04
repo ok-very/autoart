@@ -92,7 +92,7 @@ interface TableSectionProps {
 
 function Header({ children, className }: TableSectionProps) {
     return (
-        <thead className={clsx('bg-[var(--ws-bg)] border-b border-[var(--ws-panel-border)]', className)}>
+        <thead className={clsx('bg-ws-bg border-b border-ws-panel-border', className)}>
             {children}
         </thead>
     );
@@ -120,10 +120,10 @@ function Row({ children, selected, expanded, onClick, className }: RowProps) {
     return (
         <tr
             className={clsx(
-                'border-b border-[var(--ws-panel-border)] transition-colors duration-75',
-                hoverable && 'hover:bg-[var(--ws-bg)]',
-                selected && 'bg-[var(--ws-row-expanded-bg)]',
-                expanded && 'bg-[var(--ws-row-expanded-bg)]',
+                'border-b border-ws-panel-border transition-colors duration-75',
+                hoverable && 'hover:bg-ws-bg',
+                selected && 'bg-ws-row-expanded-bg',
+                expanded && 'bg-ws-row-expanded-bg',
                 onClick && 'cursor-pointer',
                 className,
             )}
@@ -200,7 +200,7 @@ function HeaderCell({ children, align = 'left', width, className }: HeaderCellPr
             className={clsx(
                 cellPadding[size],
                 alignClass[align],
-                'text-xs font-medium text-[var(--ws-text-secondary)] uppercase tracking-wider',
+                'text-xs font-medium text-ws-text-secondary uppercase tracking-wider',
                 className,
             )}
             style={width ? { width } : undefined}
@@ -231,7 +231,7 @@ function Cell({ children, align = 'left', colSpan, mono, className }: CellProps)
                 cellPadding[size],
                 cellText[size],
                 alignClass[align],
-                mono && 'font-mono text-[var(--ws-mono-fg)]',
+                mono && 'font-mono text-ws-mono-fg',
                 className,
             )}
             colSpan={colSpan}

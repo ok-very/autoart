@@ -34,7 +34,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             <div
                 ref={ref}
                 className={clsx(
-                    'bg-[var(--ws-panel-bg,#fff)] border border-[var(--ws-panel-border,theme(colors.slate.200))]',
+                    'bg-ws-panel-bg border border-ws-panel-border',
                     shadowClasses[shadow],
                     paddingClasses[padding],
                     radiusClasses[radius],

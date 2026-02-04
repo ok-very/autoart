@@ -32,6 +32,14 @@
   --color-ws-mono-fg: var(--ws-mono-fg);
   --color-ws-row-expanded-bg: var(--ws-row-expanded-bg);
 
+  /* Tab/tabstrip colors — enables bg-ws-tabstrip-bg, text-ws-tab-fg, etc. */
+  --color-ws-tabstrip-bg: var(--ws-tabstrip-bg);
+  --color-ws-tab-fg: var(--ws-tab-fg);
+  --color-ws-tab-fg-hover: var(--ws-tab-fg-hover);
+  --color-ws-tab-fg-active: var(--ws-tab-fg-active);
+  --color-ws-tab-bg-active: var(--ws-tab-bg-active);
+  --color-ws-tab-indicator: var(--ws-tab-indicator-color);
+
   /* Typography scale — enables text-ws-h1, text-ws-h2, text-ws-body, etc. */
   --font-size-ws-h1: var(--ws-font-size-h1);
   --font-size-ws-h2: var(--ws-font-size-h2);

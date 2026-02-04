@@ -38,7 +38,7 @@ export function SegmentedControl({
         <div
             role="tablist"
             className={clsx(
-                'inline-flex rounded-lg border border-[var(--ws-panel-border,#e2e8f0)] bg-[var(--ws-tabstrip-bg,#f1f5f9)] p-0.5',
+                'inline-flex rounded-lg border border-ws-panel-border bg-ws-tabstrip-bg p-0.5',
                 className
             )}
         >
@@ -62,8 +62,8 @@ export function SegmentedControl({
                             'rounded-md font-sans font-medium transition-all',
                             sizeStyles[size],
                             isSelected
-                                ? 'bg-[var(--ws-tab-bg-active,#ffffff)] text-[var(--ws-tab-fg-active,#1e293b)] shadow-sm border-b-2 border-[var(--ws-tab-indicator-color,var(--ws-accent,#3b82f6))]'
-                                : 'text-[var(--ws-tab-fg,#64748b)] hover:text-[var(--ws-tab-fg-hover,#475569)]',
+                                ? 'bg-ws-tab-bg-active text-ws-tab-fg-active shadow-sm border-b-2 border-ws-tab-indicator'
+                                : 'text-ws-tab-fg hover:text-ws-tab-fg-hover',
                             item.disabled && 'opacity-50 cursor-not-allowed'
                         )}
                     >

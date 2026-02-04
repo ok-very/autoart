@@ -27,17 +27,17 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
                 onClick={() => onChange(!checked)}
                 className={clsx(
                     'relative inline-flex items-center rounded-full transition-colors',
-                    'focus:outline-none focus:ring-2 focus:ring-[var(--ws-accent,#3b82f6)] focus:ring-offset-1',
+                    'focus:outline-none focus:ring-2 focus:ring-ws-accent focus:ring-offset-1',
                     'disabled:opacity-50 disabled:cursor-not-allowed',
                     s.track,
-                    checked ? 'bg-[var(--ws-accent,#3b82f6)]' : 'bg-[var(--ws-panel-border,#e2e8f0)]',
+                    checked ? 'bg-ws-accent' : 'bg-ws-panel-border',
                     className
                 )}
                 {...props}
             >
                 <span
                     className={clsx(
-                        'inline-block transform rounded-full bg-[var(--ws-panel-bg,#fff)] transition-transform',
+                        'inline-block transform rounded-full bg-ws-panel-bg transition-transform',
                         s.knob,
                         checked ? s.on : s.off,
                     )}

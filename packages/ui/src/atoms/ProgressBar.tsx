@@ -61,7 +61,7 @@ export function ProgressBar({
     if (value !== undefined) {
         return (
             <div
-                className={clsx("w-full bg-[var(--ws-panel-border,#e2e8f0)] rounded overflow-hidden", className)}
+                className={clsx("w-full bg-ws-panel-border rounded overflow-hidden", className)}
                 style={{ height: resolvedHeight }}
             >
                 <div
@@ -79,7 +79,7 @@ export function ProgressBar({
     if (!segments || segments.length === 0) {
         return (
             <div
-                className={clsx("w-full bg-[var(--ws-panel-border,#e2e8f0)] rounded overflow-hidden", className)}
+                className={clsx("w-full bg-ws-panel-border rounded overflow-hidden", className)}
                 style={{ height: resolvedHeight }}
             />
         );
@@ -87,7 +87,7 @@ export function ProgressBar({
 
     return (
         <div
-            className={clsx("flex rounded overflow-hidden shadow-sm bg-[var(--ws-panel-border,#e2e8f0)] w-full", className)}
+            className={clsx("flex rounded overflow-hidden shadow-sm bg-ws-panel-border w-full", className)}
             style={{ height: resolvedHeight }}
         >
             {segments.map((segment) => (
