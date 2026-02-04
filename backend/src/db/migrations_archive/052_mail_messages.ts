@@ -58,13 +58,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
         ])
         .execute();
 
-    // Indexes
-    await db.schema
-        .createIndex('idx_mail_messages_external')
-        .on('mail_messages')
-        .column('external_id')
-        .execute();
-
+    // Indexes (external_id unique constraint from column definition is sufficient)
     await db.schema
         .createIndex('idx_mail_messages_project')
         .on('mail_messages')

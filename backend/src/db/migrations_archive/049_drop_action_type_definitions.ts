@@ -9,7 +9,7 @@
 import { Kysely, sql } from 'kysely';
 
 export async function up(db: Kysely<unknown>): Promise<void> {
-    await db.schema.dropTable('action_type_definitions').execute();
+    await db.schema.dropTable('action_type_definitions').ifExists().execute();
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
