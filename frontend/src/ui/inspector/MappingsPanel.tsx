@@ -419,6 +419,8 @@ function ActionMappingsPanel({
                 unlinkEmail.mutateAsync({
                     messageId: link.mail_message_id,
                     linkId: link.id,
+                    targetType: 'action',
+                    targetId: actionId,
                 }),
         });
     }, [actionId, openOverlay, unlinkEmail]);

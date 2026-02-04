@@ -106,7 +106,8 @@ export function usePromoteEmail() {
       api.post<MailMessage>('/mail/promote', { externalId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: mailMessageQueryKeys.promotedIds() });
-      queryClient.invalidateQueries({ queryKey: mailMessageQueryKeys.messages() });
+      // Invalidate all message list queries regardless of filters
+      queryClient.invalidateQueries({ queryKey: ['mailMessages', 'list'] });
     },
   });
 }
@@ -150,10 +151,26 @@ export function useUnlinkEmail() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ messageId, linkId }: { messageId: string; linkId: string }) =>
-      api.delete(`/mail/messages/${messageId}/links/${linkId}`),
-    onSuccess: () => {
+    mutationFn: ({
+      messageId,
+      linkId,
+      targetType,
+      targetId,
+    }: {
+      messageId: string;
+      linkId: string;
+      targetType: string;
+      targetId: string;
+    }) => api.delete(`/mail/messages/${messageId}/links/${linkId}`),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: mailMessageQueryKeys.all() });
+      // Invalidate the specific target's links query
+      queryClient.invalidateQueries({
+        queryKey: mailMessageQueryKeys.linksForTarget(
+          variables.targetType,
+          variables.targetId
+        ),
+      });
     },
   });
 }

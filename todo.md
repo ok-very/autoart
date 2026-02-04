@@ -89,7 +89,7 @@
 |------|-------|
 | Project Log view | Missing project sidebar (inconsistent with other project-scoped views) |
 | Records view | Align layout with Fields view: definitions filter + search bar, no redundant dropdown title |
-| `packages/ui/src/molecules/SegmentedControl.tsx` | Still using glassmorphism (`bg-[var(--ws-tabstrip-bg,#f1f5f9)]` with translucent styling) — not in DESIGN.md, should be solid background |
+| ~~`packages/ui/src/molecules/SegmentedControl.tsx`~~ | ~~Glassmorphism/arbitrary values~~ — now uses theme tokens (PR #377) |
 | Intake forms + poll deployments | Need verification: localhost vs production endpoint config (forms and poll submit endpoints may be hardcoded or misconfigured for dev vs prod) |
 | Future outbound subdomains | `polls.autoart.work`, `forms.autoart.work` endpoint routing not wired — debug and configure for dev vs prod |
 | SelectionInspector / Record view | Handle `definition_kind` system for filtering/classification — arrangement vs container vs record kinds should drive what's shown and how |
@@ -106,8 +106,8 @@
 | `apps/autohelper/autohelper/modules/mail/router.py` | `_update_triage` shorthand endpoints (`archive`, `mark-action-required`, `mark-informational`) silently erase existing `triage_notes` when passing `None` — preserve existing notes (CodeAnt #346) |
 | `apps/autohelper/autohelper/modules/mail/schemas.py` | `TriageResponse.triaged_at` typed as `str | None` but `TransientEmail.triaged_at` is `datetime | None` — inconsistent API contract (CodeAnt #346) |
 | `frontend/src/api/types/mail.ts` | Frontend `triage_status` typed as `TriageStatus` union but backend schema is plain `str | None` — type mismatch if backend sends unexpected value (CodeAnt #346) |
-| `frontend/src/api/hooks/mailMessages.ts` | `usePromoteEmail` invalidates `messages()` with no args — filtered queries (project/pagination) stay stale; invalidate `['mailMessages', 'list']` prefix (CodeAnt #347) |
-| `frontend/src/api/hooks/mailMessages.ts` | `useUnlinkEmail` only invalidates generic `mailMessages` key, not specific `links` queries — `useMailLinksForTarget` consumers keep showing removed links (CodeAnt #347) |
+| ~~`frontend/src/api/hooks/mailMessages.ts`~~ | ~~`usePromoteEmail` invalidation~~ — now invalidates `['mailMessages', 'list']` prefix (PR #380) |
+| ~~`frontend/src/api/hooks/mailMessages.ts`~~ | ~~`useUnlinkEmail` links invalidation~~ — now invalidates specific linksForTarget query (PR #380) |
 | `frontend/src/api/types/mail.ts` | `MailMessage.metadata` typed as `Record<string, unknown>` but backend stores via `JSON.stringify` — could be any JSON value, use `unknown` (CodeAnt #347) |
 | `backend/src/db/migrations/052_mail_messages.ts` | Explicit index on `external_id` redundant (UNIQUE already creates one) — extra write overhead (CodeAnt #348) |
 | `backend/src/db/migrations/052_mail_messages.ts` | Explicit index on `mail_message_id` redundant (composite unique constraint already covers it as leading column) — extra write overhead (CodeAnt #348) |
