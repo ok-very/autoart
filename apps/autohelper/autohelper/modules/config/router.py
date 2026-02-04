@@ -1,5 +1,6 @@
 """Config module routes - read/write persistent config (data/config.json)."""
 
+import threading
 from typing import Any
 
 from fastapi import APIRouter
@@ -11,6 +12,52 @@ from autohelper.shared.logging import get_logger
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/config", tags=["config"])
+
+
+def _open_folder_dialog() -> str | None:
+    """Open native folder picker dialog. Must run on main thread for some platforms."""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+
+        # Create and hide root window
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)  # Bring dialog to front
+
+        # Open folder picker
+        folder = filedialog.askdirectory(
+            title="Select folder",
+            mustexist=True,
+        )
+
+        root.destroy()
+        return folder if folder else None
+    except Exception as e:
+        logger.warning("Failed to open folder dialog: %s", e)
+        return None
+
+
+@router.post("/select-folder")
+async def select_folder() -> dict[str, Any]:
+    """
+    Open a native folder picker dialog and return the selected path.
+    Returns {"path": "/selected/path"} or {"path": null} if cancelled.
+    """
+    # tkinter needs to run on main thread on macOS, use threading event to wait
+    result: dict[str, str | None] = {"path": None}
+    done = threading.Event()
+
+    def run_dialog() -> None:
+        result["path"] = _open_folder_dialog()
+        done.set()
+
+    # Run in thread and wait (FastAPI runs in thread pool anyway)
+    thread = threading.Thread(target=run_dialog)
+    thread.start()
+    done.wait(timeout=120)  # 2 minute timeout for user to select
+
+    return {"path": result["path"]}
 
 
 @router.get("")

@@ -38,6 +38,7 @@ const QueueCommandSchema = z.object({
     'start_mail',
     'stop_mail',
     'run_gc',
+    'select_folder',
   ]),
   payload: z
     .object({
@@ -89,6 +90,15 @@ const HeartbeatSchema = z.object({
         enabled: z.boolean(),
         last_run: z.string().nullish(),
       })
+      .optional(),
+    adapters: z
+      .array(
+        z.object({
+          name: z.string(),
+          available: z.boolean(),
+          handler: z.enum(['autohelper', 'backend']),
+        })
+      )
       .optional(),
   }),
 });

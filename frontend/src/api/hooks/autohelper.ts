@@ -170,6 +170,50 @@ export function useUpdateAutoHelperConfig() {
     });
 }
 
+/**
+ * Open native folder picker dialog on AutoHelper machine via backend bridge.
+ * Queues a select_folder command and polls for result.
+ * Returns selected path or null if cancelled.
+ */
+export function useSelectFolder() {
+    const qc = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (): Promise<string | null> => {
+            // Queue the select_folder command
+            const cmd = await api.post<CommandResponse>('/autohelper/commands', {
+                commandType: 'select_folder',
+            });
+
+            // Poll for completion (user may take a while to select)
+            const maxWaitMs = 120_000; // 2 minutes
+            const pollIntervalMs = 500;
+            const startTime = Date.now();
+
+            while (Date.now() - startTime < maxWaitMs) {
+                const status = await api.get<CommandResponse>(`/autohelper/commands/${cmd.id}`);
+
+                if (status.status === 'completed') {
+                    const result = status.result as { path?: string | null } | null;
+                    return result?.path ?? null;
+                }
+
+                if (status.status === 'failed') {
+                    throw new Error('Folder selection failed');
+                }
+
+                // Wait before next poll
+                await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+            }
+
+            throw new Error('Folder selection timed out');
+        },
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['autohelper-bridge-status'] });
+        },
+    });
+}
+
 // ==================== INDEX HOOKS ====================
 
 export interface IndexStatusResponse {
@@ -348,6 +392,12 @@ export interface BridgeSettingsResponse {
     version: number;
 }
 
+export interface AdapterInfo {
+    name: string;
+    available: boolean;
+    handler: 'autohelper' | 'backend';
+}
+
 export interface BridgeStatusResponse {
     status: {
         database?: { connected: boolean; path: string; migration_status: string };
@@ -356,6 +406,7 @@ export interface BridgeStatusResponse {
         mail?: { enabled: boolean; running: boolean };
         index?: { status: string; total_files?: number; last_run?: string };
         gc?: { enabled: boolean; last_run?: string };
+        adapters?: AdapterInfo[];
     };
     lastSeen: string | null;
     pendingCommands: Array<{ id: string; type: string; status: string }>;
@@ -367,7 +418,8 @@ export type CommandType =
     | 'run_collector'
     | 'start_mail'
     | 'stop_mail'
-    | 'run_gc';
+    | 'run_gc'
+    | 'select_folder';
 
 export interface QueueCommandRequest {
     commandType: CommandType;

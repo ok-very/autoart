@@ -56,26 +56,6 @@ if (-not (Test-Path ".env")) {
 # Load .env file
 Import-AutoArtEnv
 
-# Build shared package first if dist doesn't exist
-if (-not (Test-Path "shared\dist")) {
-    Write-Host "[*] Building shared package..." -ForegroundColor Yellow
-    Push-Location shared
-    pnpm build 2>&1 | Out-Null
-    Pop-Location
-    Write-Host "[OK] Shared package built" -ForegroundColor Green
-}
-
-# Run database migrations (fast no-op if already current)
-Write-Host "[*] Checking database migrations..." -ForegroundColor Yellow
-Push-Location backend
-$migrateOutput = pnpm migrate 2>&1
-if ($migrateOutput -match "No pending migrations") {
-    Write-Host "[OK] Database up to date" -ForegroundColor Green
-} else {
-    Write-Host $migrateOutput
-    Write-Host "[OK] Migrations applied" -ForegroundColor Green
-}
-Pop-Location
 
 Write-Host "[*] Starting backend server..." -ForegroundColor Green
 $currentPath = $env:Path
@@ -172,7 +152,8 @@ function Stop-AllDevProcesses {
         try {
             $cmd = (Get-CimInstance Win32_Process -Filter "ProcessId = $($_.Id)" -ErrorAction SilentlyContinue).CommandLine
             $cmd -and ($cmd -match [regex]::Escape($ProjectDir) -or ($cmd -match "tsx" -and $cmd -match "backend") -or ($cmd -match "vite"))
-        } catch { $false }
+        }
+        catch { $false }
     } | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
 
     # Kill orphaned Python processes
@@ -180,7 +161,8 @@ function Stop-AllDevProcesses {
         try {
             $cmd = (Get-CimInstance Win32_Process -Filter "ProcessId = $($_.Id)" -ErrorAction SilentlyContinue).CommandLine
             $cmd -and ($cmd -match [regex]::Escape($ProjectDir) -or $cmd -match "autohelper")
-        } catch { $false }
+        }
+        catch { $false }
     } | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
 
     Write-Host "[OK] All services stopped." -ForegroundColor Green

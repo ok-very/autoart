@@ -8,6 +8,7 @@ from .bio import extract_bio_text
 from .contact import extract_emails, extract_location, extract_phones
 from .documents import extract_cv_links, extract_pdf_links
 from .images import SUPPORTED_IMAGE_EXTENSIONS, extract_image_urls
+from .text import extract_docx_text, extract_pdf_text
 
 __all__ = [
     # Bio extraction
@@ -22,4 +23,7 @@ __all__ = [
     # Document extraction
     "extract_cv_links",
     "extract_pdf_links",
+    # Text extraction
+    "extract_pdf_text",
+    "extract_docx_text",
 ]

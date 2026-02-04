@@ -11,20 +11,61 @@ Local-first Python filesystem orchestration service for AutoArt integration.
 
 ## Quick Start
 
+From the **monorepo root**:
+
 ```bash
-# Install dependencies
-pip install -e ".[dev]"
+# Linux/Mac
+pnpm --filter autohelper install:deps
+pnpm --filter autohelper dev
 
-# Set environment variables
-export AUTOHELPER_ALLOWED_ROOTS="C:\\Projects,D:\\Data"
-export AUTOHELPER_DB_PATH="./data/autohelper.db"
-
-# Run the server
-python -m autohelper.main
-
-# Or use uvicorn directly
-uvicorn autohelper.app:build_app --factory --reload
+# Windows (PowerShell)
+pnpm --filter autohelper install:deps:win
+pnpm --filter autohelper dev:win
 ```
+
+Or as part of the full monorepo setup:
+
+```bash
+# Linux/Mac
+pnpm build:all
+
+# Windows
+pnpm build:all:win
+```
+
+The `install:deps` script creates a `.venv/` directory and installs the package with dev dependencies.
+
+### Manual Setup (not recommended)
+
+If you need to run outside the monorepo:
+
+```bash
+cd apps/autohelper
+python -m venv .venv
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+pip install -e ".[dev]"
+```
+
+### Running
+
+```bash
+# With local data directory (dev mode)
+pnpm --filter autohelper dev      # or dev:win
+
+# With default data directory
+pnpm --filter autohelper start    # or start:win
+```
+
+### Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `install:deps` / `install:deps:win` | Create venv and install dependencies |
+| `dev` / `dev:win` | Run with `./data` as data directory |
+| `start` / `start:win` | Run with default data directory |
+| `lint` / `lint:win` | Run ruff linter |
+| `format` / `format:win` | Auto-fix lint issues |
+| `clean:venv` / `clean:venv:win` | Delete the virtual environment |
 
 ## API Endpoints
 

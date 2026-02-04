@@ -9,10 +9,7 @@
 import {
     Server,
     Database,
-    FolderSearch,
     RefreshCw,
-    Play,
-    Square,
     Trash2,
     Plus,
     X,
@@ -25,6 +22,10 @@ import {
     Link,
     Unplug,
     Clock,
+    Puzzle,
+    Cloud,
+    Monitor,
+    FolderOpen,
 } from 'lucide-react';
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
@@ -33,9 +34,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useClaimPairing, usePairingStatus, useUnpairAutoHelper } from '../../api/connections';
 import {
     useBridgeSettings,
-    useUpdateBridgeSettings,
     useBridgeStatus,
     useQueueCommand,
+    useSelectFolder,
+    useUpdateBridgeSettings,
 } from '../../api/hooks/autohelper';
 import { toast } from '../../stores/toastStore';
 import { Badge, Button, TextInput, Toggle } from '@autoart/ui';
@@ -428,178 +430,220 @@ function ServiceStatusCard({ lastSeen }: { lastSeen: string | null }) {
     );
 }
 
-function CollectorCard() {
-    const { data: bridgeSettings } = useBridgeSettings();
-    const updateSettings = useUpdateBridgeSettings();
-    const queueCommand = useQueueCommand();
+/** Canonical adapter list with backend fallback info */
+const CANONICAL_ADAPTERS = [
+    { name: 'PDF', backendFallback: false },
+    { name: 'DOCX', backendFallback: true },
+    { name: 'CSV', backendFallback: true },
+    { name: 'XLSX', backendFallback: true },
+    { name: 'Web Collector', backendFallback: false },
+    { name: 'Mail Poller', backendFallback: true },
+];
+
+interface ResolvedAdapter {
+    name: string;
+    available: boolean;
+    handler: 'autohelper' | 'backend' | null; // null when unavailable
+    reason?: string; // why unavailable
+}
+
+function AdaptersCard({ autohelperOnline }: { autohelperOnline: boolean }) {
     const { data: bridgeStatus } = useBridgeStatus();
 
-    const [url, setUrl] = useState('');
-    const [outputPath, setOutputPath] = useState('');
-    const [crawlDepth, setCrawlDepth] = useState<number | ''>('');
-    const [minWidth, setMinWidth] = useState<number | ''>('');
-    const [maxWidth, setMaxWidth] = useState<number | ''>('');
-    const [minHeight, setMinHeight] = useState<number | ''>('');
-    const [maxHeight, setMaxHeight] = useState<number | ''>('');
-    const [minFilesize, setMinFilesize] = useState<number | ''>('');
-    const [maxFilesize, setMaxFilesize] = useState<number | ''>('');
-    const [loaded, setLoaded] = useState(false);
+    const reportedAdapters = bridgeStatus?.status?.adapters ?? [];
 
-    const settings = bridgeSettings?.settings;
+    // Resolve actual availability: what can the user USE right now?
+    const adapters = useMemo((): ResolvedAdapter[] => {
+        return CANONICAL_ADAPTERS.map(canonical => {
+            const reported = reportedAdapters.find(a => a.name === canonical.name);
 
-    // Seed local state from settings on first load
-    if (settings && !loaded) {
-        setCrawlDepth(settings.crawl_depth ?? 20);
-        setMinWidth(settings.min_width ?? 100);
-        setMaxWidth(settings.max_width ?? 5000);
-        setMinHeight(settings.min_height ?? 100);
-        setMaxHeight(settings.max_height ?? 5000);
-        setMinFilesize(settings.min_filesize_kb ?? 100);
-        setMaxFilesize(settings.max_filesize_kb ?? 12000);
-        setLoaded(true);
-    }
+            // AutoHelper reports this adapter
+            if (reported) {
+                if (reported.available) {
+                    // AutoHelper can handle it
+                    return {
+                        name: canonical.name,
+                        available: true,
+                        handler: 'autohelper',
+                    };
+                }
+                // AutoHelper says unavailable - check for backend fallback
+                if (canonical.backendFallback) {
+                    return {
+                        name: canonical.name,
+                        available: true,
+                        handler: 'backend',
+                        reason: 'AutoHelper missing dependency',
+                    };
+                }
+                // No fallback
+                return {
+                    name: canonical.name,
+                    available: false,
+                    handler: null,
+                    reason: 'Not installed in AutoHelper',
+                };
+            }
 
-    const handleSave = useCallback(() => {
-        updateSettings.mutate({
-            crawl_depth: crawlDepth || 20,
-            min_width: minWidth || 100,
-            max_width: maxWidth || 5000,
-            min_height: minHeight || 100,
-            max_height: maxHeight || 5000,
-            min_filesize_kb: minFilesize || 100,
-            max_filesize_kb: maxFilesize || 12000,
+            // AutoHelper didn't report this adapter
+            if (!autohelperOnline) {
+                // Offline - use backend fallback if available
+                if (canonical.backendFallback) {
+                    return {
+                        name: canonical.name,
+                        available: true,
+                        handler: 'backend',
+                    };
+                }
+                return {
+                    name: canonical.name,
+                    available: false,
+                    handler: null,
+                    reason: 'Requires AutoHelper',
+                };
+            }
+
+            // Online but not reported - shouldn't happen, but handle it
+            if (canonical.backendFallback) {
+                return {
+                    name: canonical.name,
+                    available: true,
+                    handler: 'backend',
+                };
+            }
+            return {
+                name: canonical.name,
+                available: false,
+                handler: null,
+                reason: 'Not available',
+            };
         });
-        toast.success('Settings saved');
-    }, [updateSettings, crawlDepth, minWidth, maxWidth, minHeight, maxHeight, minFilesize, maxFilesize]);
+    }, [reportedAdapters, autohelperOnline]);
 
-    const handleRun = useCallback(() => {
-        if (!url.trim()) return;
-        queueCommand.mutate({
-            commandType: 'run_collector',
-            payload: { url: url.trim(), output_path: outputPath || undefined },
-        });
-        toast.info('Collector queued');
-    }, [queueCommand, url, outputPath]);
-
-    const active = bridgeStatus?.status?.runner?.active ?? false;
-    const pendingCollectorCmd = bridgeStatus?.pendingCommands?.find(c => c.type === 'run_collector');
+    const availableCount = adapters.filter(a => a.available).length;
 
     return (
         <CardShell
-            icon={<FolderSearch className="w-5 h-5 text-[var(--ws-color-warning)]" />}
-            iconBg="bg-[var(--ws-color-warning)]/10"
-            title="Collector"
+            icon={<Puzzle className="w-5 h-5 text-[var(--ws-accent)]" />}
+            iconBg="bg-[var(--ws-accent)]/10"
+            title="Capabilities"
             badge={
-                pendingCollectorCmd ? (
-                    <PendingCommandBadge type="collector" status={pendingCollectorCmd.status} />
-                ) : active ? (
-                    <StatusBadge ok label="Running" />
-                ) : undefined
+                <Badge variant="neutral" size="sm">
+                    {availableCount}/{adapters.length}
+                </Badge>
             }
         >
-            <FieldRow label="URL">
-                <TextInput
-                    type="url"
-                    size="sm"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://example.com/gallery"
-                />
-            </FieldRow>
-            <FieldRow label="Output path">
-                <TextInput
-                    size="sm"
-                    value={outputPath}
-                    onChange={(e) => setOutputPath(e.target.value)}
-                    placeholder="(default)"
-                />
-            </FieldRow>
-            <FieldRow label="Crawl depth">
-                <TextInput
-                    type="number"
-                    size="sm"
-                    value={String(crawlDepth)}
-                    onChange={(e) => setCrawlDepth(e.target.value ? Number(e.target.value) : '')}
-                    className="w-24"
-                />
-            </FieldRow>
-
-            <div className="grid grid-cols-2 gap-4">
-                <FieldRow label="Min width">
-                    <TextInput type="number" size="sm" value={String(minWidth)} onChange={(e) => setMinWidth(e.target.value ? Number(e.target.value) : '')} className="w-24" />
-                </FieldRow>
-                <FieldRow label="Max width">
-                    <TextInput type="number" size="sm" value={String(maxWidth)} onChange={(e) => setMaxWidth(e.target.value ? Number(e.target.value) : '')} className="w-24" />
-                </FieldRow>
-                <FieldRow label="Min height">
-                    <TextInput type="number" size="sm" value={String(minHeight)} onChange={(e) => setMinHeight(e.target.value ? Number(e.target.value) : '')} className="w-24" />
-                </FieldRow>
-                <FieldRow label="Max height">
-                    <TextInput type="number" size="sm" value={String(maxHeight)} onChange={(e) => setMaxHeight(e.target.value ? Number(e.target.value) : '')} className="w-24" />
-                </FieldRow>
-                <FieldRow label="Min size (KB)">
-                    <TextInput type="number" size="sm" value={String(minFilesize)} onChange={(e) => setMinFilesize(e.target.value ? Number(e.target.value) : '')} className="w-24" />
-                </FieldRow>
-                <FieldRow label="Max size (KB)">
-                    <TextInput type="number" size="sm" value={String(maxFilesize)} onChange={(e) => setMaxFilesize(e.target.value ? Number(e.target.value) : '')} className="w-24" />
-                </FieldRow>
-            </div>
-
-            <div className="flex gap-2 pt-2">
-                <SmallButton onClick={handleSave} loading={updateSettings.isPending} variant="default">
-                    Save Settings
-                </SmallButton>
-                <SmallButton
-                    onClick={handleRun}
-                    loading={queueCommand.isPending}
-                    disabled={!url.trim() || !!pendingCollectorCmd || active}
-                    variant="primary"
-                >
-                    <Play className="w-3 h-3" /> Run Collector
-                </SmallButton>
+            <div className="overflow-hidden rounded-lg border border-ws-panel-border">
+                <table className="w-full text-sm">
+                    <thead>
+                        <tr className="bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))]">
+                            <th className="text-left px-3 py-2 font-medium text-ws-text-secondary">Type</th>
+                            <th className="text-left px-3 py-2 font-medium text-ws-text-secondary">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {adapters.map((adapter, idx) => (
+                            <tr
+                                key={adapter.name}
+                                className={idx !== adapters.length - 1 ? 'border-b border-ws-panel-border' : ''}
+                            >
+                                <td className="px-3 py-2 text-ws-fg">{adapter.name}</td>
+                                <td className="px-3 py-2">
+                                    {adapter.available ? (
+                                        <span className="inline-flex items-center gap-1.5 text-[var(--ws-color-success)]">
+                                            <CheckCircle2 className="w-3 h-3" />
+                                            {adapter.handler === 'autohelper' ? (
+                                                <span className="inline-flex items-center gap-1">
+                                                    <Monitor className="w-3 h-3" /> AutoHelper
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center gap-1">
+                                                    <Cloud className="w-3 h-3" /> Backend
+                                                </span>
+                                            )}
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1 text-ws-muted">
+                                            <XCircle className="w-3 h-3" />
+                                            {adapter.reason || 'Unavailable'}
+                                        </span>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
         </CardShell>
     );
 }
 
 function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
-    const { data: bridgeSettings } = useBridgeSettings();
     const { data: bridgeStatus } = useBridgeStatus();
-    const updateSettings = useUpdateBridgeSettings();
     const queueCommand = useQueueCommand();
+    const updateSettings = useUpdateBridgeSettings();
+    const { data: bridgeSettings } = useBridgeSettings();
 
-    const settings = bridgeSettings?.settings;
-    const status = bridgeStatus?.status;
+    // Get mail status from heartbeat (works even when AutoHelper is remote)
+    const running = bridgeStatus?.status?.mail?.running ?? false;
+    const [actionPending, setActionPending] = useState(false);
 
-    const [pollInterval, setPollInterval] = useState<number | ''>(settings?.mail_poll_interval ?? 30);
-    const [localEnabled, setLocalEnabled] = useState<boolean | null>(null);
-    // Track if settings changed but not yet saved
-    const [dirty, setDirty] = useState(false);
-
-    const enabled = localEnabled ?? settings?.mail_enabled ?? false;
-    const running = status?.mail?.running ?? false;
-
-    // Sync poll interval from settings on first load
-    useEffect(() => {
-        if (settings?.mail_poll_interval != null && pollInterval !== settings.mail_poll_interval) {
-            setPollInterval(settings.mail_poll_interval);
-        }
-        // Only sync on settings change, not pollInterval
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [settings?.mail_poll_interval]);
-
+    // Check for pending mail commands
     const pendingMailCmd = bridgeStatus?.pendingCommands?.find(
         c => c.type === 'start_mail' || c.type === 'stop_mail'
     );
 
-    const handleToggleEnabled = useCallback((next: boolean) => {
-        setLocalEnabled(next);
-        updateSettings.mutate({ mail_enabled: next });
-        // If disabling and running, auto-queue stop
-        if (!next && running) {
-            queueCommand.mutate({ commandType: 'stop_mail' });
+    // Poll interval from settings
+    const [pollInterval, setPollInterval] = useState<number | ''>(
+        bridgeSettings?.settings?.mail_poll_interval ?? 30
+    );
+    const [dirty, setDirty] = useState(false);
+
+    useEffect(() => {
+        if (bridgeSettings?.settings?.mail_poll_interval != null) {
+            setPollInterval(bridgeSettings.settings.mail_poll_interval);
         }
-    }, [updateSettings, queueCommand, running]);
+    }, [bridgeSettings?.settings?.mail_poll_interval]);
+
+    // Clear action pending when command completes
+    useEffect(() => {
+        if (!pendingMailCmd && actionPending) {
+            setActionPending(false);
+        }
+    }, [pendingMailCmd, actionPending]);
+
+    // Toggle routes through backend bridge
+    const handleToggle = useCallback(async (enable: boolean) => {
+        setActionPending(true);
+        try {
+            // Queue the command - AutoHelper will pick it up on next poll
+            queueCommand.mutate(
+                { commandType: enable ? 'start_mail' : 'stop_mail' },
+                {
+                    onSuccess: () => {
+                        toast.info(enable ? 'Mail start queued' : 'Mail stop queued');
+                        // Persist the setting so it survives restarts
+                        updateSettings.mutate({ mail_enabled: enable });
+                    },
+                    onError: (err) => {
+                        setActionPending(false);
+                        toast.error(
+                            err instanceof Error
+                                ? `Failed: ${err.message}`
+                                : 'Failed to queue mail command'
+                        );
+                    },
+                }
+            );
+        } catch (err) {
+            setActionPending(false);
+            toast.error(
+                err instanceof Error
+                    ? `Failed: ${err.message}`
+                    : 'Failed to queue mail command'
+            );
+        }
+    }, [queueCommand, updateSettings]);
 
     const handlePollIntervalChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value ? Number(e.target.value) : '';
@@ -620,23 +664,7 @@ function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
         }
     }, [savePollInterval]);
 
-    const handleStart = useCallback(() => {
-        queueCommand.mutate({ commandType: 'start_mail' });
-        toast.info('Mail start queued');
-    }, [queueCommand]);
-
-    const handleStop = useCallback(() => {
-        queueCommand.mutate({ commandType: 'stop_mail' });
-        toast.info('Mail stop queued');
-    }, [queueCommand]);
-
-    // Derive state label
-    const getStateLabel = (): { label: string; variant: 'success' | 'neutral' | 'warning' } => {
-        if (!enabled) return { label: 'Disabled', variant: 'neutral' };
-        if (running) return { label: 'Running', variant: 'success' };
-        return { label: 'Enabled (stopped)', variant: 'warning' };
-    };
-    const stateInfo = getStateLabel();
+    const isActioning = actionPending || !!pendingMailCmd;
 
     return (
         <CardShell
@@ -647,69 +675,41 @@ function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
                 pendingMailCmd ? (
                     <PendingCommandBadge type={pendingMailCmd.type} status={pendingMailCmd.status} />
                 ) : (
-                    <Badge variant={stateInfo.variant} size="sm" className="gap-1">
-                        {stateInfo.variant === 'success' ? (
+                    <Badge variant={running ? 'success' : 'neutral'} size="sm" className="gap-1">
+                        {running ? (
                             <CheckCircle2 className="w-3 h-3" />
-                        ) : stateInfo.variant === 'warning' ? (
-                            <AlertTriangle className="w-3 h-3" />
                         ) : (
                             <XCircle className="w-3 h-3" />
                         )}
-                        {stateInfo.label}
+                        {running ? 'Running' : 'Stopped'}
                     </Badge>
                 )
             }
         >
-            <FieldRow label="Enabled">
-                <div className="flex items-center gap-3">
-                    <Toggle checked={enabled} onChange={handleToggleEnabled} />
-                    {!enabled && (
-                        <span className="text-xs text-ws-text-secondary">
-                            Enable to allow mail polling
-                        </span>
-                    )}
-                </div>
-            </FieldRow>
-            <FieldRow label="Poll interval (s)">
-                <TextInput
-                    type="number"
-                    size="sm"
-                    value={String(pollInterval)}
-                    onChange={handlePollIntervalChange}
-                    onBlur={savePollInterval}
-                    onKeyDown={handleKeyDown}
-                    className="w-24"
-                    disabled={!enabled}
+            <FieldRow label="Mail polling">
+                <Toggle
+                    checked={running}
+                    onChange={handleToggle}
+                    disabled={isActioning}
                 />
             </FieldRow>
 
-            <div className="flex items-center gap-2 pt-2">
-                {running ? (
-                    <SmallButton
-                        onClick={handleStop}
-                        loading={queueCommand.isPending}
-                        disabled={!!pendingMailCmd}
-                        variant="danger"
-                    >
-                        <Square className="w-3 h-3" /> Stop
-                    </SmallButton>
-                ) : (
-                    <SmallButton
-                        onClick={handleStart}
-                        loading={queueCommand.isPending}
-                        disabled={!enabled || !!pendingMailCmd}
-                        variant="primary"
-                    >
-                        <Play className="w-3 h-3" /> Start
-                    </SmallButton>
-                )}
-                {!enabled && !running && (
-                    <span className="text-xs text-ws-muted">Enable mail to start polling</span>
-                )}
-            </div>
+            {running && (
+                <FieldRow label="Poll interval (s)">
+                    <TextInput
+                        type="number"
+                        size="sm"
+                        value={String(pollInterval)}
+                        onChange={handlePollIntervalChange}
+                        onBlur={savePollInterval}
+                        onKeyDown={handleKeyDown}
+                        className="w-24"
+                    />
+                </FieldRow>
+            )}
 
             {/* MS Graph fallback indicator */}
-            {microsoftConnected && (
+            {microsoftConnected && !running && (
                 <div className="pt-3 mt-3 border-t border-ws-panel-border">
                     <div className="flex items-center gap-2 text-sm">
                         <CheckCircle2 className="w-4 h-4 text-[var(--ws-color-success)]" />
@@ -723,9 +723,10 @@ function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
     );
 }
 
-function RootsCard() {
+function RootsCard({ autohelperOnline }: { autohelperOnline: boolean }) {
     const { data: bridgeSettings } = useBridgeSettings();
     const updateSettings = useUpdateBridgeSettings();
+    const selectFolder = useSelectFolder();
     const [newRoot, setNewRoot] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -734,20 +735,54 @@ function RootsCard() {
         [bridgeSettings?.settings?.allowed_roots],
     );
 
+    const addRoot = useCallback((path: string) => {
+        const trimmed = path.trim();
+        if (!trimmed) return;
+        if (roots.includes(trimmed)) {
+            toast.warning('Path already exists');
+            return;
+        }
+        updateSettings.mutate(
+            { allowed_roots: [...roots, trimmed] },
+            {
+                onSuccess: () => {
+                    setNewRoot('');
+                    toast.success('Root added');
+                },
+                onError: (err) => {
+                    toast.error(err instanceof Error ? err.message : 'Failed to add root');
+                },
+            }
+        );
+    }, [roots, updateSettings]);
+
     const handleAdd = useCallback(() => {
-        const trimmed = newRoot.trim();
-        if (!trimmed || roots.includes(trimmed)) return;
-        updateSettings.mutate({ allowed_roots: [...roots, trimmed] });
-        setNewRoot('');
-        toast.success('Root added');
-        // Keep focus on input for adding multiple roots
+        addRoot(newRoot);
         inputRef.current?.focus();
-    }, [newRoot, roots, updateSettings]);
+    }, [addRoot, newRoot]);
+
+    const handleBrowse = useCallback(() => {
+        selectFolder.mutate(undefined, {
+            onSuccess: (path) => {
+                if (path) {
+                    addRoot(path);
+                }
+            },
+            onError: (err) => {
+                toast.error(err instanceof Error ? err.message : 'Failed to open folder picker');
+            },
+        });
+    }, [selectFolder, addRoot]);
 
     const handleRemove = useCallback(
         (root: string) => {
-            updateSettings.mutate({ allowed_roots: roots.filter((r) => r !== root) });
-            toast.info('Root removed');
+            updateSettings.mutate(
+                { allowed_roots: roots.filter((r) => r !== root) },
+                {
+                    onSuccess: () => toast.info('Root removed'),
+                    onError: (err) => toast.error(err instanceof Error ? err.message : 'Failed to remove root'),
+                }
+            );
         },
         [roots, updateSettings],
     );
@@ -758,6 +793,9 @@ function RootsCard() {
             handleAdd();
         }
     }, [handleAdd]);
+
+    const isBusy = updateSettings.isPending || selectFolder.isPending;
+    const browseDisabled = !autohelperOnline || updateSettings.isPending;
 
     return (
         <CardShell
@@ -778,7 +816,8 @@ function RootsCard() {
                             <span className="text-sm text-ws-fg font-mono truncate flex-1">{root}</span>
                             <button
                                 onClick={() => handleRemove(root)}
-                                className="opacity-0 group-hover:opacity-100 text-ws-muted hover:text-[var(--ws-color-error)] transition-opacity"
+                                disabled={isBusy}
+                                className="opacity-0 group-hover:opacity-100 text-ws-muted hover:text-[var(--ws-color-error)] transition-opacity disabled:opacity-30 disabled:cursor-not-allowed"
                                 aria-label={`Remove ${root}`}
                             >
                                 <X className="w-4 h-4" />
@@ -788,20 +827,41 @@ function RootsCard() {
                 </ul>
             )}
 
-            <div className="flex gap-2">
-                <TextInput
-                    ref={inputRef}
-                    size="sm"
-                    value={newRoot}
-                    onChange={(e) => setNewRoot(e.target.value)}
-                    placeholder="Type a path, then press Enter or click Add"
-                    onKeyDown={handleKeyDown}
-                    className="flex-1"
-                    autoComplete="off"
-                />
-                <SmallButton onClick={handleAdd} disabled={!newRoot.trim()}>
-                    <Plus className="w-3 h-3" /> Add
-                </SmallButton>
+            <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                    <SmallButton
+                        onClick={handleBrowse}
+                        loading={selectFolder.isPending}
+                        disabled={browseDisabled}
+                    >
+                        <FolderOpen className="w-3 h-3" /> Browse
+                    </SmallButton>
+                    {!autohelperOnline && (
+                        <span className="text-xs text-ws-muted self-center">
+                            Start AutoHelper to browse local folders
+                        </span>
+                    )}
+                </div>
+                <div className="flex gap-2 flex-1">
+                    <TextInput
+                        ref={inputRef}
+                        size="sm"
+                        value={newRoot}
+                        onChange={(e) => setNewRoot(e.target.value)}
+                        placeholder="Or type path manually"
+                        onKeyDown={handleKeyDown}
+                        className="flex-1"
+                        autoComplete="off"
+                        disabled={isBusy}
+                    />
+                    <SmallButton
+                        onClick={handleAdd}
+                        disabled={!newRoot.trim() || isBusy}
+                        loading={updateSettings.isPending && newRoot.trim() !== ''}
+                    >
+                        <Plus className="w-3 h-3" /> Add
+                    </SmallButton>
+                </div>
             </div>
         </CardShell>
     );
@@ -929,6 +989,11 @@ export function AutoHelperSection({
 
     const lastSeen = bridgeStatus?.lastSeen ?? null;
 
+    // AutoHelper is "online" if we've heard from it in the last 30 seconds
+    const autohelperOnline = lastSeen
+        ? Date.now() - new Date(lastSeen).getTime() < 30000
+        : false;
+
     return (
         <div className="space-y-6">
             <div>
@@ -938,9 +1003,9 @@ export function AutoHelperSection({
 
             {pairingCard}
             <ServiceStatusCard lastSeen={lastSeen} />
-            <CollectorCard />
+            <AdaptersCard autohelperOnline={autohelperOnline} />
             <MailCard microsoftConnected={microsoftConnected} />
-            <RootsCard />
+            <RootsCard autohelperOnline={autohelperOnline} />
             <AdvancedCard />
         </div>
     );

@@ -630,6 +630,11 @@ class WebCollector:
                 # Write file
                 await asyncio.to_thread(filepath.write_bytes, content)
 
+                # Extract text from PDF for metadata
+                from ..extractors.text import extract_pdf_text
+
+                extracted_text = await asyncio.to_thread(extract_pdf_text, filepath)
+
                 # Generate persistent ID
                 content_hash = compute_content_hash(content)
                 artifact_id = generate_persistent_id(content, url, timestamp)
@@ -650,7 +655,11 @@ class WebCollector:
                     collected_at=timestamp,
                     mime_type="application/pdf",
                     size=len(content),
-                    metadata={"document_type": "cv", "source_page": source_url},
+                    metadata={
+                        "document_type": "cv",
+                        "source_page": source_url,
+                        "extracted_text": extracted_text,
+                    },
                 )
 
                 results.append((artifact, entry))
