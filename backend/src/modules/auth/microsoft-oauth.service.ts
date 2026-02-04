@@ -122,14 +122,29 @@ export async function handleMicrosoftCallback(code: string, state: string): Prom
     let user: { id: string; email: string; name: string } | undefined;
 
     if (statePayload.mode === 'link') {
-        // Link mode: use the userId from state
-        userId = statePayload.userId!;
+        // Link mode: use the userId from state and verify user exists
+        if (!statePayload.userId) {
+            throw new AppError(400, 'Invalid OAuth state: missing user ID for link mode', 'INVALID_STATE');
+        }
+        userId = statePayload.userId;
+
+        const existingUser = await db
+            .selectFrom('users')
+            .select(['id', 'email', 'name', 'deleted_at'])
+            .where('id', '=', userId)
+            .executeTakeFirst();
+
+        if (!existingUser || existingUser.deleted_at !== null) {
+            throw new AppError(403, 'This account has been deactivated', 'ACCOUNT_DEACTIVATED');
+        }
+
+        user = { id: existingUser.id, email: existingUser.email, name: existingUser.name };
     } else {
         // Login mode: find or create user
         const dbUser = await db
             .insertInto('users')
             .values({
-                email: profile.email,
+                email: profile.email.toLowerCase(),
                 name: profile.name,
                 password_hash: '',
             })
