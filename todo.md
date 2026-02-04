@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-03 (evening)*
+*Last Updated: 2026-02-04*
 
 ## Bug List
 
@@ -163,6 +163,7 @@
 
 | PRs | Description |
 |-----|-------------|
+| #369-372 | Intake form blocks → records integration: public definition endpoint, RecordBlock field rendering with `--pub-*` tokens, submission→records creation, completion flow with created records display |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
 
 ---
