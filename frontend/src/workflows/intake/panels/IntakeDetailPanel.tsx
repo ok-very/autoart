@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ArrowLeft, Copy, ExternalLink } from 'lucide-react';
 import {
   useIntakeForm,
   useUpdateIntakeForm,
-  useIntakeSubmissions,
 } from '../../../api/hooks';
 import {
   Button,
@@ -14,8 +13,10 @@ import {
   Label,
   Select,
 } from '@autoart/ui';
+import { SegmentedControl } from '@autoart/ui';
 
-import type { IntakeSubmission, IntakeFormStatus } from '@autoart/shared';
+import type { IntakeFormStatus, FormBlock, ModuleBlock } from '@autoart/shared';
+import { SubmissionsTable } from '../components/SubmissionsTable';
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
@@ -24,19 +25,40 @@ const STATUS_OPTIONS = [
 
 const FORMS_BASE_URL = 'https://forms.autoart.work';
 
+type TabValue = 'overview' | 'responses';
+
 interface IntakeDetailPanelProps {
   formId: string;
   onBack?: () => void;
+  /** Callback when clicking a created record badge */
+  onRecordClick?: (recordId: string) => void;
 }
 
-export function IntakeDetailPanel({ formId, onBack }: IntakeDetailPanelProps) {
+export function IntakeDetailPanel({ formId, onBack, onRecordClick }: IntakeDetailPanelProps) {
   const { data: form, isLoading } = useIntakeForm(formId);
-  const { data: submissions, isLoading: loadingSubmissions } =
-    useIntakeSubmissions(formId);
   const updateForm = useUpdateIntakeForm();
 
+  const [activeTab, setActiveTab] = useState<TabValue>('overview');
   const [editingUrl, setEditingUrl] = useState(false);
   const [sharepointUrl, setSharepointUrl] = useState('');
+
+  // Build block labels from form pages for the submissions table
+  const blockLabels = useMemo(() => {
+    const labels = new Map<string, string>();
+    if (form?.pages) {
+      for (const page of form.pages) {
+        const blocks = page.blocks_config?.blocks as FormBlock[] | undefined;
+        if (blocks) {
+          for (const block of blocks) {
+            if (block.kind === 'module') {
+              labels.set(block.id, (block as ModuleBlock).label);
+            }
+          }
+        }
+      }
+    }
+    return labels;
+  }, [form?.pages]);
 
   const handleStatusChange = (status: IntakeFormStatus) => {
     updateForm.mutate({ id: formId, status });
@@ -88,126 +110,100 @@ export function IntakeDetailPanel({ formId, onBack }: IntakeDetailPanelProps) {
         </Badge>
       </div>
 
-      {/* Public URL */}
-      <Card className="p-4">
-        <Label>Public URL</Label>
-        <div className="flex items-center gap-2 mt-2">
-          <code className="flex-1 text-sm bg-slate-100 px-3 py-2 rounded truncate">
-            {FORMS_BASE_URL}/{form.unique_id}
-          </code>
-          <Button size="sm" variant="ghost" onClick={copyPublicUrl}>
-            <Copy className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() =>
-              window.open(`${FORMS_BASE_URL}/${form.unique_id}`, '_blank')
-            }
-          >
-            <ExternalLink className="w-4 h-4" />
-          </Button>
-        </div>
-      </Card>
+      {/* Tab navigation */}
+      <SegmentedControl
+        value={activeTab}
+        onChange={(val) => setActiveTab(val as TabValue)}
+        data={[
+          { value: 'overview', label: 'Overview' },
+          { value: 'responses', label: 'Responses' },
+        ]}
+      />
 
-      {/* Settings */}
-      <Card className="p-4 space-y-4">
-        <div>
-          <Select
-            label="Status"
-            value={form.status}
-            onChange={(val) => val && handleStatusChange(val as IntakeFormStatus)}
-            data={STATUS_OPTIONS}
-          />
-        </div>
+      {/* Tab content */}
+      {activeTab === 'overview' ? (
+        <div className="space-y-6">
+          {/* Public URL */}
+          <Card className="p-4">
+            <Label>Public URL</Label>
+            <div className="flex items-center gap-2 mt-2">
+              <code className="flex-1 text-sm bg-slate-100 px-3 py-2 rounded truncate">
+                {FORMS_BASE_URL}/{form.unique_id}
+              </code>
+              <Button size="sm" variant="ghost" onClick={copyPublicUrl}>
+                <Copy className="w-4 h-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() =>
+                  window.open(`${FORMS_BASE_URL}/${form.unique_id}`, '_blank')
+                }
+              >
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+            </div>
+          </Card>
 
-        <div>
-          <Label>SharePoint Request URL</Label>
-          {editingUrl ? (
-            <div className="flex gap-2 mt-1">
-              <TextInput
-                value={sharepointUrl}
-                onChange={(e) => setSharepointUrl(e.target.value)}
-                placeholder="https://..."
-                className="flex-1"
+          {/* Settings */}
+          <Card className="p-4 space-y-4">
+            <div>
+              <Select
+                label="Status"
+                value={form.status}
+                onChange={(val) => val && handleStatusChange(val as IntakeFormStatus)}
+                data={STATUS_OPTIONS}
               />
-              <Button size="sm" onClick={handleSaveSharepointUrl}>
-                Save
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setEditingUrl(false)}
-              >
-                Cancel
-              </Button>
             </div>
-          ) : (
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-sm text-ws-text-secondary truncate flex-1">
-                {form.sharepoint_request_url || '(not set)'}
-              </span>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setSharepointUrl(form.sharepoint_request_url || '');
-                  setEditingUrl(true);
-                }}
-              >
-                Edit
-              </Button>
+
+            <div>
+              <Label>SharePoint Request URL</Label>
+              {editingUrl ? (
+                <div className="flex gap-2 mt-1">
+                  <TextInput
+                    value={sharepointUrl}
+                    onChange={(e) => setSharepointUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="flex-1"
+                  />
+                  <Button size="sm" onClick={handleSaveSharepointUrl}>
+                    Save
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setEditingUrl(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-sm text-ws-text-secondary truncate flex-1">
+                    {form.sharepoint_request_url || '(not set)'}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setSharepointUrl(form.sharepoint_request_url || '');
+                      setEditingUrl(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                </div>
+              )}
             </div>
-          )}
+          </Card>
         </div>
-      </Card>
-
-      {/* Submissions */}
-      <div>
-        <h3 className="font-medium mb-3">
-          Submissions ({submissions?.length ?? 0})
-        </h3>
-
-        {loadingSubmissions ? (
-          <Spinner />
-        ) : submissions?.length === 0 ? (
-          <p className="text-sm text-ws-text-secondary text-center py-8">
-            No submissions yet.
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {submissions?.map((sub) => (
-              <SubmissionRow key={sub.id} submission={sub} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function SubmissionRow({ submission }: { submission: IntakeSubmission }) {
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <Card
-      className="p-3 cursor-pointer hover:bg-ws-bg"
-      onClick={() => setExpanded(!expanded)}
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <span className="font-mono text-sm">{submission.upload_code}</span>
-          <span className="text-xs text-ws-text-secondary ml-2">
-            {new Date(submission.created_at).toLocaleString()}
-          </span>
-        </div>
-      </div>
-
-      {expanded && (
-        <pre className="mt-3 text-xs bg-slate-100 p-2 rounded overflow-auto max-h-48">
-          {JSON.stringify(submission.metadata, null, 2)}
-        </pre>
+      ) : (
+        <SubmissionsTable
+          formId={formId}
+          blockLabels={blockLabels}
+          onRecordClick={onRecordClick}
+        />
       )}
-    </Card>
+    </div>
   );
 }
