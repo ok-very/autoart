@@ -38,7 +38,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['react-pdf', 'pdfjs-dist'],
+    include: ['react-pdf', 'pdfjs-dist', 'dompurify'],
   },
   build: { sourcemap: true },
 });

@@ -54,3 +54,6 @@ catalog:
 
   # Document preview
   react-pdf: "^10.0.0"
+
+  # Sanitization
+  dompurify: "^3.2.0"
