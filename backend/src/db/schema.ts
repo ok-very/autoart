@@ -575,6 +575,7 @@ export interface PollsTable {
   unique_id: string;
   title: string;
   description: string | null;
+  confirmation_message: string | null;
   status: Generated<PollStatus>;
   time_config: unknown; // JSONB - PollTimeConfig
   project_id: string | null;

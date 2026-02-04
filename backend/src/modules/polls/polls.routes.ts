@@ -4,6 +4,8 @@ import { z } from 'zod';
 
 import {
   CreatePollInputSchema,
+  UpdatePollInputSchema,
+  DuplicatePollInputSchema,
   SubmitPollResponseInputSchema,
   LogEngagementInputSchema,
   EngagementContextType,
@@ -99,6 +101,82 @@ export async function pollRoutes(app: FastifyInstance) {
 
         const closedPoll = await pollsService.closePoll(request.params.id);
         return reply.send({ poll: closedPoll });
+      } catch (err) {
+        if (err instanceof AppError) {
+          return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+        }
+        throw err;
+      }
+    }
+  );
+
+  // Update poll
+  fastify.patch(
+    '/:id',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        params: z.object({ id: z.string().uuid() }),
+        body: UpdatePollInputSchema,
+      },
+    },
+    async (request, reply) => {
+      try {
+        const poll = await pollsService.updatePoll(
+          request.params.id,
+          request.user!.userId,
+          request.body
+        );
+        return reply.send({ poll });
+      } catch (err) {
+        if (err instanceof AppError) {
+          return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+        }
+        throw err;
+      }
+    }
+  );
+
+  // Delete poll
+  fastify.delete(
+    '/:id',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        params: z.object({ id: z.string().uuid() }),
+      },
+    },
+    async (request, reply) => {
+      try {
+        await pollsService.deletePoll(request.params.id, request.user!.userId);
+        return reply.code(204).send();
+      } catch (err) {
+        if (err instanceof AppError) {
+          return reply.code(err.statusCode).send({ error: err.code, message: err.message });
+        }
+        throw err;
+      }
+    }
+  );
+
+  // Duplicate poll
+  fastify.post(
+    '/:id/duplicate',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        params: z.object({ id: z.string().uuid() }),
+        body: DuplicatePollInputSchema.optional(),
+      },
+    },
+    async (request, reply) => {
+      try {
+        const poll = await pollsService.duplicatePoll(
+          request.params.id,
+          request.user!.userId,
+          request.body
+        );
+        return reply.code(201).send({ poll });
       } catch (err) {
         if (err instanceof AppError) {
           return reply.code(err.statusCode).send({ error: err.code, message: err.message });
