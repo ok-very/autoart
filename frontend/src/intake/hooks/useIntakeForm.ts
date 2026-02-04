@@ -10,6 +10,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z, ZodTypeAny } from 'zod';
 import { useState, useMemo } from 'react';
 import type { FormBlock, ModuleBlock, IntakeFormConfig } from '@autoart/shared';
+import type { SubmissionResult } from '../api';
+
+// Re-export from api.ts to maintain single source of truth
+export type SubmissionResultData = SubmissionResult;
 
 type UseIntakeFormReturn = {
     rhf: UseFormReturn<Record<string, unknown>>;
@@ -17,6 +21,7 @@ type UseIntakeFormReturn = {
     isSubmitting: boolean;
     submitError?: string;
     isSubmitted: boolean;
+    submissionResult?: SubmissionResultData;
 };
 
 /**
@@ -112,8 +117,8 @@ function buildFormSchema(blocks: FormBlock[]): z.ZodObject<Record<string, ZodTyp
 
 interface UseIntakeFormOptions {
     config: IntakeFormConfig;
-    onSubmitSuccess?: (data: Record<string, unknown>) => void;
-    submitFn: (data: Record<string, unknown>) => Promise<void>;
+    onSubmitSuccess?: (result: SubmissionResultData, data: Record<string, unknown>) => void;
+    submitFn: (data: Record<string, unknown>) => Promise<SubmissionResultData>;
 }
 
 export function useIntakeForm({
@@ -124,6 +129,7 @@ export function useIntakeForm({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | undefined>(undefined);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [submissionResult, setSubmissionResult] = useState<SubmissionResultData | undefined>(undefined);
 
     // Build schema from blocks (memoized)
     const schema = useMemo(() => buildFormSchema(config.blocks), [config.blocks]);
@@ -139,9 +145,10 @@ export function useIntakeForm({
         setSubmitError(undefined);
 
         try {
-            await submitFn(data);
+            const result = await submitFn(data);
+            setSubmissionResult(result);
             setIsSubmitted(true);
-            onSubmitSuccess?.(data);
+            onSubmitSuccess?.(result, data);
         } catch (e: unknown) {
             const message = e instanceof Error ? e.message : 'Submission failed';
             setSubmitError(message);
@@ -150,5 +157,5 @@ export function useIntakeForm({
         }
     };
 
-    return { rhf, onSubmit, isSubmitting, submitError, isSubmitted };
+    return { rhf, onSubmit, isSubmitting, submitError, isSubmitted, submissionResult };
 }

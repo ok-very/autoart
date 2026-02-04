@@ -1,4 +1,4 @@
-import type { IntakeFormConfig } from '@autoart/shared';
+import type { IntakeFormConfig, CreatedRecord } from '@autoart/shared';
 
 // In production, VITE_API_URL should be set to the backend URL (e.g., https://api.autoart.work)
 // In development, we use the Vite proxy at /public
@@ -20,6 +20,7 @@ export interface SubmissionResult {
   id: string;
   upload_code: string;
   created_at: string;
+  created_records?: CreatedRecord[];
 }
 
 export interface RecordDefinitionField {

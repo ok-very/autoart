@@ -303,7 +303,6 @@ body {
 }
 
 /* Dropdown Animation Fix */
-[data-mantine-menu-dropdown],
 .dropdown-menu {
   transform-origin: var(--menu-origin, top center);
   animation: dropdownFadeIn 0.15s ease-out;
