@@ -32,6 +32,7 @@ import type { FieldViewModel } from '@autoart/shared/domain';
 
 import type { HierarchyNode, FieldDef } from '../../types';
 import { type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
+import { stringifyFieldValue } from '../../utils/stringifyFieldValue';
 import { EditableCell } from '../../ui/molecules/EditableCell';
 import { StatusColumnSummary } from '../../ui/molecules/StatusColumnSummary';
 import { StatusFieldEditor } from '../semantic/StatusFieldEditor';
@@ -312,7 +313,7 @@ export function DataTableHierarchy({
                 sortKey: (row: TableRow) => {
                     const node = row.data as HierarchyNode;
                     const val = getFieldValue(node, field.key, fallbacks);
-                    return val == null ? null : String(val);
+                    return stringifyFieldValue(val);
                 },
                 cell: (row: TableRow) => {
                     const node = row.data as HierarchyNode;

@@ -30,7 +30,7 @@ export function CreateInvoiceView({
   );
 
   const createRecord = useCreateFinanceRecord();
-  const { data: clients = [] } = useContactsByGroup('Developer/Client');
+  const { data: clients = [], isPending: isLoadingClients } = useContactsByGroup('Developer/Client');
 
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [issueDate, setIssueDate] = useState(new Date().toLocaleDateString('en-CA'));
@@ -92,6 +92,7 @@ export function CreateInvoiceView({
           value={clientId}
           onChange={setClientId}
           placeholder="Select client"
+          isLoading={isLoadingClients}
         />
         <div className="grid grid-cols-2 gap-4">
           <TextInput
