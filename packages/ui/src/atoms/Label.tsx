@@ -34,13 +34,13 @@ export function Label({
             className={clsx(
                 'font-medium block',
                 size === 'sm' ? 'text-xs' : 'text-sm',
-                disabled ? 'text-[var(--ws-text-disabled,#8c8c88)]' : 'text-[var(--ws-fg,#1e293b)]',
+                disabled ? 'text-ws-text-disabled' : 'text-ws-fg',
                 className
             )}
         >
             {children}
             {required && (
-                <span className="text-[var(--ws-color-error,#8c4a4a)] ml-0.5" aria-label="required">*</span>
+                <span className="text-ws-error ml-0.5" aria-label="required">*</span>
             )}
         </label>
     );

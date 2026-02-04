@@ -32,8 +32,8 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
                     id={inputId}
                     onChange={handleChange}
                     className={clsx(
-                        'mt-0.5 h-4 w-4 rounded border-[var(--ws-panel-border,#e2e8f0)] text-[var(--ws-accent,#3b82f6)]',
-                        'focus:ring-2 focus:ring-[var(--ws-accent,#3b82f6)] focus:ring-offset-1',
+                        'mt-0.5 h-4 w-4 rounded border-ws-panel-border text-ws-accent',
+                        'focus:ring-2 focus:ring-ws-accent focus:ring-offset-1',
                         'disabled:opacity-50 disabled:cursor-not-allowed',
                         className
                     )}
@@ -44,13 +44,13 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
                         {label && (
                             <label
                                 htmlFor={inputId}
-                                className="text-sm font-medium text-[var(--ws-fg,#1e293b)] cursor-pointer"
+                                className="text-sm font-medium text-ws-fg cursor-pointer"
                             >
                                 {label}
                             </label>
                         )}
                         {description && (
-                            <p className="text-xs text-[var(--ws-text-secondary,#5a5a57)]">{description}</p>
+                            <p className="text-xs text-ws-text-secondary">{description}</p>
                         )}
                     </div>
                 )}

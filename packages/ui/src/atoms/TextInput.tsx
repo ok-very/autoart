@@ -18,25 +18,25 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
                 {label && (
                     <label
                         htmlFor={inputId}
-                        className="text-sm font-medium text-[var(--ws-fg,#1e293b)]"
+                        className="text-sm font-medium text-ws-fg"
                     >
                         {label}
-                        {required && <span className="text-[var(--ws-color-error,#8c4a4a)] ml-0.5">*</span>}
+                        {required && <span className="text-ws-error ml-0.5">*</span>}
                     </label>
                 )}
                 {description && (
-                    <p className="text-xs text-[var(--ws-text-secondary,#5a5a57)]">{description}</p>
+                    <p className="text-xs text-ws-text-secondary">{description}</p>
                 )}
                 <input
                     ref={ref}
                     id={inputId}
                     className={clsx(
                         'w-full rounded-lg border transition-colors font-sans',
-                        'focus:outline-none focus:ring-2 focus:ring-[var(--ws-accent,#3b82f6)] focus:border-[var(--ws-accent,#3b82f6)]',
-                        'disabled:bg-[var(--ws-bg,#f8fafc)] disabled:text-[var(--ws-text-disabled,#8c8c88)] disabled:cursor-not-allowed',
+                        'focus:outline-none focus:ring-2 focus:ring-ws-accent focus:border-ws-accent',
+                        'disabled:bg-ws-bg disabled:text-ws-text-disabled disabled:cursor-not-allowed',
                         error
-                            ? 'border-[var(--ws-color-error,#8c4a4a)] focus:ring-[var(--ws-color-error,#8c4a4a)] focus:border-[var(--ws-color-error,#8c4a4a)]'
-                            : 'border-[var(--ws-panel-border,#e2e8f0)]',
+                            ? 'border-ws-error focus:ring-ws-error focus:border-ws-error'
+                            : 'border-ws-panel-border',
                         {
                             'px-2 py-1 text-xs': size === 'sm',
                             'px-3 py-2 text-sm': size === 'md',
@@ -49,12 +49,12 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
                     {...props}
                 />
                 {hint && !error && (
-                    <p id={`${inputId}-hint`} className="text-xs text-[var(--ws-text-secondary,#5a5a57)]">
+                    <p id={`${inputId}-hint`} className="text-xs text-ws-text-secondary">
                         {hint}
                     </p>
                 )}
                 {error && (
-                    <p id={`${inputId}-error`} className="text-xs text-[var(--ws-color-error,#8c4a4a)]">
+                    <p id={`${inputId}-error`} className="text-xs text-ws-error">
                         {error}
                     </p>
                 )}
