@@ -3,14 +3,14 @@
  *
  * Handles Microsoft OAuth 2.0 authentication flow for OneDrive integration.
  * Uses direct fetch() to Microsoft identity platform endpoints (no heavy SDK).
- * Follows the same pattern as oauth.service.ts (Google).
+ * Supports both login mode (create/find user) and link mode (connect to existing user).
  */
 
-import crypto from 'crypto';
 import { sql } from 'kysely';
 
 import { db } from '../../db/client.js';
 import { AppError } from '../../utils/errors.js';
+import { generateOAuthState, validateOAuthState, type OAuthMode } from './oauth-state.js';
 
 // Environment validation
 const MICROSOFT_CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
@@ -33,32 +33,18 @@ const SCOPES = [
     'User.Read',
 ].join(' ');
 
-// In-memory state store (same pattern as Google OAuth)
-const stateStore = new Map<string, { timestamp: number; userId?: string }>();
-
-// Clean up expired states (older than 10 minutes)
-setInterval(() => {
-    const now = Date.now();
-    for (const [state, data] of stateStore.entries()) {
-        if (now - data.timestamp > 10 * 60 * 1000) {
-            stateStore.delete(state);
-        }
-    }
-}, 60 * 1000);
-
 /**
  * Generate Microsoft OAuth authorization URL.
- * If userId is provided, it's stored with the state for associating tokens
- * with an existing user (connection flow vs. login flow).
+ * If userId is provided, uses 'link' mode to connect Microsoft to an existing user.
+ * Otherwise, uses 'login' mode to create/find a user.
  */
 export function getMicrosoftAuthUrl(userId?: string): { url: string; state: string } {
     if (!MICROSOFT_CLIENT_ID || !MICROSOFT_CLIENT_SECRET) {
         throw new AppError(500, 'Microsoft OAuth is not configured', 'OAUTH_NOT_CONFIGURED');
     }
 
-    // Generate CSRF state token
-    const state = crypto.randomBytes(32).toString('hex');
-    stateStore.set(state, { timestamp: Date.now(), userId });
+    const mode: OAuthMode = userId ? 'link' : 'login';
+    const state = generateOAuthState(mode, userId);
 
     const params = new URLSearchParams({
         client_id: MICROSOFT_CLIENT_ID,
@@ -74,29 +60,25 @@ export function getMicrosoftAuthUrl(userId?: string): { url: string; state: stri
     return { url, state };
 }
 
-/**
- * Validate state parameter (CSRF protection)
- */
-function validateState(state: string): { userId?: string } | null {
-    const entry = stateStore.get(state);
-    if (!entry) return null;
-    stateStore.delete(state);
-    return { userId: entry.userId };
+export interface MicrosoftCallbackResult {
+    mode: OAuthMode;
+    userId: string;
+    user?: { id: string; email: string; name: string };
+    profile: { email: string; name: string };
 }
 
 /**
  * Exchange authorization code for tokens and store credentials.
+ * In 'login' mode: creates/finds user and returns user data.
+ * In 'link' mode: stores credentials for existing user.
  */
-export async function handleMicrosoftCallback(code: string, state: string) {
+export async function handleMicrosoftCallback(code: string, state: string): Promise<MicrosoftCallbackResult> {
     if (!MICROSOFT_CLIENT_ID || !MICROSOFT_CLIENT_SECRET) {
         throw new AppError(500, 'Microsoft OAuth is not configured', 'OAUTH_NOT_CONFIGURED');
     }
 
     // Validate state (CSRF protection)
-    const stateData = validateState(state);
-    if (!stateData) {
-        throw new AppError(400, 'Invalid or expired state parameter', 'INVALID_STATE');
-    }
+    const statePayload = validateOAuthState(state);
 
     // Exchange code for tokens
     const tokenResponse = await fetch(MICROSOFT_TOKEN_URL, {
@@ -136,13 +118,15 @@ export async function handleMicrosoftCallback(code: string, state: string) {
     // Get user profile from Microsoft Graph
     const profile = await getMicrosoftProfile(tokens.access_token);
 
-    // If we have a userId from state, this is a "connect account" flow
-    // Otherwise, find/create user by email
-    let userId = stateData.userId;
+    let userId: string;
+    let user: { id: string; email: string; name: string } | undefined;
 
-    if (!userId) {
-        // Find or create user
-        const user = await db
+    if (statePayload.mode === 'link') {
+        // Link mode: use the userId from state
+        userId = statePayload.userId!;
+    } else {
+        // Login mode: find or create user
+        const dbUser = await db
             .insertInto('users')
             .values({
                 email: profile.email,
@@ -157,11 +141,12 @@ export async function handleMicrosoftCallback(code: string, state: string) {
             .returningAll()
             .executeTakeFirstOrThrow();
 
-        if (user.deleted_at !== null) {
+        if (dbUser.deleted_at !== null) {
             throw new AppError(403, 'This account has been deactivated', 'ACCOUNT_DEACTIVATED');
         }
 
-        userId = user.id;
+        userId = dbUser.id;
+        user = { id: dbUser.id, email: dbUser.email, name: dbUser.name };
     }
 
     // Store Microsoft tokens in connection_credentials table
@@ -196,7 +181,7 @@ export async function handleMicrosoftCallback(code: string, state: string) {
         )
         .execute();
 
-    return { userId, profile };
+    return { mode: statePayload.mode, userId, user, profile };
 }
 
 /**

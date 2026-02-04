@@ -343,9 +343,10 @@ export async function authRoutes(fastify: FastifyInstance) {
   // ============================================================================
 
   // Initiate Microsoft OAuth flow
-  fastify.get('/microsoft', async (request: FastifyRequest, reply: FastifyReply) => {
+  // Without auth: login mode (create/find user)
+  // With auth: link mode (connect Microsoft to existing user)
+  fastify.get('/microsoft', { preHandler: fastify.authenticateOptional }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      // If the user is authenticated, pass their userId so tokens get linked
       const userId = (request.user as { userId?: string })?.userId;
       const { url, state } = microsoftOAuthService.getMicrosoftAuthUrl(userId);
       return reply.send({ url, state });
@@ -364,6 +365,71 @@ export async function authRoutes(fastify: FastifyInstance) {
   fastify.get<MicrosoftCallbackQuery>('/microsoft/callback', async (request, reply) => {
     const { code, state, error, error_description } = request.query;
 
+    // Helper to send popup close response for link mode
+    const sendPopupResponse = (success: boolean, message?: string) => {
+      const targetOrigin = process.env.CLIENT_ORIGIN;
+
+      if (!targetOrigin) {
+        console.error('Microsoft OAuth callback: CLIENT_ORIGIN not set');
+        return reply.type('text/html').status(500).send(`
+<!DOCTYPE html>
+<html>
+<head><title>Microsoft OAuth Error</title></head>
+<body>
+<h1>Configuration Error</h1>
+<p>OAuth callback cannot complete: CLIENT_ORIGIN is not configured.</p>
+</body>
+</html>`);
+      }
+
+      let safeTargetOrigin: string;
+      try {
+        const originUrl = new URL(targetOrigin);
+        const isLocalhost = originUrl.hostname === 'localhost' || originUrl.hostname === '127.0.0.1';
+        if (originUrl.protocol === 'http:' && !isLocalhost) {
+          throw new Error('HTTP only allowed for localhost');
+        }
+        safeTargetOrigin = originUrl.origin;
+      } catch {
+        console.error('Microsoft OAuth callback: Invalid CLIENT_ORIGIN:', targetOrigin);
+        return reply.type('text/html').status(500).send(`
+<!DOCTYPE html>
+<html>
+<head><title>Microsoft OAuth Error</title></head>
+<body>
+<h1>Configuration Error</h1>
+<p>OAuth callback cannot complete: CLIENT_ORIGIN is misconfigured.</p>
+</body>
+</html>`);
+      }
+
+      const safeMessage = message ? message.replace(/[<>"'&]/g, c => ({
+        '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '&': '&amp;'
+      })[c] || c) : '';
+
+      return reply.type('text/html').send(`
+<!DOCTYPE html>
+<html>
+<head><title>Microsoft OAuth</title></head>
+<body>
+<script>
+(function() {
+  var targetOrigin = ${JSON.stringify(safeTargetOrigin)};
+  if (window.opener && targetOrigin) {
+    window.opener.postMessage({
+      type: 'microsoft-oauth-callback',
+      success: ${success},
+      message: ${JSON.stringify(safeMessage)}
+    }, targetOrigin);
+  }
+  window.close();
+})();
+</script>
+<p>${success ? 'Connected! This window will close.' : `Error: ${safeMessage}`}</p>
+</body>
+</html>`);
+    };
+
     if (error) {
       return reply.code(400).send({
         error: 'OAUTH_DENIED',
@@ -376,13 +442,21 @@ export async function authRoutes(fastify: FastifyInstance) {
     }
 
     try {
-      const { userId } = await microsoftOAuthService.handleMicrosoftCallback(code, state);
+      const result = await microsoftOAuthService.handleMicrosoftCallback(code, state);
 
-      // If the user already had a session (connecting account), return success
-      // Otherwise create a session for the new/found user
-      const user = await authService.getUserById(userId);
+      // Link mode: return HTML that closes the popup
+      if (result.mode === 'link') {
+        return sendPopupResponse(true, 'Microsoft account connected successfully');
+      }
+
+      // Login mode: return JSON with session tokens
+      if (!result.user) {
+        return reply.code(500).send({ error: 'INTERNAL_ERROR', message: 'User not found after OAuth' });
+      }
+
+      const user = await authService.getUserById(result.user.id);
       if (!user) {
-        return reply.code(404).send({ error: 'NOT_FOUND', message: 'User not found after OAuth' });
+        return reply.code(404).send({ error: 'NOT_FOUND', message: 'User not found' });
       }
 
       const refreshToken = await authService.createSession(user.id);
