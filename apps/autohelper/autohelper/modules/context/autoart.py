@@ -19,7 +19,7 @@ class AutoArtClientConfig:
     """Configuration for AutoArt client"""
 
     api_url: str = "http://localhost:3000"
-    api_key: str | None = None
+    link_key: str | None = None
 
 
 class AutoArtClientError(Exception):
@@ -42,7 +42,7 @@ class AutoArtClient:
         settings = get_settings()
         client = AutoArtClient(
             api_url=settings.autoart_api_url,
-            api_key=settings.autoart_api_key
+            link_key=settings.autoart_link_key or None,
         )
         projects = client.fetch_projects()
     """
@@ -50,24 +50,20 @@ class AutoArtClient:
     def __init__(
         self,
         api_url: str | None = None,
-        api_key: str | None = None,
-        session_id: str | None = None,
+        link_key: str | None = None,
     ):
         if api_url is None:
             api_url = "http://localhost:3001"
         self.api_url = api_url.rstrip("/")
-        self.api_key = api_key
-        self.session_id = session_id
+        self.link_key = link_key
         self._cached_projects: list[dict[str, Any]] | None = None
         self._cached_developers: list[str] | None = None
 
     def _get_headers(self) -> dict[str, str]:
-        """Build request headers with optional API key and session ID."""
+        """Build request headers with optional link key."""
         headers = {"Content-Type": "application/json"}
-        if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
-        if self.session_id:
-            headers["X-AutoHelper-Session"] = self.session_id
+        if self.link_key:
+            headers["X-AutoHelper-Key"] = self.link_key
         return headers
 
     def _request(
@@ -172,93 +168,15 @@ class AutoArtClient:
         self._cached_developers = None
 
     # =========================================================================
-    # PAIRING & CREDENTIAL PROXYING
+    # CREDENTIAL PROXYING
     # =========================================================================
 
-    def pair_with_code(
-        self, code: str, instance_name: str = "AutoHelper"
-    ) -> tuple[str | None, str | None]:
+    def get_monday_token(self) -> str | None:
         """
-        Exchange a pairing code for a session ID.
-
-        Args:
-            code: 6-digit pairing code from AutoArt
-            instance_name: Name to identify this AutoHelper instance
-
-        Returns:
-            (session_id, None) on success, (None, error_message) on failure
-        """
-        try:
-            response = requests.post(
-                f"{self.api_url}/api/connections/autohelper/handshake",
-                json={"code": code, "instanceName": instance_name},
-                headers={"Content-Type": "application/json"},
-                timeout=10,
-            )
-
-            if response.status_code == 200:
-                result = response.json()
-                session_id = result.get("sessionId")
-                logger.info(f"Paired with AutoArt, session: {session_id[:8]}...")
-                return session_id, None
-
-            # Extract error from response body when available
-            error_msg = f"Backend returned {response.status_code}"
-            try:
-                body = response.json()
-                if "error" in body:
-                    error_msg = body["error"]
-            except ValueError:
-                pass
-            logger.warning(f"Pairing failed: {response.status_code} - {response.text}")
-            return None, error_msg
-
-        except requests.ConnectionError as e:
-            logger.error(f"Pairing request failed (connection): {e}")
-            return None, "Backend unreachable"
-
-        except requests.Timeout as e:
-            logger.error(f"Pairing request failed (timeout): {e}")
-            return None, "Backend timed out"
-
-        except requests.RequestException as e:
-            logger.error(f"Pairing request failed: {e}")
-            return None, f"Request failed: {e}"
-
-    def disconnect_session(self, session_id: str) -> bool:
-        """
-        Tell the AutoArt backend to invalidate this session.
-
-        Best-effort — returns False on any failure so callers can
-        proceed with local cleanup regardless.
-        """
-        try:
-            response = requests.post(
-                f"{self.api_url}/api/connections/autohelper/disconnect",
-                headers={
-                    "X-AutoHelper-Session": session_id,
-                    "Content-Type": "application/json",
-                },
-                timeout=5,
-            )
-            if response.status_code == 200:
-                logger.info("Session invalidated on backend")
-                return True
-            logger.warning("Backend disconnect returned %s", response.status_code)
-            return False
-        except requests.RequestException as e:
-            logger.warning("Backend disconnect failed: %s", e)
-            return False
-
-    def get_monday_token(self, session_id: str) -> str | None:
-        """
-        Fetch Monday API token from AutoArt using session credentials.
+        Fetch Monday API token from AutoArt using the link key.
 
         This makes AutoArt the single source of truth for API tokens,
         eliminating the need to store the Monday key locally.
-
-        Args:
-            session_id: Valid session ID from pairing
 
         Returns:
             Monday API token on success, None on failure
@@ -266,7 +184,7 @@ class AutoArtClient:
         try:
             response = requests.get(
                 f"{self.api_url}/api/connections/autohelper/credentials",
-                headers={"X-AutoHelper-Session": session_id, "Content-Type": "application/json"},
+                headers=self._get_headers(),
                 timeout=10,
             )
 
@@ -283,19 +201,6 @@ class AutoArtClient:
         except requests.RequestException as e:
             logger.error(f"Credential fetch failed: {e}")
             return None
-
-    def verify_session(self, session_id: str) -> bool:
-        """
-        Verify that a session ID is still valid.
-
-        Args:
-            session_id: Session ID to verify
-
-        Returns:
-            True if session is valid, False otherwise
-        """
-        # The credentials endpoint will fail if session is invalid
-        return self.get_monday_token(session_id) is not None
 
     # =========================================================================
     # GARBAGE COLLECTION

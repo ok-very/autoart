@@ -1,10 +1,8 @@
 """Pairing router — lets the frontend pair/unpair AutoHelper over HTTP.
 
-POST /pair         Accept a 6-digit code, handshake with the backend, persist session.
-POST /pair/unpair  Clear the local session so the tray updates immediately.
+POST /pair         Accept a link key, verify it, persist to config.
+POST /pair/unpair  Clear the local link key so the tray updates immediately.
 """
-
-import socket
 
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -20,12 +18,11 @@ router = APIRouter(prefix="/pair", tags=["pairing"])
 
 
 class PairRequest(BaseModel):
-    code: str
+    key: str
 
 
 class PairResponse(BaseModel):
     paired: bool
-    displayId: str | None = None
     error: str | None = None
 
 
@@ -35,27 +32,29 @@ class UnpairResponse(BaseModel):
 
 @router.post("", response_model=PairResponse)
 def pair(body: PairRequest) -> PairResponse:
-    """Exchange a pairing code for a session, persist it, and propagate."""
+    """Accept a link key from the frontend, verify it against the backend, persist it."""
     try:
         settings = get_settings()
         client = AutoArtClient(
             api_url=settings.autoart_api_url,
-            api_key=settings.autoart_api_key or None,
+            link_key=body.key,
         )
 
-        hostname = socket.gethostname()
-        session_id, error = client.pair_with_code(body.code, instance_name=hostname)
-
-        if not session_id:
-            return PairResponse(paired=False, error=error or "Handshake failed — check the code and try again")
+        # Verify the key works by hitting the credentials endpoint
+        token = client.get_monday_token()
+        if not token:
+            return PairResponse(paired=False, error="Key rejected by backend — is Monday connected?")
 
         # Persist to config.json
         store = ConfigStore()
         cfg = store.load()
-        cfg["autoart_session_id"] = session_id
+        cfg["autoart_link_key"] = body.key
+        # Clean up legacy keys
+        cfg.pop("autoart_session_id", None)
+        cfg.pop("autoart_api_key", None)
         store.save(cfg)
 
-        # Clear cached Settings so dependents pick up the new session
+        # Clear cached Settings so dependents pick up the new key
         reset_settings()
 
         # Reinitialise the context service
@@ -66,8 +65,8 @@ def pair(body: PairRequest) -> PairResponse:
         except Exception as exc:
             logger.warning("Failed to reinit context service after pairing: %s", exc)
 
-        logger.info("Paired via HTTP endpoint, session: %s...", session_id[:8])
-        return PairResponse(paired=True, displayId=hostname)
+        logger.info("Paired via HTTP endpoint")
+        return PairResponse(paired=True)
 
     except Exception as exc:
         logger.error("Pairing failed: %s", exc)
@@ -76,22 +75,14 @@ def pair(body: PairRequest) -> PairResponse:
 
 @router.post("/unpair", response_model=UnpairResponse)
 def unpair() -> UnpairResponse:
-    """Invalidate session server-side, then clear local state."""
+    """Clear the local link key."""
     store = ConfigStore()
     cfg = store.load()
-    old_session_id = cfg.get("autoart_session_id")
 
-    # Tell the backend to drop the session before we forget the ID
-    if old_session_id:
-        settings = get_settings()
-        client = AutoArtClient(
-            api_url=settings.autoart_api_url,
-            api_key=settings.autoart_api_key or None,
-        )
-        client.disconnect_session(old_session_id)
-
-    # Clear local state regardless of backend result
+    cfg.pop("autoart_link_key", None)
+    # Clean up legacy keys too
     cfg.pop("autoart_session_id", None)
+    cfg.pop("autoart_api_key", None)
     store.save(cfg)
 
     reset_settings()

@@ -96,15 +96,14 @@ class ContextService:
         config = config_store.load()
 
         # AutoArt client (local server, may not be running)
-        # Use session_id from ConfigStore if available, otherwise fall back to settings
+        # Use link_key from ConfigStore if available, otherwise fall back to settings
         autoart_url = getattr(self.settings, "autoart_api_url", "http://localhost:3001")
-        autoart_key = getattr(self.settings, "autoart_api_key", None)
-        autoart_session_id = config.get("autoart_session_id") or getattr(
-            self.settings, "autoart_session_id", ""
+        autoart_link_key = config.get("autoart_link_key") or getattr(
+            self.settings, "autoart_link_key", ""
         )
         try:
             self._autoart_client = AutoArtClient(
-                api_url=autoart_url, api_key=autoart_key, session_id=autoart_session_id
+                api_url=autoart_url, link_key=autoart_link_key or None
             )
         except Exception as e:
             logger.warning(f"Failed to init AutoArt client: {e}")

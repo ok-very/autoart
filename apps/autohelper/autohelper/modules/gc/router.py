@@ -92,8 +92,7 @@ async def get_gc_stats() -> GCStatsResponse:
     settings = get_settings()
     client = AutoArtClient(
         api_url=settings.autoart_api_url,
-        api_key=settings.autoart_api_key,
-        session_id=settings.autoart_session_id,
+        link_key=settings.autoart_link_key or None,
     )
 
     stats = client.get_gc_stats(retention_days=settings.gc_retention_days)
