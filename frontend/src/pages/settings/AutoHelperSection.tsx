@@ -727,6 +727,7 @@ function RootsCard() {
     const { data: bridgeSettings } = useBridgeSettings();
     const updateSettings = useUpdateBridgeSettings();
     const [newRoot, setNewRoot] = useState('');
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const roots: string[] = useMemo(
         () => bridgeSettings?.settings?.allowed_roots ?? [],
@@ -739,6 +740,8 @@ function RootsCard() {
         updateSettings.mutate({ allowed_roots: [...roots, trimmed] });
         setNewRoot('');
         toast.success('Root added');
+        // Keep focus on input for adding multiple roots
+        inputRef.current?.focus();
     }, [newRoot, roots, updateSettings]);
 
     const handleRemove = useCallback(
@@ -749,22 +752,34 @@ function RootsCard() {
         [roots, updateSettings],
     );
 
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleAdd();
+        }
+    }, [handleAdd]);
+
     return (
         <CardShell
             icon={<HardDrive className="w-5 h-5 text-ws-text-secondary" />}
             iconBg="bg-[var(--ws-bg)]"
             title="Roots"
         >
+            <p className="text-xs text-ws-text-secondary mb-3">
+                Directories AutoHelper can access for indexing and collection.
+            </p>
+
             {roots.length === 0 ? (
-                <p className="text-sm text-ws-muted">No roots configured</p>
+                <p className="text-sm text-ws-muted py-2">No roots configured</p>
             ) : (
-                <ul className="space-y-1">
+                <ul className="space-y-1 mb-3">
                     {roots.map((root) => (
                         <li key={root} className="flex items-center gap-2 group">
                             <span className="text-sm text-ws-fg font-mono truncate flex-1">{root}</span>
                             <button
                                 onClick={() => handleRemove(root)}
                                 className="opacity-0 group-hover:opacity-100 text-ws-muted hover:text-[var(--ws-color-error)] transition-opacity"
+                                aria-label={`Remove ${root}`}
                             >
                                 <X className="w-4 h-4" />
                             </button>
@@ -773,14 +788,16 @@ function RootsCard() {
                 </ul>
             )}
 
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2">
                 <TextInput
+                    ref={inputRef}
                     size="sm"
                     value={newRoot}
                     onChange={(e) => setNewRoot(e.target.value)}
-                    placeholder="/path/to/files"
-                    onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                    placeholder="Type a path, then press Enter or click Add"
+                    onKeyDown={handleKeyDown}
                     className="flex-1"
+                    autoComplete="off"
                 />
                 <SmallButton onClick={handleAdd} disabled={!newRoot.trim()}>
                     <Plus className="w-3 h-3" /> Add
