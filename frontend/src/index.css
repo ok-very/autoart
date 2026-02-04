@@ -2,7 +2,7 @@
 @import "./workspace/themes/variables.css";
 
 /* Include @autoart/ui package to ensure its Tailwind classes aren't purged */
-@source "../packages/ui/src";
+@source "../../packages/ui/src";
 
 @theme {
   /* Custom colors for record types */
