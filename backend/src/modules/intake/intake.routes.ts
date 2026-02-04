@@ -193,6 +193,31 @@ export async function intakePublicRoutes(app: FastifyInstance) {
     }
   );
 
+  // Get record definition for form (public)
+  fastify.get(
+    '/forms/:uniqueId/definitions/:definitionId',
+    {
+      schema: {
+        params: z.object({
+          uniqueId: z.string().min(1),
+          definitionId: z.string().uuid(),
+        }),
+      },
+    },
+    async (request, reply) => {
+      const definition = await intakeService.getDefinitionForForm(
+        request.params.uniqueId,
+        request.params.definitionId
+      );
+
+      if (!definition) {
+        return reply.code(404).send({ error: 'NOT_FOUND', message: 'Definition not found' });
+      }
+
+      return reply.send({ definition });
+    }
+  );
+
   // Submit to form (public)
   fastify.post(
     '/forms/:uniqueId/submissions',
