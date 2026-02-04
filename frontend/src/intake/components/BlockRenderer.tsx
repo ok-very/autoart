@@ -85,7 +85,8 @@ export function BlockRenderer({ block }: BlockRendererProps) {
  */
 export function isInputBlock(block: FormBlock): boolean {
   if (block.kind === 'record') {
-    return false;
+    // RecordBlocks with createInstance collect input for record creation
+    return (block as RecordBlockType).createInstance === true;
   }
   return !STATIC_BLOCKS.includes((block as ModuleBlock).type);
 }

@@ -2,22 +2,406 @@
 @import "./variables.css";
 
 @theme {
+  /* =========================================================================
+     COLORS
+     ========================================================================= */
+  /* Foundation */
   --color-pub-bg: var(--pub-bg);
   --color-pub-fg: var(--pub-fg);
   --color-pub-muted: var(--pub-muted-fg);
+
+  /* Accent */
   --color-pub-accent: var(--pub-accent);
   --color-pub-accent-fg: var(--pub-accent-fg);
+  --color-pub-accent-hover: var(--pub-accent-hover);
+  --color-pub-accent-secondary: var(--pub-accent-secondary);
+
+  /* Surfaces */
   --color-pub-panel-bg: var(--pub-panel-bg);
   --color-pub-panel-border: var(--pub-panel-border);
+  --color-pub-section-bg: var(--pub-section-bg);
+
+  /* Text hierarchy */
+  --color-pub-text-primary: var(--pub-text-primary);
   --color-pub-text-secondary: var(--pub-text-secondary);
   --color-pub-text-disabled: var(--pub-text-disabled);
+
+  /* System feedback */
   --color-pub-success: var(--pub-color-success);
   --color-pub-warning: var(--pub-color-warning);
   --color-pub-error: var(--pub-color-error);
   --color-pub-info: var(--pub-color-info);
+
+  /* Input colors */
+  --color-pub-input-bg: var(--pub-input-bg);
+  --color-pub-input-bg-disabled: var(--pub-input-bg-disabled);
+  --color-pub-input-border: var(--pub-input-border);
+  --color-pub-input-border-hover: var(--pub-input-border-hover);
+  --color-pub-input-border-focus: var(--pub-input-border-focus);
+  --color-pub-input-border-error: var(--pub-input-border-error);
+  --color-pub-input-fg: var(--pub-input-fg);
+  --color-pub-input-placeholder: var(--pub-input-placeholder);
+
+  /* Button colors */
+  --color-pub-button-primary-bg: var(--pub-button-primary-bg);
+  --color-pub-button-primary-bg-hover: var(--pub-button-primary-bg-hover);
+  --color-pub-button-primary-fg: var(--pub-button-primary-fg);
+  --color-pub-button-secondary-bg: var(--pub-button-secondary-bg);
+  --color-pub-button-secondary-bg-hover: var(--pub-button-secondary-bg-hover);
+  --color-pub-button-secondary-fg: var(--pub-button-secondary-fg);
+
+  /* Check/radio colors */
+  --color-pub-check-border: var(--pub-check-border);
+  --color-pub-check-border-checked: var(--pub-check-border-checked);
+  --color-pub-check-bg: var(--pub-check-bg);
+  --color-pub-check-bg-checked: var(--pub-check-bg-checked);
+  --color-pub-check-fg-checked: var(--pub-check-fg-checked);
+
+  /* Progress colors */
+  --color-pub-progress-bg: var(--pub-progress-bg);
+  --color-pub-progress-fg: var(--pub-progress-fg);
+
+  /* Label/description colors */
+  --color-pub-label: var(--pub-label-fg);
+  --color-pub-description: var(--pub-description-fg);
+  --color-pub-required: var(--pub-required-indicator);
+  --color-pub-error-text: var(--pub-error-fg);
+
+  /* =========================================================================
+     TYPOGRAPHY
+     ========================================================================= */
   --font-size-pub-h1: var(--pub-font-size-h1);
   --font-size-pub-h2: var(--pub-font-size-h2);
   --font-size-pub-body: var(--pub-font-size-body);
   --font-size-pub-meta: var(--pub-font-size-meta);
   --font-size-pub-micro: var(--pub-font-size-micro);
+  --font-size-pub-input: var(--pub-input-font-size);
+  --font-size-pub-label: var(--pub-label-font-size);
+  --font-size-pub-error: var(--pub-error-font-size);
+
+  /* =========================================================================
+     SPACING
+     ========================================================================= */
+  --spacing-pub-1: var(--pub-space-1);
+  --spacing-pub-2: var(--pub-space-2);
+  --spacing-pub-3: var(--pub-space-3);
+  --spacing-pub-4: var(--pub-space-4);
+  --spacing-pub-5: var(--pub-space-5);
+  --spacing-pub-6: var(--pub-space-6);
+  --spacing-pub-8: var(--pub-space-8);
+
+  /* =========================================================================
+     RADII
+     ========================================================================= */
+  --radius-pub-input: var(--pub-input-radius);
+  --radius-pub-button: var(--pub-button-radius);
+  --radius-pub-check: var(--pub-check-radius);
+  --radius-pub-progress: var(--pub-progress-radius);
+}
+
+/* =========================================================================
+   FORM COMPONENT CLASSES
+
+   Use these classes in intake form blocks instead of hardcoded Tailwind.
+   All styling flows through --pub-* tokens.
+   ========================================================================= */
+
+/* Base input styling */
+.pub-input {
+  width: 100%;
+  padding: var(--pub-input-padding-y) var(--pub-input-padding-x);
+  background: var(--pub-input-bg);
+  border: 1px solid var(--pub-input-border);
+  border-radius: var(--pub-input-radius);
+  font-size: var(--pub-input-font-size);
+  color: var(--pub-input-fg);
+  line-height: var(--pub-line-height);
+  transition: border-color var(--pub-motion-duration) var(--pub-motion-ease),
+              box-shadow var(--pub-motion-duration) var(--pub-motion-ease);
+}
+
+.pub-input::placeholder {
+  color: var(--pub-input-placeholder);
+}
+
+.pub-input:hover:not(:disabled) {
+  border-color: var(--pub-input-border-hover);
+}
+
+.pub-input:focus {
+  outline: none;
+  border-color: var(--pub-input-border-focus);
+  box-shadow: 0 0 0 var(--pub-focus-ring-width) var(--pub-focus-ring-color);
+}
+
+.pub-input:disabled {
+  background: var(--pub-input-bg-disabled);
+  color: var(--pub-text-disabled);
+  cursor: not-allowed;
+}
+
+.pub-input--error {
+  border-color: var(--pub-input-border-error);
+}
+
+.pub-input--error:focus {
+  border-color: var(--pub-input-border-error);
+  box-shadow: 0 0 0 var(--pub-focus-ring-width) rgba(140, 74, 74, 0.25);
+}
+
+/* Textarea variant */
+.pub-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Select styling */
+.pub-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236B6560' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right var(--pub-input-padding-x) center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: calc(var(--pub-input-padding-x) * 2 + 16px);
+}
+
+/* Label styling */
+.pub-label {
+  display: block;
+  font-size: var(--pub-label-font-size);
+  font-weight: var(--pub-label-font-weight);
+  color: var(--pub-label-fg);
+  margin-bottom: var(--pub-label-margin-bottom);
+}
+
+.pub-label-required {
+  color: var(--pub-required-indicator);
+  margin-left: var(--pub-space-1);
+}
+
+/* Description text */
+.pub-description {
+  font-size: var(--pub-description-font-size);
+  color: var(--pub-description-fg);
+  margin-bottom: var(--pub-space-2);
+}
+
+/* Error message */
+.pub-error {
+  font-size: var(--pub-error-font-size);
+  color: var(--pub-error-fg);
+  margin-top: var(--pub-error-margin-top);
+}
+
+/* Primary button */
+.pub-button-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pub-button-padding-y) var(--pub-button-padding-x);
+  background: var(--pub-button-primary-bg);
+  color: var(--pub-button-primary-fg);
+  border: 1px solid var(--pub-button-primary-border);
+  border-radius: var(--pub-button-radius);
+  font-size: var(--pub-button-font-size);
+  font-weight: var(--pub-button-font-weight);
+  cursor: pointer;
+  transition: background-color var(--pub-motion-duration) var(--pub-motion-ease);
+}
+
+.pub-button-primary:hover:not(:disabled) {
+  background: var(--pub-button-primary-bg-hover);
+}
+
+.pub-button-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 var(--pub-focus-ring-width) var(--pub-focus-ring-color);
+}
+
+.pub-button-primary:disabled {
+  opacity: var(--pub-button-disabled-opacity);
+  cursor: not-allowed;
+}
+
+/* Secondary button */
+.pub-button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pub-button-padding-y) var(--pub-button-padding-x);
+  background: var(--pub-button-secondary-bg);
+  color: var(--pub-button-secondary-fg);
+  border: 1px solid var(--pub-button-secondary-border);
+  border-radius: var(--pub-button-radius);
+  font-size: var(--pub-button-font-size);
+  font-weight: var(--pub-button-font-weight);
+  cursor: pointer;
+  transition: background-color var(--pub-motion-duration) var(--pub-motion-ease);
+}
+
+.pub-button-secondary:hover:not(:disabled) {
+  background: var(--pub-button-secondary-bg-hover);
+}
+
+.pub-button-secondary:focus {
+  outline: none;
+  box-shadow: 0 0 0 var(--pub-focus-ring-width) var(--pub-focus-ring-color);
+}
+
+.pub-button-secondary:disabled {
+  opacity: var(--pub-button-disabled-opacity);
+  cursor: not-allowed;
+}
+
+/* Text button (no border) */
+.pub-button-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pub-button-padding-y) var(--pub-button-padding-x);
+  background: transparent;
+  color: var(--pub-button-secondary-fg);
+  border: none;
+  border-radius: var(--pub-button-radius);
+  font-size: var(--pub-button-font-size);
+  font-weight: var(--pub-button-font-weight);
+  cursor: pointer;
+  transition: background-color var(--pub-motion-duration) var(--pub-motion-ease);
+}
+
+.pub-button-text:hover:not(:disabled) {
+  background: var(--pub-button-secondary-bg-hover);
+}
+
+.pub-button-text:disabled {
+  color: var(--pub-text-disabled);
+  cursor: not-allowed;
+}
+
+/* Checkbox styling */
+.pub-checkbox {
+  appearance: none;
+  width: var(--pub-check-size);
+  height: var(--pub-check-size);
+  background: var(--pub-check-bg);
+  border: 1px solid var(--pub-check-border);
+  border-radius: var(--pub-check-radius);
+  cursor: pointer;
+  transition: all var(--pub-motion-duration) var(--pub-motion-ease);
+  flex-shrink: 0;
+}
+
+.pub-checkbox:checked {
+  background: var(--pub-check-bg-checked);
+  border-color: var(--pub-check-border-checked);
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.pub-checkbox:focus {
+  outline: none;
+  box-shadow: 0 0 0 var(--pub-focus-ring-width) var(--pub-focus-ring-color);
+}
+
+/* Radio styling */
+.pub-radio {
+  appearance: none;
+  width: var(--pub-check-size);
+  height: var(--pub-check-size);
+  background: var(--pub-check-bg);
+  border: 1px solid var(--pub-check-border);
+  border-radius: var(--pub-radio-radius);
+  cursor: pointer;
+  transition: all var(--pub-motion-duration) var(--pub-motion-ease);
+  flex-shrink: 0;
+}
+
+.pub-radio:checked {
+  background: var(--pub-check-bg-checked);
+  border-color: var(--pub-check-border-checked);
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e");
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.pub-radio:focus {
+  outline: none;
+  box-shadow: 0 0 0 var(--pub-focus-ring-width) var(--pub-focus-ring-color);
+}
+
+/* Progress bar */
+.pub-progress {
+  width: 100%;
+  height: var(--pub-progress-height);
+  background: var(--pub-progress-bg);
+  border-radius: var(--pub-progress-radius);
+  overflow: hidden;
+}
+
+.pub-progress-bar {
+  height: 100%;
+  background: var(--pub-progress-fg);
+  border-radius: var(--pub-progress-radius);
+  transition: width var(--pub-motion-duration-slow) var(--pub-motion-ease);
+}
+
+/* Section header (for record blocks) */
+.pub-section {
+  border: 1px solid var(--pub-section-border);
+  border-radius: var(--pub-input-radius);
+  background: var(--pub-section-bg);
+  padding: var(--pub-space-4);
+}
+
+.pub-section-header {
+  font-size: var(--pub-section-header-font-size);
+  font-weight: var(--pub-section-header-font-weight);
+  color: var(--pub-section-header-fg);
+  margin-bottom: var(--pub-section-header-margin-bottom);
+}
+
+/* Field group (label + input + error) */
+.pub-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.pub-field + .pub-field {
+  margin-top: var(--pub-space-4);
+}
+
+/* Success state container */
+.pub-success-icon {
+  width: 64px;
+  height: 64px;
+  background: rgba(111, 127, 92, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pub-success-icon svg {
+  width: 32px;
+  height: 32px;
+  color: var(--pub-color-success);
+}
+
+/* Loading spinner */
+.pub-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--pub-panel-border);
+  border-top-color: var(--pub-accent);
+  border-radius: 50%;
+  animation: pub-spin 0.8s linear infinite;
+}
+
+@keyframes pub-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

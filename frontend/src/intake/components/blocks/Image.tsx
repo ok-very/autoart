@@ -1,3 +1,7 @@
+/**
+ * ImageBlock - Static image display
+ */
+
 import type { ModuleBlock } from '@autoart/shared';
 
 interface ImageBlockProps {
@@ -10,26 +14,26 @@ export function ImageBlock({ block }: ImageBlockProps) {
 
   if (!imageUrl) {
     return (
-      <div className="py-4">
-        <div className="h-48 bg-slate-100 rounded-lg flex items-center justify-center">
+      <div className="py-pub-4">
+        <div className="h-48 bg-pub-section-bg rounded-lg flex items-center justify-center border border-pub-panel-border">
           <span className="text-pub-muted">Image placeholder</span>
         </div>
         {block.label && (
-          <p className="mt-2 text-sm text-center text-pub-text-secondary">{block.label}</p>
+          <p className="mt-pub-2 text-pub-meta text-center text-pub-text-secondary">{block.label}</p>
         )}
       </div>
     );
   }
 
   return (
-    <div className="py-4">
+    <div className="py-pub-4">
       <img
         src={imageUrl}
         alt={block.label || 'Form image'}
         className="max-w-full h-auto rounded-lg"
       />
       {block.label && (
-        <p className="mt-2 text-sm text-center text-pub-text-secondary">{block.label}</p>
+        <p className="mt-pub-2 text-pub-meta text-center text-pub-text-secondary">{block.label}</p>
       )}
     </div>
   );
