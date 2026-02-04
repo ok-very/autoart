@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from autohelper.modules.context.autoart import AutoArtClient
-    from autohelper.modules.context.monday import MondayClient
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +77,6 @@ class ContextService:
 
         self.settings = get_settings()
         self._context = ContextData()
-        self._monday_client: MondayClient | None = None
         self._autoart_client: AutoArtClient | None = None
         self._refresh_lock = threading.Lock()
 
@@ -89,7 +87,6 @@ class ContextService:
         """Initialize API clients based on settings."""
         from autohelper.config.store import ConfigStore
         from autohelper.modules.context.autoart import AutoArtClient
-        from autohelper.modules.context.monday import MondayClient, MondayClientError
 
         # Load config from ConfigStore (where GUI saves settings)
         config_store = ConfigStore()
@@ -109,18 +106,6 @@ class ContextService:
             logger.warning(f"Failed to init AutoArt client: {e}")
             self._autoart_client = None
 
-        # Monday client is now accessed via AutoArt proxy (using link_key)
-        # Direct Monday client is only initialized if we have a direct token in settings
-        # (for backward compatibility or direct API access scenarios)
-        monday_token = getattr(self.settings, "monday_api_token", None)
-        if monday_token:
-            try:
-                self._monday_client = MondayClient(token=monday_token)
-                logger.info("Monday client initialized (direct token)")
-            except (ValueError, MondayClientError) as e:
-                logger.warning(f"Failed to init Monday client: {e}")
-                self._monday_client = None
-
     def reinit_clients(self) -> None:
         """Reinitialize clients (call after settings change)."""
         from autohelper.config.settings import get_settings
@@ -138,16 +123,15 @@ class ContextService:
         import time
 
         with self._refresh_lock:
-            # Get provider priority from settings (default: autoart first, then monday)
+            # Get provider priority from settings (default: autoart)
             providers = getattr(
                 self.settings,
                 "context_providers",
-                [ContextProvider.AUTOART.value, ContextProvider.MONDAY.value],
+                [ContextProvider.AUTOART.value],
             )
 
             projects: list[dict[str, Any]] = []
             developers: list[str] = []
-            board_names: list[str] = []
 
             for provider in providers:
                 if provider == ContextProvider.AUTOART.value and self._autoart_client:
@@ -169,35 +153,9 @@ class ContextService:
                     except Exception as e:
                         logger.warning(f"AutoArt fetch failed: {e}")
 
-                elif provider == ContextProvider.MONDAY.value and self._monday_client:
-                    try:
-                        if self._monday_client.test_connection():
-                            logger.info("Fetching context from Monday.com...")
-                            boards = self._monday_client.fetch_boards_summary()
-
-                            for board in boards:
-                                board_names.append(board["name"])
-                                # Extract developer and project from board name
-                                if board.get("developer") and board["developer"] not in developers:
-                                    developers.append(board["developer"])
-                                if board.get("project"):
-                                    projects.append(
-                                        {
-                                            "id": board["id"],
-                                            "name": f"{board['developer']} - {board['project']}",
-                                            "definition": "Board",
-                                            "source": "monday",
-                                        }
-                                    )
-
-                            logger.info(f"Monday: {len(boards)} boards")
-                    except Exception as e:
-                        logger.warning(f"Monday fetch failed: {e}")
-
             # Deduplicate developers
             self._context.developers = list(set(developers))
             self._context.projects = projects
-            self._context.board_names = board_names
             self._context.last_updated = time.time()
 
             logger.info(
@@ -262,13 +220,6 @@ class ContextService:
     @property
     def is_available(self) -> bool:
         """Check if any context provider is configured and working."""
-        if self._monday_client:
-            try:
-                if self._monday_client.test_connection():
-                    return True
-            except Exception:
-                pass
-
         if self._autoart_client:
             try:
                 if self._autoart_client.test_connection():
