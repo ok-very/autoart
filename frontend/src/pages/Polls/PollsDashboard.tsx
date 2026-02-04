@@ -2,12 +2,16 @@
  * PollsDashboard - List of polls with create and close actions
  */
 
-import { Plus, BarChart3, Loader2, ExternalLink, XCircle } from 'lucide-react';
+import { Plus, BarChart3, Loader2, ExternalLink, XCircle, Pencil, Copy, Trash2 } from 'lucide-react';
 
 import { Button } from '@autoart/ui';
-import { usePolls, useCreatePoll, useClosePoll } from '../../api/hooks/polls';
+import { usePolls, useCreatePoll, useClosePoll, useDuplicatePoll, useDeletePoll } from '../../api/hooks/polls';
 import { type } from '../../ui/typography';
 import type { Poll, PollStatus } from '@autoart/shared';
+
+interface PollsDashboardProps {
+    onOpenPoll?: (pollId: string) => void;
+}
 
 const STATUS_DOT: Record<PollStatus, string> = {
     active: 'bg-ws-success',
@@ -46,17 +50,23 @@ function defaultTimeConfig() {
     };
 }
 
-export function PollsDashboard() {
+export function PollsDashboard({ onOpenPoll }: PollsDashboardProps) {
     const { data: polls, isLoading } = usePolls();
     const createPoll = useCreatePoll();
     const closePoll = useClosePoll();
+    const duplicatePoll = useDuplicatePoll();
+    const deletePoll = useDeletePoll();
 
     const handleCreate = async () => {
         try {
-            await createPoll.mutateAsync({
+            const result = await createPoll.mutateAsync({
                 title: 'Untitled Poll',
                 time_config: defaultTimeConfig(),
             });
+            // Open the newly created poll in editor
+            if (onOpenPoll && result.poll) {
+                onOpenPoll(result.poll.id);
+            }
         } catch (err) {
             console.error('Failed to create poll:', err);
         }
@@ -71,7 +81,40 @@ export function PollsDashboard() {
         }
     };
 
-    const handleOpenPublic = (poll: Poll) => {
+    const handleDuplicate = async (e: React.SyntheticEvent, pollId: string) => {
+        e.stopPropagation();
+        try {
+            const result = await duplicatePoll.mutateAsync({ id: pollId });
+            // Open the duplicated poll in editor
+            if (onOpenPoll && result.poll) {
+                onOpenPoll(result.poll.id);
+            }
+        } catch (err) {
+            console.error('Failed to duplicate poll:', err);
+        }
+    };
+
+    const handleDelete = async (e: React.SyntheticEvent, pollId: string) => {
+        e.stopPropagation();
+        if (!confirm('Delete this poll and all its responses?')) return;
+        try {
+            await deletePoll.mutateAsync(pollId);
+        } catch (err) {
+            console.error('Failed to delete poll:', err);
+        }
+    };
+
+    const handleCardClick = (poll: Poll) => {
+        if (onOpenPoll) {
+            onOpenPoll(poll.id);
+        } else {
+            // Fallback: open public poll in new tab
+            window.open(`/public/poll/${poll.unique_id}`, '_blank', 'noopener,noreferrer');
+        }
+    };
+
+    const handleOpenPublic = (e: React.SyntheticEvent, poll: Poll) => {
+        e.stopPropagation();
         window.open(`/public/poll/${poll.unique_id}`, '_blank', 'noopener,noreferrer');
     };
 
@@ -114,8 +157,8 @@ export function PollsDashboard() {
                         key={poll.id}
                         role="button"
                         tabIndex={0}
-                        onClick={() => handleOpenPublic(poll)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpenPublic(poll); } }}
+                        onClick={() => handleCardClick(poll)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardClick(poll); } }}
                         className="bg-white rounded-xl border border-ws-border p-6 text-left hover:border-ws-accent hover:shadow-sm transition-all group cursor-pointer"
                     >
                         <div className="flex items-start gap-4">
@@ -132,21 +175,51 @@ export function PollsDashboard() {
                                     <p className={type.metadata}>
                                         {new Date(poll.created_at).toLocaleDateString()}
                                     </p>
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {poll.status !== 'closed' && (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); onOpenPoll?.(poll.id); }}
+                                                className="p-1 rounded text-ws-text-secondary hover:bg-black/5 transition-colors"
+                                                title="Edit poll"
+                                            >
+                                                <Pencil className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={(e) => handleDuplicate(e, poll.id)}
+                                            className="p-1 rounded text-ws-text-secondary hover:bg-black/5 transition-colors"
+                                            title="Duplicate poll"
+                                        >
+                                            <Copy className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => handleOpenPublic(e, poll)}
+                                            className="p-1 rounded text-ws-text-secondary hover:bg-black/5 transition-colors"
+                                            title="Open public poll"
+                                        >
+                                            <ExternalLink className="w-4 h-4" />
+                                        </button>
                                         {poll.status === 'active' && (
                                             <button
                                                 type="button"
                                                 onClick={(e) => handleClose(e, poll.id)}
-                                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClose(e, poll.id); } }}
-                                                className="p-1 rounded text-ws-error hover:bg-[rgba(140,74,74,0.08)] transition-colors"
+                                                className="p-1 rounded text-ws-warning hover:bg-[rgba(184,155,94,0.08)] transition-colors"
                                                 title="Close poll"
                                             >
                                                 <XCircle className="w-4 h-4" />
                                             </button>
                                         )}
-                                        <span className="p-1 rounded text-ws-text-secondary hover:bg-black/5 transition-colors">
-                                            <ExternalLink className="w-4 h-4" />
-                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => handleDelete(e, poll.id)}
+                                            className="p-1 rounded text-ws-error hover:bg-[rgba(140,74,74,0.08)] transition-colors"
+                                            title="Delete poll"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
                                     </div>
                                 </div>
                             </div>
