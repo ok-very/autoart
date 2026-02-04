@@ -34,6 +34,7 @@ function CreateUserForm({ onClose }: { onClose: () => void }) {
     const [error, setError] = useState('');
 
     const handleSubmit = useCallback(async () => {
+        if (createMutation.isPending) return; // Prevent duplicate submissions
         setError('');
         const trimmedEmail = email.trim();
         const trimmedName = name.trim();
@@ -380,7 +381,8 @@ function UserRow({
             await updateMutation.mutateAsync({ userId: user.id, role: newRole });
             setEditingRole(false);
         } catch {
-            // Keep the edit UI open so the user can retry.
+            // Reopen edit UI if onBlur closed it, so user can retry
+            setEditingRole(true);
         }
     }, [user.id, updateMutation]);
 

@@ -130,8 +130,8 @@
 | ~~`packages/ui/src/molecules/SegmentedControl.tsx`~~ | ~~Tailwind v4 token migration + added tab tokens to @theme~~ (PR #377) |
 | ~~`packages/ui/src/molecules/PortalMenu.tsx`~~ | ~~File doesn't exist — stale entry~~ |
 | ~~`packages/ui/src/molecules/PortalSelect.tsx`~~ | ~~File doesn't exist — stale entry~~ |
-| ~~`backend/src/modules/imports/connections.routes.ts`~~ | ~~/connections/autohelper/credentials endpoint~~ — removed (credential proxy dead code) |
-| ~~`apps/autohelper/autohelper/modules/context/autoart.py`~~ | ~~`get_monday_token()` method~~ — removed (credential proxy dead code) |
+| ~~`backend/src/modules/imports/connections.routes.ts`~~ | ~~/connections/autohelper/credentials endpoint~~ — removed (PR #378, credential proxy dead code) |
+| ~~`apps/autohelper/autohelper/modules/context/autoart.py`~~ | ~~`get_monday_token()` method~~ — removed (PR #378, credential proxy dead code) |
 
 **Low priority (CodeAnt #332 nitpicks):**
 
