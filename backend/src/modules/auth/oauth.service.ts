@@ -2,14 +2,15 @@
  * OAuth Service
  *
  * Handles Google OAuth 2.0 authentication flow.
+ * Supports both login mode (create/find user) and link mode (connect to existing user).
  */
 
-import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { sql } from 'kysely';
 
 import { db } from '../../db/client.js';
 import { AppError } from '../../utils/errors.js';
+import { generateOAuthState, validateOAuthState, type OAuthMode } from './oauth-state.js';
 
 
 // Environment validation
@@ -27,30 +28,18 @@ const oauth2Client = new OAuth2Client(
     GOOGLE_REDIRECT_URI
 );
 
-// In-memory state store (replace with Redis in production)
-const stateStore = new Map<string, { timestamp: number }>();
-
-// Clean up expired states (older than 10 minutes)
-setInterval(() => {
-    const now = Date.now();
-    for (const [state, data] of stateStore.entries()) {
-        if (now - data.timestamp > 10 * 60 * 1000) {
-            stateStore.delete(state);
-        }
-    }
-}, 60 * 1000);
-
 /**
- * Generate OAuth authorization URL
+ * Generate OAuth authorization URL.
+ * If userId is provided, uses 'link' mode to connect Google to an existing user.
+ * Otherwise, uses 'login' mode to create/find a user.
  */
-export function getGoogleAuthUrl(): { url: string; state: string } {
+export function getGoogleAuthUrl(userId?: string): { url: string; state: string } {
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
         throw new AppError(500, 'Google OAuth is not configured', 'OAUTH_NOT_CONFIGURED');
     }
 
-    // Generate CSRF state token
-    const state = crypto.randomBytes(32).toString('hex');
-    stateStore.set(state, { timestamp: Date.now() });
+    const mode: OAuthMode = userId ? 'link' : 'login';
+    const state = generateOAuthState(mode, userId);
 
     const url = oauth2Client.generateAuthUrl({
         access_type: 'offline',
@@ -68,29 +57,25 @@ export function getGoogleAuthUrl(): { url: string; state: string } {
     return { url, state };
 }
 
-/**
- * Validate state parameter (CSRF protection)
- */
-function validateState(state: string): boolean {
-    if (!stateStore.has(state)) {
-        return false;
-    }
-    stateStore.delete(state);
-    return true;
+export interface GoogleCallbackResult {
+    mode: OAuthMode;
+    user?: { id: string; email: string; name: string };
+    profile: { email: string; name: string };
+    connected: boolean;
 }
 
 /**
- * Exchange authorization code for tokens
+ * Exchange authorization code for tokens.
+ * In 'login' mode: creates/finds user and returns user data.
+ * In 'link' mode: stores credentials for existing user.
  */
-export async function handleGoogleCallback(code: string, state: string) {
+export async function handleGoogleCallback(code: string, state: string): Promise<GoogleCallbackResult> {
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
         throw new AppError(500, 'Google OAuth is not configured', 'OAUTH_NOT_CONFIGURED');
     }
 
     // Validate state (CSRF protection)
-    if (!validateState(state)) {
-        throw new AppError(400, 'Invalid or expired state parameter', 'INVALID_STATE');
-    }
+    const statePayload = validateOAuthState(state);
 
     // Exchange code for tokens
     let tokens;
@@ -112,33 +97,44 @@ export async function handleGoogleCallback(code: string, state: string) {
     // Get user profile
     const profile = await getGoogleProfile(tokens.access_token);
 
-    // Find or create user (using upsert to handle concurrent OAuth callbacks)
-    const user = await db
-        .insertInto('users')
-        .values({
-            email: profile.email,
-            name: profile.name,
-            password_hash: '', // OAuth users have no password
-        })
-        .onConflict((oc) =>
-            oc.column('email').doUpdateSet({
-                // Update name if it changed, but only for non-deleted users
-                name: profile.name,
-            })
-        )
-        .returningAll()
-        .executeTakeFirstOrThrow();
+    let userId: string;
+    let user: { id: string; email: string; name: string } | undefined;
 
-    // Verify user is not soft-deleted
-    if (user.deleted_at !== null) {
-        throw new AppError(403, 'This account has been deactivated', 'ACCOUNT_DEACTIVATED');
+    if (statePayload.mode === 'link') {
+        // Link mode: use the userId from state
+        userId = statePayload.userId!;
+    } else {
+        // Login mode: find or create user
+        const dbUser = await db
+            .insertInto('users')
+            .values({
+                email: profile.email,
+                name: profile.name,
+                password_hash: '', // OAuth users have no password
+            })
+            .onConflict((oc) =>
+                oc.column('email').doUpdateSet({
+                    // Update name if it changed, but only for non-deleted users
+                    name: profile.name,
+                })
+            )
+            .returningAll()
+            .executeTakeFirstOrThrow();
+
+        // Verify user is not soft-deleted
+        if (dbUser.deleted_at !== null) {
+            throw new AppError(403, 'This account has been deactivated', 'ACCOUNT_DEACTIVATED');
+        }
+
+        userId = dbUser.id;
+        user = { id: dbUser.id, email: dbUser.email, name: dbUser.name };
     }
 
     // Store Google tokens in connection_credentials table
     await db
         .insertInto('connection_credentials')
         .values({
-            user_id: user.id,
+            user_id: userId,
             provider: 'google',
             access_token: tokens.access_token!,
             refresh_token: tokens.refresh_token || null,
@@ -165,7 +161,12 @@ export async function handleGoogleCallback(code: string, state: string) {
         )
         .execute();
 
-    return { user, tokens };
+    return {
+        mode: statePayload.mode,
+        user,
+        profile,
+        connected: true,
+    };
 }
 
 /**
