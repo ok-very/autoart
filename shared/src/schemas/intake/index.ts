@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { FormBlockSchema } from '../../intake/schemas.js';
+import { FormBlockSchema, RecordMappingSchema } from '../../intake/schemas.js';
 
 export {
   ModuleBlockTypeSchema,
@@ -13,11 +13,15 @@ export {
   RecordBlockSchema,
   FormBlockSchema,
   IntakeFormConfigSchema,
+  RecordMappingSchema,
+  FieldMappingSchema,
   type ModuleBlockType,
   type ModuleBlock,
   type RecordBlock,
   type FormBlock,
-  type IntakeFormConfig
+  type IntakeFormConfig,
+  type RecordMapping,
+  type FieldMapping,
 } from '../../intake/schemas.js';
 
 // ==================== ENUMS ====================
@@ -58,6 +62,8 @@ export interface FormSettings {
  */
 export const IntakePageConfigSchema = z.object({
   blocks: z.array(FormBlockSchema),
+  /** Record mappings: connect form blocks to record fields */
+  recordMappings: z.array(RecordMappingSchema).optional(),
   settings: IntakePageSettingsSchema.optional(),
 });
 export type IntakePageConfig = z.infer<typeof IntakePageConfigSchema>;
