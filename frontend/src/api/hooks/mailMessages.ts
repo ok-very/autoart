@@ -159,7 +159,7 @@ export function useUnlinkEmail() {
     }: {
       messageId: string;
       linkId: string;
-      targetType: string;
+      targetType: MailLinkTargetType;
       targetId: string;
     }) => api.delete(`/mail/messages/${messageId}/links/${linkId}`),
     onSuccess: (_, variables) => {
