@@ -17,12 +17,13 @@ import { Button } from '@autoart/ui';
 import { IntakeCanvas } from '../../workflows/intake/components/IntakeCanvas';
 import { FloatingToolbar } from '../../workflows/intake/components/FloatingToolbar';
 import { FormSettingsPanel } from '../../workflows/intake/components/FormSettingsPanel';
+import { RecordMappingPanel } from '../../workflows/intake/components/RecordMappingPanel';
 import {
     useIntakeForm,
     useUpdateIntakeForm,
     useUpsertIntakeFormPage,
 } from '../../api/hooks/intake';
-import type { FormBlock, ModuleBlock, ModuleBlockType } from '@autoart/shared';
+import type { FormBlock, ModuleBlock, ModuleBlockType, RecordMapping } from '@autoart/shared';
 
 interface IntakeEditorViewProps {
     formId: string;
@@ -49,7 +50,17 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     const [copied, setCopied] = useState(false);
 
     // Editor tabs
-    const [activeTab, setActiveTab] = useState<'build' | 'logic' | 'settings'>('build');
+    const [activeTab, setActiveTab] = useState<'build' | 'logic' | 'records' | 'settings'>('build');
+
+    // Record mappings state (loaded from form config, saved with settings)
+    const [recordMappingsChanges, setRecordMappingsChanges] = useState<RecordMapping[] | null>(null);
+
+    // Derive record mappings from prop or user changes
+    const recordMappings = useMemo(() => {
+        if (recordMappingsChanges !== null) return recordMappingsChanges;
+        const firstPage = form?.pages?.[0];
+        return (firstPage?.blocks_config?.recordMappings as RecordMapping[] | undefined) ?? [];
+    }, [form?.pages, recordMappingsChanges]);
 
     // Debounce timer refs
     const saveBlocksTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -85,6 +96,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
             requestAnimationFrame(() => {
                 setTitleChanges(null);
                 setBlocksChanges(null);
+                setRecordMappingsChanges(null);
             });
         }
     }, [form]);
@@ -99,6 +111,32 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
             setBlocksChanges(value);
         }
     }, [blocks]);
+
+    // Handler for record mapping changes - saves immediately with debounce
+    const saveRecordMappingsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const handleRecordMappingsChange = useCallback((mappings: RecordMapping[]) => {
+        setRecordMappingsChanges(mappings);
+
+        // Debounce save
+        if (saveRecordMappingsTimeoutRef.current) {
+            clearTimeout(saveRecordMappingsTimeoutRef.current);
+        }
+        saveRecordMappingsTimeoutRef.current = setTimeout(async () => {
+            setSaveStatus('saving');
+            try {
+                await upsertPage.mutateAsync({
+                    formId,
+                    page_index: 0,
+                    blocks_config: { blocks, recordMappings: mappings },
+                });
+                setSaveStatus('saved');
+                setTimeout(() => setSaveStatus('idle'), 2000);
+            } catch (err) {
+                console.error('Failed to save record mappings:', err);
+                setSaveStatus('error');
+            }
+        }, 1000);
+    }, [formId, blocks, upsertPage]);
 
     // Auto-save blocks with debounce
     useEffect(() => {
@@ -276,7 +314,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
 
                 {/* Center: Tabs */}
                 <div className="flex h-full w-1/3 justify-center">
-                    {(['build', 'logic', 'settings'] as const).map((tab) => (
+                    {(['build', 'logic', 'records', 'settings'] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -365,6 +403,16 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                 {activeTab === 'logic' && (
                     <div className="max-w-2xl mx-auto py-8 px-4">
                         <div className="flex-1" />
+                    </div>
+                )}
+
+                {activeTab === 'records' && (
+                    <div className="max-w-2xl mx-auto py-8 px-4">
+                        <RecordMappingPanel
+                            blocks={blocks}
+                            recordMappings={recordMappings}
+                            onChange={handleRecordMappingsChange}
+                        />
                     </div>
                 )}
 
