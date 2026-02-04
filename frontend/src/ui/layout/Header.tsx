@@ -10,7 +10,7 @@ import {
   TableProperties, Wand2, Layers, Zap, Activity, Hammer, Settings, ClipboardList, LayoutGrid, Check,
   AppWindow, FileText, Image, Mail, DollarSign, BarChart3, Calendar
 } from 'lucide-react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
 
 import type { FieldsViewMode } from '@autoart/shared';
@@ -34,7 +34,6 @@ import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
 
 export function Header() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { data: projects } = useProjects();
   const { data: currentUser } = useCurrentUser();
   const { getNode: _getNode } = useHierarchyStore();

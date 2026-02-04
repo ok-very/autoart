@@ -35,7 +35,7 @@ interface ColumnSelections {
 
 export function MillerColumnsView({ className }: MillerColumnsViewProps) {
     const { getChildren, getNode } = useHierarchyStore();
-    const { activeProjectId, setSelection, openOverlay } = useUIStore();
+    const { activeProjectId, setActiveProject, setSelection, openOverlay } = useUIStore();
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Track user selections (except project which comes from store)
@@ -101,7 +101,7 @@ export function MillerColumnsView({ className }: MillerColumnsViewProps) {
 
         switch (level) {
             case 'project':
-                // Project selection handled by store
+                setActiveProject(id);
                 newUserSelections.process = null;
                 newUserSelections.stage = null;
                 newUserSelections.subprocess = null;

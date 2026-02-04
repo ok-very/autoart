@@ -1,15 +1,11 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-02*
+*Last Updated: 2026-02-03*
 
 ## Bug List
 
 **Active blocking:**
-- **Dropdowns rendering empty frames** — glassmorphism styling applied but content not visible (Menu/Dropdown atoms broken after recent changes, intermittent)
-- **Projects button in header doesn't spawn new panel** — confirmed not working (may be feature gap, not wiring issue)
-- **Project view "columns" sidebar not functioning** — no project selection mechanism, add button calls non-existent overlay/handler
 - **AutoHelper pairing times out** — service is open but pairing request never completes (frontend or AutoHelper service issue)
-- **dompurify throws blocking Vite build errors** — introduced in #352, breaks production builds
 
 **Needs manual verification:**
 - Login fails with demo account credentials — `seed:dev` creates the user, but default `db:rebuild` workflow may not
@@ -19,6 +15,12 @@
 
 **UX polish:**
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
+
+**Confirmed resolved (PRs #337-339, #353, #355, #357-359):**
+- ~~Dropdowns rendering transparent backgrounds~~ — arbitrary-value `var()` colors broke under Tailwind v4 oklch pipeline, migrated to theme classes (PR #357)
+- ~~Projects button doesn't spawn panel~~ — routed to center content instead of dockview, now uses `handleOpenPanel` (PR #358)
+- ~~Miller Columns project selection broken~~ — clicked project but never called `setActiveProject`, child columns stayed empty (PR #359)
+- ~~dompurify throws blocking Vite build errors~~ — DOMPurify restored for email HTML rendering with proper ES module import (PR #355)
 
 **Confirmed resolved (PRs #337-339, #353):**
 - ~~Selection Inspector stuck open~~ — close button added with `onClose` prop, wired through dockview panel (PR #338)
@@ -107,6 +109,22 @@
 | `frontend/src/api/hooks/search.ts` | `useSearch` second param repurposed from `projectId` to `type` — `MentionSuggestion.tsx` still passes project UUID, returns empty results (CodeAnt #349) |
 | `frontend/src/ui/admin/AdminUsersPanel.tsx` | Create-user handler lacks `isPending` guard — rapid Enter presses can fire duplicate create requests (CodeAnt #349) |
 | `frontend/src/ui/admin/AdminUsersPanel.tsx` | Role-change empty `catch` doesn't reopen edit UI after failure when `onBlur` already closed it — suggest `setEditingRole(true)` in catch (CodeAnt #349) |
+| `packages/ui/src/atoms/Button.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes like `bg-ws-panel-bg` (same issue fixed in Menu/Dropdown via PR #357) |
+| `packages/ui/src/atoms/Card.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| `packages/ui/src/atoms/Toggle.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| `packages/ui/src/atoms/Select.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| `packages/ui/src/atoms/TextInput.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| `packages/ui/src/atoms/Modal.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| `packages/ui/src/atoms/Checkbox.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| `packages/ui/src/atoms/Label.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| `packages/ui/src/molecules/PortalMenu.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| `packages/ui/src/atoms/IconButton.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| `packages/ui/src/atoms/RadioGroup.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| `packages/ui/src/molecules/PortalSelect.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| `packages/ui/src/atoms/CurrencyInput.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| `packages/ui/src/atoms/ProgressBar.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| `packages/ui/src/molecules/SegmentedControl.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes; also using glassmorphism (not in DESIGN.md) |
+| `packages/ui/src/atoms/Table.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
 
 **Low priority (CodeAnt #332 nitpicks):**
 
@@ -139,6 +157,8 @@
 
 | PRs | Description |
 |-----|-------------|
+| #354-356 | Fix theme registry readonly cache mutation; restore DOMPurify for email HTML; propagate AutoHelper pairing errors to frontend |
+| #357-359 | Fix dropdown transparent backgrounds (theme class migration); Projects button spawns panel; Miller Columns project selection |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
 
 ---
