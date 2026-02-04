@@ -1,4 +1,10 @@
-import { generateUniqueId, IntakeFormConfigSchema, type CreatedRecord } from '@autoart/shared';
+import {
+  generateUniqueId,
+  IntakeFormConfigSchema,
+  IntakePageConfigSchema,
+  type CreatedRecord,
+  type RecordMapping,
+} from '@autoart/shared';
 
 import { db } from '../../db/client.js';
 import type {
@@ -236,6 +242,91 @@ async function processRecordBlocks(
 }
 
 /**
+ * Process RecordMappings in a form submission.
+ * Uses the new block connector pattern: maps ModuleBlock values to record fields.
+ */
+async function processRecordMappings(
+  formId: string,
+  metadata: Record<string, unknown>,
+  trx: typeof db
+): Promise<CreatedRecord[]> {
+  const createdRecords: CreatedRecord[] = [];
+
+  // Get form pages to find RecordMappings
+  const pages = await trx
+    .selectFrom('intake_form_pages')
+    .selectAll()
+    .where('form_id', '=', formId)
+    .execute();
+
+  for (const page of pages) {
+    let config;
+    try {
+      config = IntakePageConfigSchema.parse(page.blocks_config);
+    } catch {
+      continue; // Skip invalid config
+    }
+
+    const recordMappings = config.recordMappings as RecordMapping[] | undefined;
+    if (!recordMappings || recordMappings.length === 0) {
+      continue;
+    }
+
+    for (const mapping of recordMappings) {
+      if (!mapping.createInstance || !mapping.definitionId) {
+        continue;
+      }
+
+      // Get definition to get the name
+      const definition = await recordsService.getDefinitionById(mapping.definitionId);
+      if (!definition) {
+        continue; // Skip if definition doesn't exist
+      }
+
+      // Build record data from field mappings
+      const recordData: Record<string, unknown> = {};
+
+      for (const fieldMapping of mapping.fieldMappings) {
+        const value = metadata[fieldMapping.blockId];
+        if (value !== undefined) {
+          recordData[fieldMapping.fieldKey] = value;
+        }
+      }
+
+      // Determine unique name
+      let uniqueName: string;
+      if (mapping.nameFieldKey && recordData[mapping.nameFieldKey]) {
+        uniqueName = String(recordData[mapping.nameFieldKey]);
+      } else {
+        // Fallback: {definitionName}-{timestamp}
+        const timestamp = Date.now();
+        uniqueName = `${definition.name}-${timestamp}`;
+      }
+
+      // Create the record
+      try {
+        const record = await recordsService.createRecord({
+          definitionId: mapping.definitionId,
+          uniqueName,
+          data: recordData,
+        });
+
+        createdRecords.push({
+          definitionId: mapping.definitionId,
+          recordId: record.id,
+          uniqueName: record.unique_name,
+        });
+      } catch (err) {
+        // Log but don't fail - continue processing other mappings
+        console.error(`Failed to create record for mapping ${mapping.id}:`, err);
+      }
+    }
+  }
+
+  return createdRecords;
+}
+
+/**
  * Create a form submission with optional record creation.
  * Wraps submission insert and record creation in a transaction.
  */
@@ -256,12 +347,19 @@ export async function createSubmission(
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    // Process RecordBlocks and create records
+    // Process records from both RecordBlocks (legacy) and RecordMappings (new)
     const metadataObj = (typeof metadata === 'object' && metadata !== null)
       ? metadata as Record<string, unknown>
       : {};
 
-    const createdRecords = await processRecordBlocks(formId, metadataObj, trx);
+    // Process legacy RecordBlocks
+    const recordBlockRecords = await processRecordBlocks(formId, metadataObj, trx);
+
+    // Process new RecordMappings (block connector pattern)
+    const recordMappingRecords = await processRecordMappings(formId, metadataObj, trx);
+
+    // Combine all created records
+    const createdRecords = [...recordBlockRecords, ...recordMappingRecords];
 
     // Update submission with created records
     if (createdRecords.length > 0) {

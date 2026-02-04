@@ -66,6 +66,7 @@ export const IntakePageConfigSchema = z.object({
   recordMappings: z.array(RecordMappingSchema).optional(),
   settings: IntakePageSettingsSchema.optional(),
 });
+
 export type IntakePageConfig = z.infer<typeof IntakePageConfigSchema>;
 
 // ==================== FORM DTOs ====================
