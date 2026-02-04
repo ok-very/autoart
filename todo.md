@@ -111,9 +111,9 @@
 | `frontend/src/api/types/mail.ts` | `MailMessage.metadata` typed as `Record<string, unknown>` but backend stores via `JSON.stringify` — could be any JSON value, use `unknown` (CodeAnt #347) |
 | `backend/src/db/migrations/052_mail_messages.ts` | Explicit index on `external_id` redundant (UNIQUE already creates one) — extra write overhead (CodeAnt #348) |
 | `backend/src/db/migrations/052_mail_messages.ts` | Explicit index on `mail_message_id` redundant (composite unique constraint already covers it as leading column) — extra write overhead (CodeAnt #348) |
-| `frontend/src/api/hooks/search.ts` | `useSearch` second param repurposed from `projectId` to `type` — `MentionSuggestion.tsx` still passes project UUID, returns empty results (CodeAnt #349) |
-| `frontend/src/ui/admin/AdminUsersPanel.tsx` | Create-user handler lacks `isPending` guard — rapid Enter presses can fire duplicate create requests (CodeAnt #349) |
-| `frontend/src/ui/admin/AdminUsersPanel.tsx` | Role-change empty `catch` doesn't reopen edit UI after failure when `onBlur` already closed it — suggest `setEditingRole(true)` in catch (CodeAnt #349) |
+| ~~`frontend/src/api/hooks/search.ts`~~ | ~~`useSearch` param mismatch~~ — supports both legacy projectId string and options object (PR #379) |
+| ~~`frontend/src/ui/admin/AdminUsersPanel.tsx`~~ | ~~Create-user handler `isPending` guard~~ — added (PR #379) |
+| ~~`frontend/src/ui/admin/AdminUsersPanel.tsx`~~ | ~~Role-change catch reopens edit UI~~ — added `setEditingRole(true)` in catch (PR #379) |
 | ~~`packages/ui/src/atoms/Button.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
 | ~~`packages/ui/src/atoms/Card.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
 | ~~`packages/ui/src/atoms/Toggle.tsx`~~ | ~~Tailwind v4 token migration~~ (PR #377) |
