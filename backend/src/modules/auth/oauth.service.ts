@@ -102,13 +102,16 @@ export async function handleGoogleCallback(code: string, state: string): Promise
 
     if (statePayload.mode === 'link') {
         // Link mode: use the userId from state
-        userId = statePayload.userId!;
+        if (!statePayload.userId) {
+            throw new AppError(400, 'Invalid OAuth state: missing user ID for link mode', 'INVALID_STATE');
+        }
+        userId = statePayload.userId;
     } else {
         // Login mode: find or create user
         const dbUser = await db
             .insertInto('users')
             .values({
-                email: profile.email,
+                email: profile.email.toLowerCase(),
                 name: profile.name,
                 password_hash: '', // OAuth users have no password
             })
