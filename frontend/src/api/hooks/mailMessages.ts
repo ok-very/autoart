@@ -106,7 +106,8 @@ export function usePromoteEmail() {
       api.post<MailMessage>('/mail/promote', { externalId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: mailMessageQueryKeys.promotedIds() });
-      queryClient.invalidateQueries({ queryKey: mailMessageQueryKeys.messages() });
+      // Invalidate all message list queries (with any filter combination)
+      queryClient.invalidateQueries({ queryKey: ['mailMessages', 'list'] });
     },
   });
 }
@@ -150,10 +151,30 @@ export function useUnlinkEmail() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ messageId, linkId }: { messageId: string; linkId: string }) =>
-      api.delete(`/mail/messages/${messageId}/links/${linkId}`),
-    onSuccess: () => {
+    mutationFn: ({
+      messageId,
+      linkId,
+      targetType,
+      targetId,
+    }: {
+      messageId: string;
+      linkId: string;
+      targetType?: string;
+      targetId?: string;
+    }) => api.delete(`/mail/messages/${messageId}/links/${linkId}`),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: mailMessageQueryKeys.all() });
+      // Also invalidate specific links query if target info provided
+      if (variables.targetType && variables.targetId) {
+        queryClient.invalidateQueries({
+          queryKey: mailMessageQueryKeys.linksForTarget(
+            variables.targetType,
+            variables.targetId
+          ),
+        });
+      }
+      // Invalidate all links queries to be safe
+      queryClient.invalidateQueries({ queryKey: ['mailMessages', 'links'] });
     },
   });
 }
