@@ -144,24 +144,25 @@ export function FileUpload({ block }: FileUploadProps) {
       control={control}
       defaultValue=""
       render={({ fieldState }) => (
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-pub-text-secondary">
+        <div className="pub-field">
+          <label className="pub-label">
             {block.label}
-            {block.required && <span className="text-red-500 ml-1">*</span>}
+            {block.required && <span className="pub-label-required">*</span>}
           </label>
           {block.description && (
-            <p className="text-sm text-pub-text-secondary">{block.description}</p>
+            <p className="pub-description">{block.description}</p>
           )}
 
           {/* Upload Area */}
           <div
-            className={`border-2 border-dashed rounded-lg p-6 text-center ${uploadedUrl
-              ? 'border-green-300 bg-green-50'
-              : 'border-slate-300 hover:border-blue-400'
+            className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${uploadedUrl
+              ? 'border-pub-success bg-[rgba(111,127,92,0.08)]'
+              : 'border-pub-input-border hover:border-pub-accent'
               }`}
+            style={{ borderStyle: 'dashed' }}
           >
             {uploadedUrl ? (
-              <div className="text-green-700">
+              <div className="text-pub-success">
                 <svg
                   className="w-8 h-8 mx-auto mb-2"
                   fill="none"
@@ -198,7 +199,7 @@ export function FileUpload({ block }: FileUploadProps) {
                   onDragEnter={handleDragOver}
                   onDrop={handleDrop}
                 >
-                  <span className="text-blue-600 hover:text-blue-700">
+                  <span className="text-pub-accent hover:underline">
                     Choose a file
                   </span>
                   <span className="text-pub-text-secondary"> or drag and drop</span>
@@ -214,7 +215,7 @@ export function FileUpload({ block }: FileUploadProps) {
                   />
                 </label>
                 {block.acceptedFileTypes && (
-                  <p className="text-xs text-pub-muted mt-2">
+                  <p className="text-pub-micro text-pub-muted mt-2">
                     Accepted: {block.acceptedFileTypes.join(', ')}
                   </p>
                 )}
@@ -224,9 +225,9 @@ export function FileUpload({ block }: FileUploadProps) {
 
           {/* Progress Bar */}
           {isUploading && (
-            <div className="w-full bg-slate-200 rounded-full h-2">
+            <div className="pub-progress">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all"
+                className="pub-progress-bar"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
@@ -234,10 +235,10 @@ export function FileUpload({ block }: FileUploadProps) {
 
           {/* Errors */}
           {uploadError && (
-            <p className="text-sm text-red-500">{uploadError}</p>
+            <p className="pub-error">{uploadError}</p>
           )}
           {fieldState.error && (
-            <p className="text-sm text-red-500">{fieldState.error.message}</p>
+            <p className="pub-error">{fieldState.error.message}</p>
           )}
         </div>
       )}

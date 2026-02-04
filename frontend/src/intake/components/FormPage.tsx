@@ -9,6 +9,7 @@ import { FormProvider } from 'react-hook-form';
 import { fetchForm, submitForm } from '../api';
 import { BlockRenderer } from './BlockRenderer';
 import { useIntakeForm } from '../hooks/useIntakeForm';
+import { IntakeFormProvider } from '../context/IntakeFormContext';
 import type { IntakeFormConfig } from '@autoart/shared';
 
 export function FormPage() {
@@ -102,8 +103,8 @@ export function FormPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+      <div className="flex items-center justify-center min-h-screen bg-pub-bg">
+        <div className="pub-spinner" />
       </div>
     );
   }
@@ -111,9 +112,9 @@ export function FormPage() {
   // Error state
   if (error || !form) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-pub-bg">
         <div className="text-center">
-          <h1 className="text-pub-h1 font-semibold text-pub-fg mb-2">Form Not Found</h1>
+          <h1 className="text-pub-h1 font-semibold text-pub-fg mb-pub-2">Form Not Found</h1>
           <p className="text-pub-text-secondary">
             This form may have been disabled or doesn't exist.
           </p>
@@ -128,21 +129,18 @@ export function FormPage() {
       ?? 'Thank you! Your response has been recorded.';
     const redirectUrl = config?.settings?.redirectUrl;
 
-    // Auto-redirect if configured
-
-
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="flex items-center justify-center min-h-screen bg-pub-bg">
+        <div className="text-center max-w-md mx-auto p-pub-8">
+          <div className="pub-success-icon mx-auto mb-pub-4">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-pub-h1 font-semibold text-pub-fg mb-2">Submitted!</h1>
+          <h1 className="text-pub-h1 font-semibold text-pub-fg mb-pub-2">Submitted!</h1>
           <p className="text-pub-text-secondary">{confirmationMessage}</p>
           {redirectUrl && (
-            <p className="text-sm text-pub-muted mt-4">Redirecting...</p>
+            <p className="text-pub-meta text-pub-muted mt-pub-4">Redirecting...</p>
           )}
         </div>
       </div>
@@ -156,16 +154,16 @@ export function FormPage() {
   const blocks = currentPageData?.blocks_config?.blocks || [];
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4">
+    <div className="max-w-2xl mx-auto py-pub-8 px-pub-4 bg-pub-bg min-h-screen">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-pub-8">
         <h1 className="text-pub-h1 font-semibold text-pub-fg">{form.title}</h1>
         {form.sharepoint_request_url && (
           <a
             href={form.sharepoint_request_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:underline text-sm mt-2 inline-block"
+            className="text-pub-accent hover:underline text-pub-meta mt-pub-2 inline-block"
           >
             Request files from SharePoint
           </a>
@@ -174,16 +172,16 @@ export function FormPage() {
 
       {/* Progress */}
       {pages.length > 1 && (
-        <div className="mb-6">
-          <div className="flex items-center gap-2">
+        <div className="mb-pub-6">
+          <div className="flex items-center gap-pub-2">
             {pages.map((_, i) => (
               <div
                 key={i}
-                className={`h-2 flex-1 rounded ${i <= currentPage ? 'bg-blue-600' : 'bg-slate-200'}`}
+                className={`h-2 flex-1 rounded-pub-progress ${i <= currentPage ? 'bg-pub-accent' : 'bg-pub-progress-bg'}`}
               />
             ))}
           </div>
-          <p className="text-sm text-pub-text-secondary mt-2">
+          <p className="text-pub-meta text-pub-text-secondary mt-pub-2">
             Page {currentPage + 1} of {pages.length}
           </p>
         </div>
@@ -191,59 +189,61 @@ export function FormPage() {
 
       {/* Page Title */}
       {(currentPageData?.blocks_config?.settings as any)?.pageTitle && (
-        <h2 className="text-pub-h2 font-semibold text-pub-fg mb-4">
+        <h2 className="text-pub-h2 font-semibold text-pub-fg mb-pub-4">
           {(currentPageData.blocks_config.settings as any).pageTitle}
         </h2>
       )}
 
       {/* Form with React Hook Form Provider */}
       <FormProvider {...rhf}>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {blocks.map((block) => (
-            <BlockRenderer key={block.id} block={block} />
-          ))}
+        <IntakeFormProvider formUniqueId={uniqueId!}>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-pub-6">
+            {blocks.map((block) => (
+              <BlockRenderer key={block.id} block={block} />
+            ))}
 
-          {/* Empty state */}
-          {blocks.length === 0 && (
-            <div className="text-center py-12 text-pub-text-secondary">
-              This page has no questions yet.
-            </div>
-          )}
+            {/* Empty state */}
+            {blocks.length === 0 && (
+              <div className="text-center py-12 text-pub-text-secondary">
+                This page has no questions yet.
+              </div>
+            )}
 
-          {/* Navigation */}
-          <div className="flex justify-between pt-4">
-            <button
-              type="button"
-              onClick={handlePrev}
-              disabled={isFirstPage}
-              className={`px-4 py-2 rounded ${isFirstPage ? 'text-pub-muted cursor-not-allowed' : 'text-pub-text-secondary hover:bg-slate-100'}`}
-            >
-              Previous
-            </button>
-
-            {isLastPage ? (
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit'}
-              </button>
-            ) : (
+            {/* Navigation */}
+            <div className="flex justify-between pt-pub-4">
               <button
                 type="button"
-                onClick={handleNext}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                onClick={handlePrev}
+                disabled={isFirstPage}
+                className={`pub-button-text ${isFirstPage ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                Next
+                Previous
               </button>
-            )}
-          </div>
 
-          {submitError && (
-            <p className="text-red-600 text-sm text-center">{submitError}</p>
-          )}
-        </form>
+              {isLastPage ? (
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="pub-button-primary"
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="pub-button-primary"
+                >
+                  Next
+                </button>
+              )}
+            </div>
+
+            {submitError && (
+              <p className="pub-error text-center">{submitError}</p>
+            )}
+          </form>
+        </IntakeFormProvider>
       </FormProvider>
     </div>
   );

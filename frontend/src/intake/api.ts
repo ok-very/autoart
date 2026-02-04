@@ -22,6 +22,21 @@ export interface SubmissionResult {
   created_at: string;
 }
 
+export interface RecordDefinitionField {
+  key: string;
+  type: string;
+  label: string;
+  required?: boolean;
+  options?: string[];
+  renderHint?: string;
+}
+
+export interface RecordDefinitionResponse {
+  id: string;
+  name: string;
+  fields: RecordDefinitionField[];
+}
+
 export async function fetchForm(uniqueId: string): Promise<PublicForm> {
   const res = await fetch(`${API_BASE}/forms/${uniqueId}`);
   if (!res.ok) {
@@ -46,4 +61,16 @@ export async function submitForm(
   }
   const data = await res.json();
   return data.submission;
+}
+
+export async function fetchRecordDefinition(
+  formUniqueId: string,
+  definitionId: string
+): Promise<RecordDefinitionResponse> {
+  const res = await fetch(`${API_BASE}/forms/${formUniqueId}/definitions/${definitionId}`);
+  if (!res.ok) {
+    throw new Error(res.status === 404 ? 'Definition not found' : 'Failed to load definition');
+  }
+  const data = await res.json();
+  return data.definition;
 }

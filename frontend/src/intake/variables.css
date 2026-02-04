@@ -4,36 +4,187 @@
  * Client-facing intake forms use their own token namespace,
  * separate from the workspace (--ws-*) tokens.
  * See docs/DESIGN.md § CSS Variable Prefixes.
+ *
+ * NEVER use hardcoded colors in intake form components.
+ * All styling flows through these tokens.
  */
 
 :root {
-  /* Foundation Neutrals */
-  --pub-bg: #F5F2ED;
-  --pub-fg: #2E2E2C;
-  --pub-muted-fg: #6B6560;
+  /* =========================================================================
+     FOUNDATION NEUTRALS
+     ========================================================================= */
+  --pub-bg: #F5F2ED;                /* Parchment - page background */
+  --pub-fg: #2E2E2C;                /* Charcoal Ink - primary text */
+  --pub-muted-fg: #6B6560;          /* Muted text, placeholders */
 
-  /* Text Hierarchy */
+  /* =========================================================================
+     TEXT HIERARCHY
+     ========================================================================= */
+  --pub-text-primary: var(--pub-fg);
   --pub-text-secondary: #5A5A57;
   --pub-text-disabled: #8C8C88;
 
-  /* Structural Accent */
-  --pub-accent: #3F5C6E;
+  /* =========================================================================
+     STRUCTURAL ACCENTS
+     ========================================================================= */
+  --pub-accent: #3F5C6E;            /* Oxide Blue - focus, primary actions */
   --pub-accent-fg: #FFFFFF;
+  --pub-accent-hover: #4A6D80;      /* Lightened for hover */
+  --pub-accent-secondary: #8A5A3C;  /* Burnt Umber - metadata emphasis */
 
-  /* Surfaces */
+  /* =========================================================================
+     SURFACES
+     ========================================================================= */
   --pub-panel-bg: #FFFFFF;
-  --pub-panel-border: #D6D2CB;
+  --pub-panel-border: #D6D2CB;      /* Ash Taupe */
+  --pub-section-bg: rgba(63, 92, 110, 0.04); /* Subtle section background */
 
-  /* System Feedback */
-  --pub-color-success: #6F7F5C;
-  --pub-color-warning: #B89B5E;
-  --pub-color-error: #8C4A4A;
-  --pub-color-info: #3F5C6E;
+  /* =========================================================================
+     SYSTEM FEEDBACK
+     ========================================================================= */
+  --pub-color-success: #6F7F5C;     /* Moss Green */
+  --pub-color-warning: #B89B5E;     /* Desaturated Amber */
+  --pub-color-error: #8C4A4A;       /* Iron Red */
+  --pub-color-info: #3F5C6E;        /* Oxide Blue */
 
-  /* Typography Scale */
+  /* =========================================================================
+     TYPOGRAPHY SCALE
+     @see docs/DESIGN.md - hard limits
+     ========================================================================= */
   --pub-font-size-h1: 20px;
   --pub-font-size-h2: 16px;
   --pub-font-size-body: 14px;
   --pub-font-size-meta: 12px;
   --pub-font-size-micro: 11px;
+  --pub-font-weight-normal: 400;
+  --pub-font-weight-semibold: 600;
+  --pub-line-height: 1.5;
+
+  /* =========================================================================
+     FORM INPUTS
+     ========================================================================= */
+  /* Input backgrounds */
+  --pub-input-bg: #FFFFFF;
+  --pub-input-bg-disabled: #F5F2ED;
+
+  /* Input borders */
+  --pub-input-border: #D6D2CB;      /* Ash Taupe - default border */
+  --pub-input-border-hover: #B8B4AD;
+  --pub-input-border-focus: var(--pub-accent);
+  --pub-input-border-error: var(--pub-color-error);
+
+  /* Input text */
+  --pub-input-fg: var(--pub-fg);
+  --pub-input-placeholder: var(--pub-muted-fg);
+
+  /* Input sizing */
+  --pub-input-padding-x: 12px;
+  --pub-input-padding-y: 10px;
+  --pub-input-radius: 6px;
+  --pub-input-font-size: var(--pub-font-size-body);
+
+  /* Focus ring */
+  --pub-focus-ring-width: 2px;
+  --pub-focus-ring-color: rgba(63, 92, 110, 0.25);
+  --pub-focus-ring-offset: 0px;
+
+  /* =========================================================================
+     BUTTONS
+     ========================================================================= */
+  /* Primary button (submit, main actions) */
+  --pub-button-primary-bg: var(--pub-accent);
+  --pub-button-primary-bg-hover: var(--pub-accent-hover);
+  --pub-button-primary-fg: var(--pub-accent-fg);
+  --pub-button-primary-border: var(--pub-accent);
+
+  /* Secondary button (cancel, back) */
+  --pub-button-secondary-bg: transparent;
+  --pub-button-secondary-bg-hover: rgba(63, 92, 110, 0.08);
+  --pub-button-secondary-fg: var(--pub-text-secondary);
+  --pub-button-secondary-border: var(--pub-panel-border);
+
+  /* Button sizing */
+  --pub-button-padding-x: 16px;
+  --pub-button-padding-y: 10px;
+  --pub-button-radius: 6px;
+  --pub-button-font-size: var(--pub-font-size-body);
+  --pub-button-font-weight: 500;
+
+  /* Disabled state */
+  --pub-button-disabled-opacity: 0.5;
+
+  /* =========================================================================
+     SELECT / DROPDOWN
+     ========================================================================= */
+  --pub-select-indicator-color: var(--pub-muted-fg);
+  --pub-select-option-hover-bg: rgba(63, 92, 110, 0.08);
+  --pub-select-option-selected-bg: rgba(63, 92, 110, 0.12);
+
+  /* =========================================================================
+     CHECKBOX / RADIO
+     ========================================================================= */
+  --pub-check-size: 18px;
+  --pub-check-border: var(--pub-input-border);
+  --pub-check-border-checked: var(--pub-accent);
+  --pub-check-bg: #FFFFFF;
+  --pub-check-bg-checked: var(--pub-accent);
+  --pub-check-fg-checked: #FFFFFF;
+  --pub-check-radius: 4px;
+  --pub-radio-radius: 50%;
+
+  /* =========================================================================
+     LABELS & DESCRIPTIONS
+     ========================================================================= */
+  --pub-label-fg: var(--pub-text-secondary);
+  --pub-label-font-size: var(--pub-font-size-body);
+  --pub-label-font-weight: 500;
+  --pub-label-margin-bottom: 6px;
+
+  --pub-description-fg: var(--pub-text-secondary);
+  --pub-description-font-size: var(--pub-font-size-meta);
+
+  --pub-required-indicator: var(--pub-color-error);
+
+  /* =========================================================================
+     ERROR MESSAGES
+     ========================================================================= */
+  --pub-error-fg: var(--pub-color-error);
+  --pub-error-font-size: var(--pub-font-size-meta);
+  --pub-error-margin-top: 4px;
+
+  /* =========================================================================
+     SECTION HEADERS (Record blocks, form sections)
+     ========================================================================= */
+  --pub-section-header-fg: var(--pub-fg);
+  --pub-section-header-font-size: var(--pub-font-size-h2);
+  --pub-section-header-font-weight: var(--pub-font-weight-semibold);
+  --pub-section-header-margin-bottom: 16px;
+  --pub-section-border: var(--pub-panel-border);
+
+  /* =========================================================================
+     PROGRESS INDICATOR
+     ========================================================================= */
+  --pub-progress-bg: #E5E2DD;
+  --pub-progress-fg: var(--pub-accent);
+  --pub-progress-height: 8px;
+  --pub-progress-radius: 4px;
+
+  /* =========================================================================
+     SPACING SCALE (4px base)
+     ========================================================================= */
+  --pub-space-1: 4px;
+  --pub-space-2: 8px;
+  --pub-space-3: 12px;
+  --pub-space-4: 16px;
+  --pub-space-5: 20px;
+  --pub-space-6: 24px;
+  --pub-space-8: 32px;
+
+  /* =========================================================================
+     MOTION
+     @see docs/DESIGN.md - 120-160ms, ease-out only
+     ========================================================================= */
+  --pub-motion-duration: 120ms;
+  --pub-motion-duration-slow: 160ms;
+  --pub-motion-ease: ease-out;
 }

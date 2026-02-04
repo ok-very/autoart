@@ -30,32 +30,32 @@ export function Checkbox({ block }: CheckboxProps) {
         };
 
         return (
-          <div className="space-y-2">
-            <p className="block text-sm font-medium text-pub-text-secondary">
+          <div className="pub-field">
+            <p className="pub-label">
               {block.label}
-              {block.required && <span className="text-red-500 ml-1">*</span>}
+              {block.required && <span className="pub-label-required">*</span>}
             </p>
             {block.description && (
-              <p className="text-sm text-pub-text-secondary">{block.description}</p>
+              <p className="pub-description">{block.description}</p>
             )}
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               {options.map((option) => (
                 <label
                   key={option}
-                  className="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-pub-bg"
+                  className="flex items-center gap-3 cursor-pointer py-1"
                 >
                   <input
                     type="checkbox"
                     checked={selectedValues.includes(option)}
                     onChange={(e) => handleChange(option, e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                    className="pub-checkbox"
                   />
-                  <span className="text-pub-text-secondary">{option}</span>
+                  <span className="text-pub-fg">{option}</span>
                 </label>
               ))}
             </div>
             {fieldState.error && (
-              <p className="text-sm text-red-500">{fieldState.error.message}</p>
+              <p className="pub-error">{fieldState.error.message}</p>
             )}
           </div>
         );

@@ -1,3 +1,7 @@
+/**
+ * Description - Static text block for instructions or info
+ */
+
 import type { ModuleBlock } from '@autoart/shared';
 
 interface DescriptionProps {
@@ -6,12 +10,12 @@ interface DescriptionProps {
 
 export function Description({ block }: DescriptionProps) {
   return (
-    <div className="py-2">
+    <div className="py-pub-2">
       {block.label && (
-        <p className="text-sm font-medium text-pub-text-secondary mb-1">{block.label}</p>
+        <p className="pub-label mb-pub-1">{block.label}</p>
       )}
       {block.description && (
-        <p className="text-sm text-pub-text-secondary whitespace-pre-wrap">{block.description}</p>
+        <p className="pub-description whitespace-pre-wrap">{block.description}</p>
       )}
     </div>
   );

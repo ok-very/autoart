@@ -19,19 +19,18 @@ export function Dropdown({ block }: DropdownProps) {
       control={control}
       defaultValue=""
       render={({ field, fieldState }) => (
-        <div className="space-y-2">
-          <label htmlFor={block.id} className="block text-sm font-medium text-pub-text-secondary">
+        <div className="pub-field">
+          <label htmlFor={block.id} className="pub-label">
             {block.label}
-            {block.required && <span className="text-red-500 ml-1">*</span>}
+            {block.required && <span className="pub-label-required">*</span>}
           </label>
           {block.description && (
-            <p className="text-sm text-pub-text-secondary">{block.description}</p>
+            <p className="pub-description">{block.description}</p>
           )}
           <select
             {...field}
             id={block.id}
-            className={`w-full px-3 py-2 border rounded-lg text-pub-fg focus:outline-none focus:ring-2 focus:ring-blue-500 ${fieldState.error ? 'border-red-500' : 'border-slate-300'
-              }`}
+            className={`pub-input pub-select ${fieldState.error ? 'pub-input--error' : ''}`}
           >
             <option value="">Select an option...</option>
             {options.map((option) => (
@@ -41,7 +40,7 @@ export function Dropdown({ block }: DropdownProps) {
             ))}
           </select>
           {fieldState.error && (
-            <p className="text-sm text-red-500">{fieldState.error.message}</p>
+            <p className="pub-error">{fieldState.error.message}</p>
           )}
         </div>
       )}

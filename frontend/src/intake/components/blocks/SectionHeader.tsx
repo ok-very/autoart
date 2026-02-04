@@ -1,3 +1,7 @@
+/**
+ * SectionHeader - Static section divider with title
+ */
+
 import type { ModuleBlock } from '@autoart/shared';
 
 interface SectionHeaderProps {
@@ -6,12 +10,12 @@ interface SectionHeaderProps {
 
 export function SectionHeader({ block }: SectionHeaderProps) {
   return (
-    <div className="pt-6 pb-2">
-      <h3 className="text-pub-h2 font-semibold text-pub-fg">{block.label}</h3>
+    <div className="pt-pub-6 pb-pub-2">
+      <h3 className="pub-section-header" style={{ marginBottom: 0 }}>{block.label}</h3>
       {block.description && (
-        <p className="mt-1 text-sm text-pub-text-secondary">{block.description}</p>
+        <p className="pub-description mt-pub-1">{block.description}</p>
       )}
-      <div className="mt-3 border-b border-pub-panel-border" />
+      <div className="mt-pub-3 border-b border-pub-panel-border" />
     </div>
   );
 }
