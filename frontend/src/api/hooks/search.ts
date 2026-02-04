@@ -11,7 +11,7 @@ interface UseSearchOptions {
 }
 
 export function useSearch(query: string, options?: UseSearchOptions | string, enabled = true) {
-  // Support legacy call signature: useSearch(query, projectId, enabled)
+  // Existing callers pass projectId as second arg (treating string as projectId)
   const opts: UseSearchOptions = typeof options === 'string'
     ? { projectId: options }
     : (options ?? {});
