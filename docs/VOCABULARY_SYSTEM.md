@@ -20,6 +20,162 @@ The autocomplete is a derived benefit of building agent-first infrastructure.
 
 ---
 
+## Three-Layer Model
+
+```
+                         ┌─────────────────────┐
+                         │      Verbage        │
+                         │  (shared term layer) │
+                         └──────────┬──────────┘
+                                    │
+                 ┌──────────────────┴──────────────────┐
+                 ▼                                     ▼
+     ┌───────────────────────┐           ┌───────────────────────┐
+     │      Vocabulary       │           │      Inference        │
+     │   "What can I do?"    │           │   "What happened?"    │
+     ├───────────────────────┤           ├───────────────────────┤
+     │ • Action types        │           │ • Fact classification │
+     │ • Field definitions   │           │ • Event detection     │
+     │ • Entity resolution   │           │ • Import mapping      │
+     │ • Creation routing    │           │ • Email parsing       │
+     └───────────────────────┘           └───────────────────────┘
+            │                                     │
+            ▼                                     ▼
+     "invoice henderson"              "invoiced the client" in email
+     → create Invoice action          → INVOICE_SENT fact recorded
+```
+
+**Verbage** is the shared language layer — the terms, verbs, and nomenclature used in this workspace. Both systems consume it differently:
+
+| Layer | Question | Example |
+|-------|----------|---------|
+| **Verbage** | What words exist? | "invoice", "bill", "charge" are synonyms |
+| **Vocabulary** | What can the user create? | "invoice" → ActionType:Invoice |
+| **Inference** | What fact does this text describe? | "invoiced" → INVOICE_SENT event |
+
+The verbage layer is learned from imports and usage. Vocabulary and Inference become consumers of that shared foundation rather than maintaining separate word lists.
+
+---
+
+## Existing Infrastructure
+
+These files contain the current (import-scoped) inference system that will be extended:
+
+### Verbage (currently hardcoded)
+
+| File | Purpose |
+|------|---------|
+| [`backend/src/modules/interpreter/fact-kind-inferrer.ts`](../backend/src/modules/interpreter/fact-kind-inferrer.ts) | Verb dictionary for past-tense fact labeling. Contains `VERB_TENSES` mapping (~50 verbs). |
+
+### Inference System
+
+| File | Purpose |
+|------|---------|
+| [`backend/src/modules/interpreter/inference-learner.ts`](../backend/src/modules/interpreter/inference-learner.ts) | Stores user corrections during imports. Column → field mappings with confidence scoring. |
+| [`backend/src/modules/interpreter/mappings/intent-mapping-rules.ts`](../backend/src/modules/interpreter/mappings/intent-mapping-rules.ts) | Regex patterns for classifying text as `action_hint` (internal work) or `fact_candidate` (observable outcome). |
+| [`backend/src/modules/imports/services/import-classification.service.ts`](../backend/src/modules/imports/services/import-classification.service.ts) | Orchestrates classification during import. Consumes inference outputs. |
+
+### Schema (vocabulary source)
+
+| File | Purpose |
+|------|---------|
+| `backend/src/db/schema.ts` | `record_definitions` table — action types with `definition_kind` |
+| `shared/schemas/actions.ts` | Zod schemas for action payloads |
+
+---
+
+## Refactoring Considerations
+
+### Phase 1-4: Build Vocabulary Standalone
+
+No changes to existing inference code. Vocabulary system is additive.
+
+### Phase 5: Wire Inference Learner to Vocabulary
+
+The `inference_learnings` table already stores term → mapping corrections:
+
+```typescript
+// inference-learner.ts — existing schema
+interface InputSignature {
+    columnName: string;    // ← term
+    columnType: string;
+    sampleValues: string[];
+}
+
+interface ColumnMapping {
+    fieldId?: string;      // ← maps_to
+    fieldName: string;
+    fieldType: string;
+    specialMapping?: 'title' | 'assignee' | 'dueDate' | 'status' | 'description';
+}
+```
+
+This maps directly to vocabulary's `TermAssociation`:
+
+```typescript
+interface TermAssociation {
+  term: string;           // ← columnName
+  maps_to: string;        // ← fieldId or derived from specialMapping
+  target_type: 'field';
+  confidence: number;     // ← derived from applied_count
+  source: 'import';
+}
+```
+
+**Work required:**
+- [ ] Query `inference_learnings` during vocabulary build
+- [ ] Transform `InputSignature` + `ColumnMapping` → `TermAssociation`
+- [ ] Add `applied_count` normalization to confidence (0-1 scale)
+
+### Future: Unify Verb Layer
+
+The `VERB_TENSES` dictionary in `fact-kind-inferrer.ts` should become a projection of verbage, not a hardcoded source:
+
+**Current (hardcoded):**
+```typescript
+// fact-kind-inferrer.ts
+const VERB_TENSES: Record<string, string> = {
+    submit: 'Submitted',
+    invoice: 'Invoiced',
+    // ...
+};
+```
+
+**Future (derived from verbage):**
+```typescript
+// verbage-service.ts (new)
+interface VerbEntry {
+  base: string;           // "invoice"
+  past_participle: string; // "invoiced"
+  past_tense_label: string; // "Invoiced" (for fact labels)
+  action_types: string[]; // ["Invoice"] (for vocabulary)
+}
+
+// fact-kind-inferrer.ts (refactored)
+import { getVerbTenses } from '../verbage/verbage-service.js';
+const VERB_TENSES = getVerbTenses(); // derived, not hardcoded
+```
+
+**Work required:**
+- [ ] Extract verb data to shared verbage layer
+- [ ] `fact-kind-inferrer` consumes verbage instead of hardcoded dict
+- [ ] Vocabulary builder consumes same verbage for `ActionTypeEntry.verbs`
+- [ ] Migration to seed initial verb entries from current hardcoded list
+
+### Email as Capture Point
+
+Email is a rich entry point for the inference system (facts), not vocabulary (creation). When email parsing is wired:
+
+1. Email text → `intent-mapping-rules.ts` patterns → `fact_candidate`
+2. Fact candidate → `fact-kind-inferrer.ts` → labeled fact
+3. Labeled fact → event log
+
+The vocabulary system doesn't directly touch email parsing, but **shares the verbage layer**. If "invoiced" is recognized as a verb in verbage, both systems benefit:
+- Inference: "invoiced the client" → INVOICE_SENT fact
+- Vocabulary: "invoice henderson" → create Invoice action
+
+---
+
 ## Architecture
 
 ```
@@ -356,19 +512,34 @@ Given parsed intent, return a creation plan.
 8. Write snapshot, mark as active, deactivate previous
 ```
 
-### Verb Inference
+### Verb Extraction
 
-Action type verbs are inferred from canonical names:
+Action type verbs are derived from the verbage layer. Initial population comes from:
 
-| Canonical Name | Inferred Verbs |
-|----------------|----------------|
-| Invoice | invoice, bill |
-| Deliverable | deliver |
-| Payment | pay |
-| Task | task |
-| Note | note |
+1. **Canonical name derivation:** "Invoice" → base verb "invoice"
+2. **Synonym expansion:** "invoice" synonyms include "bill", "charge"
+3. **Import learning:** terms frequently mapped to Invoice actions
 
-Plus manual overrides for non-obvious mappings.
+| Canonical Name | Derived Verbs | Source |
+|----------------|---------------|--------|
+| Invoice | invoice | name derivation |
+| Invoice | bill, charge | synonym expansion |
+| Deliverable | deliver | name derivation |
+| Payment | pay | name derivation |
+
+The same verbage entry serves both systems:
+
+```typescript
+// Verbage entry for "invoice"
+{
+  base: "invoice",
+  synonyms: ["bill", "charge"],
+  past_participle: "invoiced",      // → Inference uses for fact labels
+  action_types: ["Invoice"],         // → Vocabulary uses for creation
+}
+```
+
+Manual overrides for non-obvious mappings (e.g., "AP" → Payment) are stored in verbage, not in consuming systems.
 
 ---
 
@@ -553,7 +724,19 @@ Plus manual overrides for non-obvious mappings.
 
 ## References
 
-- `docs/DESIGN.md` — Design system principles
-- `backend/src/modules/actions/` — Current action creation flow
-- `frontend/src/components/Composer/` — Current Composer implementation
-- `shared/schemas/` — Action schemas
+### Design
+- [`docs/DESIGN.md`](DESIGN.md) — Design system principles
+
+### Existing Inference Infrastructure
+- [`backend/src/modules/interpreter/fact-kind-inferrer.ts`](../backend/src/modules/interpreter/fact-kind-inferrer.ts) — Verb dictionary, fact label generation
+- [`backend/src/modules/interpreter/inference-learner.ts`](../backend/src/modules/interpreter/inference-learner.ts) — User correction storage, term learning
+- [`backend/src/modules/interpreter/mappings/intent-mapping-rules.ts`](../backend/src/modules/interpreter/mappings/intent-mapping-rules.ts) — Text classification patterns
+- [`backend/src/modules/imports/services/import-classification.service.ts`](../backend/src/modules/imports/services/import-classification.service.ts) — Classification orchestration
+
+### Schema & Actions
+- [`backend/src/modules/actions/`](../backend/src/modules/actions/) — Current action creation flow
+- [`shared/schemas/actions.ts`](../shared/src/schemas/actions.ts) — Action Zod schemas
+- `backend/src/db/schema.ts` — Database schema including `record_definitions`
+
+### Frontend
+- `frontend/src/components/Composer/` — Current Composer implementation (to be replaced in Phase 6)
