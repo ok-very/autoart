@@ -57,7 +57,9 @@ export async function intakeRoutes(app: FastifyInstance) {
       try {
         const form = await intakeService.createForm(
           request.body.title,
-          request.body.sharepoint_request_url
+          request.body.sharepoint_request_url,
+          request.body.project_id,
+          request.body.classification_node_id
         );
         return reply.code(201).send({ form });
       } catch (err) {
@@ -178,7 +180,7 @@ export async function intakePublicRoutes(app: FastifyInstance) {
         return reply.code(404).send({ error: 'NOT_FOUND', message: 'Form not found' });
       }
 
-      // Return sanitized form data (exclude internal fields if needed)
+      // Return sanitized form data (exclude internal fields)
       return reply.send({
         form: {
           unique_id: form.unique_id,
@@ -190,31 +192,6 @@ export async function intakePublicRoutes(app: FastifyInstance) {
           })),
         },
       });
-    }
-  );
-
-  // Get record definition for form (public)
-  fastify.get(
-    '/forms/:uniqueId/definitions/:definitionId',
-    {
-      schema: {
-        params: z.object({
-          uniqueId: z.string().min(1),
-          definitionId: z.string().uuid(),
-        }),
-      },
-    },
-    async (request, reply) => {
-      const definition = await intakeService.getDefinitionForForm(
-        request.params.uniqueId,
-        request.params.definitionId
-      );
-
-      if (!definition) {
-        return reply.code(404).send({ error: 'NOT_FOUND', message: 'Definition not found' });
-      }
-
-      return reply.send({ definition });
     }
   );
 
@@ -241,8 +218,6 @@ export async function intakePublicRoutes(app: FastifyInstance) {
         request.body.upload_code,
         request.body.metadata
       );
-
-      // Note: CSV export of submissions handled by AutoHelper on-demand
 
       return reply.code(201).send({
         submission: {

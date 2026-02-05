@@ -1,10 +1,10 @@
 /**
  * BlockRenderer - Factory component that renders FormBlocks by type
- * 
+ *
  * Uses React Hook Form context - blocks access form state via useFormContext
  */
 
-import type { FormBlock, ModuleBlock, RecordBlock as RecordBlockType } from '@autoart/shared';
+import type { FormBlock, ModuleBlock } from '@autoart/shared';
 import {
   ShortAnswer,
   Paragraph,
@@ -20,7 +20,6 @@ import {
   SectionHeader,
   Description,
   ImageBlock,
-  RecordBlock,
 } from './blocks';
 
 // Module block type to component mapping
@@ -49,44 +48,33 @@ interface BlockRendererProps {
 }
 
 export function BlockRenderer({ block }: BlockRendererProps) {
-  // Handle record blocks
-  if (block.kind === 'record') {
-    return <RecordBlock block={block as RecordBlockType} />;
-  }
-
-  const moduleBlock = block as ModuleBlock;
-
   // Handle static display blocks
-  if (moduleBlock.type === 'section_header') {
-    return <SectionHeader block={moduleBlock} />;
+  if (block.type === 'section_header') {
+    return <SectionHeader block={block} />;
   }
-  if (moduleBlock.type === 'description') {
-    return <Description block={moduleBlock} />;
+  if (block.type === 'description') {
+    return <Description block={block} />;
   }
-  if (moduleBlock.type === 'image') {
-    return <ImageBlock block={moduleBlock} />;
+  if (block.type === 'image') {
+    return <ImageBlock block={block} />;
   }
 
   // Handle input blocks
-  const Component = MODULE_COMPONENTS[moduleBlock.type];
+  const Component = MODULE_COMPONENTS[block.type];
   if (!Component) {
     return (
       <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm">
-        Unsupported block type: <code>{moduleBlock.type}</code>
+        Unsupported block type: <code>{block.type}</code>
       </div>
     );
   }
 
-  return <Component block={moduleBlock} />;
+  return <Component block={block} />;
 }
 
 /**
  * Check if a block collects user input (vs static display)
  */
 export function isInputBlock(block: FormBlock): boolean {
-  if (block.kind === 'record') {
-    // RecordBlocks with createInstance collect input for record creation
-    return (block as RecordBlockType).createInstance === true;
-  }
-  return !STATIC_BLOCKS.includes((block as ModuleBlock).type);
+  return !STATIC_BLOCKS.includes(block.type);
 }
