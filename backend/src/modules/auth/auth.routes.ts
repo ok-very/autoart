@@ -4,11 +4,11 @@ import { registerSchema, loginSchema, RegisterInput, LoginInput, RefreshInput } 
 import * as authService from './auth.service.js';
 import * as avatarService from './avatar.service.js';
 import * as microsoftOAuthService from './microsoft-oauth.service.js';
-import * as mondayOAuthService from '../imports/monday-oauth.service.js';
 import * as oauthService from './oauth.service.js';
 import * as settingsService from './settings.service.js';
 import { requireRole } from '../../plugins/requireRole.js';
 import { AppError } from '../../utils/errors.js';
+import * as mondayOAuthService from '../imports/monday-oauth.service.js';
 
 export async function authRoutes(fastify: FastifyInstance) {
   // Register

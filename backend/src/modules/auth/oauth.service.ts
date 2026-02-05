@@ -8,9 +8,9 @@
 import { OAuth2Client } from 'google-auth-library';
 import { sql } from 'kysely';
 
+import { generateOAuthState, validateOAuthState, type OAuthMode } from './oauth-state.js';
 import { db } from '../../db/client.js';
 import { AppError } from '../../utils/errors.js';
-import { generateOAuthState, validateOAuthState, type OAuthMode } from './oauth-state.js';
 
 
 // Environment validation

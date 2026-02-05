@@ -320,7 +320,7 @@ export function useMondayBoards() {
 // AUTOHELPER CLAIM TOKEN PAIRING
 // ============================================================================
 
-export interface AutoHelperStatus extends ConnectionStatus {}
+export type AutoHelperStatus = ConnectionStatus;
 
 export interface ClaimTokenResult {
     code: string;
