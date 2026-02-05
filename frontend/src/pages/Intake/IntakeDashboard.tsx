@@ -42,7 +42,7 @@ export function IntakeDashboard({ onOpenForm }: IntakeDashboardProps) {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-64">
-                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+                <Loader2 className="w-8 h-8 animate-spin text-[var(--ws-accent)]" />
             </div>
         );
     }
@@ -77,10 +77,10 @@ export function IntakeDashboard({ onOpenForm }: IntakeDashboardProps) {
                     <button
                         key={form.id}
                         onClick={() => handleOpenForm(form.id)}
-                        className="bg-ws-panel-bg rounded-xl border border-ws-panel-border p-6 text-left hover:border-indigo-300 hover:shadow-md transition-all group"
+                        className="bg-ws-panel-bg rounded-xl border border-ws-panel-border p-6 text-left hover:border-[var(--ws-accent)]/30 hover:shadow-md transition-all group"
                     >
                         <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                            <div className="w-10 h-10 rounded-lg bg-[var(--ws-accent)]/10 flex items-center justify-center text-[var(--ws-accent)] group-hover:bg-[var(--ws-accent)] group-hover:text-[var(--ws-accent-fg)] transition-colors">
                                 <FileText className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -100,7 +100,7 @@ export function IntakeDashboard({ onOpenForm }: IntakeDashboardProps) {
                 <button
                     onClick={handleCreateForm}
                     disabled={createForm.isPending}
-                    className="bg-ws-bg rounded-xl border-2 border-dashed border-ws-panel-border p-6 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all flex flex-col items-center justify-center min-h-[140px]"
+                    className="bg-ws-bg rounded-xl border-2 border-dashed border-ws-panel-border p-6 hover:border-[var(--ws-accent)]/30 hover:bg-[var(--ws-accent)]/5 transition-all flex flex-col items-center justify-center min-h-[140px]"
                 >
                     <Plus className="w-8 h-8 text-ws-muted mb-2" />
                     <span className="text-sm font-medium text-ws-text-secondary">New Form</span>

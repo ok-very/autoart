@@ -2,7 +2,7 @@ import { clsx } from 'clsx';
 
 import type { FieldViewModel } from '@autoart/shared/domain';
 
-import { TagsInput } from '@autoart/ui';
+import { TagsInput, EmailInput, PhoneInput, TimeInput } from '@autoart/ui';
 import { DateFieldEditor } from '../semantic/DateFieldEditor';
 import { StatusFieldEditor } from '../semantic/StatusFieldEditor';
 
@@ -62,42 +62,40 @@ export function FieldRenderer({
     // ========== RENDER HINT DISPATCH ==========
     // Semantic hints override base type for specialized rendering
 
-    // Email hint - native email input with validation
+    // Email hint - uses shared EmailInput atom
     if (renderHint === 'email') {
         return (
-            <input
-                type="email"
+            <EmailInput
                 value={String(value || '')}
                 onChange={(e) => onChange(e.target.value)}
                 readOnly={readOnly}
                 placeholder={viewModel.placeholder}
-                className={clsx(
-                    'w-full text-sm border rounded-md shadow-sm px-3 py-2 transition-colors',
-                    readOnly
-                        ? 'border-slate-300 bg-ws-panel-bg cursor-default'
-                        : 'border-slate-300 bg-ws-panel-bg hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
-                    className
-                )}
+                className={className}
             />
         );
     }
 
-    // Phone hint - tel input for mobile keyboards
+    // Phone hint - uses shared PhoneInput atom
     if (renderHint === 'phone') {
         return (
-            <input
-                type="tel"
+            <PhoneInput
                 value={String(value || '')}
                 onChange={(e) => onChange(e.target.value)}
                 readOnly={readOnly}
                 placeholder={viewModel.placeholder}
-                className={clsx(
-                    'w-full text-sm border rounded-md shadow-sm px-3 py-2 transition-colors',
-                    readOnly
-                        ? 'border-slate-300 bg-ws-panel-bg cursor-default'
-                        : 'border-slate-300 bg-ws-panel-bg hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
-                    className
-                )}
+                className={className}
+            />
+        );
+    }
+
+    // Time hint - uses shared TimeInput atom
+    if (renderHint === 'time') {
+        return (
+            <TimeInput
+                value={String(value || '')}
+                onChange={(e) => onChange(e.target.value)}
+                readOnly={readOnly}
+                className={className}
             />
         );
     }

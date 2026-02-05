@@ -17,13 +17,12 @@ import { Button } from '@autoart/ui';
 import { IntakeCanvas } from '../../workflows/intake/components/IntakeCanvas';
 import { FloatingToolbar } from '../../workflows/intake/components/FloatingToolbar';
 import { FormSettingsPanel } from '../../workflows/intake/components/FormSettingsPanel';
-import { RecordMappingPanel } from '../../workflows/intake/components/RecordMappingPanel';
 import {
     useIntakeForm,
     useUpdateIntakeForm,
     useUpsertIntakeFormPage,
 } from '../../api/hooks/intake';
-import type { FormBlock, ModuleBlock, ModuleBlockType, RecordMapping } from '@autoart/shared';
+import type { FormBlock, ModuleBlock, ModuleBlockType } from '@autoart/shared';
 
 interface IntakeEditorViewProps {
     formId: string;
@@ -50,17 +49,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     const [copied, setCopied] = useState(false);
 
     // Editor tabs
-    const [activeTab, setActiveTab] = useState<'build' | 'logic' | 'records' | 'settings'>('build');
-
-    // Record mappings state (loaded from form config, saved with settings)
-    const [recordMappingsChanges, setRecordMappingsChanges] = useState<RecordMapping[] | null>(null);
-
-    // Derive record mappings from prop or user changes
-    const recordMappings = useMemo(() => {
-        if (recordMappingsChanges !== null) return recordMappingsChanges;
-        const firstPage = form?.pages?.[0];
-        return (firstPage?.blocks_config?.recordMappings as RecordMapping[] | undefined) ?? [];
-    }, [form?.pages, recordMappingsChanges]);
+    const [activeTab, setActiveTab] = useState<'build' | 'logic' | 'settings'>('build');
 
     // Debounce timer refs
     const saveBlocksTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -96,7 +85,6 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
             requestAnimationFrame(() => {
                 setTitleChanges(null);
                 setBlocksChanges(null);
-                setRecordMappingsChanges(null);
             });
         }
     }, [form]);
@@ -111,32 +99,6 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
             setBlocksChanges(value);
         }
     }, [blocks]);
-
-    // Handler for record mapping changes - saves immediately with debounce
-    const saveRecordMappingsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const handleRecordMappingsChange = useCallback((mappings: RecordMapping[]) => {
-        setRecordMappingsChanges(mappings);
-
-        // Debounce save
-        if (saveRecordMappingsTimeoutRef.current) {
-            clearTimeout(saveRecordMappingsTimeoutRef.current);
-        }
-        saveRecordMappingsTimeoutRef.current = setTimeout(async () => {
-            setSaveStatus('saving');
-            try {
-                await upsertPage.mutateAsync({
-                    formId,
-                    page_index: 0,
-                    blocks_config: { blocks, recordMappings: mappings },
-                });
-                setSaveStatus('saved');
-                setTimeout(() => setSaveStatus('idle'), 2000);
-            } catch (err) {
-                console.error('Failed to save record mappings:', err);
-                setSaveStatus('error');
-            }
-        }, 1000);
-    }, [formId, blocks, upsertPage]);
 
     // Auto-save blocks with debounce
     useEffect(() => {
@@ -284,7 +246,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
     if (formLoading) {
         return (
             <div className="flex items-center justify-center h-full">
-                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+                <Loader2 className="w-8 h-8 animate-spin text-[var(--ws-accent)]" />
             </div>
         );
     }
@@ -306,7 +268,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                             type="text"
                             value={formTitle}
                             onChange={(e) => handleTitleChange(e.target.value)}
-                            className="text-sm font-semibold text-ws-fg bg-transparent border-none p-0 focus:ring-0 w-48 hover:border-b hover:border-slate-300 focus:border-b focus:border-indigo-500"
+                            className="text-sm font-semibold text-ws-fg bg-transparent border-none p-0 focus:ring-0 w-48 hover:border-b hover:border-slate-300 focus:border-b focus:border-[var(--ws-accent)]"
                         />
                         {renderSaveStatus()}
                     </div>
@@ -314,12 +276,12 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
 
                 {/* Center: Tabs */}
                 <div className="flex h-full w-1/3 justify-center">
-                    {(['build', 'logic', 'records', 'settings'] as const).map((tab) => (
+                    {(['build', 'logic', 'settings'] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-4 h-full flex items-center text-sm font-medium border-b-2 transition-colors ${activeTab === tab
-                                ? 'text-indigo-600 border-indigo-600'
+                                ? 'text-[var(--ws-accent)] border-[var(--ws-accent)]'
                                 : 'text-ws-text-secondary border-transparent hover:text-ws-fg'
                                 }`}
                         >
@@ -367,7 +329,7 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                         />
 
                         {/* Form Header Block */}
-                        <div className="bg-ws-panel-bg rounded-xl border border-ws-panel-border mb-4 overflow-hidden border-t-4 border-t-indigo-600">
+                        <div className="bg-ws-panel-bg rounded-xl border border-ws-panel-border mb-4 overflow-hidden border-t-4 border-t-[var(--ws-accent)]">
                             <div className="p-6">
                                 <input
                                     type="text"
@@ -403,16 +365,6 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                 {activeTab === 'logic' && (
                     <div className="max-w-2xl mx-auto py-8 px-4">
                         <div className="flex-1" />
-                    </div>
-                )}
-
-                {activeTab === 'records' && (
-                    <div className="max-w-2xl mx-auto py-8 px-4">
-                        <RecordMappingPanel
-                            blocks={blocks}
-                            recordMappings={recordMappings}
-                            onChange={handleRecordMappingsChange}
-                        />
                     </div>
                 )}
 
