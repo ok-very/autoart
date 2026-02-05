@@ -1,8 +1,8 @@
+import type { FastifyInstance } from 'fastify';
 import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import path from 'node:path';
 
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
 import { getAvatarPath } from './avatar.service.js';
 

@@ -9,8 +9,8 @@
  * returns the existing row.
  */
 
-import { db } from '../../db/client.js';
 import { env } from '../../config/env.js';
+import { db } from '../../db/client.js';
 import type { MailMessage, MailLink } from '../../db/schema.js';
 
 // =============================================================================
