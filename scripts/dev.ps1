@@ -141,30 +141,6 @@ function Stop-AllDevProcesses {
         }
     }
 
-    # Kill processes on dev ports
-    Stop-ProcessOnPort -Port $script:AutoArt.BackendPort
-    Stop-ProcessOnPort -Port $script:AutoArt.FrontendPort
-    Stop-ProcessOnPort -Port $script:AutoArt.AutoHelperPort
-    Stop-ProcessOnPort -Port 5174
-
-    # Kill orphaned node processes
-    Get-Process -Name "node" -ErrorAction SilentlyContinue | Where-Object {
-        try {
-            $cmd = (Get-CimInstance Win32_Process -Filter "ProcessId = $($_.Id)" -ErrorAction SilentlyContinue).CommandLine
-            $cmd -and ($cmd -match [regex]::Escape($ProjectDir) -or ($cmd -match "tsx" -and $cmd -match "backend") -or ($cmd -match "vite"))
-        }
-        catch { $false }
-    } | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
-
-    # Kill orphaned Python processes
-    Get-Process -Name "python", "python3", "uvicorn" -ErrorAction SilentlyContinue | Where-Object {
-        try {
-            $cmd = (Get-CimInstance Win32_Process -Filter "ProcessId = $($_.Id)" -ErrorAction SilentlyContinue).CommandLine
-            $cmd -and ($cmd -match [regex]::Escape($ProjectDir) -or $cmd -match "autohelper")
-        }
-        catch { $false }
-    } | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }
-
     Write-Host "[OK] All services stopped." -ForegroundColor Green
 }
 
