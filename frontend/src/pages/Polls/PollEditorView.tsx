@@ -11,7 +11,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { ArrowLeft, Loader2, Check, ExternalLink, Copy, Trash2 } from 'lucide-react';
 
-import { Button } from '@autoart/ui';
+import { Button, MiniCalendar } from '@autoart/ui';
 import {
     usePolls,
     useUpdatePoll,
@@ -140,17 +140,6 @@ export function PollEditorView({ pollId, onBack, onDeleted }: PollEditorViewProp
             console.error('Failed to delete poll:', err);
         }
     }, [pollId, deletePoll, onDeleted, onBack]);
-
-    const handleDateAdd = useCallback(() => {
-        const current = timeConfig ?? { dates: [], start_hour: 9, end_hour: 17, granularity: '30min' as const, timezone: 'America/Vancouver' };
-        const lastDate = current.dates.length > 0
-            ? new Date(current.dates[current.dates.length - 1])
-            : new Date();
-        const nextDate = new Date(lastDate);
-        nextDate.setDate(nextDate.getDate() + 1);
-        const dateStr = nextDate.toISOString().split('T')[0];
-        setTimeConfigChanges({ ...current, dates: [...current.dates, dateStr] });
-    }, [timeConfig]);
 
     const handleDateRemove = useCallback((dateToRemove: string) => {
         if (!timeConfig) return;
@@ -364,28 +353,36 @@ export function PollEditorView({ pollId, onBack, onDeleted }: PollEditorViewProp
                                 <label className="block text-xs font-medium text-ws-text-secondary mb-2">
                                     Dates
                                 </label>
-                                <div className="flex flex-wrap gap-2 mb-2">
-                                    {timeConfig?.dates.map((date) => (
-                                        <span
-                                            key={date}
-                                            className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-ws-bg border border-ws-panel-border rounded"
-                                        >
-                                            {new Date(date + 'T00:00:00').toLocaleDateString(undefined, {
-                                                month: 'short',
-                                                day: 'numeric',
-                                            })}
-                                            <button
-                                                onClick={() => handleDateRemove(date)}
-                                                className="text-ws-text-secondary hover:text-ws-error"
+                                <MiniCalendar
+                                    selectedDates={timeConfig?.dates ?? []}
+                                    onDatesChange={(dates) =>
+                                        setTimeConfigChanges({
+                                            ...(timeConfig ?? { dates: [], start_hour: 9, end_hour: 17, granularity: '30min' as const, timezone: 'America/Vancouver' }),
+                                            dates,
+                                        })
+                                    }
+                                />
+                                {timeConfig?.dates && timeConfig.dates.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-3">
+                                        {timeConfig.dates.map((date) => (
+                                            <span
+                                                key={date}
+                                                className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-ws-bg border border-ws-panel-border rounded"
                                             >
-                                                &times;
-                                            </button>
-                                        </span>
-                                    ))}
-                                </div>
-                                <Button variant="secondary" size="sm" onClick={handleDateAdd}>
-                                    + Add Date
-                                </Button>
+                                                {new Date(date + 'T00:00:00').toLocaleDateString(undefined, {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                })}
+                                                <button
+                                                    onClick={() => handleDateRemove(date)}
+                                                    className="text-ws-text-secondary hover:text-ws-error"
+                                                >
+                                                    &times;
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">

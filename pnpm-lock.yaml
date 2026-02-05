@@ -527,6 +527,9 @@ importers:
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
+      date-fns:
+        specifier: 'catalog:'
+        version: 4.1.0
       lucide-react:
         specifier: 'catalog:'
         version: 0.562.0(react@19.2.3)
