@@ -33,6 +33,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import type { FormBlock } from '@autoart/shared';
 import { EditorBlockRenderer } from './editor-blocks';
+import { BlockRecordBindingEditor } from './BlockRecordBindingEditor';
 
 interface IntakeCanvasProps {
     blocks: FormBlock[];
@@ -71,6 +72,7 @@ const layoutBlocks = [
 interface SortableBlockProps {
     block: FormBlock;
     isActive: boolean;
+    allBlocks: FormBlock[];
     onSelectBlock: (id: string) => void;
     onDeleteBlock: (id: string) => void;
     onUpdateBlock: (id: string, updates: Partial<FormBlock>) => void;
@@ -80,6 +82,7 @@ interface SortableBlockProps {
 function SortableBlock({
     block,
     isActive,
+    allBlocks,
     onSelectBlock,
     onDeleteBlock,
     onUpdateBlock,
@@ -133,9 +136,17 @@ function SortableBlock({
                     </div>
 
                     {/* Block-specific preview */}
-                    <div className="mb-6">
+                    <div className="mb-4">
                         <EditorBlockRenderer block={block} isActive={true} onUpdate={onUpdateBlock} />
                     </div>
+
+                    {/* Inline Record Binding Editor */}
+                    <BlockRecordBindingEditor
+                        blockId={block.id}
+                        binding={block.recordBinding}
+                        allBlocks={allBlocks}
+                        onUpdate={(binding) => onUpdateBlock(block.id, { recordBinding: binding })}
+                    />
 
                     {/* Footer Actions */}
                     <div className="flex items-center justify-end gap-4 pt-4 border-t border-ws-panel-border">
@@ -297,6 +308,7 @@ export function IntakeCanvas({
                             key={block.id}
                             block={block}
                             isActive={block.id === activeBlockId}
+                            allBlocks={blocks}
                             onSelectBlock={onSelectBlock}
                             onDeleteBlock={onDeleteBlock}
                             onUpdateBlock={onUpdateBlock}
