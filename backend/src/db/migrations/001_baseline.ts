@@ -618,15 +618,10 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute();
 
   await db.schema
-    .createIndex('idx_intake_form_pages_form')
-    .on('intake_form_pages')
-    .columns(['form_id', 'page_index'])
-    .execute();
-
-  await db.schema
     .createIndex('idx_intake_form_pages_form_page')
     .on('intake_form_pages')
     .columns(['form_id', 'page_index'])
+    .unique()
     .execute();
 
   await db.schema
