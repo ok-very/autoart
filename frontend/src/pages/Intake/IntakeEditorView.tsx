@@ -17,6 +17,7 @@ import { Button } from '@autoart/ui';
 import { IntakeCanvas } from '../../workflows/intake/components/IntakeCanvas';
 import { FloatingToolbar } from '../../workflows/intake/components/FloatingToolbar';
 import { FormSettingsPanel } from '../../workflows/intake/components/FormSettingsPanel';
+import { IntakeFlowDiagram } from '../../workflows/intake/components/IntakeFlowDiagram';
 import {
     useIntakeForm,
     useUpdateIntakeForm,
@@ -363,9 +364,10 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                 )}
 
                 {activeTab === 'logic' && (
-                    <div className="max-w-2xl mx-auto py-8 px-4">
-                        <div className="flex-1" />
-                    </div>
+                    <IntakeFlowDiagram
+                        blocks={blocks}
+                        classificationNodeId={form?.classification_node_id ?? null}
+                    />
                 )}
 
                 {activeTab === 'settings' && (
