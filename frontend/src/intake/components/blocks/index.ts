@@ -16,4 +16,3 @@ export { Dropdown } from './Dropdown';
 export { SectionHeader } from './SectionHeader';
 export { Description } from './Description';
 export { ImageBlock } from './Image';
-export { RecordBlock } from './RecordBlock';
