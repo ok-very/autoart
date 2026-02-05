@@ -13,9 +13,10 @@
  * GUARDRAIL: Never writes to the legacy task tables.
  */
 
-import { sql } from 'kysely';
+import { sql, type Transaction } from 'kysely';
 
 import type { ComposerInput, ComposerResponse, ContextType, ActionReference } from '@autoart/shared';
+import type { Database } from '../../db/schema.js';
 
 import { EventFactory } from './event-factory.js';
 import { db } from '../../db/client.js';
@@ -31,6 +32,8 @@ export interface ComposeOptions {
     actorId: string | null;
     /** Skip view computation (for performance) */
     skipView?: boolean;
+    /** Optional transaction — if provided, compose runs within it instead of creating its own */
+    trx?: Transaction<Database>;
 }
 
 /**
@@ -55,7 +58,7 @@ export async function compose(
     }
 
     // Run everything in a transaction so we can roll back on any failure
-    return await db.transaction().execute(async (trx) => {
+    const execute = async (trx: Transaction<Database>) => {
         const contextId = input.action.contextId;
         const contextType = input.action.contextType;
 
@@ -251,7 +254,9 @@ export async function compose(
         };
 
         return response;
-    });
+    };
+
+    return options.trx ? execute(options.trx) : db.transaction().execute(execute);
 }
 
 /**
