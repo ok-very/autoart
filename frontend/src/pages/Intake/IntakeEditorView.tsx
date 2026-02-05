@@ -375,6 +375,8 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                             confirmationMessage: form?.pages?.[0]?.blocks_config?.settings?.confirmationMessage,
                             redirectUrl: form?.pages?.[0]?.blocks_config?.settings?.redirectUrl,
                         }}
+                        projectId={form?.project_id ?? null}
+                        classificationNodeId={form?.classification_node_id ?? null}
                         onSave={async (newSettings) => {
                             await upsertPage.mutateAsync({
                                 formId,
@@ -383,6 +385,13 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                                     blocks,
                                     settings: newSettings,
                                 },
+                            });
+                        }}
+                        onClassificationChange={async (newProjectId, newNodeId) => {
+                            await updateForm.mutateAsync({
+                                id: formId,
+                                project_id: newProjectId,
+                                classification_node_id: newNodeId,
                             });
                         }}
                         isSaving={upsertPage.isPending}
