@@ -13,6 +13,7 @@ import type {
   IntakeFormUpdate,
 } from '../../db/schema.js';
 import { NotFoundError, ConflictError } from '../../utils/errors.js';
+import { processBlockBindings } from './intake.composer.js';
 
 const MAX_UNIQUE_ID_RETRIES = 5;
 
@@ -167,8 +168,8 @@ export interface SubmissionWithRecords extends IntakeSubmission {
 
 /**
  * Create a form submission.
- * Record creation via block bindings will be handled by intake.composer.ts (Phase 2).
- * For now, submissions save metadata only.
+ * If the form has a classification_node_id and blocks have record bindings,
+ * creates records + Composer actions within the same transaction.
  */
 export async function createSubmission(
   formId: string,
@@ -186,8 +187,36 @@ export async function createSubmission(
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    // Block binding → record creation will be wired in Phase 2 (intake.composer.ts)
-    const createdRecords: CreatedRecord[] = [];
+    // Process block bindings → records + Composer actions
+    let createdRecords: CreatedRecord[] = [];
+
+    const form = await trx
+      .selectFrom('intake_forms')
+      .select(['classification_node_id'])
+      .where('id', '=', formId)
+      .executeTakeFirst();
+
+    if (form?.classification_node_id) {
+      const metadataObj = (typeof metadata === 'object' && metadata !== null)
+        ? metadata as Record<string, unknown>
+        : {};
+
+      createdRecords = await processBlockBindings(
+        formId,
+        form.classification_node_id,
+        metadataObj,
+        trx
+      );
+    }
+
+    // Persist created records on the submission
+    if (createdRecords.length > 0) {
+      await trx
+        .updateTable('intake_submissions')
+        .set({ created_records: JSON.stringify(createdRecords) })
+        .where('id', '=', submission.id)
+        .execute();
+    }
 
     return {
       ...submission,
