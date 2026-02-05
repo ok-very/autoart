@@ -57,11 +57,6 @@ cleanup() {
         kill "$pid" 2>/dev/null || true
         wait "$pid" 2>/dev/null || true
     done
-    # Kill anything still on dev ports
-    stop_on_port "$BACKEND_PORT"
-    stop_on_port "$FRONTEND_PORT"
-    stop_on_port "$AUTOHELPER_PORT"
-    stop_on_port 5174
     echo "[OK] All services stopped."
     exit 0
 }
