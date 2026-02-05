@@ -5,4 +5,3 @@
 export { IntakeCanvas } from './IntakeCanvas';
 export { FloatingToolbar } from './FloatingToolbar';
 export { SubmissionsTable } from './SubmissionsTable';
-export { RecordMappingPanel } from './RecordMappingPanel';

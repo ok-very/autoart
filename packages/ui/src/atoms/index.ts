@@ -31,4 +31,7 @@ export * from './RadixSelect';
 export * from './Popover';
 export * from './Collapsible';
 export * from './CurrencyInput';
+export * from './EmailInput';
+export * from './PhoneInput';
 export * from './Table';
+export * from './TimeInput';

@@ -31,8 +31,8 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { FormBlock, ModuleBlock } from '@autoart/shared';
-import { BlockOptionsEditor } from './BlockOptionsEditor';
+import type { FormBlock } from '@autoart/shared';
+import { EditorBlockRenderer } from './editor-blocks';
 
 interface IntakeCanvasProps {
     blocks: FormBlock[];
@@ -106,7 +106,7 @@ function SortableBlock({
             style={style}
             onClick={() => onSelectBlock(block.id)}
             className={`bg-ws-panel-bg rounded-xl border p-6 transition-all cursor-pointer ${isActive
-                ? 'border-indigo-300 shadow-md border-l-4 border-l-indigo-600'
+                ? 'border-[var(--ws-accent)]/30 shadow-md border-l-4 border-l-[var(--ws-accent)]'
                 : 'border-ws-panel-border hover:border-slate-300'
                 } ${isDragging ? 'shadow-lg z-10' : ''}`}
         >
@@ -124,7 +124,7 @@ function SortableBlock({
                                     }
                                 }}
                                 placeholder="Question title"
-                                className="w-full bg-ws-bg p-3 text-base font-medium border-b-2 border-indigo-600 focus:outline-none rounded-t"
+                                className="w-full bg-ws-bg p-3 text-base font-medium border-b-2 border-[var(--ws-accent)] focus:outline-none rounded-t"
                             />
                         </div>
                         <div className="px-3 py-2 bg-ws-bg border border-ws-panel-border rounded text-sm text-ws-text-secondary">
@@ -132,23 +132,10 @@ function SortableBlock({
                         </div>
                     </div>
 
-                    {/* Input Preview */}
+                    {/* Block-specific preview */}
                     <div className="mb-6">
-                        <input
-                            type="text"
-                            disabled
-                            placeholder="Answer placeholder"
-                            className="w-1/2 border-b border-ws-panel-border py-2 text-sm text-ws-muted bg-transparent"
-                        />
+                        <EditorBlockRenderer block={block} isActive={true} onUpdate={onUpdateBlock} />
                     </div>
-
-                    {/* Options Editor for choice blocks */}
-                    {block.kind === 'module' && (
-                        <BlockOptionsEditor
-                            block={block as ModuleBlock}
-                            onUpdate={(updates) => onUpdateBlock(block.id, updates)}
-                        />
-                    )}
 
                     {/* Footer Actions */}
                     <div className="flex items-center justify-end gap-4 pt-4 border-t border-ws-panel-border">
@@ -157,7 +144,7 @@ function SortableBlock({
                                 e.stopPropagation();
                                 onDuplicateBlock(block.id);
                             }}
-                            className="text-ws-muted hover:text-indigo-600"
+                            className="text-ws-muted hover:text-[var(--ws-accent)]"
                         >
                             <Copy className="w-4 h-4" />
                         </button>
@@ -179,7 +166,7 @@ function SortableBlock({
                                 onChange={(e) =>
                                     onUpdateBlock(block.id, { required: e.target.checked })
                                 }
-                                className="rounded border-slate-300 text-indigo-600"
+                                className="rounded border-slate-300 text-[var(--ws-accent)]"
                             />
                         </label>
                         <button
@@ -210,12 +197,7 @@ function SortableBlock({
                                 <span className="text-red-500 ml-1">*</span>
                             )}
                         </label>
-                        <input
-                            type="text"
-                            disabled
-                            placeholder="Your answer"
-                            className="w-full border border-ws-panel-border rounded px-3 py-2 text-sm text-ws-text-secondary bg-ws-bg"
-                        />
+                        <EditorBlockRenderer block={block} isActive={false} />
                     </div>
                 </div>
             )}
@@ -265,7 +247,7 @@ export function IntakeCanvas({
                     Add your first question or content block
                 </p>
                 <Dropdown>
-                    <DropdownTrigger className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 transition-colors">
+                    <DropdownTrigger className="px-4 py-2 bg-[var(--ws-accent)] text-[var(--ws-accent-fg)] rounded-lg hover:opacity-90 flex items-center gap-2 transition-opacity">
                         <Plus size={16} />
                         Add First Block
                     </DropdownTrigger>
@@ -325,7 +307,7 @@ export function IntakeCanvas({
                     {/* Add Block Button */}
                     <div className="flex justify-center pt-4">
                         <Dropdown>
-                            <DropdownTrigger className="w-10 h-10 bg-ws-panel-bg border-2 border-dashed border-slate-300 text-ws-muted hover:border-indigo-400 hover:text-indigo-600 rounded-full flex items-center justify-center transition-all">
+                            <DropdownTrigger className="w-10 h-10 bg-ws-panel-bg border-2 border-dashed border-slate-300 text-ws-muted hover:border-[var(--ws-accent)]/40 hover:text-[var(--ws-accent)] rounded-full flex items-center justify-center transition-all">
                                 <Plus size={20} />
                             </DropdownTrigger>
                             <DropdownContent className="w-56">
