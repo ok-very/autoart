@@ -95,6 +95,7 @@ export function FieldRenderer({
                 value={String(value || '')}
                 onChange={(e) => onChange(e.target.value)}
                 readOnly={readOnly}
+                placeholder={viewModel.placeholder}
                 className={className}
             />
         );
