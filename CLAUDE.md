@@ -61,6 +61,23 @@ Agents dispatch these via `Task` tool with `subagent_type` set to `feature-dev:c
 - Only use for `--pub-*` (public/client-facing) surfaces, and only with explicit user request
 - DESIGN.md is the authority for workspace UI. frontend-design does not override it.
 
+### Plugin Install Checklist
+
+All plugins install via the Claude Code plugin marketplace. Run on a fresh checkout or when updating:
+
+```bash
+# Required plugins (install in any order)
+claude plugin install superpowers          # Process skills (TDD, debugging, plans)
+claude plugin install feature-dev          # Subagents: code-explorer, code-architect, code-reviewer
+claude plugin install typescript-lsp       # LSP for go-to-definition, find-references, type queries
+claude plugin install github               # GitHub MCP server (issues, PRs, code search)
+claude plugin install frontend-design      # UI generation (RESTRICTED — see above)
+```
+
+**Prerequisites:**
+- **typescript-lsp** requires a global install: `npm install -g typescript-language-server typescript`
+- **github** requires `GITHUB_PERSONAL_ACCESS_TOKEN` env var (or `gh auth` configured)
+
 ---
 
 ## Operating Principles
