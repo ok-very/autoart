@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-06 20:40*
+*Last Updated: 2026-02-06*
 
 ## Bug List
 
@@ -22,38 +22,25 @@
      remove the feature
 - Emoji/icon selector overlay — search doesn't work; consider switching to Phosphor Icons
 - Glassmorphism missing from tab strip where it was implemented — should be doable now with first-class theme variables
-- "Import" tab hiding in overflow menu despite ample space in tab bar
+- ~~"Import" tab hiding in overflow menu despite ample space in tab bar~~ — promoted to P0 stack
 - Project View: "New project" dropdown UI broken under "Your projects" section — formatting not clean
 
-**Confirmed resolved:**
-- ~~Monday import crashes with null group_title~~ — connector uses `name` property but plan service read nonexistent `title`, fixed to `g.name` (commit 10c702a)
-- ~~Poll editor "Granularity" unclear, pills unreadable~~ — renamed to "Meeting Duration", 2-col layout with Timezone, full date format in vertical list ("Wednesday, February 12, 2026") (commits 16f1ba3, ae76bbf)
-- ~~Poll editor missing~~ — "New poll" has no editor attached; clicking existing spawned poll yields full page roundtrip (polls editor shipped in PRs #271-273, possible regression)
-- ~~Dropdowns rendering transparent backgrounds~~ — arbitrary-value `var()` colors broke under Tailwind v4 oklch pipeline, migrated to theme classes (PR #357)
-- ~~Projects button doesn't spawn panel~~ — routed to center content instead of dockview, now uses `handleOpenPanel` (PR #358)
-- ~~Miller Columns project selection broken~~ — clicked project but never called `setActiveProject`, child columns stayed empty (PR #359)
-- ~~dompurify throws blocking Vite build errors~~ — DOMPurify restored for email HTML rendering with proper ES module import (PR #355)
-
-**Confirmed resolved (PRs #337-339, #353):**
-- ~~Selection Inspector stuck open~~ — close button added with `onClose` prop, wired through dockview panel (PR #338)
-- ~~Panel spawner menu opaque background~~ — glassmorphism (`backdrop-blur-sm` + translucent bg) on Menu + Dropdown atoms (PR #337)
-- ~~AutoHelper tray menu shows "Paired" on launch without pairing~~ — poll-loop validation caches backend session check, menu reads cached bool (PR #353)
-- ~~Applications dropdown bleeds into workspace tabs~~ — header divider added between project selector and nav links (PR #339)
-- ~~Panel spawn visibility issue~~ — `setActive()` called on newly spawned panels via `requestAnimationFrame` (PR #339)
-- ~~Workspace/Fields subtabs have no active accent~~ — tab active state migrated from `text-blue-600` to `--ws-accent` token (PR #338)
-
-**Confirmed resolved:**
-- ~~Action definitions empty after migration~~ — definitions seeded in new `record_definitions` system with `definition_kind`
-- ~~Calendar link in header menu not wired up~~ — fully implemented (PR #271)
-- ~~Header spacing too tight~~ — widened nav gap and margin in Header.tsx (PR #335)
-- ~~`/pair` async blocking I/O~~ — handlers converted to sync `def` for threadpool execution (PR #334, commit b4c1259)
-- ~~Disconnect spinner bleeds to all rows~~ — per-row `disconnectingId` tracking added (PR #335, commit b4c1259)
+**Confirmed resolved (18 items):** See Recently Closed section for PR references. Covers: Monday null group_title, poll editor granularity/missing, dropdown transparency, project spawn, Miller Columns, DOMPurify build, SelectionInspector close, panel spawner glassmorphism, AutoHelper tray pairing, applications dropdown bleed, panel spawn visibility, tab accent, action definitions seed, calendar link, header spacing, `/pair` async I/O, disconnect spinner.
 
 ---
 
-## P0: Blocking
+## P0: Next Stack — Import Wizard Recovery
 
-*(none)*
+Three related bugs, one stack. Classification panel regression broke the configure-mapping step; column headers speak database jargon instead of human; connector sidebar traps users with no escape route.
+
+| # | Issue | Bug Ref |
+|---|-------|---------|
+| 1 | **Classification Panel regression:** Step 2 "Configure Mapping" broken — items not reaching configuration mapping. Archaeology required (review old diffs, reimplement lost functionality) | Bug list: "Step 2: Configure Mapping broken" |
+| 2 | **Import hierarchy labels:** Column headers use internal jargon instead of human-readable labels — useless for reclassification | Bug list: "Import hierarchy" |
+| 3 | **Connector sidebar escape hatch:** Monday connector creates "active session" with no cancel/back — user trapped | Bug list: "Import wizard (Monday)" |
+| 4 | **"Import" tab visibility:** Tab hides in overflow menu despite ample space in tab bar | UX polish |
+
+Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanup (may touch same files). PR 3 is the escape-hatch UX. PR 4 is the tab visibility fix (small, independent).
 
 ---
 
@@ -66,7 +53,6 @@
 | 237 | Performance Optimization & Caching | Backend + Frontend |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 79 | Enhance Workflow View Interactions | Feature |
-| — | Classification Panel: proper bindings on import | Import |
 | — | Poll editor: support different/multiple time block selections per day | Polls |
 | — | Consolidate Calendar/Gantt/future view expansions: Applications views not linked to Project View segmented equivalents; no project/process selection for these views outside single-project setting; Application view should perform general-purpose filter/overlay across projects (separate feature expansion) | Feature |
 | — | Finances UI unification: Finances call gets pulled into Project View rather than spawning its own panel; needs formalization and dedicated panel architecture; institute math/formula ESM to design and handle logic; missing project bindings and unclear how it interacts with records system | Finance |
@@ -107,10 +93,8 @@
 | Intake forms + poll deployments | Need verification: localhost vs production endpoint config (forms and poll submit endpoints may be hardcoded or misconfigured for dev vs prod) |
 | Future outbound subdomains | `polls.autoart.work`, `forms.autoart.work` endpoint routing not wired — debug and configure for dev vs prod |
 | SelectionInspector / Record view | Handle `definition_kind` system for filtering/classification — arrangement vs container vs record kinds should drive what's shown and how |
-| ~~Selection editor / Schema editor~~ | ~~"Quick create" pin toggle removed (PR #339)~~ |
 | Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate — shared field component needs expanded options for where/how combobox is invoked |
 | Selection editor | "Plan" link badge system could just be a pointer to the active window name / binding group color instead of its own concept |
-| ~~Workspace naming~~ | ~~Panel renamed to "Project View" (PR #339); blank area with spawn buttons already works~~ |
 | `frontend/src/ui/table-core/UniversalTableCore.tsx` + composites | All tables are div-based with `role` attributes — migrate to new Table atom primitives from PR #350 for semantic HTML, browser print styles, native keyboard nav |
 | `packages/ui/src/atoms/Badge.tsx` | Badge variant colors (project, process, task, etc.) use domain-semantic Tailwind colors — needs separate approach since they're not chrome tokens |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` has no explicit UI/behavior mapping — containers render as actions (icon, labels, create flow). Needs dedicated UX treatment (CodeAnt #324 review) |
@@ -120,14 +104,9 @@
 | `apps/autohelper/autohelper/modules/mail/router.py` | `_update_triage` shorthand endpoints (`archive`, `mark-action-required`, `mark-informational`) silently erase existing `triage_notes` when passing `None` — preserve existing notes (CodeAnt #346) |
 | `apps/autohelper/autohelper/modules/mail/schemas.py` | `TriageResponse.triaged_at` typed as `str | None` but `TransientEmail.triaged_at` is `datetime | None` — inconsistent API contract (CodeAnt #346) |
 | `frontend/src/api/types/mail.ts` | Frontend `triage_status` typed as `TriageStatus` union but backend schema is plain `str | None` — type mismatch if backend sends unexpected value (CodeAnt #346) |
-| ~~`frontend/src/api/hooks/mailMessages.ts`~~ | ~~`usePromoteEmail` cache invalidation~~ — fixed to invalidate `['mailMessages', 'list']` prefix |
-| ~~`frontend/src/api/hooks/mailMessages.ts`~~ | ~~`useUnlinkEmail` cache invalidation~~ — fixed to also invalidate links queries |
 | `frontend/src/api/types/mail.ts` | `MailMessage.metadata` typed as `Record<string, unknown>` but backend stores via `JSON.stringify` — could be any JSON value, use `unknown` (CodeAnt #347) |
 | `backend/src/db/migrations/052_mail_messages.ts` | Explicit index on `external_id` redundant (UNIQUE already creates one) — extra write overhead (CodeAnt #348) |
 | `backend/src/db/migrations/052_mail_messages.ts` | Explicit index on `mail_message_id` redundant (composite unique constraint already covers it as leading column) — extra write overhead (CodeAnt #348) |
-| ~~`frontend/src/api/hooks/search.ts`~~ | ~~`useSearch` projectId param~~ — fixed to properly pass projectId to backend |
-| ~~`frontend/src/ui/admin/AdminUsersPanel.tsx`~~ | ~~Create-user `isPending` guard~~ — fixed |
-| ~~`frontend/src/ui/admin/AdminUsersPanel.tsx`~~ | ~~Role-change catch reopen~~ — fixed to call `setEditingRole(true)` |
 | `packages/ui/src/atoms/Button.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes like `bg-ws-panel-bg` (same issue fixed in Menu/Dropdown via PR #357) |
 | `packages/ui/src/atoms/Card.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
 | `packages/ui/src/atoms/Toggle.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
@@ -209,20 +188,7 @@
 | — | UI Consistency Audit: dead code removal, font-bold→semibold, header heights h-10/h-8, `--ws-font-size-*` typography tokens, 2744 hardcoded slate/white→`--ws-*` color tokens, stale TODOs purged | PRs #313-317 |
 | — | Bugfixes: Methodology→Process rename, fieldBindings crash, Bound→Linked, LoginPage tokens, Chladni badge/loader tile | PR #312 |
 | — | Dockview v4 theme, swoopy tab corners, unified ThemedTab, tab strip + button | PRs #307-311 |
-| 275 | Epic: Export Workbench — preview-first outputs + finance via sessions | PRs #286-290, #292 |
-| 218 | Phase 6: Remove task_references system + hierarchy nodes | PRs #282-285 |
-| — | Polls editor/management surface in dashboard | PRs #271-273 |
-| — | Style token infrastructure + formatter consumption | PRs #279-280 |
-| — | Chladni-pattern cymatic loading screen | PR #281 |
-| — | In-flight doc PRs (git.md merge rules) | PRs #266, #270 |
-| — | Font refactor: shared base.css + CSS variable font-family | PRs #260, #262 |
-| — | Dockview panels not rendering + Composer defaults to "Task" | PRs #263-265 |
-| — | Header reorder, Applications dropdown, Intake cleanup | PRs #267, #269 |
-| — | Restore Windows venv scripts | PR #259 |
-| 238 | Epic: Invoicerr Integration (invoice management system) | PRs #239-249 |
-| 227-234 | Events Module + Project Log (Phases 1-4) | PRs #227-234 |
-| 185 | Fork and modernize crab-meet scheduling polls | PRs #186, #206-213 |
-| 87 | Global Command Palette | PRs #174, #176 |
+| *(older entries pruned — see git log for PRs #174-306)* | | |
 
 ---
 
