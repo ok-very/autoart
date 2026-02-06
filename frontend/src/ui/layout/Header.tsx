@@ -25,6 +25,7 @@ import {
 import { useCollectionStore } from '../../stores';
 import { useCollectionModeOptional } from '../../workflows/export/context/CollectionModeProvider';
 import { useWorkspaceStore, useOpenPanelIds } from '../../stores/workspaceStore';
+import { useImportSession } from '../../stores/contextStore';
 import { Button, IconButton, Inline } from '@autoart/ui';
 import { Menu, SegmentedControl } from '@autoart/ui';
 import { WorkspaceDropdown } from './WorkspaceDropdown';
@@ -42,6 +43,8 @@ export function Header() {
 
   const { openPanel, setBoundProject } = useWorkspaceStore();
   const openPanelIds = useOpenPanelIds();
+  const importSessionCtx = useImportSession();
+  const importSessionActive = !!importSessionCtx.sessionId;
   const boundProjectId = useWorkspaceStore((s) => s.boundProjectId);
   const boundPanelIds = useWorkspaceStore((s) => s.boundPanelIds);
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
@@ -205,13 +208,13 @@ export function Header() {
             <Menu>
               <Menu.Target>
                 <Button
-                  variant={isWorkbenchActive ? 'light' : 'subtle'}
-                  color={isWorkbenchActive ? 'yellow' : 'gray'}
+                  variant={isWorkbenchActive || importSessionActive ? 'light' : 'subtle'}
+                  color={isWorkbenchActive || importSessionActive ? 'yellow' : 'gray'}
                   size="sm"
                   rightSection={<ChevronDown size={14} />}
-                  leftSection={<Hammer size={14} />}
+                  leftSection={importSessionActive ? <FolderOpen size={14} /> : <Hammer size={14} />}
                 >
-                  Workbench
+                  {importSessionActive ? 'Import' : 'Workbench'}
                 </Button>
               </Menu.Target>
 
