@@ -1131,9 +1131,18 @@ function BoardConfigPanel({ config, onTitleChange, onRoleChange, onGroupUpdate, 
 // MAIN COMPONENT
 // ============================================================================
 
-export function Step2ConfigureMapping({ onNext, onBack, session, onSessionCreated }: StepProps) {
+/** Check if plan has unresolved AMBIGUOUS/UNCLASSIFIED items */
+function hasUnresolvedClassifications(plan: ImportPlan | null): boolean {
+    if (!plan?.classifications) return false;
+    return plan.classifications.some(
+        (c) => !c.resolution && (c.outcome === 'AMBIGUOUS' || c.outcome === 'UNCLASSIFIED')
+    );
+}
+
+export function Step2ConfigureMapping({ onNext, onBack, session, plan, onSessionCreated }: StepProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [pendingClassification, setPendingClassification] = useState(false);
 
     // Extract board IDs from session config
     const boardIds = useMemo(() => {
@@ -1227,8 +1236,19 @@ export function Step2ConfigureMapping({ onNext, onBack, session, onSessionCreate
         });
     }, [updateGroupConfigs]);
 
+    // When classifications are resolved externally (ClassificationPanel), the plan
+    // prop updates. If we were waiting on classification, check if we can now advance.
+    const planClassificationsResolved = pendingClassification && !hasUnresolvedClassifications(plan);
+
     const handleNext = async () => {
         if (!session) return;
+
+        // If classifications were pending and are now resolved, advance directly
+        if (planClassificationsResolved) {
+            setPendingClassification(false);
+            onNext();
+            return;
+        }
 
         try {
             setIsRefreshing(true);
@@ -1241,7 +1261,14 @@ export function Step2ConfigureMapping({ onNext, onBack, session, onSessionCreate
 
             const newPlan = await generatePlan.mutateAsync(session.id);
             onSessionCreated(session, newPlan);
-            onNext();
+
+            // Gate advancement: if the new plan has unresolved classifications,
+            // stay on Step 2 so ImportWorkflowLayout can show ClassificationPanel.
+            if (hasUnresolvedClassifications(newPlan)) {
+                setPendingClassification(true);
+            } else {
+                onNext();
+            }
         } catch (err) {
             console.error('Failed to refresh plan:', err);
             const errorMessage = err instanceof Error ? err.message : 'Failed to generate import plan';
@@ -1307,6 +1334,13 @@ export function Step2ConfigureMapping({ onNext, onBack, session, onSessionCreate
                 </Alert>
             )}
 
+            {/* Classification pending notice */}
+            {pendingClassification && !planClassificationsResolved && (
+                <Alert variant="warning" className="mt-4">
+                    Items need classification before proceeding. Resolve them in the panel below.
+                </Alert>
+            )}
+
             {/* Footer */}
             <Inline justify="between" className="pt-4 mt-4 border-t border-ws-panel-border shrink-0">
                 <Button onClick={onBack} variant="secondary" disabled={isRefreshing}>
@@ -1315,9 +1349,9 @@ export function Step2ConfigureMapping({ onNext, onBack, session, onSessionCreate
                 <Button
                     onClick={handleNext}
                     variant="primary"
-                    disabled={isRefreshing || updateBoardConfig.isPending || updateGroupConfigs.isPending}
+                    disabled={isRefreshing || updateBoardConfig.isPending || updateGroupConfigs.isPending || (pendingClassification && !planClassificationsResolved)}
                 >
-                    {isRefreshing ? 'Generating Plan...' : 'Next: Columns'}
+                    {isRefreshing ? 'Generating Plan...' : pendingClassification && !planClassificationsResolved ? 'Resolve Classifications...' : 'Next: Columns'}
                 </Button>
             </Inline>
         </div>
