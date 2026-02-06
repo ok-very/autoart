@@ -318,6 +318,7 @@ EOF
 
 - NEVER amend commits that have been pushed
 - Create NEW commits for fixes, not `--amend`
+- **Commit instruction file changes immediately.** Edits to `.claude/skills/`, `.claude/commands/`, `CLAUDE.md`, or any agent/skill configuration MUST be committed and pushed in the same turn they are written. These files are not code — they are session-volatile. If they aren't committed, they vanish when the session ends.
 
 ---
 
