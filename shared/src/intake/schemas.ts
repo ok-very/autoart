@@ -3,12 +3,30 @@ import { z } from 'zod';
 /**
  * Intake Form Block Schemas
  *
- * Forms are composed of blocks:
- * - ModuleBlock: Custom form elements (text, email, file upload, etc.)
- * - RecordBlock: Existing RecordDefinition loaded as a styled, read-only segment.
+ * Forms are composed of ModuleBlocks — custom form elements (text, email, file upload, etc.).
+ * Each block can optionally bind to a record definition field via BlockRecordBinding.
  *
  * @see https://github.com/ok-very/autoart/issues/93
  */
+
+// ==================== BLOCK RECORD BINDING ====================
+
+/**
+ * Per-block binding to a record definition field.
+ * When present, the block's submitted value populates the bound field
+ * on a record created (or linked) during submission.
+ */
+export const BlockRecordBindingSchema = z.object({
+    mode: z.enum(['create', 'link']),
+    definitionId: z.string().uuid(),
+    fieldKey: z.string(),
+    /** For 'link' mode: which field on target definition to auto-match against */
+    linkMatchField: z.string().optional(),
+    /** Blocks sharing a groupKey produce/update a single record */
+    groupKey: z.string().optional(),
+});
+
+export type BlockRecordBinding = z.infer<typeof BlockRecordBindingSchema>;
 
 // ==================== MODULE BLOCK ====================
 
@@ -46,74 +64,27 @@ export const ModuleBlockSchema = z.object({
     acceptedFileTypes: z.array(z.string()).optional(),
     /** For file_upload: custom endpoint override */
     uploadEndpoint: z.string().url().optional(),
+    /** Optional binding to a record definition field */
+    recordBinding: BlockRecordBindingSchema.optional(),
 });
 
 export type ModuleBlock = z.infer<typeof ModuleBlockSchema>;
 
-// ==================== RECORD BLOCK ====================
+// ==================== FORM BLOCK ====================
 
-export const RecordBlockSchema = z.object({
-    id: z.string().uuid(),
-    kind: z.literal('record'),
-    /** Links to an existing RecordDefinition.id */
-    definitionId: z.string().uuid(),
-    /** Optional label override (defaults to definition name) */
-    label: z.string().optional(),
-    /** If true, submission creates a new record instance */
-    createInstance: z.boolean().default(true),
-});
-
-export type RecordBlock = z.infer<typeof RecordBlockSchema>;
-
-// ==================== FORM BLOCK UNION ====================
-
-export const FormBlockSchema = z.discriminatedUnion('kind', [
-    ModuleBlockSchema,
-    RecordBlockSchema,
-]);
+/**
+ * FormBlock is now just ModuleBlock — RecordBlock has been removed.
+ * Kept as a named type for API compatibility.
+ */
+export const FormBlockSchema = ModuleBlockSchema;
 
 export type FormBlock = z.infer<typeof FormBlockSchema>;
-
-// ==================== RECORD MAPPING ====================
-
-/**
- * Maps a single ModuleBlock to a field in a RecordDefinition.
- * Allows form blocks to populate record fields on submission.
- */
-export const FieldMappingSchema = z.object({
-    /** FieldDef.key in the target RecordDefinition */
-    fieldKey: z.string(),
-    /** ModuleBlock.id to pull the value from */
-    blockId: z.string().uuid(),
-});
-
-export type FieldMapping = z.infer<typeof FieldMappingSchema>;
-
-/**
- * Configures how form blocks map to a RecordDefinition.
- * Staff can map multiple blocks to create a single record on submission.
- */
-export const RecordMappingSchema = z.object({
-    id: z.string().uuid(),
-    /** Target RecordDefinition.id */
-    definitionId: z.string().uuid(),
-    /** Create record instance on submit (default: true) */
-    createInstance: z.boolean().default(true),
-    /** Field key to use as the record's unique_name */
-    nameFieldKey: z.string().optional(),
-    /** Block → field mappings */
-    fieldMappings: z.array(FieldMappingSchema),
-});
-
-export type RecordMapping = z.infer<typeof RecordMappingSchema>;
 
 // ==================== INTAKE FORM CONFIG ====================
 
 export const IntakeFormConfigSchema = z.object({
     /** Ordered list of blocks */
     blocks: z.array(FormBlockSchema),
-    /** Record mappings: connect form blocks to record fields */
-    recordMappings: z.array(RecordMappingSchema).optional(),
     /** Form-level settings */
     settings: z.object({
         /** Show progress bar */
@@ -130,7 +101,7 @@ export type IntakeFormConfig = z.infer<typeof IntakeFormConfigSchema>;
 // ==================== SUBMISSION RESULT ====================
 
 /**
- * Record created from a RecordBlock during form submission
+ * Record created from block bindings during form submission
  */
 export const CreatedRecordSchema = z.object({
     definitionId: z.string().uuid(),

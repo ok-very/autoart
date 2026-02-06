@@ -38,7 +38,7 @@ const previewMap: Record<string, React.ComponentType<EditorBlockProps>> = {
 };
 
 export function EditorBlockRenderer({ block, isActive, onUpdate }: EditorBlockProps) {
-    const blockType = block.kind === 'module' ? block.type : 'short_answer';
+    const blockType = block.type;
     const Preview = previewMap[blockType] ?? ShortAnswerPreview;
     return <Preview block={block} isActive={isActive} onUpdate={onUpdate} />;
 }

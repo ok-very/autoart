@@ -5,23 +5,19 @@
  */
 
 import { z } from 'zod';
-import { FormBlockSchema, RecordMappingSchema } from '../../intake/schemas.js';
+import { FormBlockSchema } from '../../intake/schemas.js';
 
 export {
+  BlockRecordBindingSchema,
   ModuleBlockTypeSchema,
   ModuleBlockSchema,
-  RecordBlockSchema,
   FormBlockSchema,
   IntakeFormConfigSchema,
-  RecordMappingSchema,
-  FieldMappingSchema,
+  type BlockRecordBinding,
   type ModuleBlockType,
   type ModuleBlock,
-  type RecordBlock,
   type FormBlock,
   type IntakeFormConfig,
-  type RecordMapping,
-  type FieldMapping,
 } from '../../intake/schemas.js';
 
 // ==================== ENUMS ====================
@@ -58,12 +54,10 @@ export interface FormSettings {
 
 /**
  * Page config - the content structure for a form page.
- * Contains an array of FormBlocks (ModuleBlock | RecordBlock).
+ * Contains an array of FormBlocks (ModuleBlock only).
  */
 export const IntakePageConfigSchema = z.object({
   blocks: z.array(FormBlockSchema),
-  /** Record mappings: connect form blocks to record fields */
-  recordMappings: z.array(RecordMappingSchema).optional(),
   settings: IntakePageSettingsSchema.optional(),
 });
 
@@ -80,6 +74,8 @@ export const IntakeFormSchema = z.object({
   title: z.string().min(1),
   status: IntakeFormStatusSchema,
   sharepoint_request_url: z.string().url().nullable(),
+  project_id: z.string().uuid().nullable(),
+  classification_node_id: z.string().uuid().nullable(),
   created_at: z.string().datetime(),
 });
 export type IntakeForm = z.infer<typeof IntakeFormSchema>;
@@ -131,6 +127,8 @@ export type IntakeSubmission = z.infer<typeof IntakeSubmissionSchema>;
 export const CreateIntakeFormInputSchema = z.object({
   title: z.string().min(1).max(200),
   sharepoint_request_url: z.string().url().optional(),
+  project_id: z.string().uuid().optional(),
+  classification_node_id: z.string().uuid().optional(),
 });
 export type CreateIntakeFormInput = z.infer<typeof CreateIntakeFormInputSchema>;
 
@@ -141,6 +139,8 @@ export const UpdateIntakeFormInputSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   status: IntakeFormStatusSchema.optional(),
   sharepoint_request_url: z.string().url().nullable().optional(),
+  project_id: z.string().uuid().nullable().optional(),
+  classification_node_id: z.string().uuid().nullable().optional(),
 });
 export type UpdateIntakeFormInput = z.infer<typeof UpdateIntakeFormInputSchema>;
 

@@ -532,6 +532,8 @@ export interface IntakeFormsTable {
   title: string;
   status: Generated<IntakeFormStatus>;
   sharepoint_request_url: string | null;
+  project_id: string | null;
+  classification_node_id: string | null;
   created_at: Generated<Date>;
 }
 
