@@ -102,10 +102,12 @@ export function MondayImportWizardView({
     }, [currentStep]);
 
     const handleBack = useCallback(() => {
-        if (currentStep > 1) {
+        if (currentStep === 1) {
+            onReset();
+        } else {
             setCurrentStep((s) => s - 1);
         }
-    }, [currentStep]);
+    }, [currentStep, onReset]);
 
     return (
         <ImportContextProvider value={contextValue}>

@@ -335,11 +335,22 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                         <Calendar className="w-12 h-12 text-ws-muted mb-4" />
                         <div className="text-sm font-medium text-ws-text-secondary mb-2">
-                            Monday.com Connected
+                            {session ? 'Import in Progress' : 'Monday.com Connected'}
                         </div>
-                        <p className="text-xs text-ws-muted max-w-48">
-                            Select a board in the main window to begin import.
+                        <p className="text-xs text-ws-muted max-w-48 mb-4">
+                            {session
+                                ? 'Configure your import in the main window.'
+                                : 'Select a board in the main window to begin import.'}
                         </p>
+                        {session && (
+                            <button
+                                onClick={onReset}
+                                className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-ws-text-secondary bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                                New Import
+                            </button>
+                        )}
                     </div>
                 )}
 
