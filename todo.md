@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-04 19:35*
+*Last Updated: 2026-02-05 20:45*
 
 ## Bug List
 
@@ -10,13 +10,22 @@
 - Fields from seed data rendering as `[object Object]` in tables
 - Subprocesses and stages not populating from seed projections
 - Poll editor missing — "New poll" has no editor attached; clicking existing spawned poll yields full page roundtrip (polls editor shipped in PRs #271-273, possible regression)
+- Poll "Open public poll" link is dead — navigates to `/public/poll/:id` which has no route, falls back to workspace. No way to preview poll output.
 - Finance overlay "client" field breaks when querying contacts — placeholder query not wired
+- Expired session causes 401 cascade — `/auth/me` fails, `/auth/refresh` fails, then every authenticated query fires and fails too. Client should redirect to login after refresh failure instead of hammering dead endpoints.
+- AutoHelper sessions lost on backend restart (#340) — in-memory session store dies on restart, AutoHelper tray still shows "Paired" but backend has no session. Need to persist sessions to DB.
+- Workspace preset timing (#181) — `pendingPanelPositions` workaround for dockview panel positioning race condition
 
 **UX polish:**
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
-     remove the feature 
+     remove the feature
 - Emoji/icon selector overlay — search doesn't work; consider switching to Phosphor Icons
 - Glassmorphism missing from tab strip where it was implemented — should be doable now with first-class theme variables
+- Placeholder themes: Compact, Minimal, Floating, and Default are all essentially identical — four names, one skin. Either differentiate them or cull to one honest default.
+
+**Confirmed resolved (PR #403):**
+- ~~Google OAuth returns 500 when not configured~~ — added `/auth/google/status` + `/auth/microsoft/status` endpoints, changed 500 → 501, frontend disables buttons when unconfigured (PR #403)
+- ~~Monday OAuth unreachable from UI~~ — already fixed in PRs #388-392; UI conditionally shows OAuth button based on status endpoint. Bug entry was stale.
 
 **Confirmed resolved (PRs #337-339, #353, #355, #357-359):**
 - ~~Dropdowns rendering transparent backgrounds~~ — arbitrary-value `var()` colors broke under Tailwind v4 oklch pipeline, migrated to theme classes (PR #357)
@@ -77,6 +86,7 @@
 | 85 | Templating Engine | Feature |
 | 86 | Monday.com Board Sync Settings | Integration |
 | 291 | Schema editor / Composer relationship-math builder | Feature |
+| 393 | File Detection & Alignment Service with watchdog — replace polling with filesystem watchdog in AutoHelper, convention enforcement, violation surfacing in UI | AutoHelper |
 | — | Composer bar as sleek dockview popout window (replace modal) | UX |
 | — | Action vocabulary: store classification verbs/nouns/adjectives from imports as a heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret what action type is being constructed or referenced | Classification |
 
@@ -164,6 +174,8 @@
 
 | PRs | Description |
 |-----|-------------|
+| #403 | **OAuth graceful status checks:** `/auth/google/status` + `/auth/microsoft/status` endpoints, 500→501 for unconfigured providers, frontend disables connect buttons, fixed stale redirect URIs, env example docs |
+| #394 | **MiniCalendar molecule for polls:** Compact month-grid date selector with multi-select toggle for poll configuration |
 | #369-372, #381-386 | **Intake forms → records pipeline:** Block connector architecture (RecordMapping schemas, SubmissionsTable with CSV export + record badges, RecordMappingPanel for staff config, Responses tab integration, Records editor tab, backend handler processes mappings) |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
 
