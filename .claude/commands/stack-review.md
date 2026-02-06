@@ -1,7 +1,7 @@
 ---
 description: Code review PRs in the stack, finding bugs and reporting issues locally
 model: claude-sonnet-4-20250514
-allowed-tools: Bash(gh:*), Bash(stackit:*), Bash(git:*), Read, Grep, Glob, Task, Edit, AskUserQuestion
+allowed-tools: Bash(gh *), Bash(stackit *), Bash(git *), Read, Grep, Glob, Task, Edit, AskUserQuestion
 argument-hint: [--apply | --branch <name>]
 ---
 
@@ -16,7 +16,7 @@ Perform code reviews on PRs in the stack. Finds bugs, checks CLAUDE.md complianc
 ## Context
 - Current branch: !`git branch --show-current`
 - Repo: !`gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null`
-- Stack state: !`command stackit log --no-interactive 2>&1`
+- Stack state: !`stackit log --no-interactive 2>&1`
 
 ## Arguments
 $ARGUMENTS
@@ -51,7 +51,7 @@ Perform code reviews on stack PRs in parallel, reporting high-confidence issues 
 Get all branches in the stack that have open PRs:
 
 ```bash
-command stackit log --json --no-interactive 2>&1
+stackit log --json --no-interactive 2>&1
 ```
 
 Parse the JSON to identify branches with PRs. For each branch, check if the PR is reviewable:
@@ -292,7 +292,7 @@ mutation {
 ### Step 7: Restack
 
 ```bash
-command stackit restack --no-interactive
+stackit restack --no-interactive
 ```
 
 ### Step 8: Report

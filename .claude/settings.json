@@ -3,6 +3,7 @@
     "allow": [
       "Bash(git *)",
       "Bash(gh *)",
+      "Bash(stackit *)",
       "Bash(pnpm *)",
       "Bash(npm *)",
       "Bash(npx *)",
@@ -18,7 +19,9 @@
       "Bash(chmod *)",
       "Bash(echo *)",
       "Bash(sleep *)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Skill(stackit:*)",
+      "Skill(*)"
     ]
   }
 }
