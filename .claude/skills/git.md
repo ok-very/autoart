@@ -30,6 +30,9 @@ This project uses **stackit** for stacked PR management. Always prefer stackit c
 | Navigate up/down | `stackit up` / `stackit down` |
 | Switch to branch | `stackit checkout <branch>` |
 | Absorb fixes into correct commits | `stackit absorb` |
+| Describe stack | `stackit describe -m "title"` |
+| View stack info | `stackit info` / `stackit info --stack` |
+| Flatten independent branches | `stackit flatten` |
 
 ### Skills (Preferred)
 
@@ -45,6 +48,7 @@ Use skills instead of manual commands when available:
 | `/stack-restack` | Rebase all branches in stack |
 | `/stack-absorb` | Route working changes to correct commits |
 | `/stack-merge` | Merge PRs from bottom up |
+| `/stack-describe` | Add title/description to stack (AI-generated) |
 
 ### Creating a Stack
 
@@ -158,12 +162,50 @@ stackit merge            # Interactive wizard
 | `--wait` | Wait for merge to complete (vs fire-and-forget) |
 | `--no-interactive` | Non-interactive mode (required for Claude) |
 
+### Stack Descriptions
+
+Add a title and description to a stack. Stored as stack-level metadata in `refs/stackit/stacks/` — persists across branch deletion and reparenting. Descriptions appear in `stackit info`, PR bodies, and consolidated PRs.
+
+```bash
+stackit describe                              # Opens editor
+stackit describe -m "Auth Feature"            # Title only
+stackit describe -m "Auth" -d "OAuth2 impl"   # Title + description
+stackit describe --show                       # Display current
+stackit describe --clear                      # Remove
+```
+
+For Claude, always use flags (`-m`, `-d`) — never the editor mode.
+
+### Stack Info
+
+Inspect branch relationships, PR status, and diffs.
+
+```bash
+stackit info                 # Current branch info
+stackit info --stack         # All branches in the stack
+stackit info --diff          # Diff vs parent branch
+stackit info --stat          # Diffstat summary
+stackit info --json          # JSON output (useful for scripting)
+stackit info --body          # Include PR body
+```
+
+### Flatten
+
+Re-parent independent branches closer to trunk. Useful after merging from the middle of a stack, or when chained branches don't actually depend on each other.
+
+```bash
+stackit flatten              # Flatten from current branch
+stackit flatten --yes        # Skip confirmation
+```
+
 ### Syncing and Restacking
 
 ```bash
 stackit sync             # Pull main, cleanup merged branches, restack
 stackit restack          # Rebase all branches in stack
 ```
+
+**Note:** `stackit sync` also garbage-collects orphaned stack metadata (stacks where all branches have been merged or deleted).
 
 ---
 
@@ -244,7 +286,7 @@ feat: descriptive title
 - Detail one
 - Detail two
 
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 EOF
 )"
 ```
