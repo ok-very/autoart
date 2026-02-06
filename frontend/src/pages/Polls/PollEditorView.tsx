@@ -363,25 +363,27 @@ export function PollEditorView({ pollId, onBack, onDeleted }: PollEditorViewProp
                                     }
                                 />
                                 {timeConfig?.dates && timeConfig.dates.length > 0 && (
-                                    <div className="flex flex-wrap gap-2 mt-3">
+                                    <ul className="mt-3 divide-y divide-ws-panel-border border border-ws-panel-border rounded-lg overflow-hidden">
                                         {timeConfig.dates.map((date) => (
-                                            <span
+                                            <li
                                                 key={date}
-                                                className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-ws-bg border border-ws-panel-border rounded"
+                                                className="flex items-center justify-between px-3 py-2 bg-ws-bg text-sm text-ws-fg"
                                             >
                                                 {new Date(date + 'T00:00:00').toLocaleDateString(undefined, {
-                                                    month: 'short',
+                                                    weekday: 'long',
+                                                    month: 'long',
                                                     day: 'numeric',
+                                                    year: 'numeric',
                                                 })}
                                                 <button
                                                     onClick={() => handleDateRemove(date)}
-                                                    className="text-ws-text-secondary hover:text-ws-error"
+                                                    className="text-ws-text-disabled hover:text-ws-error ml-4 shrink-0"
                                                 >
                                                     &times;
                                                 </button>
-                                            </span>
+                                            </li>
                                         ))}
-                                    </div>
+                                    </ul>
                                 )}
                             </div>
 
