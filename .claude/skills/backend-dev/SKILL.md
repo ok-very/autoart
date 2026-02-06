@@ -1,7 +1,7 @@
 ---
 name: backend-dev
 description: Build backend features with real persistence and validation. Fastify modules, Action/Event pattern, database, cross-service communication. Keywords backend, api, fastify, database, migration, endpoint.
-allowed-tools: Read, Edit, Write, Grep, Glob, Bash(pnpm:*), Bash(git:*)
+allowed-tools: Read, Edit, Write, Grep, Glob, Bash(pnpm:*), Bash(git:*), Task
 model: opus
 ---
 
@@ -56,6 +56,22 @@ AutoHelper is a local Python service. Frontend cannot reliably reach it directly
 | AutoHelper → Backend | HTTPS with `x-autohelper-key` | Report status, fetch config |
 | Frontend → Backend → AutoHelper | Backend proxies | User controls AutoHelper |
 | Frontend → AutoHelper | localhost | Dev-only. Never assume this works. |
+
+## Plugin Delegation
+
+Use the `Task` tool to dispatch plugin subagents for mechanical work. Your judgment directs them.
+
+**code-explorer** (`subagent_type: "feature-dev:code-explorer"`):
+- Trace Action/Event flows end-to-end before adding new ones. Confirm the Composer orchestration path exists.
+- Map which modules register routes, which handlers consume which schemas, and where events are emitted.
+
+**code-architect** (`subagent_type: "feature-dev:code-architect"`):
+- Generate module scaffolding for new Fastify modules. Evaluate output against project conventions: Action/Event pattern, soft-intrinsic type derivation, snake_case database naming, UUID primary keys.
+- Reject any blueprint that uses explicit entity type checks instead of relationship derivation.
+
+**typescript-lsp**:
+- Verify Zod schema alignment between `shared/schemas/` and handler implementations. Use go-to-definition to confirm handlers actually reference the schemas they claim to.
+- Check that database query return types match what routes serialize to responses.
 
 ## You Never
 

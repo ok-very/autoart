@@ -95,7 +95,7 @@ Launch ALL of the following agents in PARALLEL using the Task tool. Each agent r
 #### Agent 1: Bug Hunter (`bugs`)
 
 ```
-You are analyzing code changes for potential bugs and edge cases.
+You are analyzing code changes for potential bugs and edge cases in a TypeScript/React/Fastify monorepo.
 
 CHANGES TO ANALYZE:
 - Branch: {CURRENT_BRANCH} vs {TRUNK_BRANCH}
@@ -105,16 +105,16 @@ DIFF:
 {DIFF_CONTENT}
 
 LOOK FOR:
-1. Nil/null pointer dereferences
-2. Missing error checks (especially in Go - never ignore errors)
-3. Off-by-one errors in loops/slices
-4. Race conditions in concurrent code
-5. Resource leaks (unclosed files, connections, channels)
-6. Unhandled edge cases (empty inputs, zero values, negative numbers)
-7. Logic errors in conditionals
-8. Missing input validation
-9. Incorrect error wrapping (should use %w for wrapped errors)
-10. Panic-inducing code paths
+1. Optional chaining gaps (accessing .foo on potentially undefined without ?.)
+2. Unhandled Promise rejections (missing .catch(), missing try/catch on await)
+3. Swallowed errors (catch blocks that log but don't rethrow or handle)
+4. Off-by-one errors in array operations
+5. Race conditions in React state updates (stale closures, missing deps in useEffect)
+6. Resource leaks (unsubscribed event listeners, uncleaned useEffect, unclosed DB connections)
+7. Unhandled edge cases (empty arrays, undefined props, null database results)
+8. Logic errors in conditionals
+9. Missing Zod validation at API boundaries
+10. TanStack Query cache inconsistencies (missing invalidation after mutations)
 
 OUTPUT FORMAT (JSON):
 {
@@ -123,7 +123,7 @@ OUTPUT FORMAT (JSON):
     {
       "severity": "HIGH|MEDIUM|LOW",
       "title": "Brief description",
-      "file": "path/to/file.go",
+      "file": "path/to/file.ts",
       "line": 142,
       "description": "Detailed explanation of the issue",
       "suggestion": "How to fix it",
@@ -142,7 +142,7 @@ If no issues found, return empty findings array.
 #### Agent 2: Simplification (`simplify`)
 
 ```
-You are analyzing code changes for simplification and refactoring opportunities.
+You are analyzing code changes for simplification and refactoring opportunities in a TypeScript/React/Fastify monorepo.
 
 CHANGES TO ANALYZE:
 - Branch: {CURRENT_BRANCH} vs {TRUNK_BRANCH}
@@ -152,22 +152,23 @@ DIFF:
 {DIFF_CONTENT}
 
 LOOK FOR:
-1. Duplicated code that could be extracted
+1. Duplicated code that could be extracted (but only if used 2+ places or >100 lines)
 2. Complex conditionals that could be simplified
 3. Deep nesting that could use early returns
-4. Long functions that should be split
-5. Dead code or unused variables
-6. Unnecessary type conversions
+4. Long components/functions that should be split
+5. Dead code or unused variables/imports
+6. Unnecessary type assertions (as) when inference suffices
 7. Verbose patterns with simpler alternatives
-8. Boolean parameters that should be typed constants
-9. String literals that should be constants
-10. Over-engineering (unnecessary abstractions)
+8. Explicit entity type checks where soft-intrinsic derivation should be used
+9. String literals that should be Zod enums or const objects
+10. Over-engineering (premature abstractions, unnecessary helpers for one-time operations)
 
 PROJECT STYLE RULES:
+- Soft-intrinsic type derivation: derive types from relationships, never explicit entityType checks
+- Zod as source of truth: derive TypeScript types from Zod schemas, don't duplicate
+- Component extraction: extract at 2+ uses or >100 lines, inline at <50 lines if tightly coupled
 - Early returns over deep nesting
-- switch over if-else chains with 3+ conditions
-- Use typed constants instead of boolean parameters
-- Remove unused parameters entirely (don't use `_`)
+- No inline styles or ad-hoc components — add to component library
 
 OUTPUT FORMAT (JSON):
 {
@@ -176,7 +177,7 @@ OUTPUT FORMAT (JSON):
     {
       "severity": "HIGH|MEDIUM|LOW",
       "title": "Brief description",
-      "file": "path/to/file.go",
+      "file": "path/to/file.ts",
       "line": 42,
       "description": "What could be simplified",
       "suggestion": "Proposed simplification",
@@ -193,7 +194,7 @@ OUTPUT FORMAT (JSON):
 #### Agent 3: Performance (`perf`)
 
 ```
-You are analyzing code changes for performance issues.
+You are analyzing code changes for performance issues in a TypeScript/React/Fastify monorepo.
 
 CHANGES TO ANALYZE:
 - Branch: {CURRENT_BRANCH} vs {TRUNK_BRANCH}
@@ -203,16 +204,16 @@ DIFF:
 {DIFF_CONTENT}
 
 LOOK FOR:
-1. Unnecessary allocations in hot paths
-2. String concatenation in loops (use strings.Builder)
-3. Unbounded slice growth (missing capacity hints)
-4. N+1 query patterns
-5. Missing caching opportunities
-6. Blocking operations that could be async
+1. Unnecessary React re-renders (missing memo, unstable references in props/deps)
+2. Large lists without virtualization
+3. N+1 query patterns in Fastify handlers
+4. Missing TanStack Query caching (staleTime, gcTime not configured for stable data)
+5. Expensive computations without useMemo
+6. Blocking the main thread (heavy synchronous work in React components)
 7. Inefficient algorithms (O(n²) when O(n) is possible)
-8. Repeated expensive computations
-9. Large structs passed by value instead of pointer
-10. Unnecessary regex compilation in loops
+8. Repeated database queries that could be batched
+9. Missing indexes implied by new query patterns
+10. Bundle size impact (importing entire libraries when tree-shaking is possible)
 
 OUTPUT FORMAT (JSON):
 {
@@ -221,7 +222,7 @@ OUTPUT FORMAT (JSON):
     {
       "severity": "HIGH|MEDIUM|LOW",
       "title": "Brief description",
-      "file": "path/to/file.go",
+      "file": "path/to/file.ts",
       "line": 89,
       "description": "Performance issue explanation",
       "impact": "Expected impact on performance",
@@ -237,7 +238,7 @@ OUTPUT FORMAT (JSON):
 #### Agent 4: Test Coverage (`tests`)
 
 ```
-You are analyzing code changes for test coverage gaps.
+You are analyzing code changes for test coverage gaps in a TypeScript/React/Fastify monorepo.
 
 CHANGES TO ANALYZE:
 - Branch: {CURRENT_BRANCH} vs {TRUNK_BRANCH}
@@ -247,20 +248,21 @@ DIFF:
 {DIFF_CONTENT}
 
 LOOK FOR:
-1. New functions/methods without corresponding tests
+1. New functions/handlers without corresponding tests
 2. New error paths without test coverage
 3. Edge cases not covered by existing tests
 4. Changed behavior that needs test updates
 5. Complex conditionals with untested branches
-6. Public API changes without integration tests
-7. Missing table-driven test cases
-8. Tests that don't use t.Parallel()
+6. New API endpoints without integration tests
+7. Zod schema changes without validation tests
+8. React components with complex logic but no component tests
 
 PROJECT TEST RULES:
-- Always use t.Parallel() for parallel test execution
-- Use require over assert for early failure
-- Table-driven tests for multiple cases
-- Integration tests use NewTestShellInProcess(t)
+- Vitest for all tests (describe/it blocks, not t.Parallel)
+- Fastify integration tests: use app.inject() for route testing
+- React component tests: use @testing-library/react
+- Zod schemas: test edge cases and error messages
+- Prefer focused assertions over snapshot tests
 
 OUTPUT FORMAT (JSON):
 {
@@ -269,7 +271,7 @@ OUTPUT FORMAT (JSON):
     {
       "severity": "HIGH|MEDIUM|LOW",
       "title": "Brief description",
-      "file": "path/to/file.go",
+      "file": "path/to/file.ts",
       "line": 50,
       "description": "What needs test coverage",
       "test_suggestion": "Outline of test to add",
@@ -284,7 +286,7 @@ OUTPUT FORMAT (JSON):
 #### Agent 5: Documentation (`docs`)
 
 ```
-You are analyzing code changes for documentation needs.
+You are analyzing code changes for documentation needs in a TypeScript/React/Fastify monorepo.
 
 CHANGES TO ANALYZE:
 - Branch: {CURRENT_BRANCH} vs {TRUNK_BRANCH}
@@ -294,20 +296,21 @@ DIFF:
 {DIFF_CONTENT}
 
 LOOK FOR:
-1. New public functions without doc comments
+1. Non-obvious constraints that need JSDoc (don't add JSDoc to self-evident code)
 2. Changed behavior not reflected in existing docs
-3. New CLI commands/flags without help text
-4. Complex logic that needs explanatory comments
-5. README updates needed for new features
-6. Missing examples in help text
-7. Outdated comments that don't match code
-8. New configuration options without documentation
+3. New panel types not registered in panelRegistry.ts docs
+4. Complex Action/Event flows that need explanatory comments
+5. DESIGN.md updates needed for new design tokens or interaction patterns
+6. Outdated comments that don't match code
+7. New Zod schemas without usage documentation in shared/
+8. Skill or agent configuration changes without CLAUDE.md updates
 
 PROJECT DOC RULES:
 - Comments explain "why" not "what"
-- CLI Long descriptions should include examples
-- Config changes go in docs/config.md
-- TUI changes go in docs/tui.md
+- Only add JSDoc for non-obvious constraints, not self-evident code
+- Design changes go in docs/DESIGN.md
+- Skill/agent config changes go in relevant .claude/skills/ files
+- Don't add docstrings to code you didn't change
 
 OUTPUT FORMAT (JSON):
 {
@@ -316,7 +319,7 @@ OUTPUT FORMAT (JSON):
     {
       "severity": "HIGH|MEDIUM|LOW",
       "title": "Brief description",
-      "file": "path/to/file.go",
+      "file": "path/to/file.ts",
       "line": 25,
       "description": "What documentation is needed",
       "suggestion": "Proposed documentation",
@@ -341,16 +344,16 @@ DIFF:
 {DIFF_CONTENT}
 
 LOOK FOR:
-1. Command injection vulnerabilities (unescaped shell arguments)
-2. Path traversal vulnerabilities
-3. Hardcoded secrets or credentials
-4. Insufficient input validation
-5. TOCTOU (time-of-check-time-of-use) races
-6. Unsafe deserialization
-7. Missing authentication/authorization checks
-8. Logging of sensitive data
-9. Insecure temporary file creation
-10. Unsafe use of user-controlled data
+1. XSS vulnerabilities (dangerouslySetInnerHTML, unescaped user content in React)
+2. SQL injection (raw queries without parameterization)
+3. Command injection vulnerabilities (unescaped shell arguments)
+4. Path traversal vulnerabilities
+5. Hardcoded secrets or credentials
+6. Insufficient input validation (missing Zod validation at API boundaries)
+7. Missing authentication/authorization checks on Fastify routes
+8. Logging of sensitive data (link keys, tokens, credentials)
+9. CORS misconfiguration
+10. Unsafe use of user-controlled data in database queries or file operations
 
 OUTPUT FORMAT (JSON):
 {
@@ -359,7 +362,7 @@ OUTPUT FORMAT (JSON):
     {
       "severity": "HIGH|MEDIUM|LOW",
       "title": "Brief description",
-      "file": "path/to/file.go",
+      "file": "path/to/file.ts",
       "line": 78,
       "description": "Security issue explanation",
       "risk": "What could go wrong",
@@ -375,7 +378,7 @@ OUTPUT FORMAT (JSON):
 #### Agent 7: UX/Ergonomics (`ux`)
 
 ```
-You are analyzing code changes for CLI user experience.
+You are analyzing code changes for UI/UX quality against the project's design system (DESIGN.md).
 
 CHANGES TO ANALYZE:
 - Branch: {CURRENT_BRANCH} vs {TRUNK_BRANCH}
@@ -385,16 +388,23 @@ DIFF:
 {DIFF_CONTENT}
 
 LOOK FOR:
-1. Unclear or unhelpful error messages
-2. Missing progress indicators for long operations
-3. Inconsistent command/flag naming
-4. Missing confirmation prompts for destructive operations
-5. Poor default values
-6. Missing --help examples
-7. Confusing output formatting
-8. Missing color/formatting for important info
-9. Unclear success/failure states
-10. Missing keyboard shortcuts in TUI
+1. Design token violations (using raw colors instead of --ws-* or --pub-* tokens)
+2. Crossing the token boundary (--ws-* used in public surfaces or --pub-* in workspace)
+3. Copy that violates DESIGN.md rules (second-person hype, encouragement, apology language)
+4. Motion/animation exceeding limits (>160ms duration, non-ease-out easing)
+5. Empty state handling that "comments" instead of staying silent (DESIGN.md: silence is a feature)
+6. Missing loading/error states
+7. Inline styles or ad-hoc components instead of using the atom/molecule library
+8. Typography violations (wrong font for context, wrong size for role)
+9. Color used for decoration rather than meaning
+10. Focus indicators that are too flashy (glow, animation >120ms)
+
+DESIGN SYSTEM RULES:
+- Muted archival palette: Parchment #F5F2ED, Oxide Blue #3F5C6E, Charcoal Ink #2E2E2C
+- Copy: declarative, not encouraging. "3 fields unfilled" not "You still need to complete..."
+- Empty states: fields exist but are blank, labels remain visible, system does not comment
+- Motion: 120-160ms, ease-out only. If motion is noticeable, it's indulgent.
+- No pure black. No opacity hacks. No centered content blocks.
 
 OUTPUT FORMAT (JSON):
 {
@@ -403,7 +413,7 @@ OUTPUT FORMAT (JSON):
     {
       "severity": "HIGH|MEDIUM|LOW",
       "title": "Brief description",
-      "file": "path/to/file.go",
+      "file": "path/to/file.tsx",
       "line": 112,
       "description": "UX issue explanation",
       "user_impact": "How this affects users",
