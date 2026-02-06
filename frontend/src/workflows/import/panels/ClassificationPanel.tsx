@@ -6,13 +6,14 @@
  * Wrapped in a collapsible bottom panel.
  */
 
-import { Save, Loader2, Sparkles, Clock, ArrowUpDown, MoreVertical, Trash2, Layers, CheckSquare, Square, Lightbulb } from 'lucide-react';
+import { Save, Loader2, Sparkles, Clock, ArrowUpDown, Trash2, Layers, Lightbulb, MoreVertical } from 'lucide-react';
 import { useState, useMemo, useCallback } from 'react';
 import { useSaveResolutions, useClassificationSuggestions } from '../../../api/hooks/imports';
 import type { ImportPlan, Resolution, ItemClassification } from '../../../api/hooks/imports';
 import { toFactKindKey } from '../../../utils/formatFactKind';
 import { PendingResolution } from '../types';
 import { ClassificationRow } from '../components/ClassificationRow';
+import { Button, Badge, Text, Inline, IconButton, Checkbox, Menu } from '@autoart/ui';
 
 // ============================================================================
 // TYPES
@@ -41,7 +42,6 @@ export function ClassificationPanel({
     const [expandedItem, setExpandedItem] = useState<string | null>(null);
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [sortUnresolvedFirst, setSortUnresolvedFirst] = useState(true);
-    const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'flat' | 'grouped'>('flat');
     const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
 
@@ -185,7 +185,6 @@ export function ClassificationPanel({
             }
             return next;
         });
-        setBulkMenuOpen(false);
     }, [unresolvedItems]);
 
     // Handle Defer All Unresolved
@@ -200,13 +199,11 @@ export function ClassificationPanel({
             }
             return next;
         });
-        setBulkMenuOpen(false);
     }, [unresolvedItems]);
 
     // Handle Clear All Pending
     const handleClearPending = useCallback(() => {
         setPendingResolutions(new Map());
-        setBulkMenuOpen(false);
     }, []);
 
     // Handle group selection toggle
@@ -285,177 +282,173 @@ export function ClassificationPanel({
     return (
         <div className="bg-ws-panel-bg flex flex-col h-full overflow-hidden">
             {/* Toolbar */}
-            <div
-                className={`flex items-center justify-between px-4 py-2 border-b border-ws-panel-border shrink-0 ${needsReview ? 'bg-amber-50/50' : 'bg-ws-panel-bg'
-                    }`}
+            <Inline
+                gap="sm"
+                align="center"
+                justify="between"
+                wrap={false}
+                className={`px-4 py-2 border-b border-ws-panel-border shrink-0 ${needsReview ? 'bg-[color:var(--ws-color-warning)]/5' : 'bg-ws-panel-bg'}`}
             >
-                <div className="flex items-center gap-3">
-                    <span className="text-sm text-ws-text-secondary">
+                <Inline gap="sm" align="center">
+                    <Text size="sm" color="dimmed">
                         {allClassifications.length} items
-                        {needsReview && (
-                            <span className="ml-2 text-amber-600 font-medium">
-                                ({unresolvedItems.length} need review)
-                            </span>
-                        )}
-                    </span>
-                    {/* Success toast */}
-                    {saveSuccess && (
-                        <span className="ml-2 px-2 py-0.5 text-xs font-medium text-green-700 bg-green-100 rounded-full animate-pulse">
-                            ✓ Saved!
-                        </span>
+                    </Text>
+                    {needsReview && (
+                        <Text size="sm" weight="semibold" className="text-[var(--ws-color-warning)]">
+                            ({unresolvedItems.length} need review)
+                        </Text>
                     )}
-                </div>
-                <div className="flex items-center gap-2">
+                    {saveSuccess && (
+                        <Badge size="xs" variant="success" className="animate-pulse">
+                            Saved
+                        </Badge>
+                    )}
+                </Inline>
+                <Inline gap="xs" align="center" wrap={false}>
                     {needsReview && (
                         <>
                             {/* Batch: Accept All Suggestions */}
                             {itemsWithSuggestions.length > 0 && (
-                                <button
+                                <Button
+                                    size="xs"
+                                    variant="light"
+                                    color="green"
+                                    leftSection={<Sparkles className="w-3.5 h-3.5" />}
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         handleAcceptAllSuggestions();
                                     }}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors"
                                     title={`Accept top suggestion for ${itemsWithSuggestions.length} items`}
                                 >
-                                    <Sparkles className="w-3.5 h-3.5" />
                                     Accept Suggestions ({itemsWithSuggestions.length})
-                                </button>
+                                </Button>
                             )}
+
                             {/* Sort Toggle */}
-                            <button
+                            <IconButton
+                                icon={ArrowUpDown}
+                                variant="subtle"
+                                size="sm"
+                                label={sortUnresolvedFirst ? 'Showing unresolved first' : 'Show in original order'}
+                                active={sortUnresolvedFirst}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setSortUnresolvedFirst(!sortUnresolvedFirst);
                                 }}
-                                className={`flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-lg border transition-colors ${sortUnresolvedFirst
-                                    ? 'text-blue-700 bg-blue-50 border-blue-200'
-                                    : 'text-ws-text-secondary bg-ws-panel-bg border-ws-panel-border hover:border-slate-300'
-                                    }`}
-                                title={sortUnresolvedFirst ? 'Showing unresolved first' : 'Show in original order'}
-                            >
-                                <ArrowUpDown className="w-3.5 h-3.5" />
-                            </button>
+                            />
 
                             {/* View Mode Toggle */}
-                            <button
+                            <IconButton
+                                icon={Layers}
+                                variant="subtle"
+                                size="sm"
+                                label={viewMode === 'grouped' ? 'Switch to flat view' : 'Group by field'}
+                                active={viewMode === 'grouped'}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setViewMode(viewMode === 'flat' ? 'grouped' : 'flat');
                                 }}
-                                className={`flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium rounded-lg border transition-colors ${viewMode === 'grouped'
-                                    ? 'text-indigo-700 bg-indigo-50 border-indigo-200'
-                                    : 'text-ws-text-secondary bg-ws-panel-bg border-ws-panel-border hover:border-slate-300'
-                                    }`}
-                                title={viewMode === 'grouped' ? 'Switch to flat view' : 'Group by field'}
-                            >
-                                <Layers className="w-3.5 h-3.5" />
-                            </button>
+                            />
 
                             {/* Bulk Actions Dropdown */}
-                            <div className="relative">
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setBulkMenuOpen(!bulkMenuOpen);
-                                    }}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ws-text-secondary bg-ws-bg hover:bg-slate-100 border border-ws-panel-border rounded-lg transition-colors"
-                                    title="Bulk actions"
-                                >
-                                    <MoreVertical className="w-3.5 h-3.5" />
-                                    Actions
-                                </button>
-                                {bulkMenuOpen && (
-                                    <div
-                                        className="absolute right-0 top-full mt-1 w-48 bg-ws-panel-bg border border-ws-panel-border rounded-lg shadow-lg py-1 z-50"
+                            <Menu>
+                                <Menu.Target>
+                                    <Button
+                                        size="xs"
+                                        variant="subtle"
+                                        color="gray"
+                                        rightSection={<MoreVertical className="w-3.5 h-3.5" />}
                                         onClick={(e) => e.stopPropagation()}
                                     >
-                                        {/* Primary action: Defer Remaining */}
-                                        <button
-                                            onClick={handleDeferRemaining}
-                                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-ws-text-secondary hover:bg-amber-50 hover:text-amber-700 font-medium"
-                                        >
-                                            <Clock className="w-4 h-4" />
-                                            Defer Remaining
-                                            <span className="ml-auto text-xs text-ws-muted">
-                                                {unresolvedItems.length - resolvedCount}
-                                            </span>
-                                        </button>
-                                        <div className="border-t border-ws-panel-border my-1" />
-                                        <button
-                                            onClick={handleDeferAll}
-                                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-ws-text-secondary hover:bg-ws-bg"
-                                        >
-                                            <Clock className="w-4 h-4" />
-                                            Defer All Unresolved
-                                        </button>
-                                        <button
-                                            onClick={handleClearPending}
-                                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                            Clear Pending
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                            <span className="text-sm text-amber-700 mx-1">
+                                        Actions
+                                    </Button>
+                                </Menu.Target>
+                                <Menu.Dropdown align="end">
+                                    <Menu.Item
+                                        leftSection={<Clock className="w-4 h-4" />}
+                                        rightSection={<Text size="xs" color="dimmed">{unresolvedItems.length - resolvedCount}</Text>}
+                                        onClick={handleDeferRemaining}
+                                    >
+                                        Defer Remaining
+                                    </Menu.Item>
+                                    <Menu.Divider />
+                                    <Menu.Item
+                                        leftSection={<Clock className="w-4 h-4" />}
+                                        onClick={handleDeferAll}
+                                    >
+                                        Defer All Unresolved
+                                    </Menu.Item>
+                                    <Menu.Item
+                                        leftSection={<Trash2 className="w-4 h-4" />}
+                                        onClick={handleClearPending}
+                                        className="text-[var(--ws-color-error)]"
+                                    >
+                                        Clear Pending
+                                    </Menu.Item>
+                                </Menu.Dropdown>
+                            </Menu>
+
+                            <Text size="sm" className="text-[var(--ws-color-warning)] mx-1">
                                 {resolvedCount}/{unresolvedItems.length}
-                            </span>
-                            <button
+                            </Text>
+
+                            {/* Save Button */}
+                            <Button
+                                size="sm"
+                                variant="primary"
+                                disabled={!allResolved || saveResolutionsMutation.isPending}
+                                leftSection={saveResolutionsMutation.isPending
+                                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                                    : <Save className="w-4 h-4" />
+                                }
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleSave();
                                 }}
-                                disabled={!allResolved || saveResolutionsMutation.isPending}
-                                className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 rounded-lg transition-colors"
                             >
-                                {saveResolutionsMutation.isPending ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Saving...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Save className="w-4 h-4" />
-                                        Save
-                                    </>
-                                )}
-                            </button>
+                                {saveResolutionsMutation.isPending ? 'Saving...' : 'Save'}
+                            </Button>
                         </>
                     )}
-                </div>
-            </div>
+                </Inline>
+            </Inline>
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto">
-                {/* View mode toggle + Group bulk actions */}
+                {/* Group bulk actions bar */}
                 {viewMode === 'grouped' && groupedByField.size > 0 && (
-                    <div className="px-6 py-2 bg-ws-bg border-b border-ws-panel-border flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-ws-text-secondary">
-                                {selectedGroups.size} of {groupedByField.size} groups selected
-                            </span>
-                        </div>
+                    <Inline
+                        gap="sm"
+                        align="center"
+                        justify="between"
+                        className="px-6 py-2 bg-ws-bg border-b border-ws-panel-border"
+                    >
+                        <Text size="xs" weight="semibold" color="dimmed">
+                            {selectedGroups.size} of {groupedByField.size} groups selected
+                        </Text>
                         {selectedGroups.size > 0 && (
-                            <div className="flex items-center gap-2">
-                                <button
+                            <Inline gap="xs" align="center">
+                                <Button
+                                    size="xs"
+                                    variant="light"
+                                    color="yellow"
+                                    leftSection={<Clock className="w-3 h-3" />}
                                     onClick={() => handleBulkGroupOutcome('DEFERRED')}
-                                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded hover:bg-amber-100"
                                 >
-                                    <Clock className="w-3 h-3" />
                                     Defer Selected
-                                </button>
-                                <button
+                                </Button>
+                                <Button
+                                    size="xs"
+                                    variant="light"
+                                    color="violet"
+                                    leftSection={<Lightbulb className="w-3 h-3" />}
                                     onClick={() => handleBulkGroupOutcome('INTERNAL_WORK')}
-                                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded hover:bg-purple-100"
                                 >
-                                    <Lightbulb className="w-3 h-3" />
                                     Mark Internal
-                                </button>
-                            </div>
+                                </Button>
+                            </Inline>
                         )}
-                    </div>
+                    </Inline>
                 )}
 
                 {viewMode === 'grouped' ? (
@@ -463,18 +456,19 @@ export function ClassificationPanel({
                     Array.from(groupedByField.entries()).map(([groupKey, items]) => (
                         <div key={groupKey} className="border-b border-ws-panel-border last:border-b-0">
                             {/* Group Header */}
-                            <div
-                                className="flex items-center gap-3 px-6 py-2 bg-ws-bg hover:bg-slate-100 cursor-pointer"
+                            <Inline
+                                gap="sm"
+                                align="center"
+                                className="px-6 py-2 bg-ws-bg hover:bg-ws-row-expanded-bg cursor-pointer"
                                 onClick={() => handleToggleGroup(groupKey)}
                             >
-                                {selectedGroups.has(groupKey) ? (
-                                    <CheckSquare className="w-4 h-4 text-blue-600" />
-                                ) : (
-                                    <Square className="w-4 h-4 text-ws-muted" />
-                                )}
-                                <span className="font-medium text-ws-text-secondary">{groupKey}</span>
-                                <span className="text-xs text-ws-text-secondary">({items.length} items)</span>
-                            </div>
+                                <Checkbox
+                                    checked={selectedGroups.has(groupKey)}
+                                    onChange={() => handleToggleGroup(groupKey)}
+                                />
+                                <Text size="sm" weight="semibold" color="dimmed">{groupKey}</Text>
+                                <Text size="xs" color="dimmed">({items.length} items)</Text>
+                            </Inline>
                             {/* Group Items */}
                             <div className="pl-4">
                                 {items.map((classification) => (
