@@ -3,7 +3,7 @@
  *
  * Features:
  * - Title, description, confirmation message editing
- * - Time configuration (dates, hours, granularity, timezone)
+ * - Time configuration (dates, hours, meeting duration, timezone)
  * - Status management
  * - Results view with response counts and heatmap
  */
@@ -47,10 +47,10 @@ interface PollEditorViewProps {
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 type EditorTab = 'editor' | 'results';
 
-const GRANULARITY_OPTIONS = [
-    { value: '15min', label: '15 minutes' },
-    { value: '30min', label: '30 minutes' },
-    { value: '60min', label: '1 hour' },
+const DURATION_OPTIONS = [
+    { value: '15min', label: '15 min' },
+    { value: '30min', label: '30 min' },
+    { value: '60min', label: '1 hr' },
 ] as const;
 
 const STATUS_OPTIONS = [
@@ -363,25 +363,27 @@ export function PollEditorView({ pollId, onBack, onDeleted }: PollEditorViewProp
                                     }
                                 />
                                 {timeConfig?.dates && timeConfig.dates.length > 0 && (
-                                    <div className="flex flex-wrap gap-2 mt-3">
+                                    <ul className="mt-3 divide-y divide-ws-panel-border border border-ws-panel-border rounded-lg overflow-hidden">
                                         {timeConfig.dates.map((date) => (
-                                            <span
+                                            <li
                                                 key={date}
-                                                className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-ws-bg border border-ws-panel-border rounded"
+                                                className="flex items-center justify-between px-3 py-2 bg-ws-bg text-sm text-ws-fg"
                                             >
                                                 {new Date(date + 'T00:00:00').toLocaleDateString(undefined, {
-                                                    month: 'short',
+                                                    weekday: 'long',
+                                                    month: 'long',
                                                     day: 'numeric',
+                                                    year: 'numeric',
                                                 })}
                                                 <button
                                                     onClick={() => handleDateRemove(date)}
-                                                    className="text-ws-text-secondary hover:text-ws-error"
+                                                    className="text-ws-text-disabled hover:text-ws-error ml-4 shrink-0"
                                                 >
                                                     &times;
                                                 </button>
-                                            </span>
+                                            </li>
                                         ))}
-                                    </div>
+                                    </ul>
                                 )}
                             </div>
 
@@ -431,48 +433,50 @@ export function PollEditorView({ pollId, onBack, onDeleted }: PollEditorViewProp
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-medium text-ws-text-secondary mb-1">
-                                    Granularity
-                                </label>
-                                <select
-                                    value={timeConfig?.granularity ?? '30min'}
-                                    onChange={(e) =>
-                                        setTimeConfigChanges({
-                                            ...(timeConfig ?? { dates: [], start_hour: 9, end_hour: 17, granularity: '30min' as const, timezone: 'America/Vancouver' }),
-                                            granularity: e.target.value as '15min' | '30min' | '60min',
-                                        })
-                                    }
-                                    className="w-full px-3 py-2 text-sm border border-ws-panel-border rounded-lg bg-ws-bg"
-                                >
-                                    {GRANULARITY_OPTIONS.map((opt) => (
-                                        <option key={opt.value} value={opt.value}>
-                                            {opt.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-ws-text-secondary mb-1">
+                                        Meeting Duration
+                                    </label>
+                                    <select
+                                        value={timeConfig?.granularity ?? '30min'}
+                                        onChange={(e) =>
+                                            setTimeConfigChanges({
+                                                ...(timeConfig ?? { dates: [], start_hour: 9, end_hour: 17, granularity: '30min' as const, timezone: 'America/Vancouver' }),
+                                                granularity: e.target.value as '15min' | '30min' | '60min',
+                                            })
+                                        }
+                                        className="w-full px-3 py-2 text-sm border border-ws-panel-border rounded-lg bg-ws-bg"
+                                    >
+                                        {DURATION_OPTIONS.map((opt) => (
+                                            <option key={opt.value} value={opt.value}>
+                                                {opt.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
 
-                            <div>
-                                <label className="block text-xs font-medium text-ws-text-secondary mb-1">
-                                    Timezone
-                                </label>
-                                <select
-                                    value={timeConfig?.timezone ?? 'America/Vancouver'}
-                                    onChange={(e) =>
-                                        setTimeConfigChanges({
-                                            ...(timeConfig ?? { dates: [], start_hour: 9, end_hour: 17, granularity: '30min' as const, timezone: 'America/Vancouver' }),
-                                            timezone: e.target.value,
-                                        })
-                                    }
-                                    className="w-full px-3 py-2 text-sm border border-ws-panel-border rounded-lg bg-ws-bg"
-                                >
-                                    {COMMON_TIMEZONES.map((tz) => (
-                                        <option key={tz} value={tz}>
-                                            {tz.replace('_', ' ')}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div>
+                                    <label className="block text-xs font-medium text-ws-text-secondary mb-1">
+                                        Timezone
+                                    </label>
+                                    <select
+                                        value={timeConfig?.timezone ?? 'America/Vancouver'}
+                                        onChange={(e) =>
+                                            setTimeConfigChanges({
+                                                ...(timeConfig ?? { dates: [], start_hour: 9, end_hour: 17, granularity: '30min' as const, timezone: 'America/Vancouver' }),
+                                                timezone: e.target.value,
+                                            })
+                                        }
+                                        className="w-full px-3 py-2 text-sm border border-ws-panel-border rounded-lg bg-ws-bg"
+                                    >
+                                        {COMMON_TIMEZONES.map((tz) => (
+                                            <option key={tz} value={tz}>
+                                                {tz.replace('_', ' ')}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                         </section>
 

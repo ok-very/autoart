@@ -1,24 +1,34 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-04 19:35*
+*Last Updated: 2026-02-06 10:30*
 
 ## Bug List
 
 **Active blocking:**
+- **Step 2: Configure Mapping broken:** Classification Panel missing old functionality; items not making it into configuration mapping. Need to look at old diffs and figure out how to fix/reimplement the regressions.
+- **Import hierarchy:** Column headers use internal jargon instead of human-readable labels — useless for proper reclassification
+- **Import wizard (Monday):** Connector sidebar action creates "active session" with no escape route — no cancel import, no back button, user trapped
+- **Intake record binding:** Adding record binding to block throws "Invalid UUID" error at `body/blocks_config/blocks/0/recordBinding/definitionId`
+- **Preview buttons (intake forms + polls):** Implementation theater — buttons exist but lead to no endpoint
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
 - "Save current" in menu doesn't activate save workspace prompt — handler chain exists, not confirmed working
 - Fields from seed data rendering as `[object Object]` in tables
 - Subprocesses and stages not populating from seed projections
-- Poll editor missing — "New poll" has no editor attached; clicking existing spawned poll yields full page roundtrip (polls editor shipped in PRs #271-273, possible regression)
 - Finance overlay "client" field breaks when querying contacts — placeholder query not wired
+- **AutoHelper settings:** Module detection failing (available modules not showing in settings), file root selection broken (browser), settings page needs comprehensive review
 
 **UX polish:**
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
-     remove the feature 
+     remove the feature
 - Emoji/icon selector overlay — search doesn't work; consider switching to Phosphor Icons
 - Glassmorphism missing from tab strip where it was implemented — should be doable now with first-class theme variables
+- "Import" tab hiding in overflow menu despite ample space in tab bar
+- Project View: "New project" dropdown UI broken under "Your projects" section — formatting not clean
 
-**Confirmed resolved (PRs #337-339, #353, #355, #357-359):**
+**Confirmed resolved:**
+- ~~Monday import crashes with null group_title~~ — connector uses `name` property but plan service read nonexistent `title`, fixed to `g.name` (commit 10c702a)
+- ~~Poll editor "Granularity" unclear, pills unreadable~~ — renamed to "Meeting Duration", 2-col layout with Timezone, full date format in vertical list ("Wednesday, February 12, 2026") (commits 16f1ba3, ae76bbf)
+- ~~Poll editor missing~~ — "New poll" has no editor attached; clicking existing spawned poll yields full page roundtrip (polls editor shipped in PRs #271-273, possible regression)
 - ~~Dropdowns rendering transparent backgrounds~~ — arbitrary-value `var()` colors broke under Tailwind v4 oklch pipeline, migrated to theme classes (PR #357)
 - ~~Projects button doesn't spawn panel~~ — routed to center content instead of dockview, now uses `handleOpenPanel` (PR #358)
 - ~~Miller Columns project selection broken~~ — clicked project but never called `setActiveProject`, child columns stayed empty (PR #359)
@@ -57,6 +67,11 @@
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 79 | Enhance Workflow View Interactions | Feature |
 | — | Classification Panel: proper bindings on import | Import |
+| — | Poll editor: support different/multiple time block selections per day | Polls |
+| — | Consolidate Calendar/Gantt/future view expansions: Applications views not linked to Project View segmented equivalents; no project/process selection for these views outside single-project setting; Application view should perform general-purpose filter/overlay across projects (separate feature expansion) | Feature |
+| — | Finances UI unification: Finances call gets pulled into Project View rather than spawning its own panel; needs formalization and dedicated panel architecture; institute math/formula ESM to design and handle logic; missing project bindings and unclear how it interacts with records system | Finance |
+| — | Records/Fields/Actions registry browser UI unification: needs consistent layout and shared filter system across all three panels | UX |
+| — | Workspace project binding + conditional sidebars: project binding only appears under "4. Review" tab; conditional sidebar appearance not implemented; complex feature requiring focused design and implementation plan | Workspace |
 
 ---
 
@@ -173,6 +188,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Stackit skills recovery:** 26 orphaned command/skill files restored from git object store (f8814d8 tree); post-merge verification rule added to prevent future orphaned stack content (rapid-fire merges outran GitHub retargeting in Jan 29 incident) | Commits 73d7106, eaea487 |
 | 387 | **Unified OAuth under /api/auth:** Shared HMAC-signed state utility (stateless, 10-min expiry), Google/Microsoft/Monday all support login mode (create/find user) + link mode (connect to existing user), Monday moved from `/connections/monday/oauth/*` to `/auth/monday` with consistent callback format (JSON for login, HTML popup-close for link), deprecated old routes return 410 Gone | PRs #388-392 |
 | — | **AutoHelper Pairing Odyssey + Bug Fixes:** Replaced push-to-localhost pattern with claim-token flow (in-memory sessions → persistent link keys, 6-char codes w/ TTL); tray menu pairing dialog; port alignment to 8100 + Vite proxy; fixed `is_running()` AttributeError, routed mail/folder controls through backend bridge, explicit Web Collector dependency checks; AdaptersCard showing real capability status | PRs #354-368 (14 PRs) |
 | 83 | Email Section Redesign + Email Logging System: Table atom primitives, body_html capture, MappingsPanel expand/collapse HTML rendering, triage endpoints, mail_messages/mail_links persistence, frontend linking, promoted badges, CodeAnt review fixes | PRs #346-353 |

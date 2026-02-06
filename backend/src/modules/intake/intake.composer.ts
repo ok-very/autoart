@@ -103,10 +103,12 @@ export async function processBlockBindings(
     const definition = await recordsService.getDefinitionById(group.definitionId);
     if (!definition) continue;
 
-    // Aggregate block values into record data
+    // Aggregate block values into record data (skip undefined to avoid overwriting existing data in link mode)
     const recordData: Record<string, unknown> = {};
     for (const bb of group.blocks) {
-      recordData[bb.binding.fieldKey] = bb.value;
+      if (bb.value !== undefined) {
+        recordData[bb.binding.fieldKey] = bb.value;
+      }
     }
 
     if (group.mode === 'create') {
@@ -242,7 +244,7 @@ async function processLinkGroup(
             factKind: 'DOCUMENT_SUBMITTED',
             formId,
             definitionId: group.definitionId,
-            linkedRecordId: existingRecord.id,
+            recordId: existingRecord.id,
           },
         }],
       };
