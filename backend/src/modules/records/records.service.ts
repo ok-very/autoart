@@ -1,4 +1,4 @@
-import { sql } from 'kysely';
+import { sql, type Transaction } from 'kysely';
 
 import type {
   CreateDefinitionInput,
@@ -10,7 +10,7 @@ import type {
   ListRecordsQuery,
 } from './records.schemas.js';
 import { db } from '../../db/client.js';
-import type { RecordDefinition, DataRecord, NewRecordDefinition, RecordAlias } from '../../db/schema.js';
+import type { Database, RecordDefinition, DataRecord, NewRecordDefinition, RecordAlias } from '../../db/schema.js';
 import { NotFoundError, ConflictError } from '../../utils/errors.js';
 
 // ==================== DEFINITIONS ====================
@@ -420,14 +420,20 @@ export async function getRecordByUniqueName(uniqueName: string): Promise<DataRec
   return record || null;
 }
 
-export async function createRecord(input: CreateRecordInput, userId?: string): Promise<DataRecord> {
+export async function createRecord(
+  input: CreateRecordInput,
+  userId?: string,
+  trx?: Transaction<Database>
+): Promise<DataRecord> {
+  const conn = trx ?? db;
+
   // Verify definition exists
   const def = await getDefinitionById(input.definitionId);
   if (!def) {
     throw new NotFoundError('Record definition', input.definitionId);
   }
 
-  const record = await db
+  const record = await conn
     .insertInto('records')
     .values({
       definition_id: input.definitionId,
@@ -440,7 +446,7 @@ export async function createRecord(input: CreateRecordInput, userId?: string): P
     .executeTakeFirstOrThrow();
 
   // Create primary alias
-  await db
+  await conn
     .insertInto('record_aliases')
     .values({
       record_id: record.id,
