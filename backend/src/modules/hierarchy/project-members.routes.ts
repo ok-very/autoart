@@ -1,4 +1,4 @@
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 
 import * as memberService from './project-members.service.js';
 import { requireRole } from '../../plugins/requireRole.js';

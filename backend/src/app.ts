@@ -7,11 +7,11 @@ import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-
 
 import { env } from './config/env.js';
 import { actionReferencesRoutes } from './modules/actions/action-references.routes.js';
-
 import { actionsRoutes } from './modules/actions/actions.routes.js';
 import { containersRoutes } from './modules/actions/containers.routes.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { avatarRoutes } from './modules/auth/avatar.routes.js';
+import { autohelperRoutes } from './modules/autohelper/autohelper.routes.js';
 import { composerRoutes } from './modules/composer/composer.routes.js';
 import { definitionsRoutes } from './modules/definitions/index.js';
 import { eventsRoutes } from './modules/events/events.routes.js';
@@ -25,13 +25,12 @@ import { importsRoutes } from './modules/imports/imports.routes.js';
 import { mondayWorkspaceRoutes } from './modules/imports/monday/monday-workspace.routes.js';
 import { intakeRoutes, intakePublicRoutes } from './modules/intake/intake.routes.js';
 import { linksRoutes } from './modules/links/links.routes.js';
+import { mailRoutes } from './modules/mail/mail.routes.js';
 import { pollRoutes, pollPublicRoutes } from './modules/polls/index.js';
 import { workflowSurfaceRoutes } from './modules/projections/workflow-surface.routes.js';
 import { factKindsRoutes } from './modules/records/fact-kinds.routes.js';
 import { recordsRoutes } from './modules/records/records.routes.js';
-import { mailRoutes } from './modules/mail/mail.routes.js';
 import { runnerRoutes } from './modules/runner/runner.routes.js';
-import { autohelperRoutes } from './modules/autohelper/autohelper.routes.js';
 import { searchRoutes } from './modules/search/search.routes.js';
 import authPlugin from './plugins/auth.js';
 import { errorHandler, notFoundHandler } from './utils/errorHandler.js';

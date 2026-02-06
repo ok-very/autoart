@@ -58,7 +58,7 @@ export function IntakeDetailPanel({ formId, onBack, onRecordClick }: IntakeDetai
       }
     }
     return labels;
-  }, [form?.pages]);
+  }, [form]);
 
   const handleStatusChange = (status: IntakeFormStatus) => {
     updateForm.mutate({ id: formId, status });

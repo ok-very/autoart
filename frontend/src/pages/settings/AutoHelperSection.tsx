@@ -173,15 +173,15 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
     const { data: pairingStatus } = usePairingStatus(!!claimCode);
 
     // When claim is redeemed, refetch connections then show toast
-    // Clear state immediately to prevent re-triggering from re-renders (e.g., countdown timer)
+    const claimedRef = useRef(false);
     useEffect(() => {
-        if (pairingStatus?.claimed && claimCode) {
-            // Clear state synchronously to prevent effect re-entry
-            setClaimCode(null);
-            setExpiresAt(null);
-            setSecondsLeft(0);
-            // Refetch connections so autohelperStatus.connected updates, then toast
+        if (pairingStatus?.claimed && claimCode && !claimedRef.current) {
+            claimedRef.current = true;
             queryClient.refetchQueries({ queryKey: ['connections'] }).then(() => {
+                setClaimCode(null);
+                setExpiresAt(null);
+                setSecondsLeft(0);
+                claimedRef.current = false;
                 toast.success('AutoHelper paired');
             });
         }
@@ -338,6 +338,19 @@ function PairCard({ autohelperStatus }: { autohelperStatus: { connected: boolean
     );
 }
 
+function useIsOnline(lastSeen: string | null) {
+    const [isOnline, setIsOnline] = useState(false);
+    useEffect(() => {
+        const check = () => {
+            setIsOnline(!!lastSeen && (Date.now() - new Date(lastSeen).getTime()) < 30000);
+        };
+        check();
+        const id = setInterval(check, 5000);
+        return () => clearInterval(id);
+    }, [lastSeen]);
+    return isOnline;
+}
+
 function ServiceStatusCard({ lastSeen }: { lastSeen: string | null }) {
     const { data: bridgeStatus } = useBridgeStatus();
     const queueCommand = useQueueCommand();
@@ -346,7 +359,7 @@ function ServiceStatusCard({ lastSeen }: { lastSeen: string | null }) {
 
     const status = bridgeStatus?.status;
     const dbOk = status?.database?.connected ?? false;
-    const isOnline = lastSeen && (Date.now() - new Date(lastSeen).getTime()) < 30000;
+    const isOnline = useIsOnline(lastSeen);
 
     // Check for pending index commands
     const pendingIndexCmd = bridgeStatus?.pendingCommands?.find(
@@ -450,10 +463,9 @@ interface ResolvedAdapter {
 function AdaptersCard({ autohelperOnline }: { autohelperOnline: boolean }) {
     const { data: bridgeStatus } = useBridgeStatus();
 
-    const reportedAdapters = bridgeStatus?.status?.adapters ?? [];
-
     // Resolve actual availability: what can the user USE right now?
     const adapters = useMemo((): ResolvedAdapter[] => {
+        const reportedAdapters = bridgeStatus?.status?.adapters ?? [];
         return CANONICAL_ADAPTERS.map(canonical => {
             const reported = reportedAdapters.find(a => a.name === canonical.name);
 
@@ -518,7 +530,7 @@ function AdaptersCard({ autohelperOnline }: { autohelperOnline: boolean }) {
                 reason: 'Not available',
             };
         });
-    }, [reportedAdapters, autohelperOnline]);
+    }, [bridgeStatus?.status?.adapters, autohelperOnline]);
 
     const availableCount = adapters.filter(a => a.available).length;
 
@@ -586,35 +598,21 @@ function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
 
     // Get mail status from heartbeat (works even when AutoHelper is remote)
     const running = bridgeStatus?.status?.mail?.running ?? false;
-    const [actionPending, setActionPending] = useState(false);
 
     // Check for pending mail commands
     const pendingMailCmd = bridgeStatus?.pendingCommands?.find(
         c => c.type === 'start_mail' || c.type === 'stop_mail'
     );
 
-    // Poll interval from settings
-    const [pollInterval, setPollInterval] = useState<number | ''>(
+    // Poll interval: local edits override server value until saved
+    const [localPollInterval, setLocalPollInterval] = useState<number | ''>(
         bridgeSettings?.settings?.mail_poll_interval ?? 30
     );
     const [dirty, setDirty] = useState(false);
-
-    useEffect(() => {
-        if (bridgeSettings?.settings?.mail_poll_interval != null) {
-            setPollInterval(bridgeSettings.settings.mail_poll_interval);
-        }
-    }, [bridgeSettings?.settings?.mail_poll_interval]);
-
-    // Clear action pending when command completes
-    useEffect(() => {
-        if (!pendingMailCmd && actionPending) {
-            setActionPending(false);
-        }
-    }, [pendingMailCmd, actionPending]);
+    const pollInterval = dirty ? localPollInterval : (bridgeSettings?.settings?.mail_poll_interval ?? 30);
 
     // Toggle routes through backend bridge
     const handleToggle = useCallback(async (enable: boolean) => {
-        setActionPending(true);
         try {
             // Queue the command - AutoHelper will pick it up on next poll
             queueCommand.mutate(
@@ -626,7 +624,6 @@ function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
                         updateSettings.mutate({ mail_enabled: enable });
                     },
                     onError: (err) => {
-                        setActionPending(false);
                         toast.error(
                             err instanceof Error
                                 ? `Failed: ${err.message}`
@@ -636,7 +633,6 @@ function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
                 }
             );
         } catch (err) {
-            setActionPending(false);
             toast.error(
                 err instanceof Error
                     ? `Failed: ${err.message}`
@@ -647,16 +643,16 @@ function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
 
     const handlePollIntervalChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value ? Number(e.target.value) : '';
-        setPollInterval(val);
+        setLocalPollInterval(val);
         setDirty(true);
     }, []);
 
     const savePollInterval = useCallback(() => {
         if (!dirty) return;
-        const interval = pollInterval || 30;
+        const interval = localPollInterval || 30;
         updateSettings.mutate({ mail_poll_interval: interval });
         setDirty(false);
-    }, [dirty, pollInterval, updateSettings]);
+    }, [dirty, localPollInterval, updateSettings]);
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
@@ -664,7 +660,7 @@ function MailCard({ microsoftConnected }: { microsoftConnected: boolean }) {
         }
     }, [savePollInterval]);
 
-    const isActioning = actionPending || !!pendingMailCmd;
+    const isActioning = queueCommand.isPending || !!pendingMailCmd;
 
     return (
         <CardShell
@@ -931,6 +927,9 @@ export function AutoHelperSection({
         refetchInterval: 5000, // Poll every 5 seconds when connected
     });
 
+    const lastSeen = bridgeStatus?.lastSeen ?? null;
+    const autohelperOnline = useIsOnline(lastSeen);
+
     // Toast on pairing status transitions (not on initial load)
     const prevConnected = useRef<boolean | null>(null);
     useEffect(() => {
@@ -986,13 +985,6 @@ export function AutoHelperSection({
             </div>
         );
     }
-
-    const lastSeen = bridgeStatus?.lastSeen ?? null;
-
-    // AutoHelper is "online" if we've heard from it in the last 30 seconds
-    const autohelperOnline = lastSeen
-        ? Date.now() - new Date(lastSeen).getTime() < 30000
-        : false;
 
     return (
         <div className="space-y-6">
