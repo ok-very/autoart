@@ -140,6 +140,24 @@ If `gh pr merge` fails (e.g., merge conflict after retarget):
    gh pr merge <PR-NUMBER> --merge --admin   # Use admin override if you own the repo
    ```
 
+#### Post-merge verification (REQUIRED)
+
+After the merge loop completes, **verify content actually reached main**:
+
+```bash
+# Pull main and check that key files from the stack exist
+git checkout main && git pull
+# Spot-check: do files from the last PR in the stack exist?
+git log --oneline -5   # Should show merge commits for each PR
+```
+
+**Why:** GitHub can mark stacked PRs as "MERGED" without their content reaching main.
+This happens when merges fire faster than GitHub's retargeting (5-second gaps between
+merges in a 10+ PR stack). The PRs close, the branches delete, but the merge commits
+are orphaned — not ancestors of main. The only way to catch this is to verify on main
+after the loop. If content is missing, the blobs survive in git's object store and can
+be recovered with `git show <commit>:<path>`.
+
 **NEVER** do any of the following as "recovery":
 - `git rebase --onto` to manually rebase branches
 - `git push --force` or `--force-with-lease` on stacked branches
@@ -390,6 +408,7 @@ worktree:
 | `gh pr edit --base` throws Projects Classic error | Ignore the GraphQL error — the command still works. Verify with `gh pr view --json baseRefName` |
 | Parallel fork diverged too far | Close conflicted PRs and re-apply changes on main. Don't fight cascading rebases |
 | Migration file missing error | Database has migration your branch doesn't. Restore file or `DELETE FROM kysely_migration WHERE name = 'X'` |
+| PRs show "MERGED" but content not on main | Rapid-fire stack merges can outrun GitHub retargeting. Always run post-merge verification. Recover with `git show <commit>:<path>` |
 
 ---
 
