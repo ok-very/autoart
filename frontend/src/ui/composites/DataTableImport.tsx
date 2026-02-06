@@ -72,6 +72,18 @@ export interface DataTableImportProps {
 // ============================================================================
 
 /**
+ * Convert field names from snake_case/camelCase to human-readable Title Case.
+ * "status_text" → "Status Text", "targetDate" → "Target Date"
+ */
+function humanizeFieldName(fieldName: string): string {
+    return fieldName
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/[_-]/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .trim();
+}
+
+/**
  * Discover all unique fields from import plan items
  */
 export function discoverImportFields(plan: ImportPlan): ImportFieldDef[] {
@@ -105,7 +117,7 @@ export function discoverImportFields(plan: ImportPlan): ImportFieldDef[] {
             fieldName,
             renderHint,
             width: getWidthForRenderHint(renderHint),
-            label: fieldName,
+            label: humanizeFieldName(fieldName),
         }));
 }
 
@@ -141,7 +153,7 @@ export function discoverFieldsForItems(items: ImportPlanItem[]): ImportFieldDef[
             fieldName,
             renderHint,
             width: getWidthForRenderHint(renderHint),
-            label: fieldName,
+            label: humanizeFieldName(fieldName),
         }));
 }
 
