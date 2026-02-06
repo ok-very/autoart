@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-06 10:30*
+*Last Updated: 2026-02-06 20:40*
 
 ## Bug List
 
@@ -188,6 +188,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Plugin integration upgrade:** Plugin Delegation sections added to 5 agent skills (architect, frontend-dev, backend-dev, integrator, reviewer), Loaded Plugins documentation + install checklist in CLAUDE.md, improve skill agent prompts rewritten from Go to TypeScript/React/Fastify, frontend-design plugin restricted to --pub-* surfaces only | PR #405 |
 | — | **Stackit skills recovery:** 26 orphaned command/skill files restored from git object store (f8814d8 tree); post-merge verification rule added to prevent future orphaned stack content (rapid-fire merges outran GitHub retargeting in Jan 29 incident) | Commits 73d7106, eaea487 |
 | 387 | **Unified OAuth under /api/auth:** Shared HMAC-signed state utility (stateless, 10-min expiry), Google/Microsoft/Monday all support login mode (create/find user) + link mode (connect to existing user), Monday moved from `/connections/monday/oauth/*` to `/auth/monday` with consistent callback format (JSON for login, HTML popup-close for link), deprecated old routes return 410 Gone | PRs #388-392 |
 | — | **AutoHelper Pairing Odyssey + Bug Fixes:** Replaced push-to-localhost pattern with claim-token flow (in-memory sessions → persistent link keys, 6-char codes w/ TTL); tray menu pairing dialog; port alignment to 8100 + Vite proxy; fixed `is_running()` AttributeError, routed mail/folder controls through backend bridge, explicit Web Collector dependency checks; AdaptersCard showing real capability status | PRs #354-368 (14 PRs) |
