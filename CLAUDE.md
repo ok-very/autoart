@@ -29,12 +29,37 @@ Invoke these for focused work. Each has its own perspective, priorities, and jud
 
 | Skill | Invoke | Delegate When |
 |-------|--------|---------------|
-| Architect | `/architect` | Planning multi-system features. Data flows, risk identification, design validation before code. |
-| Frontend | `/frontend-dev` | Building UI. Design tokens, component library, state management, API integration. |
-| Backend | `/backend-dev` | Building APIs. Action/Event pattern, schemas, database, cross-service communication. |
-| Integrator | `/integrator` | Verifying end-to-end paths. The "click the button, trace the bytes" check. |
-| Reviewer | `/reviewer` | Auditing for implementation theater. POC code, naming lies, silent breakage. |
+| Architect | `/architect` | Planning multi-system features. Data flows, risk identification, design validation before code. Dispatches code-explorer for path tracing, code-architect for proposals. |
+| Frontend | `/frontend-dev` | Building UI. Design tokens, component library, state management, API integration. Dispatches code-explorer for state flow tracing, typescript-lsp for prop verification. |
+| Backend | `/backend-dev` | Building APIs. Action/Event pattern, schemas, database, cross-service communication. Dispatches code-explorer for Action/Event tracing, typescript-lsp for Zod verification. |
+| Integrator | `/integrator` | Verifying end-to-end paths. The "click the button, trace the bytes" check. Dispatches code-explorer for full-path tracing, typescript-lsp for connection verification. |
+| Reviewer | `/reviewer` | Auditing for implementation theater. POC code, naming lies, silent breakage. Dispatches code-reviewer for mechanical first pass, typescript-lsp to verify claims. |
+| Improve | `/improve` | Multi-agent code analysis. Bugs, simplification, performance, tests, docs, security, UX. |
 | Logkeeper | `/logkeeper` | Maintaining `todo.md`. Logging completed work, updating priorities, housekeeping. |
+
+---
+
+## Loaded Plugins
+
+Five plugins are loaded. They define **process** and **capability** — project agents provide **judgment**.
+
+**superpowers** — Process skills (writing-plans, verification-before-completion, systematic-debugging, etc.). These auto-trigger based on workflow context. Do not duplicate their process logic in agent skills — agents focus on project-specific direction, superpowers handle the mechanical workflow.
+
+**feature-dev** — Three Task subagent types for mechanical work:
+- `code-explorer`: Deep codebase analysis, execution path tracing, dependency mapping
+- `code-architect`: Feature architecture proposals, implementation blueprints
+- `code-reviewer`: Confidence-scored code review, bug/quality finding
+
+Agents dispatch these via `Task` tool with `subagent_type` set to `feature-dev:code-explorer`, `feature-dev:code-architect`, or `feature-dev:code-reviewer`.
+
+**typescript-lsp** — Precision type queries. Faster than Grep for type-level questions: go-to-definition, find-references, hover for type info. Use to mechanically verify connections ("is this hook calling the right endpoint?") rather than grepping and hoping.
+
+**github** — Authenticated MCP server. Use for GitHub operations where available; falls back to `gh` CLI.
+
+**frontend-design** — **RESTRICTED.** This plugin's aesthetic defaults conflict with DESIGN.md's muted archival palette. Rules:
+- **NEVER** use frontend-design for `--ws-*` (workspace) surfaces
+- Only use for `--pub-*` (public/client-facing) surfaces, and only with explicit user request
+- DESIGN.md is the authority for workspace UI. frontend-design does not override it.
 
 ---
 
