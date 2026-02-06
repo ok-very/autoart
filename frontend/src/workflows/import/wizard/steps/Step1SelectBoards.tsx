@@ -102,7 +102,9 @@ export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
     // Toggle simplified for single select if we enforce it:
     // Actually, let's keep set logic but enforce size=1 check or auto-deselect others.
     const handleBoardClick = (boardId: string) => {
-        setSelectedBoardIds(new Set([boardId])); // Single select behavior
+        setSelectedBoardIds((prev) =>
+            prev.has(boardId) ? new Set() : new Set([boardId])
+        );
     };
 
     // Render Logic
