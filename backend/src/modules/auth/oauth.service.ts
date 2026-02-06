@@ -16,10 +16,17 @@ import { generateOAuthState, validateOAuthState, type OAuthMode } from './oauth-
 // Environment validation
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/auth/google/callback';
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3001/api/auth/google/callback';
 
 if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     console.warn('Warning: Google OAuth credentials not configured. Google authentication will not work.');
+}
+
+/**
+ * Check if Google OAuth is configured
+ */
+export function isGoogleOAuthConfigured(): boolean {
+    return Boolean(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET);
 }
 
 const oauth2Client = new OAuth2Client(
@@ -35,7 +42,7 @@ const oauth2Client = new OAuth2Client(
  */
 export function getGoogleAuthUrl(userId?: string): { url: string; state: string } {
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
-        throw new AppError(500, 'Google OAuth is not configured', 'OAUTH_NOT_CONFIGURED');
+        throw new AppError(501, 'Google OAuth is not configured', 'OAUTH_NOT_CONFIGURED');
     }
 
     const mode: OAuthMode = userId ? 'link' : 'login';
@@ -71,7 +78,7 @@ export interface GoogleCallbackResult {
  */
 export async function handleGoogleCallback(code: string, state: string): Promise<GoogleCallbackResult> {
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
-        throw new AppError(500, 'Google OAuth is not configured', 'OAUTH_NOT_CONFIGURED');
+        throw new AppError(501, 'Google OAuth is not configured', 'OAUTH_NOT_CONFIGURED');
     }
 
     // Validate state (CSRF protection)

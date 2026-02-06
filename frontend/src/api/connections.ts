@@ -95,10 +95,6 @@ export function useValidateMondayKey() {
 // MONDAY OAUTH
 // ============================================================================
 
-interface MondayOAuthStatusResult {
-    available: boolean;
-}
-
 interface MondayAuthUrlResult {
     url: string;
     state: string;
@@ -110,8 +106,8 @@ interface MondayAuthUrlResult {
 export function useMondayOAuthStatus() {
     return useQuery({
         queryKey: ['monday', 'oauth', 'status'],
-        queryFn: async (): Promise<MondayOAuthStatusResult> => {
-            return api.get<MondayOAuthStatusResult>('/auth/monday/status');
+        queryFn: async (): Promise<OAuthStatusResult> => {
+            return api.get<OAuthStatusResult>('/auth/monday/status');
         },
         staleTime: 60 * 60 * 1000, // 1 hour - configuration doesn't change often
     });
@@ -153,6 +149,23 @@ export function useConnectMondayOAuth() {
 // ============================================================================
 // GOOGLE OAUTH
 // ============================================================================
+
+interface OAuthStatusResult {
+    available: boolean;
+}
+
+/**
+ * Check if Google OAuth is configured on the server
+ */
+export function useGoogleOAuthStatus() {
+    return useQuery({
+        queryKey: ['google', 'oauth', 'status'],
+        queryFn: async (): Promise<OAuthStatusResult> => {
+            return api.get<OAuthStatusResult>('/auth/google/status');
+        },
+        staleTime: 60 * 60 * 1000,
+    });
+}
 
 interface GoogleAuthUrlResult {
     url: string;
@@ -210,6 +223,19 @@ export function useDisconnectGoogle() {
 // ============================================================================
 // MICROSOFT OAUTH
 // ============================================================================
+
+/**
+ * Check if Microsoft OAuth is configured on the server
+ */
+export function useMicrosoftOAuthStatus() {
+    return useQuery({
+        queryKey: ['microsoft', 'oauth', 'status'],
+        queryFn: async (): Promise<OAuthStatusResult> => {
+            return api.get<OAuthStatusResult>('/auth/microsoft/status');
+        },
+        staleTime: 60 * 60 * 1000,
+    });
+}
 
 interface MicrosoftAuthUrlResult {
     url: string;

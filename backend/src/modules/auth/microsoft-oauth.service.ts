@@ -15,10 +15,17 @@ import { generateOAuthState, validateOAuthState, type OAuthMode } from './oauth-
 // Environment validation
 const MICROSOFT_CLIENT_ID = process.env.MICROSOFT_CLIENT_ID;
 const MICROSOFT_CLIENT_SECRET = process.env.MICROSOFT_CLIENT_SECRET;
-const MICROSOFT_REDIRECT_URI = process.env.MICROSOFT_REDIRECT_URI || 'http://localhost:3000/auth/microsoft/callback';
+const MICROSOFT_REDIRECT_URI = process.env.MICROSOFT_REDIRECT_URI || 'http://localhost:3001/api/auth/microsoft/callback';
 
 if (!MICROSOFT_CLIENT_ID || !MICROSOFT_CLIENT_SECRET) {
     console.warn('Warning: Microsoft OAuth credentials not configured. Microsoft authentication will not work.');
+}
+
+/**
+ * Check if Microsoft OAuth is configured
+ */
+export function isMicrosoftOAuthConfigured(): boolean {
+    return Boolean(MICROSOFT_CLIENT_ID && MICROSOFT_CLIENT_SECRET);
 }
 
 // Microsoft OAuth v2.0 endpoints
@@ -40,7 +47,7 @@ const SCOPES = [
  */
 export function getMicrosoftAuthUrl(userId?: string): { url: string; state: string } {
     if (!MICROSOFT_CLIENT_ID || !MICROSOFT_CLIENT_SECRET) {
-        throw new AppError(500, 'Microsoft OAuth is not configured', 'OAUTH_NOT_CONFIGURED');
+        throw new AppError(501, 'Microsoft OAuth is not configured', 'OAUTH_NOT_CONFIGURED');
     }
 
     const mode: OAuthMode = userId ? 'link' : 'login';
@@ -74,7 +81,7 @@ export interface MicrosoftCallbackResult {
  */
 export async function handleMicrosoftCallback(code: string, state: string): Promise<MicrosoftCallbackResult> {
     if (!MICROSOFT_CLIENT_ID || !MICROSOFT_CLIENT_SECRET) {
-        throw new AppError(500, 'Microsoft OAuth is not configured', 'OAUTH_NOT_CONFIGURED');
+        throw new AppError(501, 'Microsoft OAuth is not configured', 'OAUTH_NOT_CONFIGURED');
     }
 
     // Validate state (CSRF protection)
