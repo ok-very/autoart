@@ -102,6 +102,8 @@ export function BlockRecordBindingEditor({
                                 } else {
                                     newBinding.groupKey = `group-${newDefId.slice(0, 8)}`;
                                 }
+                            } else {
+                                newBinding.groupKey = undefined;
                             }
                             onUpdate(newBinding);
                         }}
