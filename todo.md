@@ -1,33 +1,34 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-05 20:45*
+*Last Updated: 2026-02-06 10:30*
 
 ## Bug List
 
 **Active blocking:**
+- **Step 2: Configure Mapping broken:** Classification Panel missing old functionality; items not making it into configuration mapping. Need to look at old diffs and figure out how to fix/reimplement the regressions.
+- **Import hierarchy:** Column headers use internal jargon instead of human-readable labels — useless for proper reclassification
+- **Import wizard (Monday):** Connector sidebar action creates "active session" with no escape route — no cancel import, no back button, user trapped
+- **Intake record binding:** Adding record binding to block throws "Invalid UUID" error at `body/blocks_config/blocks/0/recordBinding/definitionId`
+- **Preview buttons (intake forms + polls):** Implementation theater — buttons exist but lead to no endpoint
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
 - "Save current" in menu doesn't activate save workspace prompt — handler chain exists, not confirmed working
 - Fields from seed data rendering as `[object Object]` in tables
 - Subprocesses and stages not populating from seed projections
-- Poll editor missing — "New poll" has no editor attached; clicking existing spawned poll yields full page roundtrip (polls editor shipped in PRs #271-273, possible regression)
-- Poll "Open public poll" link is dead — navigates to `/public/poll/:id` which has no route, falls back to workspace. No way to preview poll output.
 - Finance overlay "client" field breaks when querying contacts — placeholder query not wired
-- Expired session causes 401 cascade — `/auth/me` fails, `/auth/refresh` fails, then every authenticated query fires and fails too. Client should redirect to login after refresh failure instead of hammering dead endpoints.
-- AutoHelper sessions lost on backend restart (#340) — in-memory session store dies on restart, AutoHelper tray still shows "Paired" but backend has no session. Need to persist sessions to DB.
-- Workspace preset timing (#181) — `pendingPanelPositions` workaround for dockview panel positioning race condition
+- **AutoHelper settings:** Module detection failing (available modules not showing in settings), file root selection broken (browser), settings page needs comprehensive review
 
 **UX polish:**
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
      remove the feature
 - Emoji/icon selector overlay — search doesn't work; consider switching to Phosphor Icons
 - Glassmorphism missing from tab strip where it was implemented — should be doable now with first-class theme variables
-- Placeholder themes: Compact, Minimal, Floating, and Default are all essentially identical — four names, one skin. Either differentiate them or cull to one honest default.
+- "Import" tab hiding in overflow menu despite ample space in tab bar
+- Project View: "New project" dropdown UI broken under "Your projects" section — formatting not clean
 
-**Confirmed resolved (PR #403):**
-- ~~Google OAuth returns 500 when not configured~~ — added `/auth/google/status` + `/auth/microsoft/status` endpoints, changed 500 → 501, frontend disables buttons when unconfigured (PR #403)
-- ~~Monday OAuth unreachable from UI~~ — already fixed in PRs #388-392; UI conditionally shows OAuth button based on status endpoint. Bug entry was stale.
-
-**Confirmed resolved (PRs #337-339, #353, #355, #357-359):**
+**Confirmed resolved:**
+- ~~Monday import crashes with null group_title~~ — connector uses `name` property but plan service read nonexistent `title`, fixed to `g.name` (commit 10c702a)
+- ~~Poll editor "Granularity" unclear, pills unreadable~~ — renamed to "Meeting Duration", 2-col layout with Timezone, full date format in vertical list ("Wednesday, February 12, 2026") (commits 16f1ba3, ae76bbf)
+- ~~Poll editor missing~~ — "New poll" has no editor attached; clicking existing spawned poll yields full page roundtrip (polls editor shipped in PRs #271-273, possible regression)
 - ~~Dropdowns rendering transparent backgrounds~~ — arbitrary-value `var()` colors broke under Tailwind v4 oklch pipeline, migrated to theme classes (PR #357)
 - ~~Projects button doesn't spawn panel~~ — routed to center content instead of dockview, now uses `handleOpenPanel` (PR #358)
 - ~~Miller Columns project selection broken~~ — clicked project but never called `setActiveProject`, child columns stayed empty (PR #359)
@@ -66,6 +67,11 @@
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 79 | Enhance Workflow View Interactions | Feature |
 | — | Classification Panel: proper bindings on import | Import |
+| — | Poll editor: support different/multiple time block selections per day | Polls |
+| — | Consolidate Calendar/Gantt/future view expansions: Applications views not linked to Project View segmented equivalents; no project/process selection for these views outside single-project setting; Application view should perform general-purpose filter/overlay across projects (separate feature expansion) | Feature |
+| — | Finances UI unification: Finances call gets pulled into Project View rather than spawning its own panel; needs formalization and dedicated panel architecture; institute math/formula ESM to design and handle logic; missing project bindings and unclear how it interacts with records system | Finance |
+| — | Records/Fields/Actions registry browser UI unification: needs consistent layout and shared filter system across all three panels | UX |
+| — | Workspace project binding + conditional sidebars: project binding only appears under "4. Review" tab; conditional sidebar appearance not implemented; complex feature requiring focused design and implementation plan | Workspace |
 
 ---
 
@@ -86,7 +92,6 @@
 | 85 | Templating Engine | Feature |
 | 86 | Monday.com Board Sync Settings | Integration |
 | 291 | Schema editor / Composer relationship-math builder | Feature |
-| 393 | File Detection & Alignment Service with watchdog — replace polling with filesystem watchdog in AutoHelper, convention enforcement, violation surfacing in UI | AutoHelper |
 | — | Composer bar as sleek dockview popout window (replace modal) | UX |
 | — | Action vocabulary: store classification verbs/nouns/adjectives from imports as a heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret what action type is being constructed or referenced | Classification |
 
@@ -174,8 +179,6 @@
 
 | PRs | Description |
 |-----|-------------|
-| #403 | **OAuth graceful status checks:** `/auth/google/status` + `/auth/microsoft/status` endpoints, 500→501 for unconfigured providers, frontend disables connect buttons, fixed stale redirect URIs, env example docs |
-| #394 | **MiniCalendar molecule for polls:** Compact month-grid date selector with multi-select toggle for poll configuration |
 | #369-372, #381-386 | **Intake forms → records pipeline:** Block connector architecture (RecordMapping schemas, SubmissionsTable with CSV export + record badges, RecordMappingPanel for staff config, Responses tab integration, Records editor tab, backend handler processes mappings) |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
 
@@ -185,6 +188,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Stackit skills recovery:** 26 orphaned command/skill files restored from git object store (f8814d8 tree); post-merge verification rule added to prevent future orphaned stack content (rapid-fire merges outran GitHub retargeting in Jan 29 incident) | Commits 73d7106, eaea487 |
 | 387 | **Unified OAuth under /api/auth:** Shared HMAC-signed state utility (stateless, 10-min expiry), Google/Microsoft/Monday all support login mode (create/find user) + link mode (connect to existing user), Monday moved from `/connections/monday/oauth/*` to `/auth/monday` with consistent callback format (JSON for login, HTML popup-close for link), deprecated old routes return 410 Gone | PRs #388-392 |
 | — | **AutoHelper Pairing Odyssey + Bug Fixes:** Replaced push-to-localhost pattern with claim-token flow (in-memory sessions → persistent link keys, 6-char codes w/ TTL); tray menu pairing dialog; port alignment to 8100 + Vite proxy; fixed `is_running()` AttributeError, routed mail/folder controls through backend bridge, explicit Web Collector dependency checks; AdaptersCard showing real capability status | PRs #354-368 (14 PRs) |
 | 83 | Email Section Redesign + Email Logging System: Table atom primitives, body_html capture, MappingsPanel expand/collapse HTML rendering, triage endpoints, mail_messages/mail_links persistence, frontend linking, promoted badges, CodeAnt review fixes | PRs #346-353 |
