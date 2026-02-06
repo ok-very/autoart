@@ -69,14 +69,7 @@ export function HierarchyPreview({
         );
     }, [plan.classifications]);
 
-    // DEBUG
-    console.log('[HierarchyPreview] Render:', {
-        viewMode,
-        itemCount: plan.items.length,
-        containerCount: plan.containers.length,
-        fieldCount: discoveredFields.length,
-        visibleFieldCount: visibleFields.size,
-    });
+
 
     // Handle field visibility toggle
     const handleToggleField = useCallback((fieldName: string) => {

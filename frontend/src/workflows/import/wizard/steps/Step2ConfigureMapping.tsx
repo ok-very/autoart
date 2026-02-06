@@ -165,6 +165,18 @@ function inferRoleFromGroupName(groupTitle: string, currentRole: MondayGroupRole
     return 'subprocess';
 }
 
+/** Wait for a TanStack mutation to finish if it's currently pending */
+function awaitMutation(mutation: { isPending: boolean }): Promise<void> {
+    if (!mutation.isPending) return Promise.resolve();
+    return new Promise((resolve) => {
+        const check = () => {
+            if (!mutation.isPending) resolve();
+            else setTimeout(check, 50);
+        };
+        check();
+    });
+}
+
 function getSectionForRole(role: MondayGroupRole): SectionId {
     for (const section of SECTIONS) {
         if (section.roles.includes(role)) {
@@ -1221,6 +1233,12 @@ export function Step2ConfigureMapping({ onNext, onBack, session, onSessionCreate
         try {
             setIsRefreshing(true);
             setError(null);
+
+            // Drain in-flight config mutations before regenerating plan.
+            // Without this, generatePlan reads stale board/group configs from the DB.
+            await awaitMutation(updateBoardConfig);
+            await awaitMutation(updateGroupConfigs);
+
             const newPlan = await generatePlan.mutateAsync(session.id);
             onSessionCreated(session, newPlan);
             onNext();
