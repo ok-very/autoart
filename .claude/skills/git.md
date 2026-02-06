@@ -96,45 +96,48 @@ stackit sync                 # Pull main, cleanup any already-merged branches
 stackit log                  # Confirm stack order and PR numbers
 ```
 
-Verify all PRs are approved and CI is passing before starting.
+**Run lint before merging.** This repo has no CI — lint locally before starting the merge loop:
+
+```bash
+stackit bottom --no-interactive
+pnpm --filter @autoart/shared --filter @autoart/ui build   # Build workspace deps
+pnpm typecheck                                              # Must pass
+pnpm lint                                                   # Must pass
+```
+
+If either fails, fix the errors before merging. Use `/stack-fix` or `/stack-verify` to locate which branch introduced the failure.
 
 #### The merge loop
 
+This repo has no branch protection, so `stackit merge next` fails with "clean status" (automerge requires a gate). Use `gh pr merge` directly:
+
 ```bash
 # 1. Merge the bottom-most unmerged PR
-stackit merge next --no-interactive
+gh pr merge <PR-NUMBER> --merge
 
-# 2. Sync to pull the merge, cleanup the merged branch, restack remaining
+# 2. Wait ~5s for GitHub to retarget child PRs, then merge the next one
+gh pr merge <NEXT-PR-NUMBER> --merge
+
+# 3. Repeat until all PRs are merged
+# Do NOT run `stackit sync` between merges — GitHub handles retargeting
+
+# 4. After ALL PRs are merged, cleanup with stackit
 stackit sync --no-interactive
-
-# 3. Check what remains
-stackit log --no-interactive
-
-# 4. Repeat steps 1-3 until all PRs are merged
 ```
 
-#### When `stackit merge next` errors
+**Never pass `--delete-branch`** — the repo's "Automatically delete head branches"
+setting handles cleanup after child PRs are retargeted. Forcing early deletion
+races against retargeting and can cascade-close child PRs.
 
-If stackit errors (e.g., "Pull request is in clean status", automerge failures):
+#### If a PR won't merge
+
+If `gh pr merge` fails (e.g., merge conflict after retarget):
 
 1. **STOP.** Do not manually rebase, force push, or recreate PRs.
-2. Try with `--force` flag: `stackit merge next --force --no-interactive`
-3. If that still fails, merge that single PR manually:
+2. Wait a few seconds — GitHub may still be retargeting.
+3. If it persists, the branch may need updating:
    ```bash
-   gh pr merge <PR-NUMBER> --merge
-   ```
-   **Never pass `--delete-branch`** — the repo's "Automatically delete head branches"
-   setting handles cleanup after child PRs are retargeted. Forcing early deletion
-   races against retargeting and can cascade-close child PRs.
-
-> **Do NOT run `stackit sync` between sequential manual merges.**
-> GitHub retargets child PRs automatically after a base branch merges.
-> Wait until the next PR's base branch has updated, then merge it the same way.
-> Run `stackit sync` once after all PRs are merged.
-
-4. **After all PRs are merged, return to stackit** for cleanup:
-   ```bash
-   stackit sync --no-interactive     # Pull main, cleanup merged branches
+   gh pr merge <PR-NUMBER> --merge --admin   # Use admin override if you own the repo
    ```
 
 **NEVER** do any of the following as "recovery":
