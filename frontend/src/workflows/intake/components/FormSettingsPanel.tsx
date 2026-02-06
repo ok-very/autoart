@@ -75,7 +75,7 @@ export function FormSettingsPanel({ settings, onSave, isSaving }: FormSettingsPa
                         </div>
                         <button
                             onClick={() => handleChange('showProgress', !localSettings.showProgress)}
-                            className="text-indigo-600"
+                            className="text-[var(--ws-accent)]"
                         >
                             {localSettings.showProgress ? (
                                 <ToggleRight className="w-8 h-8" />
@@ -100,7 +100,7 @@ export function FormSettingsPanel({ settings, onSave, isSaving }: FormSettingsPa
                             onChange={(e) => handleChange('confirmationMessage', e.target.value || undefined)}
                             placeholder="Thank you! Your response has been recorded."
                             rows={3}
-                            className="w-full px-3 py-2 border border-ws-panel-border rounded-lg text-sm text-ws-text-secondary placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                            className="w-full px-3 py-2 border border-ws-panel-border rounded-lg text-sm text-ws-text-secondary placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--ws-accent)] focus:border-transparent resize-none"
                         />
                     </div>
 
@@ -120,7 +120,7 @@ export function FormSettingsPanel({ settings, onSave, isSaving }: FormSettingsPa
                             value={localSettings.redirectUrl || ''}
                             onChange={(e) => handleChange('redirectUrl', e.target.value || undefined)}
                             placeholder="https://example.com/thank-you"
-                            className="w-full px-3 py-2 border border-ws-panel-border rounded-lg text-sm text-ws-text-secondary placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-ws-panel-border rounded-lg text-sm text-ws-text-secondary placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--ws-accent)] focus:border-transparent"
                         />
                         {localSettings.redirectUrl && !isValidUrl(localSettings.redirectUrl) && (
                             <p className="text-xs text-amber-600 mt-2 flex items-center gap-1">

@@ -60,7 +60,7 @@ export function FloatingToolbar({ activeBlockId, onAddBlock }: FloatingToolbarPr
                         key={tool.id}
                         onClick={() => onAddBlock(tool.id)}
                         title={tool.label}
-                        className="w-full px-2 py-1.5 rounded-md flex items-center gap-2 text-ws-text-secondary hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-xs"
+                        className="w-full px-2 py-1.5 rounded-md flex items-center gap-2 text-ws-text-secondary hover:bg-[var(--ws-accent)]/5 hover:text-[var(--ws-accent)] transition-colors text-xs"
                     >
                         <tool.icon className="w-4 h-4" />
                         <span>{tool.label}</span>
