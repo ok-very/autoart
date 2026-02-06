@@ -5,6 +5,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Save, Check, AlertCircle, ExternalLink, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Button } from '@autoart/ui';
+import { useProjects, useProjectTree } from '../../../api/hooks/entities/hierarchy';
 
 interface FormSettings {
     showProgress: boolean;
@@ -14,11 +15,21 @@ interface FormSettings {
 
 interface FormSettingsPanelProps {
     settings: FormSettings;
+    projectId: string | null;
+    classificationNodeId: string | null;
     onSave: (settings: FormSettings) => void;
+    onClassificationChange: (projectId: string | null, classificationNodeId: string | null) => void;
     isSaving?: boolean;
 }
 
-export function FormSettingsPanel({ settings, onSave, isSaving }: FormSettingsPanelProps) {
+export function FormSettingsPanel({
+    settings,
+    projectId,
+    classificationNodeId,
+    onSave,
+    onClassificationChange,
+    isSaving,
+}: FormSettingsPanelProps) {
     // Track user changes separately from props
     const [changes, setChanges] = useState<Partial<FormSettings>>({});
     const [isDirty, setIsDirty] = useState(false);
@@ -40,8 +51,96 @@ export function FormSettingsPanel({ settings, onSave, isSaving }: FormSettingsPa
         setIsDirty(false);
     }, [localSettings, onSave]);
 
+    // Hierarchy hooks
+    const { data: projects } = useProjects();
+    const { data: treeNodes } = useProjectTree(projectId);
+
+    // Build cascading options for context node
+    const contextOptions = useMemo(() => {
+        if (!treeNodes) return [];
+        const opts: Array<{ value: string; label: string }> = [];
+
+        const buildOptions = (nodes: typeof treeNodes, parentId: string | null, depth: number) => {
+            const children = nodes.filter(n => n.parent_id === parentId);
+            for (const node of children) {
+                const indent = '\u00A0\u00A0'.repeat(depth);
+                const typeLabel = node.type.charAt(0).toUpperCase() + node.type.slice(1);
+                opts.push({
+                    value: node.id,
+                    label: `${indent}${typeLabel}: ${node.title}`,
+                });
+                buildOptions(nodes, node.id, depth + 1);
+            }
+        };
+
+        // Start from the project node (root)
+        const projectNode = treeNodes.find(n => n.type === 'project');
+        if (projectNode) {
+            buildOptions(treeNodes, projectNode.id, 0);
+        }
+
+        return opts;
+    }, [treeNodes]);
+
     return (
-        <div className="max-w-2xl mx-auto py-8 px-4">
+        <div className="max-w-2xl mx-auto py-8 px-4 space-y-6">
+            {/* Classification Section */}
+            <div className="bg-ws-panel-bg rounded-xl border border-ws-panel-border overflow-hidden">
+                <div className="px-6 py-4 border-b border-ws-panel-border">
+                    <h2 className="text-ws-h2 font-semibold text-ws-fg">Classification</h2>
+                    <p className="text-sm text-ws-text-secondary mt-1">
+                        Associate this form with a project. Submissions create records under the selected context.
+                    </p>
+                </div>
+
+                <div className="p-6 space-y-4">
+                    {/* Project Select */}
+                    <div>
+                        <label className="block text-sm font-medium text-ws-text-secondary mb-2">
+                            Project
+                        </label>
+                        <select
+                            value={projectId ?? ''}
+                            onChange={(e) => {
+                                const newProjectId = e.target.value || null;
+                                onClassificationChange(newProjectId, null);
+                            }}
+                            className="w-full px-3 py-2 border border-ws-panel-border rounded-lg text-sm text-ws-fg bg-ws-panel-bg focus:outline-none focus:ring-2 focus:ring-[var(--ws-accent)] focus:border-transparent"
+                        >
+                            <option value="">None</option>
+                            {projects?.map((p) => (
+                                <option key={p.id} value={p.id}>{p.title}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Context Node Select (cascading) */}
+                    {projectId && (
+                        <div>
+                            <label className="block text-sm font-medium text-ws-text-secondary mb-2">
+                                Context
+                            </label>
+                            <select
+                                value={classificationNodeId ?? ''}
+                                onChange={(e) => {
+                                    onClassificationChange(projectId, e.target.value || null);
+                                }}
+                                className="w-full px-3 py-2 border border-ws-panel-border rounded-lg text-sm text-ws-fg bg-ws-panel-bg focus:outline-none focus:ring-2 focus:ring-[var(--ws-accent)] focus:border-transparent"
+                            >
+                                <option value="">Select context node...</option>
+                                {contextOptions.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                            </select>
+                            <p className="text-xs text-ws-text-secondary mt-2">
+                                Submissions land under this node in the hierarchy.
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Form Settings Section */}
             <div className="bg-ws-panel-bg rounded-xl border border-ws-panel-border overflow-hidden">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-ws-panel-border flex items-center justify-between">
@@ -53,7 +152,7 @@ export function FormSettingsPanel({ settings, onSave, isSaving }: FormSettingsPa
                         className="flex items-center gap-2"
                     >
                         {isSaving ? (
-                            <span className="animate-spin">⏳</span>
+                            <span className="animate-spin">&#x23F3;</span>
                         ) : isDirty ? (
                             <Save className="w-4 h-4" />
                         ) : (
