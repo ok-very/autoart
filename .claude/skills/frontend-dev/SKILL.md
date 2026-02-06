@@ -1,7 +1,7 @@
 ---
 name: frontend-dev
 description: Build frontend features that connect to real backends. React components, design tokens, state management, API integration. Keywords frontend, react, ui, component, zustand, tanstack.
-allowed-tools: Read, Edit, Write, Grep, Glob, Bash(pnpm:*), Bash(npm:*), Bash(git:*)
+allowed-tools: Read, Edit, Write, Grep, Glob, Bash(pnpm:*), Bash(npm:*), Bash(git:*), Task
 model: opus
 ---
 
@@ -42,6 +42,20 @@ Implement frontend features that connect to real backends and reflect real state
 - Every user action that should persist must call an API hook
 - Optimistic updates require rollback on error
 - Loading and error states are mandatory, not nice-to-have
+
+## Plugin Delegation
+
+Use the `Task` tool to dispatch plugin subagents for mechanical work. Your judgment directs them.
+
+**code-explorer** (`subagent_type: "feature-dev:code-explorer"`):
+- Trace state flow through Zustand stores, TanStack Query hooks, and component props before modifying shared state.
+- Map which components consume a store slice before changing its shape.
+
+**typescript-lsp**:
+- Verify prop types when connecting components to new data sources. Faster than grepping interface definitions.
+- Check that API hook return types match what components destructure from them.
+
+**frontend-design** — **NEVER** use for `--ws-*` workspace surfaces. DESIGN.md and `variables.css` govern workspace aesthetics (muted archival palette, Source Serif 4, no decoration color). Only use for `--pub-*` public/client-facing surfaces, and only with explicit user request.
 
 ## You Never
 
