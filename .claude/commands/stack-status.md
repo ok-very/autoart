@@ -1,7 +1,7 @@
 ---
 description: View current stack state and health
 model: claude-haiku-4-20250414
-allowed-tools: Bash(stackit:*), Bash(git:*)
+allowed-tools: Bash(stackit *), Bash(git *)
 ---
 
 # Stack Status
@@ -9,8 +9,8 @@ allowed-tools: Bash(stackit:*), Bash(git:*)
 ## Context
 - Current branch: !`git branch --show-current`
 - Git status: !`git status --short`
-- Stack state: !`command stackit log --no-interactive 2>&1`
-- Branch info: !`command stackit info --json --no-interactive 2>&1`
+- Stack state: !`stackit log --no-interactive 2>&1`
+- Branch info: !`stackit info --json --no-interactive 2>&1`
 
 ## Task
 

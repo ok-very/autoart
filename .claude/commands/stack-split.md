@@ -1,7 +1,7 @@
 ---
 description: Split committed changes between current branch and a new branch (parent or child)
 model: claude-opus-4-20250514
-allowed-tools: Bash(stackit:*), Bash(git:*), Read, Write, Glob, Grep, AskUserQuestion
+allowed-tools: Bash(stackit *), Bash(git *), Read, Write, Glob, Grep, AskUserQuestion
 argument-hint: [check-command]
 ---
 
@@ -23,7 +23,7 @@ Split the committed changes on the current branch between this branch and a new 
 ## Context
 - Current branch: !`git branch --show-current`
 - Git status: !`git status --short`
-- Stack state: !`command stackit log --no-interactive 2>&1`
+- Stack state: !`stackit log --no-interactive 2>&1`
 
 ## Arguments
 $ARGUMENTS
@@ -38,9 +38,9 @@ This workflow uses **stackit's undo system** to ensure commits are never lost:
 
 1. **Before execution**: Stackit automatically takes a snapshot of the current state
 2. **During execution**: The split command handles all git operations safely
-3. **On failure**: Use `command stackit undo` to restore the previous state
+3. **On failure**: Use `stackit undo` to restore the previous state
 
-Recovery is always: `command stackit undo`
+Recovery is always: `stackit undo`
 
 ## Instructions
 
@@ -76,7 +76,7 @@ Get the commits on the current branch that will be analyzed for splitting:
 
 ```bash
 # Get parent branch from stackit metadata
-command stackit log --no-interactive
+stackit log --no-interactive
 
 # Get the diff between parent and current branch HEAD
 # This shows all changes that could be split
@@ -216,7 +216,7 @@ Dry Run - Generate Extract Patch
 
 Dry Run - Execute Split
 =======================
-command stackit split --by-hunk --above \
+stackit split --by-hunk --above \
     --patch /tmp/extract.patch \
     --name "<child-branch-name>" \
     --message "<child-commit-message>"
@@ -237,7 +237,7 @@ git checkout <current-branch>
 
 Recovery (if needed)
 ====================
-command stackit undo
+stackit undo
 ```
 
 Then ask again whether to execute or cancel.
@@ -282,12 +282,12 @@ Use the `--patch` flag to execute the split:
 
 ```bash
 # For --above (extract to child branch):
-command stackit split --patch /tmp/extract.patch --above \
+stackit split --patch /tmp/extract.patch --above \
     --name "<child-branch-name>" \
     --message "<child-commit-message>"
 
 # For --below (extract to parent branch, default):
-command stackit split --patch /tmp/extract.patch \
+stackit split --patch /tmp/extract.patch \
     --name "<parent-branch-name>" \
     --message "<parent-commit-message>"
 ```
@@ -323,7 +323,7 @@ After both branches are verified successfully:
 
 ```bash
 # Show the final stack
-command stackit log --no-interactive
+stackit log --no-interactive
 ```
 
 Present a summary:
@@ -342,7 +342,7 @@ Child branch [<child-branch>]:
 Stack structure:
 <stackit log output>
 
-Recovery: If anything is wrong, run `command stackit undo` to restore.
+Recovery: If anything is wrong, run `stackit undo` to restore.
 
 Next steps:
 - Run /stack-submit to create/update PRs
@@ -357,7 +357,7 @@ Next steps:
 | Phase 1 | No commits on branch | Inform and exit - nothing to split |
 | Phase 2 | All hunks same category | Inform user - splitting not needed |
 | Phase 4 | User cancels | Exit - no changes made |
-| Phase 5 | Split command fails | `command stackit undo` |
+| Phase 5 | Split command fails | `stackit undo` |
 | Phase 5 | Build fails | Offer: Continue/Rollback |
 
 **On any execution failure**, use `AskUserQuestion`:
@@ -370,7 +370,7 @@ Next steps:
 
 **If user selects "Rollback"**:
 ```bash
-command stackit undo
+stackit undo
 ```
 
 Then report: "Rolled back to original state. Your commits are restored."
@@ -440,7 +440,7 @@ Only classify hunks you're 90%+ confident about. For ambiguous hunks, ask the us
 - Create branches without user approval of the plan
 - Continue past a build failure without user consent
 - Put the same hunk in both patches
-- Use `git commit` directly for the child branch - use `command stackit create`
+- Use `git commit` directly for the child branch - use `stackit create`
 - Skip build verification (unless user explicitly says to)
 - Propose child branch names that already exist
 - Split hunks that are interdependent (function + its usages) without asking

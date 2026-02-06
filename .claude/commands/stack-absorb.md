@@ -1,7 +1,7 @@
 ---
 description: Absorb working changes into correct commits with intelligent fix sourcing
 model: claude-sonnet-4-20250514
-allowed-tools: Bash(stackit:*), Bash(git:*), Read, Edit, Glob, Grep, AskUserQuestion, Skill
+allowed-tools: Bash(stackit *), Bash(git *), Read, Edit, Glob, Grep, AskUserQuestion, Skill
 ---
 
 # Stack Absorb
@@ -11,7 +11,7 @@ Absorb staged changes into the correct commits, then intelligently fix any broke
 ## Context
 - Current branch: !`git branch --show-current`
 - Git status: !`git status --short`
-- Stack state: !`command stackit log --no-interactive 2>&1`
+- Stack state: !`stackit log --no-interactive 2>&1`
 
 ## How Absorb Works
 
@@ -26,7 +26,7 @@ Absorb assigns each change to the commit that last modified those lines. This ma
 ### Phase 1: Absorb with JSON Output
 
 ```bash
-command stackit absorb --json --force --no-interactive 2>&1
+stackit absorb --json --force --no-interactive 2>&1
 ```
 
 Parse the JSON output to understand:
@@ -50,8 +50,8 @@ Save this information - you'll need it to find fixes.
      - "Let me specify" - I'll provide the command
 
 ```bash
-command stackit bottom --no-interactive
-command stackit foreach --upstack "<build-command>" 2>&1
+stackit bottom --no-interactive
+stackit foreach --upstack "<build-command>" 2>&1
 ```
 
 Parse output to find the FIRST failing branch. The failing branch is where to fix.
@@ -66,39 +66,39 @@ For each broken branch, identify what's missing by reading the error.
 - Check the JSON's `unabsorbable` array for the missing code
 - If found, apply it to the failing branch:
   ```bash
-  command stackit checkout <failing-branch> --no-interactive
+  stackit checkout <failing-branch> --no-interactive
   # Edit the file to add the missing code from the unabsorbable hunk content
   git add <files>
   git commit -m "fix: add <missing-item> dependency"
-  command stackit restack --no-interactive
+  stackit restack --no-interactive
   ```
 
 **Source 2: New files**
 - Check the JSON's `new_files` array
 - If the missing code is in a new file, copy relevant parts:
   ```bash
-  command stackit checkout <failing-branch> --no-interactive
+  stackit checkout <failing-branch> --no-interactive
   # Copy the relevant code from the new file
   git add <files>
   git commit -m "fix: add <missing-item> from new file"
-  command stackit restack --no-interactive
+  stackit restack --no-interactive
   ```
 
 **Source 3: Absorbed upstack (bring down)**
 - Check the JSON's `absorbed` array for hunks that went to child branches
 - If the missing code was absorbed to a child, it needs to come DOWN:
   ```bash
-  command stackit checkout <failing-branch> --no-interactive
+  stackit checkout <failing-branch> --no-interactive
   # Apply the code from the absorbed hunk content
   git add <files>
   git commit -m "fix: bring down <missing-item> from upstack"
-  command stackit restack --no-interactive
+  stackit restack --no-interactive
   ```
 
 ### Phase 4: Verify Fix
 
 ```bash
-command stackit foreach --stack "<build-command>" 2>&1
+stackit foreach --stack "<build-command>" 2>&1
 ```
 
 If another branch fails, repeat Phase 3 for that branch.
@@ -120,26 +120,26 @@ When branch X fails with "undefined: foo":
 ## Example
 
 ```
-$ command stackit absorb --json --force --no-interactive
+$ stackit absorb --json --force --no-interactive
 
 JSON shows:
 - absorbed: validateUser() call -> add-login branch
 - unabsorbable: hashPassword() definition (commutes_with_all)
 
-$ command stackit foreach --upstack "<build-command>"
+$ stackit foreach --upstack "<build-command>"
 
 add-auth: PASS
 add-login: FAIL - undefined: hashPassword
 
 Looking for hashPassword in unabsorbable hunks... Found!
 
-$ command stackit checkout add-login --no-interactive
+$ stackit checkout add-login --no-interactive
 # Edit utils/crypto.go to add hashPassword from unabsorbable content
 $ git add utils/crypto.go
 $ git commit -m "fix: add hashPassword dependency"
-$ command stackit restack --no-interactive
+$ stackit restack --no-interactive
 
-$ command stackit foreach --stack "<build-command>"
+$ stackit foreach --stack "<build-command>"
 All branches pass!
 ```
 
@@ -163,7 +163,7 @@ If max attempts (2) are reached for a branch, use `AskUserQuestion`:
 - Header: "Fix attempts"
 - Question: "Unable to fix after 2 attempts on this branch. How should I proceed?"
 - Options:
-  - "Undo absorb" - Run `command stackit undo` to rollback
+  - "Undo absorb" - Run `stackit undo` to rollback
   - "Stop here" - Keep state, I'll fix manually
   - "Skip this branch" - Continue fixing other branches
 

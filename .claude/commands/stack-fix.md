@@ -1,7 +1,7 @@
 ---
 description: Diagnose and fix common stack issues
 model: claude-sonnet-4-20250514
-allowed-tools: Bash(stackit:*), Bash(git:*), Read, Edit, Glob, Grep, AskUserQuestion, Skill, Task
+allowed-tools: Bash(stackit *), Bash(git *), Read, Edit, Glob, Grep, AskUserQuestion, Skill, Task
 ---
 
 # Stack Fix
@@ -11,7 +11,7 @@ Diagnose and fix stack problems, including build/lint/test failures.
 ## Context
 - Current branch: !`git branch --show-current`
 - Git status: !`git status --short`
-- Stack state: !`command stackit log --no-interactive 2>&1`
+- Stack state: !`stackit log --no-interactive 2>&1`
 
 ## Instructions
 
@@ -26,10 +26,10 @@ Check the context and look for these indicators:
 - Follow the Build Failure Workflow below
 
 **Branches need restack** (stackit log shows "needs restack" or branches are out of sync):
-- Run `command stackit restack --no-interactive`
+- Run `stackit restack --no-interactive`
 
 **Orphaned branches** (stackit log shows branch with no parent, or parent was merged):
-- Run `command stackit sync --no-interactive`
+- Run `stackit sync --no-interactive`
 
 **Uncommitted changes** (git status shows modified/untracked files):
 - Use `AskUserQuestion`:
@@ -68,8 +68,8 @@ Fix any lint errors, unused variables, or build failures NOW. This prevents havi
 
 #### Step 4: Stage and continue
 ```bash
-command stackit add .
-command stackit continue
+stackit add .
+stackit continue
 ```
 
 #### Step 5: If you amended a commit, restack children
@@ -77,14 +77,14 @@ If you made additional fixes and amended them into a commit:
 ```bash
 git add -A
 git commit --amend --no-edit
-command stackit restack --no-interactive
+stackit restack --no-interactive
 ```
 
 Child branches need restacking after an amend because the commit SHA changed.
 
 #### Step 6: Verify
 ```bash
-command stackit log  # Should show clean tree, no "needs restack"
+stackit log  # Should show clean tree, no "needs restack"
 <build-command>      # All checks should pass
 ```
 
@@ -116,8 +116,8 @@ Optionally, verify the command works on current branch first:
 
 #### Step 2: Go to bottom of stack and run checks upward
 ```bash
-command stackit bottom --no-interactive
-command stackit foreach --upstack "<check-command>" 2>&1
+stackit bottom --no-interactive
+stackit foreach --upstack "<check-command>" 2>&1
 ```
 
 This starts at the bottom branch (closest to trunk) and walks toward leaves, stopping at the first failure. The failing branch is where the bug was introduced.
@@ -137,7 +137,7 @@ Parse the output to find the FIRST branch with `✗` or non-zero exit - that's w
 
 #### Step 3: Checkout the failing branch
 ```bash
-command stackit checkout <failing-branch> --no-interactive
+stackit checkout <failing-branch> --no-interactive
 ```
 
 #### Step 4: Fix the issue
@@ -151,7 +151,7 @@ command stackit checkout <failing-branch> --no-interactive
 
 #### Step 5: Propagate the fix via restack
 ```bash
-command stackit restack --no-interactive
+stackit restack --no-interactive
 ```
 
 This rebases all child branches onto the fixed branch, propagating your fix.
@@ -161,7 +161,7 @@ This rebases all child branches onto the fixed branch, propagating your fix.
 
 #### Step 6: Verify all branches now pass
 ```bash
-command stackit foreach --stack "<check-command>" 2>&1
+stackit foreach --stack "<check-command>" 2>&1
 ```
 
 If it stops at another failure, repeat from Step 2 (there may be multiple independent issues).
@@ -169,7 +169,7 @@ If it stops at another failure, repeat from Step 2 (there may be multiple indepe
 ### 4. After Fixes
 
 Verify stack is healthy:
-- `command stackit log` shows clean tree
+- `stackit log` shows clean tree
 - All branches pass checks
 
 ## Key Insight
@@ -191,7 +191,7 @@ The restack command automatically propagates your fix to all child branches.
 
 **Multiple independent failures**: After fixing one, re-run foreach to find next failure. For large error outputs with many distinct issues, consider spawning parallel haiku Task subagents to classify and prioritize errors before fixing.
 
-**After amending a commit**: Always run `command stackit restack --no-interactive` because child branches reference the old commit SHA.
+**After amending a commit**: Always run `stackit restack --no-interactive` because child branches reference the old commit SHA.
 
 ## Tool Trust
 
@@ -203,9 +203,9 @@ Only apply fixes you're 90%+ confident about. If unsure whether a fix is correct
 
 ## Do NOT
 - Fix the same bug on multiple branches manually
-- Use `git checkout` directly - use `command stackit checkout` instead
-- Use `git rebase --continue` - use `command stackit continue` instead (it handles metadata properly)
-- Use `git rebase --abort` - use `command stackit abort` instead
+- Use `git checkout` directly - use `stackit checkout` instead
+- Use `git rebase --continue` - use `stackit continue` instead (it handles metadata properly)
+- Use `git rebase --abort` - use `stackit abort` instead
 - Make destructive changes without user confirmation
 - Loop indefinitely on fixes (max 2 attempts per issue type)
 - Skip asking what check command to use if unclear

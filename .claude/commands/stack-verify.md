@@ -1,7 +1,7 @@
 ---
 description: Verify stack health by running checks on all branches
 model: claude-sonnet-4-20250514
-allowed-tools: Bash(stackit:*), Bash(git:*), AskUserQuestion, Skill, Task
+allowed-tools: Bash(stackit *), Bash(git *), AskUserQuestion, Skill, Task
 argument-hint: [check-command]
 ---
 
@@ -12,7 +12,7 @@ Run verification checks on all branches in the stack and report results.
 ## Context
 - Current branch: !`git branch --show-current`
 - Git status: !`git status --short`
-- Stack state: !`command stackit log --no-interactive 2>&1`
+- Stack state: !`stackit log --no-interactive 2>&1`
 
 ## Arguments
 $ARGUMENTS
@@ -35,19 +35,19 @@ If provided in arguments, use that. Otherwise:
 
 First, go to bottom of stack to ensure consistent ordering:
 ```bash
-command stackit bottom --no-interactive
+stackit bottom --no-interactive
 ```
 
 Then run checks:
 
 **Quick mode (default)** - stop at first failure:
 ```bash
-command stackit foreach --upstack "<check-command>" 2>&1
+stackit foreach --upstack "<check-command>" 2>&1
 ```
 
 **Full diagnostic mode** - check all branches:
 ```bash
-command stackit foreach --upstack --no-fail-fast "<check-command>" 2>&1
+stackit foreach --upstack --no-fail-fast "<check-command>" 2>&1
 ```
 
 **Parallel mode** - For large stacks (5+ branches) with independent branches, consider spawning parallel Task subagents to verify sibling branches simultaneously. Only use this when branches don't have linear dependencies.
@@ -155,5 +155,5 @@ After verification completes, use `AskUserQuestion` based on results:
 Based on response:
 - **"Submit PRs"**: Invoke `/stack-submit` skill using the `Skill` tool
 - **"Fix issues"**: Invoke `/stack-fix` skill using the `Skill` tool
-- **"View stack"** / **"View details"**: Run `command stackit log --no-interactive`
+- **"View stack"** / **"View details"**: Run `stackit log --no-interactive`
 - **"Done for now"**: End with summary of verification results

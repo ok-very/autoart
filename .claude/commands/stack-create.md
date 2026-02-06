@@ -1,7 +1,7 @@
 ---
 description: Create a new stacked branch with commit
 model: claude-sonnet-4-20250514
-allowed-tools: Bash(stackit:*), Bash(git:*), AskUserQuestion, Skill
+allowed-tools: Bash(stackit *), Bash(git *), AskUserQuestion, Skill
 argument-hint: [-m "message"] [branch-name]
 ---
 
@@ -33,7 +33,7 @@ Create a new stacked branch with the current changes.
      - "Let me describe" → Wait for user to provide message
 4. If user provided `-m "message"`, use that message
 5. Otherwise, generate a commit message matching the project's style (see recent commits)
-6. Run: `echo "<message>" | command stackit create [branch-name] --no-interactive`
+6. Run: `echo "<message>" | stackit create [branch-name] --no-interactive`
 
 You can call multiple tools in a single response. Stage and create in one message.
 

@@ -1,7 +1,7 @@
 ---
 description: Rebase all branches to ensure proper ancestry
 model: claude-haiku-4-20250414
-allowed-tools: Bash(stackit:*), Bash(git:*), AskUserQuestion, Skill
+allowed-tools: Bash(stackit *), Bash(git *), AskUserQuestion, Skill
 ---
 
 # Stack Restack
@@ -9,7 +9,7 @@ allowed-tools: Bash(stackit:*), Bash(git:*), AskUserQuestion, Skill
 ## Context
 - Current branch: !`git branch --show-current`
 - Git status: !`git status --short`
-- Stack state: !`command stackit log --no-interactive 2>&1`
+- Stack state: !`stackit log --no-interactive 2>&1`
 
 ## Task
 
@@ -21,9 +21,9 @@ Rebase all branches in the stack to ensure proper parent-child ancestry.
 
 If preconditions fail, inform user and stop.
 
-Otherwise, run `command stackit restack --no-interactive` and show the result.
+Otherwise, run `stackit restack --no-interactive` and show the result.
 
-If conflicts occur, inform user they need to resolve conflicts and run `command stackit continue`.
+If conflicts occur, inform user they need to resolve conflicts and run `stackit continue`.
 
 ## Follow-up
 
