@@ -226,7 +226,7 @@ export async function generatePlanFromConnector(
 
         const groups = allNodes
             .filter(n => n.type === 'group' && n.metadata.boardId === boardId)
-            .map(g => ({ id: g.id, title: g.title }));
+            .map(g => ({ id: g.id, title: g.name }));
 
         // Collect unique columns
         const columnMap = new Map<string, { id: string, title: string, type: string }>();
