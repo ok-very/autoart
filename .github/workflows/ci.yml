@@ -26,7 +26,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm --filter @autoart/shared build
+      - run: pnpm --filter @autoart/shared --filter @autoart/ui build
 
       - run: pnpm typecheck
 
