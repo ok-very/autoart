@@ -2,7 +2,7 @@ import { Check, ChevronRight, FileText, Lightbulb, Clock, Sparkles } from 'lucid
 import type { ItemClassification, ClassificationSuggestion } from '../../../api/hooks/imports';
 import type { PendingResolution } from '../types';
 import { OUTCOME_OPTIONS } from '../constants';
-import { OutcomeIcon, getOutputKindBadge, formatSuggestionLabel, getConfidenceColor, isSuggestionSelected } from '../utils';
+import { OutcomeIcon, getOutputKindBadge, formatSuggestionLabel, getConfidenceColor, isSuggestionSelected, getOutcomeLabel } from '../utils';
 import { toFactKindKey, formatRuleSource, humanizeFactKind } from '../../../utils/formatFactKind';
 
 interface ClassificationRowProps {
@@ -100,7 +100,7 @@ export function ClassificationRow({
                         ) : (
                             <span className="text-xs font-medium text-amber-700 flex items-center gap-1.5">
                                 <Check className="w-3 h-3" />
-                                <span className="font-semibold">{pending.outcome === 'FACT_EMITTED' ? 'Emit Fact' : pending.outcome}</span>
+                                <span className="font-semibold">{getOutcomeLabel(pending.outcome)}</span>
                                 {pending.factKind && (
                                     <span className="text-amber-600">
                                         → {humanizeFactKind(pending.factKind)}

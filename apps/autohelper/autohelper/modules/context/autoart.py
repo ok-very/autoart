@@ -167,41 +167,6 @@ class AutoArtClient:
         self._cached_projects = None
         self._cached_developers = None
 
-    # =========================================================================
-    # CREDENTIAL PROXYING
-    # =========================================================================
-
-    def get_monday_token(self) -> str | None:
-        """
-        Fetch Monday API token from AutoArt using the link key.
-
-        This makes AutoArt the single source of truth for API tokens,
-        eliminating the need to store the Monday key locally.
-
-        Returns:
-            Monday API token on success, None on failure
-        """
-        try:
-            response = requests.get(
-                f"{self.api_url}/api/connections/autohelper/credentials",
-                headers=self._get_headers(),
-                timeout=10,
-            )
-
-            if response.status_code == 200:
-                result = response.json()
-                token = result.get("monday_api_token")
-                if token:
-                    logger.debug("Retrieved Monday token from AutoArt")
-                    return token
-
-            logger.warning(f"Failed to get Monday token: {response.status_code}")
-            return None
-
-        except requests.RequestException as e:
-            logger.error(f"Credential fetch failed: {e}")
-            return None
-
     def verify_key(self) -> bool:
         """Check if the link key is recognized by the backend (no Monday dependency)."""
         try:

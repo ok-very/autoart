@@ -12,7 +12,7 @@ export interface TransientEmail {
   metadata: Record<string, unknown> | null;
   ingestion_id: number | null;
   created_at: string | null;
-  triage_status: TriageStatus | null;
+  triage_status: TriageStatus | string | null;
   triage_notes: string | null;
   triaged_at: string | null;
 }
@@ -129,7 +129,7 @@ export interface MailMessage {
   received_at: string | null;
   body_preview: string | null;
   body_html: string | null;
-  metadata: Record<string, unknown>;
+  metadata: unknown;
   project_id: string | null;
   promoted_at: string;
   promoted_by: string;

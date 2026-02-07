@@ -207,11 +207,23 @@ export async function authRoutes(fastify: FastifyInstance) {
   // GOOGLE OAUTH ENDPOINTS
   // ============================================================================
 
+  // Check if Google OAuth is available
+  fastify.get('/google/status', async (_request, reply) => {
+    return reply.send({ available: oauthService.isGoogleOAuthConfigured() });
+  });
+
   // Initiate Google OAuth flow
   // Without auth: login mode (create/find user)
   // With auth: link mode (connect Google to existing user)
   fastify.get('/google', { preHandler: fastify.authenticateOptional }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
+      if (!oauthService.isGoogleOAuthConfigured()) {
+        return reply.code(501).send({
+          error: 'Google OAuth not configured',
+          message: 'Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables'
+        });
+      }
+
       const userId = (request.user as { userId?: string })?.userId;
       const { url, state } = oauthService.getGoogleAuthUrl(userId);
       return reply.send({ url, state });
@@ -342,11 +354,23 @@ export async function authRoutes(fastify: FastifyInstance) {
   // MICROSOFT OAUTH ENDPOINTS
   // ============================================================================
 
+  // Check if Microsoft OAuth is available
+  fastify.get('/microsoft/status', async (_request, reply) => {
+    return reply.send({ available: microsoftOAuthService.isMicrosoftOAuthConfigured() });
+  });
+
   // Initiate Microsoft OAuth flow
   // Without auth: login mode (create/find user)
   // With auth: link mode (connect Microsoft to existing user)
   fastify.get('/microsoft', { preHandler: fastify.authenticateOptional }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
+      if (!microsoftOAuthService.isMicrosoftOAuthConfigured()) {
+        return reply.code(501).send({
+          error: 'Microsoft OAuth not configured',
+          message: 'Set MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET environment variables'
+        });
+      }
+
       const userId = (request.user as { userId?: string })?.userId;
       const { url, state } = microsoftOAuthService.getMicrosoftAuthUrl(userId);
       return reply.send({ url, state });

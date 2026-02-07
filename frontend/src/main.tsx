@@ -9,6 +9,8 @@ import { ToastContainer } from './ui/Toast';
 import { toast } from './stores/toastStore';
 import { getUserFriendlyMessage, isAuthError } from './utils/errors';
 import { LAYOUT_VERSION } from './stores/workspaceStore';
+import { api } from './api/client';
+import { useAuthStore } from './stores/authStore';
 
 // Clear corrupted workspace layout before React mounts
 // This prevents crashes from incompatible persisted state
@@ -41,17 +43,34 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 30000,
       retry: (failureCount, error) => {
+        // Never retry auth errors — the session is dead.
         if (isAuthError(error)) return false;
         return failureCount < 2;
       },
     },
     mutations: {
       onError: (error) => {
+        // Don't toast auth errors — the redirect to login is the feedback.
+        if (isAuthError(error)) return;
         const message = getUserFriendlyMessage(error);
         toast.error(message);
       },
     },
   },
+});
+
+/**
+ * Session-expired handler: fires once when token refresh fails.
+ * Cancels all in-flight queries, clears auth state, and lets React
+ * re-render into the login routes (App.tsx checks isAuthenticated).
+ */
+api.setSessionExpiredHandler(() => {
+  // Cancel every in-flight query so nothing else fires against dead tokens.
+  queryClient.cancelQueries();
+  // Clear all cached data — it belongs to the old session.
+  queryClient.clear();
+  // Clear Zustand auth state — App.tsx will redirect to /login.
+  useAuthStore.getState().logout();
 });
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

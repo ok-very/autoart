@@ -13,6 +13,7 @@ import { useMemo } from 'react';
 import type { ImportPlan } from '../../../api/hooks/imports';
 import { Badge } from '@autoart/ui';
 import { DataFieldWidget, type DataFieldKind } from '../../../ui/molecules/DataFieldWidget';
+import { humanizeFieldName } from '../utils';
 import { TableFrame, TableHeaderRow, TableRow, TableHeaderCell, TableCell } from '../../../ui/table';
 
 interface TablePreviewProps {
@@ -37,7 +38,7 @@ export function TablePreview({ plan, selectedRecordId, onSelect }: TablePreviewP
 
         return Array.from(fieldSet.entries()).map(([name, hint]) => ({
             key: name,
-            label: name,
+            label: humanizeFieldName(name),
             renderHint: hint as DataFieldKind,
         }));
     }, [plan.items]);

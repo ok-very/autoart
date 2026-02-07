@@ -2,18 +2,52 @@
 // In development, Vite proxies /api to localhost:3001
 export const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
+/**
+ * Custom error class that preserves HTTP status and backend error code.
+ * Without this, all API errors became plain Error('Request failed') and
+ * isAuthError() could never detect 401s — causing the retry cascade.
+ */
+export class ApiError extends Error {
+  public readonly status: number;
+  public readonly code: string | undefined;
+
+  constructor(status: number, message: string, code?: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
 interface FetchOptions extends RequestInit {
   skipAuth?: boolean;
 }
 
+type SessionExpiredCallback = () => void;
+
 class ApiClient {
   private accessToken: string | null = null;
   private refreshTokenValue: string | null = null;
+  private onSessionExpired: SessionExpiredCallback | null = null;
+  /** True once session expiry has fired; prevents further authenticated requests. */
+  private sessionDead = false;
+  /** Deduplicates concurrent refresh attempts. */
+  private refreshPromise: Promise<boolean> | null = null;
+
+  /**
+   * Register a callback invoked once when token refresh fails.
+   * The callback should clear auth state and redirect to login.
+   */
+  setSessionExpiredHandler(handler: SessionExpiredCallback) {
+    this.onSessionExpired = handler;
+  }
 
   setToken(token: string | null) {
     this.accessToken = token;
     if (token) {
       localStorage.setItem('accessToken', token);
+      // New valid token means the session is alive again (post-login).
+      this.sessionDead = false;
     } else {
       localStorage.removeItem('accessToken');
     }
@@ -43,6 +77,21 @@ class ApiClient {
   }
 
   private async refreshToken(): Promise<boolean> {
+    // If a refresh is already in flight, piggyback on it instead of
+    // firing a parallel request for every queued 401.
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.refreshPromise = this._doRefresh();
+    try {
+      return await this.refreshPromise;
+    } finally {
+      this.refreshPromise = null;
+    }
+  }
+
+  private async _doRefresh(): Promise<boolean> {
     const token = this.getRefreshToken();
     if (!token) return false;
 
@@ -60,13 +109,33 @@ class ApiClient {
         return true;
       }
     } catch {
-      // Ignore errors
+      // Network error during refresh — treat as failed.
     }
+
+    // Refresh failed. Mark session dead so no further requests attempt auth.
+    this.handleSessionExpired();
     return false;
+  }
+
+  private handleSessionExpired() {
+    if (this.sessionDead) return; // Already fired.
+    this.sessionDead = true;
+
+    // Clear tokens so nothing tries to use them.
+    this.setToken(null);
+    this.setRefreshToken(null);
+
+    // Notify the app (clears auth store, cancels queries, redirects).
+    this.onSessionExpired?.();
   }
 
   async fetch<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
     const { skipAuth, ...fetchOptions } = options;
+
+    // If the session is dead, fail fast instead of hammering the backend.
+    if (this.sessionDead && !skipAuth) {
+      throw new ApiError(401, 'Session expired', 'AUTH_EXPIRED_TOKEN');
+    }
 
     const headers = new Headers(fetchOptions.headers);
 
@@ -85,7 +154,7 @@ class ApiClient {
       headers,
     });
 
-    // Handle token expiry
+    // Handle token expiry — attempt refresh exactly once.
     if (response.status === 401 && !skipAuth) {
       const refreshed = await this.refreshToken();
       if (refreshed) {
@@ -95,13 +164,16 @@ class ApiClient {
           headers,
         });
       }
+      // If refresh failed, handleSessionExpired was already called inside refreshToken().
+      // Fall through to the !response.ok block below which will throw ApiError.
     }
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({
-        message: response.statusText || 'Request failed'
-      }));
-      throw new Error(error.message || 'Request failed');
+      const body = await response.json().catch(() => ({}));
+      // Backend returns { error: { code, message } }
+      const code = body?.error?.code as string | undefined;
+      const message = body?.error?.message || body?.message || response.statusText || 'Request failed';
+      throw new ApiError(response.status, message, code);
     }
 
     // Handle 204 No Content

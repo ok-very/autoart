@@ -67,17 +67,17 @@ export function MiniCalendar({ selectedDates, onDatesChange, className }: MiniCa
                 <button
                     type="button"
                     onClick={() => setViewMonth((m) => subMonths(m, 1))}
-                    className="w-7 h-7 flex items-center justify-center rounded text-ws-text-secondary hover:bg-[var(--ws-row-expanded-bg)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ws-accent)]"
+                    className="w-7 h-7 flex items-center justify-center rounded text-ws-text-secondary hover:bg-ws-row-expanded-bg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ws-accent"
                 >
                     <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="text-sm font-semibold text-[var(--ws-fg)]">
+                <span className="text-sm font-semibold text-ws-fg">
                     {format(viewMonth, 'MMMM yyyy')}
                 </span>
                 <button
                     type="button"
                     onClick={() => setViewMonth((m) => addMonths(m, 1))}
-                    className="w-7 h-7 flex items-center justify-center rounded text-ws-text-secondary hover:bg-[var(--ws-row-expanded-bg)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ws-accent)]"
+                    className="w-7 h-7 flex items-center justify-center rounded text-ws-text-secondary hover:bg-ws-row-expanded-bg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ws-accent"
                 >
                     <ChevronRight className="w-4 h-4" />
                 </button>
@@ -108,11 +108,11 @@ export function MiniCalendar({ selectedDates, onDatesChange, className }: MiniCa
                             onClick={() => handleDayClick(day)}
                             className={clsx(
                                 'w-8 h-8 flex items-center justify-center rounded text-xs transition-colors',
-                                'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--ws-accent)]',
-                                selected && 'bg-[var(--ws-accent)] text-[var(--ws-accent-fg)]',
-                                !selected && today && 'ring-1 ring-inset ring-[var(--ws-accent)]',
+                                'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ws-accent',
+                                selected && 'bg-ws-accent text-ws-accent-fg',
+                                !selected && today && 'ring-1 ring-inset ring-ws-accent',
                                 !selected && !inMonth && 'text-ws-text-disabled',
-                                !selected && inMonth && 'text-[var(--ws-fg)] hover:bg-[var(--ws-row-expanded-bg)]',
+                                !selected && inMonth && 'text-ws-fg hover:bg-ws-row-expanded-bg',
                             )}
                         >
                             {format(day, 'd')}

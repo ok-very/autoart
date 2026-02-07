@@ -12,7 +12,7 @@ import { useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import { AccountSection, AppearanceSection, AutoHelperSection, IntegrationsSection } from './settings';
-import { useConnections, useConnectMonday, useDisconnectMonday, useConnectGoogle, useDisconnectGoogle, useConnectMicrosoft, useDisconnectMicrosoft, useMondayOAuthStatus, useConnectMondayOAuth } from '../api/connections';
+import { useConnections, useConnectMonday, useDisconnectMonday, useConnectGoogle, useDisconnectGoogle, useConnectMicrosoft, useDisconnectMicrosoft, useMondayOAuthStatus, useConnectMondayOAuth, useGoogleOAuthStatus, useMicrosoftOAuthStatus } from '../api/connections';
 import { useCurrentUser } from '../api/hooks';
 
 // ============================================================================
@@ -55,10 +55,12 @@ export function SettingsPage() {
     const connectMondayOAuthMutation = useConnectMondayOAuth();
 
     // Google OAuth hooks
+    const { data: googleOAuthStatus } = useGoogleOAuthStatus();
     const connectGoogleMutation = useConnectGoogle();
     const disconnectGoogleMutation = useDisconnectGoogle();
 
     // Microsoft OAuth hooks
+    const { data: microsoftOAuthStatus } = useMicrosoftOAuthStatus();
     const connectMicrosoftMutation = useConnectMicrosoft();
     const disconnectMicrosoftMutation = useDisconnectMicrosoft();
 
@@ -170,12 +172,14 @@ export function SettingsPage() {
                                     googleStatus={{ connected: connections?.google?.connected ?? false }}
                                     onMicrosoftConnect={handleMicrosoftConnect}
                                     onMicrosoftDisconnect={handleMicrosoftDisconnect}
+                                    microsoftOAuthAvailable={microsoftOAuthStatus?.available ?? false}
                                     onMondayConnect={handleMondayConnect}
                                     onMondayOAuthConnect={handleMondayOAuthConnect}
                                     mondayOAuthAvailable={mondayOAuthStatus?.available ?? false}
                                     onMondayDisconnect={handleMondayDisconnect}
                                     onGoogleConnect={handleGoogleConnect}
                                     onGoogleDisconnect={handleGoogleDisconnect}
+                                    googleOAuthAvailable={googleOAuthStatus?.available ?? false}
                                 />
                             ) : (
                                 <AccountSection />

@@ -89,7 +89,7 @@ class ContextService:
         """Initialize API clients based on settings."""
         from autohelper.config.store import ConfigStore
         from autohelper.modules.context.autoart import AutoArtClient
-        from autohelper.modules.context.monday import MondayClient, MondayClientError
+        from autohelper.modules.context.monday import MondayClient  # noqa: F401 — used for type
 
         # Load config from ConfigStore (where GUI saves settings)
         config_store = ConfigStore()
@@ -108,18 +108,6 @@ class ContextService:
         except Exception as e:
             logger.warning(f"Failed to init AutoArt client: {e}")
             self._autoart_client = None
-
-        # Monday client is now accessed via AutoArt proxy (using link_key)
-        # Direct Monday client is only initialized if we have a direct token in settings
-        # (for backward compatibility or direct API access scenarios)
-        monday_token = getattr(self.settings, "monday_api_token", None)
-        if monday_token:
-            try:
-                self._monday_client = MondayClient(token=monday_token)
-                logger.info("Monday client initialized (direct token)")
-            except (ValueError, MondayClientError) as e:
-                logger.warning(f"Failed to init Monday client: {e}")
-                self._monday_client = None
 
     def reinit_clients(self) -> None:
         """Reinitialize clients (call after settings change)."""

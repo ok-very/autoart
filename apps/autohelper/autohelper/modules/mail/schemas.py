@@ -40,9 +40,9 @@ class TransientEmail(BaseModel):
     metadata: dict[str, Any] | None = None
     ingestion_id: int | None = None
     created_at: datetime | None = None
-    triage_status: str | None = "pending"
+    triage_status: str | None = None
     triage_notes: str | None = None
-    triaged_at: datetime | None = None
+    triaged_at: str | None = None
 
 
 class TransientEmailList(BaseModel):

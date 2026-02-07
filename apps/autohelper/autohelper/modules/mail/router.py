@@ -50,7 +50,7 @@ def _row_to_email(row: tuple) -> TransientEmail:
         metadata=metadata,
         ingestion_id=row[7],
         created_at=row[8],
-        triage_status=row[9] or "pending",
+        triage_status=row[9],
         triage_notes=row[10],
         triaged_at=row[11],
     )
@@ -164,8 +164,17 @@ async def get_email(email_id: str) -> TransientEmail:
 # =============================================================================
 
 
-def _update_triage(email_id: str, status: str, notes: str | None) -> TriageResponse:
-    """Shared triage update logic."""
+_UNSET = object()  # sentinel: distinguish "not provided" from explicit None
+
+
+def _update_triage(
+    email_id: str, status: str, notes: str | None | object = _UNSET
+) -> TriageResponse:
+    """Shared triage update logic.
+
+    When *notes* is ``_UNSET`` (the default), existing ``triage_notes`` are
+    preserved.  Pass an explicit value (including ``None``) to overwrite.
+    """
     if status not in VALID_TRIAGE_STATUSES:
         raise HTTPException(
             status_code=400,
@@ -183,14 +192,25 @@ def _update_triage(email_id: str, status: str, notes: str | None) -> TriageRespo
 
     now = datetime.now(timezone.utc).isoformat()
 
-    db.execute(
-        """
-        UPDATE transient_emails
-        SET triage_status = ?, triage_notes = ?, triaged_at = ?
-        WHERE id = ?
-    """,
-        (status, notes, now, email_id),
-    )
+    if notes is _UNSET:
+        # Preserve existing triage_notes
+        db.execute(
+            """
+            UPDATE transient_emails
+            SET triage_status = ?, triaged_at = ?
+            WHERE id = ?
+        """,
+            (status, now, email_id),
+        )
+    else:
+        db.execute(
+            """
+            UPDATE transient_emails
+            SET triage_status = ?, triage_notes = ?, triaged_at = ?
+            WHERE id = ?
+        """,
+            (status, notes, now, email_id),
+        )
     db.commit()
 
     return TriageResponse(
@@ -209,20 +229,20 @@ async def triage_email(email_id: str, request: TriageRequest) -> TriageResponse:
 
 @router.post("/emails/{email_id}/archive", response_model=TriageResponse)
 async def archive_email(email_id: str) -> TriageResponse:
-    """Shorthand to set triage_status = 'archived'."""
-    return _update_triage(email_id, "archived", None)
+    """Shorthand to set triage_status = 'archived'. Preserves existing notes."""
+    return _update_triage(email_id, "archived")
 
 
 @router.post("/emails/{email_id}/mark-action-required", response_model=TriageResponse)
 async def mark_action_required(email_id: str) -> TriageResponse:
-    """Shorthand to set triage_status = 'action_required'."""
-    return _update_triage(email_id, "action_required", None)
+    """Shorthand to set triage_status = 'action_required'. Preserves existing notes."""
+    return _update_triage(email_id, "action_required")
 
 
 @router.post("/emails/{email_id}/mark-informational", response_model=TriageResponse)
 async def mark_informational(email_id: str) -> TriageResponse:
-    """Shorthand to set triage_status = 'informational'."""
-    return _update_triage(email_id, "informational", None)
+    """Shorthand to set triage_status = 'informational'. Preserves existing notes."""
+    return _update_triage(email_id, "informational")
 
 
 # =============================================================================
