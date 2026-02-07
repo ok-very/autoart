@@ -25,6 +25,7 @@ import {
     Wand2,
     Mail,
     Image,
+    BarChart3,
     type LucideIcon,
 } from 'lucide-react';
 
@@ -39,7 +40,7 @@ import {
 export type CorePanelId = 'center-workspace';
 export type ToolPanelId = 'selection-inspector' | 'classification' | 'search-results' | 'mail-panel';
 export type RegistryPanelId = 'records-list' | 'fields-list' | 'actions-list' | 'events-list';
-export type WorkbenchPanelId = 'import-workbench' | 'export-workbench' | 'composer-workbench' | 'intake-workbench' | 'artcollector-workbench';
+export type WorkbenchPanelId = 'import-workbench' | 'export-workbench' | 'composer-workbench' | 'intake-workbench' | 'artcollector-workbench' | 'polls-workbench';
 export type ProjectPanelId = 'project-panel';
 export type PanelId = CorePanelId | ToolPanelId | RegistryPanelId | WorkbenchPanelId | ProjectPanelId;
 
@@ -247,6 +248,15 @@ export const PANEL_DEFINITIONS: Record<PanelId, PanelDefinition> = {
         id: 'artcollector-workbench',
         title: 'Art Collector',
         icon: Image,
+        permanent: false,
+        defaultPlacement: { area: 'center' },
+        shouldShow: () => false, // On-demand
+        canActOn: () => true,
+    },
+    'polls-workbench': {
+        id: 'polls-workbench',
+        title: 'Polls',
+        icon: BarChart3,
         permanent: false,
         defaultPlacement: { area: 'center' },
         shouldShow: () => false, // On-demand

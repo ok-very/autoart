@@ -72,6 +72,7 @@ import { ExportPanel } from '../panels/ExportPanel';
 import { ComposerPanel } from '../panels/ComposerPanel';
 import { MailPanel } from '../panels/MailPanel';
 import { IntakePanel } from '../panels/IntakePanel';
+import { PollsPanel } from '../panels/PollsPanel';
 import { ArtCollectorPanel } from '../panels/ArtCollectorPanel';
 import { ProjectPanel } from '../panels/ProjectPanel';
 
@@ -83,7 +84,7 @@ const TOOL_PANELS: ToolPanelId[] = ['selection-inspector', 'mail-panel'];
 const REGISTRY_PANELS: RegistryPanelId[] = ['records-list', 'fields-list', 'actions-list', 'events-list'];
 const WORKBENCH_PANELS: WorkbenchPanelId[] = [
   'import-workbench', 'export-workbench', 'composer-workbench',
-  'intake-workbench', 'artcollector-workbench',
+  'intake-workbench', 'polls-workbench', 'artcollector-workbench',
 ];
 
 let panelCounter = 0;
@@ -364,6 +365,7 @@ const COMPONENTS: Record<string, React.FunctionComponent<IDockviewPanelProps>> =
   'composer-workbench': ComposerPanel,
   'mail-panel': MailPanel,
   'intake-workbench': IntakePanel,
+  'polls-workbench': PollsPanel,
   'artcollector-workbench': ArtCollectorPanel,
   'project-panel': ProjectPanel,
 };
