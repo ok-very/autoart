@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-06*
+*Last Updated: 2026-02-07*
 
 ## Bug List
 
@@ -8,19 +8,19 @@
 - ~~**Step 2: Configure Mapping broken:** Classification Panel missing old functionality~~ — fixed: restored classification gating from unmerged commit `efc939f` + mutation drain from `9fa1268`. `handleNext()` now checks for unresolved AMBIGUOUS/UNCLASSIFIED items, stays on Step 2 with warning alert + disabled button until resolved. Also added `awaitMutation()` to drain in-flight config mutations before plan regeneration. Fixed duplicate WHERE clause in `monday-workspace.service.ts`.
 - ~~**Import hierarchy:** Column headers use internal jargon~~ — fixed: `humanizeFieldName()` in table headers, `getOutcomeLabel()` in classification rows
 - ~~**Import wizard (Monday):** Connector sidebar action creates "active session" with no escape route~~ — fixed in commit 9dd1cff ("New Import" button added to sidebar)
-- **Intake record binding:** Adding record binding to block throws "Invalid UUID" error at `body/blocks_config/blocks/0/recordBinding/definitionId`
-- **Preview buttons (intake forms + polls):** Implementation theater — buttons exist but lead to no endpoint
+- ~~**Intake record binding:** Adding record binding to block throws "Invalid UUID" error~~ — fixed: auto-save now filters incomplete bindings (empty `definitionId`) before sending to backend. Schema stays strict.
+- ~~**Preview buttons (intake forms + polls):** Implementation theater~~ — fixed: intake Preview opens `VITE_INTAKE_APP_URL/{unique_id}` in new tab; poll editor Preview opens `VITE_POLL_APP_URL/{unique_id}`.
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
-- "Save current" in menu doesn't activate save workspace prompt — handler chain exists, not confirmed working
-- Fields from seed data rendering as `[object Object]` in tables
-- Subprocesses and stages not populating from seed projections
-- Poll editor missing — "New poll" has no editor attached; clicking existing spawned poll yields full page roundtrip (polls editor shipped in PRs #271-273, possible regression)
-- Poll "Open public poll" link is dead — navigates to `/public/poll/:id` which has no route, falls back to workspace. No way to preview poll output.
-- Finance overlay "client" field breaks when querying contacts — placeholder query not wired
+- ~~"Save current" in menu doesn't activate save workspace prompt~~ — fixed: `requestAnimationFrame` defers dialog open after Radix DropdownMenu close/focus-restore cycle.
+- ~~Fields from seed data rendering as `[object Object]` in tables~~ — fixed: `formatText()` now extracts `.name/.label/.title` from objects, falls back to JSON.
+- Subprocesses and stages not populating from seed projections — **deferred:** seed inserts actions/events directly without triggering projector. Needs separate deep-dive.
+- ~~Poll editor missing~~ — resolved: `PollsContent` wrapper already wires dashboard→editor navigation via `CenterContentRouter`. Added `polls-workbench` panel to registry for workspace presets.
+- ~~Poll "Open public poll" link is dead~~ — fixed: URLs now use `VITE_POLL_APP_URL` env var (dev: `localhost:5175`, prod: `poll.autoart.work`). Added `.env.development` with defaults.
+- ~~Finance overlay "client" field breaks when querying contacts~~ — **not broken:** `useContactsByGroup` → `/records/contacts/by-group` → `listContactsByGroup()` all wired. Stale todo entry.
 - ~~Expired session causes 401 cascade~~ — fixed: `ApiError` class preserves status/code, `isAuthError()` detects 401s, `sessionDead` flag + refresh dedup prevents cascade, `setSessionExpiredHandler` clears queries + auth store
-- AutoHelper sessions lost on backend restart (#340) — in-memory session store dies on restart, AutoHelper tray still shows "Paired" but backend has no session. Need to persist sessions to DB.
-- Workspace preset timing (#181) — `pendingPanelPositions` workaround for dockview panel positioning race condition
-- **AutoHelper settings:** Module detection failing (available modules not showing in settings), file root selection broken (browser), settings page needs comprehensive review
+- AutoHelper sessions lost on backend restart (#340) — **deferred:** link key IS persisted in `connection_credentials` DB table. Issue is tray icon staleness — needs design decision, not a bugfix.
+- Workspace preset timing (#181) — **deferred:** `pendingPanelPositions` workaround already in place. UX polish, not a bug.
+- **AutoHelper settings:** — **deferred:** architecture gap — needs backend bridge pattern for frontend→backend→AutoHelper communication. Separate design PR.
 
 **UX polish:**
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
