@@ -123,8 +123,8 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                 // out until the user has completed the selection.
                 const cleanBlocks = blocks.map((block) => {
                     if (block.kind === 'module' && 'recordBinding' in block && block.recordBinding) {
-                        const binding = block.recordBinding as { definitionId?: string };
-                        if (!binding.definitionId) {
+                        const binding = block.recordBinding as { definitionId?: string; fieldKey?: string };
+                        if (!binding.definitionId || !binding.fieldKey) {
                             const { recordBinding: _, ...rest } = block;
                             return rest as FormBlock;
                         }
