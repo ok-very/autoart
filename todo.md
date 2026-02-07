@@ -5,11 +5,11 @@
 ## Bug List
 
 **Active blocking:**
-- ~~**Step 2: Configure Mapping broken:** Classification Panel missing old functionality~~ — fixed: restored classification gating from unmerged commit `efc939f` + mutation drain from `9fa1268`. `handleNext()` now checks for unresolved AMBIGUOUS/UNCLASSIFIED items, stays on Step 2 with warning alert + disabled button until resolved. Also added `awaitMutation()` to drain in-flight config mutations before plan regeneration. Fixed duplicate WHERE clause in `monday-workspace.service.ts`.
+- **Classification Panel has no actionable interface:** Prior "fix" restored gating logic but the panel itself still has no UI for the user to actually resolve AMBIGUOUS/UNCLASSIFIED items — it gates advancement without giving you any way to act. Reopened.
 - ~~**Import hierarchy:** Column headers use internal jargon~~ — fixed: `humanizeFieldName()` in table headers, `getOutcomeLabel()` in classification rows
 - ~~**Import wizard (Monday):** Connector sidebar action creates "active session" with no escape route~~ — fixed in commit 9dd1cff ("New Import" button added to sidebar)
 - ~~**Intake record binding:** Adding record binding to block throws "Invalid UUID" error~~ — fixed: auto-save now filters incomplete bindings (empty `definitionId`) before sending to backend. Schema stays strict.
-- ~~**Preview buttons (intake forms + polls):** Implementation theater~~ — fixed: intake Preview opens `VITE_INTAKE_APP_URL/{unique_id}` in new tab; poll editor Preview opens `VITE_POLL_APP_URL/{unique_id}`.
+- **Preview buttons (intake forms + polls):** Still broken — prior "fix" did not resolve. Reopened.
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
 - ~~"Save current" in menu doesn't activate save workspace prompt~~ — fixed: `requestAnimationFrame` defers dialog open after Radix DropdownMenu close/focus-restore cycle.
 - ~~Fields from seed data rendering as `[object Object]` in tables~~ — fixed: `formatText()` now extracts `.name/.label/.title` from objects, falls back to JSON.
@@ -20,7 +20,12 @@
 - ~~Expired session causes 401 cascade~~ — fixed: `ApiError` class preserves status/code, `isAuthError()` detects 401s, `sessionDead` flag + refresh dedup prevents cascade, `setSessionExpiredHandler` clears queries + auth store
 - AutoHelper sessions lost on backend restart (#340) — **deferred:** link key IS persisted in `connection_credentials` DB table. Issue is tray icon staleness — needs design decision, not a bugfix.
 - Workspace preset timing (#181) — **deferred:** `pendingPanelPositions` workaround already in place. UX polish, not a bug.
-- **AutoHelper settings:** — **deferred:** architecture gap — needs backend bridge pattern for frontend→backend→AutoHelper communication. Separate design PR.
+- ~~**AutoHelper settings:**~~ — moved to P2 (backend bridge pattern + local storage locality)
+
+- **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
+- **Image form block link:** No image preview loads in the editor — can't verify via Preview button either since that's also broken. The editor should show a closer representation of the actual result inline rather than relying on a separate preview
+- **CenterView routing conceptual breakage:** Forms, imports, and other non-project views still populate the default Project CenterView. Needs architect review — these should map to their respective workspaces, with Desk as the catch-all for exceptions. Current behavior conflates project context with general-purpose surfaces.
+- **Desk workspace:** Broken layout, should be first in workspace list and default view. Blocks everything else.
 
 **UX polish:**
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
@@ -45,7 +50,7 @@ Three related bugs, one stack. Classification panel regression broke the configu
 
 | # | Issue | Bug Ref |
 |---|-------|---------|
-| 1 | ~~**Classification Panel regression:**~~ Fixed — restored classification gating + mutation drain from unmerged stacked branches. `handleNext()` gates on unresolved classifications, shows warning, disables advancement until resolved via ClassificationPanel in ImportWorkflowLayout's bottom region. Also fixed duplicate WHERE clause in `monday-workspace.service.ts`. | Bug list: "Step 2: Configure Mapping broken" |
+| 1 | **Classification Panel:** Gating logic restored but panel has no actionable UI — user cannot resolve AMBIGUOUS/UNCLASSIFIED items. Gates advancement with no way to act. Needs actual classification controls. | Bug list: "Step 2: Configure Mapping broken" |
 | 2 | ~~**Import hierarchy labels:** Column headers use internal jargon~~ — fixed: `humanizeFieldName()` converts snake_case/camelCase to Title Case in table headers; `getOutcomeLabel()` replaces raw SCREAMING_CASE outcomes in ClassificationRow | Bug list: "Import hierarchy" |
 | 3 | ~~**Connector sidebar escape hatch:**~~ Fixed in commit 9dd1cff — "New Import" button + back button added | Bug list: "Import wizard (Monday)" |
 | 4 | **"Import" tab visibility:** Tab hides in overflow menu despite ample space in tab bar | UX polish |
@@ -66,8 +71,10 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 | — | Poll editor: support different/multiple time block selections per day | Polls |
 | — | Consolidate Calendar/Gantt/future view expansions: Applications views not linked to Project View segmented equivalents; no project/process selection for these views outside single-project setting; Application view should perform general-purpose filter/overlay across projects (separate feature expansion) | Feature |
 | — | Finances UI unification: Finances call gets pulled into Project View rather than spawning its own panel; needs formalization and dedicated panel architecture; institute math/formula ESM to design and handle logic; missing project bindings and unclear how it interacts with records system | Finance |
+| — | **Formula/math module:** Standalone ESM for computed fields, financial calculations, and relationship math. Currently referenced as sub-points of Finances UI and Schema editor but never scoped as its own deliverable. | Feature |
+| — | **CenterView workspace routing:** Architect review — forms/imports/non-project views squatting in Project CenterView. Map content to owning workspaces, Desk as catch-all for exceptions. Conceptual breakage, not just a bug. | Architecture |
 | — | Records/Fields/Actions registry browser UI unification: needs consistent layout and shared filter system across all three panels | UX |
-| — | Workspace project binding + conditional sidebars: project binding only appears under "4. Review" tab; conditional sidebar appearance not implemented; complex feature requiring focused design and implementation plan | Workspace |
+| — | **Workspace project binding + sidebar overrides:** Never fully implemented — project binding to workspace with conditional sidebar appearance was specced but left incomplete. Blocks CenterView routing fix. | Workspace |
 
 ---
 
@@ -89,6 +96,9 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 | 86 | Monday.com Board Sync Settings | Integration |
 | 291 | Schema editor / Composer relationship-math builder | Feature |
 | 393 | File Detection & Alignment Service with watchdog — replace polling with filesystem watchdog in AutoHelper, convention enforcement, violation surfacing in UI | AutoHelper |
+| — | **AutoHelper settings bridge:** Architecture gap — frontend→backend→AutoHelper communication needs backend bridge pattern. Settings UI currently calls localhost directly, fails when AutoHelper is remote/offline | AutoHelper |
+| — | **AutoHelper local-only config:** Roots (indexed directories), DB path, and garbage collection settings carry with the user profile in the global DB but should be stored locally with AutoHelper so they don't follow the user across systems | AutoHelper |
+| — | **AutoHelper "Rebuild Index" is theater:** Carries stale DB path from previous system, hangs when triggered — likely calling localhost with no real backend handler or using the wrong path | AutoHelper |
 | — | Composer bar as sleek dockview popout window (replace modal) | UX |
 | — | Action vocabulary: store classification verbs/nouns/adjectives from imports as a heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret what action type is being constructed or referenced | Classification |
 
