@@ -33,7 +33,7 @@ export function BlockRecordBindingEditor({
             ? JSON.parse(selectedDef.schema_config)
             : selectedDef.schema_config;
         return Array.isArray(config?.fields) ? config.fields : [];
-    }, [selectedDef]);
+    }, [selectedDef?.schema_config]);
 
     // Find sibling blocks in same group
     const groupSiblings = useMemo(() => {
