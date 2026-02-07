@@ -46,8 +46,8 @@
     "build:all": "pnpm install && pnpm --filter autohelper run install:deps && pnpm build:shared && pnpm -r build",
     "build:all:win": "pnpm install && pnpm --filter autohelper run install:deps:win && pnpm build:shared && pnpm -r build",
     "setup:win": "pnpm build:all:win && pnpm migrate && pnpm seed:dev",
-    "build:all:clean": "pnpm -r exec rm -rf dist && pnpm run build:all",
-    "build:all:clean:win": "pnpm -r exec node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && pnpm run build:all:win",
+    "build:all:clean": "node scripts/clean-dist.mjs && pnpm run build:all",
+    "build:all:clean:win": "node scripts/clean-dist.mjs && pnpm run build:all:win",
     "git:stack": "bash scripts/git/stack-pr.sh",
     "git:merge-stack": "bash scripts/git/merge-stack.sh"
   },
