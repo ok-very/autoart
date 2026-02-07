@@ -2,6 +2,7 @@ import { clsx } from 'clsx';
 import { ExternalLink, Mail, Check, X } from 'lucide-react';
 
 import { UserChip } from '@autoart/ui';
+import { stringifyFieldValue } from '../../utils/stringifyFieldValue';
 
 /**
  * Field display kinds supported by the widget
@@ -53,15 +54,7 @@ function formatText(value: unknown): string {
     if (typeof value === 'string') return value;
     if (typeof value === 'number') return new Intl.NumberFormat('en-US').format(value);
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-    if (Array.isArray(value)) return value.map(formatText).filter(Boolean).join(', ');
-    if (typeof value === 'object') {
-        const obj = value as Record<string, unknown>;
-        for (const key of ['name', 'label', 'title', 'value', 'display', 'text']) {
-            if (typeof obj[key] === 'string') return obj[key];
-        }
-        try { return JSON.stringify(value); } catch { return ''; }
-    }
-    return String(value);
+    return stringifyFieldValue(value) ?? '';
 }
 
 function StatusPill({ label, colorClass }: { label: string; colorClass: string }) {
