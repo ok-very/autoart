@@ -589,14 +589,14 @@ export function IntegrationsSection({
     googleStatus = { connected: false },
     onMicrosoftConnect = () => { },
     onMicrosoftDisconnect = async () => { },
-    microsoftOAuthAvailable = false,
+    microsoftOAuthAvailable = true,
     onMondayConnect = async () => { },
     onMondayOAuthConnect = async () => { },
-    mondayOAuthAvailable = false,
+    mondayOAuthAvailable = true,
     onMondayDisconnect = async () => { },
     onGoogleConnect = () => { },
     onGoogleDisconnect = async () => { },
-    googleOAuthAvailable = false,
+    googleOAuthAvailable = true,
 }: IntegrationsSectionProps) {
     return (
         <div className="space-y-6">
