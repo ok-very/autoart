@@ -13,7 +13,6 @@ import type { Transaction } from 'kysely';
 import type { CreatedRecord, ComposerInput, ContextType, BlockRecordBinding } from '@autoart/shared';
 
 import type { Database } from '../../db/schema.js';
-import { db } from '../../db/client.js';
 import * as recordsService from '../records/records.service.js';
 import { compose } from '../composer/composer.service.js';
 
