@@ -5,7 +5,6 @@
  * Allows binding a block to a record definition field.
  */
 
-import { useMemo } from 'react';
 import { Link2, X } from 'lucide-react';
 import { useRecordDefinitions, useRecordDefinition } from '../../../api/hooks/entities/definitions';
 import type { BlockRecordBinding, FormBlock } from '@autoart/shared';
@@ -27,21 +26,22 @@ export function BlockRecordBindingEditor({
     const { data: selectedDef } = useRecordDefinition(binding?.definitionId ?? null);
 
     // Get fields from selected definition's schema_config
-    const definitionFields = useMemo(() => {
+    // (React Compiler handles memoization automatically)
+    const definitionFields = (() => {
         if (!selectedDef?.schema_config) return [];
         const config = typeof selectedDef.schema_config === 'string'
             ? JSON.parse(selectedDef.schema_config)
             : selectedDef.schema_config;
         return Array.isArray(config?.fields) ? config.fields : [];
-    }, [selectedDef?.schema_config]);
+    })();
 
     // Find sibling blocks in same group
-    const groupSiblings = useMemo(() => {
+    const groupSiblings = (() => {
         if (!binding?.groupKey) return [];
         return allBlocks.filter(
             (b) => b.id !== blockId && b.recordBinding?.groupKey === binding.groupKey
         );
-    }, [allBlocks, blockId, binding?.groupKey]);
+    })();
 
     // Unbound state: show add button
     if (!binding) {
