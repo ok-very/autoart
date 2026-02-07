@@ -288,7 +288,9 @@ export function WorkspaceDropdown() {
             : undefined;
         setDialogParentId(parentWorkspaceId);
         setDialogDefaultColor(parentColor);
-        setDialogOpen(true);
+        // Defer dialog open to next frame so Radix DropdownMenu completes its
+        // close + focus-restore cycle before the dialog mounts and traps focus.
+        requestAnimationFrame(() => setDialogOpen(true));
     };
 
     const handleDeleteCustom = (id: string) => {
