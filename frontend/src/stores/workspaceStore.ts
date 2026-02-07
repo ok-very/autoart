@@ -120,7 +120,7 @@ const initialState = {
     panelParams: new Map<string, unknown>(),
     userOverrides: new Map<PanelId, boolean>(),
     dockviewApi: null as DockviewApi | null,
-    activeWorkspaceId: null as string | null,
+    activeWorkspaceId: 'desk' as string | null,
     activeSubviewId: null as string | null,
     customWorkspaces: [] as WorkspacePreset[],
     pendingPanelPositions: new Map<PanelId, PanelPosition>(),
@@ -236,13 +236,13 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 // Restore default layout:
                 // - Reset to DEFAULT_OPEN_PANELS (center-workspace + selection-inspector)
                 // - Clear layout blob (DockviewWorkspace will rebuild default)
-                // - Clear user overrides and active workspace
+                // - Clear user overrides and default to Desk workspace
                 set({
                     layout: null,
                     openPanelIds: [...DEFAULT_OPEN_PANELS],
                     panelParams: new Map(),
                     userOverrides: new Map(),
-                    activeWorkspaceId: null,
+                    activeWorkspaceId: 'desk',
                     activeSubviewId: null,
                     boundProjectId: null,
                     boundPanelIds: new Set(),
