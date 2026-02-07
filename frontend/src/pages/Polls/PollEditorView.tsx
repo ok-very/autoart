@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
-import { ArrowLeft, Loader2, Check, ExternalLink, Eye, Copy, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Check, Eye, Copy, Trash2 } from 'lucide-react';
 
 import { Button, MiniCalendar } from '@autoart/ui';
 import {
