@@ -38,6 +38,7 @@ import { Header } from './Header';
 import { OverlayRegistry } from '../registry/OverlayRegistry';
 import { CommandPalette } from '../command-palette';
 import { useWorkspaceStore, useOpenPanelIds, useLayout, usePendingPanelPositions } from '../../stores/workspaceStore';
+import { WorkspaceContextProvider } from '../../workspace/WorkspaceContext';
 import { useVisiblePanels } from '../../stores/contextStore';
 import { useUIStore } from '../../stores/uiStore';
 import {
@@ -778,17 +779,19 @@ export function MainLayout() {
       <Header />
 
       {/* Main Dockview Area - fills remaining space */}
-      <div className="flex-1 overflow-hidden h-full">
-        <DockviewReact
-          theme={autoartTheme}
-          onReady={onReady}
-          components={COMPONENTS}
-          tabComponents={tabComponents}
-          defaultTabComponent={defaultTab}
-          watermarkComponent={watermark as FunctionComponent<IWatermarkPanelProps>}
-          rightHeaderActionsComponent={TabStripAddButton}
-        />
-      </div>
+      <WorkspaceContextProvider>
+        <div className="flex-1 overflow-hidden h-full">
+          <DockviewReact
+            theme={autoartTheme}
+            onReady={onReady}
+            components={COMPONENTS}
+            tabComponents={tabComponents}
+            defaultTabComponent={defaultTab}
+            watermarkComponent={watermark as FunctionComponent<IWatermarkPanelProps>}
+            rightHeaderActionsComponent={TabStripAddButton}
+          />
+        </div>
+      </WorkspaceContextProvider>
 
       {/* Global Overlays (modals, drawers, etc.) */}
       <OverlayRegistry />
