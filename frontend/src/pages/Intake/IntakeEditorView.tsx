@@ -116,10 +116,26 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
         saveBlocksTimeoutRef.current = setTimeout(async () => {
             setSaveStatus('saving');
             try {
+                // Strip incomplete record bindings before sending to backend.
+                // BlockRecordBindingEditor initializes with definitionId: '' when the
+                // user first clicks "Link to record field". The backend Zod schema
+                // requires definitionId to be a valid UUID, so we must filter these
+                // out until the user has completed the selection.
+                const cleanBlocks = blocks.map((block) => {
+                    if (block.kind === 'module' && 'recordBinding' in block && block.recordBinding) {
+                        const binding = block.recordBinding as { definitionId?: string; fieldKey?: string };
+                        if (!binding.definitionId || !binding.fieldKey) {
+                            const { recordBinding: _, ...rest } = block;
+                            return rest as FormBlock;
+                        }
+                    }
+                    return block;
+                });
+
                 await upsertPage.mutateAsync({
                     formId,
                     page_index: 0,
-                    blocks_config: { blocks },
+                    blocks_config: { blocks: cleanBlocks },
                 });
                 lastSavedBlocksRef.current = blocksJson;
                 setSaveStatus('saved');
