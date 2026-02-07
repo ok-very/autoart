@@ -151,7 +151,6 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 
 | PRs | Description |
 |-----|-------------|
-| #403 | **OAuth graceful status checks:** `/auth/google/status` + `/auth/microsoft/status` endpoints, 500→501 for unconfigured providers, frontend disables connect buttons, fixed stale redirect URIs, env example docs |
 | #394 | **MiniCalendar molecule for polls:** Compact month-grid date selector with multi-select toggle for poll configuration |
 | #369-372, #381-386 | **Intake forms → records pipeline:** Block connector architecture (RecordMapping schemas, SubmissionsTable with CSV export + record badges, RecordMappingPanel for staff config, Responses tab integration, Records editor tab, backend handler processes mappings) |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
@@ -162,6 +161,7 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| 403 | **OAuth graceful status checks:** Added `/auth/google/status`, `/auth/microsoft/status`, `/auth/monday/status` endpoints; changed 500→501 for unconfigured providers; frontend disables Connect buttons when server reports unavailable; fixed OAuth availability prop defaults (false→true) to prevent dead buttons in overlay contexts; resolved stale redirect URI concerns (intentional localhost dev defaults, overrideable via env) | PR #403 |
 | — | **Session: P0 Import Wizard Recovery + 401 Cascade + Mail Module (Feb 2026):** (1) Classification Panel regression: restored gating from unmerged commits `efc939f`+`9fa1268` — `handleNext()` gates on unresolved classifications, shows warning, disables Next button until resolved; mutation drain prevents stale config reads; fixed duplicate WHERE clause in monday-workspace.service.ts (2) Column headers: `humanizeFieldName()` for snake_case/camelCase → Title Case, `getOutcomeLabel()` for SCREAMING_CASE outcomes → readable labels (3) 401 cascade: `ApiError` class preserves status/code, `sessionDead` flag + refresh dedup prevents cascade, `setSessionExpiredHandler` wired in main.tsx (4) Mail module: triage `None` vs `"pending"` disambiguation, `_UNSET` sentinel preserving notes, `triaged_at` type unified to `str \| None`, frontend type guards, `metadata: unknown` (5) Dead code: Monday token endpoints, redundant indexes (6) Tailwind v4: PortalMenu, PortalSelect, MiniCalendar migrated; packages/ui/ clean | Commit 0e479c7 |
 | — | **Plugin integration upgrade:** Plugin Delegation sections added to 5 agent skills (architect, frontend-dev, backend-dev, integrator, reviewer), Loaded Plugins documentation + install checklist in CLAUDE.md, improve skill agent prompts rewritten from Go to TypeScript/React/Fastify, frontend-design plugin restricted to --pub-* surfaces only | PR #405 |
 | — | **Stackit skills recovery:** 26 orphaned command/skill files restored from git object store (f8814d8 tree); post-merge verification rule added to prevent future orphaned stack content (rapid-fire merges outran GitHub retargeting in Jan 29 incident) | Commits 73d7106, eaea487 |
