@@ -220,8 +220,9 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
         setShowPublishDialog(true);
     };
 
+    const intakeAppBase = import.meta.env.VITE_INTAKE_APP_URL || 'https://form.autoart.work';
     const publicUrl = form?.unique_id
-        ? `https://form.autoart.work/${form.unique_id}`
+        ? `${intakeAppBase}/${form.unique_id}`
         : null;
 
     const handleCopyUrl = () => {
@@ -316,7 +317,13 @@ export function IntakeEditorView({ formId, onBack }: IntakeEditorViewProps) {
                         <Redo2 className="w-4 h-4" />
                     </button>
                     <div className="h-6 w-px bg-slate-200 mx-1" />
-                    <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        onClick={() => publicUrl && window.open(publicUrl, '_blank')}
+                        disabled={!publicUrl}
+                    >
                         <Eye className="w-4 h-4" /> Preview
                     </Button>
                     <Button
