@@ -67,6 +67,8 @@ export interface WorkspacePreset {
     isBuiltIn: boolean;
     /** Scopes this custom workspace under a built-in workspace's submenu */
     parentWorkspaceId?: string;
+    /** Content types this workspace can display in center-workspace. Router validates against this. */
+    ownedContentTypes?: CenterContentType[];
     /** @deprecated Use subviews instead. Kept for backward compat with custom workspaces. */
     panels: WorkspacePanelConfig[];
     /** Named sub-configurations. Built-in workspaces should use this. */
