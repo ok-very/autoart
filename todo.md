@@ -1,65 +1,77 @@
 # AutoArt Priorities
 
 *Last Updated: 2026-02-07*
+*Strategy: See [roadmap.md](roadmap.md) for phased implementation plan and architectural diagnosis.*
 
 ## Bug List
 
-**Active blocking:**
-- **Classification Panel has no actionable interface:** Prior "fix" restored gating logic but the panel itself still has no UI for the user to actually resolve AMBIGUOUS/UNCLASSIFIED items — it gates advancement without giving you any way to act. Reopened.
-- ~~**Import hierarchy:** Column headers use internal jargon~~ — fixed: `humanizeFieldName()` in table headers, `getOutcomeLabel()` in classification rows
-- ~~**Import wizard (Monday):** Connector sidebar action creates "active session" with no escape route~~ — fixed in commit 9dd1cff ("New Import" button added to sidebar)
-- ~~**Intake record binding:** Adding record binding to block throws "Invalid UUID" error~~ — fixed: auto-save now filters incomplete bindings (empty `definitionId`) before sending to backend. Schema stays strict.
-- **Preview buttons (intake forms + polls):** Still broken — prior "fix" did not resolve. Reopened.
-- Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
-- ~~"Save current" in menu doesn't activate save workspace prompt~~ — fixed: `requestAnimationFrame` defers dialog open after Radix DropdownMenu close/focus-restore cycle.
-- ~~Fields from seed data rendering as `[object Object]` in tables~~ — fixed: `formatText()` now extracts `.name/.label/.title` from objects, falls back to JSON.
-- Subprocesses and stages not populating from seed projections — **deferred:** seed inserts actions/events directly without triggering projector. Needs separate deep-dive.
-- ~~Poll editor missing~~ — resolved: `PollsContent` wrapper already wires dashboard→editor navigation via `CenterContentRouter`. Added `polls-workbench` panel to registry for workspace presets.
-- ~~Poll "Open public poll" link is dead~~ — fixed: URLs now use `VITE_POLL_APP_URL` env var (dev: `localhost:5175`, prod: `poll.autoart.work`). Added `.env.development` with defaults.
-- ~~Finance overlay "client" field breaks when querying contacts~~ — **not broken:** `useContactsByGroup` → `/records/contacts/by-group` → `listContactsByGroup()` all wired. Stale todo entry.
-- ~~Expired session causes 401 cascade~~ — fixed: `ApiError` class preserves status/code, `isAuthError()` detects 401s, `sessionDead` flag + refresh dedup prevents cascade, `setSessionExpiredHandler` clears queries + auth store
-- AutoHelper sessions lost on backend restart (#340) — **deferred:** link key IS persisted in `connection_credentials` DB table. Issue is tray icon staleness — needs design decision, not a bugfix.
-- Workspace preset timing (#181) — **deferred:** `pendingPanelPositions` workaround already in place. UX polish, not a bug.
-- ~~**AutoHelper settings:**~~ — moved to P2 (backend bridge pattern + local storage locality)
+**Active — addressed by [Phase 1](roadmap.md#phase-1-workspace-foundation):**
+- **CenterView routing conceptual breakage:** Forms, imports, and other non-project views populate default Project CenterView. Should map to owning workspaces, with Desk as catch-all. [Phase 1.4]
+- **Desk workspace:** Broken layout, should be first in workspace list and default view. [Phase 1.3]
 
+**Active — unphased:**
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
-- **Image form block link:** No image preview loads in the editor — can't verify via Preview button either since that's also broken. The editor should show a closer representation of the actual result inline rather than relying on a separate preview
-- **CenterView routing conceptual breakage:** Forms, imports, and other non-project views still populate the default Project CenterView. Needs architect review — these should map to their respective workspaces, with Desk as the catch-all for exceptions. Current behavior conflates project context with general-purpose surfaces.
-- **Desk workspace:** Broken layout, should be first in workspace list and default view. Blocks everything else.
+- **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
+- Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
+
+**Deferred:**
+- Subprocesses and stages not populating from seed projections — seed inserts actions/events directly without triggering projector. Addressed by [Phase 2.4](roadmap.md#phase-2-type-system-unification) (seed through Composer).
+- AutoHelper sessions lost on backend restart (#340) — link key IS persisted in `connection_credentials` DB table. Issue is tray icon staleness — needs design decision, not a bugfix.
+- Workspace preset timing (#181) — `pendingPanelPositions` workaround in place. Replaced by [Phase 1.6](roadmap.md#phase-1-workspace-foundation) (workspace save).
 
 **UX polish:**
-- "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
-     remove the feature
+- "Import" tab hides in overflow menu despite ample space in tab bar
+- "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong — remove the feature
 - Emoji/icon selector overlay — search doesn't work; consider switching to Phosphor Icons
 - Glassmorphism missing from tab strip where it was implemented — should be doable now with first-class theme variables
 - Placeholder themes: Compact, Minimal, Floating, and Default are all essentially identical — four names, one skin. Either differentiate them or cull to one honest default.
-- ~~"Import" tab hiding in overflow menu despite ample space in tab bar~~ — promoted to P0 stack
 - Project View: "New project" dropdown UI broken under "Your projects" section — formatting not clean
 
-**Confirmed resolved (PR #403):**
-- ~~Google OAuth returns 500 when not configured~~ — added `/auth/google/status` + `/auth/microsoft/status` endpoints, changed 500 → 501, frontend disables buttons when unconfigured (PR #403)
-- ~~Monday OAuth unreachable from UI~~ — already fixed in PRs #388-392; UI conditionally shows OAuth button based on status endpoint. Bug entry was stale.
-
-**Confirmed resolved (18 items):** See Recently Closed section for PR references. Covers: Monday null group_title, poll editor granularity/missing, dropdown transparency, project spawn, Miller Columns, DOMPurify build, SelectionInspector close, panel spawner glassmorphism, AutoHelper tray pairing, applications dropdown bleed, panel spawn visibility, tab accent, action definitions seed, calendar link, header spacing, `/pair` async I/O, disconnect spinner.
+**Confirmed resolved (25+ items):** See Recently Closed section for PR references. Covers: Phase 0 stack (React Compiler memo, Classification Panel partial save, preview servers, ExecutionControls API client, unused vars), import hierarchy labels, connector sidebar escape hatch, intake record binding UUID, workspace save prompt timing, `[object Object]` field rendering, poll editor, poll public URLs, finance overlay contacts, 401 cascade, AutoHelper settings (now uses backend bridge), Google/Monday OAuth, and 18 earlier items (Monday null group_title, poll editor granularity, dropdown transparency, project spawn, Miller Columns, DOMPurify build, SelectionInspector close, panel spawner glassmorphism, AutoHelper tray pairing, applications dropdown bleed, panel spawn visibility, tab accent, action definitions seed, calendar link, header spacing, `/pair` async I/O, disconnect spinner).
 
 ---
 
-## P0: Next Stack — Import Wizard Recovery
+## Phase 0: Stop the Bleeding ✓
 
-Three related bugs, one stack. Classification panel regression broke the configure-mapping step; column headers speak database jargon instead of human; connector sidebar traps users with no escape route.
+*Complete — PRs #416-420 submitted and awaiting merge*
 
-| # | Issue | Bug Ref |
-|---|-------|---------|
-| 1 | **Classification Panel:** Gating logic restored but panel has no actionable UI — user cannot resolve AMBIGUOUS/UNCLASSIFIED items. Gates advancement with no way to act. Needs actual classification controls. | Bug list: "Step 2: Configure Mapping broken" |
-| 2 | ~~**Import hierarchy labels:** Column headers use internal jargon~~ — fixed: `humanizeFieldName()` converts snake_case/camelCase to Title Case in table headers; `getOutcomeLabel()` replaces raw SCREAMING_CASE outcomes in ClassificationRow | Bug list: "Import hierarchy" |
-| 3 | ~~**Connector sidebar escape hatch:**~~ Fixed in commit 9dd1cff — "New Import" button + back button added | Bug list: "Import wizard (Monday)" |
-| 4 | **"Import" tab visibility:** Tab hides in overflow menu despite ample space in tab bar | UX polish |
-
-Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanup (may touch same files). PR 3 is the escape-hatch UX. PR 4 is the tab visibility fix (small, independent).
+All five items shipped. Typecheck and lint pass clean. Phase 1 (Workspace Foundation) now unblocked.
 
 ---
 
-## P1: Ready to Build
+## Phase 1: Workspace Foundation
+
+*Full details: [roadmap.md Phase 1](roadmap.md#phase-1-workspace-foundation)*
+
+| # | Issue | Absorbs From | Depends On |
+|---|-------|-------------|-----------|
+| 1.1 | Workspace context contract (`WorkspaceContext` interface) | — | Phase 0 |
+| 1.2 | Panel context consumption (project-panel, mail-panel, inspector) | Workspace binding (was P1) | 1.1 |
+| 1.3 | Desk workspace (first in list, default on login) | Bug: Desk broken | 1.1, 1.2 |
+| 1.4 | CenterView routing ownership (workspace declares content type) | P1: CenterView routing, Bug: CenterView breakage | 1.1 |
+| 1.5 | Store consolidation (uiStore content state -> workspaceStore) | — (new) | 1.4 |
+| 1.6 | Workspace save (full state snapshot) | P2 #182: modification tracking | 1.5 |
+| 1.7 | Custom workspace lifecycle (create, rename, delete) | — | 1.5, 1.6 |
+| 1.8 | Workspace sidebar overrides (per-workspace sidebar rules) | P1: sidebar overrides | 1.4 |
+
+---
+
+## Phase 2: Type System Unification
+
+*Full details: [roadmap.md Phase 2](roadmap.md#phase-2-type-system-unification)*
+
+| # | Issue | Absorbs From | Depends On |
+|---|-------|-------------|-----------|
+| 2.1 | Entity kind resolver in `@autoart/shared` | Housekeeping: `definition_kind` items | — |
+| 2.2 | Import adapter migration (remove `entityType` strings) | — | 2.1 |
+| 2.3 | Overlay type migration (derive `entityKind` from context) | — | 2.1 |
+| 2.4 | Seed through Composer (validate seed = real user path) | Bug: seed projections deferred | 2.1, Phase 1 |
+
+---
+
+## Features (Unblocked)
+
+Items that can be built independently of the workspace/type phases.
 
 | # | Issue | Category |
 |---|-------|----------|
@@ -69,24 +81,31 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 79 | Enhance Workflow View Interactions | Feature |
 | — | Poll editor: support different/multiple time block selections per day | Polls |
-| — | Consolidate Calendar/Gantt/future view expansions: Applications views not linked to Project View segmented equivalents; no project/process selection for these views outside single-project setting; Application view should perform general-purpose filter/overlay across projects (separate feature expansion) | Feature |
-| — | Finances UI unification: Finances call gets pulled into Project View rather than spawning its own panel; needs formalization and dedicated panel architecture; institute math/formula ESM to design and handle logic; missing project bindings and unclear how it interacts with records system | Finance |
-| — | **Formula/math module:** Standalone ESM for computed fields, financial calculations, and relationship math. Currently referenced as sub-points of Finances UI and Schema editor but never scoped as its own deliverable. | Feature |
-| — | **CenterView workspace routing:** Architect review — forms/imports/non-project views squatting in Project CenterView. Map content to owning workspaces, Desk as catch-all for exceptions. Conceptual breakage, not just a bug. | Architecture |
-| — | Records/Fields/Actions registry browser UI unification: needs consistent layout and shared filter system across all three panels | UX |
-| — | **Workspace project binding + sidebar overrides:** Never fully implemented — project binding to workspace with conditional sidebar appearance was specced but left incomplete. Blocks CenterView routing fix. | Workspace |
+| — | Records/Fields/Actions registry browser UI unification: consistent layout and shared filter system | UX |
 
 ---
 
-## P2: Near-term
+## Features (Blocked by Phase 1)
+
+These need workspace foundation first. Building them now guarantees regressions.
+
+| Issue | Category | Blocked By |
+|-------|----------|-----------|
+| Consolidate Calendar/Gantt/future view expansions: Applications views not linked to Project View segmented equivalents; no project/process selection outside single-project setting; Application view should perform general-purpose filter/overlay across projects | Feature | Phase 1.4 (CenterView routing) |
+| Finances UI unification: Finances call gets pulled into Project View rather than spawning its own panel; needs formalization and dedicated panel architecture; institute math/formula ESM; missing project bindings | Finance | Phase 1.1 (workspace context) |
+| **Formula/math module:** Standalone ESM for computed fields, financial calculations, and relationship math. Currently sub-points of Finances UI and Schema editor but never scoped independently. | Feature | Phase 1.1 (workspace context) |
+| Composer bar as sleek dockview popout window (replace modal) | UX | Phase 1 (Dockview infrastructure) |
+
+---
+
+## P2: Near-term (Independent)
+
+Items that don't depend on workspace or type phases.
 
 | # | Issue | Category |
 |---|-------|----------|
-| — | Intake forms → records verification: E2E test block mapping, record creation, completion flow | Intake |
+| — | Intake forms -> records verification: E2E test block mapping, record creation, completion flow | Intake |
 | 173 | Epic: Finance Management System — rename "client" to "contact"; support progressive billing, budget allocation, developer record emulation | Epic |
-| 182 | Workspace modification tracking and save workflow | Workspace |
-| 180 | Add route/project context to workspace system | Workspace |
-| 179 | Context-driven automatic panel reconciliation | Workspace |
 | 183 | Evolve export into live client reports system | Reports |
 | 178 | Manual file link support in intake forms | Intake |
 | 177 | Integrate intake forms with records system | Intake |
@@ -96,47 +115,41 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 | 86 | Monday.com Board Sync Settings | Integration |
 | 291 | Schema editor / Composer relationship-math builder | Feature |
 | 393 | File Detection & Alignment Service with watchdog — replace polling with filesystem watchdog in AutoHelper, convention enforcement, violation surfacing in UI | AutoHelper |
-| — | **AutoHelper settings bridge:** Architecture gap — frontend→backend→AutoHelper communication needs backend bridge pattern. Settings UI currently calls localhost directly, fails when AutoHelper is remote/offline | AutoHelper |
-| — | **AutoHelper local-only config:** Roots (indexed directories), DB path, and garbage collection settings carry with the user profile in the global DB but should be stored locally with AutoHelper so they don't follow the user across systems | AutoHelper |
-| — | **AutoHelper "Rebuild Index" is theater:** Carries stale DB path from previous system, hangs when triggered — likely calling localhost with no real backend handler or using the wrong path | AutoHelper |
-| — | Composer bar as sleek dockview popout window (replace modal) | UX |
-| — | Action vocabulary: store classification verbs/nouns/adjectives from imports as a heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret what action type is being constructed or referenced | Classification |
+| — | **AutoHelper local-only config:** Roots, DB path, garbage collection settings should be stored locally with AutoHelper, not in global DB | AutoHelper |
+| — | **AutoHelper "Rebuild Index" is theater:** Carries stale DB path, hangs when triggered — needs real backend handler or correct path | AutoHelper |
+| — | Action vocabulary: store classification verbs/nouns/adjectives from imports as heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret action type construction | Classification |
+
+**Note:** AutoHelper settings bridge (was P2) is **resolved** — frontend now correctly uses backend bridge endpoints. See [roadmap.md](roadmap.md#autohelper-status-resolved).
+
+**Note:** Workspace modification tracking (#182), route/project context (#180), and panel reconciliation (#179) are absorbed into [Phase 1](roadmap.md#phase-1-workspace-foundation) items 1.5-1.7.
 
 ---
 
 ## Housekeeping
 
-| File | Issue |
-|------|-------|
-| Project Log view | Missing project sidebar (inconsistent with other project-scoped views) |
-| Records view | Align layout with Fields view: definitions filter + search bar, no redundant dropdown title |
-| `packages/ui/src/molecules/SegmentedControl.tsx` | Still using glassmorphism (`bg-[var(--ws-tabstrip-bg,#f1f5f9)]` with translucent styling) — not in DESIGN.md, should be solid background |
-| Intake forms + poll deployments | Need verification: localhost vs production endpoint config (forms and poll submit endpoints may be hardcoded or misconfigured for dev vs prod) |
-| Future outbound subdomains | `polls.autoart.work`, `forms.autoart.work` endpoint routing not wired — debug and configure for dev vs prod |
-| SelectionInspector / Record view | Handle `definition_kind` system for filtering/classification — arrangement vs container vs record kinds should drive what's shown and how |
-| Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate — shared field component needs expanded options for where/how combobox is invoked |
-| Selection editor | "Plan" link badge system could just be a pointer to the active window name / binding group color instead of its own concept |
-| `frontend/src/ui/table-core/UniversalTableCore.tsx` + composites | All tables are div-based with `role` attributes — migrate to new Table atom primitives from PR #350 for semantic HTML, browser print styles, native keyboard nav |
-| `packages/ui/src/atoms/Badge.tsx` | Badge variant colors (project, process, task, etc.) use domain-semantic Tailwind colors — needs separate approach since they're not chrome tokens |
-| `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` has no explicit UI/behavior mapping — containers render as actions (icon, labels, create flow). Needs dedicated UX treatment (CodeAnt #324 review) |
-| `frontend/src/ui/sidebars/` + definition filtering | Definitions without `definition_kind` (legacy/manual rows) excluded entirely by new filter — add fallback or migration to backfill (CodeAnt #324 review) |
-| `ExportMenu.tsx` | `invoiceNumber` now sent to PDF/DOCX export endpoints — backend handlers should consume it for Content-Disposition filenames |
-| ~~`apps/autohelper/.../mail/router.py`~~ | ~~Triage status "pending" ambiguity (CodeAnt #346)~~ — **Fixed:** default changed to `None`, sentinel pattern preserves notes |
-| ~~`apps/autohelper/.../mail/schemas.py`~~ | ~~`triaged_at` type mismatch (CodeAnt #346)~~ — **Fixed:** unified to `str \| None` |
-| ~~`frontend/src/api/types/mail.ts`~~ | ~~`triage_status` + `metadata` type mismatches (CodeAnt #346-347)~~ — **Fixed:** `TriageStatus \| string \| null`, `metadata: unknown` |
-| ~~`backend/src/db/migrations/`~~ | ~~Redundant indexes (CodeAnt #348)~~ — **Fixed:** `idx_mail_links_message` removed from 001_baseline |
-| ~~`packages/ui/src/` (all atoms + molecules)~~ | ~~Tailwind v4 `bg-[var(--ws-*)]` migration~~ — **Done:** 0 remaining arbitrary `var(--ws-*)` patterns in packages/ui/ (PortalMenu, PortalSelect, MiniCalendar fixed this session; rest done in prior PRs #333, #357) |
-| ~~`connections.routes.ts`~~ | ~~Dead `/connections/autohelper/credentials` endpoint~~ — **Removed** |
-| ~~`autoart.py`~~ | ~~Dead `get_monday_token()` method~~ — **Removed** |
-| ~~`service.py`~~ | ~~Dead Monday client init~~ — **Removed** |
+| File | Issue | Phase |
+|------|-------|-------|
+| Project Log view | Missing project sidebar (inconsistent with other project-scoped views) | 1.8 |
+| Records view | Align layout with Fields view: definitions filter + search bar, no redundant dropdown title | — |
+| `packages/ui/src/molecules/SegmentedControl.tsx` | Still using glassmorphism (`bg-[var(--ws-tabstrip-bg,#f1f5f9)]`) — not in DESIGN.md, should be solid background | — |
+| Intake forms + poll deployments | Need verification: localhost vs production endpoint config | — |
+| Future outbound subdomains | `polls.autoart.work`, `forms.autoart.work` endpoint routing not wired | — |
+| SelectionInspector / Record view | Handle `definition_kind` system for filtering/classification | 2.1 |
+| Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate | — |
+| Selection editor | "Plan" link badge system could just be a pointer to the active window name / binding group color | — |
+| `UniversalTableCore.tsx` + composites | All tables div-based with `role` attributes — migrate to Table atom primitives from PR #350 | — |
+| `packages/ui/src/atoms/Badge.tsx` | Badge variant colors use domain-semantic Tailwind colors — needs separate approach (not chrome tokens) | — |
+| `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` has no explicit UI/behavior mapping (CodeAnt #324) | 2.1 |
+| `frontend/src/ui/sidebars/` + definition filtering | Definitions without `definition_kind` excluded by filter — add fallback or migration (CodeAnt #324) | 2.1 |
+| `ExportMenu.tsx` | `invoiceNumber` sent to PDF/DOCX endpoints — backend should consume for Content-Disposition filenames | — |
 
 **Low priority (CodeAnt #332 nitpicks):**
 
 | File | Issue |
 |------|-------|
-| `packages/ui/src/atoms/Card.tsx` | Tailwind arbitrary value parsing: `theme(...)` nested inside `var(...)` fallback may be dropped by some JIT parsers — verify CI builds the stylesheet correctly |
-| `frontend/src/ui/sidebars/ProjectSidebar.tsx` | Section headings (`<p>` at lines 78, 138) lack proper heading semantics for assistive tech — use `<h2>` or add `role="heading"` + `aria-level` |
-| `frontend/src/intake/components/blocks/*.tsx` | Email, Phone, Time inputs missing ARIA attributes (`aria-invalid`, `aria-describedby`, `aria-required`); error paragraphs not programmatically linked to inputs |
+| `packages/ui/src/atoms/Card.tsx` | Tailwind arbitrary value parsing: `theme(...)` nested inside `var(...)` fallback may be dropped by some JIT parsers |
+| `frontend/src/ui/sidebars/ProjectSidebar.tsx` | Section headings (`<p>` at lines 78, 138) lack proper heading semantics for assistive tech |
+| `frontend/src/intake/components/blocks/*.tsx` | Email, Phone, Time inputs missing ARIA attributes (`aria-invalid`, `aria-describedby`, `aria-required`) |
 
 ---
 
@@ -161,8 +174,9 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 
 | PRs | Description |
 |-----|-------------|
+| #416-420 | **Phase 0 stack:** (0.1) React Compiler memo fix, (0.2) Classification Panel partial save, (0.3) Preview dev servers (intake 5174 + poll 5175), (0.4) ExecutionControls API client, (0.5) Unused var cleanup |
 | #394 | **MiniCalendar molecule for polls:** Compact month-grid date selector with multi-select toggle for poll configuration |
-| #369-372, #381-386 | **Intake forms → records pipeline:** Block connector architecture (RecordMapping schemas, SubmissionsTable with CSV export + record badges, RecordMappingPanel for staff config, Responses tab integration, Records editor tab, backend handler processes mappings) |
+| #369-372, #381-386 | **Intake forms -> records pipeline:** Block connector architecture (RecordMapping schemas, SubmissionsTable with CSV export + record badges, RecordMappingPanel for staff config, Responses tab integration, Records editor tab, backend handler processes mappings) |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
 
 ---
@@ -171,28 +185,29 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 
 | # | Issue | Closed By |
 |---|-------|-----------|
-| 403 | **OAuth graceful status checks:** Added `/auth/google/status`, `/auth/microsoft/status`, `/auth/monday/status` endpoints; changed 500→501 for unconfigured providers; frontend disables Connect buttons when server reports unavailable; fixed OAuth availability prop defaults (false→true) to prevent dead buttons in overlay contexts; resolved stale redirect URI concerns (intentional localhost dev defaults, overrideable via env) | PR #403 |
-| — | **Session: P0 Import Wizard Recovery + 401 Cascade + Mail Module (Feb 2026):** (1) Classification Panel regression: restored gating from unmerged commits `efc939f`+`9fa1268` — `handleNext()` gates on unresolved classifications, shows warning, disables Next button until resolved; mutation drain prevents stale config reads; fixed duplicate WHERE clause in monday-workspace.service.ts (2) Column headers: `humanizeFieldName()` for snake_case/camelCase → Title Case, `getOutcomeLabel()` for SCREAMING_CASE outcomes → readable labels (3) 401 cascade: `ApiError` class preserves status/code, `sessionDead` flag + refresh dedup prevents cascade, `setSessionExpiredHandler` wired in main.tsx (4) Mail module: triage `None` vs `"pending"` disambiguation, `_UNSET` sentinel preserving notes, `triaged_at` type unified to `str \| None`, frontend type guards, `metadata: unknown` (5) Dead code: Monday token endpoints, redundant indexes (6) Tailwind v4: PortalMenu, PortalSelect, MiniCalendar migrated; packages/ui/ clean | Commit 0e479c7 |
-| — | **Plugin integration upgrade:** Plugin Delegation sections added to 5 agent skills (architect, frontend-dev, backend-dev, integrator, reviewer), Loaded Plugins documentation + install checklist in CLAUDE.md, improve skill agent prompts rewritten from Go to TypeScript/React/Fastify, frontend-design plugin restricted to --pub-* surfaces only | PR #405 |
-| — | **Stackit skills recovery:** 26 orphaned command/skill files restored from git object store (f8814d8 tree); post-merge verification rule added to prevent future orphaned stack content (rapid-fire merges outran GitHub retargeting in Jan 29 incident) | Commits 73d7106, eaea487 |
-| 387 | **Unified OAuth under /api/auth:** Shared HMAC-signed state utility (stateless, 10-min expiry), Google/Microsoft/Monday all support login mode (create/find user) + link mode (connect to existing user), Monday moved from `/connections/monday/oauth/*` to `/auth/monday` with consistent callback format (JSON for login, HTML popup-close for link), deprecated old routes return 410 Gone | PRs #388-392 |
-| — | **AutoHelper Pairing Odyssey + Bug Fixes:** Replaced push-to-localhost pattern with claim-token flow (in-memory sessions → persistent link keys, 6-char codes w/ TTL); tray menu pairing dialog; port alignment to 8100 + Vite proxy; fixed `is_running()` AttributeError, routed mail/folder controls through backend bridge, explicit Web Collector dependency checks; AdaptersCard showing real capability status | PRs #354-368 (14 PRs) |
-| 83 | Email Section Redesign + Email Logging System: Table atom primitives, body_html capture, MappingsPanel expand/collapse HTML rendering, triage endpoints, mail_messages/mail_links persistence, frontend linking, promoted badges, CodeAnt review fixes | PRs #346-353 |
-| 82a-82e | User Profiles System: schema + role middleware, avatar upload + password change + admin CRUD, account settings UI + admin panel + header avatar, UserChip photo support, project assignment + deactivation reassignment | PRs #341-345 |
+| — | **Bug fix stack (Feb 7 2026):** (1) Guard ClassificationRow outcome render against null (2) `build:all:clean` resilient to Windows EBUSY file locks (3) Hook to block stackit checkout/restack during sessions (4) Restore ExternalLink alongside Preview button in poll editor (5) Filter incomplete record bindings from intake auto-save (6) Workspace save dialog timing fix (rAF after Radix close) (7) DataFieldWidget object rendering (8) Poll public URLs via env vars (9) Polls panel + registry entry for workspace presets | PRs #411-415 |
+| 403 | **OAuth graceful status checks:** Added `/auth/google/status`, `/auth/microsoft/status`, `/auth/monday/status` endpoints; changed 500->501 for unconfigured providers; frontend disables Connect buttons when server reports unavailable; fixed OAuth availability prop defaults (false->true) to prevent dead buttons in overlay contexts; resolved stale redirect URI concerns (intentional localhost dev defaults, overrideable via env) | PR #403 |
+| — | **Session: P0 Import Wizard Recovery + 401 Cascade + Mail Module (Feb 2026):** (1) Classification Panel regression: restored gating from unmerged commits `efc939f`+`9fa1268` (2) Column headers: `humanizeFieldName()` + `getOutcomeLabel()` (3) 401 cascade: `ApiError` class, `sessionDead` flag, `setSessionExpiredHandler` (4) Mail module: triage `None` vs `"pending"`, `_UNSET` sentinel, type unification (5) Dead code removal (6) Tailwind v4 migration | Commit 0e479c7 |
+| — | **Plugin integration upgrade:** Plugin Delegation sections added to 5 agent skills, Loaded Plugins documentation + install checklist, improve skill prompts rewritten, frontend-design plugin restricted to --pub-* | PR #405 |
+| — | **Stackit skills recovery:** 26 orphaned command/skill files restored from git object store; post-merge verification rule added | Commits 73d7106, eaea487 |
+| 387 | **Unified OAuth under /api/auth:** Shared HMAC-signed state utility, Google/Microsoft/Monday login + link modes, consistent callback format, deprecated old routes return 410 Gone | PRs #388-392 |
+| — | **AutoHelper Pairing Odyssey + Bug Fixes:** Claim-token flow, tray menu pairing, port alignment, mail/folder controls through backend bridge | PRs #354-368 (14 PRs) |
+| 83 | Email Section Redesign + Email Logging System | PRs #346-353 |
+| 82a-82e | User Profiles System | PRs #341-345 |
 | — | UX polish: Menu/Dropdown `--ws-*` token migration + glassmorphism | PR #337 |
-| — | UX polish: SelectionInspector close button + tab accent migration to `--ws-accent` | PR #338 |
-| — | Header divider, panel spawn activation (`requestAnimationFrame`), "Project View" rename, SchemaEditor pin toggle removal | PR #339 |
-| — | AutoHelper frontend-initiated pairing: `/pair` endpoint + one-click Pair button, remove tkinter dialog | PRs #334-335 |
-| — | Migration 036 stub restoration + seed transaction wrapping (housekeeping) | PR #331 |
-| — | Accessibility: form label/input associations (Email, Phone, Time); sidebar section headings; SettingsPage + Card.tsx design tokens (housekeeping) | PR #332 |
-| — | Atom token migration: 13 atom files migrated to `--ws-*` tokens; Toggle atom extraction from AutoHelperSection (housekeeping) | PR #333 |
-| — | Intake `--pub-*` token boundary fix (housekeeping); `definition_kind` system: seed containers + sidebar heuristics removal + idempotency fix (housekeeping) | PRs #323-324 |
-| 235 | Context breadcrumb to events (P1) | PR #325 |
-| — | Loading screen refactoring: rounded corners + wrapper, AutoArt text + pre-spinner, design tokens in React fallback; AutoHelper pairing: tray menu + TclError fallback; Review feedback fixes: `_check_paired()` settings fallback, container seed upsert `is_system` | PRs #326-330 |
-| — | Add /logkeeper skill: dedicated todo.md maintenance agent with personality | PR (commit 4b6e228) |
-| — | Refactor: rename recipe → arrangement, drop orphaned action_type_definitions, seed arrangement definitions | PRs #320-322 |
-| — | UI Consistency Audit: dead code removal, font-bold→semibold, header heights h-10/h-8, `--ws-font-size-*` typography tokens, 2744 hardcoded slate/white→`--ws-*` color tokens, stale TODOs purged | PRs #313-317 |
-| — | Bugfixes: Methodology→Process rename, fieldBindings crash, Bound→Linked, LoginPage tokens, Chladni badge/loader tile | PR #312 |
+| — | UX polish: SelectionInspector close button + tab accent migration | PR #338 |
+| — | Header divider, panel spawn activation, "Project View" rename, SchemaEditor pin toggle removal | PR #339 |
+| — | AutoHelper frontend-initiated pairing | PRs #334-335 |
+| — | Migration 036 stub restoration + seed transaction wrapping | PR #331 |
+| — | Accessibility: form label/input associations, sidebar headings, design tokens | PR #332 |
+| — | Atom token migration: 13 atom files to `--ws-*` tokens, Toggle atom extraction | PR #333 |
+| — | Intake `--pub-*` token boundary fix, `definition_kind` system seeds + sidebar heuristics | PRs #323-324 |
+| 235 | Context breadcrumb to events | PR #325 |
+| — | Loading screen refactoring, AutoHelper tray menu, review feedback fixes | PRs #326-330 |
+| — | Add /logkeeper skill | PR (commit 4b6e228) |
+| — | Refactor: rename recipe -> arrangement, drop orphaned action_type_definitions, seed arrangement definitions | PRs #320-322 |
+| — | UI Consistency Audit: dead code removal, font-bold->semibold, header heights, typography tokens, 2744 color tokens | PRs #313-317 |
+| — | Bugfixes: Methodology->Process rename, fieldBindings crash, Bound->Linked, LoginPage tokens, Chladni badge/loader tile | PR #312 |
 | — | Dockview v4 theme, swoopy tab corners, unified ThemedTab, tab strip + button | PRs #307-311 |
 | *(older entries pruned — see git log for PRs #174-306)* | | |
 

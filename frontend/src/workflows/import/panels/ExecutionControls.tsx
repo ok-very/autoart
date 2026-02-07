@@ -15,6 +15,7 @@ import { Ban, CheckCircle2, AlertTriangle, Upload, Loader2 } from 'lucide-react'
 import { useState, useCallback, useMemo } from 'react';
 
 import type { ImportSession, ImportPlan } from '../../../api/hooks/imports';
+import { useExecuteImport } from '../../../api/hooks/imports';
 import { Card, Inline, Text, Button, Badge } from '@autoart/ui';
 
 // ============================================================================
@@ -126,6 +127,7 @@ export function ExecutionControls({
     onReset,
 }: ExecutionControlsProps) {
     const [executionStatus, setExecutionStatus] = useState<'idle' | 'success' | 'error' | 'blocked'>('idle');
+    const executeMutation = useExecuteImport();
 
     const hasErrors = plan?.validationIssues.some((i) => i.severity === 'error') ?? false;
 
@@ -163,14 +165,10 @@ export function ExecutionControls({
         setExecutionStatus('idle');
 
         try {
-            const response = await fetch(`/api/imports/sessions/${session.id}/execute`, {
-                method: 'POST',
-            });
+            const result = await executeMutation.mutateAsync(session.id);
 
-            const result = await response.json();
-
-            if (result.blocked) {
-                setExecutionStatus('blocked');
+            if (result.status === 'failed') {
+                setExecutionStatus('error');
                 onExecuteComplete(false);
             } else {
                 setExecutionStatus('success');
@@ -181,7 +179,7 @@ export function ExecutionControls({
             setExecutionStatus('error');
             onExecuteComplete(false);
         }
-    }, [session, plan, commitAllowed, onExecuteStart, onExecuteComplete]);
+    }, [session, plan, commitAllowed, onExecuteStart, onExecuteComplete, executeMutation]);
 
     // No session yet
     if (!session || !plan) {
