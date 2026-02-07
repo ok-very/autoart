@@ -8,8 +8,9 @@
 # Services started:
 #   - Backend API (port 3001)
 #   - Frontend (port 5173)
-#   - AutoHelper Python service (port 8100)
-#   - Forms app (port 5174) - optional
+#   - Intake preview (port 5174)
+#   - Poll preview (port 5175)
+#   - AutoHelper Python service (port 8100) - if present
 
 set -euo pipefail
 
@@ -82,13 +83,17 @@ if [[ -f apps/autohelper/package.json ]]; then
     sleep 2
 fi
 
-# Start Forms if present
-if [[ -f apps/forms/package.json ]]; then
-    echo "[*] Starting Forms app..."
-    (cd apps/forms && pnpm dev) 2>&1 | sed 's/^/[FORMS] /' &
-    PIDS+=($!)
-    sleep 2
-fi
+# Start Intake preview (port 5174)
+echo "[*] Starting Intake preview server..."
+(cd frontend && pnpm dev:intake) 2>&1 | sed 's/^/[INTAKE] /' &
+PIDS+=($!)
+sleep 1
+
+# Start Poll preview (port 5175)
+echo "[*] Starting Poll preview server..."
+(cd frontend && pnpm dev:poll) 2>&1 | sed 's/^/[POLL] /' &
+PIDS+=($!)
+sleep 1
 
 echo ""
 echo "======================================"
@@ -97,8 +102,9 @@ echo "======================================"
 echo ""
 echo "  Frontend:   http://localhost:$FRONTEND_PORT"
 echo "  Backend:    http://localhost:$BACKEND_PORT"
+echo "  Intake:     http://localhost:5174"
+echo "  Poll:       http://localhost:5175"
 [[ -f apps/autohelper/package.json ]] && echo "  AutoHelper: http://localhost:$AUTOHELPER_PORT"
-[[ -f apps/forms/package.json ]] && echo "  Forms:      http://localhost:5174"
 echo ""
 echo "Press Ctrl+C to stop all services"
 echo ""
