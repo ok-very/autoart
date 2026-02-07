@@ -6,9 +6,14 @@
  *
  * GUARDRAIL: This component's identity never changes.
  * Only the internal renderer switches based on uiStore.centerContentType.
+ *
+ * When a workspace declares ownedContentTypes, the router validates and
+ * redirects to the workspace's default content type on mismatch.
  */
 
+import { useEffect } from 'react';
 import { useUIStore } from '../../stores/uiStore';
+import { useWorkspaceContextOptional } from '../../workspace/WorkspaceContext';
 import { ProjectContentAdapter } from './ProjectContentAdapter';
 import {
     ArtCollectorContent,
@@ -22,6 +27,17 @@ import {
 
 export function CenterContentRouter() {
     const centerContentType = useUIStore((s) => s.centerContentType);
+    const setCenterContentType = useUIStore((s) => s.setCenterContentType);
+    const wsCtx = useWorkspaceContextOptional();
+
+    // Validate content type against workspace's owned types
+    useEffect(() => {
+        if (!wsCtx?.ownedContentTypes) return;
+        if (!wsCtx.ownedContentTypes.includes(centerContentType)) {
+            // Redirect to workspace's default content type (first in list)
+            setCenterContentType(wsCtx.ownedContentTypes[0]);
+        }
+    }, [centerContentType, wsCtx?.ownedContentTypes, setCenterContentType]);
 
     switch (centerContentType) {
         case 'projects':
