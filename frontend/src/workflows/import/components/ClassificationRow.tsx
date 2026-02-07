@@ -90,7 +90,7 @@ export function ClassificationRow({
                 </div>
 
                 {/* Inline Pending Resolution Status */}
-                {pending && (
+                {pending?.outcome && (
                     <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 rounded-lg border border-amber-100 animate-in fade-in zoom-in duration-200">
                         {pending.outcome === 'DEFERRED' ? (
                             <span className="text-xs font-medium text-ws-text-secondary flex items-center gap-1.5">
