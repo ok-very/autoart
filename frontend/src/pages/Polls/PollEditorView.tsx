@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
-import { ArrowLeft, Loader2, Check, ExternalLink, Copy, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Check, Eye, Copy, Trash2 } from 'lucide-react';
 
 import { Button, MiniCalendar } from '@autoart/ui';
 import {
@@ -243,6 +243,14 @@ export function PollEditorView({ pollId, onBack, onDeleted }: PollEditorViewProp
                 <div className="flex items-center gap-2">
                     {publicUrl && (
                         <>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="flex items-center gap-2"
+                                onClick={() => window.open(publicUrl, '_blank')}
+                            >
+                                <Eye className="w-4 h-4" /> Preview
+                            </Button>
                             <button
                                 onClick={handleCopyUrl}
                                 className="p-2 text-ws-text-secondary hover:bg-ws-hover rounded"
@@ -250,15 +258,6 @@ export function PollEditorView({ pollId, onBack, onDeleted }: PollEditorViewProp
                             >
                                 {copied ? <Check className="w-4 h-4 text-ws-success" /> : <Copy className="w-4 h-4" />}
                             </button>
-                            <a
-                                href={publicUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-2 text-ws-text-secondary hover:bg-ws-hover rounded"
-                                title="Open public poll"
-                            >
-                                <ExternalLink className="w-4 h-4" />
-                            </a>
                         </>
                     )}
                     <Button
