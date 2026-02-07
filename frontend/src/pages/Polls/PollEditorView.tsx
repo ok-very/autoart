@@ -149,11 +149,12 @@ export function PollEditorView({ pollId, onBack, onDeleted }: PollEditorViewProp
         });
     }, [timeConfig]);
 
-    const publicUrl = poll?.unique_id ? `/public/poll/${poll.unique_id}` : null;
+    const pollAppBase = import.meta.env.VITE_POLL_APP_URL || 'https://poll.autoart.work';
+    const publicUrl = poll?.unique_id ? `${pollAppBase}/${poll.unique_id}` : null;
 
     const handleCopyUrl = () => {
         if (publicUrl) {
-            navigator.clipboard.writeText(window.location.origin + publicUrl);
+            navigator.clipboard.writeText(publicUrl);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }

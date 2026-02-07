@@ -50,6 +50,8 @@ function defaultTimeConfig() {
     };
 }
 
+const POLL_APP_URL = import.meta.env.VITE_POLL_APP_URL || 'https://poll.autoart.work';
+
 export function PollsDashboard({ onOpenPoll }: PollsDashboardProps) {
     const { data: polls, isLoading } = usePolls();
     const createPoll = useCreatePoll();
@@ -109,13 +111,13 @@ export function PollsDashboard({ onOpenPoll }: PollsDashboardProps) {
             onOpenPoll(poll.id);
         } else {
             // Fallback: open public poll in new tab
-            window.open(`/public/poll/${poll.unique_id}`, '_blank', 'noopener,noreferrer');
+            window.open(`${POLL_APP_URL}/${poll.unique_id}`, '_blank', 'noopener,noreferrer');
         }
     };
 
     const handleOpenPublic = (e: React.SyntheticEvent, poll: Poll) => {
         e.stopPropagation();
-        window.open(`/public/poll/${poll.unique_id}`, '_blank', 'noopener,noreferrer');
+        window.open(`${POLL_APP_URL}/${poll.unique_id}`, '_blank', 'noopener,noreferrer');
     };
 
     if (isLoading) {
