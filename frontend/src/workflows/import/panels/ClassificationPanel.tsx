@@ -245,12 +245,12 @@ export function ClassificationPanel({
         return Array.from(pendingResolutions.values()).filter((r) => r.outcome !== null).length;
     }, [pendingResolutions]);
 
-    // Check if all items are resolved
-    const allResolved = resolvedCount === unresolvedItems.length && unresolvedItems.length > 0;
+    // Check if there are any resolutions to save
+    const hasResolutions = resolvedCount > 0;
 
     // Handle save
     const handleSave = useCallback(async () => {
-        if (!sessionId || !allResolved) return;
+        if (!sessionId || !hasResolutions) return;
 
         const resolutions: Resolution[] = Array.from(pendingResolutions.values())
             .filter((r) => r.outcome !== null)
@@ -273,7 +273,7 @@ export function ClassificationPanel({
         } catch (err) {
             console.error('Failed to save resolutions:', err);
         }
-    }, [sessionId, allResolved, pendingResolutions, saveResolutionsMutation, onResolutionsSaved]);
+    }, [sessionId, hasResolutions, pendingResolutions, saveResolutionsMutation, onResolutionsSaved]);
 
     // No classifications at all
     if (allClassifications.length === 0) {
@@ -407,7 +407,7 @@ export function ClassificationPanel({
                                     e.stopPropagation();
                                     handleSave();
                                 }}
-                                disabled={!allResolved || saveResolutionsMutation.isPending}
+                                disabled={!hasResolutions || saveResolutionsMutation.isPending}
                                 className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 rounded-lg transition-colors"
                             >
                                 {saveResolutionsMutation.isPending ? (
