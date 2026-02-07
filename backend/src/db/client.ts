@@ -26,8 +26,6 @@ const dbContainer: { instance: Kysely<Database> | null } = { instance: null };
  * Create database pool with appropriate authentication
  */
 async function createPool(): Promise<Pool> {
-  const isDev = env.NODE_ENV === 'development';
-
   if (!env.AZURE_AD_USER) {
     // Development: Use password-based connection string
     if (!env.DATABASE_URL) {
