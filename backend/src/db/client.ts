@@ -28,7 +28,7 @@ const dbContainer: { instance: Kysely<Database> | null } = { instance: null };
 async function createPool(): Promise<Pool> {
   const isDev = env.NODE_ENV === 'development';
 
-  if (isDev || !env.AZURE_AD_USER) {
+  if (!env.AZURE_AD_USER) {
     // Development: Use password-based connection string
     if (!env.DATABASE_URL) {
       throw new Error('DATABASE_URL is required when AZURE_AD_USER is not set');
@@ -130,8 +130,8 @@ export async function checkConnection(): Promise<boolean> {
  * Call this at app startup
  */
 export async function initializeDatabase(): Promise<void> {
-  if (env.NODE_ENV !== 'development' && env.AZURE_AD_USER) {
-    // Production: Use Azure AD token auth
+  if (env.AZURE_AD_USER) {
+    // Use Azure AD token auth (any environment)
     pool = await createPool();
     dbContainer.instance = new Kysely<Database>({
       dialect: new PostgresDialect({ pool }),
