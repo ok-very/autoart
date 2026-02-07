@@ -877,11 +877,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .column('session_id')
     .execute();
 
-  await db.schema
-    .createIndex('idx_mail_links_message')
-    .on('mail_links')
-    .column('mail_message_id')
-    .execute();
+  // idx_mail_links_message removed — redundant with uq_mail_links_message_target
+  // (mail_message_id is the leading column of the composite unique constraint)
 
   await db.schema
     .createIndex('idx_mail_links_target')

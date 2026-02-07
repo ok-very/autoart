@@ -29,6 +29,7 @@ import { useMemo, useCallback } from 'react';
 import type { ImportPlan, ImportPlanItem, ItemClassification } from '../../api/hooks/imports';
 import { ColumnPicker } from '../../ui/molecules/ColumnPicker';
 import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
+import { humanizeFieldName } from '../../workflows/import/utils';
 import { UniversalTableCore, makeImportPlanRowModel, getImportPlanMeta, getImportPlanNode, type TableColumn as CoreTableColumn, type TableRow } from '../table-core';
 
 // ============================================================================
@@ -105,7 +106,7 @@ export function discoverImportFields(plan: ImportPlan): ImportFieldDef[] {
             fieldName,
             renderHint,
             width: getWidthForRenderHint(renderHint),
-            label: fieldName,
+            label: humanizeFieldName(fieldName),
         }));
 }
 
@@ -141,7 +142,7 @@ export function discoverFieldsForItems(items: ImportPlanItem[]): ImportFieldDef[
             fieldName,
             renderHint,
             width: getWidthForRenderHint(renderHint),
-            label: fieldName,
+            label: humanizeFieldName(fieldName),
         }));
 }
 

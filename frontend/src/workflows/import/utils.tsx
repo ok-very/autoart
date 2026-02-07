@@ -62,6 +62,40 @@ export function getOutputKindBadge(output: InterpretationOutput) {
     }
 }
 
+/** Map outcome codes to human-readable labels */
+const OUTCOME_LABEL_MAP: Record<string, string> = {
+    FACT_EMITTED: 'Emit Fact',
+    DERIVED_STATE: 'Derived State',
+    INTERNAL_WORK: 'Internal Work',
+    EXTERNAL_WORK: 'External Work',
+    DEFERRED: 'Deferred',
+    AMBIGUOUS: 'Ambiguous',
+    UNCLASSIFIED: 'Unclassified',
+};
+
+/** Get human-readable label for a classification outcome */
+export function getOutcomeLabel(outcome: string): string {
+    return OUTCOME_LABEL_MAP[outcome] ?? outcome;
+}
+
+/**
+ * Humanize a field name for display as a column header.
+ * Handles snake_case, camelCase, and common abbreviations.
+ */
+export function humanizeFieldName(name: string): string {
+    // Split on underscores, hyphens, or camelCase boundaries
+    const words = name
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/[_-]+/g, ' ')
+        .trim()
+        .split(/\s+/);
+
+    // Title-case each word
+    return words
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ');
+}
+
 /** Format suggestion label - prefer inferredLabel, then humanize fact kinds */
 export function formatSuggestionLabel(suggestion: ClassificationSuggestion): string {
     // Use inferred label if available (human-readable from inference)

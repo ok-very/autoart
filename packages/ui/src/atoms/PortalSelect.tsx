@@ -57,7 +57,7 @@ export function PortalSelect({
     return (
         <div className={clsx('flex flex-col gap-1', className)}>
             {label && (
-                <span className="text-sm font-medium text-[var(--ws-fg,#1e293b)]">{label}</span>
+                <span className="text-sm font-medium text-ws-fg">{label}</span>
             )}
 
             <button
@@ -66,11 +66,11 @@ export function PortalSelect({
                 onClick={handleToggle}
                 disabled={disabled}
                 className={clsx(
-                    'w-full flex items-center justify-between text-left border rounded-lg transition-all bg-[var(--ws-panel-bg,#fff)] font-sans',
-                    'focus:outline-none focus:ring-2 focus:ring-[var(--ws-accent,#3b82f6)] focus:border-[var(--ws-accent,#3b82f6)]',
-                    disabled ? 'bg-[var(--ws-bg,#f8fafc)] text-[var(--ws-text-disabled,#8c8c88)] cursor-not-allowed' : 'hover:border-[var(--ws-panel-border,#e2e8f0)] cursor-pointer',
-                    !currentOption && !disabled && 'text-[var(--ws-text-secondary,#5a5a57)]',
-                    currentOption && 'text-[var(--ws-fg,#1e293b)]',
+                    'w-full flex items-center justify-between text-left border rounded-lg transition-all bg-ws-panel-bg font-sans',
+                    'focus:outline-none focus:ring-2 focus:ring-ws-accent focus:border-ws-accent',
+                    disabled ? 'bg-ws-bg text-ws-text-disabled cursor-not-allowed' : 'hover:border-ws-panel-border cursor-pointer',
+                    !currentOption && !disabled && 'text-ws-text-secondary',
+                    currentOption && 'text-ws-fg',
                     {
                         'px-2 py-1 text-xs min-h-[26px]': size === 'sm',
                         'px-3 py-2 text-sm min-h-[38px]': size === 'md',
@@ -97,14 +97,14 @@ export function PortalSelect({
                         <button
                             type="button"
                             onClick={() => handleSelect(null)}
-                            className="w-full px-3 py-1.5 text-left text-sm text-[var(--ws-text-disabled,#8c8c88)] hover:bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))] transition-colors border-b border-[var(--ws-panel-border,#e2e8f0)]"
+                            className="w-full px-3 py-1.5 text-left text-sm text-ws-text-disabled hover:bg-ws-row-expanded-bg transition-colors border-b border-ws-panel-border"
                         >
                             Clear selection
                         </button>
                     )}
 
                     {data.length === 0 ? (
-                        <div className="px-3 py-2 text-sm text-[var(--ws-text-disabled,#8c8c88)] italic">No options</div>
+                        <div className="px-3 py-2 text-sm text-ws-text-disabled italic">No options</div>
                     ) : (
                         data.map((option) => {
                             const isSelected = option.value === value;
@@ -115,7 +115,7 @@ export function PortalSelect({
                                     onClick={() => handleSelect(option.value)}
                                     className={clsx(
                                         'w-full px-3 py-1.5 text-left text-sm flex items-center justify-between transition-colors',
-                                        isSelected ? 'bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))] text-[var(--ws-accent,#3b82f6)]' : 'text-[var(--ws-fg,#1e293b)] hover:bg-[var(--ws-row-expanded-bg,rgba(63,92,110,0.04))]'
+                                        isSelected ? 'bg-ws-row-expanded-bg text-ws-accent' : 'text-ws-fg hover:bg-ws-row-expanded-bg'
                                     )}
                                 >
                                     <span className="truncate">{option.label}</span>

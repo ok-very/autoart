@@ -5,9 +5,9 @@
 ## Bug List
 
 **Active blocking:**
-- **Step 2: Configure Mapping broken:** Classification Panel missing old functionality; items not making it into configuration mapping. Need to look at old diffs and figure out how to fix/reimplement the regressions.
-- **Import hierarchy:** Column headers use internal jargon instead of human-readable labels — useless for proper reclassification
-- **Import wizard (Monday):** Connector sidebar action creates "active session" with no escape route — no cancel import, no back button, user trapped
+- ~~**Step 2: Configure Mapping broken:** Classification Panel missing old functionality~~ — fixed: restored classification gating from unmerged commit `efc939f` + mutation drain from `9fa1268`. `handleNext()` now checks for unresolved AMBIGUOUS/UNCLASSIFIED items, stays on Step 2 with warning alert + disabled button until resolved. Also added `awaitMutation()` to drain in-flight config mutations before plan regeneration. Fixed duplicate WHERE clause in `monday-workspace.service.ts`.
+- ~~**Import hierarchy:** Column headers use internal jargon~~ — fixed: `humanizeFieldName()` in table headers, `getOutcomeLabel()` in classification rows
+- ~~**Import wizard (Monday):** Connector sidebar action creates "active session" with no escape route~~ — fixed in commit 9dd1cff ("New Import" button added to sidebar)
 - **Intake record binding:** Adding record binding to block throws "Invalid UUID" error at `body/blocks_config/blocks/0/recordBinding/definitionId`
 - **Preview buttons (intake forms + polls):** Implementation theater — buttons exist but lead to no endpoint
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
@@ -17,7 +17,7 @@
 - Poll editor missing — "New poll" has no editor attached; clicking existing spawned poll yields full page roundtrip (polls editor shipped in PRs #271-273, possible regression)
 - Poll "Open public poll" link is dead — navigates to `/public/poll/:id` which has no route, falls back to workspace. No way to preview poll output.
 - Finance overlay "client" field breaks when querying contacts — placeholder query not wired
-- Expired session causes 401 cascade — `/auth/me` fails, `/auth/refresh` fails, then every authenticated query fires and fails too. Client should redirect to login after refresh failure instead of hammering dead endpoints.
+- ~~Expired session causes 401 cascade~~ — fixed: `ApiError` class preserves status/code, `isAuthError()` detects 401s, `sessionDead` flag + refresh dedup prevents cascade, `setSessionExpiredHandler` clears queries + auth store
 - AutoHelper sessions lost on backend restart (#340) — in-memory session store dies on restart, AutoHelper tray still shows "Paired" but backend has no session. Need to persist sessions to DB.
 - Workspace preset timing (#181) — `pendingPanelPositions` workaround for dockview panel positioning race condition
 - **AutoHelper settings:** Module detection failing (available modules not showing in settings), file root selection broken (browser), settings page needs comprehensive review
@@ -45,9 +45,9 @@ Three related bugs, one stack. Classification panel regression broke the configu
 
 | # | Issue | Bug Ref |
 |---|-------|---------|
-| 1 | **Classification Panel regression:** Step 2 "Configure Mapping" broken — items not reaching configuration mapping. Archaeology required (review old diffs, reimplement lost functionality) | Bug list: "Step 2: Configure Mapping broken" |
-| 2 | **Import hierarchy labels:** Column headers use internal jargon instead of human-readable labels — useless for reclassification | Bug list: "Import hierarchy" |
-| 3 | **Connector sidebar escape hatch:** Monday connector creates "active session" with no cancel/back — user trapped | Bug list: "Import wizard (Monday)" |
+| 1 | ~~**Classification Panel regression:**~~ Fixed — restored classification gating + mutation drain from unmerged stacked branches. `handleNext()` gates on unresolved classifications, shows warning, disables advancement until resolved via ClassificationPanel in ImportWorkflowLayout's bottom region. Also fixed duplicate WHERE clause in `monday-workspace.service.ts`. | Bug list: "Step 2: Configure Mapping broken" |
+| 2 | ~~**Import hierarchy labels:** Column headers use internal jargon~~ — fixed: `humanizeFieldName()` converts snake_case/camelCase to Title Case in table headers; `getOutcomeLabel()` replaces raw SCREAMING_CASE outcomes in ClassificationRow | Bug list: "Import hierarchy" |
+| 3 | ~~**Connector sidebar escape hatch:**~~ Fixed in commit 9dd1cff — "New Import" button + back button added | Bug list: "Import wizard (Monday)" |
 | 4 | **"Import" tab visibility:** Tab hides in overflow menu despite ample space in tab bar | UX polish |
 
 Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanup (may touch same files). PR 3 is the escape-hatch UX. PR 4 is the tab visibility fix (small, independent).
@@ -111,32 +111,14 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` has no explicit UI/behavior mapping — containers render as actions (icon, labels, create flow). Needs dedicated UX treatment (CodeAnt #324 review) |
 | `frontend/src/ui/sidebars/` + definition filtering | Definitions without `definition_kind` (legacy/manual rows) excluded entirely by new filter — add fallback or migration to backfill (CodeAnt #324 review) |
 | `ExportMenu.tsx` | `invoiceNumber` now sent to PDF/DOCX export endpoints — backend handlers should consume it for Content-Disposition filenames |
-| `apps/autohelper/autohelper/modules/mail/router.py` | Triage status "pending" in `VALID_TRIAGE_STATUSES` conflicts with implicit "pending" default — callers can't distinguish never-triaged from explicitly-triaged (CodeAnt #346) |
-| `apps/autohelper/autohelper/modules/mail/router.py` | `_update_triage` shorthand endpoints (`archive`, `mark-action-required`, `mark-informational`) silently erase existing `triage_notes` when passing `None` — preserve existing notes (CodeAnt #346) |
-| `apps/autohelper/autohelper/modules/mail/schemas.py` | `TriageResponse.triaged_at` typed as `str | None` but `TransientEmail.triaged_at` is `datetime | None` — inconsistent API contract (CodeAnt #346) |
-| `frontend/src/api/types/mail.ts` | Frontend `triage_status` typed as `TriageStatus` union but backend schema is plain `str | None` — type mismatch if backend sends unexpected value (CodeAnt #346) |
-| `frontend/src/api/types/mail.ts` | `MailMessage.metadata` typed as `Record<string, unknown>` but backend stores via `JSON.stringify` — could be any JSON value, use `unknown` (CodeAnt #347) |
-| `backend/src/db/migrations/052_mail_messages.ts` | Explicit index on `external_id` redundant (UNIQUE already creates one) — extra write overhead (CodeAnt #348) |
-| `backend/src/db/migrations/052_mail_messages.ts` | Explicit index on `mail_message_id` redundant (composite unique constraint already covers it as leading column) — extra write overhead (CodeAnt #348) |
-| `packages/ui/src/atoms/Button.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes like `bg-ws-panel-bg` (same issue fixed in Menu/Dropdown via PR #357) |
-| `packages/ui/src/atoms/Card.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/Toggle.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/Select.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/TextInput.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/Modal.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/Checkbox.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/Label.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/molecules/PortalMenu.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/IconButton.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/RadioGroup.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/molecules/PortalSelect.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/atoms/CurrencyInput.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `backend/src/modules/imports/connections.routes.ts` | `/connections/autohelper/credentials` endpoint returns Monday token but nothing calls it — dead code, remove |
-| `apps/autohelper/autohelper/modules/context/autoart.py` | `get_monday_token()` method defined but never called — dead code, remove |
-| `apps/autohelper/autohelper/modules/context/service.py` | Direct Monday client init (lines 112-122) for backward compat token nobody stores — dead code, remove |
-| `packages/ui/src/atoms/ProgressBar.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/molecules/SegmentedControl.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes; also using glassmorphism (not in DESIGN.md) |
-| `packages/ui/src/atoms/Table.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
+| ~~`apps/autohelper/.../mail/router.py`~~ | ~~Triage status "pending" ambiguity (CodeAnt #346)~~ — **Fixed:** default changed to `None`, sentinel pattern preserves notes |
+| ~~`apps/autohelper/.../mail/schemas.py`~~ | ~~`triaged_at` type mismatch (CodeAnt #346)~~ — **Fixed:** unified to `str \| None` |
+| ~~`frontend/src/api/types/mail.ts`~~ | ~~`triage_status` + `metadata` type mismatches (CodeAnt #346-347)~~ — **Fixed:** `TriageStatus \| string \| null`, `metadata: unknown` |
+| ~~`backend/src/db/migrations/`~~ | ~~Redundant indexes (CodeAnt #348)~~ — **Fixed:** `idx_mail_links_message` removed from 001_baseline |
+| ~~`packages/ui/src/` (all atoms + molecules)~~ | ~~Tailwind v4 `bg-[var(--ws-*)]` migration~~ — **Done:** 0 remaining arbitrary `var(--ws-*)` patterns in packages/ui/ (PortalMenu, PortalSelect, MiniCalendar fixed this session; rest done in prior PRs #333, #357) |
+| ~~`connections.routes.ts`~~ | ~~Dead `/connections/autohelper/credentials` endpoint~~ — **Removed** |
+| ~~`autoart.py`~~ | ~~Dead `get_monday_token()` method~~ — **Removed** |
+| ~~`service.py`~~ | ~~Dead Monday client init~~ — **Removed** |
 
 **Low priority (CodeAnt #332 nitpicks):**
 
@@ -180,6 +162,7 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Session: bulk bug/debt cleanup (Feb 2026):** (1) Mail module: triage `None` vs `"pending"` disambiguation, sentinel pattern preserving notes on shorthand endpoints, `triaged_at` type unification, frontend type guards for unknown triage values, `metadata: unknown` (2) 401 cascade: `ApiError` class, `sessionDead` flag, refresh dedup, `setSessionExpiredHandler` callback wiring in main.tsx (3) Import wizard: `humanizeFieldName()` + `getOutcomeLabel()` for human-readable labels, escape hatch already landed in 9dd1cff (4) Dead code: Monday token proxy endpoint, `get_monday_token()`, Monday client init, redundant index (5) Tailwind v4: PortalMenu, PortalSelect, MiniCalendar migrated; packages/ui/ fully clean | Session work |
 | — | **Plugin integration upgrade:** Plugin Delegation sections added to 5 agent skills (architect, frontend-dev, backend-dev, integrator, reviewer), Loaded Plugins documentation + install checklist in CLAUDE.md, improve skill agent prompts rewritten from Go to TypeScript/React/Fastify, frontend-design plugin restricted to --pub-* surfaces only | PR #405 |
 | — | **Stackit skills recovery:** 26 orphaned command/skill files restored from git object store (f8814d8 tree); post-merge verification rule added to prevent future orphaned stack content (rapid-fire merges outran GitHub retargeting in Jan 29 incident) | Commits 73d7106, eaea487 |
 | 387 | **Unified OAuth under /api/auth:** Shared HMAC-signed state utility (stateless, 10-min expiry), Google/Microsoft/Monday all support login mode (create/find user) + link mode (connect to existing user), Monday moved from `/connections/monday/oauth/*` to `/auth/monday` with consistent callback format (JSON for login, HTML popup-close for link), deprecated old routes return 410 Gone | PRs #388-392 |

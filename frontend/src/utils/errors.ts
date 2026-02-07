@@ -1,5 +1,6 @@
 import type { ApiErrorResponse } from '@autoart/shared';
 import { ErrorCodes } from '@autoart/shared';
+import { ApiError } from '../api/client';
 
 export function isApiErrorResponse(error: unknown): error is { response: { data: ApiErrorResponse } } {
   return (
@@ -14,6 +15,11 @@ export function isApiErrorResponse(error: unknown): error is { response: { data:
 }
 
 export function getErrorMessage(error: unknown): string {
+  // ApiError from our fetch client — already has a clean message.
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+
   if (isApiErrorResponse(error)) {
     return error.response.data.error.message;
   }
@@ -33,6 +39,11 @@ export function getErrorMessage(error: unknown): string {
 }
 
 export function getErrorCode(error: unknown): string | undefined {
+  // ApiError from our fetch client.
+  if (error instanceof ApiError) {
+    return error.code;
+  }
+
   if (isApiErrorResponse(error)) {
     return error.response.data.error.code;
   }
@@ -40,6 +51,15 @@ export function getErrorCode(error: unknown): string | undefined {
 }
 
 export function isAuthError(error: unknown): boolean {
+  // Check ApiError by code first (most common path).
+  if (error instanceof ApiError) {
+    if (error.status === 401) return true;
+    return error.code === ErrorCodes.AUTH_REQUIRED ||
+      error.code === ErrorCodes.AUTH_INVALID_TOKEN ||
+      error.code === ErrorCodes.AUTH_EXPIRED_TOKEN;
+  }
+
+  // Legacy Axios-style check for backwards compatibility.
   const code = getErrorCode(error);
   return code === ErrorCodes.AUTH_REQUIRED ||
     code === ErrorCodes.AUTH_INVALID_TOKEN ||

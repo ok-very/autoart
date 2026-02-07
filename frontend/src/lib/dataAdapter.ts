@@ -8,6 +8,7 @@ import type {
   EnrichedTransientEmail,
   ProcessedEmail,
   TriageInfo,
+  TriageStatus,
   Priority,
 } from '../api/types/mail';
 
@@ -50,24 +51,38 @@ function inferPriority(email: TransientEmail): Priority {
   return 'medium';
 }
 
-/**
- * Create placeholder triage info for emails without enrichment
- */
+/** Known triage statuses from the backend. */
+const KNOWN_TRIAGE_STATUSES = new Set<string>([
+  'pending',
+  'action_required',
+  'informational',
+  'archived',
+]);
+
+function isKnownTriageStatus(value: string): value is TriageStatus {
+  return KNOWN_TRIAGE_STATUSES.has(value);
+}
+
 function createPlaceholderTriage(email?: TransientEmail): TriageInfo {
-  // Use real triage_status from the backend when available
-  if (email?.triage_status && email.triage_status !== 'pending') {
+  // null triage_status means never triaged
+  if (!email?.triage_status) {
     return {
-      status: email.triage_status,
-      confidence: 1,
-      reasoning: email.triage_notes ?? null,
+      status: 'pending',
+      confidence: 0,
+      reasoning: null,
       suggestedAction: null,
     };
   }
 
+  // Guard against unexpected values from the backend
+  const status: TriageStatus = isKnownTriageStatus(email.triage_status)
+    ? email.triage_status
+    : 'pending';
+
   return {
-    status: email?.triage_status ?? 'pending',
-    confidence: 0,
-    reasoning: null,
+    status,
+    confidence: 1,
+    reasoning: email.triage_notes ?? null,
     suggestedAction: null,
   };
 }

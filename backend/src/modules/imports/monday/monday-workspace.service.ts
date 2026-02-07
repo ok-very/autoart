@@ -179,7 +179,6 @@ export async function listBoardConfigsByExternalIds(
         .selectFrom('monday_board_configs')
         .selectAll()
         .where('board_id', 'in', boardIds)
-        .where('board_id', 'in', boardIds)
         .execute();
 }
 
