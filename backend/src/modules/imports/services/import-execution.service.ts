@@ -74,7 +74,7 @@ export async function executeImport(sessionId: string, userId?: string) {
 
     try {
         // Execute plan
-        const results = await executePlanViaComposer(plan, session.target_project_id, userId);
+        const results = await executePlanViaComposer(plan, session.target_project_id, userId, sessionId);
 
         // Mark execution complete
         await db
@@ -140,6 +140,7 @@ function getContextTypeFromNodeType(nodeType: string | undefined): ContextType {
  * Shared context for plan execution - holds mutable state across phases.
  */
 interface ExecutionContext {
+    sessionId: string;
     createdIds: Record<string, string>;
     containerTypes: Map<string, string>;
     executionErrors: string[];
@@ -157,8 +158,9 @@ interface ExecutionContext {
 /**
  * Initialize execution context from an import plan.
  */
-function createExecutionContext(plan: ImportPlan): ExecutionContext {
+function createExecutionContext(plan: ImportPlan, sessionId: string): ExecutionContext {
     return {
+        sessionId,
         createdIds: {},
         containerTypes: new Map(),
         executionErrors: [],
@@ -875,6 +877,23 @@ async function createActionWithEvents(
     ctx.createdIds[item.tempId] = action.id;
     ctx.counters.actionsCreated++;
 
+    // Auto-link: record which import item produced this action
+    if (ctx.sessionId) {
+        try {
+            await db
+                .insertInto('import_action_links')
+                .values({
+                    import_session_id: ctx.sessionId,
+                    item_temp_id: item.tempId,
+                    action_id: action.id,
+                })
+                .onConflict((oc) => oc.columns(['import_session_id', 'item_temp_id', 'action_id']).doNothing())
+                .execute();
+        } catch {
+            logger.warn({ tempId: item.tempId, actionId: action.id }, '[imports.service] Failed to auto-link import item to action');
+        }
+    }
+
     // Emit ACTION_DECLARED event
     await emitEvent({
         contextId: effectiveContextId,
@@ -987,10 +1006,11 @@ async function refreshProjectProjection(targetProjectId: string | null): Promise
 async function executePlanViaComposer(
     plan: ImportPlan,
     targetProjectId: string | null,
-    userId?: string
+    userId?: string,
+    sessionId?: string
 ): Promise<ExecutionResults> {
     // Phase 1: Initialize execution context
-    const ctx = createExecutionContext(plan);
+    const ctx = createExecutionContext(plan, sessionId ?? '');
 
     // Diagnostic: Log item distribution by entity kind
     const entityKindCounts = plan.items.reduce((acc, item) => {

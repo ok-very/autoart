@@ -33,6 +33,7 @@ import {
     useCompose,
     useRecordDefinitions,
     generateMockComposerSuggestions,
+    useVocabularySuggestions,
     type Suggestion,
 } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
@@ -79,6 +80,36 @@ export function UnifiedComposerBar({
         if (!allDefinitions) return [];
         return allDefinitions.filter((d) => d.definition_kind === 'action_arrangement');
     }, [allDefinitions]);
+
+    // Vocabulary suggestions for arrangement ranking
+    const titlePrefix = useMemo(() => {
+        const words = title.trim().split(/\s+/);
+        return words[0] || '';
+    }, [title]);
+
+    const { data: vocabSuggestions } = useVocabularySuggestions(titlePrefix, { limit: 5 });
+
+    // Rank arrangements: boost those whose name matches vocabulary verbs/nouns
+    const rankedArrangements = useMemo(() => {
+        if (!vocabSuggestions?.length || !actionArrangements.length) return actionArrangements;
+
+        const vocabNouns = new Set(vocabSuggestions.map((s) => s.noun.toLowerCase()));
+        const vocabVerbs = new Set(vocabSuggestions.map((s) => s.verb.toLowerCase()));
+
+        return [...actionArrangements].sort((a, b) => {
+            const aName = a.name.toLowerCase();
+            const bName = b.name.toLowerCase();
+            const aMatch =
+                [...vocabNouns].some((n) => aName.includes(n)) ||
+                [...vocabVerbs].some((v) => aName.includes(v));
+            const bMatch =
+                [...vocabNouns].some((n) => bName.includes(n)) ||
+                [...vocabVerbs].some((v) => bName.includes(v));
+            if (aMatch && !bMatch) return -1;
+            if (!aMatch && bMatch) return 1;
+            return 0;
+        });
+    }, [actionArrangements, vocabSuggestions]);
 
     // Derive default arrangement ID (first available arrangement)
     const defaultArrangementId = useMemo(() => actionArrangements[0]?.id ?? null, [actionArrangements]);
@@ -271,7 +302,7 @@ export function UnifiedComposerBar({
                                     Type:
                                 </span>
                                 <div className="flex flex-wrap gap-1.5">
-                                    {actionArrangements.map((arrangement) => {
+                                    {rankedArrangements.map((arrangement) => {
                                         const isSelected = selectedArrangementId === arrangement.id;
                                         const styling = arrangement.styling as { icon?: string } | undefined;
                                         return (
@@ -344,6 +375,38 @@ export function UnifiedComposerBar({
                                             suggestion={suggestion}
                                             onClick={() => handleAcceptSuggestion(suggestion)}
                                         />
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Vocabulary Suggestions */}
+                            {vocabSuggestions && vocabSuggestions.length > 0 && (
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-xs text-ws-text-secondary shrink-0">
+                                        Vocabulary:
+                                    </span>
+                                    {vocabSuggestions.map((s, i) => (
+                                        <button
+                                            key={`vocab-${s.verb}-${s.noun}-${i}`}
+                                            type="button"
+                                            onClick={() => {
+                                                const label = s.adjective
+                                                    ? `${s.verb} ${s.noun} ${s.adjective} `
+                                                    : `${s.verb} ${s.noun} `;
+                                                setTitle(label);
+                                            }}
+                                            className={clsx(
+                                                'inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs',
+                                                'transition-colors',
+                                                'bg-slate-50 text-ws-text-secondary',
+                                                'hover:bg-slate-100 hover:text-ws-fg',
+                                            )}
+                                        >
+                                            <Wand2 size={10} />
+                                            <span className="truncate max-w-[150px]">
+                                                {s.verb} {s.noun}
+                                            </span>
+                                        </button>
                                     ))}
                                 </div>
                             )}

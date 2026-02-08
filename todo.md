@@ -30,17 +30,20 @@
 
 **Scope:**
 
-| # | Issue | Category |
-|---|-------|----------|
-| 217 | Expose interpretation HTTP routes for frontend hooks | Backend |
-| 237 | Performance Optimization & Caching | Backend + Frontend |
-| 79 | Enhance Workflow View Interactions | Feature |
-| — | Records/Fields/Actions registry browser UI unification: consistent layout and shared filter system | UX |
-| — | Action vocabulary: store classification verbs/nouns/adjectives from imports as heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret action type construction | Classification |
+| # | Issue | Category | Status |
+|---|-------|----------|--------|
+| 217 | Expose interpretation HTTP routes for frontend hooks | Backend | ✓ Done (PRs #439-443) |
+| — | Records/Fields/Actions registry browser UI unification: consistent layout and shared filter system | UX | ✓ Done (PRs #439-443) |
+| — | Action vocabulary: store classification verbs/nouns/adjectives from imports as heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret action type construction | Classification | ✓ Done (PRs #439-443) |
+| 79 | Enhance Workflow View Interactions — backend (migration + routes + auto-linking) | Backend | ✓ Done (PRs #439-443) |
+| 79 | Enhance Workflow View Interactions — frontend (badges + context menu + link dialog) | Frontend | **In-flight (PR #443)** |
+| 237 | Performance Optimization & Caching | Backend + Frontend | **Pending** |
 
 **Dependencies:** None — foundation phases cleared the path. #217 (interpretation routes) is the critical enabler; #237 (performance) and #79 (workflow interactions) build on top.
 
 **Done when:** Frontend can call interpretation endpoints via TanStack Query hooks, imports complete in <2s for typical payloads, and workflow view supports direct interaction with imported actions.
+
+**Note:** Phase 3.4 frontend portion (ActionRegistryTable badges, context menu, link dialog) and Phase 3.7 (performance optimization) remain. Five PRs awaiting review.
 
 ---
 
@@ -220,7 +223,9 @@
 
 ## In-Flight (Awaiting Review)
 
-*(none)*
+| PRs | Description |
+|-----|-------------|
+| #439-443 | **Phase 3: Import Pipeline (sub-phases 3.1-3.6):** (3.1) Interpretation HTTP routes + Zod schemas (3.2) TanStack Query hooks (3.3) Registry browser UI unification (RegistryFilterBar, 280px sidebar) (3.4) Workflow view backend (migration 005, import_action_links table, auto-linking in ExecutionContext) (3.5) Action vocabulary extraction (migration 004, vocabulary.service.ts, classification hooks) (3.6) Composer vocabulary integration (useVocabularySuggestions hook, UnifiedComposerBar ranking). Frontend portion of 3.4 (ActionRegistryTable badges, link dialog) and Phase 3.7 (performance) remain. |
 
 ---
 
