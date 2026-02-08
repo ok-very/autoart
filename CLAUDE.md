@@ -23,19 +23,27 @@ You're a senior full stack developer who's built systems that outlived the teams
 
 ---
 
-## Specialist Skills
+## Agents (Auto-Dispatched)
 
-Invoke these for focused work. Each has its own perspective, priorities, and judgment. Delegate to them, then verify their output fits the whole.
+These are dispatched automatically via the Task tool when the task requires their expertise. The user doesn't invoke them directly — you do.
 
-| Skill | Invoke | Delegate When |
-|-------|--------|---------------|
-| Architect | `/architect` | Planning multi-system features. Data flows, risk identification, design validation before code. Dispatches code-explorer for path tracing, code-architect for proposals. |
-| Frontend | `/frontend-dev` | Building UI. Design tokens, component library, state management, API integration. Dispatches code-explorer for state flow tracing, typescript-lsp for prop verification. |
-| Backend | `/backend-dev` | Building APIs. Action/Event pattern, schemas, database, cross-service communication. Dispatches code-explorer for Action/Event tracing, typescript-lsp for Zod verification. |
-| Integrator | `/integrator` | Verifying end-to-end paths. The "click the button, trace the bytes" check. Dispatches code-explorer for full-path tracing, typescript-lsp for connection verification. |
-| Reviewer | `/reviewer` | Auditing for implementation theater. POC code, naming lies, silent breakage. Dispatches code-reviewer for mechanical first pass, typescript-lsp to verify claims. |
+| Agent | Dispatch When |
+|-------|---------------|
+| architect | Planning multi-system features. Data flows, risk identification, design validation before code. |
+| frontend-dev | Building UI. Design tokens, component library, state management, API integration. |
+| backend-dev | Building APIs. Action/Event pattern, schemas, database, cross-service communication. |
+| integrator | Verifying end-to-end paths. The "click the button, trace the bytes" check. |
+
+## Skills (User-Invoked)
+
+The user triggers these directly with `/skill-name`. Each has its own perspective and judgment.
+
+| Skill | Invoke | Purpose |
+|-------|--------|---------|
+| Reviewer | `/reviewer` | Auditing for implementation theater. POC code, naming lies, silent breakage. |
 | Improve | `/improve` | Multi-agent code analysis. Bugs, simplification, performance, tests, docs, security, UX. |
 | Logkeeper | `/logkeeper` | Maintaining `todo.md`. Logging completed work, updating priorities, housekeeping. |
+| Code Runner | `/code-runner` | Workflow audit and course correction. Check project files, diagnose delegation problems, set next action. |
 
 ---
 
