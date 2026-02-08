@@ -2,20 +2,21 @@
  * DefinitionListSidebar
  *
  * Focused sidebar that shows only ONE type of definitions (either records or actions).
- * Used by the separated Records and Actions pages.
+ * Used by the separated Records and Actions pages/panels.
  *
- * Unlike RegistrySidebar which shows both, this shows only the relevant definitions
- * for the current page context.
+ * Integrates RegistryFilterBar for unified search, sort, and result count display.
  */
 
 import { clsx } from 'clsx';
-import { Plus, Database, Zap, Search, Settings } from 'lucide-react';
-import { useState } from 'react';
+import { Plus, Database, Zap, Settings } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
+import type { DefinitionKind } from '@autoart/shared';
+
+import { Spinner } from '@autoart/ui';
 import { useRecordDefinitions, useRecordStats } from '../../api/hooks';
 import { useUIStore } from '../../stores/uiStore';
-
-type DefinitionKind = 'record' | 'action_arrangement' | 'container';
+import { RegistryFilterBar, type RegistrySortKey } from '../registry/RegistryFilterBar';
 
 interface DefinitionListSidebarProps {
     width: number;
@@ -37,20 +38,42 @@ export function DefinitionListSidebar({
     const { data: definitions, isLoading } = useRecordDefinitions();
     const { data: stats } = useRecordStats();
     const { openOverlay } = useUIStore();
-    const [searchQuery, setSearchQuery] = useState('');
 
-    // Filter definitions by kind — no fallback heuristics, definition_kind is authoritative
-    const filteredDefinitions = (definitions || []).filter((def) => {
-        const defKind = (def as { definition_kind?: string }).definition_kind;
-        return defKind === definitionKind;
-    });
+    // Filter bar state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [sortKey, setSortKey] = useState<RegistrySortKey>('name');
+
+    // Filter definitions by kind
+    const filteredDefinitions = useMemo(() => {
+        return (definitions || []).filter((def) => {
+            const defKind = (def as { definition_kind?: string }).definition_kind;
+            return defKind === definitionKind;
+        });
+    }, [definitions, definitionKind]);
 
     // Apply search filter
-    const searchedDefinitions = searchQuery.trim()
-        ? filteredDefinitions.filter((def) =>
-            def.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        : filteredDefinitions;
+    const searchedDefinitions = useMemo(() => {
+        const filtered = searchQuery.trim()
+            ? filteredDefinitions.filter((def) =>
+                def.name.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            : filteredDefinitions;
+
+        // Sort
+        return [...filtered].sort((a, b) => {
+            switch (sortKey) {
+                case 'name':
+                    return a.name.localeCompare(b.name);
+                case 'created':
+                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                case 'updated':
+                    // Definitions don't have updated_at; fall back to created_at
+                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                default:
+                    return 0;
+            }
+        });
+    }, [filteredDefinitions, searchQuery, sortKey]);
 
     const getCount = (definitionId: string): number => {
         if (!stats) return 0;
@@ -62,8 +85,7 @@ export function DefinitionListSidebar({
         if (definitionKind === 'record') {
             openOverlay('create-definition', { definitionKind: 'record' });
         } else {
-            // For actions, open composer
-            window.location.href = '/composer';
+            useUIStore.getState().openCommandPalette();
         }
     };
 
@@ -75,8 +97,6 @@ export function DefinitionListSidebar({
     const isRecords = definitionKind === 'record';
     const Icon = isRecords ? Database : Zap;
     const title = isRecords ? 'Record Definitions' : 'Action Definitions';
-    const iconColor = isRecords ? 'text-blue-500' : 'text-purple-500';
-    const emptyMessage = isRecords ? 'No record definitions' : 'No action definitions';
     const instanceLabel = isRecords ? 'record' : 'instance';
 
     return (
@@ -87,49 +107,39 @@ export function DefinitionListSidebar({
             {/* Header */}
             <div className="h-10 border-b border-ws-panel-border flex items-center justify-between px-3 bg-ws-panel-bg">
                 <div className="flex items-center gap-2">
-                    <Icon size={18} className={iconColor} />
-                    <span className="font-semibold text-ws-text-secondary">{title}</span>
+                    <Icon size={18} className="text-ws-text-secondary" />
+                    <span className="font-semibold text-sm text-ws-text-secondary">{title}</span>
                 </div>
                 <button
                     onClick={handleCreate}
-                    className={clsx(
-                        'p-1.5 rounded-md transition-colors',
-                        isRecords
-                            ? 'text-blue-500 hover:bg-blue-50'
-                            : 'text-purple-500 hover:bg-purple-50'
-                    )}
+                    className="p-1.5 rounded-md transition-colors text-ws-text-secondary hover:bg-ws-row-expanded-bg"
                     title={`Create ${isRecords ? 'record' : 'action'} definition`}
                 >
                     <Plus size={16} />
                 </button>
             </div>
 
-            {/* Search */}
-            <div className="p-3 border-b border-ws-panel-border">
-                <div className="relative">
-                    <Search
-                        size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-ws-muted"
-                    />
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search definitions..."
-                        className="w-full pl-9 pr-3 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                </div>
-            </div>
+            {/* Unified filter bar */}
+            <RegistryFilterBar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                definitionKind={null}
+                onDefinitionKindChange={() => {}}
+                sortKey={sortKey}
+                onSortChange={setSortKey}
+                resultCount={searchedDefinitions.length}
+                hideKindFilter
+            />
 
             {/* List */}
             <div className="flex-1 overflow-y-auto custom-scroll">
                 {isLoading ? (
                     <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin w-5 h-5 border-2 border-slate-300 border-t-blue-500 rounded-full" />
+                        <Spinner size="sm" />
                     </div>
                 ) : searchedDefinitions.length === 0 ? (
-                    <div className="text-center py-8 px-4">
-                        <p className="text-xs text-ws-muted">{emptyMessage}</p>
+                    <div className="py-8 px-4">
+                        <p className="text-xs text-ws-text-secondary">No definitions found</p>
                     </div>
                 ) : (
                     <div className="p-1 space-y-0.5">
@@ -139,14 +149,13 @@ export function DefinitionListSidebar({
                             className={clsx(
                                 'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors',
                                 selectedDefinitionId === null
-                                    ? isRecords ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                                    : 'hover:bg-slate-100 text-ws-text-secondary'
+                                    ? 'bg-ws-row-expanded-bg text-ws-fg'
+                                    : 'hover:bg-ws-row-expanded-bg text-ws-text-secondary'
                             )}
                         >
-                            <span className="text-base">📋</span>
                             <div className="flex-1 min-w-0">
                                 <div className="text-sm font-medium">All {isRecords ? 'Records' : 'Actions'}</div>
-                                <div className="text-[10px] text-ws-muted">
+                                <div className="text-[10px] text-ws-text-secondary">
                                     {stats ? stats.reduce((sum, s) => sum + s.count, 0) : 0} total
                                 </div>
                             </div>
@@ -165,8 +174,8 @@ export function DefinitionListSidebar({
                                     className={clsx(
                                         'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors group cursor-pointer',
                                         isSelected
-                                            ? isRecords ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                                            : 'hover:bg-slate-100 text-ws-text-secondary'
+                                            ? 'bg-ws-row-expanded-bg text-ws-fg'
+                                            : 'hover:bg-ws-row-expanded-bg text-ws-text-secondary'
                                     )}
                                 >
                                     {/* Icon */}
@@ -177,7 +186,7 @@ export function DefinitionListSidebar({
                                     {/* Name and Count */}
                                     <div className="flex-1 min-w-0">
                                         <div className="text-sm font-medium truncate">{def.name}</div>
-                                        <div className="text-[10px] text-ws-muted">
+                                        <div className="text-[10px] text-ws-text-secondary">
                                             {count} {instanceLabel}{count !== 1 ? 's' : ''}
                                         </div>
                                     </div>
@@ -185,7 +194,7 @@ export function DefinitionListSidebar({
                                     {/* Edit Schema button on hover */}
                                     <button
                                         onClick={(e) => handleEditDefinition(e, def.id)}
-                                        className="p-1 text-ws-muted hover:text-ws-text-secondary hover:bg-slate-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="p-1 text-ws-text-secondary hover:text-ws-fg hover:bg-ws-row-expanded-bg rounded opacity-0 group-hover:opacity-100 transition-opacity"
                                         title={`Edit ${def.name} schema`}
                                     >
                                         <Settings size={12} />
