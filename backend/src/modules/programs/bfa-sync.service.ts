@@ -1,20 +1,22 @@
 /**
  * BFA Sync Service — Orchestration
  *
- * Coordinates: fetch Monday data → compute diff → store report.
- * No mutations to project data — that's Phase 4.3.
+ * Coordinates: fetch Monday data → compute diff → store report → seed decisions.
+ * Also handles decision submission, application, and listing.
  */
 
 import { randomUUID } from 'crypto';
 
-import type { BfaSyncDiffReport } from '@autoart/shared';
+import type { BfaApplyResult, BfaSyncDiffReport } from '@autoart/shared';
 
 import { db } from '../../db/client.js';
+import type { SyncDecision } from '../../db/schema.js';
 import { getMondayToken } from '../imports/connections.service.js';
 import { MondayConnector } from '../imports/connectors/monday-connector.js';
 import { interpretMondayData } from '../imports/monday/monday-domain-interpreter.js';
 import * as mondayWorkspaceService from '../imports/monday/monday-workspace.service.js';
 import { getBfaProgramConfig } from './bfa-program.config.js';
+import { resolveApplyOps, setDotPath } from './bfa-sync-applier.js';
 import { computeBfaDiff, type LocalEntitySnapshot } from './bfa-sync-differ.js';
 
 // ============================================================================
@@ -81,6 +83,9 @@ export async function computeDiff(
     // 8. Store on sync state
     await storeDiffReport(boardConfigId, report);
 
+    // 9. Seed decision rows for every field change
+    await seedDecisionsFromReport(boardConfigId, report);
+
     return report;
 }
 
@@ -126,6 +131,297 @@ export async function listDiffReports(
         reportAt: r.last_diff_report_at,
         report: r.last_diff_report as BfaSyncDiffReport,
     }));
+}
+
+/**
+ * Submit or update user decisions for field changes in a report.
+ * Upserts on (report_id, entity_id, field) unique constraint.
+ */
+export async function submitDecisions(
+    boardConfigId: string,
+    reportId: string,
+    decisions: Array<{ entityId: string; field: string; decision: string; assignedTo?: string }>,
+    userId: string,
+): Promise<{ updated: number }> {
+    if (decisions.length === 0) return { updated: 0 };
+
+    let updated = 0;
+    for (const d of decisions) {
+        const result = await db
+            .updateTable('sync_decisions')
+            .set({
+                decision: d.decision,
+                decided_by: userId,
+                decided_at: new Date(),
+                ...(d.assignedTo !== undefined ? { assigned_to: d.assignedTo } : {}),
+            })
+            .where('board_config_id', '=', boardConfigId)
+            .where('report_id', '=', reportId)
+            .where('entity_id', '=', d.entityId)
+            .where('field', '=', d.field)
+            .executeTakeFirst();
+
+        if (result.numUpdatedRows > 0n) {
+            updated++;
+        }
+    }
+
+    return { updated };
+}
+
+/**
+ * Apply accepted decisions to local entities.
+ *
+ * 1. Load report + decisions
+ * 2. resolveApplyOps() to determine writes
+ * 3. Write field_bindings for actions, metadata for hierarchy nodes
+ * 4. Stamp applied decisions
+ */
+export async function applyDecisions(
+    boardConfigId: string,
+): Promise<BfaApplyResult> {
+    // 1. Load report
+    const report = await getDiffReport(boardConfigId);
+    if (!report) {
+        throw new Error('No diff report found for this board config');
+    }
+
+    // 2. Load all decisions for this report
+    const decisionRows = await db
+        .selectFrom('sync_decisions')
+        .selectAll()
+        .where('board_config_id', '=', boardConfigId)
+        .where('report_id', '=', report.id)
+        .execute();
+
+    // 3. Resolve write operations
+    const { writeOps, autoAccepted, counts } = resolveApplyOps(report, decisionRows as SyncDecision[]);
+
+    // 4. Apply writes
+    const errors: Array<{ entityId: string; field: string; error: string }> = [];
+
+    // Determine which entities are actions vs hierarchy nodes
+    const entityIds = [...writeOps.keys()];
+    const entityTypeMap = new Map<string, 'action' | 'node'>();
+    if (entityIds.length > 0) {
+        const mappings = await db
+            .selectFrom('external_source_mappings')
+            .select(['local_entity_id', 'local_entity_type'])
+            .where('provider', '=', 'monday')
+            .where('local_entity_id', 'in', entityIds)
+            .execute();
+
+        for (const m of mappings) {
+            entityTypeMap.set(
+                m.local_entity_id,
+                m.local_entity_type === 'action' ? 'action' : 'node',
+            );
+        }
+
+        // Fallback: if entity not in mappings, try to detect by checking tables
+        for (const eid of entityIds) {
+            if (!entityTypeMap.has(eid)) {
+                const action = await db
+                    .selectFrom('actions')
+                    .select('id')
+                    .where('id', '=', eid)
+                    .executeTakeFirst();
+                entityTypeMap.set(eid, action ? 'action' : 'node');
+            }
+        }
+    }
+
+    for (const [entityId, ops] of writeOps) {
+        const entityType = entityTypeMap.get(entityId) ?? 'action';
+
+        try {
+            if (entityType === 'action') {
+                await applyActionWrites(entityId, ops);
+            } else {
+                await applyNodeWrites(entityId, ops);
+            }
+        } catch (err) {
+            for (const op of ops) {
+                errors.push({
+                    entityId,
+                    field: op.field,
+                    error: err instanceof Error ? err.message : String(err),
+                });
+            }
+        }
+    }
+
+    // 5. Stamp applied decisions
+    if (autoAccepted.length > 0) {
+        await db
+            .updateTable('sync_decisions')
+            .set({ applied_at: new Date() })
+            .where('id', 'in', autoAccepted)
+            .execute();
+    }
+
+    // Also stamp all monday-authority decisions that were auto-applied
+    // (they may not have a decision row if the field wasn't in the decisions table somehow)
+    await db
+        .updateTable('sync_decisions')
+        .set({ applied_at: new Date() })
+        .where('board_config_id', '=', boardConfigId)
+        .where('report_id', '=', report.id)
+        .where('authority', '=', 'monday')
+        .where('applied_at', 'is', null)
+        .execute();
+
+    return {
+        applied: counts.applied,
+        rejected: counts.rejected,
+        deferred: counts.deferred,
+        errors,
+    };
+}
+
+/**
+ * List decisions for a board config with optional filters.
+ */
+export async function listDecisions(
+    boardConfigId: string,
+    reportId?: string,
+    assignedTo?: string,
+): Promise<SyncDecision[]> {
+    let query = db
+        .selectFrom('sync_decisions')
+        .selectAll()
+        .where('board_config_id', '=', boardConfigId)
+        .orderBy('created_at', 'asc');
+
+    if (reportId) {
+        query = query.where('report_id', '=', reportId);
+    }
+
+    if (assignedTo) {
+        query = query.where('assigned_to', '=', assignedTo);
+    }
+
+    return query.execute();
+}
+
+// ============================================================================
+// INTERNAL — DECISION SEEDING
+// ============================================================================
+
+/**
+ * Create sync_decisions rows for every fieldChange in a report.
+ * Monday-authority rows get decision = 'accept' pre-populated.
+ * Merge-authority rows start with decision = null (pending).
+ *
+ * Called automatically after computeDiff() stores the report.
+ */
+async function seedDecisionsFromReport(
+    boardConfigId: string,
+    report: BfaSyncDiffReport,
+): Promise<void> {
+    if (report.fieldChanges.length === 0) return;
+
+    const rows = report.fieldChanges.map(change => ({
+        board_config_id: boardConfigId,
+        report_id: report.id,
+        entity_id: change.entityId,
+        field: change.field,
+        source_field: change.sourceField,
+        old_value: change.oldValue,
+        new_value: change.newValue,
+        authority: change.authority,
+        severity: change.severity,
+        decision: change.authority === 'monday' ? 'accept' : null,
+    }));
+
+    // Use onConflict to handle re-syncs that produce the same field changes
+    await db
+        .insertInto('sync_decisions')
+        .values(rows)
+        .onConflict(oc =>
+            oc.columns(['report_id', 'entity_id', 'field']).doUpdateSet({
+                old_value: (eb) => eb.ref('excluded.old_value'),
+                new_value: (eb) => eb.ref('excluded.new_value'),
+                authority: (eb) => eb.ref('excluded.authority'),
+                severity: (eb) => eb.ref('excluded.severity'),
+                source_field: (eb) => eb.ref('excluded.source_field'),
+            }),
+        )
+        .execute();
+}
+
+// ============================================================================
+// INTERNAL — ENTITY WRITES
+// ============================================================================
+
+/**
+ * Apply field writes to an action's field_bindings array.
+ * Loads the full array, merges/replaces matching fieldKey entries, writes back.
+ */
+async function applyActionWrites(
+    actionId: string,
+    ops: Array<{ field: string; newValue: string }>,
+): Promise<void> {
+    const action = await db
+        .selectFrom('actions')
+        .select('field_bindings')
+        .where('id', '=', actionId)
+        .executeTakeFirst();
+
+    if (!action) {
+        throw new Error(`Action ${actionId} not found`);
+    }
+
+    const bindings = parseFieldBindings(action.field_bindings);
+
+    for (const op of ops) {
+        const existing = bindings.find(b => b.fieldKey === op.field);
+        if (existing) {
+            existing.value = op.newValue;
+        } else {
+            bindings.push({ fieldKey: op.field, value: op.newValue });
+        }
+    }
+
+    await db
+        .updateTable('actions')
+        .set({ field_bindings: JSON.stringify(bindings) })
+        .where('id', '=', actionId)
+        .execute();
+}
+
+/**
+ * Apply field writes to a hierarchy node's metadata JSONB.
+ * Uses setDotPath to update nested fields.
+ */
+async function applyNodeWrites(
+    nodeId: string,
+    ops: Array<{ field: string; newValue: string }>,
+): Promise<void> {
+    const node = await db
+        .selectFrom('hierarchy_nodes')
+        .select('metadata')
+        .where('id', '=', nodeId)
+        .executeTakeFirst();
+
+    if (!node) {
+        throw new Error(`Hierarchy node ${nodeId} not found`);
+    }
+
+    const metadata = (node.metadata ?? {}) as Record<string, unknown>;
+
+    for (const op of ops) {
+        setDotPath(metadata, op.field, op.newValue);
+    }
+
+    await db
+        .updateTable('hierarchy_nodes')
+        .set({
+            metadata: JSON.stringify(metadata),
+            updated_at: new Date(),
+        })
+        .where('id', '=', nodeId)
+        .execute();
 }
 
 // ============================================================================
