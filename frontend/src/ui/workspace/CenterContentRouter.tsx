@@ -5,14 +5,14 @@
  * This is the permanent center anchor that can display different content types.
  *
  * GUARDRAIL: This component's identity never changes.
- * Only the internal renderer switches based on uiStore.centerContentType.
+ * Only the internal renderer switches based on workspaceStore.centerContentType.
  *
  * When a workspace declares ownedContentTypes, the router validates and
  * redirects to the workspace's default content type on mismatch.
  */
 
 import { useEffect } from 'react';
-import { useUIStore } from '../../stores/uiStore';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { useWorkspaceContextOptional } from '../../workspace/WorkspaceContext';
 import { ProjectContentAdapter } from './ProjectContentAdapter';
 import {
@@ -26,8 +26,8 @@ import {
 } from './content';
 
 export function CenterContentRouter() {
-    const centerContentType = useUIStore((s) => s.centerContentType);
-    const setCenterContentType = useUIStore((s) => s.setCenterContentType);
+    const centerContentType = useWorkspaceStore((s) => s.centerContentType);
+    const setCenterContentType = useWorkspaceStore((s) => s.setCenterContentType);
     const wsCtx = useWorkspaceContextOptional();
 
     // Validate content type against workspace's owned types

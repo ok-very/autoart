@@ -10,10 +10,8 @@
  */
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import type { WorkspaceScope } from '../types/workspace';
-import type { CenterContentType } from '../stores/uiStore';
+import type { WorkspaceScope, CenterContentType } from '../types/workspace';
 import { useWorkspaceStore } from '../stores/workspaceStore';
-import { useUIStore } from '../stores/uiStore';
 import { BUILT_IN_WORKSPACES } from './workspacePresets';
 
 export interface WorkspaceContextValue {
@@ -63,7 +61,7 @@ export function WorkspaceContextProvider({ children }: WorkspaceContextProviderP
     const subviewId = useWorkspaceStore((s) => s.activeSubviewId);
     const boundProjectId = useWorkspaceStore((s) => s.boundProjectId);
     const boundPanelIds = useWorkspaceStore((s) => s.boundPanelIds);
-    const contentType = useUIStore((s) => s.centerContentType);
+    const contentType = useWorkspaceStore((s) => s.centerContentType);
 
     const preset = useMemo(
         () => workspaceId ? BUILT_IN_WORKSPACES.find((w) => w.id === workspaceId) ?? null : null,

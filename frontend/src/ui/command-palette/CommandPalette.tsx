@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { useUIStore } from '@/stores/uiStore';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { useProjects } from '@/api/hooks/hierarchy';
 import { useRecords } from '@/api/hooks/entities/records';
 import { useAllActions } from '@/api/hooks/actions/actions';
@@ -69,7 +70,7 @@ export function CommandPalette() {
   const inspectAction = useUIStore((s) => s.inspectAction);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   const toggleInspector = useUIStore((s) => s.toggleInspector);
-  const setProjectViewMode = useUIStore((s) => s.setProjectViewMode);
+  const setProjectViewMode = useWorkspaceStore((s) => s.setProjectViewMode);
   const openOverlay = useUIStore((s) => s.openOverlay);
 
   // Generate unique IDs for ARIA

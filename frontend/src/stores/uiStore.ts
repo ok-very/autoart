@@ -4,30 +4,17 @@ import { persist } from 'zustand/middleware';
 import type { ProjectViewMode, RecordsViewMode, FieldsViewMode, ViewMode } from '@autoart/shared';
 import type { ImportSession, ImportPlan } from '../api/hooks/imports';
 import {
-  ProjectViewModeSchema,
-  RecordsViewModeSchema,
-  FieldsViewModeSchema,
   PROJECT_VIEW_MODE_LABELS,
   RECORDS_VIEW_MODE_LABELS,
   FIELDS_VIEW_MODE_LABELS,
 } from '@autoart/shared';
 
-/**
- * Content type for center-workspace panel.
- * Determines what content is displayed in the permanent center anchor.
- */
-export type CenterContentType =
-  | 'projects'      // Project views (workflow, log, columns, list, cards)
-  | 'artcollector'  // Art collection workflow
-  | 'intake'        // Data intake workflow
-  | 'export'        // Export workflow
-  | 'mail'          // Communication
-  | 'calendar'      // Calendar view
-  | 'finance'       // Finance hub (invoices, budgets, expenses)
-  | 'polls';        // Availability polls
+// CenterContentType moved to types/workspace.ts in v6
+export type { CenterContentType } from '../types/workspace';
 
 import { Selection, UIPanels, InspectorMode, OverlayConfig, InspectorTabId, normalizeInspectorTabId } from '../types/ui';
 import { deriveUIPanels } from '../utils/uiComposition';
+import { useWorkspaceStore } from './workspaceStore';
 
 // Re-export for compatibility if needed, or prefer importing from types/ui
 export type { Selection, UIPanels, InspectorMode, InspectorTabId };
@@ -36,37 +23,12 @@ export type { Selection, UIPanels, InspectorMode, InspectorTabId };
 export type { ProjectViewMode, RecordsViewMode, FieldsViewMode, ViewMode };
 export { PROJECT_VIEW_MODE_LABELS, RECORDS_VIEW_MODE_LABELS, FIELDS_VIEW_MODE_LABELS };
 
-// Type guards for view mode categories - use schema validation
-export function isProjectViewMode(mode: ViewMode): mode is ProjectViewMode {
-  return ProjectViewModeSchema.safeParse(mode).success;
-}
-
-export function isRecordsViewMode(mode: ViewMode): mode is RecordsViewMode {
-  return RecordsViewModeSchema.safeParse(mode).success;
-}
-
-export function isFieldsViewMode(mode: ViewMode): mode is FieldsViewMode {
-  return FieldsViewModeSchema.safeParse(mode).success;
-}
-
 type Theme = 'light' | 'dark';
 
 interface UIState {
   // Core State
   selection: Selection;
   activeProjectId: string | null;
-
-  // Center workspace content type
-  centerContentType: CenterContentType;
-  setCenterContentType: (type: CenterContentType) => void;
-
-  // Namespaced view modes (each panel has its own)
-  projectViewMode: ProjectViewMode;
-  fieldsViewMode: FieldsViewMode;
-  recordsViewMode: RecordsViewMode;
-
-  // Legacy alias for backward compatibility
-  viewMode: ViewMode;
 
   inspectorTabMode: InspectorTabId;
 
@@ -118,13 +80,6 @@ interface UIState {
   setSidebarWidth: (width: number) => void;
   setInspectorWidth: (width: number) => void;
 
-  // Namespaced view mode setters
-  setProjectViewMode: (mode: ProjectViewMode) => void;
-  setFieldsViewMode: (mode: FieldsViewMode) => void;
-  setRecordsViewMode: (mode: RecordsViewMode) => void;
-
-  // Legacy setter (deprecated - use namespaced setters)
-  setViewMode: (mode: ViewMode) => void;
   setTheme: (theme: Theme) => void;
 
   // Overlay Actions
@@ -162,18 +117,6 @@ export const useUIStore = create<UIState>()(
     (set, get) => ({
       selection: null,
       activeProjectId: null,
-
-      // Center workspace content type (default: projects for backward compat)
-      centerContentType: 'projects' as CenterContentType,
-      setCenterContentType: (type) => set({ centerContentType: type }),
-
-      // Namespaced view modes
-      projectViewMode: 'workflow' as ProjectViewMode,
-      fieldsViewMode: 'browse' as FieldsViewMode,
-      recordsViewMode: 'list' as RecordsViewMode,
-
-      // Legacy alias - derives from projectViewMode for backward compat
-      get viewMode(): ViewMode { return get().projectViewMode; },
 
       inspectorTabMode: 'record',
       includeSystemEventsInLog: false,
@@ -218,29 +161,6 @@ export const useUIStore = create<UIState>()(
       setSidebarWidth: (width) => set({ sidebarWidth: Math.max(200, Math.min(400, width)) }),
       setInspectorWidth: (width) => set({ inspectorWidth: Math.max(300, Math.min(500, width)) }),
 
-      // Namespaced view mode setters
-      setProjectViewMode: (mode) => set((state) => {
-        const shouldClearSelection = mode === 'columns' && state.projectViewMode !== 'columns';
-        return {
-          projectViewMode: mode,
-          ...(shouldClearSelection ? { selection: null } : {}),
-        };
-      }),
-      setFieldsViewMode: (mode) => set({ fieldsViewMode: mode }),
-      setRecordsViewMode: (mode) => set({ recordsViewMode: mode }),
-
-      // Legacy setter - routes to appropriate namespaced setter
-      setViewMode: (mode) => {
-        if (isProjectViewMode(mode)) {
-          get().setProjectViewMode(mode);
-        } else if (isFieldsViewMode(mode)) {
-          get().setFieldsViewMode(mode);
-        } else if (isRecordsViewMode(mode)) {
-          get().setRecordsViewMode(mode);
-        } else if (process.env.NODE_ENV === 'development') {
-          console.warn(`setViewMode: Unrecognized view mode "${mode}"`);
-        }
-      },
       setTheme: (theme) => set({ theme }),
 
       openOverlay: (type, props = {}) => set({ activeOverlay: { type, props } }),
@@ -285,19 +205,13 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: 'ui-storage',
-      version: 5, // v5: Rename drawer to overlay
+      version: 6, // v6: centerContentType + view modes moved to workspaceStore
       partialize: (state) => ({
         sidebarWidth: state.sidebarWidth,
         inspectorWidth: state.inspectorWidth,
         sidebarCollapsed: state.sidebarCollapsed,
         inspectorCollapsed: state.inspectorCollapsed,
         overlayCollapsed: state.overlayCollapsed,
-        // Center content type
-        centerContentType: state.centerContentType,
-        // Namespaced view modes
-        projectViewMode: state.projectViewMode,
-        fieldsViewMode: state.fieldsViewMode,
-        recordsViewMode: state.recordsViewMode,
         theme: state.theme,
         overlayHeight: state.overlayHeight,
         inspectorTabMode: state.inspectorTabMode,
@@ -359,8 +273,15 @@ export const useUIStore = create<UIState>()(
           }
         }
 
-        // Ensure centerContentType has a default value
-        state.centerContentType = state.centerContentType || 'projects';
+        if (version < 6) {
+          // v6: centerContentType + view modes moved to workspaceStore
+          // Strip these fields from uiStore persisted state
+          delete state.centerContentType;
+          delete state.projectViewMode;
+          delete state.fieldsViewMode;
+          delete state.recordsViewMode;
+          delete state.viewMode;
+        }
 
         return state;
       },
@@ -369,12 +290,13 @@ export const useUIStore = create<UIState>()(
 );
 
 // Helper to get derived panels from the store state
-// Uses a selector to avoid re-renders on unrelated state changes
+// Uses selectors from both uiStore (layout) and workspaceStore (view modes)
 export const useUIPanels = (): UIPanels => {
+  const projectViewMode = useWorkspaceStore((s) => s.projectViewMode);
   return useUIStore((state) =>
     deriveUIPanels({
       selection: state.selection,
-      projectViewMode: state.projectViewMode,
+      projectViewMode,
       activeOverlay: state.activeOverlay,
       inspectorCollapsed: state.inspectorCollapsed,
       sidebarCollapsed: state.sidebarCollapsed,

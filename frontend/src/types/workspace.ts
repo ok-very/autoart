@@ -7,7 +7,20 @@
 
 import type { LucideIcon } from 'lucide-react';
 import type { PanelId } from '../workspace/panelRegistry';
-import type { CenterContentType } from '../stores/uiStore';
+
+/**
+ * Content type for center-workspace panel.
+ * Determines what content is displayed in the permanent center anchor.
+ */
+export type CenterContentType =
+    | 'projects'      // Project views (workflow, log, columns, list, cards)
+    | 'artcollector'  // Art collection workflow
+    | 'intake'        // Data intake workflow
+    | 'export'        // Export workflow
+    | 'mail'          // Communication
+    | 'calendar'      // Calendar view
+    | 'finance'       // Finance hub (invoices, budgets, expenses)
+    | 'polls';        // Availability polls
 
 /**
  * Scope determines when a workspace is available:

@@ -13,7 +13,8 @@
 import { Database } from 'lucide-react';
 import { useCallback, useState, useEffect } from 'react';
 
-import { useUIStore, isRecordsViewMode } from '../stores/uiStore';
+import { useUIStore } from '../stores/uiStore';
+import { useWorkspaceStore } from '../stores/workspaceStore';
 import { ResizeHandle } from '@autoart/ui';
 import { SelectionInspector } from '../ui/composites';
 import { RecordView } from '../ui/composites/RecordView';
@@ -21,17 +22,19 @@ import { Header } from '../ui/layout/Header';
 import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../ui/registry';
 
 export function RecordsPage() {
-  const { inspectorWidth, setInspectorWidth, viewMode, setViewMode, openOverlay } = useUIStore();
+  const { inspectorWidth, setInspectorWidth, openOverlay } = useUIStore();
+  const recordsViewMode = useWorkspaceStore((s) => s.recordsViewMode);
+  const setRecordsViewMode = useWorkspaceStore((s) => s.setRecordsViewMode);
   const [sidebarWidth, setSidebarWidth] = useState(260);
   const [selectedDefinitionId, setSelectedDefinitionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<RegistryTab>('instances');
 
   // Ensure we're using a valid RecordsViewMode when on this page
   useEffect(() => {
-    if (!isRecordsViewMode(viewMode)) {
-      setViewMode('list');
+    if (recordsViewMode !== 'list' && recordsViewMode !== 'ingest') {
+      setRecordsViewMode('list');
     }
-  }, [viewMode, setViewMode]);
+  }, [recordsViewMode, setRecordsViewMode]);
 
   const handleSidebarResize = useCallback(
     (delta: number) => {
