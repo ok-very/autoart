@@ -43,7 +43,7 @@ export function InspectorFooterComposer() {
     // Filter to action arrangements only
     const actionArrangements = useMemo(() => {
         if (!allDefinitions) return [];
-        return allDefinitions.filter((d) => d.kind === 'action_arrangement');
+        return allDefinitions.filter((d) => d.definition_kind === 'action_arrangement');
     }, [allDefinitions]);
 
     // Derive default arrangement ID (first arrangement)
