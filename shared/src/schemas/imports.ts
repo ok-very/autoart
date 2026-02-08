@@ -130,3 +130,28 @@ export const ClassificationsResponseSchema = z.object({
     unresolvedCount: z.number(),
 });
 export type ClassificationsResponse = z.infer<typeof ClassificationsResponseSchema>;
+
+// ============================================================================
+// IMPORT-ACTION LINKS
+// ============================================================================
+
+export const LinkActionRequestSchema = z.object({
+    sessionId: z.string().uuid(),
+    itemTempId: z.string().min(1),
+    actionId: z.string().uuid(),
+});
+export type LinkActionRequest = z.infer<typeof LinkActionRequestSchema>;
+
+export const ImportActionLinkSchema = z.object({
+    id: z.string().uuid(),
+    importSessionId: z.string().uuid(),
+    itemTempId: z.string(),
+    actionId: z.string().uuid(),
+    createdAt: z.string(),
+});
+export type ImportActionLink = z.infer<typeof ImportActionLinkSchema>;
+
+export const ActionLinksResponseSchema = z.object({
+    links: z.array(ImportActionLinkSchema),
+});
+export type ActionLinksResponse = z.infer<typeof ActionLinksResponseSchema>;

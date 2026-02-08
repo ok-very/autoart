@@ -733,6 +733,21 @@ export type ActionVocabulary = Selectable<ActionVocabularyTable>;
 export type NewActionVocabulary = Insertable<ActionVocabularyTable>;
 export type ActionVocabularyUpdate = Updateable<ActionVocabularyTable>;
 
+// ============================================
+// IMPORT-ACTION LINKS TABLE (Migration 005)
+// ============================================
+
+export interface ImportActionLinksTable {
+  id: Generated<string>;
+  import_session_id: string;
+  item_temp_id: string;
+  action_id: string;
+  created_at: Generated<Date>;
+}
+
+export type ImportActionLink = Selectable<ImportActionLinksTable>;
+export type NewImportActionLink = Insertable<ImportActionLinksTable>;
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -773,6 +788,7 @@ export interface Database {
   autohelper_instances: AutoHelperInstancesTable;
   autohelper_commands: AutoHelperCommandsTable;
   action_vocabulary: ActionVocabularyTable;
+  import_action_links: ImportActionLinksTable;
 }
 
 

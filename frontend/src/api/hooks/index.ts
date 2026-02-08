@@ -335,6 +335,12 @@ export {
   type EmailSuggestionsInput,
 } from './suggestions';
 
+// Vocabulary (Action vocabulary autocomplete)
+export {
+  useVocabularySuggestions,
+  type VocabularySuggestion,
+} from './vocabulary';
+
 // ============================================================================
 // UTILITIES
 // ============================================================================

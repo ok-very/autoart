@@ -14,7 +14,7 @@ import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
-import { InterpretItemRequestSchema, ReclassifyRequestSchema } from '@autoart/shared';
+import { InterpretItemRequestSchema, ReclassifyRequestSchema, LinkActionRequestSchema } from '@autoart/shared';
 
 import { listDefinitions } from '../records/records.service.js';
 import { suggestClassificationsForPlan, type ClassificationSuggestion } from './classification-suggester.js';
@@ -331,6 +331,79 @@ export async function importsRoutes(app: FastifyInstance) {
             totalItems: plan.items.length,
             unresolvedCount,
         });
+    });
+
+    // ========================================================================
+    // IMPORT-ACTION LINK ROUTES
+    // ========================================================================
+
+    /**
+     * Link an import item to an action.
+     * Creates a record in import_action_links.
+     */
+    app.post('/link-action', { preHandler: [app.authenticate] }, async (request, reply) => {
+        const body = LinkActionRequestSchema.parse(request.body);
+
+        const session = await importsService.getSession(body.sessionId);
+        if (!session) {
+            return reply.status(404).send({ error: 'Session not found' });
+        }
+
+        const { db } = await import('../../db/client.js');
+        const action = await db
+            .selectFrom('actions')
+            .select('id')
+            .where('id', '=', body.actionId)
+            .executeTakeFirst();
+
+        if (!action) {
+            return reply.status(404).send({ error: 'Action not found' });
+        }
+
+        const link = await db
+            .insertInto('import_action_links')
+            .values({
+                import_session_id: body.sessionId,
+                item_temp_id: body.itemTempId,
+                action_id: body.actionId,
+            })
+            .returningAll()
+            .executeTakeFirstOrThrow();
+
+        return reply.status(201).send({
+            id: link.id,
+            importSessionId: link.import_session_id,
+            itemTempId: link.item_temp_id,
+            actionId: link.action_id,
+            createdAt: link.created_at.toISOString(),
+        });
+    });
+
+    /**
+     * Get all import-action links for a given action.
+     */
+    app.get('/action-links/:actionId', async (request, reply) => {
+        const ActionIdParamSchema = z.object({
+            actionId: z.string().uuid(),
+        });
+        const { actionId } = ActionIdParamSchema.parse(request.params);
+
+        const { db } = await import('../../db/client.js');
+        const rows = await db
+            .selectFrom('import_action_links')
+            .selectAll()
+            .where('action_id', '=', actionId)
+            .execute();
+
+        const links = rows.map(row => ({
+            id: row.id,
+            importSessionId: row.import_session_id,
+            itemTempId: row.item_temp_id,
+            actionId: row.action_id,
+            createdAt: row.created_at.toISOString(),
+        }));
+
+        return reply.send({ links });
     });
 }
 
