@@ -58,12 +58,17 @@ export type CommandType =
   | 'stop_mail'
   | 'run_gc'
   | 'select_folder'
+  | 'watch_project'
+  | 'unwatch_project'
   | 'ping';
 
 /** Payload varies by command type */
 export interface CommandPayload {
   url?: string;
   output_path?: string;
+  project_id?: string;
+  root_path?: string;
+  folders?: string[];
 }
 
 // ============================================================================

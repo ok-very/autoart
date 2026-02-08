@@ -15,6 +15,7 @@ from autohelper.config import Settings, get_settings
 from autohelper.db import get_db, init_db
 from autohelper.db.migrate import run_migrations
 from autohelper.modules.config.router import router as config_router
+from autohelper.modules.invoice_watch.router import router as invoice_watch_router
 from autohelper.modules.pairing.router import router as pairing_router
 from autohelper.modules.export.router import router as export_router
 from autohelper.modules.filetree.router import router as filetree_router
@@ -83,6 +84,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     stop_backend_poller()
     stop_gc_scheduler()
     MailService().stop()
+
+    # Stop invoice watchers
+    from autohelper.modules.invoice_watch.router import get_service as get_invoice_watch_service
+
+    get_invoice_watch_service().shutdown()
+
     db = get_db()
     db.close()
     logger.info("AutoHelper stopped")
@@ -167,6 +174,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(gc_router)
     app.include_router(config_router)
     app.include_router(pairing_router)
+    app.include_router(invoice_watch_router)
 
     # Root endpoint
     @app.get("/")
