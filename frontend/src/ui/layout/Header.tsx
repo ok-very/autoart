@@ -20,8 +20,8 @@ import { useHierarchyStore } from '../../stores/hierarchyStore';
 import {
   useUIStore,
   FIELDS_VIEW_MODE_LABELS,
-  type CenterContentType,
 } from '../../stores/uiStore';
+import type { CenterContentType } from '../../types/workspace';
 import { useCollectionStore } from '../../stores';
 import { useCollectionModeOptional } from '../../workflows/export/context/CollectionModeProvider';
 import { useWorkspaceStore, useOpenPanelIds } from '../../stores/workspaceStore';
@@ -37,7 +37,10 @@ export function Header() {
   const { data: projects } = useProjects();
   const { data: currentUser } = useCurrentUser();
   const { getNode: _getNode } = useHierarchyStore();
-  const { fieldsViewMode, setFieldsViewMode, openOverlay, setCenterContentType } = useUIStore();
+  const { openOverlay } = useUIStore();
+  const fieldsViewMode = useWorkspaceStore((s) => s.fieldsViewMode);
+  const setFieldsViewMode = useWorkspaceStore((s) => s.setFieldsViewMode);
+  const setCenterContentType = useWorkspaceStore((s) => s.setCenterContentType);
   const collectionMode = useCollectionModeOptional();
 
   const { openPanel, setBoundProject } = useWorkspaceStore();

@@ -11,7 +11,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 import { useIngestionParsers, useIngestionPreview, useRunIngestion } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
-import { useUIStore } from '../../stores/uiStore';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
 
 interface IngestionViewProps {
     /**
@@ -22,7 +22,7 @@ interface IngestionViewProps {
 
 export function IngestionView({ onImportComplete }: IngestionViewProps) {
     const { selectProject } = useHierarchyStore();
-    const { setViewMode } = useUIStore();
+    const setRecordsViewMode = useWorkspaceStore((s) => s.setRecordsViewMode);
 
     // Data state
     const [rawData, setRawData] = useState('');
@@ -98,16 +98,16 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
 
             // Select the new project and switch back to list view
             selectProject(result.projectId);
-            setViewMode('list');
+            setRecordsViewMode('list');
             onImportComplete?.(result.projectId);
         } catch (err) {
             console.error('Import failed:', err);
         }
-    }, [rawData, selectedParser, parserConfig, runImport, selectProject, setViewMode, onImportComplete]);
+    }, [rawData, selectedParser, parserConfig, runImport, selectProject, setRecordsViewMode, onImportComplete]);
 
     const handleCancel = useCallback(() => {
-        setViewMode('list');
-    }, [setViewMode]);
+        setRecordsViewMode('list');
+    }, [setRecordsViewMode]);
 
     if (parsersLoading) {
         return (

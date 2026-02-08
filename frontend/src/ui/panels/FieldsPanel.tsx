@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react';
 import type { FieldDescriptor } from '@autoart/shared';
 
 import { useUIStore } from '../../stores/uiStore';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { useCollectionModeOptional } from '../../workflows/export/context/CollectionModeProvider';
 import { ResizeHandle, SegmentedControl } from '@autoart/ui';
 import { FieldsMillerColumnsView } from '../composites/FieldsMillerColumnsView';
@@ -25,7 +26,8 @@ const TAB_DATA = [
 ];
 
 export function FieldsPanel() {
-    const { setFieldsViewMode, openOverlay } = useUIStore();
+    const setFieldsViewMode = useWorkspaceStore((s) => s.setFieldsViewMode);
+    const { openOverlay } = useUIStore();
     const collectionMode = useCollectionModeOptional();
     const [sidebarWidth, setSidebarWidth] = useState(300);
     const [selectedField, setSelectedField] = useState<FieldDescriptor | null>(null);

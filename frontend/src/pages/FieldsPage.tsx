@@ -15,7 +15,8 @@ import { useState, useEffect } from 'react';
 
 import type { FieldDescriptor } from '@autoart/shared';
 
-import { useUIStore, isFieldsViewMode } from '../stores/uiStore';
+import { useUIStore } from '../stores/uiStore';
+import { useWorkspaceStore } from '../stores/workspaceStore';
 import { ResizeHandle } from '@autoart/ui';
 import { FieldsMillerColumnsView } from '../ui/composites/FieldsMillerColumnsView';
 import { Header } from '../ui/layout/Header';
@@ -25,17 +26,19 @@ import { FieldInstancesReview } from '../ui/semantic/FieldInstancesReview';
 
 
 export function FieldsPage() {
-    const { viewMode, setViewMode, openOverlay } = useUIStore();
+    const { openOverlay } = useUIStore();
+    const fieldsViewMode = useWorkspaceStore((s) => s.fieldsViewMode);
+    const setFieldsViewMode = useWorkspaceStore((s) => s.setFieldsViewMode);
     const [sidebarWidth, setSidebarWidth] = useState(600);
     const [selectedField, setSelectedField] = useState<FieldDescriptor | null>(null);
     const [activeTab, setActiveTab] = useState<RegistryTab>('definitions');
 
     // Ensure valid view mode on mount
     useEffect(() => {
-        if (!isFieldsViewMode(viewMode)) {
-            setViewMode('browse');
+        if (fieldsViewMode !== 'browse' && fieldsViewMode !== 'aggregate') {
+            setFieldsViewMode('browse');
         }
-    }, [viewMode, setViewMode]);
+    }, [fieldsViewMode, setFieldsViewMode]);
 
     const handleCreateField = () => {
         openOverlay('add-field', {});

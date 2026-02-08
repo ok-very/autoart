@@ -13,12 +13,13 @@ import { persist } from 'zustand/middleware';
 import type { DockviewApi } from 'dockview';
 import type { PanelId } from '../workspace/panelRegistry';
 import { isPermanentPanel, PANEL_DEFINITIONS } from '../workspace/panelRegistry';
-import type { WorkspacePreset, WorkspacePanelConfig, CapturedWorkspaceState, CapturedPanelState, PersistedWorkspacePreset } from '../types/workspace';
+import type { WorkspacePreset, WorkspacePanelConfig, CapturedWorkspaceState, CapturedPanelState, PersistedWorkspacePreset, CenterContentType } from '../types/workspace';
 import { BUILT_IN_WORKSPACES, DEFAULT_CUSTOM_WORKSPACE_ICON } from '../workspace/workspacePresets';
-import { useUIStore } from './uiStore';
+import type { ProjectViewMode, RecordsViewMode, FieldsViewMode } from '@autoart/shared';
 
 // Layout version - increment when layout schema changes to force reset
-export const LAYOUT_VERSION = 3;
+// v4: centerContentType + view modes moved from uiStore to workspaceStore
+export const LAYOUT_VERSION = 4;
 
 // Serialized layout state from Dockview
 export interface SerializedDockviewState {
@@ -85,6 +86,18 @@ interface WorkspaceState {
     boundPanelIds: Set<string>;             // Panel IDs bound to workspace project
     workspaceModified: boolean;             // True when user modifies panels
 
+    // Content routing (moved from uiStore in v4)
+    centerContentType: CenterContentType;
+    setCenterContentType: (type: CenterContentType) => void;
+
+    // View modes (moved from uiStore in v4)
+    projectViewMode: ProjectViewMode;
+    fieldsViewMode: FieldsViewMode;
+    recordsViewMode: RecordsViewMode;
+    setProjectViewMode: (mode: ProjectViewMode) => void;
+    setFieldsViewMode: (mode: FieldsViewMode) => void;
+    setRecordsViewMode: (mode: RecordsViewMode) => void;
+
     // Panel actions
     openPanel: (panelId: PanelId, params?: unknown) => void;
     closePanel: (panelId: PanelId) => void;
@@ -127,12 +140,30 @@ const initialState = {
     boundProjectId: null as string | null,
     boundPanelIds: new Set<string>(),
     workspaceModified: false,
+    // Content routing + view modes (moved from uiStore in v4)
+    centerContentType: 'projects' as CenterContentType,
+    projectViewMode: 'workflow' as ProjectViewMode,
+    fieldsViewMode: 'browse' as FieldsViewMode,
+    recordsViewMode: 'list' as RecordsViewMode,
 };
 
 export const useWorkspaceStore = create<WorkspaceState>()(
     persist(
         (set, get) => ({
             ...initialState,
+
+            // Content routing + view modes
+            setCenterContentType: (type) => set({ centerContentType: type }),
+            setProjectViewMode: (mode) => set((state) => {
+                const shouldClearSelection = mode === 'columns' && state.projectViewMode !== 'columns';
+                return {
+                    projectViewMode: mode,
+                    // Note: selection clearing is handled by uiStore consumer if needed
+                    ...(shouldClearSelection ? {} : {}),
+                };
+            }),
+            setFieldsViewMode: (mode) => set({ fieldsViewMode: mode }),
+            setRecordsViewMode: (mode) => set({ recordsViewMode: mode }),
 
             openPanel: (panelId: PanelId, params?: unknown) => {
                 const state = get();
@@ -319,6 +350,8 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 const positionMap = new Map<string, PanelPosition>();
                 const newParams = new Map<string, unknown>(state.panelParams);
                 let projectPanelCounter = 0;
+                let newContentType: CenterContentType | undefined;
+                let newProjectViewMode: ProjectViewMode | undefined;
 
                 for (const panelConfig of resolvedPanels) {
                     const baseId = panelConfig.panelId;
@@ -346,9 +379,9 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                         positionMap.set(uniqueId as PanelId, panelConfig.position);
                     }
 
-                    // Set content type for center-workspace
+                    // Set content type for center-workspace (now local to workspaceStore)
                     if (baseId === 'center-workspace' && panelConfig.contentType) {
-                        useUIStore.getState().setCenterContentType(panelConfig.contentType);
+                        newContentType = panelConfig.contentType;
                     }
 
                     // Set view mode
@@ -356,7 +389,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                         if (baseId === 'center-workspace') {
                             const validModes = ['workflow', 'log', 'columns', 'list', 'cards'];
                             if (validModes.includes(panelConfig.viewMode)) {
-                                useUIStore.getState().setProjectViewMode(panelConfig.viewMode as any);
+                                newProjectViewMode = panelConfig.viewMode as ProjectViewMode;
                             }
                         } else {
                             const existing = newParams.get(uniqueId) as Record<string, unknown> | undefined;
@@ -374,6 +407,8 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     boundPanelIds: newBoundPanelIds,
                     workspaceModified: false,
                     panelParams: newParams,
+                    ...(newContentType ? { centerContentType: newContentType } : {}),
+                    ...(newProjectViewMode ? { projectViewMode: newProjectViewMode } : {}),
                 });
 
                 // Focus the first panel in the preset using Dockview API
@@ -476,17 +511,16 @@ export const useWorkspaceStore = create<WorkspaceState>()(
 
             captureCurrentState: (): CapturedWorkspaceState => {
                 const state = get();
-                const uiState = useUIStore.getState();
                 const validPositions = ['center', 'left', 'right', 'bottom'] as const;
 
                 const openPanels: CapturedPanelState[] = state.openPanelIds.map(id => {
                     const def = PANEL_DEFINITIONS[id];
                     const params = state.panelParams.get(id) as Record<string, unknown> | undefined;
 
-                    // Get view mode from params or from uiStore for center-workspace
+                    // Get view mode from params or from workspaceStore for center-workspace
                     let currentViewMode: string | undefined;
                     if (id === 'center-workspace') {
-                        currentViewMode = uiState.projectViewMode;
+                        currentViewMode = state.projectViewMode;
                     } else if (params?.viewMode) {
                         currentViewMode = params.viewMode as string;
                     }
@@ -529,6 +563,11 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 boundProjectId: state.boundProjectId,
                 boundPanelIds: Array.from(state.boundPanelIds),
                 workspaceModified: state.workspaceModified,
+                // Content routing + view modes (v4)
+                centerContentType: state.centerContentType,
+                projectViewMode: state.projectViewMode,
+                fieldsViewMode: state.fieldsViewMode,
+                recordsViewMode: state.recordsViewMode,
             }),
             merge: (persisted: unknown, current: WorkspaceState) => {
                 const p = persisted as {
@@ -543,6 +582,11 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     boundProjectId?: string | null;
                     boundPanelIds?: string[];
                     workspaceModified?: boolean;
+                    // v4 fields
+                    centerContentType?: CenterContentType;
+                    projectViewMode?: ProjectViewMode;
+                    fieldsViewMode?: FieldsViewMode;
+                    recordsViewMode?: RecordsViewMode;
                 } | undefined;
 
                 // Handle version mismatch: preserve custom workspaces but reset layout
@@ -581,6 +625,11 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     boundProjectId: p?.boundProjectId ?? current.boundProjectId,
                     boundPanelIds: new Set(p?.boundPanelIds ?? []),
                     workspaceModified: p?.workspaceModified ?? current.workspaceModified,
+                    // v4 fields with defaults
+                    centerContentType: p?.centerContentType ?? current.centerContentType,
+                    projectViewMode: p?.projectViewMode ?? current.projectViewMode,
+                    fieldsViewMode: p?.fieldsViewMode ?? current.fieldsViewMode,
+                    recordsViewMode: p?.recordsViewMode ?? current.recordsViewMode,
                 };
             },
         }
@@ -597,5 +646,7 @@ export const useAllWorkspaces = () => useWorkspaceStore((s) => s.getAllWorkspace
 export const usePendingPanelPositions = () => useWorkspaceStore((s) => s.pendingPanelPositions);
 export const useBoundProjectId = () => useWorkspaceStore((s) => s.boundProjectId);
 export const useBoundPanelIds = () => useWorkspaceStore((s) => s.boundPanelIds);
+export const useCenterContentType = () => useWorkspaceStore((s) => s.centerContentType);
+export const useProjectViewMode = () => useWorkspaceStore((s) => s.projectViewMode);
 export const useCustomWorkspacesByParent = (parentId: string) =>
     useWorkspaceStore((s) => s.customWorkspaces.filter(w => w.parentWorkspaceId === parentId));

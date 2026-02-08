@@ -10,7 +10,8 @@
  */
 
 import { SegmentedControl } from '@autoart/ui';
-import { useUIStore, useUIPanels, PROJECT_VIEW_MODE_LABELS } from '../../stores/uiStore';
+import { useUIPanels, PROJECT_VIEW_MODE_LABELS } from '../../stores/uiStore';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
 import type { ProjectViewMode } from '@autoart/shared';
 
 import { ActionListView } from '../layout/ActionListView';
@@ -27,7 +28,8 @@ const VIEW_MODE_DATA = Object.entries(PROJECT_VIEW_MODE_LABELS).map(([value, lab
 
 export function ProjectContentAdapter() {
     const panels = useUIPanels();
-    const { projectViewMode, setProjectViewMode } = useUIStore();
+    const projectViewMode = useWorkspaceStore((s) => s.projectViewMode);
+    const setProjectViewMode = useWorkspaceStore((s) => s.setProjectViewMode);
 
     // Render the active subview based on workspace mode
     const renderContent = () => {
