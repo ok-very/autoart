@@ -123,6 +123,7 @@ interface WorkspaceState {
     applyWorkspace: (workspaceId: string, subviewId?: string) => void;
     saveCurrentAsWorkspace: (name: string, options?: { color?: string; parentWorkspaceId?: string }) => void;
     updateCustomWorkspace: (id: string) => void;
+    renameCustomWorkspace: (id: string, newName: string) => void;
     deleteCustomWorkspace: (id: string) => void;
     duplicateSubview: (parentWorkspaceId: string, subviewId: string, name: string, color?: string) => void;
     duplicateCustomWorkspace: (id: string) => void;
@@ -481,6 +482,31 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                             : w
                     ),
                     workspaceModified: false,
+                });
+            },
+
+            renameCustomWorkspace: (id: string, newName: string) => {
+                const state = get();
+                const workspace = state.customWorkspaces.find(w => w.id === id);
+                if (!workspace) {
+                    console.warn(`Cannot rename workspace: ${id} (not found)`);
+                    return;
+                }
+                const trimmed = newName.trim();
+                if (!trimmed) return;
+                // Check name uniqueness across all workspaces
+                const allNames = [
+                    ...BUILT_IN_WORKSPACES.map(w => w.label.toLowerCase()),
+                    ...state.customWorkspaces.filter(w => w.id !== id).map(w => w.label.toLowerCase()),
+                ];
+                if (allNames.includes(trimmed.toLowerCase())) {
+                    console.warn(`Cannot rename workspace: name "${trimmed}" already exists`);
+                    return;
+                }
+                set({
+                    customWorkspaces: state.customWorkspaces.map(w =>
+                        w.id === id ? { ...w, label: trimmed } : w
+                    ),
                 });
             },
 
