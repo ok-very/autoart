@@ -39,37 +39,40 @@ CLAUDE.md says "soft-intrinsic type derivation — derive from relationships, no
 
 ---
 
-## Phase 0: Stop the Bleeding
+## Phase 0: Stop the Bleeding ✓
+
+**Status: Complete** — All items merged via PRs #416-420.
 
 Fix bugs that block current functionality. No new features.
 
-| # | Item | File(s) | Why First |
-|---|------|---------|-----------|
-| 0.1 | **React Compiler memoization fix** — `useMemo` deps don't match React Compiler inference. Fix deps or suppress directive. | `frontend/src/workflows/intake/components/BlockRecordBindingEditor.tsx:39` | Blocks clean lint (error exit code) |
-| 0.2 | **Classification Panel deadlock** — Save button disabled when items are unresolved (inverted logic). Should enable save when user has *pending* resolutions. | `frontend/src/workflows/import/panels/ClassificationPanel.tsx:410` | Blocks entire import wizard |
-| 0.3 | **Preview dev server startup** — Add intake (5174) and poll (5175) to `pnpm dev`. Or: embed preview route in dashboard. | `scripts/dev.sh`, `frontend/.env.development` | Preview buttons open dead links |
-| 0.4 | **ExecutionControls API client** — Replace raw `fetch()` with proper TanStack Query mutation hook. | `frontend/src/workflows/import/panels/ExecutionControls.tsx:166` | Bypasses auth, breaks on 401 |
-| 0.5 | **Unused var cleanup** — Prefix `isDev` and `db` with `_`. | `backend/src/db/client.ts:29`, `backend/src/modules/intake/intake.composer.ts:16` | Lint warnings every build |
+| # | Item | File(s) | Status |
+|---|------|---------|--------|
+| 0.1 | **React Compiler memoization fix** — `useMemo` deps don't match React Compiler inference. Fix deps or suppress directive. | `frontend/src/workflows/intake/components/BlockRecordBindingEditor.tsx:39` | ✓ Merged |
+| 0.2 | **Classification Panel deadlock** — Save button disabled when items are unresolved (inverted logic). Should enable save when user has *pending* resolutions. | `frontend/src/workflows/import/panels/ClassificationPanel.tsx:410` | ✓ Merged |
+| 0.3 | **Preview dev server startup** — Add intake (5174) and poll (5175) to `pnpm dev`. Or: embed preview route in dashboard. | `scripts/dev.sh`, `frontend/.env.development` | ✓ Merged |
+| 0.4 | **ExecutionControls API client** — Replace raw `fetch()` with proper TanStack Query mutation hook. | `frontend/src/workflows/import/panels/ExecutionControls.tsx:166` | ✓ Merged |
+| 0.5 | **Unused var cleanup** — Prefix `isDev` and `db` with `_`. | `backend/src/db/client.ts:29`, `backend/src/modules/intake/intake.composer.ts:16` | ✓ Merged |
 
-**Delegation:** `/frontend-dev` for 0.1-0.3, `/backend-dev` for 0.4, housekeeping for 0.5.
-**Verification:** `/integrator` traces import wizard start-to-execute after all 5 land.
+Clean builds, unblocked import wizard, working preview buttons. Phase 1 now unblocked.
 
 ---
 
 ## Phase 1: Workspace Foundation
 
+**Status: In Progress** — Items 1.1-1.4 submitted as PRs #421-425, awaiting review.
+
 Fix the workspace system so everything built on top of it stops regressing. This phase absorbs multiple items scattered across the old P1, P2, and bug list.
 
-| # | Item | Absorbs | Depends On |
-|---|------|---------|-----------|
-| 1.1 | **Workspace context contract** — Define `WorkspaceContext` interface. Replace ad-hoc `boundProjectId` + `pendingPanelPositions` with a single context object passed via Dockview panel params. | — (new) | Phase 0 complete |
-| 1.2 | **Panel context consumption** — Update `project-panel`, `mail-panel`, `selection-inspector` to read from `WorkspaceContext`. Panels that don't need context ignore it. | Workspace binding (old P1) | 1.1 |
-| 1.3 | **Desk workspace** — With context binding working, Desk becomes: project-panel (bound) + mail-panel (bound) + center showing project overview. First in workspace list, default on login. | Bug: "Desk workspace broken" | 1.1, 1.2 |
-| 1.4 | **CenterView routing ownership** — Each workspace preset declares which `CenterContentType` it owns. CenterContentRouter validates content matches active workspace. Mismatches redirect to workspace default. | P1: CenterView routing, Bug: CenterView conceptual breakage | 1.1 |
-| 1.5 | **Store consolidation** — Merge `uiStore` content/view state into `workspaceStore`. One store owns workspace identity, content type, view mode, and panel layout. Single version, single migration. | — (new, highest-impact change for regressions) | 1.4 |
-| 1.6 | **Workspace save** — With unified store, "Save workspace" persists the full state snapshot. Replace `requestAnimationFrame` timing hack. | P2 #182: Workspace modification tracking | 1.5 |
-| 1.7 | **Custom workspace lifecycle** — Create, rename, delete custom workspaces. Same `WorkspaceContext` shape as built-in presets. | — (new) | 1.5, 1.6 |
-| 1.8 | **Workspace sidebar overrides** — Workspaces declare sidebar visibility rules. Intake workspace shows intake sidebar, Plan shows project sidebar, etc. | P1: Workspace sidebar overrides | 1.4 |
+| # | Item | Absorbs | Depends On | Status |
+|---|------|---------|-----------|--------|
+| 1.1 | **Workspace context contract** — Define `WorkspaceContext` interface. Replace ad-hoc `boundProjectId` + `pendingPanelPositions` with a single context object passed via Dockview panel params. | — (new) | Phase 0 complete | 🔄 PR #421 |
+| 1.2 | **Panel context consumption** — Update `project-panel`, `mail-panel`, `selection-inspector` to read from `WorkspaceContext`. Panels that don't need context ignore it. | Workspace binding (old P1) | 1.1 | 🔄 PR #422, #423 |
+| 1.3 | **Desk workspace** — With context binding working, Desk becomes: project-panel (bound) + mail-panel (bound) + center showing project overview. First in workspace list, default on login. | Bug: "Desk workspace broken" | 1.1, 1.2 | 🔄 PR #425 |
+| 1.4 | **CenterView routing ownership** — Each workspace preset declares which `CenterContentType` it owns. CenterContentRouter validates content matches active workspace. Mismatches redirect to workspace default. | P1: CenterView routing, Bug: CenterView conceptual breakage | 1.1 | 🔄 PR #424 |
+| 1.5 | **Store consolidation** — Merge `uiStore` content/view state into `workspaceStore`. One store owns workspace identity, content type, view mode, and panel layout. Single version, single migration. | — (new, highest-impact change for regressions) | 1.4 | Not started |
+| 1.6 | **Workspace save** — With unified store, "Save workspace" persists the full state snapshot. Replace `requestAnimationFrame` timing hack. | P2 #182: Workspace modification tracking | 1.5 | Not started |
+| 1.7 | **Custom workspace lifecycle** — Create, rename, delete custom workspaces. Same `WorkspaceContext` shape as built-in presets. | — (new) | 1.5, 1.6 | Not started |
+| 1.8 | **Workspace sidebar overrides** — Workspaces declare sidebar visibility rules. Intake workspace shows intake sidebar, Plan shows project sidebar, etc. | P1: Workspace sidebar overrides | 1.4 | Not started |
 
 **Key files:**
 - `frontend/src/stores/uiStore.ts` — will be partially absorbed into workspaceStore
