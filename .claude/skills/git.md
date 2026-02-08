@@ -26,7 +26,7 @@ This project uses **stackit** for stacked PR management. Always prefer stackit c
 | Submit PRs | `stackit submit` |
 | Sync with main | `stackit sync` |
 | Rebase children | `stackit restack` |
-| Merge bottom PR | `stackit merge next` |
+| Merge stack | `stackit merge squash` |
 | Navigate up/down | `stackit up` / `stackit down` |
 | Switch to branch | `stackit checkout <branch>` |
 | Absorb fixes into correct commits | `stackit absorb` |
@@ -85,9 +85,7 @@ stackit submit           # Submit current branch
 stackit submit --stack   # Submit entire stack (alias: ss)
 ```
 
-### Merging a Stack — Step by Step
-
-**Always merge from the bottom up, one PR at a time.**
+### Merging a Stack
 
 #### Pre-merge checklist
 
@@ -96,7 +94,7 @@ stackit sync                 # Pull main, cleanup any already-merged branches
 stackit log                  # Confirm stack order and PR numbers
 ```
 
-**Run lint before merging.** This repo has no CI — lint locally before starting the merge loop:
+**Run lint before merging.** This repo has no CI — lint locally before starting the merge:
 
 ```bash
 stackit bottom --no-interactive
@@ -107,7 +105,19 @@ pnpm lint                                                   # Must pass
 
 If either fails, fix the errors before merging. Use `/stack-fix` or `/stack-verify` to locate which branch introduced the failure.
 
-#### The merge loop
+#### Primary method: `stackit merge squash`
+
+Consolidates the entire stack into a single PR and merges it. This is the preferred method — it avoids the retargeting race conditions of bottom-up individual merges.
+
+```bash
+stackit merge squash --no-interactive
+```
+
+The pretooluse hook will gate this command for confirmation before execution.
+
+#### Fallback: bottom-up individual merges
+
+Use when you need to preserve individual PR history, or when `stackit merge squash` fails.
 
 This repo has no branch protection, so `stackit merge next` fails with "clean status" (automerge requires a gate). Use `gh pr merge` directly:
 
@@ -129,7 +139,7 @@ stackit sync --no-interactive
 setting handles cleanup after child PRs are retargeted. Forcing early deletion
 races against retargeting and can cascade-close child PRs.
 
-#### If a PR won't merge
+##### If a PR won't merge
 
 If `gh pr merge` fails (e.g., merge conflict after retarget):
 
@@ -142,21 +152,19 @@ If `gh pr merge` fails (e.g., merge conflict after retarget):
 
 #### Post-merge verification (REQUIRED)
 
-After the merge loop completes, **verify content actually reached main**:
+After merging (either method), **verify content actually reached main**:
 
 ```bash
 # Pull main and check that key files from the stack exist
 git checkout main && git pull
 # Spot-check: do files from the last PR in the stack exist?
-git log --oneline -5   # Should show merge commits for each PR
+git log --oneline -5   # Should show merge commits
 ```
 
 **Why:** GitHub can mark stacked PRs as "MERGED" without their content reaching main.
-This happens when merges fire faster than GitHub's retargeting (5-second gaps between
-merges in a 10+ PR stack). The PRs close, the branches delete, but the merge commits
-are orphaned — not ancestors of main. The only way to catch this is to verify on main
-after the loop. If content is missing, the blobs survive in git's object store and can
-be recovered with `git show <commit>:<path>`.
+This happens when bottom-up merges fire faster than GitHub's retargeting (5-second gaps
+between merges in a 10+ PR stack). `stackit merge squash` avoids this by consolidating
+first, but always verify regardless.
 
 **NEVER** do any of the following as "recovery":
 - `git rebase --onto` to manually rebase branches
@@ -166,13 +174,6 @@ be recovered with `git show <commit>:<path>`.
 - Close and recreate PRs
 
 These destroy stackit's internal tracking and cascade into more breakage.
-
-#### Other merge modes
-
-```bash
-stackit merge squash     # Consolidate stack into single PR and merge
-stackit merge            # Interactive wizard
-```
 
 #### Useful flags
 
@@ -233,14 +234,14 @@ stackit restack          # Rebase all branches in stack
 ## CRITICAL MERGE RULES
 
 ```bash
-# Via stackit (preferred)
-stackit merge next --no-interactive
+# Preferred: consolidate and merge entire stack
+stackit merge squash --no-interactive
 
-# Manual fallback for a SINGLE PR only (then immediately `stackit sync`)
+# Fallback: merge individual PRs bottom-up (preserves per-PR history)
 gh pr merge <number> --merge
 ```
 
-**NEVER use `--squash`** — it breaks stacked PRs and orphans child branch commits.
+**NEVER use `gh pr merge --squash`** on individual stacked PRs — it orphans child branch commits. `stackit merge squash` is safe because stackit consolidates the stack into a single PR first, then merges that.
 
 ---
 

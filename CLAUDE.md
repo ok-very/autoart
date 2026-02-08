@@ -121,7 +121,7 @@ This happened because:
 **Git/Stackit:**
 - Use **stackit** for all branch/PR operations. See `@.claude/skills/git.md`.
 - **NEVER** manually rebase, force push, or retarget stacked branches.
-- **NEVER** use `--squash` when merging PRs. Always `--merge`.
+- **NEVER** use `gh pr merge --squash` on individual stacked PRs — it orphans child branches. Use `stackit merge squash` to consolidate the stack safely.
 - **NEVER** amend pushed commits. Create new commits.
 - **NEVER** use `git stash`. Commit changes so branch switching works.
 - **NEVER** navigate between stack branches to apply fixes.
