@@ -81,24 +81,27 @@
 
 ## Phase 4: BFA Reconciliation Pipeline Integration (#437)
 
-*Integrate the BFA-todo reconciliation pipeline into AutoArt's export workflow. Monday.com Excel uploads, field-level diff approval, Google Docs styled injection -- all through the web UI. AutoHelper evolves from file-operations-only to general Python task runner.*
+*Port BFA domain logic into the TypeScript backend, use the existing Monday.com connector for data sync, and build a reconciliation UI for field-level diff review. Google Docs injection via API.*
+
+**Architecture (revised Feb 2026):** Instead of copying the BFA Python pipeline into AutoHelper, BFA's phase system, authority rules, and column semantics are ported as TypeScript code-as-config in `backend/src/modules/programs/bfa-program.config.ts`. Shared types live in `shared/src/schemas/bfa.ts`. The existing Monday.com connector + workspace/board/column config tables provide the data pipeline; the BFA program config provides the interpretation layer.
+
+> **Abstraction flag:** When a second program needs phase/authority/column config, evaluate extracting `programs/` into database-driven config (JSON in a `program_configs` table). Current code-as-config approach is correct for single-program usage.
 
 **Scope:**
 
-| # | Issue | Sub-phase | Category |
-|---|-------|-----------|----------|
-| 437 | AutoHelper BFA runner: copy `bfa_pipeline/` to AutoHelper, create runner wrapper, add command handlers | 4.1 | AutoHelper |
-| 437 | Backend reconciliation service: file upload, report storage, apply decisions routes | 4.2 | Backend |
-| 437 | Frontend reconciliation panel: diff review, accept/reject, summary stats | 4.3 | Frontend |
-| 437 | Google Docs injection: resolve placeholders, call Docs API, inject styled content | 4.4 | Backend + Frontend |
+| # | Issue | Sub-phase | Category | Status |
+|---|-------|-----------|----------|--------|
+| 437 | BFA program configuration: shared schemas, program config, Monday workspace seed | 4.1 | Shared + Backend | ✓ Done |
+| 437 | Monday connector → BFA sync differ: field-level diff engine using program config + authority rules | 4.2 | Backend | |
+| 437 | Backend reconciliation service: diff report storage, apply decisions routes, rollup handling | 4.3 | Backend | |
+| 437 | Frontend reconciliation panel: diff review, accept/reject, summary stats | 4.4 | Frontend | |
+| 437 | Google Docs injection: resolve placeholders, call Docs API, inject styled content | 4.5 | Backend + Frontend | |
 
-**Dependencies:** Phase 3 infrastructure stable. Google OAuth (#403) resolved for Phase 4.4.
+**Dependencies:** Phase 3 infrastructure stable. Google OAuth (#403) resolved for Phase 4.5.
 
-**Internal order:** 4.1 -> 4.2 -> 4.3 -> 4.4 (strict chain -- each sub-phase depends on the prior)
+**Internal order:** 4.1 → 4.2 → 4.3 → 4.4 → 4.5 (strict chain — each sub-phase depends on the prior)
 
-**Cross-system risk:** This touches AutoHelper (Python), backend (Fastify), frontend (React), and BFA-todo (standalone Python pipeline). Every sub-phase requires end-to-end data flow verification. See [roadmap.md](roadmap.md) for full architecture, risks, and per-sub-phase verification requirements.
-
-**Done when:** User uploads Monday.com Excel, sees field-level diffs in a reconciliation panel, approves changes, receives `gdocs_inject.json`, and can optionally inject styled content into a Google Doc.
+**Done when:** User triggers Monday sync for BFA board, sees field-level diffs in a reconciliation panel, approves changes, and can optionally inject styled content into a Google Doc.
 
 ---
 
