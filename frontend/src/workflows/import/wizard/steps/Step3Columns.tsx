@@ -302,6 +302,7 @@ function CategorySection({ category, columns, boardConfigId, workspaceId, onColu
 export function Step3Columns({ onNext, onBack, session, onSessionCreated }: StepProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [inflightMutations, setInflightMutations] = useState(0);
 
     // Extract board IDs
     const boardIds = useMemo(() => {
@@ -345,11 +346,16 @@ export function Step3Columns({ onNext, onBack, session, onSessionCreated }: Step
             return c;
         });
 
-        await updateColumns.mutateAsync({
-            workspaceId,
-            boardConfigId,
-            columns: updatedColumns
-        });
+        setInflightMutations(c => c + 1);
+        try {
+            await updateColumns.mutateAsync({
+                workspaceId,
+                boardConfigId,
+                columns: updatedColumns
+            });
+        } finally {
+            setInflightMutations(c => c - 1);
+        }
     };
 
     const handleNext = async () => {
@@ -357,6 +363,16 @@ export function Step3Columns({ onNext, onBack, session, onSessionCreated }: Step
 
         try {
             setIsRefreshing(true);
+            // Wait for any in-flight column updates to settle
+            if (inflightMutations > 0) {
+                await new Promise<void>(resolve => {
+                    const check = () => {
+                        if (inflightMutations <= 0) resolve();
+                        else setTimeout(check, 50);
+                    };
+                    check();
+                });
+            }
             const newPlan = await generatePlan.mutateAsync(session.id);
             onSessionCreated(session, newPlan);
             onNext();
@@ -478,7 +494,7 @@ export function Step3Columns({ onNext, onBack, session, onSessionCreated }: Step
                 <Button
                     onClick={handleNext}
                     variant="primary"
-                    disabled={isRefreshing || updateColumns.isPending}
+                    disabled={isRefreshing || inflightMutations > 0}
                 >
                     {isRefreshing ? 'Regenerating Plan...' : 'Next: Templates'}
                 </Button>

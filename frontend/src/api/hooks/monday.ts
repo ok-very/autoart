@@ -87,7 +87,29 @@ export function useUpdateMondayColumnConfigs() {
                 { columns }
             );
         },
-        onSuccess: (_data, variables) => {
+        onMutate: async (variables) => {
+            await queryClient.cancelQueries({ queryKey: ['monday', 'boards', 'configs'] });
+            const queryFilter = { queryKey: ['monday', 'boards', 'configs'] };
+            const queries = queryClient.getQueriesData<MondayBoardConfig[]>(queryFilter);
+            for (const [key, data] of queries) {
+                if (!data) continue;
+                const updated = data.map(board =>
+                    board.id === variables.boardConfigId
+                        ? { ...board, columns: variables.columns }
+                        : board
+                );
+                queryClient.setQueryData(key, updated);
+            }
+            return { queries };
+        },
+        onError: (_err, _vars, context) => {
+            if (context?.queries) {
+                for (const [key, data] of context.queries) {
+                    queryClient.setQueryData(key, data);
+                }
+            }
+        },
+        onSettled: (_data, _err, variables) => {
             queryClient.invalidateQueries({ queryKey: ['monday', 'boards', 'configs'] });
             queryClient.invalidateQueries({ queryKey: ['monday', 'workspaces', variables.workspaceId] });
         },
