@@ -54,6 +54,8 @@ export function BfaSyncView() {
     useEffect(() => {
         if (docIdInput) {
             localStorage.setItem('bfa-sync-doc-id', docIdInput);
+        } else {
+            localStorage.removeItem('bfa-sync-doc-id');
         }
     }, [docIdInput]);
 

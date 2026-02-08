@@ -25,7 +25,7 @@ import {
     transformSelectionPanel,
     transformNextSteps,
 } from './bfa-import-transformer.js';
-import { getDiffReport } from './bfa-sync.service.js';
+import { getDiffReport, resolveEntityProjects } from './bfa-sync.service.js';
 import { db } from '../../db/client.js';
 import { projectBfaExportModels } from '../exports/projectors/bfa-project.projector.js';
 import * as hierarchyService from '../hierarchy/hierarchy.service.js';
@@ -78,7 +78,8 @@ export async function importToAutoArt(
     const entityIds = [...new Set(appliedDecisions.map(d => d.entity_id))];
 
     // 4. Resolve entity IDs → project-level hierarchy node IDs
-    const projectNodeIds = await resolveProjectIds(entityIds);
+    const entityToProject = await resolveEntityProjects(entityIds);
+    const projectNodeIds = [...new Set(entityToProject.values())];
 
     // 5. Build export models for existing projects
     const existingExportModels = projectNodeIds.length > 0
@@ -303,106 +304,3 @@ async function ensureNextStepSubprocesses(
         }, userId);
     }
 }
-
-// ============================================================================
-// INTERNAL — RESOLUTION HELPERS
-// ============================================================================
-
-/**
- * Resolve entity IDs to their project-level ancestor node IDs.
- * Walks up the hierarchy to find nodes with type='project'.
- */
-async function resolveProjectIds(entityIds: string[]): Promise<string[]> {
-    if (entityIds.length === 0) return [];
-
-    // Check external_source_mappings to classify entities
-    const mappings = await db
-        .selectFrom('external_source_mappings')
-        .select(['local_entity_id', 'local_entity_type'])
-        .where('provider', '=', 'monday')
-        .where('local_entity_id', 'in', entityIds)
-        .execute();
-
-    const nodeIdsToCheck = new Set<string>();
-
-    // For actions, resolve via context_id
-    const actionIds = mappings
-        .filter(m => m.local_entity_type === 'action')
-        .map(m => m.local_entity_id);
-
-    if (actionIds.length > 0) {
-        const actions = await db
-            .selectFrom('actions')
-            .select(['id', 'context_id'])
-            .where('id', 'in', actionIds)
-            .execute();
-
-        for (const a of actions) {
-            if (a.context_id) nodeIdsToCheck.add(a.context_id);
-        }
-    }
-
-    // For hierarchy nodes, add directly
-    const nodeEntityIds = mappings
-        .filter(m => m.local_entity_type !== 'action')
-        .map(m => m.local_entity_id);
-    for (const id of nodeEntityIds) nodeIdsToCheck.add(id);
-
-    // Also add any entityIds not in mappings (might be hierarchy nodes directly)
-    const mappedIds = new Set(mappings.map(m => m.local_entity_id));
-    for (const id of entityIds) {
-        if (!mappedIds.has(id)) nodeIdsToCheck.add(id);
-    }
-
-    if (nodeIdsToCheck.size === 0) return [];
-
-    const projectIds = new Set<string>();
-    const nodeArray = [...nodeIdsToCheck];
-
-    // Check which are already projects
-    const directProjects = await db
-        .selectFrom('hierarchy_nodes')
-        .select('id')
-        .where('id', 'in', nodeArray)
-        .where('type', '=', 'project')
-        .execute();
-
-    for (const p of directProjects) {
-        projectIds.add(p.id);
-    }
-
-    // Walk up hierarchy for non-project nodes
-    const nonProjectIds = nodeArray.filter(id => !projectIds.has(id));
-    for (const nodeId of nonProjectIds) {
-        const ancestor = await findProjectAncestor(nodeId);
-        if (ancestor) projectIds.add(ancestor);
-    }
-
-    return [...projectIds];
-}
-
-/**
- * Walk up the hierarchy from a node to find its project-level ancestor.
- */
-async function findProjectAncestor(nodeId: string): Promise<string | null> {
-    let currentId: string | null = nodeId;
-    const visited = new Set<string>();
-
-    while (currentId && !visited.has(currentId)) {
-        visited.add(currentId);
-
-        const node = await db
-            .selectFrom('hierarchy_nodes')
-            .select(['id', 'parent_id', 'type'])
-            .where('id', '=', currentId)
-            .executeTakeFirst();
-
-        if (!node) return null;
-        if (node.type === 'project') return node.id;
-
-        currentId = node.parent_id;
-    }
-
-    return null;
-}
-

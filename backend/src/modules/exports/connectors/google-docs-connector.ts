@@ -47,6 +47,8 @@ export interface DocumentAnalysis {
     projectHeaders: ParsedProjectHeader[];
     /** Document last modified time */
     lastModified?: string;
+    /** Web view link for the document */
+    webViewLink?: string;
 }
 
 export interface WriteDocumentResult {
@@ -103,6 +105,7 @@ export class GoogleDocsConnector {
             docTitle: doc.title,
             projectHeaders,
             lastModified: metadata.modifiedTime,
+            webViewLink: metadata.webViewLink,
         };
     }
 

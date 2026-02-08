@@ -66,7 +66,7 @@ export function transformContacts(
             const role = parts[1]?.trim() || '';
 
             return {
-                uniqueName: `${project.projectId}:contact:${name}`,
+                uniqueName: `${project.projectId}:contact:${name}:${role}`,
                 data: {
                     name,
                     role,

@@ -56,7 +56,7 @@ export async function injectProjects(
     if (docHeaders.length === 0) {
         return {
             documentId,
-            documentUrl: '',
+            documentUrl: analysis.webViewLink ?? '',
             projectsInjected: 0,
             projectsSkipped: projects.length,
             errors: [{
@@ -80,10 +80,9 @@ export async function injectProjects(
     }
 
     if (matches.length === 0) {
-        const metadata = await client.getFileMetadata(documentId);
         return {
             documentId,
-            documentUrl: metadata.webViewLink,
+            documentUrl: analysis.webViewLink ?? '',
             projectsInjected: 0,
             projectsSkipped: projects.length,
             errors: [],
@@ -120,12 +119,9 @@ export async function injectProjects(
         await client.batchUpdate(documentId, allRequests);
     }
 
-    // 5. Get document URL
-    const metadata = await client.getFileMetadata(documentId);
-
     return {
         documentId,
-        documentUrl: metadata.webViewLink,
+        documentUrl: analysis.webViewLink ?? '',
         projectsInjected,
         projectsSkipped,
         errors,
