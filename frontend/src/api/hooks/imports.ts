@@ -15,6 +15,7 @@ import type {
     ActionLinksResponse,
 } from '@autoart/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 import { api } from '../client';
 
@@ -245,6 +246,42 @@ export function useClassifications(sessionId: string | undefined) {
         enabled: !!sessionId,
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
+}
+
+/**
+ * Prefetch classifications and suggestions when a session ID becomes available.
+ * Call this early (e.g., when a session is loaded) so data is cached before the
+ * ClassificationPanel mounts.
+ */
+export function usePrefetchClassifications(sessionId: string | null | undefined) {
+    const queryClient = useQueryClient();
+
+    useEffect(() => {
+        if (!sessionId) return;
+
+        // Prefetch classification suggestions (used by ClassificationPanel)
+        queryClient.prefetchQuery({
+            queryKey: ['classification-suggestions', sessionId],
+            queryFn: async () => {
+                const response = await api.get<{ suggestions: Record<string, ClassificationSuggestion[]> }>(
+                    `/imports/sessions/${sessionId}/suggestions`
+                );
+                return response.suggestions;
+            },
+            staleTime: 30000,
+        });
+
+        // Prefetch classifications (used by useClassifications)
+        queryClient.prefetchQuery({
+            queryKey: ['import-classifications', sessionId],
+            queryFn: async () => {
+                return api.get<ClassificationsResponse>(
+                    `/imports/sessions/${sessionId}/classifications`
+                );
+            },
+            staleTime: 5 * 60 * 1000,
+        });
+    }, [sessionId, queryClient]);
 }
 
 /**
