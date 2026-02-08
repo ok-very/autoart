@@ -62,11 +62,8 @@ export const FieldDefSchema = z.object({
    * Maps each status value to its label and color class.
    */
   statusConfig: StatusConfigSchema.optional(),
-  /**
-   * Formula expression for computed fields (type: 'computed').
-   * References sibling fields with # syntax: "#qty * #unit_price"
-   */
-  formula: z.string().optional(),
+  /** JsonLogic rule for computed fields (type: 'computed'). */
+  formula: z.union([z.record(z.string(), z.unknown()), z.string(), z.number(), z.boolean(), z.null()]).optional(),
   /**
    * Rollup configuration for rollup fields (type: 'rollup').
    * Aggregates a field across linked records.

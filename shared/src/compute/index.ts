@@ -10,13 +10,13 @@ export {
   extractReferences,
   isFormula,
   formatFormulaDisplay,
-  createRecordResolver,
+  buildFormulaData,
   formatCurrency,
   parseCurrencyInput,
   detectCycles,
-  type ReferenceResolver,
   type FormulaValue,
   type CurrencyValue,
+  type JsonLogicRule,
 } from './formula-engine.js';
 
 export {

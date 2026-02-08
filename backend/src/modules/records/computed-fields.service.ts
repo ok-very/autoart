@@ -5,10 +5,10 @@
  * Called when ?resolve=true is passed to record retrieval endpoints.
  */
 
-import type { FieldDef, SchemaConfig } from '@autoart/shared';
+import type { FieldDef, JsonLogicRule, SchemaConfig } from '@autoart/shared';
 import {
   evaluateFormula,
-  createRecordResolver,
+  buildFormulaData,
   computeRollup,
   detectCycles,
   extractReferences,
@@ -73,9 +73,9 @@ export async function resolveComputedFields(
   );
 
   // Check for cycles
-  const formulaMap = new Map<string, string>();
+  const formulaMap = new Map<string, JsonLogicRule>();
   for (const f of computedFields) {
-    formulaMap.set(f.key, f.formula!);
+    formulaMap.set(f.key, f.formula! as JsonLogicRule);
   }
   const cycleNodes = detectCycles(formulaMap);
 
@@ -96,7 +96,7 @@ export async function resolveComputedFields(
     resolving.add(field.key);
 
     // Resolve dependencies first
-    const deps = extractReferences(field.formula!);
+    const deps = extractReferences(field.formula! as JsonLogicRule);
     for (const dep of deps) {
       const depField = computedFields.find((f) => f.key === dep);
       if (depField && !resolved.has(dep)) {
@@ -105,8 +105,8 @@ export async function resolveComputedFields(
       }
     }
 
-    const resolver = createRecordResolver(resolvedData);
-    const result = evaluateFormula(field.formula!, resolver);
+    const prepared = buildFormulaData(resolvedData);
+    const result = evaluateFormula(field.formula! as JsonLogicRule, prepared);
     computed[field.key] = result.resolvedValue;
     resolvedData[field.key] = result.resolvedValue;
 
