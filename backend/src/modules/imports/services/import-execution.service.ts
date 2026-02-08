@@ -10,6 +10,8 @@
  * projection refresh and central validation guarantees.
  */
 
+import { resolveEntityKind } from '@autoart/shared';
+
 import { db } from '@db/client.js';
 import type { ContextType } from '@db/schema.js';
 import { logger } from '@utils/logger.js';
@@ -238,7 +240,7 @@ function isCreatableRecord(
     item: ImportPlanItem,
     classificationMap: Map<string, ItemClassification>
 ): boolean {
-    if (item.entityType !== 'record') return false;
+    if (resolveEntityKind(item) !== 'record') return false;
     const classification = classificationMap.get(item.tempId);
     return !!classification?.schemaMatch?.definitionId;
 }
@@ -267,7 +269,7 @@ function groupRecordsByDefinition(
             const list = recordsByDef.get(definitionId) || [];
             list.push(item);
             recordsByDef.set(definitionId, list);
-        } else if (item.entityType === 'record') {
+        } else if (resolveEntityKind(item) === 'record') {
             // Log warning for record items that cannot be created
             const classification = classificationMap.get(item.tempId);
             if (!classification) {
@@ -822,7 +824,7 @@ async function createActionWithEvents(
     }
 
     // Template deduplication
-    if (item.entityType === 'template') {
+    if (resolveEntityKind(item) === 'template') {
         const deduplicated = await checkTemplateDeduplication(item, ctx);
         if (deduplicated) return false;
     }
@@ -831,14 +833,15 @@ async function createActionWithEvents(
     const { contextId, parentActionId } = resolveItemContext(item, itemsByTempId, ctx, targetProjectId);
 
     // Templates without context can be created; others require context
-    if (!contextId && item.entityType !== 'template') {
+    const itemKind = resolveEntityKind(item);
+    if (!contextId && itemKind !== 'template') {
         logger.warn(
             {
                 module: 'imports.service',
                 operation: 'executePlanViaComposer',
                 tempId: item.tempId,
                 itemTitle: item.title,
-                entityType: item.entityType,
+                entityKind: itemKind,
                 parentTempId: item.parentTempId,
             },
             'Skipping item without context'
@@ -989,13 +992,13 @@ async function executePlanViaComposer(
     // Phase 1: Initialize execution context
     const ctx = createExecutionContext(plan);
 
-    // Diagnostic: Log item distribution by entityType
-    const entityTypeCounts = plan.items.reduce((acc, item) => {
-        const type = item.entityType ?? 'undefined';
-        acc[type] = (acc[type] || 0) + 1;
+    // Diagnostic: Log item distribution by entity kind
+    const entityKindCounts = plan.items.reduce((acc, item) => {
+        const kind = resolveEntityKind(item);
+        acc[kind] = (acc[kind] || 0) + 1;
         return acc;
     }, {} as Record<string, number>);
-    logger.debug({ entityTypeCounts, classificationsCount: plan.classifications.length, targetProjectId }, '[imports.service] Plan execution starting');
+    logger.debug({ entityKindCounts, classificationsCount: plan.classifications.length, targetProjectId }, '[imports.service] Plan execution starting');
 
     // Phase 2: Create containers (process, subprocess) as hierarchy nodes
     await createContainers(plan.containers, ctx, targetProjectId, userId);
@@ -1004,7 +1007,7 @@ async function executePlanViaComposer(
     const recordsByDef = groupRecordsByDefinition(plan.items, ctx.classificationMap);
 
     // Diagnostic: Log record filter results
-    const recordCandidates = plan.items.filter(i => i.entityType === 'record').length;
+    const recordCandidates = plan.items.filter(i => resolveEntityKind(i) === 'record').length;
     logger.debug({ recordCandidates, recordsWithSchema: Array.from(recordsByDef.values()).flat().length }, '[imports.service] Record filter results');
 
     // Execute bulk creation per definition

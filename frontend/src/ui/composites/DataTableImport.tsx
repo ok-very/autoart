@@ -22,6 +22,7 @@
  * - Wrapper discovers columns from fieldRecordings
  */
 
+import { resolveEntityKind, type EntityKind } from '@autoart/shared';
 import { clsx } from 'clsx';
 import { ChevronRight, ChevronDown, Folder, FileText, Box, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useMemo, useCallback } from 'react';
@@ -234,10 +235,10 @@ function ClassificationBadge({ classification }: { classification: ItemClassific
     );
 }
 
-function EntityTypeBadge({ entityType }: { entityType: string }) {
+function EntityKindBadge({ kind }: { kind: EntityKind }) {
     return (
         <span className="text-[10px] font-semibold uppercase text-ws-muted bg-slate-100 px-1.5 py-0.5 rounded">
-            {entityType}
+            {kind}
         </span>
     );
 }
@@ -307,9 +308,9 @@ export function DataTableImport({
                 const meta = getImportPlanMeta(row);
                 const node = getImportPlanNode(row);
 
-                // Icon based on node/entity type
+                // Icon based on entity kind
                 const Icon = meta.nodeType === 'container'
-                    ? (meta.entityType === 'project' ? Folder : meta.entityType === 'process' ? Box : Folder)
+                    ? (meta.entityKind === 'project' ? Folder : meta.entityKind === 'process' ? Box : Folder)
                     : FileText;
 
                 return (
@@ -350,7 +351,7 @@ export function DataTableImport({
             align: 'center' as const,
             cell: (row) => {
                 const meta = getImportPlanMeta(row);
-                return <EntityTypeBadge entityType={meta.entityType} />;
+                return <EntityKindBadge kind={meta.entityKind} />;
             },
         });
 
@@ -595,7 +596,7 @@ function NestedLevel({
 
                             {/* Type cell */}
                             <div className="w-16 px-2 py-2 text-center">
-                                <EntityTypeBadge entityType={item.entityType || 'action'} />
+                                <EntityKindBadge kind={resolveEntityKind(item)} />
                             </div>
 
                             {/* Field cells */}

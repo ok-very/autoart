@@ -7,7 +7,7 @@
  * - Resolution management for user-driven classification
  */
 
-import { type ClassificationOutcome, isInternalWork } from '@autoart/shared';
+import { type ClassificationOutcome, isInternalWork, resolveEntityKind } from '@autoart/shared';
 
 import { db } from '@db/client.js';
 import type { RecordDefinition } from '@db/schema.js';
@@ -169,14 +169,13 @@ export function generateClassificationsForConnectorItems(
 ): ItemClassification[] {
     return items.map((item) => {
         let baseClassification: ItemClassification;
+        const kind = resolveEntityKind(item);
 
-        switch (item.entityType) {
+        switch (kind) {
             case 'record': {
                 // Records with no field data should be marked as needing review
                 const hasFieldData = item.fieldRecordings && item.fieldRecordings.length > 0;
                 if (!hasFieldData) {
-                    // Include empty schemaMatch for consistent shape across all classifications
-                    // Must match the shape returned by addSchemaMatch (including fieldMatches and matchRationale)
                     return {
                         itemTempId: item.tempId,
                         outcome: 'UNCLASSIFIED' as ClassificationOutcome,
@@ -192,21 +191,16 @@ export function generateClassificationsForConnectorItems(
                         },
                     };
                 }
-                // Records need schema matching to determine target definition
-                // Use DERIVED_STATE (auto-commit) since connector records have structured data
-                // that doesn't require text interpretation like CSV imports
                 baseClassification = {
                     itemTempId: item.tempId,
                     outcome: 'DERIVED_STATE' as ClassificationOutcome,
                     confidence: 'high' as const,
                     rationale: 'Record from connector with structured field data',
                 };
-                // Add schema matching only for record types
                 return addSchemaMatch(baseClassification, item.fieldRecordings, definitions);
             }
 
             case 'template':
-                // Templates are auto-committed, no schema match needed
                 baseClassification = {
                     itemTempId: item.tempId,
                     outcome: 'DERIVED_STATE' as ClassificationOutcome,
@@ -216,33 +210,32 @@ export function generateClassificationsForConnectorItems(
                 return baseClassification;
 
             case 'action':
-                // Work items (actions) are created as actions in the actions table
                 baseClassification = {
                     itemTempId: item.tempId,
                     outcome: 'INTERNAL_WORK' as ClassificationOutcome,
                     confidence: 'high' as const,
-                    rationale: `${item.entityType} from connector - create as work item`,
+                    rationale: `${kind} from connector - create as work item`,
                 };
                 return baseClassification;
 
             case 'project':
             case 'stage':
-                // These are containers, not items - treat as internal work without schema match
+            case 'process':
+            case 'subprocess':
                 baseClassification = {
                     itemTempId: item.tempId,
                     outcome: 'INTERNAL_WORK' as ClassificationOutcome,
                     confidence: 'high' as const,
-                    rationale: `Container type ${item.entityType} - structural item`,
+                    rationale: `Container type ${kind} - structural item`,
                 };
                 return baseClassification;
 
             default:
-                // Unknown entity type - mark unclassified without schema match
                 baseClassification = {
                     itemTempId: item.tempId,
                     outcome: 'UNCLASSIFIED' as ClassificationOutcome,
                     confidence: 'low' as const,
-                    rationale: `Unknown entity type: ${item.entityType ?? 'undefined'}`,
+                    rationale: `Unknown entity kind: ${kind}`,
                 };
                 return baseClassification;
         }

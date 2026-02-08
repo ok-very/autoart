@@ -8,6 +8,7 @@
 // ==================== ENUMS ====================
 export {
     NodeTypeSchema,
+    DefinitionKindSchema,
     RefModeSchema,
     ReferenceStatusSchema,
     FieldTypeSchema,
@@ -31,6 +32,7 @@ export {
     WORKSPACE_THEME_LABELS,
     WORKSPACE_THEME_DESCRIPTIONS,
     type NodeType,
+    type DefinitionKind,
     type RefMode,
     type ReferenceStatus,
     type FieldType,

@@ -5,6 +5,8 @@
  * Builds tree structure with depth tracking for hierarchical display.
  */
 
+import { resolveEntityKind, type EntityKind } from '@autoart/shared';
+
 import type { RowModel, TableRow, RowId } from '../types';
 import type { ImportPlan, ImportPlanContainer, ImportPlanItem, ItemClassification } from '../../../api/hooks/imports';
 
@@ -16,7 +18,7 @@ export interface ImportPlanNode {
     id: string;
     title: string;
     nodeType: 'container' | 'item';
-    entityType: string;
+    entityKind: EntityKind;
     parentId: string | null;
     data: ImportPlanContainer | ImportPlanItem;
     classification?: ItemClassification;
@@ -29,7 +31,7 @@ export interface ImportPlanRowMeta {
     hasChildren: boolean;
     isExpanded: boolean;
     nodeType: 'container' | 'item';
-    entityType: string;
+    entityKind: EntityKind;
     classification?: ItemClassification;
 }
 
@@ -60,7 +62,7 @@ function buildImportTree(plan: ImportPlan): ImportPlanNode[] {
             id: container.tempId,
             title: container.title,
             nodeType: 'container',
-            entityType: container.type, // project, process, subprocess, stage
+            entityKind: resolveEntityKind({ type: container.type }),
             parentId: container.parentTempId,
             data: container,
             children: [],
@@ -69,17 +71,11 @@ function buildImportTree(plan: ImportPlan): ImportPlanNode[] {
 
     // Add items with classifications
     for (const item of plan.items) {
-        // Get entityType from item data - use metadata.monday.type as fallback
-        const mondayMeta = item.metadata?.monday as { type?: string } | undefined;
-        const entityType = (item as { entityType?: string }).entityType
-            ?? mondayMeta?.type
-            ?? 'action';
-
         nodeMap.set(item.tempId, {
             id: item.tempId,
             title: item.title,
             nodeType: 'item',
-            entityType,
+            entityKind: resolveEntityKind(item),
             parentId: item.parentTempId ?? null,
             data: item,
             classification: classificationMap.get(item.tempId),
@@ -130,7 +126,7 @@ export function makeImportPlanRowModel(options: ImportPlanAdapterOptions): RowMo
                     hasChildren,
                     isExpanded,
                     nodeType: node.nodeType,
-                    entityType: node.entityType,
+                    entityKind: node.entityKind,
                     classification: node.classification,
                 } satisfies ImportPlanRowMeta,
             });
@@ -176,7 +172,7 @@ export function getImportPlanMeta(row: TableRow): ImportPlanRowMeta {
         hasChildren: (meta.hasChildren as boolean) ?? false,
         isExpanded: (meta.isExpanded as boolean) ?? false,
         nodeType: (meta.nodeType as 'container' | 'item') ?? 'item',
-        entityType: (meta.entityType as string) ?? 'action',
+        entityKind: (meta.entityKind as EntityKind) ?? 'action',
         classification: meta.classification as ItemClassification | undefined,
     };
 }
