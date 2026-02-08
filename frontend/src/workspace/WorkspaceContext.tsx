@@ -29,6 +29,8 @@ export interface WorkspaceContextValue {
     scope: WorkspaceScope | null;
     /** What center-workspace should display */
     contentType: CenterContentType;
+    /** Content types this workspace can display. Null = no restriction. */
+    ownedContentTypes: CenterContentType[] | null;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
@@ -63,11 +65,13 @@ export function WorkspaceContextProvider({ children }: WorkspaceContextProviderP
     const boundPanelIds = useWorkspaceStore((s) => s.boundPanelIds);
     const contentType = useUIStore((s) => s.centerContentType);
 
-    const scope = useMemo(() => {
-        if (!workspaceId) return null;
-        const preset = BUILT_IN_WORKSPACES.find((w) => w.id === workspaceId);
-        return preset?.scope ?? null;
-    }, [workspaceId]);
+    const preset = useMemo(
+        () => workspaceId ? BUILT_IN_WORKSPACES.find((w) => w.id === workspaceId) ?? null : null,
+        [workspaceId],
+    );
+
+    const scope = preset?.scope ?? null;
+    const ownedContentTypes = preset?.ownedContentTypes ?? null;
 
     const isBound = useMemo(
         () => (panelId: string) => boundPanelIds.has(panelId),
@@ -82,8 +86,9 @@ export function WorkspaceContextProvider({ children }: WorkspaceContextProviderP
             isBound,
             scope,
             contentType,
+            ownedContentTypes,
         }),
-        [workspaceId, subviewId, boundProjectId, isBound, scope, contentType],
+        [workspaceId, subviewId, boundProjectId, isBound, scope, contentType, ownedContentTypes],
     );
 
     return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

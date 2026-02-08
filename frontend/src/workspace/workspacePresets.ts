@@ -36,6 +36,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         color: 'pink',
         scope: 'global',
         isBuiltIn: true,
+        ownedContentTypes: ['intake'],
         panels: [
             { panelId: 'center-workspace', contentType: 'intake', position: 'center' },
         ],
@@ -56,6 +57,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         color: 'blue',
         scope: 'project',
         isBuiltIn: true,
+        ownedContentTypes: ['projects'],
         panels: [
             { panelId: 'center-workspace', contentType: 'projects', viewMode: 'workflow', position: 'center' },
             { panelId: 'selection-inspector', position: 'right', bound: true },
@@ -94,6 +96,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         color: 'green',
         scope: 'project',
         isBuiltIn: true,
+        ownedContentTypes: ['projects'],
         panels: [
             { panelId: 'center-workspace', contentType: 'projects', viewMode: 'workflow', position: 'center' },
             { panelId: 'selection-inspector', position: 'right', bound: true },
@@ -127,6 +130,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         color: 'purple',
         scope: 'subprocess',
         isBuiltIn: true,
+        ownedContentTypes: ['projects'],
         panels: [
             { panelId: 'center-workspace', contentType: 'projects', viewMode: 'log', position: 'center' },
             { panelId: 'selection-inspector', position: 'right', bound: true },
@@ -149,6 +153,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         color: 'orange',
         scope: 'project',
         isBuiltIn: true,
+        ownedContentTypes: ['export'],
         panels: [
             { panelId: 'center-workspace', contentType: 'export', position: 'center' },
         ],
@@ -169,6 +174,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         color: 'amber',
         scope: 'global',
         isBuiltIn: true,
+        ownedContentTypes: ['projects', 'mail', 'calendar', 'finance', 'polls', 'artcollector'],
         panels: [
             { panelId: 'project-panel', position: 'center', bound: true },
             { panelId: 'mail-panel', position: 'right' },

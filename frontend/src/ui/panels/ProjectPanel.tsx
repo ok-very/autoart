@@ -10,6 +10,7 @@ import { ChevronDown, Check, Unlink } from 'lucide-react';
 import type { IDockviewPanelProps } from 'dockview';
 
 import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { useWorkspaceContext } from '../../workspace/WorkspaceContext';
 import { useProjects } from '../../api/hooks';
 import { ProjectView } from '../composites/ProjectView';
 import { Menu } from '@autoart/ui';
@@ -21,23 +22,21 @@ interface ProjectPanelProps {
 }
 
 export function ProjectPanelContent({ panelId }: ProjectPanelProps) {
-    const boundProjectId = useWorkspaceStore((s) => s.boundProjectId);
-    const boundPanelIds = useWorkspaceStore((s) => s.boundPanelIds);
-    const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+    const ctx = useWorkspaceContext();
     const params = useWorkspaceStore((s) => s.panelParams.get(panelId));
     const { unbindPanel, markWorkspaceModified, setPanelParam, bindPanelToWorkspace } = useWorkspaceStore();
     const { data: projects } = useProjects();
 
     // Determine if this panel is bound to workspace
-    const isBound = boundPanelIds.has(panelId);
+    const isBound = ctx.isBound(panelId);
 
     // Get project ID: bound panels use workspace project, unbound use their own
     const overrideProjectId = (params as { projectId?: string })?.projectId;
-    const effectiveProjectId = isBound ? boundProjectId : overrideProjectId;
+    const effectiveProjectId = isBound ? ctx.boundProjectId : overrideProjectId;
 
     // Get workspace color for styling
-    const workspaceColor = activeWorkspaceId
-        ? BUILT_IN_WORKSPACES.find((w) => w.id === activeWorkspaceId)?.color
+    const workspaceColor = ctx.workspaceId
+        ? BUILT_IN_WORKSPACES.find((w) => w.id === ctx.workspaceId)?.color
         : null;
 
     // Get color classes using lookup (ensures Tailwind can detect classes)
