@@ -6,8 +6,8 @@
 ## Bug List
 
 **Active — unphased:**
-- **Import wizard has no escape hatches:** No cancel/back buttons mid-flow; sidebar missing "New Import" for Monday sessions; plan regeneration uses stale (uncommitted) mappings instead of draining pending mutations first. (Orphan PRs #406-408 closed — re-apply fresh.)
-- **ClassificationRow missing interactive features:** Interpretation output badges (fact_candidate, action_hint, work_event, field_value), AMBIGUOUS candidate buttons (clickable fact-kind → FACT_EMITTED), inline confidence/outcome badges all dropped during component split. Also needs @autoart/ui migration. (Orphan PR #410 closed — re-apply fresh.)
+- **Import wizard stale plan regeneration:** Plan regeneration uses stale (uncommitted) mappings instead of draining pending mutations first. (Escape hatches fixed by PRs #432-433; orphan PRs #406-408 closed.)
+- **ClassificationRow @autoart/ui atom migration:** Interactive features (interpretation badges, AMBIGUOUS candidate buttons, confidence/outcome badges, `humanizeFieldName()`, `awaitMutation()`) are all on main. Only remaining work is migrating raw HTML elements to @autoart/ui atoms — optional polish.
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
 - **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
@@ -52,21 +52,33 @@ All four items shipped and merged to main. Entity kind resolver unified; import/
 
 ## Features
 
-All foundation phases complete. Everything below is unblocked and ready to build.
+All foundation phases complete. Ordered by import pipeline priority — top items unblock end-to-end imports.
+
+**Import pipeline:**
 
 | # | Issue | Category |
 |---|-------|----------|
 | 217 | Expose interpretation HTTP routes for frontend hooks | Backend |
-| 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
 | 237 | Performance Optimization & Caching | Backend + Frontend |
-| 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 79 | Enhance Workflow View Interactions | Feature |
-| — | Poll editor: support different/multiple time block selections per day | Polls |
 | — | Records/Fields/Actions registry browser UI unification: consistent layout and shared filter system | UX |
+
+**Workspace polish:**
+
+| # | Issue | Category |
+|---|-------|----------|
+| 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
+| 81 | Enhance Record Inspector Assignee Chip | Feature |
+| — | Composer bar as sleek dockview popout window (replace modal) | UX |
+
+**New capability:**
+
+| # | Issue | Category |
+|---|-------|----------|
 | — | Consolidate Calendar/Gantt/future view expansions: link Application views to Project View segmented equivalents; cross-project filter/overlay | Feature |
 | — | Finances UI unification: dedicated panel architecture, math/formula ESM, project bindings | Finance |
 | — | Formula/math module: standalone ESM for computed fields, financial calculations, relationship math | Feature |
-| — | Composer bar as sleek dockview popout window (replace modal) | UX |
+| — | Poll editor: support different/multiple time block selections per day | Polls |
 
 ---
 
@@ -142,7 +154,7 @@ All foundation phases complete. Everything below is unblocked and ready to build
 
 | PRs | Description |
 |-----|-------------|
-| *(none)* | |
+| #432-433 | **Import wizard escape hatches:** (1) Wire `onReset`, add Cancel Import button to wizard header, Back at step 1 exits wizard, Cancel button in Step1 footer. (2) Remove Monday exclusion from sidebar session display — "New Import" button now shows for all source types. **Review feedback addressed:** disabled Cancel during in-flight session creation (race condition), fixed stale comment in ImportSidebar. |
 
 ---
 
