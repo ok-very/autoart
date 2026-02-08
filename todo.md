@@ -72,16 +72,16 @@ Items that can be built independently of the workspace/type phases.
 
 ---
 
-## Features (Blocked by Phase 1)
+## Features (Previously Blocked — Now Unblocked)
 
-These need workspace foundation first. Building them now guarantees regressions.
+Phase 1 complete. These items are now ready to build.
 
-| Issue | Category | Blocked By |
-|-------|----------|-----------|
-| Consolidate Calendar/Gantt/future view expansions: Applications views not linked to Project View segmented equivalents; no project/process selection outside single-project setting; Application view should perform general-purpose filter/overlay across projects | Feature | Phase 1.4 (CenterView routing) |
-| Finances UI unification: Finances call gets pulled into Project View rather than spawning its own panel; needs formalization and dedicated panel architecture; institute math/formula ESM; missing project bindings | Finance | Phase 1.1 (workspace context) |
-| **Formula/math module:** Standalone ESM for computed fields, financial calculations, and relationship math. Currently sub-points of Finances UI and Schema editor but never scoped independently. | Feature | Phase 1.1 (workspace context) |
-| Composer bar as sleek dockview popout window (replace modal) | UX | Phase 1 (Dockview infrastructure) |
+| Issue | Category | Notes |
+|-------|----------|-------|
+| Consolidate Calendar/Gantt/future view expansions: Applications views not linked to Project View segmented equivalents; no project/process selection outside single-project setting; Application view should perform general-purpose filter/overlay across projects | Feature | Was blocked by Phase 1.4 (CenterView routing) |
+| Finances UI unification: Finances call gets pulled into Project View rather than spawning its own panel; needs formalization and dedicated panel architecture; institute math/formula ESM; missing project bindings | Finance | Was blocked by Phase 1.1 (workspace context) |
+| **Formula/math module:** Standalone ESM for computed fields, financial calculations, and relationship math. Currently sub-points of Finances UI and Schema editor but never scoped independently. | Feature | Was blocked by Phase 1.1 (workspace context) |
+| Composer bar as sleek dockview popout window (replace modal) | UX | Was blocked by Phase 1 (Dockview infrastructure) |
 
 ---
 
@@ -161,7 +161,6 @@ Items that don't depend on workspace or type phases.
 
 | PRs | Description |
 |-----|-------------|
-| #426-429 | **Phase 1.5-1.8 stack:** (1.5) Store consolidation (centerContentType + view modes → workspaceStore), (1.6) Workspace save with modification tracking + confirmation dialog, (1.7) Custom workspace rename + context menu, (1.8) Sidebar hints with auto-collapse support |
 | #394 | **MiniCalendar molecule for polls:** Compact month-grid date selector with multi-select toggle for poll configuration |
 | #369-372, #381-386 | **Intake forms -> records pipeline:** Block connector architecture (RecordMapping schemas, SubmissionsTable with CSV export + record badges, RecordMappingPanel for staff config, Responses tab integration, Records editor tab, backend handler processes mappings) |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
@@ -172,6 +171,7 @@ Items that don't depend on workspace or type phases.
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Phase 1.5-1.8: Workspace Foundation completion (Feb 8 2026):** (1.5) Store consolidation (centerContentType + view modes → workspaceStore), (1.6) Workspace save with modification tracking + confirmation dialog, (1.7) Custom workspace rename + context menu, (1.8) Sidebar hints with auto-collapse support | PRs #426-429 |
 | — | **Phase 1.1-1.4: Workspace Foundation (Feb 7 2026):** (1.1) WorkspaceContext contract + provider, (1.2) Panel context consumption (project-panel, mail-panel bind to workspace project), (1.3) CenterView routing ownership (workspace declares owned content types), (1.4) Desk workspace default and first in list | PRs #421-425 |
 | — | **Phase 0: Stop the Bleeding (Feb 7 2026):** (0.1) React Compiler memo fix, (0.2) Classification Panel partial save (unblocked import wizard), (0.3) Preview dev servers (intake 5174 + poll 5175), (0.4) ExecutionControls API client (replaced raw fetch), (0.5) Unused var cleanup | PRs #416-420 |
 | — | **Bug fix stack (Feb 7 2026):** (1) Guard ClassificationRow outcome render against null (2) `build:all:clean` resilient to Windows EBUSY file locks (3) Hook to block stackit checkout/restack during sessions (4) Restore ExternalLink alongside Preview button in poll editor (5) Filter incomplete record bindings from intake auto-save (6) Workspace save dialog timing fix (rAF after Radix close) (7) DataFieldWidget object rendering (8) Poll public URLs via env vars (9) Polls panel + registry entry for workspace presets | PRs #411-415 |
