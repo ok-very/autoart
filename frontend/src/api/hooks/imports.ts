@@ -4,7 +4,14 @@
  * React Query hooks for import sessions API.
  */
 
-import type { EntityKind } from '@autoart/shared';
+import type {
+    EntityKind,
+    InterpretItemRequest,
+    InterpretItemResponse,
+    ReclassifyRequest,
+    ReclassifyResponse,
+    ClassificationsResponse,
+} from '@autoart/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../client';
@@ -192,6 +199,53 @@ export function useClassificationSuggestions(sessionId: string | null) {
 }
 
 /**
+ * Interpret a single item (classification without session context).
+ * Mutation — no caching needed.
+ */
+export function useInterpretItem() {
+    return useMutation({
+        mutationFn: async (data: InterpretItemRequest) => {
+            return api.post<InterpretItemResponse>('/imports/interpret', data);
+        },
+    });
+}
+
+/**
+ * Re-interpret an item after user changes.
+ * Invalidates the classifications query for the session on success.
+ */
+export function useReclassifyItem() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: ReclassifyRequest) => {
+            return api.post<ReclassifyResponse>('/imports/reclassify', data);
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({
+                queryKey: ['import-classifications', variables.sessionId],
+            });
+        },
+    });
+}
+
+/**
+ * Fetch all classifications for an import session.
+ */
+export function useClassifications(sessionId: string | undefined) {
+    return useQuery({
+        queryKey: ['import-classifications', sessionId],
+        queryFn: async () => {
+            return api.get<ClassificationsResponse>(
+                `/imports/sessions/${sessionId}/classifications`
+            );
+        },
+        enabled: !!sessionId,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+}
+
+/**
  * Create a new import session.
  */
 export function useCreateImportSession() {
@@ -269,6 +323,7 @@ export function useExecuteImport() {
                 // Also invalidate session-specific queries to reflect updated status
                 queryClient.invalidateQueries({ queryKey: ['import-session', sessionId] }),
                 queryClient.invalidateQueries({ queryKey: ['import-plan', sessionId] }),
+                queryClient.invalidateQueries({ queryKey: ['import-classifications', sessionId] }),
             ]);
         },
     });
