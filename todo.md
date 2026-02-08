@@ -43,16 +43,11 @@ All eight items shipped and merged to main. Workspace system unified: single sto
 
 ---
 
-## Phase 2: Type System Unification
+## Phase 2: Type System Unification ✓
 
-*Full details: [roadmap.md Phase 2](roadmap.md#phase-2-type-system-unification)*
+*Complete — PRs #430-431 merged (Feb 8 2026)*
 
-| # | Issue | Absorbs From | Depends On |
-|---|-------|-------------|-----------|
-| 2.1 | Entity kind resolver in `@autoart/shared` | Housekeeping: `definition_kind` items | — |
-| 2.2 | Import adapter migration (remove `entityType` strings) | — | 2.1 |
-| 2.3 | Overlay type migration (derive `entityKind` from context) | — | 2.1 |
-| 2.4 | Seed through Composer (validate seed = real user path) | Bug: seed projections deferred | 2.1, Phase 1 |
+All four items shipped and merged to main. Entity kind resolver unified; import/overlay migrations complete; seed runs through Composer; RecordDefinitionSchema phantom field removed. Typecheck and lint pass clean.
 
 ---
 
@@ -161,7 +156,7 @@ Items that don't depend on workspace or type phases.
 
 | PRs | Description |
 |-----|-------------|
-| #430-431 | **Phase 2.2-2.3:** Entity kind resolver migration (replace entityType string checks, rename in overlay side effects) |
+| *(none)* | |
 
 ---
 
@@ -169,6 +164,7 @@ Items that don't depend on workspace or type phases.
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Phase 2.2-2.3: Entity kind resolver migration (Feb 8 2026):** (2.2) Replace entityType string checks with resolveEntityKind helper. (2.3) Rename entityType to entityKind in overlay side effects. (2.4) Seed through Composer. **Critical fix:** Remove phantom `kind` field from RecordDefinitionSchema — was always 'record', broke Composer filters for action_arrangement definitions. Backend sends `definition_kind` only; Zod default now canonical. | PRs #430-431 |
 | — | **Orphan PR cleanup (Feb 8 2026):** Closed PR #336 (invoice creator — all 4 review findings were branch-only code, not on main). Closed orphan stack PRs #406-408, #410 (import wizard fixes — diverged 80 files from main after workspace rewrite). Cherry-picked content (column humanization, ClassificationRow null guard) already on main; remaining fixes tracked in Bug List. | PRs #336, #406-408, #410 |
 | #394 | **MiniCalendar molecule for polls:** Compact month-grid date selector with multi-select toggle for poll configuration | Merged |
 | #369-372, #381-386 | **Intake forms -> records pipeline:** Block connector architecture, SubmissionsTable, RecordMappingPanel, Responses tab, Records editor tab, backend handler | Merged |

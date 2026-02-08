@@ -86,39 +86,39 @@ Fixed the workspace system so everything built on top of it stops regressing. Th
 
 ---
 
-## Phase 2: Type System Unification
+## Phase 2: Type System Unification ✓
 
-Resolve the dual type system so new features don't update three places.
+**Status: Complete** — All items merged via PRs #430-431 (Feb 8, 2026).
 
-| # | Item | Absorbs | Depends On |
-|---|------|---------|-----------|
-| 2.1 | **Entity kind resolver** — Single function: `resolveEntityKind(item, definitions, parentChain) -> EntityKind`. Uses `definition_kind` when available, falls back to parent relationship derivation. Lives in `@autoart/shared`. | Housekeeping: `definition_kind` filtering items | — |
-| 2.2 | **Import adapter migration** — Replace `entityType: container.type` with `resolveEntityKind()`. Remove all `entityType === 'project'` conditionals in import workflow. | — | 2.1 |
-| 2.3 | **Overlay type migration** — Replace `entityType: 'record' | 'node'` discriminant with `entityKind` derived from context. | — | 2.1 |
-| 2.4 | **Seed through Composer** — Rewrite seed to use Composer service. Validates seeded data follows the same path as real user actions. | Bug: seed projections deferred | 2.1, Phase 1 |
+Resolved the dual type system. Single `resolveEntityKind()` function in `@autoart/shared` replaces all scattered `entityType` string checks. Import adapter and overlay types migrated. Seed runs through Composer service. Critical fix: removed phantom `kind` field from `RecordDefinitionSchema` — Zod default always set `kind='record'`, breaking Composer filters that checked `d.kind === 'action_arrangement'`. Backend sends `definition_kind` only; schema now uses `definition_kind` as canonical field.
+
+| # | Item | Absorbs | Depends On | Status |
+|---|------|---------|-----------|--------|
+| 2.1 | **Entity kind resolver** — `resolveEntityKind()` in `@autoart/shared`. Derives kind from hierarchy type, definition_kind, definition lookup, or import plan item. | Housekeeping: `definition_kind` filtering items | — | ✓ Merged PR #430 |
+| 2.2 | **Import adapter migration** — Replaced `entityType` string checks with `resolveEntityKind()` calls. | — | 2.1 | ✓ Merged PR #430 |
+| 2.3 | **Overlay type migration** — Replaced `entityType` discriminant with `entityKind` derived from context. | — | 2.1 | ✓ Merged PR #431 |
+| 2.4 | **Seed through Composer** — Seed uses `composerService.compose()`. Validates seeded data follows real user path. `projectWorkflowSurface()` called post-transaction. | Bug: seed projections deferred | 2.1, Phase 1 | ✓ Merged PR #431 |
 
 **Key files:**
-- `shared/src/` — new `resolveEntityKind()` function
+- `shared/src/domain/entity-kind.ts` — `resolveEntityKind()`, `definitionKindToEntityKind()`, `EntityKind` type
+- `shared/src/schemas/records.ts` — `definition_kind` canonical (removed phantom `kind`)
 - `frontend/src/workflows/import/` — import adapter cleanup
 - `frontend/src/types/` — overlay type definitions
-- `backend/src/db/seeds/` — seed rewrite
-
-**Delegation:** `/architect` for 2.1 API design, `/backend-dev` for 2.4, `/frontend-dev` for 2.2-2.3, `/reviewer` for post-merge audit.
+- `frontend/src/ui/composer/` + `frontend/src/ui/inspector/` — Composer filters fixed
+- `backend/src/db/seeds/` — seed rewrite through Composer
 
 ---
 
 ## Dependency Graph
 
 ```
-Phase 0  ████████  (stop bleeding — clean builds, unblock import, fix preview)
-Phase 1           ████████████████████████  (workspace foundation)
-Phase 2                       ████████████████  (type unification, overlaps 1.5+)
-Features                                    ████████████  (unblocked items, any time)
+Phase 0  ████████  ✓ complete
+Phase 1           ████████████████████████  ✓ complete
+Phase 2                       ████████████████  ✓ complete
+Features                                    ████████████  (unblocked, any time)
 ```
 
-Phase 0 can start now.
-Phase 1 requires Phase 0 merged (clean builds needed for workspace refactor).
-Phase 2 item 2.1 can start alongside Phase 1. Items 2.2-2.4 require Phase 1 workspace context.
+All three foundation phases complete. Features section is fully unblocked.
 
 ---
 
