@@ -95,7 +95,7 @@ export function AssignRecordsView(props: AssignRecordsViewProps | LegacyAssignRe
                 onSubmit({
                     success: true,
                     data: { assigned: true, nodeId: selectedNodeId },
-                    sideEffects: [{ type: 'assign', entityType: 'record' }],
+                    sideEffects: [{ type: 'assign', entityKind: 'record' }],
                 });
             } else {
                 legacyOnSuccess?.();
@@ -127,7 +127,7 @@ export function AssignRecordsView(props: AssignRecordsViewProps | LegacyAssignRe
                 onSubmit({
                     success: true,
                     data: { assigned: true, nodeId: null },
-                    sideEffects: [{ type: 'assign', entityType: 'record' }],
+                    sideEffects: [{ type: 'assign', entityKind: 'record' }],
                 });
             } else {
                 legacyOnSuccess?.();

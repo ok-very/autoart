@@ -72,7 +72,7 @@ export function ConfirmDeleteView(props: ConfirmDeleteViewProps | LegacyConfirmD
         onSubmit({
           success: true,
           data: { deleted: true },
-          sideEffects: [{ type: 'delete', entityType: 'record' }],
+          sideEffects: [{ type: 'delete', entityKind: 'record' }],
         });
       } else {
         // Legacy: close

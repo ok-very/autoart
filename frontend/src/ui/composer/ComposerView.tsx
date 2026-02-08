@@ -126,7 +126,7 @@ export function ComposerView({
     // Filter definitions to only action_arrangement kind
     const actionArrangements = useMemo(() => {
         if (!allDefinitions) return [];
-        return allDefinitions.filter((d) => d.kind === 'action_arrangement');
+        return allDefinitions.filter((d) => d.definition_kind === 'action_arrangement');
     }, [allDefinitions]);
 
     // Derive default arrangement ID (from defaultArrangement prop or first arrangement)

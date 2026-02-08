@@ -84,7 +84,7 @@ export function CreateNodeView(props: CreateNodeViewProps | LegacyCreateNodeView
         onSubmit({
           success: true,
           data: { nodeId: result.node?.id || '' },
-          sideEffects: [{ type: 'create', entityType: 'node' }],
+          sideEffects: [{ type: 'create', entityKind: 'node' }],
         });
       } else {
         // Legacy: close

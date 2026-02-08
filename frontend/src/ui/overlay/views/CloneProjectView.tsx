@@ -101,7 +101,7 @@ export function CloneProjectView(props: CloneProjectViewProps | LegacyCloneProje
         onSubmit({
           success: true,
           data: { projectId: result.node?.id || '' },
-          sideEffects: [{ type: 'clone', entityType: 'project' }],
+          sideEffects: [{ type: 'clone', entityKind: 'project' }],
         });
       } else {
         // Legacy: auto-select and close

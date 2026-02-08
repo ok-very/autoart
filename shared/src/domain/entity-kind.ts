@@ -8,7 +8,7 @@
  *
  * Resolution order:
  * 1. HierarchyNode.type → return directly (project, process, stage, subprocess, template)
- * 2. RecordDefinition.kind / definition_kind → map to entity kind
+ * 2. RecordDefinition.definition_kind → map to entity kind
  * 3. DataRecord.definition_id + definitions lookup → recurse on definition's kind
  * 4. ImportPlanItem.entityType → validate and return
  * 5. Fallback → 'unknown'
@@ -63,7 +63,6 @@ const NODE_TYPES: ReadonlySet<string> = new Set<NodeType>([
  */
 export interface DefinitionLike {
   id: string;
-  kind?: string;
   definition_kind?: string;
   name?: string;
 }
@@ -76,8 +75,7 @@ export type EntityKindInput =
   | { type: NodeType }                              // HierarchyNode
   | { definition_id: string }                       // DataRecord
   | { entityType?: string; parentTempId?: string }  // ImportPlanItem
-  | { kind?: DefinitionKind }                       // RecordDefinition (Zod-parsed)
-  | { definition_kind?: DefinitionKind }            // RecordDefinition (raw API)
+  | { definition_kind?: DefinitionKind }            // RecordDefinition (DB column)
   | Record<string, unknown>;                        // catch-all for partial objects
 
 // ---------------------------------------------------------------------------
@@ -139,21 +137,16 @@ export function resolveEntityKind(
     return obj.type as EntityKind;
   }
 
-  // 2. RecordDefinition — has `kind` (Zod-parsed)
-  if (typeof obj.kind === 'string' && isDefinitionKind(obj.kind)) {
-    return definitionKindToEntityKind(obj.kind, obj.name as string | undefined);
-  }
-
-  // 3. RecordDefinition — has `definition_kind` (raw API column)
+  // 2. RecordDefinition — has `definition_kind` (canonical DB column)
   if (typeof obj.definition_kind === 'string' && isDefinitionKind(obj.definition_kind)) {
     return definitionKindToEntityKind(obj.definition_kind, obj.name as string | undefined);
   }
 
-  // 4. DataRecord — has `definition_id`, look up in provided definitions
+  // 3. DataRecord — has `definition_id`, look up in provided definitions
   if (typeof obj.definition_id === 'string' && definitions) {
     const def = definitions.find((d) => d.id === obj.definition_id);
     if (def) {
-      const kind = def.kind ?? def.definition_kind;
+      const kind = def.definition_kind;
       if (kind) {
         return definitionKindToEntityKind(kind, def.name);
       }

@@ -6,8 +6,8 @@
 ## Bug List
 
 **Active — unphased:**
-
-**Active — unphased:**
+- **Import wizard has no escape hatches:** No cancel/back buttons mid-flow; sidebar missing "New Import" for Monday sessions; plan regeneration uses stale (uncommitted) mappings instead of draining pending mutations first. (Orphan PRs #406-408 closed — re-apply fresh.)
+- **ClassificationRow missing interactive features:** Interpretation output badges (fact_candidate, action_hint, work_event, field_value), AMBIGUOUS candidate buttons (clickable fact-kind → FACT_EMITTED), inline confidence/outcome badges all dropped during component split. Also needs @autoart/ui migration. (Orphan PR #410 closed — re-apply fresh.)
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
 - **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
@@ -161,9 +161,7 @@ Items that don't depend on workspace or type phases.
 
 | PRs | Description |
 |-----|-------------|
-| #394 | **MiniCalendar molecule for polls:** Compact month-grid date selector with multi-select toggle for poll configuration |
-| #369-372, #381-386 | **Intake forms -> records pipeline:** Block connector architecture (RecordMapping schemas, SubmissionsTable with CSV export + record badges, RecordMappingPanel for staff config, Responses tab integration, Records editor tab, backend handler processes mappings) |
-| #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
+| #430-431 | **Phase 2.2-2.3:** Entity kind resolver migration (replace entityType string checks, rename in overlay side effects) |
 
 ---
 
@@ -171,6 +169,10 @@ Items that don't depend on workspace or type phases.
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Orphan PR cleanup (Feb 8 2026):** Closed PR #336 (invoice creator — all 4 review findings were branch-only code, not on main). Closed orphan stack PRs #406-408, #410 (import wizard fixes — diverged 80 files from main after workspace rewrite). Cherry-picked content (column humanization, ClassificationRow null guard) already on main; remaining fixes tracked in Bug List. | PRs #336, #406-408, #410 |
+| #394 | **MiniCalendar molecule for polls:** Compact month-grid date selector with multi-select toggle for poll configuration | Merged |
+| #369-372, #381-386 | **Intake forms -> records pipeline:** Block connector architecture, SubmissionsTable, RecordMappingPanel, Responses tab, Records editor tab, backend handler | Merged |
+| #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) | Merged |
 | — | **Phase 1.5-1.8: Workspace Foundation completion (Feb 8 2026):** (1.5) Store consolidation (centerContentType + view modes → workspaceStore), (1.6) Workspace save with modification tracking + confirmation dialog, (1.7) Custom workspace rename + context menu, (1.8) Sidebar hints with auto-collapse support | PRs #426-429 |
 | — | **Phase 1.1-1.4: Workspace Foundation (Feb 7 2026):** (1.1) WorkspaceContext contract + provider, (1.2) Panel context consumption (project-panel, mail-panel bind to workspace project), (1.3) CenterView routing ownership (workspace declares owned content types), (1.4) Desk workspace default and first in list | PRs #421-425 |
 | — | **Phase 0: Stop the Bleeding (Feb 7 2026):** (0.1) React Compiler memo fix, (0.2) Classification Panel partial save (unblocked import wizard), (0.3) Preview dev servers (intake 5174 + poll 5175), (0.4) ExecutionControls API client (replaced raw fetch), (0.5) Unused var cleanup | PRs #416-420 |

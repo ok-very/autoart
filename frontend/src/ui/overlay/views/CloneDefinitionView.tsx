@@ -67,7 +67,7 @@ export function CloneDefinitionView(props: CloneDefinitionViewProps | LegacyClon
         onSubmit({
           success: true,
           data: { definitionId: '' }, // ID would come from actual clone operation
-          sideEffects: [{ type: 'clone', entityType: 'definition' }],
+          sideEffects: [{ type: 'clone', entityKind: 'definition' }],
         });
       } else {
         // Legacy: close

@@ -76,7 +76,7 @@ export function CreateLinkView(props: CreateLinkViewProps | LegacyCreateLinkView
         onSubmit({
           success: true,
           data: { linkId: result.link?.id || '' },
-          sideEffects: [{ type: 'create', entityType: 'link' }],
+          sideEffects: [{ type: 'create', entityKind: 'link' }],
         });
       } else {
         // Legacy: close
