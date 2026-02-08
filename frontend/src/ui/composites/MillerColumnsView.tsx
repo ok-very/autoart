@@ -111,7 +111,7 @@ export function MillerColumnsView({ className }: MillerColumnsViewProps) {
                 newUserSelections.stage = null;
                 newUserSelections.subprocess = null;
                 break;
-            case 'stage':
+            case 'phase':
                 newUserSelections.stage = id;
                 newUserSelections.subprocess = null;
                 break;
@@ -134,7 +134,7 @@ export function MillerColumnsView({ className }: MillerColumnsViewProps) {
     // Add handlers for each level
     const handleAddProject = () => openOverlay('create-project', {});
     const handleAddProcess = () => selections.project && openOverlay('create-node', { parentId: selections.project, nodeType: 'process' });
-    const handleAddStage = () => selections.process && openOverlay('create-node', { parentId: selections.process, nodeType: 'stage' });
+    const handleAddStage = () => selections.process && openOverlay('create-node', { parentId: selections.process, nodeType: 'phase' });
     const handleAddSubprocess = () => selections.stage && openOverlay('create-node', { parentId: selections.stage, nodeType: 'subprocess' });
 
     return (
@@ -173,10 +173,10 @@ export function MillerColumnsView({ className }: MillerColumnsViewProps) {
                 {/* Column 3: Stages (if process selected) */}
                 {selections.process && (
                     <MillerColumn
-                        type="stage"
+                        type="phase"
                         items={stages}
                         selectedId={selections.stage}
-                        onSelect={(id) => handleSelect('stage', id)}
+                        onSelect={(id) => handleSelect('phase', id)}
                         onAdd={handleAddStage}
                         hasChildren={hasChildren}
                     />

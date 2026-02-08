@@ -6,7 +6,7 @@
  * than CHECK constraints for fixed value sets.
  *
  * Types defined:
- * - node_type: Hierarchy levels (project → process → stage → subprocess → task)
+ * - node_type: Hierarchy levels (project → process → phase → subprocess → task)
  * - ref_mode: Reference behavior (static snapshots vs dynamic links)
  */
 
@@ -19,7 +19,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     CREATE TYPE node_type AS ENUM (
       'project',
       'process',
-      'stage',
+      'phase',
       'subprocess',
       'template'
     )

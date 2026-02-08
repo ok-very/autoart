@@ -73,14 +73,14 @@ export function useDerivedContext(): DerivedContext {
         // If we have a selected node, derive context from it
         if (selectedNode) {
             const isSubprocess = selectedNode.type === 'subprocess';
-            const isStage = selectedNode.type === 'stage';
+            const isStage = selectedNode.type === 'phase';
 
             if (isSubprocess || isStage) {
                 return {
                     ...defaultContext,
                     contextId: selectedNode.id,
                     contextTitle: selectedNode.title,
-                    contextType: isStage ? 'stage' : 'subprocess',
+                    contextType: isStage ? 'phase' : 'subprocess',
                 };
             }
 
@@ -178,7 +178,7 @@ export function ContextIndicator({
                     <div className="flex items-center gap-1">
                         <GitBranch size={iconSize} className="text-orange-500" />
                         <Badge
-                            variant={contextType === 'stage' ? 'stage' : 'subprocess'}
+                            variant={contextType === 'phase' ? 'phase' : 'subprocess'}
                             size={size === 'sm' ? 'xs' : 'sm'}
                         >
                             {contextTitle}

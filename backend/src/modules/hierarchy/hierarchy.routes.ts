@@ -277,7 +277,7 @@ export async function hierarchyRoutes(fastify: FastifyInstance) {
    * GET /hierarchy/:contextType/:id/action-views
    *
    * Generic endpoint for stage/process action views.
-   * Supported types: stage, process
+   * Supported types: phase, process
    */
   fastify.get<{
     Params: { contextType: string; id: string };
@@ -290,7 +290,7 @@ export async function hierarchyRoutes(fastify: FastifyInstance) {
       const { view = 'task-like', status } = request.query;
 
       // Validate context type
-      if (!['stage', 'process'].includes(contextType)) {
+      if (!['phase', 'process'].includes(contextType)) {
         // If it's subprocess, it should have been caught by the specific route above,
         // but if not (e.g. route order), we can handle it or let it fall through.
         // Since specific routes take precedence in Fastify if defined first,
@@ -320,7 +320,7 @@ export async function hierarchyRoutes(fastify: FastifyInstance) {
       try {
         let views;
         // Cast contextType to ContextType
-        const type = contextType as 'stage' | 'process' | 'subprocess';
+        const type = contextType as 'phase' | 'process' | 'subprocess';
 
         if (status) {
           const derivedStatus = status as interpreterService.DerivedStatus;
@@ -353,7 +353,7 @@ export async function hierarchyRoutes(fastify: FastifyInstance) {
       const { contextType, id } = request.params;
 
       // Validate context type
-      if (!['stage', 'process'].includes(contextType)) {
+      if (!['phase', 'process'].includes(contextType)) {
         if (contextType !== 'subprocess') {
           return reply.code(400).send({ error: 'INVALID_CONTEXT_TYPE', message: 'Invalid context type' });
         }
@@ -373,7 +373,7 @@ export async function hierarchyRoutes(fastify: FastifyInstance) {
       }
 
       try {
-        const type = contextType as 'stage' | 'process' | 'subprocess';
+        const type = contextType as 'phase' | 'process' | 'subprocess';
         const summary = await interpreterService.getStatusSummary(id, type);
         return reply.send({ summary });
       } catch (err) {

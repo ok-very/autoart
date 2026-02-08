@@ -222,7 +222,7 @@ export function generateClassificationsForConnectorItems(
                 return baseClassification;
 
             case 'project':
-            case 'stage':
+            case 'phase':
             case 'process':
             case 'subprocess':
                 baseClassification = {

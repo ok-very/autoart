@@ -59,7 +59,7 @@ describe('hierarchy.service', () => {
       const originalIds = [
         fixtures.projectId,
         fixtures.processId,
-        fixtures.stageId,
+        fixtures.phaseId,
         fixtures.subprocessId,
         fixtures.leafId,
       ];
@@ -72,7 +72,7 @@ describe('hierarchy.service', () => {
       const clonedProcess = clonedTree.find((n) => n.type === 'process');
       expect(clonedProcess?.parent_id).toBe(clonedProject.id);
 
-      const clonedStage = clonedTree.find((n) => n.type === 'stage');
+      const clonedStage = clonedTree.find((n) => n.type === 'phase');
       expect(clonedStage?.parent_id).toBe(clonedProcess?.id);
 
       // Verify root_project_id is updated to new project
@@ -92,14 +92,14 @@ describe('hierarchy.service', () => {
 
       // Act: Clone the source stage under target stage's subprocess
       const clonedStage = await hierarchyService.deepCloneNode({
-        sourceNodeId: sourceFixtures.stageId!,
+        sourceNodeId: sourceFixtures.phaseId!,
         targetParentId: targetFixtures.processId!,
       });
 
       // Assert: Cloned stage has new parent
       expect(clonedStage.parent_id).toBe(targetFixtures.processId);
       expect(clonedStage.root_project_id).toBe(targetFixtures.projectId);
-      expect(clonedStage.type).toBe('stage');
+      expect(clonedStage.type).toBe('phase');
 
       // Verify descendants have updated root_project_id
       const descendants = await sql<{ id: string; root_project_id: string | null }>`
@@ -128,7 +128,7 @@ describe('hierarchy.service', () => {
       // Act: Clone with depth=stage (project, process, stage only)
       const clonedProject = await hierarchyService.deepCloneNode({
         sourceNodeId: fixtures.projectId,
-        depth: 'stage',
+        depth: 'phase',
       });
 
       // Assert: Only project, process, and stage were cloned
@@ -137,7 +137,7 @@ describe('hierarchy.service', () => {
 
       expect(types).toContain('project');
       expect(types).toContain('process');
-      expect(types).toContain('stage');
+      expect(types).toContain('phase');
       expect(types).not.toContain('subprocess');
       expect(types).not.toContain('template');
 
@@ -184,11 +184,11 @@ describe('hierarchy.service', () => {
         .executeTakeFirstOrThrow();
 
       // Get the original stage
-      const originalStage = await hierarchyService.getNodeById(fixtures.stageId!);
+      const originalStage = await hierarchyService.getNodeById(fixtures.phaseId!);
       expect(originalStage?.parent_id).toBe(fixtures.processId);
 
       // Act: Move stage to process2
-      const movedStage = await hierarchyService.moveNode(fixtures.stageId!, {
+      const movedStage = await hierarchyService.moveNode(fixtures.phaseId!, {
         newParentId: process2.id,
       });
 
@@ -206,7 +206,7 @@ describe('hierarchy.service', () => {
       const project2 = await createTestProject(db, `${testPrefix}_p2`, { withChildren: true });
 
       // Act: Move stage from project1's process to project2's process
-      const movedStage = await hierarchyService.moveNode(project1.stageId!, {
+      const movedStage = await hierarchyService.moveNode(project1.phaseId!, {
         newParentId: project2.processId!,
       });
 
@@ -253,7 +253,7 @@ describe('hierarchy.service', () => {
 
       // Act & Assert: Try to move stage directly under project (should fail - stage needs process parent)
       await expect(
-        hierarchyService.moveNode(fixtures.stageId!, {
+        hierarchyService.moveNode(fixtures.phaseId!, {
           newParentId: fixtures.projectId,
         })
       ).rejects.toThrow('Cannot move stage under project');
@@ -286,7 +286,7 @@ describe('hierarchy.service', () => {
         .values({
           parent_id: fixtures.processId!,
           root_project_id: fixtures.projectId,
-          type: 'stage',
+          type: 'phase',
           title: `${testPrefix}_stage2`,
           metadata: '{}',
           position: 1,
@@ -295,12 +295,12 @@ describe('hierarchy.service', () => {
         .executeTakeFirstOrThrow();
 
       // Verify initial positions
-      const originalStage = await hierarchyService.getNodeById(fixtures.stageId!);
+      const originalStage = await hierarchyService.getNodeById(fixtures.phaseId!);
       expect(originalStage?.position).toBe(0);
       expect(stage2.position).toBe(1);
 
       // Act: Move first stage with new position
-      const movedStage = await hierarchyService.moveNode(fixtures.stageId!, {
+      const movedStage = await hierarchyService.moveNode(fixtures.phaseId!, {
         newParentId: fixtures.processId!,
         position: 5,
       });
@@ -326,7 +326,7 @@ describe('hierarchy.service', () => {
       expect(tree.map((n) => n.type).sort()).toEqual([
         'process',
         'project',
-        'stage',
+        'phase',
         'subprocess',
         'subprocess',
       ]);

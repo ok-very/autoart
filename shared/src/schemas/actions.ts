@@ -23,7 +23,7 @@ import { z } from 'zod';
  */
 export const ContextTypeSchema = z.enum([
   'subprocess',
-  'stage',
+  'phase',
   'process',
   'project',
   'record',

@@ -302,7 +302,7 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
                                 <div
                                     key={node.tempId}
                                     className={`p-3 rounded border-l-4 ${node.type === 'process' ? 'border-purple-400 bg-purple-50' :
-                                            node.type === 'stage' ? 'border-yellow-400 bg-yellow-50' :
+                                            node.type === 'phase' ? 'border-yellow-400 bg-yellow-50' :
                                                 node.type === 'subprocess' ? 'border-orange-400 bg-orange-50' :
                                                     'border-blue-400 bg-ws-panel-bg'
                                         }`}
@@ -310,7 +310,7 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
                                 >
                                     <div className="flex items-center gap-2">
                                         <span className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded ${node.type === 'process' ? 'bg-purple-100 text-purple-600' :
-                                                node.type === 'stage' ? 'bg-yellow-100 text-yellow-600' :
+                                                node.type === 'phase' ? 'bg-yellow-100 text-yellow-600' :
                                                     node.type === 'subprocess' ? 'bg-orange-100 text-orange-600' :
                                                         'bg-blue-100 text-blue-600'
                                             }`}>
@@ -371,7 +371,7 @@ export function IngestionView({ onImportComplete }: IngestionViewProps) {
 function getNodeIndent(type: string): number {
     switch (type) {
         case 'process': return 0;
-        case 'stage': return 16;
+        case 'phase': return 16;
         case 'subprocess': return 32;
         default: return 0;
     }

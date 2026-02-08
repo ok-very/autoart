@@ -21,7 +21,7 @@ import * as actionsService from './actions.service.js';
 import * as interpreterService from '../interpreter/interpreter.service.js';
 
 // Zod schemas for validation
-const ContextTypeSchema = z.enum(['subprocess', 'stage', 'process', 'project', 'record']);
+const ContextTypeSchema = z.enum(['subprocess', 'phase', 'process', 'project', 'record']);
 
 const CreateActionBodySchema = z.object({
   contextId: z.string().uuid(),

@@ -146,7 +146,7 @@ export async function createTestProject(
 ): Promise<{
   projectId: string;
   processId?: string;
-  stageId?: string;
+  phaseId?: string;
   subprocessId?: string;
   leafId?: string;
 }> {
@@ -186,13 +186,13 @@ export async function createTestProject(
     .returning('id')
     .executeTakeFirstOrThrow();
 
-  const stage = await db
+  const phase = await db
     .insertInto('hierarchy_nodes')
     .values({
       parent_id: process.id,
       root_project_id: project.id,
-      type: 'stage',
-      title: `${prefix}_stage`,
+      type: 'phase',
+      title: `${prefix}_phase`,
       metadata: '{}',
       position: 0,
     })
@@ -202,7 +202,7 @@ export async function createTestProject(
   const subprocess = await db
     .insertInto('hierarchy_nodes')
     .values({
-      parent_id: stage.id,
+      parent_id: phase.id,
       root_project_id: project.id,
       type: 'subprocess',
       title: `${prefix}_subprocess`,
@@ -230,7 +230,7 @@ export async function createTestProject(
   return {
     projectId: project.id,
     processId: process.id,
-    stageId: stage.id,
+    phaseId: phase.id,
     subprocessId: subprocess.id,
     leafId: leaf.id,
   };

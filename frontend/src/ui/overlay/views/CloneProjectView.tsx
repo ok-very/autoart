@@ -36,12 +36,12 @@ function isOverlayProps(props: unknown): props is CloneProjectViewProps {
   return typeof props === 'object' && props !== null && 'context' in props && 'onSubmit' in props && 'onClose' in props;
 }
 
-type CloneDepth = 'all' | 'subprocess' | 'stage' | 'process';
+type CloneDepth = 'all' | 'subprocess' | 'phase' | 'process';
 
 const DEPTH_OPTIONS: { value: CloneDepth; label: string; description: string }[] = [
   { value: 'all', label: 'Complete Clone', description: 'Project → Process → Stage → Subprocess → Task' },
   { value: 'subprocess', label: 'Up to Subprocess', description: 'Project → Process → Stage → Subprocess (no tasks)' },
-  { value: 'stage', label: 'Up to Stage', description: 'Project → Process → Stage only' },
+  { value: 'phase', label: 'Up to Phase', description: 'Project → Process → Phase only' },
   { value: 'process', label: 'Up to Process', description: 'Project → Process only' },
 ];
 

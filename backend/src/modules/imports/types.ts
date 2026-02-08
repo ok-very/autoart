@@ -101,10 +101,10 @@ export interface ItemClassification {
 
 export interface ImportPlanContainer {
     tempId: string;
-    type: 'project' | 'process' | 'stage' | 'subprocess';
+    type: 'project' | 'process' | 'phase' | 'subprocess';
     title: string;
     parentTempId: string | null;
-    /** Optional hint for classification (e.g., 'process', 'stage', 'subprocess') */
+    /** Optional hint for classification (e.g., 'process', 'phase', 'subprocess') */
     definitionName?: string;
     /** Metadata for provenance tracking */
     metadata?: {

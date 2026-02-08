@@ -47,7 +47,7 @@ export interface ActionCard {
 
 interface ProjectLogViewProps {
   projectId: string | null;
-  contextType?: 'project' | 'process' | 'stage' | 'subprocess';
+  contextType?: 'project' | 'process' | 'phase' | 'subprocess';
   contextId?: string;
 }
 

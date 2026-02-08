@@ -83,7 +83,7 @@ This enables:
 Surfaces are scoped by `(context_id, context_type)`:
 
 ```typescript
-type ContextType = 'subprocess' | 'stage' | 'process' | 'project' | 'record';
+type ContextType = 'subprocess' | 'phase' | 'process' | 'project' | 'record';
 ```
 
 Initial implementation focuses on `subprocess` context, matching existing action patterns.

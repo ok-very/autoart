@@ -121,7 +121,7 @@ export function useCloneNode() {
       sourceNodeId: string;
       targetParentId?: string | null;
       overrides?: { title?: string; metadata?: Record<string, unknown> };
-      depth?: 'all' | 'process' | 'stage' | 'subprocess';
+      depth?: 'all' | 'process' | 'phase' | 'subprocess';
       includeTemplates?: boolean;
       includeRecords?: boolean;
     }) =>

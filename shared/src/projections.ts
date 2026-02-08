@@ -135,7 +135,7 @@ export interface ProcessProjectionOutput {
         /** Items in this process */
         items: ActionProjectionInput[];
         /** Source of grouping (explicit parent, definition match, or stage) */
-        source: 'definition' | 'stage' | 'explicit';
+        source: 'definition' | 'phase' | 'explicit';
     }>;
     /** Orphan items without enough context to group */
     floating: ActionProjectionInput[];

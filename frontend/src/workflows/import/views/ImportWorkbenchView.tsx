@@ -21,7 +21,7 @@ import { Text, Stack, Badge } from '@autoart/ui';
 // TYPES
 // ============================================================================
 
-type PreviewMode = 'hierarchy' | 'stage';
+type PreviewMode = 'hierarchy' | 'phase';
 
 interface ImportWorkbenchViewProps {
     session: ImportSession | null;
@@ -112,8 +112,8 @@ export function ImportWorkbenchView({
                         Hierarchy
                     </button>
                     <button
-                        onClick={() => setPreviewMode('stage')}
-                        className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${previewMode === 'stage'
+                        onClick={() => setPreviewMode('phase')}
+                        className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${previewMode === 'phase'
                                 ? 'bg-blue-100 text-blue-700'
                                 : 'text-ws-text-secondary hover:bg-slate-100'
                             }`}
@@ -152,7 +152,7 @@ export function ImportWorkbenchView({
                         onSelect={onSelectItem}
                     />
                 )}
-                {previewMode === 'stage' && (
+                {previewMode === 'phase' && (
                     <StagePreview
                         plan={plan}
                         selectedRecordId={selectedItemId}

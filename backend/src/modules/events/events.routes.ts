@@ -22,7 +22,7 @@ import * as eventsService from './events.service.js';
 import type { Event } from '../../db/schema.js';
 
 // Zod schemas for validation
-const ContextTypeSchema = z.enum(['subprocess', 'stage', 'process', 'project', 'record']);
+const ContextTypeSchema = z.enum(['subprocess', 'phase', 'process', 'project', 'record']);
 
 const CreateEventBodySchema = z.object({
   contextId: z.string().uuid(),

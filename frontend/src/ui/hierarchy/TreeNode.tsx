@@ -27,7 +27,7 @@ export function TreeNode({ node, level }: TreeNodeProps) {
   
   const isSelected = selection?.type === 'node' && selection.id === node.id;
 
-  const isFolder = node.type === 'stage';
+  const isFolder = node.type === 'phase';
   const isSubprocess = node.type === 'subprocess';
 
   // Determine index for move operations - validate index is valid

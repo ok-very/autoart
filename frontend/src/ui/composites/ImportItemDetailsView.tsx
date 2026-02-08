@@ -186,7 +186,7 @@ export function ImportItemDetailsView({ itemId, tab, plan: propPlan }: ImportIte
         );
     }
 
-    const isContainer = 'type' in selectedItem && ['project', 'process', 'stage', 'subprocess'].includes((selectedItem as { type?: string }).type || '');
+    const isContainer = 'type' in selectedItem && ['project', 'process', 'phase', 'subprocess'].includes((selectedItem as { type?: string }).type || '');
     const isItem = 'fieldRecordings' in selectedItem;
 
     // Get field recordings with proper typing

@@ -21,7 +21,7 @@ import { Text, Stack, Badge } from '@autoart/ui';
 // TYPES
 // ============================================================================
 
-type PreviewMode = 'hierarchy' | 'stage';
+type PreviewMode = 'hierarchy' | 'phase';
 
 interface MondayPreviewViewProps {
     session: ImportSession | null;
@@ -115,8 +115,8 @@ export function MondayPreviewView({
                         Hierarchy
                     </button>
                     <button
-                        onClick={() => setPreviewMode('stage')}
-                        className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${previewMode === 'stage'
+                        onClick={() => setPreviewMode('phase')}
+                        className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${previewMode === 'phase'
                             ? 'bg-amber-100 text-amber-700'
                             : 'text-ws-text-secondary hover:bg-slate-100'
                             }`}
@@ -154,7 +154,7 @@ export function MondayPreviewView({
                         onSelect={onSelectItem}
                     />
                 )}
-                {previewMode === 'stage' && (
+                {previewMode === 'phase' && (
                     <StagePreview
                         plan={plan}
                         selectedRecordId={selectedItemId}

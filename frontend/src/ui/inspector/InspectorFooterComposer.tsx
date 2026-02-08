@@ -61,7 +61,7 @@ export function InspectorFooterComposer() {
     const contextId = useMemo(() => {
         if (selectedNode) {
             // If node is a subprocess, use it directly; otherwise find parent subprocess
-            if (selectedNode.type === 'subprocess' || selectedNode.type === 'stage') {
+            if (selectedNode.type === 'subprocess' || selectedNode.type === 'phase') {
                 return selectedNode.id;
             }
             // For tasks, use their parent (which should be a subprocess)
@@ -76,7 +76,7 @@ export function InspectorFooterComposer() {
 
     const contextType = useMemo(() => {
         if (selectedNode) {
-            if (selectedNode.type === 'stage') return 'stage' as const;
+            if (selectedNode.type === 'phase') return 'phase' as const;
             return 'subprocess' as const;
         }
         if (selectedAction) {

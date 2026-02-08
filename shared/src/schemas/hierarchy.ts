@@ -3,7 +3,7 @@ import { NodeTypeSchema } from './enums.js';
 
 /**
  * Hierarchy Node Schema
- * Represents a node in the 5-level hierarchy (project → process → stage → subprocess → task)
+ * Represents a node in the 5-level hierarchy (project → process → phase → subprocess → task)
  */
 export const HierarchyNodeSchema = z.object({
   id: z.string().uuid(),
@@ -69,7 +69,7 @@ export const CloneNodeInputSchema = z.object({
     title: z.string().optional(),
     metadata: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
-  depth: z.enum(['all', 'process', 'stage', 'subprocess']).optional(),
+  depth: z.enum(['all', 'process', 'phase', 'subprocess']).optional(),
   includeTemplates: z.boolean().optional(),
   includeRecords: z.boolean().optional(),
 });

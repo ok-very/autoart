@@ -79,7 +79,7 @@ export interface HierarchyNodesTable {
   id: Generated<string>;
   parent_id: string | null;
   root_project_id: string | null;
-  type: 'project' | 'process' | 'stage' | 'subprocess' | 'template';
+  type: 'project' | 'process' | 'phase' | 'subprocess' | 'template';
   title: string;
   description: unknown | null; // TipTap JSON document
   position: Generated<number>;
@@ -182,7 +182,7 @@ export type RecordAliasUpdate = Updateable<RecordAliasesTable>;
 // ============================================
 
 /** Context type for scoping actions and events */
-export type ContextType = 'subprocess' | 'stage' | 'process' | 'project' | 'record';
+export type ContextType = 'subprocess' | 'phase' | 'process' | 'project' | 'record';
 
 // Actions Table - Intent Declarations
 // Actions declare that something should or could happen

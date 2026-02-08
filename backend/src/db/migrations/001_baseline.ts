@@ -20,9 +20,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   // ENUMS
   // ==========================================================================
 
-  await sql`CREATE TYPE context_type AS ENUM ('subprocess', 'stage', 'process', 'project', 'record')`.execute(db);
+  await sql`CREATE TYPE context_type AS ENUM ('subprocess', 'phase', 'process', 'project', 'record')`.execute(db);
   await sql`CREATE TYPE intake_form_status AS ENUM ('active', 'disabled')`.execute(db);
-  await sql`CREATE TYPE node_type AS ENUM ('project', 'process', 'stage', 'subprocess', 'template')`.execute(db);
+  await sql`CREATE TYPE node_type AS ENUM ('project', 'process', 'phase', 'subprocess', 'template')`.execute(db);
   await sql`CREATE TYPE poll_status AS ENUM ('active', 'closed', 'draft')`.execute(db);
   await sql`CREATE TYPE ref_mode AS ENUM ('static', 'dynamic')`.execute(db);
 

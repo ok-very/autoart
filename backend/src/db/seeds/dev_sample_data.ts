@@ -20,7 +20,7 @@
  *   are created as Actions with ACTION_DECLARED events
  * - parent_action_id maintains the hierarchy within the Action tree
  *
- * DO NOT create hierarchy_nodes with type: 'process', 'stage', or 'subprocess'
+ * DO NOT create hierarchy_nodes with type: 'process', 'phase', or 'subprocess'
  * directly. Use the Action system for work items.
  */
 
@@ -249,8 +249,8 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
       let actionType: string;
       if (container.type === 'process') {
         actionType = 'Process';
-      } else if (container.definitionName === 'stage') {
-        actionType = 'Stage';
+      } else if (container.definitionName === 'phase') {
+        actionType = 'Phase';
       } else {
         actionType = 'Subprocess';
       }
@@ -273,7 +273,7 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
       containerActionMap.set(container.tempId, result.action.id);
     }
 
-    console.log(`  ✓ Created ${containers.length} container actions (Process → Stage)`);
+    console.log(`  ✓ Created ${containers.length} container actions (Process → Phase)`);
 
     // --- 7. Items (tasks + subtasks) ---
 
@@ -465,7 +465,7 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
   // 10. Guardrail: verify no legacy nodes
   // =========================================================================
 
-  const legacyNodeTypes = ['process', 'stage', 'subprocess'] as const;
+  const legacyNodeTypes = ['process', 'phase', 'subprocess'] as const;
   const legacyNodes = await db
     .selectFrom('hierarchy_nodes')
     .select(['type'])

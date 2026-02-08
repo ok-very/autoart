@@ -42,7 +42,7 @@ export function useActionViews(
             if (status) params.set('status', status);
 
             let endpoint = '';
-            if (['subprocess', 'stage', 'process'].includes(contextType)) {
+            if (['subprocess', 'phase', 'process'].includes(contextType)) {
                 endpoint = `/hierarchy/${contextType}/${contextId}/action-views`;
             } else {
                 throw new Error(`Unsupported context type for action views: ${contextType}`);
@@ -81,7 +81,7 @@ export function useActionViewsSummary(
         queryKey: queryKeys.actionViews.summary(contextId!, contextType),
         queryFn: () => {
             let endpoint = '';
-            if (['subprocess', 'stage', 'process'].includes(contextType)) {
+            if (['subprocess', 'phase', 'process'].includes(contextType)) {
                 endpoint = `/hierarchy/${contextType}/${contextId}/action-views/summary`;
             } else {
                 throw new Error(`Unsupported context type for action views summary: ${contextType}`);

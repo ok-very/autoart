@@ -11,8 +11,8 @@ import * as recordsService from '../records/records.service.js';
 const VALID_PARENTS: Record<NodeType, NodeType | null> = {
   project: null,
   process: 'project',
-  stage: 'process',
-  subprocess: 'stage',
+  phase: 'process',
+  subprocess: 'phase',
   template: null, // Templates are hierarchy-agnostic singletons
 };
 
@@ -294,10 +294,10 @@ async function _updateDescendantsRootProject(nodeId: string, newRootProjectId: s
 // Depth limits for clone filtering
 // Templates are excluded from cloning - they're singletons
 const DEPTH_LIMITS: Record<string, NodeType[]> = {
-  all: ['project', 'process', 'stage', 'subprocess'],
+  all: ['project', 'process', 'phase', 'subprocess'],
   process: ['project', 'process'],
-  stage: ['project', 'process', 'stage'],
-  subprocess: ['project', 'process', 'stage', 'subprocess'],
+  phase: ['project', 'process', 'phase'],
+  subprocess: ['project', 'process', 'phase', 'subprocess'],
 };
 
 // Deep Clone Implementation

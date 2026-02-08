@@ -54,18 +54,18 @@ export function HierarchySidebar() {
 
     if (!selectedNode || selectedNode.type === 'process') {
       // No selection or process selected → create stage under process
-      return { parentId: selectedProcess.id, nodeType: 'stage' };
+      return { parentId: selectedProcess.id, nodeType: 'phase' };
     }
-    if (selectedNode.type === 'stage') {
+    if (selectedNode.type === 'phase') {
       // Stage selected → create subprocess under stage
       return { parentId: selectedNode.id, nodeType: 'subprocess' };
     }
     if (selectedNode.type === 'subprocess') {
       // Subprocess selected → create stage under process (sibling to parent's parent)
-      return { parentId: selectedProcess.id, nodeType: 'stage' };
+      return { parentId: selectedProcess.id, nodeType: 'phase' };
     }
     // Default: create stage
-    return { parentId: selectedProcess.id, nodeType: 'stage' };
+    return { parentId: selectedProcess.id, nodeType: 'phase' };
   };
 
   const createConfig = getCreateNodeConfig();
@@ -204,7 +204,7 @@ export function HierarchySidebar() {
             className="w-full py-2 border border-dashed border-slate-300 rounded text-xs text-ws-text-secondary hover:border-slate-400 hover:text-ws-text-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
           >
             <Plus size={14} />
-            New {createConfig?.nodeType === 'subprocess' ? 'Subprocess' : 'Stage'}
+            New {createConfig?.nodeType === 'subprocess' ? 'Subprocess' : 'Phase'}
           </button>
         </div>
       </div>

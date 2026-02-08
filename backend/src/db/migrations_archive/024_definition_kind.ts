@@ -39,7 +39,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     await sql`
         UPDATE record_definitions
         SET kind = 'container'
-        WHERE name IN ('Process', 'Stage', 'Subprocess')
+        WHERE name IN ('Process', 'Phase', 'Subprocess')
     `.execute(db);
 }
 

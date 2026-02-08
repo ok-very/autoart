@@ -16,7 +16,7 @@ export const nodeTypeSchema = z.enum(['project', 'process', 'subprocess']);
 
 export const createNodeSchema = z.object({
   parentId: z.string().uuid().nullable().optional(),
-  type: nodeTypeSchema, // No longer accepts 'stage' for new creations
+  type: nodeTypeSchema, // No longer accepts 'phase' for new creations
   title: z.string().min(1, 'Title is required'),
   description: z.unknown().optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
@@ -43,7 +43,7 @@ export const cloneNodeSchema = z.object({
     metadata: z.record(z.string(), z.unknown()).optional(),
   }).optional(),
   // Clone options for projects
-  depth: z.enum(['all', 'process', 'stage', 'subprocess']).optional(), // Controls how deep to clone
+  depth: z.enum(['all', 'process', 'phase', 'subprocess']).optional(), // Controls how deep to clone
   includeTemplates: z.boolean().optional(), // Clone definition templates
   includeRecords: z.boolean().optional(), // Clone associated records
 });

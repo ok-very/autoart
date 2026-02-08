@@ -42,7 +42,7 @@ const NODE_TYPE_DEFINITIONS: NodeTypeDefinition[] = [
     styling: { color: 'purple', icon: '⚙️' },
   },
   {
-    name: 'Stage',
+    name: 'Phase',
     schema_config: {
       fields: [
         { key: 'status', type: 'select', label: 'Status', options: ['Not Started', 'In Progress', 'Done'] },

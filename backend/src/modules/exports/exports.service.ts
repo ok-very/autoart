@@ -296,7 +296,7 @@ async function exportAsCsv(
         'Artwork Budget',
         'Total Budget',
         'Install Date',
-        'Stage',
+        'Phase',
         'Selected Artist',
     ];
 

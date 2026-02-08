@@ -12,7 +12,7 @@ import { Kysely, sql } from 'kysely';
 export async function up(db: Kysely<unknown>): Promise<void> {
   // engagements table
   // Note: context_type uses different values ('poll', 'form', 'page') than the
-  // existing context_type enum ('subprocess', 'stage', etc.), so we use text.
+  // existing context_type enum ('subprocess', 'phase', etc.), so we use text.
   // context_id is text because poll unique_ids are slugs, not UUIDs.
   await db.schema
     .createTable('engagements')

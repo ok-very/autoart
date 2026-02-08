@@ -220,7 +220,7 @@ function StageSection({ stage }: StageSectionProps) {
           {stage.title}
         </h3>
         <div className="flex items-center gap-2">
-          <Badge variant="stage">{stage.type}</Badge>
+          <Badge variant="phase">{stage.type}</Badge>
           <button
             onClick={() => openOverlay('create-node', { parentId: stage.id, nodeType: 'subprocess' })}
             className="text-xs text-blue-600 hover:underline"
@@ -254,7 +254,7 @@ export function Workspace() {
   // Filter hierarchy to get stages for the active project
   const stages = useMemo(() => {
     if (!activeProjectId) return [];
-    return getChildren(activeProjectId).filter(node => node.type === 'stage');
+    return getChildren(activeProjectId).filter(node => node.type === 'phase');
   }, [activeProjectId, getChildren]);
 
   // Aggregate all tasks from all subprocesses of all stages for status distribution

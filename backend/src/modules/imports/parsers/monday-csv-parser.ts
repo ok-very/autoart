@@ -128,7 +128,7 @@ export class MondayCSVParser {
                     type: 'subprocess',
                     title: stageName || col0, // Use extracted name if available
                     parentTempId: processId,
-                    definitionName: 'stage', // Classification hint
+                    definitionName: 'phase', // Classification hint
                 });
                 currentStageId = stageId;
                 currentStageName = stageName;

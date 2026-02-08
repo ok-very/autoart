@@ -189,7 +189,7 @@ async function getSelectionPanels(projectId: string) {
 
 async function getProjectTasks(projectId: string, _openOnly: boolean) {
     // Get leaf-level subprocess nodes under this project.
-    // Hierarchy: project → process → stage → subprocess
+    // Hierarchy: project → process → phase → subprocess
     // We traverse using a CTE to find all descendants, then filter to subprocesses.
     const subprocesses = await db
         .withRecursive('descendants', (qb) =>

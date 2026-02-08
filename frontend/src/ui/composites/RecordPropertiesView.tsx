@@ -115,7 +115,7 @@ export function RecordPropertiesView({ itemId, isNode }: RecordPropertiesViewPro
     const bgColor = {
         project: 'bg-blue-50 border-blue-100 text-blue-900',
         process: 'bg-purple-50 border-purple-100 text-purple-900',
-        stage: 'bg-ws-bg border-ws-panel-border text-ws-fg',
+        phase: 'bg-ws-bg border-ws-panel-border text-ws-fg',
         subprocess: 'bg-orange-50 border-orange-100 text-orange-900',
         task: 'bg-green-50 border-green-100 text-green-900',
         subtask: 'bg-teal-50 border-teal-100 text-teal-900',

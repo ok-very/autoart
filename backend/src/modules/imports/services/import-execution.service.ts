@@ -127,7 +127,7 @@ function getContextTypeFromNodeType(nodeType: string | undefined): ContextType {
     switch (nodeType) {
         case 'project': return 'project';
         case 'process': return 'process';
-        case 'stage': return 'stage';
+        case 'phase': return 'phase';
         case 'subprocess': return 'subprocess';
         default:
             if (nodeType !== undefined) {
@@ -701,15 +701,15 @@ async function emitWorkEvent(
         source?: string;
     };
 
-    // Guard against 'stage' contextType which is deprecated and will throw in emitEvent
+    // Guard against 'phase' contextType which is deprecated and will throw in emitEvent
     // Convert to 'subprocess' as the safe fallback
     let safeContextType: ContextType = effectiveContextType;
-    if (effectiveContextType === 'stage') {
+    if (effectiveContextType === 'phase') {
         logger.warn({
             actionId,
             effectiveContextId,
             originalContextType: effectiveContextType,
-        }, '[imports.service] Stage context deprecated for work events - using subprocess');
+        }, '[imports.service] Phase context deprecated for work events - using subprocess');
         safeContextType = 'subprocess';
     }
 

@@ -41,7 +41,7 @@ function collectSubprocesses(
 
   for (const process of processes) {
     // Check for subprocesses under stages (legacy/stage-based structure)
-    const stages = getChildren(process.id).filter((n) => n.type === 'stage');
+    const stages = getChildren(process.id).filter((n) => n.type === 'phase');
     for (const stage of stages) {
       subprocesses.push(...getChildren(stage.id).filter((n) => n.type === 'subprocess'));
     }
