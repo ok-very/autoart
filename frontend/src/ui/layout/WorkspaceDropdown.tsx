@@ -7,11 +7,12 @@
  * Each submenu has a "+" action to save the current arrangement into that category.
  */
 
-import { ChevronDown, Copy, Dna, Folder, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronDown, Copy, Dna, Folder, Plus, Save, Trash2 } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
 import { Button, type ButtonColor } from '@autoart/ui';
 import { Menu } from '@autoart/ui';
+import { Modal, Inline, Text } from '@autoart/ui';
 import { useWorkspaceStore, useActiveWorkspaceId, useActiveSubviewId, useCustomWorkspaces } from '../../stores/workspaceStore';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
 import type { WorkspacePreset, WorkspaceSubview } from '../../types/workspace';
@@ -266,21 +267,32 @@ export function WorkspaceDropdown() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [dialogParentId, setDialogParentId] = useState<string | undefined>();
     const [dialogDefaultColor, setDialogDefaultColor] = useState<string | undefined>();
+    const [confirmTarget, setConfirmTarget] = useState<{ workspaceId: string; subviewId?: string } | null>(null);
     const activeWorkspaceId = useActiveWorkspaceId();
     const activeSubviewId = useActiveSubviewId();
     const customWorkspaces = useCustomWorkspaces();
+    const workspaceModified = useWorkspaceStore((s) => s.workspaceModified);
 
     // Combine built-in + custom workspaces for resolving the active workspace label
     const allWorkspaces = [...BUILT_IN_WORKSPACES, ...customWorkspaces];
     const activeWorkspace = allWorkspaces.find(w => w.id === activeWorkspaceId);
+    const isCustomActive = activeWorkspace && !activeWorkspace.isBuiltIn;
     const buttonColor = getButtonColor(activeWorkspace?.color ?? DEFAULT_COLOR);
 
     // Partition custom workspaces: scoped (have parentWorkspaceId) vs legacy (no parent)
     const legacyCustom = customWorkspaces.filter(w => !w.parentWorkspaceId);
 
-    const handleSelectWorkspace = (workspaceId: string, subviewId?: string) => {
+    const doApply = useCallback((workspaceId: string, subviewId?: string) => {
         useWorkspaceStore.getState().applyWorkspace(workspaceId, subviewId);
-    };
+    }, []);
+
+    const handleSelectWorkspace = useCallback((workspaceId: string, subviewId?: string) => {
+        if (workspaceModified && workspaceId !== activeWorkspaceId) {
+            setConfirmTarget({ workspaceId, subviewId });
+            return;
+        }
+        doApply(workspaceId, subviewId);
+    }, [workspaceModified, activeWorkspaceId, doApply]);
 
     const handleOpenAddDialog = (parentWorkspaceId?: string) => {
         const parentColor = parentWorkspaceId
@@ -317,6 +329,9 @@ export function WorkspaceDropdown() {
                         leftSection={<Dna size={14} />}
                     >
                         {activeWorkspace?.label ?? 'Workspaces'}
+                        {workspaceModified && (
+                            <span className="ml-1.5 w-1.5 h-1.5 rounded-full bg-ws-color-warning inline-block" title="Unsaved changes" />
+                        )}
                     </Button>
                 </Menu.Target>
 
@@ -396,6 +411,61 @@ export function WorkspaceDropdown() {
                 parentWorkspaceId={dialogParentId}
                 defaultColor={dialogDefaultColor}
             />
+
+            {/* Confirmation dialog when switching workspaces with unsaved changes */}
+            <Modal
+                open={!!confirmTarget}
+                onOpenChange={(open) => { if (!open) setConfirmTarget(null); }}
+                title="Unsaved workspace changes"
+                description="You have modified the current workspace layout."
+                size="sm"
+            >
+                <div className="space-y-3">
+                    <Text size="sm" className="text-ws-text-secondary">
+                        {isCustomActive
+                            ? 'Save changes to the current workspace, save as a new workspace, or discard?'
+                            : 'Save as a new workspace or discard changes?'}
+                    </Text>
+                    <Inline gap="sm" justify="end" className="pt-2">
+                        <Button variant="secondary" onClick={() => setConfirmTarget(null)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            onClick={() => {
+                                if (confirmTarget) doApply(confirmTarget.workspaceId, confirmTarget.subviewId);
+                                setConfirmTarget(null);
+                            }}
+                        >
+                            Discard
+                        </Button>
+                        {isCustomActive && (
+                            <Button
+                                variant="primary"
+                                leftSection={<Save size={14} />}
+                                onClick={() => {
+                                    if (activeWorkspaceId) {
+                                        useWorkspaceStore.getState().updateCustomWorkspace(activeWorkspaceId);
+                                    }
+                                    if (confirmTarget) doApply(confirmTarget.workspaceId, confirmTarget.subviewId);
+                                    setConfirmTarget(null);
+                                }}
+                            >
+                                Update
+                            </Button>
+                        )}
+                        <Button
+                            variant="primary"
+                            onClick={() => {
+                                setConfirmTarget(null);
+                                handleOpenAddDialog();
+                            }}
+                        >
+                            Save as new
+                        </Button>
+                    </Inline>
+                </div>
+            </Modal>
         </>
     );
 }

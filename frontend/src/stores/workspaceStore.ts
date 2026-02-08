@@ -116,9 +116,13 @@ interface WorkspaceState {
     unbindPanel: (panelId: string) => void;
     markWorkspaceModified: () => void;
 
+    // Internal flag: suppress modification tracking during workspace apply
+    _applyingWorkspace: boolean;
+
     // Workspace preset actions
     applyWorkspace: (workspaceId: string, subviewId?: string) => void;
     saveCurrentAsWorkspace: (name: string, options?: { color?: string; parentWorkspaceId?: string }) => void;
+    updateCustomWorkspace: (id: string) => void;
     deleteCustomWorkspace: (id: string) => void;
     duplicateSubview: (parentWorkspaceId: string, subviewId: string, name: string, color?: string) => void;
     duplicateCustomWorkspace: (id: string) => void;
@@ -140,6 +144,7 @@ const initialState = {
     boundProjectId: null as string | null,
     boundPanelIds: new Set<string>(),
     workspaceModified: false,
+    _applyingWorkspace: false,
     // Content routing + view modes (moved from uiStore in v4)
     centerContentType: 'projects' as CenterContentType,
     projectViewMode: 'workflow' as ProjectViewMode,
@@ -246,7 +251,12 @@ export const useWorkspaceStore = create<WorkspaceState>()(
             },
 
             saveLayout: (layout: SerializedDockviewState) => {
+                const state = get();
                 set({ layout });
+                // Mark workspace as modified unless we're in the middle of applying a preset
+                if (state.activeWorkspaceId && !state._applyingWorkspace) {
+                    set({ workspaceModified: true });
+                }
             },
 
             setUserOverride: (panelId: PanelId, visible: boolean) => {
@@ -312,6 +322,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
             // =========================================================================
 
             applyWorkspace: (workspaceId: string, subviewId?: string) => {
+                set({ _applyingWorkspace: true });
                 const state = get();
                 const allWorkspaces = [...BUILT_IN_WORKSPACES, ...state.customWorkspaces];
                 const preset = allWorkspaces.find(w => w.id === workspaceId);
@@ -423,6 +434,9 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                         firstPanel.api.setActive();
                     }
                 }
+
+                // Clear suppression flag after layout settles
+                requestAnimationFrame(() => set({ _applyingWorkspace: false }));
             },
 
             saveCurrentAsWorkspace: (name: string, options?: { color?: string; parentWorkspaceId?: string }) => {
@@ -449,6 +463,24 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                 set({
                     customWorkspaces: [...state.customWorkspaces, newWorkspace],
                     activeWorkspaceId: newWorkspace.id,
+                });
+            },
+
+            updateCustomWorkspace: (id: string) => {
+                const state = get();
+                const workspace = state.customWorkspaces.find(w => w.id === id);
+                if (!workspace) {
+                    console.warn(`Cannot update workspace: ${id} (not found)`);
+                    return;
+                }
+                const captured = state.captureCurrentState();
+                set({
+                    customWorkspaces: state.customWorkspaces.map(w =>
+                        w.id === id
+                            ? { ...w, panels: captured.openPanels.map(p => ({ panelId: p.id, viewMode: p.currentViewMode, position: p.position })) }
+                            : w
+                    ),
+                    workspaceModified: false,
                 });
             },
 
