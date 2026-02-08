@@ -56,6 +56,15 @@ export function FinanceKPIStrip() {
       })
       .reduce((sum, r) => sum + extractCents(r.data as Record<string, unknown>, 'amount'), 0);
 
+    // Balance due: sum of balance_due across non-void invoices
+    // Computed fields are merged into data when resolve=true; fall back to 0 if unavailable
+    const totalBalanceDue = invoices
+      .filter((r) => {
+        const status = (r.data as Record<string, unknown>).status as string;
+        return status !== 'Void';
+      })
+      .reduce((sum, r) => sum + extractCents(r.data as Record<string, unknown>, 'balance_due'), 0);
+
     return [
       {
         label: 'Allocated',
@@ -75,11 +84,16 @@ export function FinanceKPIStrip() {
         value: formatCurrency({ amount: outstandingAP, currency: 'CAD' }),
         sublabel: `${bills.filter((r) => ['Received', 'Approved'].includes((r.data as Record<string, unknown>).status as string)).length} bills`,
       },
+      {
+        label: 'Balance Due',
+        value: formatCurrency({ amount: totalBalanceDue, currency: 'CAD' }),
+        sublabel: `${invoices.filter((r) => (r.data as Record<string, unknown>).status !== 'Void').length} invoices`,
+      },
     ];
   }, [budgets, invoices, bills]);
 
   return (
-    <div className="grid grid-cols-4 gap-px bg-slate-200">
+    <div className="grid grid-cols-5 gap-px bg-slate-200">
       {kpis.map((kpi) => (
         <div key={kpi.label} className="bg-ws-panel-bg px-4 py-3">
           <div className="text-[10px] font-medium text-ws-muted uppercase tracking-wide">

@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 
 import { useFinanceRecords } from '../../api/hooks/finance';
 import { useRecordDefinitions } from '../../api/hooks/definitions';
+import { useUIStore } from '../../stores/uiStore';
 import { formatCurrency } from '@autoart/shared';
 import { Button } from '@autoart/ui';
 
@@ -31,6 +32,7 @@ function parseExpenseRow(record: { id: string; unique_name: string; data: Record
 }
 
 export function ExpenseListView() {
+  const openOverlay = useUIStore((s) => s.openOverlay);
   const { data: definitions = [] } = useRecordDefinitions();
   const expenseDef = useMemo(
     () => definitions.find((d) => d.name === 'Expense'),
@@ -60,7 +62,7 @@ export function ExpenseListView() {
             </span>
           )}
         </div>
-        <Button variant="primary" size="sm" leftSection={<Plus size={14} />}>
+        <Button variant="primary" size="sm" leftSection={<Plus size={14} />} onClick={() => openOverlay('create-expense', {})}>
           Record Expense
         </Button>
       </header>

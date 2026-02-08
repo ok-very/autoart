@@ -52,6 +52,7 @@ const ContextEventsQuerySchema = z.object({
   limit: z.string().optional(),
   offset: z.string().optional(),
   includeSystem: z.string().optional(),
+  includeNarrative: z.string().optional(),
   types: z.union([z.string(), z.array(z.string())]).optional(),
   actorId: z.string().uuid().optional(),
   actionId: z.string().uuid().optional(),
@@ -184,12 +185,13 @@ export async function eventsRoutes(fastify: FastifyInstance) {
     },
     async (request) => {
       const { contextType, contextId } = request.params;
-      const { limit, offset, includeSystem, types, actorId, actionId } = request.query;
+      const { limit, offset, includeSystem, includeNarrative, types, actorId, actionId } = request.query;
 
       // Parse query parameters
       const parsedLimit = limit ? parseInt(limit, 10) : 50;
       const parsedOffset = offset ? parseInt(offset, 10) : 0;
       const parsedIncludeSystem = includeSystem === 'true';
+      const parsedIncludeNarrative = includeNarrative === 'true';
       const parsedTypes = types
         ? Array.isArray(types)
           ? types
@@ -206,6 +208,21 @@ export async function eventsRoutes(fastify: FastifyInstance) {
         actorId,
         actionId,
       });
+
+      // Enrich FACT_RECORDED events with human-readable narrative
+      if (parsedIncludeNarrative) {
+        const { renderFinanceNarrative } = await import('./finance-narrative.js');
+        result.events = result.events.map(event => {
+          if (event.type === 'FACT_RECORDED' && event.payload) {
+            const payload = typeof event.payload === 'string'
+              ? JSON.parse(event.payload)
+              : event.payload;
+            const narrative = renderFinanceNarrative(payload);
+            return narrative ? { ...event, _narrative: narrative } : event;
+          }
+          return event;
+        });
+      }
 
       return result;
     }
