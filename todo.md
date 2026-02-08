@@ -8,9 +8,28 @@
 **Active — unphased:**
 - **Project binding in workspaces is implementation theater:** Phase 1.2 wired WorkspaceContext consumption, but panels don't actually use the bound project ID. UI shows binding UI, backend may store it, but the connection between "user binds project to workspace" and "panels render that project's data" is broken or never existed. Trace the full path: workspace save → project binding persistence → panel mount → data fetch with bound ID.
 - **Theme assignment coupled to workspaces — meaningless complexity:** Each workspace carries its own theme, but themes are undifferentiated (Compact, Minimal, Floating, Default are essentially identical). Per-workspace theme assignment adds complexity without payoff. Either decouple theme selection from workspace identity (global user preference), or differentiate themes first per DESIGN.md variant guidance. Got muddied in during the Phase 1 workspace rewrite.
+- **UnifiedComposerBar not rendering on Project page:** Phase 3.6 wired vocabulary suggestions into UnifiedComposerBar, but the bar doesn't appear in the accessibility tree on ProjectPage despite being mounted with `visible={composerBarVisible}` (defaults to true). The legacy ComposerView renders in the Composer nav panel instead. Related to Phase 7 "Composer bar as sleek dockview popout window" item — bar is currently pinned to ProjectPage as fixed-position overlay (wrong place). Needs investigation: why isn't it rendering, and should it be a proper dockview panel first before debugging visibility.
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
 - **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
+
+**Phase 3 review findings (PRs #439-446):**
+
+*Security:*
+- **Missing auth on classifications route (PR #439):** `GET /sessions/:id/classifications` has no `preHandler: [app.authenticate]` while `/interpret` and `/reclassify` do. Leaks session classification data to unauthenticated callers.
+- **Missing auth on action-links read route (PR #443):** `GET /action-links/:actionId` unauthenticated while `POST /link-action` requires auth. Allows enumeration of import session/item associations.
+
+*Logic bugs:*
+- **Vocabulary upsert NULL adjective duplicates (PR #441):** PostgreSQL unique constraints allow multiple NULL rows in the `adjective` column — repeated vocabulary entries without adjective create duplicates instead of incrementing `frequency`. Fix: normalize missing adjective to empty string before insert.
+- **`/link-action` 500 on duplicate (PR #443):** No `onConflict` handling — auto-link then manual link for same `(session, item, action)` triple hits unique constraint and returns 500. Should upsert or return existing row.
+- **Classification cache hash ignores definition schema (PR #445):** `deriveContentHash()` only hashes `def.id` + `def.name`. Schema changes (field edits, constraint updates) don't invalidate cache → stale classifications served for up to 1 hour. Fix: hash full definition or include `updatedAt`.
+- **`useLinkAction` wrong response type (PR #444):** Hook declares `api.post<ActionLinksResponse>` (array wrapper) but backend returns single link object. Latent type mismatch — no current consumer reads `.data`, but will break if anyone does.
+- **`entityType` cast bypasses validation (PR #439):** `InterpretItemRequestSchema` accepts `z.string().optional()` for `entityType` then asserts to `ImportPlanItem['entityType']` union — any string passes through without runtime check.
+
+*Visual/UX:*
+- **Double border in Fields panel (PR #440):** Both sidebar wrapper (`FieldsPanel.tsx:72`) and `FieldsMillerColumnsView` root add `border-r border-ws-panel-border` — double divider line.
+- **Actions sidebar shows record stats (PR #440):** "All Actions" row displays `useRecordStats()` total which only counts `DataRecord` instances. Per-definition rows always show "0 instances". Should hide counts or use action-specific stats for non-record kinds.
+- **ImportLinkDialog available count mismatch (PR #444):** Header shows "Items (X available)" filtering linked items, but list renders all items including linked ones.
 
 **Deferred:**
 - AutoHelper sessions lost on backend restart (#340) — link key IS persisted in `connection_credentials` DB table. Issue is tray icon staleness — needs design decision, not a bugfix.
@@ -206,7 +225,11 @@
 | `UniversalTableCore.tsx` + composites | All tables div-based with `role` attributes — migrate to Table atom primitives from PR #350 | — |
 | `packages/ui/src/atoms/Badge.tsx` | Badge variant colors use domain-semantic Tailwind colors — needs separate approach (not chrome tokens) | — |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` — type declared and filtered but no distinct UI treatment (icon, section, color) | — |
-| `ExportMenu.tsx` | `invoiceNumber` sent to PDF/DOCX endpoints — backend should consume for Content-Disposition filenames | — |
+| `ExportMenu.tsx` | `invoiceNumber` sent to PDF/DOCX endpoints — backend should consume for Content-Disposition filenames |
+| `vocabulary.routes.ts` | Whitespace-only prefix passes `z.string().min(1)` — add `.trim()` before `.min(1)` (PR #441) |
+| `vocabulary` migration 004 | Composite btree index on `(verb, noun)` won't be used for `ILIKE ... OR ILIKE` prefix queries — consider separate `text_pattern_ops` indexes per column (PR #441) |
+| `classification-cache.ts` | Hash truncated to 16 hex chars (64-bit) — collision = wrong result served, not a miss. Use full hash or 32+ chars (PR #445) |
+| `todo.md` | Broken anchor `#autohelper-status-resolved` — roadmap heading changed to "AutoHelper Status (Resolved, Evolving)" (PR #442) | — |
 
 **Low priority (CodeAnt #332 nitpicks):**
 
@@ -238,7 +261,7 @@
 
 | PRs | Description |
 |-----|-------------|
-| #439-446 | **Phase 3: Import Pipeline Completion (Feb 8 2026):** (3.1) Interpretation HTTP routes + Zod schemas (3.2) TanStack Query hooks (3.3) Registry browser UI unification (RegistryFilterBar, 280px sidebar) (3.4) Workflow view backend (migration 005, import_action_links table, auto-linking) + frontend (ActionRegistryTable badges, "Link to Import Item" menu, ImportLinkDialog) (3.5) Action vocabulary extraction (migration 004, vocabulary.service.ts, classification hooks) (3.6) Composer vocabulary integration (useVocabularySuggestions hook, UnifiedComposerBar ranking) (3.7) Performance optimization (migration 006 indexes, in-memory classification cache, ClassificationPanel virtualization, query prefetch). Eight PRs, all complete. |
+| — | None. Phase 3 stack merged (PRs #439-446). |
 
 ---
 
@@ -246,6 +269,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Phase 3: Import Pipeline Completion (Feb 8 2026):** (3.1) Interpretation HTTP routes + Zod schemas (3.2) TanStack Query hooks (3.3) Registry browser UI unification (RegistryFilterBar, 280px sidebar) (3.4) Workflow view backend (migration 005, import_action_links table, auto-linking) + frontend (ActionRegistryTable badges, "Link to Import Item" menu, ImportLinkDialog) (3.5) Action vocabulary extraction (migration 004, vocabulary.service.ts, classification hooks) (3.6) Composer vocabulary integration (useVocabularySuggestions hook, UnifiedComposerBar ranking) (3.7) Performance optimization (migration 006 indexes, in-memory classification cache, ClassificationPanel virtualization, query prefetch). Verified: RegistryFilterBar renders across Actions/Fields/Records panels. Unverified (require import data): vocabulary suggestions, import linking badges, classification virtualization. | PRs #439-446 |
 | — | **Stale plan regen fix + ClassificationRow atom migration (Feb 8 2026):** (1) Import wizard optimistic cache update + inflight mutation counter fixes stale plan regeneration. (2) ClassificationRow raw HTML replaced with Stack/Inline/Text/Badge/Button/Card/Label/TextInput atoms from @autoart/ui. | PRs #434-435 |
 | — | **Import wizard escape hatches (Feb 8 2026):** (1) Wire `onReset`, Cancel Import in wizard header, Back at step 1 exits wizard, Cancel in Step1 footer. (2) Sidebar "New Import" button shows for all source types (removed Monday exclusion). Review fixes: disabled Cancel during in-flight session creation (race condition), updated stale comment. | PRs #432-433 |
 | — | **Phase 2.2-2.3: Entity kind resolver migration (Feb 8 2026):** (2.2) Replace entityType string checks with resolveEntityKind helper. (2.3) Rename entityType to entityKind in overlay side effects. (2.4) Seed through Composer. **Critical fix:** Remove phantom `kind` field from RecordDefinitionSchema — was always 'record', broke Composer filters for action_arrangement definitions. Backend sends `definition_kind` only; Zod default now canonical. | PRs #430-431 |
