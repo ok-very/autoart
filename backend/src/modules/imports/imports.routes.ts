@@ -9,12 +9,19 @@
  * - POST /sessions/:id/execute - Execute the import
  */
 
+import { randomUUID } from 'node:crypto';
+
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
+import { InterpretItemRequestSchema, ReclassifyRequestSchema } from '@autoart/shared';
+
+import { listDefinitions } from '../records/records.service.js';
 import { suggestClassificationsForPlan, type ClassificationSuggestion } from './classification-suggester.js';
 import mondayWebhookRoutes from './monday/monday-webhooks.routes.js'; // Added import
 import * as importsService from './services/index.js';
+import { generateClassifications } from './services/import-classification.service.js';
+import { countUnresolved } from './types.js';
 
 // ============================================================================
 // SCHEMAS
@@ -239,6 +246,90 @@ export async function importsRoutes(app: FastifyInstance) {
         return reply.send({
             deleted_count: sessionIds.length,
             session_ids: sessionIds,
+        });
+    });
+
+    // ========================================================================
+    // INTERPRETATION ROUTES
+    // ========================================================================
+
+    /**
+     * Interpret a single item.
+     * Generates a classification for an ad-hoc item outside of a session.
+     */
+    app.post('/interpret', { preHandler: [app.authenticate] }, async (request, reply) => {
+        const body = InterpretItemRequestSchema.parse(request.body);
+
+        const tempId = randomUUID();
+        const item = {
+            tempId,
+            title: body.title,
+            metadata: body.metadata ?? {},
+            fieldRecordings: body.fieldRecordings ?? [],
+            entityType: body.entityType as import('./types.js').ImportPlanItem['entityType'],
+        };
+
+        const definitions = await listDefinitions({ definitionKind: 'record' });
+        const result = generateClassifications([item], definitions);
+
+        return reply.send({ classification: result[0] });
+    });
+
+    /**
+     * Re-interpret an item after user changes.
+     * Applies changes to an existing plan item and re-classifies it.
+     */
+    app.post('/reclassify', { preHandler: [app.authenticate] }, async (request, reply) => {
+        const body = ReclassifyRequestSchema.parse(request.body);
+
+        const plan = await importsService.getLatestPlan(body.sessionId);
+        if (!plan) {
+            return reply.status(404).send({ error: 'No plan found for this session' });
+        }
+
+        const item = plan.items.find(i => i.tempId === body.itemTempId);
+        if (!item) {
+            return reply.status(404).send({ error: 'Item not found in plan' });
+        }
+
+        // Apply changes to a copy of the item
+        const modifiedItem = { ...item };
+        if (body.changes.title !== undefined) {
+            modifiedItem.title = body.changes.title;
+        }
+        if (body.changes.metadata !== undefined) {
+            modifiedItem.metadata = { ...modifiedItem.metadata, ...body.changes.metadata };
+        }
+        if (body.changes.fieldRecordings !== undefined) {
+            modifiedItem.fieldRecordings = body.changes.fieldRecordings;
+        }
+
+        const definitions = await listDefinitions({ definitionKind: 'record' });
+        const result = generateClassifications([modifiedItem], definitions);
+
+        return reply.send({ classification: result[0] });
+    });
+
+    /**
+     * Fetch all classifications for a session.
+     * Returns classification results along with summary counts.
+     */
+    app.get('/sessions/:id/classifications', async (request, reply) => {
+        const { id } = SessionIdParamSchema.parse(request.params);
+
+        const plan = await importsService.getLatestPlan(id);
+        if (!plan) {
+            return reply.status(404).send({ error: 'No plan found for this session' });
+        }
+
+        const unresolved = countUnresolved(plan);
+        const unresolvedCount = unresolved.ambiguous + unresolved.unclassified;
+
+        return reply.send({
+            classifications: plan.classifications,
+            sessionId: id,
+            totalItems: plan.items.length,
+            unresolvedCount,
         });
     });
 }

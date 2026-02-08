@@ -459,3 +459,24 @@ export {
     type PollResultsResponse,
     type PollParticipantResponsesResponse,
 } from './polls.js';
+
+// ==================== IMPORTS ====================
+export {
+    FieldRecordingSchema,
+    InterpretationOutputSchema,
+    InterpretationPlanSchema,
+    SchemaMatchSchema,
+    ResolutionSchema,
+    ItemClassificationSchema,
+    InterpretItemRequestSchema,
+    InterpretItemResponseSchema,
+    ReclassifyRequestSchema,
+    ReclassifyResponseSchema,
+    ClassificationsResponseSchema,
+    type ItemClassificationResponse,
+    type InterpretItemRequest,
+    type InterpretItemResponse,
+    type ReclassifyRequest,
+    type ReclassifyResponse,
+    type ClassificationsResponse,
+} from './imports.js';
