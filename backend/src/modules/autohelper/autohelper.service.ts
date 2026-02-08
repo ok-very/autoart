@@ -57,7 +57,8 @@ export type CommandType =
   | 'start_mail'
   | 'stop_mail'
   | 'run_gc'
-  | 'select_folder';
+  | 'select_folder'
+  | 'ping';
 
 /** Payload varies by command type */
 export interface CommandPayload {

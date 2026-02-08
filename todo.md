@@ -81,24 +81,27 @@
 
 ## Phase 4: BFA Reconciliation Pipeline Integration (#437)
 
-*Integrate the BFA-todo reconciliation pipeline into AutoArt's export workflow. Monday.com Excel uploads, field-level diff approval, Google Docs styled injection -- all through the web UI. AutoHelper evolves from file-operations-only to general Python task runner.*
+*Port BFA domain logic into the TypeScript backend, use the existing Monday.com connector for data sync, and build a reconciliation UI for field-level diff review. Google Docs injection via API.*
+
+**Architecture (revised Feb 2026):** Instead of copying the BFA Python pipeline into AutoHelper, BFA's phase system, authority rules, and column semantics are ported as TypeScript code-as-config in `backend/src/modules/programs/bfa-program.config.ts`. Shared types live in `shared/src/schemas/bfa.ts`. The existing Monday.com connector + workspace/board/column config tables provide the data pipeline; the BFA program config provides the interpretation layer.
+
+> **Abstraction flag:** When a second program needs phase/authority/column config, evaluate extracting `programs/` into database-driven config (JSON in a `program_configs` table). Current code-as-config approach is correct for single-program usage.
 
 **Scope:**
 
-| # | Issue | Sub-phase | Category |
-|---|-------|-----------|----------|
-| 437 | AutoHelper BFA runner: copy `bfa_pipeline/` to AutoHelper, create runner wrapper, add command handlers | 4.1 | AutoHelper |
-| 437 | Backend reconciliation service: file upload, report storage, apply decisions routes | 4.2 | Backend |
-| 437 | Frontend reconciliation panel: diff review, accept/reject, summary stats | 4.3 | Frontend |
-| 437 | Google Docs injection: resolve placeholders, call Docs API, inject styled content | 4.4 | Backend + Frontend |
+| # | Issue | Sub-phase | Category | Status |
+|---|-------|-----------|----------|--------|
+| 437 | BFA program configuration: shared schemas, program config, Monday workspace seed | 4.1 | Shared + Backend | ✓ Done |
+| 437 | Monday connector → BFA sync differ: field-level diff engine using program config + authority rules | 4.2 | Backend | ✓ Done |
+| 437 | Backend reconciliation service: diff report storage, apply decisions routes, rollup handling | 4.3 | Backend | |
+| 437 | Frontend reconciliation panel: diff review, accept/reject, summary stats | 4.4 | Frontend | |
+| 437 | Google Docs injection: resolve placeholders, call Docs API, inject styled content | 4.5 | Backend + Frontend | |
 
-**Dependencies:** Phase 3 infrastructure stable. Google OAuth (#403) resolved for Phase 4.4.
+**Dependencies:** Phase 3 infrastructure stable. Google OAuth (#403) resolved for Phase 4.5.
 
-**Internal order:** 4.1 -> 4.2 -> 4.3 -> 4.4 (strict chain -- each sub-phase depends on the prior)
+**Internal order:** 4.1 → 4.2 → 4.3 → 4.4 → 4.5 (strict chain — each sub-phase depends on the prior)
 
-**Cross-system risk:** This touches AutoHelper (Python), backend (Fastify), frontend (React), and BFA-todo (standalone Python pipeline). Every sub-phase requires end-to-end data flow verification. See [roadmap.md](roadmap.md) for full architecture, risks, and per-sub-phase verification requirements.
-
-**Done when:** User uploads Monday.com Excel, sees field-level diffs in a reconciliation panel, approves changes, receives `gdocs_inject.json`, and can optionally inject styled content into a Google Doc.
+**Done when:** User triggers Monday sync for BFA board, sees field-level diffs in a reconciliation panel, approves changes, and can optionally inject styled content into a Google Doc.
 
 ---
 
@@ -269,6 +272,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| 437 | **Phase 4.1-4.2: BFA Reconciliation Pipeline (Feb 8 2026):** (4.1) BFA program configuration — shared Zod schemas (`bfa.ts`: phases, authority, diff report, column mappings), TypeScript code-as-config (`bfa-program.config.ts`: phase canonicalization, budget normalization, regression detection, column mappings, state priority). (4.2) BFA sync differ — pure diff engine (`bfa-sync-differ.ts`) comparing Monday import plan items against local entity snapshots via `external_source_mappings`; orchestration service (`bfa-sync.service.ts`) fetching Monday data, building `LocalEntitySnapshot` from `actions.field_bindings` and `hierarchy_nodes.metadata`; HTTP routes (`bfa-sync.routes.ts`) at `/api/programs/bfa/sync`; migration 007 adds `last_diff_report` JSONB to `monday_sync_states` (rejected `export_sessions` misuse). | Commit 981d6b0 (4.1), uncommitted (4.2) |
 | — | **Phase 3: Import Pipeline Completion (Feb 8 2026):** (3.1) Interpretation HTTP routes + Zod schemas (3.2) TanStack Query hooks (3.3) Registry browser UI unification (RegistryFilterBar, 280px sidebar) (3.4) Workflow view backend (migration 005, import_action_links table, auto-linking) + frontend (ActionRegistryTable badges, "Link to Import Item" menu, ImportLinkDialog) (3.5) Action vocabulary extraction (migration 004, vocabulary.service.ts, classification hooks) (3.6) Composer vocabulary integration (useVocabularySuggestions hook, UnifiedComposerBar ranking) (3.7) Performance optimization (migration 006 indexes, in-memory classification cache, ClassificationPanel virtualization, query prefetch). Verified: RegistryFilterBar renders across Actions/Fields/Records panels. Unverified (require import data): vocabulary suggestions, import linking badges, classification virtualization. | PRs #439-446 |
 | — | **Stale plan regen fix + ClassificationRow atom migration (Feb 8 2026):** (1) Import wizard optimistic cache update + inflight mutation counter fixes stale plan regeneration. (2) ClassificationRow raw HTML replaced with Stack/Inline/Text/Badge/Button/Card/Label/TextInput atoms from @autoart/ui. | PRs #434-435 |
 | — | **Import wizard escape hatches (Feb 8 2026):** (1) Wire `onReset`, Cancel Import in wizard header, Back at step 1 exits wizard, Cancel in Step1 footer. (2) Sidebar "New Import" button shows for all source types (removed Monday exclusion). Review fixes: disabled Cancel during in-flight session creation (race condition), updated stale comment. | PRs #432-433 |

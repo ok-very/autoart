@@ -460,6 +460,39 @@ export {
     type PollParticipantResponsesResponse,
 } from './polls.js';
 
+// ==================== BFA PROGRAM ====================
+export {
+    BFA_PHASES,
+    BfaPhaseSchema,
+    BFA_PHASES_LEGACY,
+    BfaPhaseLegacySchema,
+    BfaFieldAuthoritySchema,
+    BFA_PROJECT_STATES,
+    BfaProjectStateSchema,
+    BfaDiffSeveritySchema,
+    BfaFieldChangeSchema,
+    BfaSyncWarningSchema,
+    BfaRollupResultSchema,
+    BfaSyncDecisionSchema,
+    BfaSyncDiffReportSchema,
+    BfaFieldAuthorityMapSchema,
+    BfaColumnMappingSchema,
+    BfaProgramConfigSchema,
+    type BfaPhase,
+    type BfaPhaseLegacy,
+    type BfaFieldAuthority,
+    type BfaProjectState,
+    type BfaDiffSeverity,
+    type BfaFieldChange,
+    type BfaSyncWarning,
+    type BfaRollupResult,
+    type BfaSyncDecision,
+    type BfaSyncDiffReport,
+    type BfaFieldAuthorityMap,
+    type BfaColumnMapping,
+    type BfaProgramConfig,
+} from './bfa.js';
+
 // ==================== IMPORTS ====================
 export {
     FieldRecordingSchema,

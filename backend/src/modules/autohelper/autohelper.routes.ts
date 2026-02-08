@@ -39,6 +39,7 @@ const QueueCommandSchema = z.object({
     'stop_mail',
     'run_gc',
     'select_folder',
+    'ping',
   ]),
   payload: z
     .object({
