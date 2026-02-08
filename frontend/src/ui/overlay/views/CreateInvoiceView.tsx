@@ -47,10 +47,11 @@ export function CreateInvoiceView({
   const [clientId, setClientId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
 
-  // Invoice number validation
+  // Invoice number validation (version counter prevents stale responses)
   const [validationStatus, setValidationStatus] = useState<{ valid: boolean; message?: string } | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const validationVersionRef = useRef(0);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -63,12 +64,15 @@ export function CreateInvoiceView({
     }
 
     setIsValidating(true);
+    const version = ++validationVersionRef.current;
     debounceRef.current = setTimeout(async () => {
       try {
         const result = await api.post<InvoiceNumberValidation>(
           '/records/validate-invoice-number',
           { invoiceNumber: trimmed },
         );
+        // Discard stale responses
+        if (version !== validationVersionRef.current) return;
         setValidationStatus({
           valid: result.valid,
           message: result.valid
@@ -80,10 +84,13 @@ export function CreateInvoiceView({
                 : 'Invalid invoice number format',
         });
       } catch {
+        if (version !== validationVersionRef.current) return;
         // Validation endpoint unavailable; allow submission
         setValidationStatus(null);
       } finally {
-        setIsValidating(false);
+        if (version === validationVersionRef.current) {
+          setIsValidating(false);
+        }
       }
     }, 500);
 
