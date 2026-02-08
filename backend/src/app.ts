@@ -32,6 +32,7 @@ import { factKindsRoutes } from './modules/records/fact-kinds.routes.js';
 import { recordsRoutes } from './modules/records/records.routes.js';
 import { runnerRoutes } from './modules/runner/runner.routes.js';
 import { searchRoutes } from './modules/search/search.routes.js';
+import { vocabularyRoutes } from './modules/vocabulary/index.js';
 import authPlugin from './plugins/auth.js';
 import { errorHandler, notFoundHandler } from './utils/errorHandler.js';
 import { logger } from './utils/logger.js';
@@ -135,6 +136,9 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // AutoHelper settings bridge (frontend + AutoHelper-facing endpoints)
   await fastify.register(autohelperRoutes, { prefix: '/api' });
+
+  // Action vocabulary suggestions (learned from import classifications)
+  await fastify.register(vocabularyRoutes, { prefix: '/api/vocabulary' });
 
   // Transient mail browsing/triage handled by AutoHelper on port 8100
 

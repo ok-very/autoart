@@ -13,6 +13,8 @@ import { db } from '@db/client.js';
 import type { RecordDefinition } from '@db/schema.js';
 import { logger } from '@utils/logger.js';
 
+import { extractVocabulary, storeVocabulary } from '../../vocabulary/vocabulary.service.js';
+
 import { getSession } from './import-sessions.service.js';
 import { type InterpretationOutput, interpretCsvRowPlan } from '../../interpreter/interpreter.service.js';
 import { matchSchema } from '../schema-matcher.js';
@@ -390,6 +392,49 @@ export async function saveResolutions(
             .execute();
 
         return plan;
+    });
+}
+
+// ============================================================================
+// VOCABULARY EXTRACTION (fire-and-forget after classification)
+// ============================================================================
+
+/**
+ * Extract and store vocabulary from classified items.
+ * Runs asynchronously and does not block the classification flow.
+ * Errors are logged but never propagated to the caller.
+ */
+export function extractAndStoreVocabulary(
+    items: ImportPlanItem[],
+    classifications: ItemClassification[],
+): void {
+    const classificationsByTempId = new Map(
+        classifications.map((c) => [c.itemTempId, c]),
+    );
+
+    const promises = items.map((item) => {
+        const classification = classificationsByTempId.get(item.tempId);
+        if (!classification) return Promise.resolve();
+
+        const vocab = extractVocabulary(item.title, classification.outcome);
+        if (!vocab) return Promise.resolve();
+
+        return storeVocabulary({
+            verb: vocab.verb,
+            noun: vocab.noun,
+            adjective: vocab.adjective,
+            classificationOutcome: classification.outcome,
+        });
+    });
+
+    Promise.allSettled(promises).then((results) => {
+        const failures = results.filter((r) => r.status === 'rejected');
+        if (failures.length > 0) {
+            logger.warn(
+                { failureCount: failures.length, totalItems: items.length },
+                '[import-classification] Some vocabulary extractions failed',
+            );
+        }
     });
 }
 
