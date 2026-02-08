@@ -247,11 +247,11 @@ export function ClassificationRow({
                         <Inline gap="sm">
                             <Check className="w-4 h-4 text-green-700" />
                             <Text size="sm" color="success">
-                                Resolved as: {classification.resolution.resolvedOutcome}
+                                Resolved as: {getOutcomeLabel(classification.resolution.resolvedOutcome)}
                             </Text>
                             {classification.resolution.resolvedFactKind && (
                                 <Text size="sm" weight="medium" color="success">
-                                    ({classification.resolution.resolvedFactKind})
+                                    ({humanizeFactKind(classification.resolution.resolvedFactKind)})
                                 </Text>
                             )}
                         </Inline>
