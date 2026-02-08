@@ -33,9 +33,9 @@
 
 ## Phase 0: Stop the Bleeding ✓
 
-*Complete — PRs #416-420 submitted and awaiting merge*
+*Complete — PRs #416-420 merged*
 
-All five items shipped. Typecheck and lint pass clean. Phase 1 (Workspace Foundation) now unblocked.
+All five items shipped and merged to main. Typecheck and lint pass clean. Phase 1 (Workspace Foundation) now unblocked.
 
 ---
 
@@ -174,7 +174,7 @@ Items that don't depend on workspace or type phases.
 
 | PRs | Description |
 |-----|-------------|
-| #416-420 | **Phase 0 stack:** (0.1) React Compiler memo fix, (0.2) Classification Panel partial save, (0.3) Preview dev servers (intake 5174 + poll 5175), (0.4) ExecutionControls API client, (0.5) Unused var cleanup |
+| #421-425 | **Phase 1.1-1.4 stack:** (1.1) WorkspaceContext contract + provider, (1.2) Panel context consumption (project-panel, mail-panel twice), (1.3) CenterView routing ownership, (1.4) Desk workspace default and first in list |
 | #394 | **MiniCalendar molecule for polls:** Compact month-grid date selector with multi-select toggle for poll configuration |
 | #369-372, #381-386 | **Intake forms -> records pipeline:** Block connector architecture (RecordMapping schemas, SubmissionsTable with CSV export + record badges, RecordMappingPanel for staff config, Responses tab integration, Records editor tab, backend handler processes mappings) |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
@@ -185,6 +185,7 @@ Items that don't depend on workspace or type phases.
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Phase 0: Stop the Bleeding (Feb 7 2026):** (0.1) React Compiler memo fix, (0.2) Classification Panel partial save (unblocked import wizard), (0.3) Preview dev servers (intake 5174 + poll 5175), (0.4) ExecutionControls API client (replaced raw fetch), (0.5) Unused var cleanup | PRs #416-420 |
 | — | **Bug fix stack (Feb 7 2026):** (1) Guard ClassificationRow outcome render against null (2) `build:all:clean` resilient to Windows EBUSY file locks (3) Hook to block stackit checkout/restack during sessions (4) Restore ExternalLink alongside Preview button in poll editor (5) Filter incomplete record bindings from intake auto-save (6) Workspace save dialog timing fix (rAF after Radix close) (7) DataFieldWidget object rendering (8) Poll public URLs via env vars (9) Polls panel + registry entry for workspace presets | PRs #411-415 |
 | 403 | **OAuth graceful status checks:** Added `/auth/google/status`, `/auth/microsoft/status`, `/auth/monday/status` endpoints; changed 500->501 for unconfigured providers; frontend disables Connect buttons when server reports unavailable; fixed OAuth availability prop defaults (false->true) to prevent dead buttons in overlay contexts; resolved stale redirect URI concerns (intentional localhost dev defaults, overrideable via env) | PR #403 |
 | — | **Session: P0 Import Wizard Recovery + 401 Cascade + Mail Module (Feb 2026):** (1) Classification Panel regression: restored gating from unmerged commits `efc939f`+`9fa1268` (2) Column headers: `humanizeFieldName()` + `getOutcomeLabel()` (3) 401 cascade: `ApiError` class, `sessionDead` flag, `setSessionExpiredHandler` (4) Mail module: triage `None` vs `"pending"`, `_UNSET` sentinel, type unification (5) Dead code removal (6) Tailwind v4 migration | Commit 0e479c7 |

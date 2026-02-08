@@ -20,8 +20,10 @@ import {
 import type { WorkspacePreset } from '../types/workspace';
 
 /**
- * Built-in workspaces for the 5 workflow stages:
+ * Built-in workspaces.
  *
+ * Desk is the default landing workspace (position 0).
+ * Workflow stages follow in pipeline order:
  * 1. Intake (global) - Import wizard, classification
  * 2. Plan (project) - Hierarchy view for task planning
  * 3. Act (project) - Registry view with composer for execution
@@ -29,6 +31,29 @@ import type { WorkspacePreset } from '../types/workspace';
  * 5. Deliver (project) - Export workbench for final output
  */
 export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
+    {
+        id: 'desk',
+        label: 'Desk',
+        icon: Monitor,
+        color: 'amber',
+        scope: 'global',
+        isBuiltIn: true,
+        ownedContentTypes: ['projects', 'mail', 'calendar', 'finance', 'polls', 'artcollector'],
+        panels: [
+            { panelId: 'project-panel', position: 'center', bound: true },
+            { panelId: 'mail-panel', position: 'right', bound: true },
+        ],
+        subviews: [
+            {
+                id: 'dashboard',
+                label: 'Dashboard',
+                panels: [
+                    { panelId: 'project-panel', position: 'center', bound: true },
+                    { panelId: 'mail-panel', position: 'right', bound: true },
+                ],
+            },
+        ],
+    },
     {
         id: 'intake',
         label: '1. Intake',
@@ -163,29 +188,6 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
                 label: 'Export',
                 panels: [
                     { panelId: 'center-workspace', contentType: 'export', position: 'center' },
-                ],
-            },
-        ],
-    },
-    {
-        id: 'desk',
-        label: 'Desk',
-        icon: Monitor,
-        color: 'amber',
-        scope: 'global',
-        isBuiltIn: true,
-        ownedContentTypes: ['projects', 'mail', 'calendar', 'finance', 'polls', 'artcollector'],
-        panels: [
-            { panelId: 'project-panel', position: 'center', bound: true },
-            { panelId: 'mail-panel', position: 'right' },
-        ],
-        subviews: [
-            {
-                id: 'dashboard',
-                label: 'Dashboard',
-                panels: [
-                    { panelId: 'project-panel', position: 'center', bound: true },
-                    { panelId: 'mail-panel', position: 'right' },
                 ],
             },
         ],
