@@ -1,4 +1,14 @@
 import { Check, ChevronRight, FileText, Lightbulb, Clock, Sparkles } from 'lucide-react';
+import {
+    Stack,
+    Inline,
+    Text,
+    Badge,
+    Button,
+    Card,
+    Label,
+    TextInput,
+} from '@autoart/ui';
 import type { ItemClassification, ClassificationSuggestion } from '../../../api/hooks/imports';
 import type { PendingResolution } from '../types';
 import { OUTCOME_OPTIONS } from '../constants';
@@ -65,48 +75,50 @@ export function ClassificationRow({
                     className={`w-4 h-4 flex-shrink-0 ${needsResolution ? 'text-amber-600' : 'text-ws-muted'}`}
                 />
 
-                <div className="flex-1 min-w-0">
-                    <p className="font-medium text-ws-fg truncate">{itemTitle}</p>
-                    <p className="text-xs text-ws-text-secondary truncate">{classification.rationale}</p>
-                </div>
+                <Stack gap="none" className="flex-1 min-w-0">
+                    <Text weight="medium" truncate>{itemTitle}</Text>
+                    <Text size="xs" color="muted" truncate>{classification.rationale}</Text>
+                </Stack>
 
                 {/* Output kind badges */}
-                <div className="flex items-center gap-1.5">
+                <Inline gap="xs" wrap={false}>
                     {outputs.slice(0, 2).map((output, idx) => {
                         const badge = getOutputKindBadge(output);
                         const Icon = badge.icon;
                         return (
-                            <span key={idx} className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${badge.color}`}>
-                                <Icon className="w-3 h-3" />
-                                {badge.label}
-                            </span>
+                            <Badge key={idx} size="xs" className={badge.color}>
+                                <Inline gap="xs" wrap={false}>
+                                    <Icon className="w-3 h-3" />
+                                    {badge.label}
+                                </Inline>
+                            </Badge>
                         );
                     })}
                     {outputs.length > 2 && (
-                        <span className="text-[10px] text-ws-muted bg-slate-100 px-1.5 py-0.5 rounded">
+                        <Badge size="xs" variant="neutral">
                             +{outputs.length - 2} more
-                        </span>
+                        </Badge>
                     )}
-                </div>
+                </Inline>
 
                 {/* Inline Pending Resolution Status */}
                 {pending?.outcome && (
                     <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 rounded-lg border border-amber-100 animate-in fade-in zoom-in duration-200">
                         {pending.outcome === 'DEFERRED' ? (
-                            <span className="text-xs font-medium text-ws-text-secondary flex items-center gap-1.5">
+                            <Inline gap="xs" wrap={false}>
                                 <Clock className="w-3 h-3" />
-                                Deferred
-                            </span>
+                                <Text size="xs" weight="medium" color="muted">Deferred</Text>
+                            </Inline>
                         ) : (
-                            <span className="text-xs font-medium text-amber-700 flex items-center gap-1.5">
+                            <Inline gap="xs" wrap={false} className="text-amber-700">
                                 <Check className="w-3 h-3" />
-                                <span className="font-semibold">{getOutcomeLabel(pending.outcome)}</span>
+                                <Text size="xs" weight="semibold" className="text-amber-700">{getOutcomeLabel(pending.outcome)}</Text>
                                 {pending.factKind && (
-                                    <span className="text-amber-600">
+                                    <Text size="xs" className="text-amber-600">
                                         → {humanizeFactKind(pending.factKind)}
-                                    </span>
+                                    </Text>
                                 )}
-                            </span>
+                            </Inline>
                         )}
                     </div>
                 )}
@@ -121,26 +133,24 @@ export function ClassificationRow({
 
             {/* Expanded details */}
             {isExpanded && hasExpandableContent && (
-                <div className="px-6 py-4 bg-ws-bg border-t border-ws-panel-border space-y-4">
+                <Stack gap="md" className="px-6 py-4 bg-ws-bg border-t border-ws-panel-border">
 
                     {/* Resolution Section - if unresolved */}
                     {needsResolution && (
-                        <div className="bg-ws-panel-bg p-4 rounded-lg border border-ws-panel-border shadow-sm">
-                            <h4 className="text-sm font-semibold text-ws-text-secondary mb-3 flex items-center gap-2">
+                        <Card padding="md" radius="md" shadow="sm">
+                            <Inline gap="sm" className="mb-3">
                                 <Sparkles className="w-4 h-4 text-purple-500" />
-                                Suggested Resolutions
-                            </h4>
+                                <Text weight="semibold" size="sm" color="muted">Suggested Resolutions</Text>
+                            </Inline>
 
                             {/* Suggestions List */}
                             {suggestions && suggestions.length > 0 && (
-                                <div className="space-y-3 mb-4">
-                                    <p className="text-xs text-ws-text-secondary mb-2">Based on analysis:</p>
-                                    <div className="flex flex-wrap gap-2">
+                                <Stack gap="sm" className="mb-4">
+                                    <Text size="xs" color="muted">Based on analysis:</Text>
+                                    <Inline gap="sm" wrap>
                                         {suggestions.map((suggestion, idx) => {
                                             const label = formatSuggestionLabel(suggestion);
                                             const isSelected = isSuggestionSelected(suggestion, pending);
-
-                                            // Determine context for icon
                                             const isFactCandidate = !!suggestion.factKind;
 
                                             return (
@@ -172,7 +182,6 @@ export function ClassificationRow({
                                                         }`}>
                                                         {suggestion.matchScore}%
                                                     </span>
-                                                    {/* Rule source tag */}
                                                     <span className={`text-[9px] px-1 py-0.5 rounded ${isSelected ? 'bg-ws-panel-bg/10 text-white/70' : 'bg-slate-100 text-ws-text-secondary'
                                                         }`}>
                                                         [{formatRuleSource(suggestion.ruleSource ?? '')}]
@@ -180,74 +189,74 @@ export function ClassificationRow({
                                                 </button>
                                             );
                                         })}
-                                    </div>
-                                </div>
+                                    </Inline>
+                                </Stack>
                             )}
 
                             {/* Outcome selection (only for items needing resolution) */}
-                            <div>
-                                <p className="text-xs font-medium text-ws-text-secondary mb-2">
+                            <Stack gap="sm">
+                                <Text size="xs" weight="medium" color="muted">
                                     Resolve as:
-                                </p>
-                                <div className="flex flex-wrap gap-2">
+                                </Text>
+                                <Inline gap="sm" wrap>
                                     {OUTCOME_OPTIONS.map((option) => {
                                         const Icon = option.icon;
                                         const isSelected = pending?.outcome === option.value;
                                         return (
-                                            <button
+                                            <Button
                                                 key={option.value}
+                                                variant={isSelected ? 'primary' : 'secondary'}
+                                                size="sm"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     onOutcomeSelect(option.value);
                                                 }}
-                                                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${isSelected
-                                                    ? 'bg-slate-800 text-white border-slate-800'
-                                                    : 'bg-ws-panel-bg text-ws-text-secondary border-ws-panel-border hover:border-slate-400'
-                                                    }`}
+                                                leftSection={<Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : option.color}`} />}
+                                                className={isSelected ? 'bg-slate-800 border-slate-800 hover:bg-slate-700' : ''}
                                             >
-                                                <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : option.color}`} />
                                                 {option.label}
-                                            </button>
+                                            </Button>
                                         );
                                     })}
-                                </div>
+                                </Inline>
 
                                 {/* Custom fact kind input - appears when FACT_EMITTED is selected */}
                                 {pending?.outcome === 'FACT_EMITTED' && !pending?.factKind && (
-                                    <div className="mt-3 pt-3 border-t border-ws-panel-border">
-                                        <label className="block text-xs font-medium text-ws-text-secondary mb-1.5">
-                                            Or enter a custom fact type:
-                                        </label>
-                                        <input
-                                            type="text"
+                                    <Stack gap="xs" className="mt-3 pt-3 border-t border-ws-panel-border">
+                                        <Label size="sm">Or enter a custom fact type:</Label>
+                                        <TextInput
+                                            size="sm"
                                             value={pending?.customFactLabel ?? ''}
                                             onChange={(e) => onCustomFactLabelChange(e.target.value)}
                                             onClick={(e) => e.stopPropagation()}
                                             placeholder="e.g., Fee Proposal Submitted"
-                                            className="w-full px-3 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-ws-muted"
                                         />
                                         {pending?.customFactLabel && (
-                                            <p className="mt-1.5 text-xs text-ws-text-secondary">
+                                            <Text size="xs" color="muted">
                                                 Will be stored as: <code className="bg-slate-100 px-1 py-0.5 rounded text-ws-text-secondary">{toFactKindKey(pending.customFactLabel)}</code>
-                                            </p>
+                                            </Text>
                                         )}
-                                    </div>
+                                    </Stack>
                                 )}
-                            </div>
-                        </div>
+                            </Stack>
+                        </Card>
                     )}
 
                     {/* Resolved status */}
                     {classification.resolution && (
-                        <div className="flex items-center gap-2 text-sm text-green-700">
-                            <Check className="w-4 h-4" />
-                            Resolved as: {classification.resolution.resolvedOutcome}
+                        <Inline gap="sm">
+                            <Check className="w-4 h-4 text-green-700" />
+                            <Text size="sm" color="success">
+                                Resolved as: {classification.resolution.resolvedOutcome}
+                            </Text>
                             {classification.resolution.resolvedFactKind && (
-                                <span className="font-medium">({classification.resolution.resolvedFactKind})</span>
+                                <Text size="sm" weight="medium" color="success">
+                                    ({classification.resolution.resolvedFactKind})
+                                </Text>
                             )}
-                        </div>
+                        </Inline>
                     )}
-                </div>
+                </Stack>
             )}
         </div>
     );
