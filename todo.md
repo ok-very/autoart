@@ -131,21 +131,23 @@
 
 **Previously Phase 4.** Renumbered to accommodate BFA integration. Independent of Phase 4/4B -- can run in parallel.
 
+**Status:** In progress — PR #456/#457 awaiting review (formula engine migration + Invoice paid_amount/balance_due fields).
+
 **Scope:**
 
-| # | Issue | Category |
-|---|-------|----------|
-| 171 | Seed: Finance RecordDefinitions (Invoice, Vendor Bill, Budget, Payment, Expense) | Finance |
-| 166 | Computed fields + relationship rollups (no-scripting, budgets/invoices/stage sums) | Finance |
-| 165 | Invoice generation + tracking (records + PDF export + payments) | Finance |
-| 168 | Vendor bills + expense tracking (invoice receipts, payments, stage reconciliation) | Finance |
-| 167 | Project Budgets surface (stage allocations + reconciliation rollups + spreadsheet export) | Finance |
+| # | Issue | Category | Status |
+|---|-------|----------|--------|
+| 171 | Seed: Finance RecordDefinitions (Invoice, Vendor Bill, Budget, Payment, Expense) | Finance | ✓ Done (#171 merged earlier) |
+| 166 | Computed fields + relationship rollups (no-scripting, budgets/invoices/stage sums) | Finance | In review (PRs #456-457) |
+| 165 | Invoice generation + tracking (records + PDF export + payments) | Finance | Partial (data layer done) |
+| 168 | Vendor bills + expense tracking (invoice receipts, payments, stage reconciliation) | Finance | |
+| 167 | Project Budgets surface (stage allocations + reconciliation rollups + spreadsheet export) | Finance | |
 
-**Dependencies:** #171 (seed) must land first -- all other finance issues depend on the RecordDefinition schemas existing. #166 (computed fields) unblocks #165, #167, #168 by providing the rollup mechanism.
+**Dependencies:** #171 (seed) landed. #166 (computed fields) in review — unblocks #165, #167, #168 by providing the rollup mechanism.
 
-**Internal order:** #171 -> #166 -> (#165, #167, #168 can parallelize)
+**Internal order:** #171 ✓ -> #166 (in review) -> (#165, #167, #168 can parallelize)
 
-**Done when:** Finance record definitions seed correctly through Composer, computed fields derive budget/invoice/expense totals, and invoice/bill/budget records can be created and queried via API.
+**Done when:** Finance record definitions seed correctly through Composer ✓, computed fields derive budget/invoice/expense totals (in review), and invoice/bill/budget records can be created and queried via API.
 
 ---
 
@@ -264,7 +266,7 @@
 
 | PRs | Description |
 |-----|-------------|
-| — | None. Phase 3 stack merged (PRs #439-446). |
+| #456-457 | **Phase 5: Finance Foundation (partial — computed fields):** (PR #456) Migrate formula engine from custom tokenizer/parser to `json-logic-js` — 452-line custom parser replaced with JsonLogic evaluation, new API `evaluateFormula(rule, data)` + `buildFormulaData()`, converted all 4 seed formulas (Invoice total, Line Item line_total/line_tax, Budget remaining) to JsonLogic objects, 37 unit tests (28 formula engine + 9 rollup engine). (PR #457) Invoice `paid_amount` rollup (sum of linked payment records) + `balance_due` computed field (total - paid_amount), full rollup chain: line items → subtotal/tax_total → total → paid_amount → balance_due. |
 
 ---
 
