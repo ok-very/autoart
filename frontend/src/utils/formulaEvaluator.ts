@@ -10,7 +10,7 @@ export {
   extractReferences,
   isFormula,
   formatFormulaDisplay,
-  createRecordResolver,
-  type ReferenceResolver,
+  buildFormulaData,
   type FormulaValue,
+  type JsonLogicRule,
 } from '@autoart/shared';

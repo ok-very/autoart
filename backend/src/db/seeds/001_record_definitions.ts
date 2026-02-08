@@ -97,7 +97,11 @@ export async function seed(db: Kysely<Database>): Promise<void> {
           // Rollup: sum of linked line_item records' line_tax field
           { key: 'tax_total', type: 'rollup', label: 'Tax Total', rollupConfig: { linkType: 'line_item', targetField: 'line_tax', aggregation: 'sum' } },
           // Computed: subtotal + tax_total
-          { key: 'total', type: 'computed', label: 'Total', formula: '#subtotal + #tax_total' },
+          { key: 'total', type: 'computed', label: 'Total', formula: { "+": [{ "var": "subtotal" }, { "var": "tax_total" }] } },
+          // Rollup: sum of linked payment records' amount field
+          { key: 'paid_amount', type: 'rollup', label: 'Paid', rollupConfig: { linkType: 'payment', targetField: 'amount', aggregation: 'sum' } },
+          // Computed: total - paid_amount
+          { key: 'balance_due', type: 'computed', label: 'Balance Due', formula: { "-": [{ "var": "total" }, { "var": "paid_amount" }] } },
           {
             key: 'status', type: 'status', label: 'Status',
             options: ['Draft', 'Sent', 'Paid', 'Overdue', 'Void'],
@@ -124,9 +128,9 @@ export async function seed(db: Kysely<Database>): Promise<void> {
           { key: 'unit_price', type: 'currency', label: 'Unit Price', currencyDefault: 'CAD' },
           { key: 'vat_rate', type: 'percent', label: 'Tax Rate' },
           // Computed: qty * unit_price (unit_price is in cents, result in cents)
-          { key: 'line_total', type: 'computed', label: 'Line Total', formula: '#qty * #unit_price' },
+          { key: 'line_total', type: 'computed', label: 'Line Total', formula: { "*": [{ "var": "qty" }, { "var": "unit_price" }] } },
           // Computed: line_total * vat_rate / 100
-          { key: 'line_tax', type: 'computed', label: 'Line Tax', formula: '#line_total * #vat_rate / 100' },
+          { key: 'line_tax', type: 'computed', label: 'Line Tax', formula: { "/": [{ "*": [{ "var": "line_total" }, { "var": "vat_rate" }] }, 100] } },
         ],
       }),
       styling: JSON.stringify({ color: 'sky', icon: '📋' }),
@@ -144,7 +148,7 @@ export async function seed(db: Kysely<Database>): Promise<void> {
           // Rollup: sum of linked budget_expense records' amount field
           { key: 'spent_amount', type: 'rollup', label: 'Spent', rollupConfig: { linkType: 'budget_expense', targetField: 'amount', aggregation: 'sum' } },
           // Computed: allocated_amount - spent_amount
-          { key: 'remaining', type: 'computed', label: 'Remaining', formula: '#allocated_amount - #spent_amount' },
+          { key: 'remaining', type: 'computed', label: 'Remaining', formula: { "-": [{ "var": "allocated_amount" }, { "var": "spent_amount" }] } },
           { key: 'notes', type: 'textarea', label: 'Notes' },
         ],
       }),
