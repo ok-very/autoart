@@ -22,13 +22,17 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "docx": "catalog:",
+    "json-logic-js": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

@@ -1,7 +1,7 @@
 # AutoArt Priorities
 
 *Last Updated: 2026-02-08*
-*Strategy: Foundation phases 0-2 complete (see [roadmap.md](roadmap.md) for architectural history). Phase 3 (import pipeline) in progress. Phase 4/4B (BFA integration, #437/#438) and Phase 5/6 (Finance) are independent tracks. This file drives active priorities.*
+*Strategy: Foundation phases 0-2 complete (see [roadmap.md](roadmap.md) for architectural history). Phase 3 (import pipeline) complete. Phase 4/4B (BFA integration, #437/#438) complete. Phase 5 (Finance Foundation) in review (PRs #456-457). Phase 6 (Finance Surfaces) next. This file drives active priorities.*
 
 ## Bug List
 
@@ -79,7 +79,9 @@
 
 ---
 
-## Phase 4: BFA Reconciliation Pipeline Integration (#437)
+## Phase 4: BFA Reconciliation Pipeline Integration (#437) ✓
+
+**Status: Complete** — All sub-phases merged via PRs #448-455 (Feb 8, 2026).
 
 *Port BFA domain logic into the TypeScript backend, use the existing Monday.com connector for data sync, and build a reconciliation UI for field-level diff review. Google Docs injection via API.*
 
@@ -91,11 +93,11 @@
 
 | # | Issue | Sub-phase | Category | Status |
 |---|-------|-----------|----------|--------|
-| 437 | BFA program configuration: shared schemas, program config, Monday workspace seed | 4.1 | Shared + Backend | ✓ Done |
-| 437 | Monday connector → BFA sync differ: field-level diff engine using program config + authority rules | 4.2 | Backend | ✓ Done |
-| 437 | Backend reconciliation service: diff report storage, apply decisions routes, rollup handling | 4.3 | Backend | |
-| 437 | Frontend reconciliation panel: diff review, accept/reject, summary stats | 4.4 | Frontend | |
-| 437 | Google Docs injection: resolve placeholders, call Docs API, inject styled content | 4.5 | Backend + Frontend | |
+| 437 | BFA program configuration: shared schemas, program config, Monday workspace seed | 4.1 | Shared + Backend | ✓ Done (PR #448) |
+| 437 | Monday connector → BFA sync differ: field-level diff engine using program config + authority rules | 4.2 | Backend | ✓ Done (PR #449) |
+| 437 | Backend reconciliation service: diff report storage, apply decisions routes, rollup handling | 4.3 | Backend | ✓ Done (PR #450) |
+| 437 | Frontend reconciliation panel: diff review, accept/reject, summary stats | 4.4 | Frontend | ✓ Done (PR #451) |
+| 437 | Google Docs injection: resolve placeholders, call Docs API, inject styled content | 4.5 | Backend + Frontend | ✓ Done (PRs #453-455) |
 
 **Dependencies:** Phase 3 infrastructure stable. Google OAuth (#403) resolved for Phase 4.5.
 
@@ -103,25 +105,39 @@
 
 **Done when:** User triggers Monday sync for BFA board, sees field-level diffs in a reconciliation panel, approves changes, and can optionally inject styled content into a Google Doc.
 
+**Key deliverables:**
+- BFA program config (shared Zod schemas, TypeScript code-as-config, phase canonicalization, authority rules)
+- Sync differ (pure diff engine, LocalEntitySnapshot construction, HTTP routes)
+- Reconciliation service (migration 007, sync decisions table, apply logic, rollup handling)
+- Frontend panel (diff review UI, accept/reject controls, summary stats)
+- Google Docs injection (Phase expansion transform, entity→project resolution, Docs API integration, contact uniqueName collision fix)
+
 ---
 
-## Phase 4B: BFA Import to AutoArt Records (#438)
+## Phase 4B: BFA Import to AutoArt Records (#438) ✓
+
+**Status: Complete** — All sub-phases merged via PRs #452-455 (Feb 8, 2026).
 
 *Depends on Phase 4. After reconciliation, optionally push approved changes back into AutoArt's hierarchy and records system via the Composer.*
 
 **Scope:**
 
-| # | Issue | Sub-phase | Category |
-|---|-------|-----------|----------|
-| 438 | Schema transformation layer: BFA -> AutoArt hierarchy/records mapping, dedup via BFA UID | 4B.1 | Backend |
-| 438 | Composer integration: BFA import actions -> events, project lattice creation, projection updates | 4B.2 | Backend |
-| 438 | Frontend import toggle: checkbox in ReconciliationPanel, preview, result modal with project links | 4B.3 | Frontend |
+| # | Issue | Sub-phase | Category | Status |
+|---|-------|-----------|----------|--------|
+| 438 | Schema transformation layer: BFA -> AutoArt hierarchy/records mapping, dedup via BFA UID | 4B.1 | Backend | ✓ Done (PRs #452-453) |
+| 438 | Composer integration: BFA import actions -> events, project lattice creation, projection updates | 4B.2 | Backend | ✓ Done (PRs #452-453) |
+| 438 | Frontend import toggle: checkbox in ReconciliationPanel, preview, result modal with project links | 4B.3 | Frontend | ✓ Done (PRs #454-455) |
 
 **Dependencies:** Phase 4 complete. Uses Composer service (stable since Phase 2.4).
 
 **Internal order:** 4B.1 -> 4B.2 -> 4B.3 (strict chain)
 
 **Done when:** User checks "Import to AutoArt records" in reconciliation panel, approved changes create hierarchy nodes (Project -> Process -> Stage), records (contacts, milestones, artists), and events via Composer. New projects appear in the workspace sidebar.
+
+**Key deliverables:**
+- Schema transformation (BFA → AutoArt hierarchy/records mapping, Phase expansion, UID-based deduplication)
+- Composer integration (import service, actions → events, project lattice creation via Composer)
+- Frontend controls (import toggle checkbox, preview modal, result modal with project links)
 
 ---
 
@@ -131,21 +147,23 @@
 
 **Previously Phase 4.** Renumbered to accommodate BFA integration. Independent of Phase 4/4B -- can run in parallel.
 
+**Status:** In progress — PR #456/#457 awaiting review (formula engine migration + Invoice paid_amount/balance_due fields).
+
 **Scope:**
 
-| # | Issue | Category |
-|---|-------|----------|
-| 171 | Seed: Finance RecordDefinitions (Invoice, Vendor Bill, Budget, Payment, Expense) | Finance |
-| 166 | Computed fields + relationship rollups (no-scripting, budgets/invoices/stage sums) | Finance |
-| 165 | Invoice generation + tracking (records + PDF export + payments) | Finance |
-| 168 | Vendor bills + expense tracking (invoice receipts, payments, stage reconciliation) | Finance |
-| 167 | Project Budgets surface (stage allocations + reconciliation rollups + spreadsheet export) | Finance |
+| # | Issue | Category | Status |
+|---|-------|----------|--------|
+| 171 | Seed: Finance RecordDefinitions (Invoice, Vendor Bill, Budget, Payment, Expense) | Finance | ✓ Done (#171 merged earlier) |
+| 166 | Computed fields + relationship rollups (no-scripting, budgets/invoices/stage sums) | Finance | In review (PRs #456-457) |
+| 165 | Invoice generation + tracking (records + PDF export + payments) | Finance | Partial (data layer done) |
+| 168 | Vendor bills + expense tracking (invoice receipts, payments, stage reconciliation) | Finance | |
+| 167 | Project Budgets surface (stage allocations + reconciliation rollups + spreadsheet export) | Finance | |
 
-**Dependencies:** #171 (seed) must land first -- all other finance issues depend on the RecordDefinition schemas existing. #166 (computed fields) unblocks #165, #167, #168 by providing the rollup mechanism.
+**Dependencies:** #171 (seed) landed. #166 (computed fields) in review — unblocks #165, #167, #168 by providing the rollup mechanism.
 
-**Internal order:** #171 -> #166 -> (#165, #167, #168 can parallelize)
+**Internal order:** #171 ✓ -> #166 (in review) -> (#165, #167, #168 can parallelize)
 
-**Done when:** Finance record definitions seed correctly through Composer, computed fields derive budget/invoice/expense totals, and invoice/bill/budget records can be created and queried via API.
+**Done when:** Finance record definitions seed correctly through Composer ✓, computed fields derive budget/invoice/expense totals (in review), and invoice/bill/budget records can be created and queried via API.
 
 ---
 
@@ -264,7 +282,7 @@
 
 | PRs | Description |
 |-----|-------------|
-| — | None. Phase 3 stack merged (PRs #439-446). |
+| #456-457 | **Phase 5: Finance Foundation (partial — computed fields):** (PR #456) Migrate formula engine from custom tokenizer/parser to `json-logic-js` — 452-line custom parser replaced with JsonLogic evaluation, new API `evaluateFormula(rule, data)` + `buildFormulaData()`, converted all 4 seed formulas (Invoice total, Line Item line_total/line_tax, Budget remaining) to JsonLogic objects, 37 unit tests (28 formula engine + 9 rollup engine). (PR #457) Invoice `paid_amount` rollup (sum of linked payment records) + `balance_due` computed field (total - paid_amount), full rollup chain: line items → subtotal/tax_total → total → paid_amount → balance_due. |
 
 ---
 
@@ -272,7 +290,8 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
-| — | **BFA import stack review fixes + merge (Feb 8 2026):** Fixed 5 automated review findings from PRs #452-455: (1) Contact uniqueName collision — include role in uniqueName to prevent "John – PM" and "John – Director" from colliding. (2) Deduplicated entity→project resolution — consolidated three near-identical functions into single `resolveEntityProjects()` exported from sync service, import service now imports shared function. (3) Batch ancestor walks with recursive CTE — replaced O(N*D) sequential queries with single recursive CTE, added depth guard (max 20) to prevent infinite loops on circular hierarchy data. (4) Return documentUrl in no-headers path — added `webViewLink` to `DocumentAnalysis`, eliminated redundant `getFileMetadata` call in injector. (5) Clear localStorage on empty doc ID — added else branch to remove stale data. Merged 8-PR stack (#448-455) to main via bottom-up gh pr merge loop. | PRs #448-455, commit 40728d4 |
+| 438 | **Phase 4B: BFA Import to AutoArt Records (Feb 8 2026):** (4B.1) Schema transformation layer — BFA → AutoArt hierarchy/records mapping via `bfa-import.service.ts`, Phase expansion (Stage → Phase nodes), UID-based deduplication, contact uniqueName collision fix (include role in uniqueName). (4B.2) Composer integration — import service orchestrates actions → events flow, creates project lattice (Project → Process → Phase), links contacts/milestones/artists, entity→project resolution via recursive CTE. (4B.3) Frontend import toggle — checkbox in ReconciliationPanel, preview modal, result modal with project links. Review fixes: deduplicated entity resolution (consolidated three near-identical functions), batch ancestor walks (O(N*D) → single CTE with depth guard), return documentUrl in no-headers path, clear localStorage on empty doc ID. | PRs #452-455 |
+| 437 | **Phase 4: BFA Reconciliation Pipeline Integration (Feb 8 2026):** (4.1) BFA program configuration — shared Zod schemas (`bfa.ts`: phases, authority, diff report, column mappings), TypeScript code-as-config (`bfa-program.config.ts`: phase canonicalization, budget normalization, regression detection, column mappings, state priority). (4.2) BFA sync differ — pure diff engine (`bfa-sync-differ.ts`) comparing Monday import plan items against local entity snapshots via `external_source_mappings`; orchestration service (`bfa-sync.service.ts`) fetching Monday data, building `LocalEntitySnapshot` from `actions.field_bindings` and `hierarchy_nodes.metadata`; HTTP routes (`bfa-sync.routes.ts`) at `/api/programs/bfa/sync`. (4.3) Backend reconciliation service — migration 007 adds `last_diff_report` JSONB to `monday_sync_states`, sync decisions table, apply logic, rollup handling. (4.4) Frontend reconciliation panel — diff review UI, accept/reject controls, summary stats. (4.5) Google Docs injection — Phase expansion import transformer, entity→project resolution, Docs API integration, styled content injection. | PRs #448-451, #453-455 |
 | — | **Stackit merge workflow updates (Feb 8 2026):** Promoted `stackit merge squash` to primary merge method (consolidates stack into single PR, avoids retargeting race). Bottom-up `gh pr merge` loop demoted to fallback for preserving per-PR history. Updated pretooluse hook — all four gated operations (`stackit checkout`, `stackit restack`, `stackit merge`, `gh pr merge`) now use "ask" confirmation instead of hard deny. Clarified squash prohibition in CLAUDE.md targets `gh pr merge --squash` on individual PRs, not stackit's safe consolidation command. | Commits b78e9d1, 860a289, 905ec07 |
 | 437 | **Phase 4.1-4.2: BFA Reconciliation Pipeline (Feb 8 2026):** (4.1) BFA program configuration — shared Zod schemas (`bfa.ts`: phases, authority, diff report, column mappings), TypeScript code-as-config (`bfa-program.config.ts`: phase canonicalization, budget normalization, regression detection, column mappings, state priority). (4.2) BFA sync differ — pure diff engine (`bfa-sync-differ.ts`) comparing Monday import plan items against local entity snapshots via `external_source_mappings`; orchestration service (`bfa-sync.service.ts`) fetching Monday data, building `LocalEntitySnapshot` from `actions.field_bindings` and `hierarchy_nodes.metadata`; HTTP routes (`bfa-sync.routes.ts`) at `/api/programs/bfa/sync`; migration 007 adds `last_diff_report` JSONB to `monday_sync_states` (rejected `export_sessions` misuse). | Commit 981d6b0 (4.1), uncommitted (4.2) |
 | — | **Phase 3: Import Pipeline Completion (Feb 8 2026):** (3.1) Interpretation HTTP routes + Zod schemas (3.2) TanStack Query hooks (3.3) Registry browser UI unification (RegistryFilterBar, 280px sidebar) (3.4) Workflow view backend (migration 005, import_action_links table, auto-linking) + frontend (ActionRegistryTable badges, "Link to Import Item" menu, ImportLinkDialog) (3.5) Action vocabulary extraction (migration 004, vocabulary.service.ts, classification hooks) (3.6) Composer vocabulary integration (useVocabularySuggestions hook, UnifiedComposerBar ranking) (3.7) Performance optimization (migration 006 indexes, in-memory classification cache, ClassificationPanel virtualization, query prefetch). Verified: RegistryFilterBar renders across Actions/Fields/Records panels. Unverified (require import data): vocabulary suggestions, import linking badges, classification virtualization. | PRs #439-446 |
