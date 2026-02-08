@@ -16,6 +16,7 @@ import { db } from '@db/client.js';
 import type { ContextType } from '@db/schema.js';
 import { logger } from '@utils/logger.js';
 
+import { invalidateSession as invalidateClassificationCache } from './classification-cache.js';
 import { getSession, getLatestPlanWithId } from './import-sessions.service.js';
 import {
     markSessionNeedsReview,
@@ -36,6 +37,10 @@ import { hasUnresolvedClassifications, countUnresolved } from '../types.js';
 // ============================================================================
 
 export async function executeImport(sessionId: string, userId?: string) {
+    // Invalidate classification cache for this session — execution commits state,
+    // so any cached classifications should not be reused after this point.
+    invalidateClassificationCache(sessionId);
+
     const session = await getSession(sessionId);
     if (!session) throw new Error('Session not found');
 

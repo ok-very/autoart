@@ -11,6 +11,7 @@ import { randomUUID } from 'node:crypto';
 import { db } from '@db/client.js';
 import { logger } from '@utils/logger.js';
 
+import * as classificationCache from './classification-cache.js';
 import { generateClassifications, generateClassificationsForConnectorItems, extractAndStoreVocabulary } from './import-classification.service.js';
 import { getSession, PARSERS } from './import-sessions.service.js';
 import { getPlannedStatus, transitionStatusInTransaction } from './session-status.service.js';
@@ -73,7 +74,12 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
     const definitions = await listDefinitions({ definitionKind: 'record' });
 
     // Generate classifications for each item (with schema matching)
-    const classifications = generateClassifications(items, definitions);
+    // Check cache first to avoid recomputation on plan regeneration with unchanged content
+    let classifications = classificationCache.getCached(sessionId, items, definitions);
+    if (!classifications) {
+        classifications = generateClassifications(items, definitions);
+        classificationCache.setCached(sessionId, items, definitions, classifications);
+    }
 
     // Fire-and-forget vocabulary extraction from classified items
     extractAndStoreVocabulary(items, classifications);
@@ -280,7 +286,15 @@ export async function generatePlanFromConnector(
     // 4. Generate classifications for Monday items (same as CSV imports)
     // This enables proper gating and schema matching for records
     const definitions = await listDefinitions({ definitionKind: 'record' });
-    plan.classifications = generateClassificationsForConnectorItems(plan.items, definitions);
+
+    // Check cache first to avoid recomputation on plan regeneration with unchanged content
+    const cachedClassifications = classificationCache.getCached(sessionId, plan.items, definitions);
+    if (cachedClassifications) {
+        plan.classifications = cachedClassifications;
+    } else {
+        plan.classifications = generateClassificationsForConnectorItems(plan.items, definitions);
+        classificationCache.setCached(sessionId, plan.items, definitions, plan.classifications);
+    }
 
     // Fire-and-forget vocabulary extraction from classified items
     extractAndStoreVocabulary(plan.items, plan.classifications);
