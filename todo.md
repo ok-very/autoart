@@ -6,8 +6,8 @@
 ## Bug List
 
 **Active — unphased:**
-- **Import wizard stale plan regeneration:** Plan regeneration uses stale (uncommitted) mappings instead of draining pending mutations first. (Escape hatches fixed by PRs #432-433; orphan PRs #406-408 closed.)
-- **ClassificationRow @autoart/ui atom migration:** Interactive features (interpretation badges, AMBIGUOUS candidate buttons, confidence/outcome badges, `humanizeFieldName()`, `awaitMutation()`) are all on main. Only remaining work is migrating raw HTML elements to @autoart/ui atoms — optional polish.
+- ~~**Import wizard stale plan regeneration:**~~ Optimistic cache update + inflight mutation counter. **In-flight: PR #434.**
+- ~~**ClassificationRow @autoart/ui atom migration:**~~ Raw HTML replaced with Stack/Inline/Text/Badge/Button/Card/Label/TextInput atoms. **In-flight: PR #435.**
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
 - **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
@@ -76,8 +76,7 @@ All foundation phases complete. Ordered by import pipeline priority — top item
 | # | Issue | Category |
 |---|-------|----------|
 | — | Consolidate Calendar/Gantt/future view expansions: link Application views to Project View segmented equivalents; cross-project filter/overlay | Feature |
-| — | Finances UI unification: dedicated panel architecture, math/formula ESM, project bindings | Finance |
-| — | Formula/math module: standalone ESM for computed fields, financial calculations, relationship math | Feature |
+| 173 | Finance Management System epic (#165-172 sub-issues tracked in P2) | Finance |
 | — | Poll editor: support different/multiple time block selections per day | Polls |
 
 ---
@@ -87,7 +86,15 @@ All foundation phases complete. Ordered by import pipeline priority — top item
 | # | Issue | Category |
 |---|-------|----------|
 | — | Intake forms -> records verification: E2E test block mapping, record creation, completion flow | Intake |
-| 173 | Epic: Finance Management System — rename "client" to "contact"; support progressive billing, budget allocation, developer record emulation | Epic |
+| 173 | **Epic: Finance Management System** — rename "client" to "contact"; progressive billing, budget allocation | Epic |
+| 165 | Invoice generation + tracking (records + PDF export + payments) | Finance |
+| 166 | Computed fields + relationship rollups (no-scripting, budgets/invoices/stage sums) | Finance |
+| 167 | Project Budgets surface (stage allocations + reconciliation rollups + spreadsheet export) | Finance |
+| 168 | Vendor bills + expense tracking (invoice receipts, payments, stage reconciliation) | Finance |
+| 169 | Finance surfaces + quick overlays (budgets/invoices/expenses hub) | Finance |
+| 170 | Wire finance actions into Composer + Project Log (invoice/bill/payment events) | Finance |
+| 171 | Seed: Finance RecordDefinitions (Invoice, Vendor Bill, Budget, Payment, Expense) | Finance |
+| 172 | Finance export modules (Invoice PDF, Budget CSV, export presets) | Finance |
 | 183 | Evolve export into live client reports system | Reports |
 | 178 | Manual file link support in intake forms | Intake |
 | 177 | Integrate intake forms with records system | Intake |
@@ -103,7 +110,7 @@ All foundation phases complete. Ordered by import pipeline priority — top item
 
 **Note:** AutoHelper settings bridge (was P2) is **resolved** — frontend now correctly uses backend bridge endpoints. See [roadmap.md](roadmap.md#autohelper-status-resolved).
 
-**Note:** Workspace modification tracking (#182), route/project context (#180), and panel reconciliation (#179) were absorbed into Phase 1 items 1.5-1.7 (now complete).
+**Note:** Workspace issues #179-182 closed on GitHub — absorbed into Phase 1 (PRs #421-429).
 
 ---
 
@@ -154,7 +161,7 @@ All foundation phases complete. Ordered by import pipeline priority — top item
 
 | PRs | Description |
 |-----|-------------|
-| #432-433 | **Import wizard escape hatches:** (1) Wire `onReset`, add Cancel Import button to wizard header, Back at step 1 exits wizard, Cancel button in Step1 footer. (2) Remove Monday exclusion from sidebar session display — "New Import" button now shows for all source types. **Review feedback addressed:** disabled Cancel during in-flight session creation (race condition), fixed stale comment in ImportSidebar. |
+| #434-435 | Fix stale plan regeneration (optimistic cache + inflight counter) + ClassificationRow atom migration |
 
 ---
 
@@ -162,6 +169,7 @@ All foundation phases complete. Ordered by import pipeline priority — top item
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Import wizard escape hatches (Feb 8 2026):** (1) Wire `onReset`, Cancel Import in wizard header, Back at step 1 exits wizard, Cancel in Step1 footer. (2) Sidebar "New Import" button shows for all source types (removed Monday exclusion). Review fixes: disabled Cancel during in-flight session creation (race condition), updated stale comment. | PRs #432-433 |
 | — | **Phase 2.2-2.3: Entity kind resolver migration (Feb 8 2026):** (2.2) Replace entityType string checks with resolveEntityKind helper. (2.3) Rename entityType to entityKind in overlay side effects. (2.4) Seed through Composer. **Critical fix:** Remove phantom `kind` field from RecordDefinitionSchema — was always 'record', broke Composer filters for action_arrangement definitions. Backend sends `definition_kind` only; Zod default now canonical. | PRs #430-431 |
 | — | **Orphan PR cleanup (Feb 8 2026):** Closed PR #336 (invoice creator — all 4 review findings were branch-only code, not on main). Closed orphan stack PRs #406-408, #410 (import wizard fixes — diverged 80 files from main after workspace rewrite). Cherry-picked content (column humanization, ClassificationRow null guard) already on main; remaining fixes tracked in Bug List. | PRs #336, #406-408, #410 |
 | #394 | **MiniCalendar molecule for polls:** Compact month-grid date selector with multi-select toggle for poll configuration | Merged |
