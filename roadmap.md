@@ -57,22 +57,22 @@ Clean builds, unblocked import wizard, working preview buttons. Phase 1 now unbl
 
 ---
 
-## Phase 1: Workspace Foundation
+## Phase 1: Workspace Foundation ✓
 
-**Status: In Progress** — Items 1.1-1.4 submitted as PRs #421-425, awaiting review.
+**Status: Complete** — All items merged via PRs #421-429 (Feb 7-8, 2026).
 
-Fix the workspace system so everything built on top of it stops regressing. This phase absorbs multiple items scattered across the old P1, P2, and bug list.
+Fixed the workspace system so everything built on top of it stops regressing. This phase absorbed multiple items scattered across the old P1, P2, and bug list.
 
 | # | Item | Absorbs | Depends On | Status |
 |---|------|---------|-----------|--------|
-| 1.1 | **Workspace context contract** — Define `WorkspaceContext` interface. Replace ad-hoc `boundProjectId` + `pendingPanelPositions` with a single context object passed via Dockview panel params. | — (new) | Phase 0 complete | 🔄 PR #421 |
-| 1.2 | **Panel context consumption** — Update `project-panel`, `mail-panel`, `selection-inspector` to read from `WorkspaceContext`. Panels that don't need context ignore it. | Workspace binding (old P1) | 1.1 | 🔄 PR #422, #423 |
-| 1.3 | **Desk workspace** — With context binding working, Desk becomes: project-panel (bound) + mail-panel (bound) + center showing project overview. First in workspace list, default on login. | Bug: "Desk workspace broken" | 1.1, 1.2 | 🔄 PR #425 |
-| 1.4 | **CenterView routing ownership** — Each workspace preset declares which `CenterContentType` it owns. CenterContentRouter validates content matches active workspace. Mismatches redirect to workspace default. | P1: CenterView routing, Bug: CenterView conceptual breakage | 1.1 | 🔄 PR #424 |
-| 1.5 | **Store consolidation** — Merge `uiStore` content/view state into `workspaceStore`. One store owns workspace identity, content type, view mode, and panel layout. Single version, single migration. | — (new, highest-impact change for regressions) | 1.4 | Not started |
-| 1.6 | **Workspace save** — With unified store, "Save workspace" persists the full state snapshot. Replace `requestAnimationFrame` timing hack. | P2 #182: Workspace modification tracking | 1.5 | Not started |
-| 1.7 | **Custom workspace lifecycle** — Create, rename, delete custom workspaces. Same `WorkspaceContext` shape as built-in presets. | — (new) | 1.5, 1.6 | Not started |
-| 1.8 | **Workspace sidebar overrides** — Workspaces declare sidebar visibility rules. Intake workspace shows intake sidebar, Plan shows project sidebar, etc. | P1: Workspace sidebar overrides | 1.4 | Not started |
+| 1.1 | **Workspace context contract** — Define `WorkspaceContext` interface. Replace ad-hoc `boundProjectId` + `pendingPanelPositions` with a single context object passed via Dockview panel params. | — (new) | Phase 0 complete | ✓ Merged PR #421 |
+| 1.2 | **Panel context consumption** — Update `project-panel`, `mail-panel`, `selection-inspector` to read from `WorkspaceContext`. Panels that don't need context ignore it. | Workspace binding (old P1) | 1.1 | ✓ Merged PR #422, #423 |
+| 1.3 | **Desk workspace** — With context binding working, Desk becomes: project-panel (bound) + mail-panel (bound) + center showing project overview. First in workspace list, default on login. | Bug: "Desk workspace broken" | 1.1, 1.2 | ✓ Merged PR #425 |
+| 1.4 | **CenterView routing ownership** — Each workspace preset declares which `CenterContentType` it owns. CenterContentRouter validates content matches active workspace. Mismatches redirect to workspace default. | P1: CenterView routing, Bug: CenterView conceptual breakage | 1.1 | ✓ Merged PR #424 |
+| 1.5 | **Store consolidation** — Merge `uiStore` content/view state into `workspaceStore`. One store owns workspace identity, content type, view mode, and panel layout. Single version, single migration. Eliminated cross-store calls in `applyWorkspace()`. | — (new, highest-impact change for regressions) | 1.4 | ✓ Merged PR #426 |
+| 1.6 | **Workspace save** — With unified store, "Save workspace" persists the full state snapshot. `_applyingWorkspace` flag suppresses false dirty marks during preset application. Confirmation dialog on switch with Update/Discard/Save-as-new options. | P2 #182: Workspace modification tracking | 1.5 | ✓ Merged PR #427 |
+| 1.7 | **Custom workspace lifecycle** — Create, rename, delete custom workspaces. `renameCustomWorkspace()` with uniqueness validation. Context menu (Pencil/Copy/Trash) on custom workspace items. Rename dialog with inline editing. | — (new) | 1.5, 1.6 | ✓ Merged PR #428 |
+| 1.8 | **Workspace sidebar overrides** — Workspaces declare sidebar visibility rules via `sidebarHint` on subviews. ProjectWorkflowView auto-collapses sidebar when hint is 'none', auto-expands when 'project'. | P1: Workspace sidebar overrides | 1.4 | ✓ Merged PR #429 |
 
 **Key files:**
 - `frontend/src/stores/uiStore.ts` — will be partially absorbed into workspaceStore

@@ -47,6 +47,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
             {
                 id: 'dashboard',
                 label: 'Dashboard',
+                sidebarHint: 'project',
                 panels: [
                     { panelId: 'project-panel', position: 'center', bound: true },
                     { panelId: 'mail-panel', position: 'right', bound: true },
@@ -69,6 +70,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
             {
                 id: 'default',
                 label: 'Intake',
+                sidebarHint: 'import',
                 panels: [
                     { panelId: 'center-workspace', contentType: 'intake', position: 'center' },
                 ],
@@ -91,6 +93,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
             {
                 id: 'workflow',
                 label: 'Workflow',
+                sidebarHint: 'project',
                 panels: [
                     { panelId: 'center-workspace', contentType: 'projects', viewMode: 'workflow', position: 'center' },
                     { panelId: 'selection-inspector', position: 'right', bound: true },
@@ -99,6 +102,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
             {
                 id: 'columns',
                 label: 'Columns',
+                sidebarHint: 'project',
                 panels: [
                     { panelId: 'center-workspace', contentType: 'projects', viewMode: 'columns', position: 'center' },
                     { panelId: 'selection-inspector', position: 'right', bound: true },
@@ -107,6 +111,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
             {
                 id: 'cards',
                 label: 'Cards',
+                sidebarHint: 'project',
                 panels: [
                     { panelId: 'center-workspace', contentType: 'projects', viewMode: 'cards', position: 'center' },
                     { panelId: 'selection-inspector', position: 'right', bound: true },
@@ -131,6 +136,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
             {
                 id: 'workflow',
                 label: 'Workflow',
+                sidebarHint: 'project',
                 panels: [
                     { panelId: 'center-workspace', contentType: 'projects', viewMode: 'workflow', position: 'center' },
                     { panelId: 'selection-inspector', position: 'right', bound: true },
@@ -140,6 +146,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
             {
                 id: 'list',
                 label: 'List',
+                sidebarHint: 'project',
                 panels: [
                     { panelId: 'center-workspace', contentType: 'projects', viewMode: 'list', position: 'center' },
                     { panelId: 'selection-inspector', position: 'right', bound: true },
@@ -164,6 +171,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
             {
                 id: 'log',
                 label: 'Log',
+                sidebarHint: 'none',
                 panels: [
                     { panelId: 'center-workspace', contentType: 'projects', viewMode: 'log', position: 'center' },
                     { panelId: 'selection-inspector', position: 'right', bound: true },
@@ -186,6 +194,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
             {
                 id: 'export',
                 label: 'Export',
+                sidebarHint: 'none',
                 panels: [
                     { panelId: 'center-workspace', contentType: 'export', position: 'center' },
                 ],

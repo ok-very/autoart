@@ -15,7 +15,7 @@ import type { ComponentType } from 'react';
 export type WorkspaceThemeId = string;
 
 export type ThemeDensity = 'compact' | 'default' | 'comfortable';
-export type ThemeVariant = 'solid' | 'floating' | 'minimal' | 'glass';
+export type ThemeVariant = 'solid' | 'floating' | 'minimal' | 'glass' | 'neumorphic';
 
 // ============================================================================
 // BEHAVIOR HOOKS

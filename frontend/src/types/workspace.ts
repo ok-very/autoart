@@ -23,6 +23,11 @@ export type CenterContentType =
     | 'polls';        // Availability polls
 
 /**
+ * Hint for which sidebar a content view should show.
+ */
+export type SidebarHint = 'project' | 'import' | 'none';
+
+/**
  * Scope determines when a workspace is available:
  * - global: Always accessible (e.g., Intake)
  * - project: Requires active project (e.g., Plan, Act, Deliver)
@@ -56,6 +61,8 @@ export interface WorkspaceSubview {
     id: string;
     label: string;
     panels: WorkspacePanelConfig[];
+    /** Hint for which sidebar to show. Read by content views. */
+    sidebarHint?: SidebarHint;
 }
 
 /**

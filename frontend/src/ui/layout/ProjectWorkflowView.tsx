@@ -21,6 +21,7 @@ import {
 } from '../../api/hooks';
 import { useHierarchyStore } from '../../stores/hierarchyStore';
 import { useUIStore } from '../../stores/uiStore';
+import { useWorkspaceContextOptional } from '../../workspace/WorkspaceContext';
 import type { HierarchyNode, DataRecord, RecordDefinition } from '../../types';
 import { DataTableFlat } from '../../ui/composites/DataTableFlat';
 import { DataTableHierarchy, type HierarchyFieldDef } from '../../ui/composites/DataTableHierarchy';
@@ -97,8 +98,21 @@ export function ProjectWorkflowView() {
     const { data: allProjects } = useProjects();
 
     // Sidebar state
+    const wsContext = useWorkspaceContextOptional();
     const [sidebarWidth, setSidebarWidth] = useState(320);
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+        () => wsContext?.sidebarHint === 'none',
+    );
+
+    // Respect workspace sidebarHint: auto-collapse when 'none', auto-expand when 'project'
+    useEffect(() => {
+        if (!wsContext?.sidebarHint) return;
+        if (wsContext.sidebarHint === 'none') {
+            setIsSidebarCollapsed(true);
+        } else if (wsContext.sidebarHint === 'project') {
+            setIsSidebarCollapsed(false);
+        }
+    }, [wsContext?.workspaceId, wsContext?.sidebarHint]);
 
     const handleSidebarResize = useCallback((delta: number) => {
         setSidebarWidth((prev) => Math.max(200, Math.min(600, prev + delta)));
