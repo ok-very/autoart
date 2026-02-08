@@ -29,6 +29,8 @@ export interface WorkspaceContextValue {
     contentType: CenterContentType;
     /** Content types this workspace can display. Null = no restriction. */
     ownedContentTypes: CenterContentType[] | null;
+    /** Sidebar hint from active subview (e.g., 'project', 'import', 'none'). Null = no hint. */
+    sidebarHint: string | null;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
@@ -71,6 +73,15 @@ export function WorkspaceContextProvider({ children }: WorkspaceContextProviderP
     const scope = preset?.scope ?? null;
     const ownedContentTypes = preset?.ownedContentTypes ?? null;
 
+    // Derive sidebarHint from the active subview
+    const sidebarHint = useMemo(() => {
+        if (!preset?.subviews) return null;
+        const subview = subviewId
+            ? preset.subviews.find(s => s.id === subviewId)
+            : preset.subviews[0];
+        return subview?.sidebarHint ?? null;
+    }, [preset, subviewId]);
+
     const isBound = useMemo(
         () => (panelId: string) => boundPanelIds.has(panelId),
         [boundPanelIds],
@@ -85,8 +96,9 @@ export function WorkspaceContextProvider({ children }: WorkspaceContextProviderP
             scope,
             contentType,
             ownedContentTypes,
+            sidebarHint,
         }),
-        [workspaceId, subviewId, boundProjectId, isBound, scope, contentType, ownedContentTypes],
+        [workspaceId, subviewId, boundProjectId, isBound, scope, contentType, ownedContentTypes, sidebarHint],
     );
 
     return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

@@ -56,6 +56,8 @@ export interface WorkspaceSubview {
     id: string;
     label: string;
     panels: WorkspacePanelConfig[];
+    /** Hint for which sidebar to show (e.g., 'project', 'import', 'none'). Read by content views. */
+    sidebarHint?: string;
 }
 
 /**
