@@ -511,6 +511,8 @@ export interface MondaySyncStatesTable {
   sync_cursor: unknown | null; // JSONB
   items_synced: Generated<number>;
   errors: Generated<unknown>; // JSONB
+  last_diff_report: unknown | null; // JSONB — BfaSyncDiffReport (migration 007)
+  last_diff_report_at: Date | null; // (migration 007)
   created_at: Generated<Date>;
   updated_at: Generated<Date>;
 }
