@@ -6,11 +6,11 @@
  * submitting accept/reject/defer decisions, and applying changes.
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 
-import type { BfaSyncDecision, BfaSubmitDecision, BfaApplyResult } from '@autoart/shared';
+import type { BfaSyncDecision, BfaSubmitDecision, BfaApplyResult, BfaInjectionResult } from '@autoart/shared';
 
-import { Button, Card, Select, Spinner, Stack, Inline, Badge } from '@autoart/ui';
+import { Button, Card, Select, Spinner, Stack, Inline, Badge, TextInput } from '@autoart/ui';
 
 import {
     useBfaSyncReports,
@@ -19,6 +19,7 @@ import {
     useTriggerBfaSync,
     useSubmitBfaDecisions,
     useApplyBfaDecisions,
+    useInjectBfaToGoogleDoc,
 } from '../../api/hooks/bfaSync';
 
 import { BfaSyncStatsBar } from './components/BfaSyncStatsBar';
@@ -39,6 +40,19 @@ export function BfaSyncView() {
     // Apply result display
     const [applyResult, setApplyResult] = useState<BfaApplyResult | null>(null);
 
+    // Injection state
+    const [docIdInput, setDocIdInput] = useState<string>(() =>
+        localStorage.getItem('bfa-sync-doc-id') ?? ''
+    );
+    const [injectionResult, setInjectionResult] = useState<BfaInjectionResult | null>(null);
+
+    // Persist doc ID to localStorage
+    useEffect(() => {
+        if (docIdInput) {
+            localStorage.setItem('bfa-sync-doc-id', docIdInput);
+        }
+    }, [docIdInput]);
+
     // API hooks
     const { data: reports, isLoading: reportsLoading } = useBfaSyncReports();
     const { data: report, isLoading: reportLoading } = useBfaSyncReport(selectedBoardConfigId);
@@ -47,6 +61,7 @@ export function BfaSyncView() {
     const triggerSync = useTriggerBfaSync();
     const submitDecisions = useSubmitBfaDecisions();
     const applyDecisions = useApplyBfaDecisions();
+    const injectToDoc = useInjectBfaToGoogleDoc();
 
     // Board selector options from reports (deduplicated by boardId)
     const boardOptions = useMemo(() => {
@@ -144,8 +159,21 @@ export function BfaSyncView() {
         );
     };
 
+    const handleInject = () => {
+        if (!selectedBoardConfigId || !docIdInput.trim()) return;
+        setInjectionResult(null);
+
+        // Parse document ID from full URL if needed
+        const documentId = parseDocumentId(docIdInput.trim());
+
+        injectToDoc.mutate(
+            { boardConfigId: selectedBoardConfigId, documentId },
+            { onSuccess: (result) => setInjectionResult(result) },
+        );
+    };
+
     const isLoading = reportsLoading || reportLoading;
-    const isMutating = triggerSync.isPending || submitDecisions.isPending || applyDecisions.isPending;
+    const isMutating = triggerSync.isPending || submitDecisions.isPending || applyDecisions.isPending || injectToDoc.isPending;
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -245,6 +273,79 @@ export function BfaSyncView() {
                         </Card>
                     )}
 
+                    {/* Google Docs Injection */}
+                    {applyResult && applyResult.applied > 0 && (
+                        <Card padding="sm">
+                            <Stack gap="sm">
+                                <span className="text-xs font-medium text-ws-text-secondary uppercase">
+                                    Google Docs Injection
+                                </span>
+                                <Inline gap="sm" align="end">
+                                    <div className="flex-1">
+                                        <TextInput
+                                            size="sm"
+                                            placeholder="Paste Google Doc ID or URL"
+                                            value={docIdInput}
+                                            onChange={(e) => setDocIdInput(e.target.value)}
+                                        />
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        onClick={handleInject}
+                                        disabled={!docIdInput.trim() || isMutating}
+                                    >
+                                        {injectToDoc.isPending ? 'Injecting...' : 'Inject to Doc'}
+                                    </Button>
+                                </Inline>
+
+                                {injectToDoc.isError && (
+                                    <span className="text-xs text-[var(--ws-color-error)]">
+                                        Injection failed: {injectToDoc.error?.message}
+                                    </span>
+                                )}
+
+                                {injectionResult && (
+                                    <Inline gap="md">
+                                        <Badge variant="success" size="md">
+                                            Injected: {injectionResult.projectsInjected}
+                                        </Badge>
+                                        {injectionResult.projectsSkipped > 0 && (
+                                            <Badge variant="warning" size="md">
+                                                Skipped: {injectionResult.projectsSkipped}
+                                            </Badge>
+                                        )}
+                                        {injectionResult.errors.length > 0 && (
+                                            <Badge variant="error" size="md">
+                                                Errors: {injectionResult.errors.length}
+                                            </Badge>
+                                        )}
+                                        {injectionResult.documentUrl && (
+                                            <a
+                                                href={injectionResult.documentUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-xs text-[var(--ws-accent)] underline"
+                                            >
+                                                Open Document
+                                            </a>
+                                        )}
+                                    </Inline>
+                                )}
+
+                                {injectionResult && injectionResult.errors.length > 0 && (
+                                    <div className="text-xs text-[var(--ws-color-error)]">
+                                        {injectionResult.errors.map((err, i) => (
+                                            <div key={i}>
+                                                {err.projectLabel || err.projectId.slice(0, 8)}: {err.error}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </Stack>
+                        </Card>
+                    )}
+
                     {/* Empty state */}
                     {!report && !isLoading && selectedBoardConfigId && (
                         <div className="py-12 text-center text-ws-text-secondary text-sm">
@@ -301,4 +402,13 @@ export function BfaSyncView() {
             )}
         </div>
     );
+}
+
+/**
+ * Extract Google Doc ID from a full URL or return the input as-is.
+ * Handles: https://docs.google.com/document/d/DOC_ID/edit
+ */
+function parseDocumentId(input: string): string {
+    const match = input.match(/\/document\/d\/([a-zA-Z0-9_-]+)/);
+    return match ? match[1] : input;
 }

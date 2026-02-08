@@ -7,14 +7,19 @@
 
 import { randomUUID } from 'crypto';
 
-import type { BfaApplyResult, BfaSyncDiffReport } from '@autoart/shared';
+import type { BfaApplyResult, BfaInjectionResult, BfaSyncDiffReport } from '@autoart/shared';
+import { DEFAULT_EXPORT_OPTIONS } from '@autoart/shared';
 
 import { db } from '../../db/client.js';
 import type { SyncDecision } from '../../db/schema.js';
-import { getMondayToken } from '../imports/connections.service.js';
+import { GoogleDocsClient } from '../exports/connectors/google-docs-client.js';
+import { GoogleDocsConnector } from '../exports/connectors/google-docs-connector.js';
+import { projectBfaExportModels } from '../exports/projectors/bfa-project.projector.js';
+import { getGoogleToken, getMondayToken } from '../imports/connections.service.js';
 import { MondayConnector } from '../imports/connectors/monday-connector.js';
 import { interpretMondayData } from '../imports/monday/monday-domain-interpreter.js';
 import * as mondayWorkspaceService from '../imports/monday/monday-workspace.service.js';
+import { injectProjects } from './bfa-gdocs-injector.js';
 import { getBfaProgramConfig } from './bfa-program.config.js';
 import { resolveApplyOps, setDotPath } from './bfa-sync-applier.js';
 import { computeBfaDiff, type LocalEntitySnapshot } from './bfa-sync-differ.js';
@@ -277,6 +282,75 @@ export async function applyDecisions(
         deferred: counts.deferred,
         errors,
     };
+}
+
+/**
+ * Inject applied sync changes into a Google Doc.
+ *
+ * 1. Load diff report + applied decisions
+ * 2. Resolve entity IDs → project IDs via hierarchy
+ * 3. Project export models for affected projects
+ * 4. Build changedFields map from applied decisions
+ * 5. Call injector to perform per-project replacement
+ */
+export async function injectToGoogleDoc(
+    boardConfigId: string,
+    documentId: string,
+    userId: string,
+): Promise<BfaInjectionResult> {
+    // 1. Load diff report
+    const report = await getDiffReport(boardConfigId);
+    if (!report) {
+        throw new Error('No diff report found for this board config');
+    }
+
+    // 2. Load applied decisions
+    const appliedDecisions = await db
+        .selectFrom('sync_decisions')
+        .selectAll()
+        .where('board_config_id', '=', boardConfigId)
+        .where('report_id', '=', report.id)
+        .where('applied_at', 'is not', null)
+        .execute();
+
+    if (appliedDecisions.length === 0) {
+        throw new Error('No applied decisions found. Apply changes before injecting.');
+    }
+
+    // 3. Extract unique entity IDs from applied decisions
+    const entityIds = [...new Set(appliedDecisions.map(d => d.entity_id))];
+
+    // 4. Resolve entity IDs to project-level node IDs
+    const projectIds = await resolveProjectIds(entityIds);
+    if (projectIds.length === 0) {
+        throw new Error('Could not resolve any project IDs from applied decisions');
+    }
+
+    // 5. Get Google token
+    const token = await getGoogleToken(userId);
+
+    // 6. Project export models for affected projects
+    const exportModels = await projectBfaExportModels(projectIds, DEFAULT_EXPORT_OPTIONS);
+
+    // 7. Build changedFields map: projectId → Set<fieldPath>
+    const changedFields = new Map<string, Set<string>>();
+    const entityToProject = await buildEntityToProjectMap(entityIds);
+
+    for (const decision of appliedDecisions) {
+        const projectId = entityToProject.get(decision.entity_id);
+        if (!projectId) continue;
+
+        const fields = changedFields.get(projectId) ?? new Set<string>();
+        fields.add(decision.field);
+        changedFields.set(projectId, fields);
+    }
+
+    // 8. Initialize Google Docs connector and client
+    const client = new GoogleDocsClient({ accessToken: token });
+    const connector = new GoogleDocsConnector({ accessToken: token });
+
+    // 9. Inject
+    return injectProjects(connector, client, documentId, exportModels, changedFields);
 }
 
 /**
@@ -562,6 +636,157 @@ function flattenMetadata(raw: unknown): Record<string, string | null> {
             result[key] = value != null ? String(value) : null;
         }
     }
+    return result;
+}
+
+/**
+ * Resolve entity IDs to their project-level ancestor node IDs.
+ * Walks up the hierarchy_nodes tree to find nodes with type='project'.
+ * For entities that are themselves projects, returns them directly.
+ * For entities in external_source_mappings (actions), looks up the
+ * related hierarchy node first.
+ */
+async function resolveProjectIds(entityIds: string[]): Promise<string[]> {
+    if (entityIds.length === 0) return [];
+
+    // First check if any entities are actions mapped to hierarchy nodes
+    const mappings = await db
+        .selectFrom('external_source_mappings')
+        .select(['local_entity_id', 'local_entity_type'])
+        .where('provider', '=', 'monday')
+        .where('local_entity_id', 'in', entityIds)
+        .execute();
+
+    // Collect all node IDs to check (entities might be actions or nodes)
+    const nodeIdsToCheck = new Set<string>();
+
+    // For actions, find associated hierarchy nodes via context
+    const actionIds = mappings
+        .filter(m => m.local_entity_type === 'action')
+        .map(m => m.local_entity_id);
+
+    if (actionIds.length > 0) {
+        const actions = await db
+            .selectFrom('actions')
+            .select(['id', 'context_id'])
+            .where('id', 'in', actionIds)
+            .execute();
+
+        for (const a of actions) {
+            if (a.context_id) nodeIdsToCheck.add(a.context_id);
+        }
+    }
+
+    // For hierarchy nodes, add directly
+    const nodeEntityIds = mappings
+        .filter(m => m.local_entity_type !== 'action')
+        .map(m => m.local_entity_id);
+    for (const id of nodeEntityIds) nodeIdsToCheck.add(id);
+
+    // Also add any entityIds not found in mappings (might be hierarchy nodes directly)
+    const mappedIds = new Set(mappings.map(m => m.local_entity_id));
+    for (const id of entityIds) {
+        if (!mappedIds.has(id)) nodeIdsToCheck.add(id);
+    }
+
+    if (nodeIdsToCheck.size === 0) return [];
+
+    // Walk up the hierarchy to find project-level ancestors
+    const nodeArray = [...nodeIdsToCheck];
+    const projectIds = new Set<string>();
+
+    // Check which of these are already projects
+    const directProjects = await db
+        .selectFrom('hierarchy_nodes')
+        .select('id')
+        .where('id', 'in', nodeArray)
+        .where('type', '=', 'project')
+        .execute();
+
+    for (const p of directProjects) {
+        projectIds.add(p.id);
+    }
+
+    // For non-project nodes, walk up to find project ancestor
+    const nonProjectIds = nodeArray.filter(id => !projectIds.has(id));
+    if (nonProjectIds.length > 0) {
+        for (const nodeId of nonProjectIds) {
+            const ancestor = await findProjectAncestor(nodeId);
+            if (ancestor) projectIds.add(ancestor);
+        }
+    }
+
+    return [...projectIds];
+}
+
+/**
+ * Walk up the hierarchy from a node to find its project-level ancestor.
+ */
+async function findProjectAncestor(nodeId: string): Promise<string | null> {
+    let currentId: string | null = nodeId;
+    const visited = new Set<string>();
+
+    while (currentId && !visited.has(currentId)) {
+        visited.add(currentId);
+
+        const node = await db
+            .selectFrom('hierarchy_nodes')
+            .select(['id', 'parent_id', 'type'])
+            .where('id', '=', currentId)
+            .executeTakeFirst();
+
+        if (!node) return null;
+        if (node.type === 'project') return node.id;
+
+        currentId = node.parent_id;
+    }
+
+    return null;
+}
+
+/**
+ * Build a map from entity IDs to their project-level ancestor IDs.
+ */
+async function buildEntityToProjectMap(entityIds: string[]): Promise<Map<string, string>> {
+    const result = new Map<string, string>();
+    if (entityIds.length === 0) return result;
+
+    // Check external_source_mappings for action entities
+    const mappings = await db
+        .selectFrom('external_source_mappings')
+        .select(['local_entity_id', 'local_entity_type'])
+        .where('provider', '=', 'monday')
+        .where('local_entity_id', 'in', entityIds)
+        .execute();
+
+    const actionIds = mappings
+        .filter(m => m.local_entity_type === 'action')
+        .map(m => m.local_entity_id);
+
+    // For actions, get context_id (hierarchy node reference)
+    const actionContextMap = new Map<string, string>();
+    if (actionIds.length > 0) {
+        const actions = await db
+            .selectFrom('actions')
+            .select(['id', 'context_id'])
+            .where('id', 'in', actionIds)
+            .execute();
+
+        for (const a of actions) {
+            if (a.context_id) actionContextMap.set(a.id, a.context_id);
+        }
+    }
+
+    // Resolve each entity to its project
+    for (const entityId of entityIds) {
+        // If it's an action, use its context_id as the starting node
+        const startNodeId = actionContextMap.get(entityId) ?? entityId;
+        const projectId = await findProjectAncestor(startNodeId);
+        if (projectId) {
+            result.set(entityId, projectId);
+        }
+    }
+
     return result;
 }
 

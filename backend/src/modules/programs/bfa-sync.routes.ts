@@ -38,6 +38,10 @@ const DecisionsQuerySchema = z.object({
     assignedTo: z.string().uuid().optional(),
 });
 
+const InjectBodySchema = z.object({
+    documentId: z.string().min(1),
+});
+
 // ============================================================================
 // ROUTES
 // ============================================================================
@@ -166,6 +170,23 @@ export async function bfaSyncRoutes(app: FastifyInstance) {
         const { id: boardConfigId } = BoardConfigIdParamSchema.parse(request.params);
 
         const result = await bfaSyncService.applyDecisions(boardConfigId);
+        return reply.send(result);
+    });
+
+    /**
+     * Inject applied sync changes into a Google Doc.
+     * Replaces per-project sections with updated content and highlights changes.
+     */
+    app.post('/sync/:id/inject', {
+        preHandler: [app.authenticate],
+    }, async (request, reply) => {
+        const { id: boardConfigId } = BoardConfigIdParamSchema.parse(request.params);
+        const { documentId } = InjectBodySchema.parse(request.body);
+        const userId = (request.user as { userId: string }).userId;
+
+        const result = await bfaSyncService.injectToGoogleDoc(
+            boardConfigId, documentId, userId,
+        );
         return reply.send(result);
     });
 }
