@@ -105,9 +105,10 @@ export function SelectionInspector({ importContext, onClose }: SelectionInspecto
     const wsCtx = useWorkspaceContextOptional();
 
     const isBound = wsCtx?.isBound('selection-inspector') ?? false;
+    const activeWorkspaceId = wsCtx?.workspaceId ?? null;
     const activeWorkspace = useMemo(
-        () => wsCtx?.workspaceId ? BUILT_IN_WORKSPACES.find((w) => w.id === wsCtx.workspaceId) : null,
-        [wsCtx?.workspaceId],
+        () => activeWorkspaceId ? BUILT_IN_WORKSPACES.find((w) => w.id === activeWorkspaceId) ?? null : null,
+        [activeWorkspaceId],
     );
     const colorClasses = getWorkspaceColorClasses(isBound ? activeWorkspace?.color : null);
 
