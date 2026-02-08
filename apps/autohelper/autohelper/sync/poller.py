@@ -346,6 +346,9 @@ class BackendPoller:
                 elif cmd_type == "select_folder":
                     result = self._cmd_select_folder()
                     success = True
+                elif cmd_type == "ping":
+                    result = self._cmd_ping()
+                    success = True
                 else:
                     logger.warning("Unknown command type: %s", cmd_type)
                     result = {"error": f"Unknown command: {cmd_type}"}
@@ -445,6 +448,16 @@ class BackendPoller:
 
         path = _open_folder_dialog()
         return {"path": path}
+
+    def _cmd_ping(self) -> dict[str, Any]:
+        """Execute ping command — echo back timestamp and version."""
+        from datetime import datetime, timezone
+
+        return {
+            "pong": True,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "version": "0.1.0",
+        }
 
     def _clear_pairing(self) -> None:
         """Clear the local pairing key."""

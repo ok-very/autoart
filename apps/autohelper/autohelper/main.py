@@ -15,6 +15,39 @@ from autohelper.shared.platform import has_dbus_tray, is_windows, platform_label
 app = build_app()
 
 
+def _check_port_conflict(host: str, port: int) -> None:
+    """Check if port is already in use. Exit cleanly if healthy instance exists."""
+    import socket
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.settimeout(1)
+        result = sock.connect_ex((host, port))
+        if result != 0:
+            return  # Port is free
+    finally:
+        sock.close()
+
+    # Port is in use — check if it's a healthy AutoHelper instance
+    import urllib.request
+
+    try:
+        req = urllib.request.Request(f"http://{host}:{port}/health")
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            if resp.status == 200:
+                print(f"AutoHelper already running on {host}:{port}, exiting.")
+                sys.exit(0)
+    except Exception:
+        pass
+
+    # Port in use but not a healthy AutoHelper
+    print(
+        f"Port {port} is in use but not responding to health check. Exiting.",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+
 def _run_with_tray(server: uvicorn.Server) -> None:
     """Start server in background, run pystray icon in foreground."""
     if not (is_windows() or has_dbus_tray()):
@@ -64,6 +97,9 @@ def _run_with_tray(server: uvicorn.Server) -> None:
 def main() -> None:
     """Run the AutoHelper server."""
     settings = get_settings()
+
+    # Check for port conflict before starting
+    _check_port_conflict(settings.host, settings.port)
 
     print(f"Starting AutoHelper on http://{settings.host}:{settings.port}")
     print(f"Docs: http://{settings.host}:{settings.port}/docs")
