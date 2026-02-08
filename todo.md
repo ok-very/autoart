@@ -154,7 +154,7 @@ All foundation phases complete. Ordered by import pipeline priority — top item
 
 | PRs | Description |
 |-----|-------------|
-| #432-433 | **Import wizard escape hatches:** (1) Wire `onReset`, add Cancel Import button to wizard header, Back at step 1 exits wizard, Cancel button in Step1 footer. (2) Remove Monday exclusion from sidebar session display — "New Import" button now shows for all source types. |
+| #432-433 | **Import wizard escape hatches:** (1) Wire `onReset`, add Cancel Import button to wizard header, Back at step 1 exits wizard, Cancel button in Step1 footer. (2) Remove Monday exclusion from sidebar session display — "New Import" button now shows for all source types. **Review feedback addressed:** disabled Cancel during in-flight session creation (race condition), fixed stale comment in ImportSidebar. |
 
 ---
 
