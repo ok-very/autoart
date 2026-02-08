@@ -6,6 +6,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+import type { InvoiceExportModel } from '@autoart/shared';
+
 import type {
     ExportFormat,
     ExportSessionStatus,
@@ -309,6 +311,27 @@ export function useExportInvoiceToGoogleDrive() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['cloud-connection-status'] });
         },
+    });
+}
+
+// ============================================================================
+// INVOICE PREVIEW
+// ============================================================================
+
+/**
+ * Fetch invoice export model for client-side preview rendering.
+ */
+export function useInvoicePreview(invoiceId: string | null) {
+    return useQuery({
+        queryKey: ['invoice-preview', invoiceId],
+        queryFn: async () => {
+            const result = await api.get<{ model: InvoiceExportModel }>(
+                `/exports/finance/invoice/${invoiceId}/preview`
+            );
+            return result.model;
+        },
+        enabled: !!invoiceId,
+        staleTime: 30000,
     });
 }
 

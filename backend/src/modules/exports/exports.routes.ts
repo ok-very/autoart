@@ -907,6 +907,25 @@ export async function exportsRoutes(app: FastifyInstance) {
     });
 
     /**
+     * Get invoice preview model (JSON) for client-side rendering.
+     */
+    app.get('/finance/invoice/:invoiceId/preview', async (request, reply) => {
+        const { invoiceId } = z.object({ invoiceId: z.string().uuid() }).parse(request.params);
+
+        try {
+            const { projectInvoice } = await import('./projectors/invoice.projector.js');
+            const model = await projectInvoice(invoiceId);
+            if (!model) {
+                return reply.status(404).send({ error: 'Invoice not found' });
+            }
+            return reply.send({ model });
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Failed to load invoice preview';
+            return reply.status(500).send({ error: message });
+        }
+    });
+
+    /**
      * Check cloud connection status for Google and Microsoft
      */
     app.get('/finance/cloud-status', async (request, reply) => {

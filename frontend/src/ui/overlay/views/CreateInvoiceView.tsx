@@ -5,15 +5,23 @@
  * Pre-fills project context, offers client picker and currency selector.
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 
 import { useRecordDefinitions } from '../../../api/hooks/definitions';
 import { useCreateFinanceRecord } from '../../../api/hooks/finance';
 import { useContactsByGroup } from '../../../api/hooks/records';
 import { useUIStore } from '../../../stores/uiStore';
 import { useFinanceStore } from '../../../stores/financeStore';
+import { api } from '../../../api/client';
 import { Button, Stack, TextInput, Select } from '@autoart/ui';
 import { ContactPicker } from '@autoart/ui';
+
+interface InvoiceNumberValidation {
+  valid: boolean;
+  formatValid: boolean;
+  conflicts: string[];
+  suggestion?: string;
+}
 
 export function CreateInvoiceView({
   onClose,
@@ -38,6 +46,58 @@ export function CreateInvoiceView({
   const [currency, setCurrency] = useState('CAD');
   const [clientId, setClientId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+
+  // Invoice number validation (version counter prevents stale responses)
+  const [validationStatus, setValidationStatus] = useState<{ valid: boolean; message?: string } | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const validationVersionRef = useRef(0);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    const trimmed = invoiceNumber.trim();
+    if (!trimmed) {
+      setValidationStatus(null);
+      setIsValidating(false);
+      return;
+    }
+
+    setIsValidating(true);
+    const version = ++validationVersionRef.current;
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const result = await api.post<InvoiceNumberValidation>(
+          '/records/validate-invoice-number',
+          { invoiceNumber: trimmed },
+        );
+        // Discard stale responses
+        if (version !== validationVersionRef.current) return;
+        setValidationStatus({
+          valid: result.valid,
+          message: result.valid
+            ? 'Available'
+            : result.conflicts.length > 0
+              ? 'Invoice number already exists'
+              : result.suggestion
+                ? `Invalid format. Try: ${result.suggestion}`
+                : 'Invalid invoice number format',
+        });
+      } catch {
+        if (version !== validationVersionRef.current) return;
+        // Validation endpoint unavailable; allow submission
+        setValidationStatus(null);
+      } finally {
+        if (version === validationVersionRef.current) {
+          setIsValidating(false);
+        }
+      }
+    }, 500);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [invoiceNumber]);
 
   const contactOptions = useMemo(
     () =>
@@ -79,13 +139,26 @@ export function CreateInvoiceView({
     <div className="p-6">
       <h2 className="text-base font-semibold text-ws-text-secondary mb-4">New Invoice</h2>
       <Stack gap="md">
-        <TextInput
-          label="Invoice Number"
-          required
-          value={invoiceNumber}
-          onChange={(e) => setInvoiceNumber(e.target.value)}
-          placeholder="INV-001"
-        />
+        <div>
+          <TextInput
+            label="Invoice Number"
+            required
+            value={invoiceNumber}
+            onChange={(e) => setInvoiceNumber(e.target.value)}
+            placeholder="INV-001"
+          />
+          {invoiceNumber.trim() && (
+            <div className="mt-1 text-xs">
+              {isValidating ? (
+                <span className="text-ws-muted">Checking...</span>
+              ) : validationStatus ? (
+                <span className={validationStatus.valid ? 'text-green-600' : 'text-red-600'}>
+                  {validationStatus.message}
+                </span>
+              ) : null}
+            </div>
+          )}
+        </div>
         <ContactPicker
           label="Client"
           contacts={contactOptions}
@@ -132,7 +205,7 @@ export function CreateInvoiceView({
           <Button
             variant="primary"
             onClick={handleCreate}
-            disabled={!invoiceNumber.trim() || !invoiceDef || createRecord.isPending}
+            disabled={!invoiceNumber.trim() || !invoiceDef || createRecord.isPending || isValidating || (validationStatus !== null && !validationStatus.valid)}
           >
             {createRecord.isPending ? 'Creating...' : 'Create Invoice'}
           </Button>

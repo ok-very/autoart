@@ -6,7 +6,7 @@
  * and trigger OAuth popup if not connected.
  */
 
-import { FileText, FileType, Cloud, ChevronDown, Loader2 } from 'lucide-react';
+import { Eye, FileText, FileType, Cloud, ChevronDown, Loader2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -22,9 +22,10 @@ import { Button, Menu } from '@autoart/ui';
 interface ExportMenuProps {
     invoiceId: string;
     invoiceNumber: string;
+    onPreview?: () => void;
 }
 
-export function ExportMenu({ invoiceId, invoiceNumber }: ExportMenuProps) {
+export function ExportMenu({ invoiceId, invoiceNumber, onPreview }: ExportMenuProps) {
     const { data: cloudStatus } = useCloudConnectionStatus();
     const exportOneDrive = useExportInvoiceToOneDrive();
     const exportGoogleDrive = useExportInvoiceToGoogleDrive();
@@ -142,6 +143,17 @@ export function ExportMenu({ invoiceId, invoiceNumber }: ExportMenuProps) {
                 </Button>
             </Menu.Target>
             <Menu.Dropdown align="end" className="min-w-[220px]">
+                {onPreview && (
+                    <>
+                        <Menu.Item
+                            leftSection={<Eye size={14} className="text-slate-400" />}
+                            onClick={onPreview}
+                        >
+                            Preview & Print
+                        </Menu.Item>
+                        <Menu.Divider />
+                    </>
+                )}
                 <Menu.Label>Download</Menu.Label>
                 <Menu.Item
                     leftSection={<FileText size={14} className="text-slate-400" />}

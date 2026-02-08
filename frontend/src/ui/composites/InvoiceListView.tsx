@@ -14,6 +14,8 @@ interface InvoiceRow {
   invoiceNumber: string;
   clientName: string;
   total: number | null;
+  paidAmount: number;
+  balanceDue: number | null;
   currency: string;
   status: string;
   dueDate: string;
@@ -28,6 +30,8 @@ function parseInvoiceRow(record: { id: string; unique_name: string; data: Record
     invoiceNumber: (data.invoice_number as string) || record.unique_name,
     clientName: '', // resolved from linked Contact in detail view
     total: (computed?.total as number) ?? (data.total as number) ?? null,
+    paidAmount: (computed?.paid_amount as number) ?? (data.paid_amount as number) ?? 0,
+    balanceDue: (computed?.balance_due as number) ?? (data.balance_due as number) ?? null,
     currency: (data.currency as string) || 'CAD',
     status: (data.status as string) || 'Draft',
     dueDate: (data.due_date as string) || '',
@@ -113,6 +117,8 @@ export function InvoiceListView() {
                 <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs">Issue Date</th>
                 <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs">Due Date</th>
                 <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs text-right">Total</th>
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs text-right">Paid</th>
+                <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs text-right">Balance</th>
                 <th className="px-4 py-2 font-medium text-ws-text-secondary text-xs">Status</th>
               </tr>
             </thead>
@@ -135,6 +141,23 @@ export function InvoiceListView() {
                   <td className="px-4 py-2.5 text-right font-mono text-ws-text-secondary">
                     {inv.total !== null
                       ? formatCurrency({ amount: inv.total, currency: inv.currency })
+                      : '\u2014'}
+                  </td>
+                  <td className="px-4 py-2.5 text-right font-mono text-ws-text-secondary">
+                    {inv.paidAmount > 0
+                      ? formatCurrency({ amount: inv.paidAmount, currency: inv.currency })
+                      : '\u2014'}
+                  </td>
+                  <td className={clsx(
+                    'px-4 py-2.5 text-right font-mono',
+                    inv.balanceDue !== null && inv.balanceDue > 0
+                      ? 'text-amber-600'
+                      : inv.balanceDue === 0
+                        ? 'text-green-600'
+                        : 'text-ws-text-secondary',
+                  )}>
+                    {inv.balanceDue !== null
+                      ? formatCurrency({ amount: inv.balanceDue, currency: inv.currency })
                       : '\u2014'}
                   </td>
                   <td className="px-4 py-2.5">

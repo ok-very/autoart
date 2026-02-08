@@ -22,6 +22,9 @@ import { ActionInspectorOverlay } from '../overlay/views/ActionInspectorOverlay'
 import { ConfirmUnlinkView } from '../overlay/views/ConfirmUnlinkView';
 import { CreateInvoiceView } from '../overlay/views/CreateInvoiceView';
 import { RecordPaymentView } from '../overlay/views/RecordPaymentView';
+import { CreateExpenseView } from '../overlay/views/CreateExpenseView';
+import { AllocateBudgetView } from '../overlay/views/AllocateBudgetView';
+import { CreateBillView } from '../overlay/views/CreateBillView';
 import { IntegrationsSection } from '../../pages/settings/IntegrationsSection';
 import { ClassificationPanel } from '../../workflows/import/panels/ClassificationPanel';
 import type { ImportPlan } from '../../api/hooks/imports';
@@ -79,6 +82,9 @@ export const OVERLAY_VIEWS: Record<string, React.ComponentType<any>> = {
     'confirm-unlink': ConfirmUnlinkView, // Confirm unlink dialog
     'create-invoice': CreateInvoiceView, // Finance: create invoice
     'record-payment': RecordPaymentView, // Finance: record payment
+    'create-expense': CreateExpenseView, // Finance: record expense
+    'allocate-budget': AllocateBudgetView, // Finance: allocate budget
+    'create-bill': CreateBillView, // Finance: create vendor bill
 };
 
 
@@ -104,7 +110,7 @@ export function OverlayRegistry() {
     if (['create-node', 'add-field', 'clone-project'].includes(type)) size = 'lg';
     if (['confirm-delete', 'confirm-unlink'].includes(type)) size = 'sm';
     if (['create-invoice'].includes(type)) size = 'lg';
-    if (['record-payment'].includes(type)) size = 'md';
+    if (['record-payment', 'create-expense', 'allocate-budget', 'create-bill'].includes(type)) size = 'md';
 
     // Construct context props expected by Overlay views
     const componentProps = {

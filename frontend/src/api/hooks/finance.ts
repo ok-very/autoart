@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+import type { Event } from '@autoart/shared';
+
 import type { DataRecord, CreateRecordInput, UpdateRecordInput } from '../../types';
 import { api } from '../client';
 
@@ -91,6 +93,36 @@ export function useLinkedRecords(recordId: string | null, linkType?: string) {
       return records;
     },
     enabled: !!recordId,
+  });
+}
+
+/**
+ * Fetch FACT_RECORDED events related to a specific record.
+ * Queries the record's project context for events, then filters
+ * client-side to events containing the record's ID in payload.recordId.
+ */
+export function useRecordEvents(record: DataRecord | undefined) {
+  const contextId = record?.classification_node_id;
+
+  return useQuery({
+    queryKey: ['record-events', record?.id, contextId],
+    queryFn: async (): Promise<Event[]> => {
+      if (!contextId || !record) return [];
+
+      const params = new URLSearchParams();
+      params.set('limit', '100');
+      params.set('types', 'FACT_RECORDED');
+
+      const result = await api.get<{ events: Event[]; total: number; hasMore: boolean }>(
+        `/events/context/project/${contextId}?${params.toString()}`,
+      );
+
+      // Filter to events referencing this record
+      return result.events.filter(
+        (e) => (e.payload as Record<string, unknown>)?.recordId === record.id,
+      );
+    },
+    enabled: !!contextId && !!record?.id,
   });
 }
 
