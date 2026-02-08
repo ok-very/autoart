@@ -87,7 +87,31 @@ export function useUpdateMondayColumnConfigs() {
                 { columns }
             );
         },
-        onSuccess: (_data, variables) => {
+        onMutate: async (variables) => {
+            await queryClient.cancelQueries({ queryKey: ['monday', 'boards', 'configs'] });
+            const queryFilter = { queryKey: ['monday', 'boards', 'configs'] };
+            // Snapshot before mutation for rollback
+            const previousQueries = queryClient.getQueriesData<MondayBoardConfig[]>(queryFilter)
+                .map(([key, data]) => [key, data ? structuredClone(data) : data] as const);
+            for (const [key, data] of previousQueries) {
+                if (!data) continue;
+                const updated = data.map(board =>
+                    board.id === variables.boardConfigId
+                        ? { ...board, columns: variables.columns }
+                        : board
+                );
+                queryClient.setQueryData(key, updated);
+            }
+            return { previousQueries };
+        },
+        onError: (_err, _vars, context) => {
+            if (context?.previousQueries) {
+                for (const [key, data] of context.previousQueries) {
+                    queryClient.setQueryData(key, data);
+                }
+            }
+        },
+        onSettled: (_data, _err, variables) => {
             queryClient.invalidateQueries({ queryKey: ['monday', 'boards', 'configs'] });
             queryClient.invalidateQueries({ queryKey: ['monday', 'workspaces', variables.workspaceId] });
         },

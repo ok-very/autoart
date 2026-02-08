@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronDown, AlertTriangle, X } from 'lucide-react';
 import { clsx } from 'clsx';
 import {
@@ -302,6 +302,9 @@ function CategorySection({ category, columns, boardConfigId, workspaceId, onColu
 export function Step3Columns({ onNext, onBack, session, onSessionCreated }: StepProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [inflightMutations, setInflightMutations] = useState(0);
+    const inflightRef = useRef(0);
+    useEffect(() => { inflightRef.current = inflightMutations; }, [inflightMutations]);
 
     // Extract board IDs
     const boardIds = useMemo(() => {
@@ -345,11 +348,16 @@ export function Step3Columns({ onNext, onBack, session, onSessionCreated }: Step
             return c;
         });
 
-        await updateColumns.mutateAsync({
-            workspaceId,
-            boardConfigId,
-            columns: updatedColumns
-        });
+        setInflightMutations(c => c + 1);
+        try {
+            await updateColumns.mutateAsync({
+                workspaceId,
+                boardConfigId,
+                columns: updatedColumns
+            });
+        } finally {
+            setInflightMutations(c => c - 1);
+        }
     };
 
     const handleNext = async () => {
@@ -357,6 +365,16 @@ export function Step3Columns({ onNext, onBack, session, onSessionCreated }: Step
 
         try {
             setIsRefreshing(true);
+            // Wait for any in-flight column updates to settle
+            if (inflightRef.current > 0) {
+                await new Promise<void>(resolve => {
+                    const check = () => {
+                        if (inflightRef.current <= 0) resolve();
+                        else setTimeout(check, 50);
+                    };
+                    check();
+                });
+            }
             const newPlan = await generatePlan.mutateAsync(session.id);
             onSessionCreated(session, newPlan);
             onNext();
@@ -478,7 +496,7 @@ export function Step3Columns({ onNext, onBack, session, onSessionCreated }: Step
                 <Button
                     onClick={handleNext}
                     variant="primary"
-                    disabled={isRefreshing || updateColumns.isPending}
+                    disabled={isRefreshing || inflightMutations > 0}
                 >
                     {isRefreshing ? 'Regenerating Plan...' : 'Next: Templates'}
                 </Button>
