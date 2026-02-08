@@ -30,8 +30,11 @@ import { Kysely } from 'kysely';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import * as composerService from '../../modules/composer/composer.service.js';
 import { MondayCSVParser } from '../../modules/imports/parsers/monday-csv-parser.js';
 import type { ImportPlanItem } from '../../modules/imports/types.js';
+import { projectWorkflowSurface } from '../../modules/projections/workflow-surface.projector.js';
+import { initializeDatabase } from '../client.js';
 import type { Database } from '../schema.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -64,66 +67,19 @@ function statusToWorkEvent(status: string | null | undefined): string | null {
 }
 
 // ============================================================================
-// HELPER: Insert action row (event batched separately)
+// HELPER: Extract field bindings (schema) and field values (data) from item
 // ============================================================================
 
-async function insertAction(
-  db: Kysely<Database>,
-  opts: {
-    contextId: string;
-    contextType: 'project';
-    parentActionId: string | null;
-    type: string;
-    fieldBindings: Array<{ fieldKey: string; value: unknown }>;
-  },
-): Promise<string> {
-  const [action] = await db
-    .insertInto('actions')
-    .values({
-      context_id: opts.contextId,
-      context_type: opts.contextType,
-      parent_action_id: opts.parentActionId,
-      type: opts.type,
-      field_bindings: JSON.stringify(opts.fieldBindings),
-    })
-    .returning('id')
-    .execute();
-
-  return action.id;
-}
-
-/** Pending event row for batch insert */
-interface PendingEvent {
-  context_id: string;
-  context_type: 'project';
-  action_id: string;
-  type: string;
-  payload: string;
-  actor_id: string;
-}
-
-/**
- * Flush pending events in batches (Postgres has a ~65k parameter limit).
- * 6 columns per event → batches of 1000 rows = 6000 params, well within limits.
- */
-async function flushEvents(db: Kysely<Database>, events: PendingEvent[]): Promise<void> {
-  const BATCH_SIZE = 1000;
-  for (let i = 0; i < events.length; i += BATCH_SIZE) {
-    const batch = events.slice(i, i + BATCH_SIZE);
-    await db.insertInto('events').values(batch).execute();
-  }
-}
-
-/**
- * Build field_bindings array from a parsed ImportPlanItem.
- */
-function buildFieldBindings(item: ImportPlanItem): Array<{ fieldKey: string; value: unknown }> {
-  const bindings: Array<{ fieldKey: string; value: unknown }> = [
-    { fieldKey: 'title', value: item.title },
+function extractFields(item: ImportPlanItem): {
+  fieldBindings: Array<{ fieldKey: string }>;
+  fieldValues: Array<{ fieldName: string; value: unknown }>;
+} {
+  const fieldBindings: Array<{ fieldKey: string }> = [{ fieldKey: 'title' }];
+  const fieldValues: Array<{ fieldName: string; value: unknown }> = [
+    { fieldName: 'title', value: item.title },
   ];
 
   for (const rec of item.fieldRecordings) {
-    // Map parser field names to our field keys
     const keyMap: Record<string, string> = {
       Status: 'status',
       'Target Date': 'targetDate',
@@ -133,11 +89,12 @@ function buildFieldBindings(item: ImportPlanItem): Array<{ fieldKey: string; val
     };
     const fieldKey = keyMap[rec.fieldName] ?? rec.fieldName;
     if (rec.value != null && rec.value !== '') {
-      bindings.push({ fieldKey, value: rec.value });
+      fieldBindings.push({ fieldKey });
+      fieldValues.push({ fieldName: fieldKey, value: rec.value });
     }
   }
 
-  return bindings;
+  return { fieldBindings, fieldValues };
 }
 
 // ============================================================================
@@ -272,161 +229,132 @@ export async function seedDevData(db: Kysely<Database>): Promise<void> {
   console.log('  ✓ Created import session + plan (with validation issues)');
 
   // =========================================================================
-  // 6. Create container actions from parsed containers
+  // 6-7. Create actions via Composer (containers + items) in one transaction
   // =========================================================================
 
-  // Collect all events for batch insert at the end
-  const pendingEvents: PendingEvent[] = [];
+  // Initialize the db client module so Composer and Projector can use it
+  await initializeDatabase();
+
   const containerActionMap = new Map<string, string>();
-  const userId = demoUser.id;
-
-  for (const container of containers) {
-    // The parser creates containers typed as 'process' or 'subprocess'
-    // with definitionName hints. Map to our action types:
-    //   - parser type 'process' → Action type 'Process'
-    //   - parser type 'subprocess' with definitionName 'stage' → Action type 'Stage'
-    //   - parser type 'subprocess' → Action type 'Subprocess'
-    let actionType: string;
-    if (container.type === 'process') {
-      actionType = 'Process';
-    } else if (container.definitionName === 'stage') {
-      actionType = 'Stage';
-    } else {
-      actionType = 'Subprocess';
-    }
-
-    const parentActionId = container.parentTempId
-      ? containerActionMap.get(container.parentTempId) ?? null
-      : null;
-
-    const fieldBindings = [{ fieldKey: 'title', value: container.title }];
-
-    const actionId = await insertAction(db, {
-      contextId: project.id,
-      contextType: 'project',
-      parentActionId,
-      type: actionType,
-      fieldBindings,
-    });
-
-    containerActionMap.set(container.tempId, actionId);
-
-    pendingEvents.push({
-      context_id: project.id,
-      context_type: 'project',
-      action_id: actionId,
-      type: 'ACTION_DECLARED',
-      payload: JSON.stringify({ actionType, fieldBindings }),
-      actor_id: userId,
-    });
-  }
-
-  console.log(`  ✓ Created ${containers.length} container actions (Process → Stage)`);
-
-  // =========================================================================
-  // 7. Create task/subtask actions from parsed items
-  // =========================================================================
-
   const itemActionMap = new Map<string, string>();
+  const userId = demoUser.id;
   let taskCount = 0;
   let subtaskCount = 0;
   let workEventCount = 0;
 
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    const isSubtask = item.metadata?.isSubtask === true;
-    const fieldBindings = buildFieldBindings(item);
+  await db.transaction().execute(async (trx) => {
+    // --- 6. Containers ---
 
-    let parentActionId: string | null;
+    for (const container of containers) {
+      let actionType: string;
+      if (container.type === 'process') {
+        actionType = 'Process';
+      } else if (container.definitionName === 'stage') {
+        actionType = 'Stage';
+      } else {
+        actionType = 'Subprocess';
+      }
 
-    if (isSubtask) {
-      const parentTaskTempId = item.metadata?.parentTaskTempId as string | undefined;
-      parentActionId = parentTaskTempId
-        ? itemActionMap.get(parentTaskTempId) ?? null
-        : null;
-      if (!parentActionId) {
+      const parentActionId = container.parentTempId
+        ? containerActionMap.get(container.parentTempId) ?? undefined
+        : undefined;
+
+      const result = await composerService.compose({
+        action: {
+          contextId: project.id,
+          contextType: 'project',
+          parentActionId,
+          type: actionType,
+          fieldBindings: [{ fieldKey: 'title' }],
+        },
+        fieldValues: [{ fieldName: 'title', value: container.title }],
+      }, { actorId: userId, skipView: true, trx });
+
+      containerActionMap.set(container.tempId, result.action.id);
+    }
+
+    console.log(`  ✓ Created ${containers.length} container actions (Process → Stage)`);
+
+    // --- 7. Items (tasks + subtasks) ---
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const isSubtask = item.metadata?.isSubtask === true;
+      const { fieldBindings, fieldValues } = extractFields(item);
+
+      let parentActionId: string | undefined;
+
+      if (isSubtask) {
+        const parentTaskTempId = item.metadata?.parentTaskTempId as string | undefined;
+        parentActionId = parentTaskTempId
+          ? itemActionMap.get(parentTaskTempId) ?? undefined
+          : undefined;
+        if (!parentActionId) {
+          parentActionId = item.parentTempId
+            ? containerActionMap.get(item.parentTempId) ?? undefined
+            : undefined;
+        }
+      } else {
         parentActionId = item.parentTempId
-          ? containerActionMap.get(item.parentTempId) ?? null
-          : null;
+          ? containerActionMap.get(item.parentTempId) ?? undefined
+          : undefined;
       }
-    } else {
-      parentActionId = item.parentTempId
-        ? containerActionMap.get(item.parentTempId) ?? null
-        : null;
-    }
 
-    const actionType = isSubtask ? 'Subtask' : 'Task';
+      const actionType = isSubtask ? 'Subtask' : 'Task';
 
-    const actionId = await insertAction(db, {
-      contextId: project.id,
-      contextType: 'project',
-      parentActionId,
-      type: actionType,
-      fieldBindings,
-    });
+      // Build extra events (work lifecycle + milestone)
+      const emitExtraEvents: Array<{ type: string; payload: Record<string, unknown> }> = [];
+      const status = (item.metadata?.status as string) ?? null;
+      const workEvent = statusToWorkEvent(status);
+      if (workEvent) {
+        emitExtraEvents.push({ type: workEvent, payload: {} });
+        workEventCount++;
+      }
 
-    itemActionMap.set(item.tempId, actionId);
+      // For MILESTONE items, add milestone field + value
+      if (status?.trim().toUpperCase() === 'MILESTONE') {
+        const notes = item.metadata?.notes as string | undefined;
+        if (notes) {
+          fieldBindings.push({ fieldKey: 'milestone' });
+          fieldValues.push({ fieldName: 'milestone', value: notes });
+        }
+      }
 
-    if (isSubtask) {
-      subtaskCount++;
-    } else {
-      taskCount++;
-    }
+      const result = await composerService.compose({
+        action: {
+          contextId: project.id,
+          contextType: 'project',
+          parentActionId,
+          type: actionType,
+          fieldBindings,
+        },
+        fieldValues,
+        emitExtraEvents: emitExtraEvents.length > 0 ? emitExtraEvents : undefined,
+      }, { actorId: userId, skipView: true, trx });
 
-    // Queue ACTION_DECLARED event
-    pendingEvents.push({
-      context_id: project.id,
-      context_type: 'project',
-      action_id: actionId,
-      type: 'ACTION_DECLARED',
-      payload: JSON.stringify({ actionType, fieldBindings }),
-      actor_id: userId,
-    });
+      itemActionMap.set(item.tempId, result.action.id);
 
-    // Queue work lifecycle event based on status
-    const status = (item.metadata?.status as string) ?? null;
-    const workEvent = statusToWorkEvent(status);
-    if (workEvent) {
-      pendingEvents.push({
-        context_id: project.id,
-        context_type: 'project',
-        action_id: actionId,
-        type: workEvent,
-        payload: JSON.stringify({}),
-        actor_id: userId,
-      });
-      workEventCount++;
-    }
+      if (isSubtask) {
+        subtaskCount++;
+      } else {
+        taskCount++;
+      }
 
-    // For MILESTONE items, also record the milestone note
-    if (status?.trim().toUpperCase() === 'MILESTONE') {
-      const notes = item.metadata?.notes as string | undefined;
-      if (notes) {
-        pendingEvents.push({
-          context_id: project.id,
-          context_type: 'project',
-          action_id: actionId,
-          type: 'FIELD_VALUE_RECORDED',
-          payload: JSON.stringify({ fieldKey: 'milestone', value: notes }),
-          actor_id: userId,
-        });
+      if ((i + 1) % 50 === 0) {
+        console.log(`    ... ${i + 1}/${items.length} items`);
       }
     }
-
-    // Progress every 50 items
-    if ((i + 1) % 50 === 0) {
-      console.log(`    ... ${i + 1}/${items.length} items`);
-    }
-  }
+  });
 
   console.log(`  ✓ Created ${taskCount} task actions, ${subtaskCount} subtask actions`);
+  console.log(`  ✓ Emitted events via Composer (${workEventCount} work lifecycle)`);
 
   // =========================================================================
-  // 7b. Batch-insert all events
+  // 7b. Project workflow surface (after transaction commits)
   // =========================================================================
 
-  await flushEvents(db, pendingEvents);
-  console.log(`  ✓ Flushed ${pendingEvents.length} events (${workEventCount} work lifecycle)`);
+  await projectWorkflowSurface(project.id, 'project');
+  console.log('  ✓ Projected workflow surface');
 
   // =========================================================================
   // 8. Create sample records
