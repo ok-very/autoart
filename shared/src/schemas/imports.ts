@@ -90,7 +90,7 @@ export const InterpretItemRequestSchema = z.object({
     title: z.string().min(1),
     metadata: z.record(z.string(), z.unknown()).optional(),
     fieldRecordings: z.array(FieldRecordingSchema).optional(),
-    entityType: z.string().optional(),
+    entityType: z.enum(['project', 'process', 'phase', 'subprocess', 'template', 'record', 'action', 'unknown']).optional(),
 });
 export type InterpretItemRequest = z.infer<typeof InterpretItemRequestSchema>;
 
