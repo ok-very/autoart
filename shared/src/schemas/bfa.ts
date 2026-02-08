@@ -293,3 +293,43 @@ export const BfaSyncDecisionRecordSchema = z.object({
   appliedAt: z.string().datetime().nullable(),
 });
 export type BfaSyncDecisionRecord = z.infer<typeof BfaSyncDecisionRecordSchema>;
+
+// ============================================================================
+// GOOGLE DOCS INJECTION
+// ============================================================================
+
+/**
+ * Result of injecting sync changes into a Google Doc.
+ */
+export const BfaInjectionResultSchema = z.object({
+    documentId: z.string(),
+    documentUrl: z.string(),
+    projectsInjected: z.number().int(),
+    projectsSkipped: z.number().int(),
+    errors: z.array(z.object({
+        projectId: z.string(),
+        projectLabel: z.string(),
+        error: z.string(),
+    })),
+});
+export type BfaInjectionResult = z.infer<typeof BfaInjectionResultSchema>;
+
+// ============================================================================
+// AUTOART IMPORT
+// ============================================================================
+
+/**
+ * Result of importing BFA projects into AutoArt hierarchy.
+ */
+export const BfaImportResultSchema = z.object({
+    projectsCreated: z.number().int(),
+    projectsUpdated: z.number().int(),
+    projectsSkipped: z.number().int(),
+    recordsCreated: z.number().int(),
+    errors: z.array(z.object({
+        projectLabel: z.string(),
+        error: z.string(),
+    })),
+    createdProjectIds: z.array(z.string().uuid()),
+});
+export type BfaImportResult = z.infer<typeof BfaImportResultSchema>;
