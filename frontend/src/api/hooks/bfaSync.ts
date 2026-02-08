@@ -10,6 +10,7 @@ import type {
     BfaSyncDecisionRecord,
     BfaSubmitDecision,
     BfaApplyResult,
+    BfaInjectionResult,
 } from '@autoart/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -142,6 +143,23 @@ export function useApplyBfaDecisions() {
             // Also invalidate hierarchy/projects since apply modifies entities
             queryClient.invalidateQueries({ queryKey: ['hierarchy'] });
             queryClient.invalidateQueries({ queryKey: ['projects'] });
+        },
+    });
+}
+
+/**
+ * Inject applied sync changes into a Google Doc.
+ */
+export function useInjectBfaToGoogleDoc() {
+    return useMutation({
+        mutationFn: async ({ boardConfigId, documentId }: {
+            boardConfigId: string;
+            documentId: string;
+        }) => {
+            return api.post<BfaInjectionResult>(
+                `/programs/bfa/sync/${boardConfigId}/inject`,
+                { documentId }
+            );
         },
     });
 }

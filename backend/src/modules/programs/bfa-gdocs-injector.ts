@@ -1,0 +1,503 @@
+/**
+ * BFA Google Docs Injector
+ *
+ * Per-project section replacement in a Google Doc after sync apply.
+ * Finds project headers in the target doc, replaces their content sections
+ * with fresh projections, and highlights changed field values.
+ *
+ * Pure module — no DB access. Receives everything it needs.
+ */
+
+import type { BfaInjectionResult, BfaProjectExportModel, ExportOptions } from '@autoart/shared';
+import { DEFAULT_EXPORT_OPTIONS } from '@autoart/shared';
+
+import type { GoogleDocsClient, GoogleDocumentRequest } from '../exports/connectors/google-docs-client.js';
+import type { GoogleDocsConnector, ParsedProjectHeader } from '../exports/connectors/google-docs-connector.js';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface ProjectMatch {
+    project: BfaProjectExportModel;
+    header: ParsedProjectHeader;
+}
+
+// ============================================================================
+// MAIN ENTRY POINT
+// ============================================================================
+
+/**
+ * Inject updated project content into specific sections of a Google Doc.
+ *
+ * For each affected project:
+ * 1. Matches export model to existing doc header by client+project name
+ * 2. Deletes the content between this header and the next
+ * 3. Inserts fresh formatted content
+ * 4. Applies bold formatting to labels and yellow highlight to changed values
+ *
+ * Requests are sorted in reverse document order to avoid index drift.
+ */
+export async function injectProjects(
+    connector: GoogleDocsConnector,
+    client: GoogleDocsClient,
+    documentId: string,
+    projects: BfaProjectExportModel[],
+    changedFields: Map<string, Set<string>>,
+): Promise<BfaInjectionResult> {
+    const errors: Array<{ projectId: string; projectLabel: string; error: string }> = [];
+    let projectsInjected = 0;
+    let projectsSkipped = 0;
+
+    // 1. Analyze document to find existing project headers
+    const analysis = await connector.analyzeDocument(documentId);
+    const docHeaders = analysis.projectHeaders;
+
+    if (docHeaders.length === 0) {
+        return {
+            documentId,
+            documentUrl: '',
+            projectsInjected: 0,
+            projectsSkipped: projects.length,
+            errors: [{
+                projectId: '',
+                projectLabel: '',
+                error: 'No project headers found in document',
+            }],
+        };
+    }
+
+    // 2. Match projects to doc headers
+    const matches: ProjectMatch[] = [];
+
+    for (const project of projects) {
+        const matched = matchProjectToHeader(project, docHeaders);
+        if (matched) {
+            matches.push({ project, header: matched });
+        } else {
+            projectsSkipped++;
+        }
+    }
+
+    if (matches.length === 0) {
+        const metadata = await client.getFileMetadata(documentId);
+        return {
+            documentId,
+            documentUrl: metadata.webViewLink,
+            projectsInjected: 0,
+            projectsSkipped: projects.length,
+            errors: [],
+        };
+    }
+
+    // 3. Build batch update requests for each matched project
+    // Process in reverse document order to avoid index drift
+    matches.sort((a, b) => b.header.startIndex - a.header.startIndex);
+
+    const allRequests: GoogleDocumentRequest[] = [];
+
+    for (const { project, header } of matches) {
+        try {
+            const projectChanges = changedFields.get(project.projectId) ?? new Set<string>();
+            const { requests } = buildProjectReplacement(
+                project,
+                header,
+                projectChanges,
+            );
+            allRequests.push(...requests);
+            projectsInjected++;
+        } catch (err) {
+            errors.push({
+                projectId: project.projectId,
+                projectLabel: `${project.header.clientName}: ${project.header.projectName}`,
+                error: err instanceof Error ? err.message : String(err),
+            });
+        }
+    }
+
+    // 4. Execute batch update
+    if (allRequests.length > 0) {
+        await client.batchUpdate(documentId, allRequests);
+    }
+
+    // 5. Get document URL
+    const metadata = await client.getFileMetadata(documentId);
+
+    return {
+        documentId,
+        documentUrl: metadata.webViewLink,
+        projectsInjected,
+        projectsSkipped,
+        errors,
+    };
+}
+
+// ============================================================================
+// PROJECT MATCHING
+// ============================================================================
+
+/**
+ * Match an export model to a document header by client+project name.
+ * Tries exact normalized match first, then substring on clientName.
+ */
+function matchProjectToHeader(
+    project: BfaProjectExportModel,
+    headers: ParsedProjectHeader[],
+): ParsedProjectHeader | null {
+    const projClient = normalize(project.header.clientName);
+    const projName = normalize(project.header.projectName);
+
+    // Exact match on both client + project name
+    for (const header of headers) {
+        const docClient = normalize(header.clientName ?? '');
+        const docProject = normalize(header.projectName ?? '');
+
+        if (docClient === projClient && docProject === projName) {
+            return header;
+        }
+    }
+
+    // Fallback: client name substring match (handles slight naming variations)
+    if (projClient.length >= 3) {
+        for (const header of headers) {
+            const docClient = normalize(header.clientName ?? '');
+            if (docClient.includes(projClient) || projClient.includes(docClient)) {
+                const docProject = normalize(header.projectName ?? '');
+                if (docProject.includes(projName) || projName.includes(docProject)) {
+                    return header;
+                }
+            }
+        }
+    }
+
+    return null;
+}
+
+function normalize(s: string): string {
+    return s.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+// ============================================================================
+// CONTENT BUILDING
+// ============================================================================
+
+/**
+ * Build Google Docs batchUpdate requests to replace a single project's content.
+ *
+ * Returns requests that:
+ * 1. Delete existing content (from end of header line to start of next project)
+ * 2. Insert new formatted content at the deletion point
+ * 3. Apply bold to label prefixes
+ * 4. Apply yellow highlight to changed field values
+ */
+function buildProjectReplacement(
+    project: BfaProjectExportModel,
+    header: ParsedProjectHeader,
+    changedFieldPaths: Set<string>,
+): { requests: GoogleDocumentRequest[] } {
+    const requests: GoogleDocumentRequest[] = [];
+
+    // The header line itself is preserved — we only replace content AFTER the header.
+    // header.startIndex is where the header line starts.
+    // We need to find where the header line ends (first newline after startIndex).
+    // Since parseProjectHeaders tracks line boundaries, the content starts
+    // at headerLineEnd and goes to header.endIndex.
+
+    // Compute where the header line ends (approximate: header rawText length + newline)
+    const headerLineEnd = header.startIndex + header.rawText.length + 1; // +1 for newline
+    const contentEnd = header.endIndex;
+
+    // Only delete if there's content between header line and next section
+    if (contentEnd > headerLineEnd) {
+        requests.push({
+            deleteContentRange: {
+                range: {
+                    startIndex: headerLineEnd,
+                    endIndex: contentEnd,
+                },
+            },
+        });
+    }
+
+    // Build the replacement text (everything except the header line)
+    const contentText = formatProjectContent(project, DEFAULT_EXPORT_OPTIONS);
+
+    // Insert new content at the position where we deleted
+    if (contentText.length > 0) {
+        requests.push({
+            insertText: {
+                location: { index: headerLineEnd },
+                text: contentText,
+            },
+        });
+
+        // Apply formatting to inserted content
+        const formatRequests = buildFormattingRequests(
+            contentText,
+            headerLineEnd,
+            changedFieldPaths,
+        );
+        requests.push(...formatRequests);
+    }
+
+    return { requests };
+}
+
+/**
+ * Format project content (everything below the header line).
+ * Based on GoogleDocsConnector.formatSingleProject but without the header line.
+ */
+function formatProjectContent(
+    project: BfaProjectExportModel,
+    options: ExportOptions,
+): string {
+    const lines: string[] = [''];
+
+    // Contacts
+    if (options.includeContacts && project.contactsBlock.lines.length > 0) {
+        lines.push(...project.contactsBlock.lines);
+        lines.push('');
+    }
+
+    // Milestones
+    if (options.includeMilestones && project.timelineBlock.milestones.length > 0) {
+        for (const milestone of project.timelineBlock.milestones) {
+            lines.push(`${milestone.kind}: ${milestone.dateText ?? 'TBC'}`);
+        }
+        lines.push('');
+    }
+
+    // Selection Panel
+    if (options.includeSelectionPanel && (
+        project.selectionPanelBlock.members.length > 0 ||
+        project.selectionPanelBlock.shortlist.length > 0 ||
+        project.selectionPanelBlock.selectedArtist
+    )) {
+        if (project.selectionPanelBlock.members.length > 0) {
+            lines.push(`Selection Panel: ${project.selectionPanelBlock.members.join(', ')}`);
+        }
+        if (project.selectionPanelBlock.shortlist.length > 0) {
+            lines.push(`Shortlist: ${project.selectionPanelBlock.shortlist.join(', ')}`);
+        }
+        if (project.selectionPanelBlock.selectedArtist) {
+            lines.push(`Selected Artist: ${project.selectionPanelBlock.selectedArtist}`);
+        }
+        if (project.selectionPanelBlock.artworkTitle) {
+            lines.push(`Artwork: ${project.selectionPanelBlock.artworkTitle}`);
+        }
+        lines.push('');
+    }
+
+    // Status
+    if (options.includeStatusNotes) {
+        if (project.statusBlock.projectStatusText) {
+            lines.push(`Project Status: ${project.statusBlock.projectStatusText}`);
+        }
+        if (project.statusBlock.bfaProjectStatusText) {
+            lines.push(`BFA Project Status: ${project.statusBlock.bfaProjectStatusText}`);
+        }
+        if (project.statusBlock.nextStepsNarrative) {
+            lines.push(project.statusBlock.nextStepsNarrative);
+        }
+        if (project.statusBlock.projectStatusText || project.statusBlock.bfaProjectStatusText) {
+            lines.push('');
+        }
+    }
+
+    // Next Steps bullets
+    const bullets = options.includeOnlyOpenNextSteps
+        ? project.nextStepsBullets.filter(b => !b.completed)
+        : project.nextStepsBullets;
+
+    if (bullets.length > 0) {
+        for (const bullet of bullets) {
+            const symbol = bullet.completed ? '\u2713' : '\u25CF';
+            lines.push(`${symbol} ${bullet.text}`);
+        }
+        lines.push('');
+    }
+
+    // Separator
+    lines.push('\u2014'.repeat(40));
+    lines.push('');
+
+    return lines.join('\n');
+}
+
+// ============================================================================
+// FORMATTING
+// ============================================================================
+
+/** Known label prefixes to bold in the output */
+const LABEL_PREFIXES = [
+    'Selection Panel:',
+    'Shortlist:',
+    'Selected Artist:',
+    'Artwork:',
+    'Project Status:',
+    'BFA Project Status:',
+];
+
+/** Field path → label prefix mapping for highlight targeting */
+const FIELD_LABEL_MAP: Record<string, string> = {
+    'fields.project_status': 'Project Status:',
+    'fields.bfa_project_status': 'BFA Project Status:',
+    'fields.selected_artist': 'Selected Artist:',
+    'fields.artwork_title': 'Artwork:',
+};
+
+/**
+ * Build text style requests for bold labels and yellow highlight on changed values.
+ */
+function buildFormattingRequests(
+    contentText: string,
+    insertOffset: number,
+    changedFieldPaths: Set<string>,
+): GoogleDocumentRequest[] {
+    const requests: GoogleDocumentRequest[] = [];
+
+    // Bold label prefixes
+    for (const prefix of LABEL_PREFIXES) {
+        let searchStart = 0;
+        while (true) {
+            const idx = contentText.indexOf(prefix, searchStart);
+            if (idx === -1) break;
+
+            requests.push({
+                updateTextStyle: {
+                    range: {
+                        startIndex: insertOffset + idx,
+                        endIndex: insertOffset + idx + prefix.length,
+                    },
+                    textStyle: { bold: true },
+                    fields: 'bold',
+                },
+            });
+            searchStart = idx + prefix.length;
+        }
+    }
+
+    // Also bold milestone kind labels (e.g. "DPAP:", "Install:")
+    const lines = contentText.split('\n');
+    let lineOffset = 0;
+    for (const line of lines) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx > 0 && colonIdx < 40) {
+            // Check if this looks like a "Label: Value" line (not a separator or bullet)
+            const beforeColon = line.slice(0, colonIdx).trim();
+            if (beforeColon.length > 0 && !/^[\u25CF\u2713]/.test(beforeColon)) {
+                const labelEnd = colonIdx + 1; // include the colon
+                requests.push({
+                    updateTextStyle: {
+                        range: {
+                            startIndex: insertOffset + lineOffset,
+                            endIndex: insertOffset + lineOffset + labelEnd,
+                        },
+                        textStyle: { bold: true },
+                        fields: 'bold',
+                    },
+                });
+            }
+        }
+        lineOffset += line.length + 1; // +1 for newline
+    }
+
+    // Yellow highlight for changed field values
+    if (changedFieldPaths.size > 0) {
+        for (const fieldPath of changedFieldPaths) {
+            const labelPrefix = FIELD_LABEL_MAP[fieldPath];
+            if (!labelPrefix) continue;
+
+            const idx = contentText.indexOf(labelPrefix);
+            if (idx === -1) continue;
+
+            // Highlight the value after the label (to end of line)
+            const valueStart = idx + labelPrefix.length;
+            const lineEnd = contentText.indexOf('\n', valueStart);
+            const valueEnd = lineEnd === -1 ? contentText.length : lineEnd;
+
+            if (valueEnd > valueStart) {
+                requests.push({
+                    updateTextStyle: {
+                        range: {
+                            startIndex: insertOffset + valueStart,
+                            endIndex: insertOffset + valueEnd,
+                        },
+                        textStyle: {
+                            backgroundColor: {
+                                color: {
+                                    rgbColor: { red: 1, green: 1, blue: 0 },
+                                },
+                            },
+                        },
+                        fields: 'backgroundColor',
+                    },
+                });
+            }
+        }
+
+        // Also highlight budget/phase/contact changes by looking for common patterns
+        // in the content text that correspond to changed field paths
+        highlightGenericChanges(contentText, insertOffset, changedFieldPaths, requests);
+    }
+
+    return requests;
+}
+
+/**
+ * Highlight field values in content for changed fields that don't have
+ * a direct label mapping. Matches "Label: Value" patterns on each line
+ * against known field-to-label associations.
+ */
+function highlightGenericChanges(
+    contentText: string,
+    insertOffset: number,
+    changedFieldPaths: Set<string>,
+    requests: GoogleDocumentRequest[],
+): void {
+    const genericMap: Record<string, string[]> = {
+        'fields.total_budget': ['Total:'],
+        'fields.artwork_budget': ['Art:'],
+        'fields.install_date': ['Install:'],
+        'fields.phase': ['Phase:'],
+    };
+
+    for (const fieldPath of changedFieldPaths) {
+        const labels = genericMap[fieldPath];
+        if (!labels) continue;
+
+        for (const label of labels) {
+            const idx = contentText.indexOf(label);
+            if (idx === -1) continue;
+
+            const valueStart = idx + label.length;
+            // Find end of this value segment (next | or ) or newline)
+            let valueEnd = contentText.length;
+            for (const terminator of [' |', ')', '\n']) {
+                const termIdx = contentText.indexOf(terminator, valueStart);
+                if (termIdx !== -1 && termIdx < valueEnd) {
+                    valueEnd = termIdx;
+                }
+            }
+
+            if (valueEnd > valueStart) {
+                requests.push({
+                    updateTextStyle: {
+                        range: {
+                            startIndex: insertOffset + valueStart,
+                            endIndex: insertOffset + valueEnd,
+                        },
+                        textStyle: {
+                            backgroundColor: {
+                                color: {
+                                    rgbColor: { red: 1, green: 1, blue: 0 },
+                                },
+                            },
+                        },
+                        fields: 'backgroundColor',
+                    },
+                });
+            }
+        }
+    }
+}
