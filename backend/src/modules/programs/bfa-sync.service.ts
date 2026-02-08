@@ -9,6 +9,7 @@ import { randomUUID } from 'crypto';
 
 import type { BfaApplyResult, BfaInjectionResult, BfaSyncDiffReport } from '@autoart/shared';
 import { DEFAULT_EXPORT_OPTIONS } from '@autoart/shared';
+import { sql } from 'kysely';
 
 import { db } from '../../db/client.js';
 import type { SyncDecision } from '../../db/schema.js';
@@ -320,8 +321,9 @@ export async function injectToGoogleDoc(
     // 3. Extract unique entity IDs from applied decisions
     const entityIds = [...new Set(appliedDecisions.map(d => d.entity_id))];
 
-    // 4. Resolve entity IDs to project-level node IDs
-    const projectIds = await resolveProjectIds(entityIds);
+    // 4. Resolve entity IDs to project-level node IDs (single call)
+    const entityToProject = await resolveEntityProjects(entityIds);
+    const projectIds = [...new Set(entityToProject.values())];
     if (projectIds.length === 0) {
         throw new Error('Could not resolve any project IDs from applied decisions');
     }
@@ -334,7 +336,6 @@ export async function injectToGoogleDoc(
 
     // 7. Build changedFields map: projectId → Set<fieldPath>
     const changedFields = new Map<string, Set<string>>();
-    const entityToProject = await buildEntityToProjectMap(entityIds);
 
     for (const decision of appliedDecisions) {
         const projectId = entityToProject.get(decision.entity_id);
@@ -641,117 +642,18 @@ function flattenMetadata(raw: unknown): Record<string, string | null> {
 
 /**
  * Resolve entity IDs to their project-level ancestor node IDs.
- * Walks up the hierarchy_nodes tree to find nodes with type='project'.
- * For entities that are themselves projects, returns them directly.
- * For entities in external_source_mappings (actions), looks up the
- * related hierarchy node first.
+ *
+ * Returns a Map<entityId, projectId>. Callers that need just the set of
+ * project IDs can do `new Set(map.values())`.
+ *
+ * Uses a single recursive CTE to batch-walk all nodes to their project
+ * ancestors instead of issuing O(N*D) sequential queries.
  */
-async function resolveProjectIds(entityIds: string[]): Promise<string[]> {
-    if (entityIds.length === 0) return [];
-
-    // First check if any entities are actions mapped to hierarchy nodes
-    const mappings = await db
-        .selectFrom('external_source_mappings')
-        .select(['local_entity_id', 'local_entity_type'])
-        .where('provider', '=', 'monday')
-        .where('local_entity_id', 'in', entityIds)
-        .execute();
-
-    // Collect all node IDs to check (entities might be actions or nodes)
-    const nodeIdsToCheck = new Set<string>();
-
-    // For actions, find associated hierarchy nodes via context
-    const actionIds = mappings
-        .filter(m => m.local_entity_type === 'action')
-        .map(m => m.local_entity_id);
-
-    if (actionIds.length > 0) {
-        const actions = await db
-            .selectFrom('actions')
-            .select(['id', 'context_id'])
-            .where('id', 'in', actionIds)
-            .execute();
-
-        for (const a of actions) {
-            if (a.context_id) nodeIdsToCheck.add(a.context_id);
-        }
-    }
-
-    // For hierarchy nodes, add directly
-    const nodeEntityIds = mappings
-        .filter(m => m.local_entity_type !== 'action')
-        .map(m => m.local_entity_id);
-    for (const id of nodeEntityIds) nodeIdsToCheck.add(id);
-
-    // Also add any entityIds not found in mappings (might be hierarchy nodes directly)
-    const mappedIds = new Set(mappings.map(m => m.local_entity_id));
-    for (const id of entityIds) {
-        if (!mappedIds.has(id)) nodeIdsToCheck.add(id);
-    }
-
-    if (nodeIdsToCheck.size === 0) return [];
-
-    // Walk up the hierarchy to find project-level ancestors
-    const nodeArray = [...nodeIdsToCheck];
-    const projectIds = new Set<string>();
-
-    // Check which of these are already projects
-    const directProjects = await db
-        .selectFrom('hierarchy_nodes')
-        .select('id')
-        .where('id', 'in', nodeArray)
-        .where('type', '=', 'project')
-        .execute();
-
-    for (const p of directProjects) {
-        projectIds.add(p.id);
-    }
-
-    // For non-project nodes, walk up to find project ancestor
-    const nonProjectIds = nodeArray.filter(id => !projectIds.has(id));
-    if (nonProjectIds.length > 0) {
-        for (const nodeId of nonProjectIds) {
-            const ancestor = await findProjectAncestor(nodeId);
-            if (ancestor) projectIds.add(ancestor);
-        }
-    }
-
-    return [...projectIds];
-}
-
-/**
- * Walk up the hierarchy from a node to find its project-level ancestor.
- */
-async function findProjectAncestor(nodeId: string): Promise<string | null> {
-    let currentId: string | null = nodeId;
-    const visited = new Set<string>();
-
-    while (currentId && !visited.has(currentId)) {
-        visited.add(currentId);
-
-        const node = await db
-            .selectFrom('hierarchy_nodes')
-            .select(['id', 'parent_id', 'type'])
-            .where('id', '=', currentId)
-            .executeTakeFirst();
-
-        if (!node) return null;
-        if (node.type === 'project') return node.id;
-
-        currentId = node.parent_id;
-    }
-
-    return null;
-}
-
-/**
- * Build a map from entity IDs to their project-level ancestor IDs.
- */
-async function buildEntityToProjectMap(entityIds: string[]): Promise<Map<string, string>> {
+export async function resolveEntityProjects(entityIds: string[]): Promise<Map<string, string>> {
     const result = new Map<string, string>();
     if (entityIds.length === 0) return result;
 
-    // Check external_source_mappings for action entities
+    // 1. Classify entities: actions vs hierarchy nodes
     const mappings = await db
         .selectFrom('external_source_mappings')
         .select(['local_entity_id', 'local_entity_type'])
@@ -759,12 +661,14 @@ async function buildEntityToProjectMap(entityIds: string[]): Promise<Map<string,
         .where('local_entity_id', 'in', entityIds)
         .execute();
 
+    // For actions, resolve via context_id to get starting hierarchy node
     const actionIds = mappings
         .filter(m => m.local_entity_type === 'action')
         .map(m => m.local_entity_id);
 
-    // For actions, get context_id (hierarchy node reference)
-    const actionContextMap = new Map<string, string>();
+    // Maps entityId → starting hierarchy node ID
+    const entityToStartNode = new Map<string, string>();
+
     if (actionIds.length > 0) {
         const actions = await db
             .selectFrom('actions')
@@ -773,18 +677,71 @@ async function buildEntityToProjectMap(entityIds: string[]): Promise<Map<string,
             .execute();
 
         for (const a of actions) {
-            if (a.context_id) actionContextMap.set(a.id, a.context_id);
+            if (a.context_id) entityToStartNode.set(a.id, a.context_id);
         }
     }
 
-    // Resolve each entity to its project
-    for (const entityId of entityIds) {
-        // If it's an action, use its context_id as the starting node
-        const startNodeId = actionContextMap.get(entityId) ?? entityId;
-        const projectId = await findProjectAncestor(startNodeId);
+    // For hierarchy nodes (mapped or unmapped), use the entity ID directly
+    const mappedIds = new Set(mappings.map(m => m.local_entity_id));
+    for (const m of mappings) {
+        if (m.local_entity_type !== 'action') {
+            entityToStartNode.set(m.local_entity_id, m.local_entity_id);
+        }
+    }
+    for (const id of entityIds) {
+        if (!mappedIds.has(id) && !entityToStartNode.has(id)) {
+            entityToStartNode.set(id, id);
+        }
+    }
+
+    // 2. Collect unique starting node IDs
+    const startNodeIds = [...new Set(entityToStartNode.values())];
+    if (startNodeIds.length === 0) return result;
+
+    // 3. Batch-walk ancestors with recursive CTE
+    const nodeToProject = await batchFindProjectAncestors(startNodeIds);
+
+    // 4. Map entity IDs → project IDs
+    for (const [entityId, startNodeId] of entityToStartNode) {
+        const projectId = nodeToProject.get(startNodeId);
         if (projectId) {
             result.set(entityId, projectId);
         }
+    }
+
+    return result;
+}
+
+/**
+ * Batch-find project ancestors for multiple hierarchy node IDs using a
+ * single recursive CTE. Returns Map<nodeId, projectId>.
+ */
+async function batchFindProjectAncestors(
+    nodeIds: string[],
+): Promise<Map<string, string>> {
+    const result = new Map<string, string>();
+    if (nodeIds.length === 0) return result;
+
+    const ids = sql.join(nodeIds.map(id => sql`${id}`));
+
+    const rows = await sql<{ original_id: string; project_id: string }>`
+        WITH RECURSIVE ancestors AS (
+            SELECT id, parent_id, type, id AS original_id, 0 AS depth
+            FROM hierarchy_nodes
+            WHERE id IN (${ids})
+            UNION ALL
+            SELECT h.id, h.parent_id, h.type, a.original_id, a.depth + 1
+            FROM hierarchy_nodes h
+            JOIN ancestors a ON h.id = a.parent_id
+            WHERE a.type != 'project' AND a.depth < 20
+        )
+        SELECT original_id, id AS project_id
+        FROM ancestors
+        WHERE type = 'project'
+    `.execute(db);
+
+    for (const row of rows.rows) {
+        result.set(row.original_id, row.project_id);
     }
 
     return result;

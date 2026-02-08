@@ -8,7 +8,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 
-import type { BfaSyncDecision, BfaSubmitDecision, BfaApplyResult, BfaInjectionResult } from '@autoart/shared';
+import type { BfaSyncDecision, BfaSubmitDecision, BfaApplyResult, BfaInjectionResult, BfaImportResult } from '@autoart/shared';
 
 import { Button, Card, Select, Spinner, Stack, Inline, Badge, TextInput } from '@autoart/ui';
 
@@ -20,6 +20,7 @@ import {
     useSubmitBfaDecisions,
     useApplyBfaDecisions,
     useInjectBfaToGoogleDoc,
+    useImportBfaToAutoArt,
 } from '../../api/hooks/bfaSync';
 
 import { BfaSyncStatsBar } from './components/BfaSyncStatsBar';
@@ -46,10 +47,15 @@ export function BfaSyncView() {
     );
     const [injectionResult, setInjectionResult] = useState<BfaInjectionResult | null>(null);
 
+    // Import state
+    const [importResult, setImportResult] = useState<BfaImportResult | null>(null);
+
     // Persist doc ID to localStorage
     useEffect(() => {
         if (docIdInput) {
             localStorage.setItem('bfa-sync-doc-id', docIdInput);
+        } else {
+            localStorage.removeItem('bfa-sync-doc-id');
         }
     }, [docIdInput]);
 
@@ -62,6 +68,7 @@ export function BfaSyncView() {
     const submitDecisions = useSubmitBfaDecisions();
     const applyDecisions = useApplyBfaDecisions();
     const injectToDoc = useInjectBfaToGoogleDoc();
+    const importToAutoArt = useImportBfaToAutoArt();
 
     // Board selector options from reports (deduplicated by boardId)
     const boardOptions = useMemo(() => {
@@ -172,8 +179,17 @@ export function BfaSyncView() {
         );
     };
 
+    const handleImport = () => {
+        if (!selectedBoardConfigId) return;
+        setImportResult(null);
+        importToAutoArt.mutate(
+            { boardConfigId: selectedBoardConfigId },
+            { onSuccess: (result) => setImportResult(result) },
+        );
+    };
+
     const isLoading = reportsLoading || reportLoading;
-    const isMutating = triggerSync.isPending || submitDecisions.isPending || applyDecisions.isPending || injectToDoc.isPending;
+    const isMutating = triggerSync.isPending || submitDecisions.isPending || applyDecisions.isPending || injectToDoc.isPending || importToAutoArt.isPending;
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -338,6 +354,75 @@ export function BfaSyncView() {
                                         {injectionResult.errors.map((err, i) => (
                                             <div key={i}>
                                                 {err.projectLabel || err.projectId.slice(0, 8)}: {err.error}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </Stack>
+                        </Card>
+                    )}
+
+                    {/* Import to AutoArt */}
+                    {applyResult && applyResult.applied > 0 && (
+                        <Card padding="sm">
+                            <Stack gap="sm">
+                                <span className="text-xs font-medium text-ws-text-secondary uppercase">
+                                    Import to AutoArt
+                                </span>
+                                <Inline gap="sm" align="end">
+                                    <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        onClick={handleImport}
+                                        disabled={isMutating}
+                                    >
+                                        {importToAutoArt.isPending ? 'Importing...' : 'Import to AutoArt'}
+                                    </Button>
+                                </Inline>
+
+                                {importToAutoArt.isError && (
+                                    <span className="text-xs text-[var(--ws-color-error)]">
+                                        Import failed: {importToAutoArt.error?.message}
+                                    </span>
+                                )}
+
+                                {importResult && (
+                                    <Inline gap="md">
+                                        <Badge variant="success" size="md">
+                                            Created: {importResult.projectsCreated}
+                                        </Badge>
+                                        <Badge variant="neutral" size="md">
+                                            Updated: {importResult.projectsUpdated}
+                                        </Badge>
+                                        {importResult.projectsSkipped > 0 && (
+                                            <Badge variant="warning" size="md">
+                                                Skipped: {importResult.projectsSkipped}
+                                            </Badge>
+                                        )}
+                                        {importResult.recordsCreated > 0 && (
+                                            <Badge variant="success" size="md">
+                                                Records: {importResult.recordsCreated}
+                                            </Badge>
+                                        )}
+                                        {importResult.errors.length > 0 && (
+                                            <Badge variant="error" size="md">
+                                                Errors: {importResult.errors.length}
+                                            </Badge>
+                                        )}
+                                    </Inline>
+                                )}
+
+                                {importResult && importResult.createdProjectIds.length > 0 && (
+                                    <span className="text-xs text-ws-text-secondary">
+                                        {importResult.createdProjectIds.length} project{importResult.createdProjectIds.length !== 1 ? 's' : ''} created in hierarchy
+                                    </span>
+                                )}
+
+                                {importResult && importResult.errors.length > 0 && (
+                                    <div className="text-xs text-[var(--ws-color-error)]">
+                                        {importResult.errors.map((err, i) => (
+                                            <div key={i}>
+                                                {err.projectLabel}: {err.error}
                                             </div>
                                         ))}
                                     </div>
