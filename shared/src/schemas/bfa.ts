@@ -234,3 +234,62 @@ export const BfaProgramConfigSchema = z.object({
   statePriority: z.record(z.string(), z.number()),
 });
 export type BfaProgramConfig = z.infer<typeof BfaProgramConfigSchema>;
+
+// ============================================================================
+// SYNC DECISION INPUT/OUTPUT
+// ============================================================================
+
+/**
+ * A single decision submitted by a user for a field change.
+ */
+export const BfaSubmitDecisionSchema = z.object({
+  entityId: z.string().uuid(),
+  field: z.string(),
+  decision: BfaSyncDecisionSchema,
+  assignedTo: z.string().uuid().optional(),
+});
+export type BfaSubmitDecision = z.infer<typeof BfaSubmitDecisionSchema>;
+
+/**
+ * Batch decision submission input.
+ */
+export const BfaSubmitDecisionsInputSchema = z.object({
+  decisions: z.array(BfaSubmitDecisionSchema),
+});
+export type BfaSubmitDecisionsInput = z.infer<typeof BfaSubmitDecisionsInputSchema>;
+
+/**
+ * Result of applying decisions to local entities.
+ */
+export const BfaApplyResultSchema = z.object({
+  applied: z.number().int(),
+  rejected: z.number().int(),
+  deferred: z.number().int(),
+  errors: z.array(z.object({
+    entityId: z.string(),
+    field: z.string(),
+    error: z.string(),
+  })),
+});
+export type BfaApplyResult = z.infer<typeof BfaApplyResultSchema>;
+
+/**
+ * A persisted decision record returned from the API.
+ */
+export const BfaSyncDecisionRecordSchema = z.object({
+  id: z.string().uuid(),
+  reportId: z.string().uuid(),
+  entityId: z.string().uuid(),
+  field: z.string(),
+  sourceField: z.string(),
+  oldValue: z.string(),
+  newValue: z.string(),
+  authority: BfaFieldAuthoritySchema,
+  severity: BfaDiffSeveritySchema,
+  decision: BfaSyncDecisionSchema.nullable(),
+  decidedBy: z.string().uuid().nullable(),
+  decidedAt: z.string().datetime().nullable(),
+  assignedTo: z.string().uuid().nullable(),
+  appliedAt: z.string().datetime().nullable(),
+});
+export type BfaSyncDecisionRecord = z.infer<typeof BfaSyncDecisionRecordSchema>;

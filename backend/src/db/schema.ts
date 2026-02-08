@@ -716,6 +716,34 @@ export type NewAutoHelperCommand = Insertable<AutoHelperCommandsTable>;
 export type AutoHelperCommandUpdate = Updateable<AutoHelperCommandsTable>;
 
 // ============================================
+// SYNC DECISIONS TABLE (Migration 008)
+// Persists user decisions on field-level changes from sync diff reports
+// ============================================
+
+export interface SyncDecisionsTable {
+  id: Generated<string>;
+  board_config_id: string;
+  report_id: string;
+  entity_id: string;
+  field: string;
+  source_field: string;
+  old_value: string;
+  new_value: string;
+  authority: string;
+  severity: string;
+  decision: string | null;
+  decided_by: string | null;
+  decided_at: Date | null;
+  assigned_to: string | null;
+  applied_at: Date | null;
+  created_at: Generated<Date>;
+}
+
+export type SyncDecision = Selectable<SyncDecisionsTable>;
+export type NewSyncDecision = Insertable<SyncDecisionsTable>;
+export type SyncDecisionUpdate = Updateable<SyncDecisionsTable>;
+
+// ============================================
 // ACTION VOCABULARY TABLE (Migration 004)
 // Learned verbs/nouns/adjectives from import classifications
 // ============================================
@@ -791,6 +819,7 @@ export interface Database {
   autohelper_commands: AutoHelperCommandsTable;
   action_vocabulary: ActionVocabularyTable;
   import_action_links: ImportActionLinksTable;
+  sync_decisions: SyncDecisionsTable;
 }
 
 

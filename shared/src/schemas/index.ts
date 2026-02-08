@@ -478,6 +478,10 @@ export {
     BfaFieldAuthorityMapSchema,
     BfaColumnMappingSchema,
     BfaProgramConfigSchema,
+    BfaSubmitDecisionSchema,
+    BfaSubmitDecisionsInputSchema,
+    BfaApplyResultSchema,
+    BfaSyncDecisionRecordSchema,
     type BfaPhase,
     type BfaPhaseLegacy,
     type BfaFieldAuthority,
@@ -491,6 +495,10 @@ export {
     type BfaFieldAuthorityMap,
     type BfaColumnMapping,
     type BfaProgramConfig,
+    type BfaSubmitDecision,
+    type BfaSubmitDecisionsInput,
+    type BfaApplyResult,
+    type BfaSyncDecisionRecord,
 } from './bfa.js';
 
 // ==================== IMPORTS ====================
