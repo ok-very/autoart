@@ -11,7 +11,7 @@ import { randomUUID } from 'node:crypto';
 import { db } from '@db/client.js';
 import { logger } from '@utils/logger.js';
 
-import { generateClassifications, generateClassificationsForConnectorItems } from './import-classification.service.js';
+import { generateClassifications, generateClassificationsForConnectorItems, extractAndStoreVocabulary } from './import-classification.service.js';
 import { getSession, PARSERS } from './import-sessions.service.js';
 import { getPlannedStatus, transitionStatusInTransaction } from './session-status.service.js';
 import { listDefinitions } from '../../records/records.service.js';
@@ -74,6 +74,9 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
 
     // Generate classifications for each item (with schema matching)
     const classifications = generateClassifications(items, definitions);
+
+    // Fire-and-forget vocabulary extraction from classified items
+    extractAndStoreVocabulary(items, classifications);
 
     const planData: ImportPlan = {
         sessionId,
@@ -278,6 +281,9 @@ export async function generatePlanFromConnector(
     // This enables proper gating and schema matching for records
     const definitions = await listDefinitions({ definitionKind: 'record' });
     plan.classifications = generateClassificationsForConnectorItems(plan.items, definitions);
+
+    // Fire-and-forget vocabulary extraction from classified items
+    extractAndStoreVocabulary(plan.items, plan.classifications);
 
     // Determine session status
     const hasUnresolved = hasUnresolvedClassifications(plan);

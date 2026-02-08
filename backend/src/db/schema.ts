@@ -713,6 +713,26 @@ export type AutoHelperCommand = Selectable<AutoHelperCommandsTable>;
 export type NewAutoHelperCommand = Insertable<AutoHelperCommandsTable>;
 export type AutoHelperCommandUpdate = Updateable<AutoHelperCommandsTable>;
 
+// ============================================
+// ACTION VOCABULARY TABLE (Migration 004)
+// Learned verbs/nouns/adjectives from import classifications
+// ============================================
+
+export interface ActionVocabularyTable {
+  id: Generated<string>;
+  verb: string;
+  noun: string;
+  adjective: string | null;
+  classification_outcome: string;
+  frequency: Generated<number>;
+  last_seen_at: Generated<Date>;
+  created_at: Generated<Date>;
+}
+
+export type ActionVocabulary = Selectable<ActionVocabularyTable>;
+export type NewActionVocabulary = Insertable<ActionVocabularyTable>;
+export type ActionVocabularyUpdate = Updateable<ActionVocabularyTable>;
+
 // Database Interface
 export interface Database {
   users: UsersTable;
@@ -752,6 +772,7 @@ export interface Database {
   mail_links: MailLinksTable;
   autohelper_instances: AutoHelperInstancesTable;
   autohelper_commands: AutoHelperCommandsTable;
+  action_vocabulary: ActionVocabularyTable;
 }
 
 

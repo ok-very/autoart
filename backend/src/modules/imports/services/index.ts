@@ -27,6 +27,7 @@ export {
     generateClassificationsForConnectorItems,
     addSchemaMatch,
     saveResolutions,
+    extractAndStoreVocabulary,
     type Resolution,
 } from './import-classification.service.js';
 
