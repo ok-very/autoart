@@ -482,6 +482,8 @@ export {
     BfaSubmitDecisionsInputSchema,
     BfaApplyResultSchema,
     BfaSyncDecisionRecordSchema,
+    BfaInjectionResultSchema,
+    BfaImportResultSchema,
     type BfaPhase,
     type BfaPhaseLegacy,
     type BfaFieldAuthority,
@@ -499,6 +501,8 @@ export {
     type BfaSubmitDecisionsInput,
     type BfaApplyResult,
     type BfaSyncDecisionRecord,
+    type BfaInjectionResult,
+    type BfaImportResult,
 } from './bfa.js';
 
 // ==================== IMPORTS ====================

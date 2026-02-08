@@ -211,6 +211,24 @@ export async function seed(db: Kysely<Database>): Promise<void> {
       }),
       styling: JSON.stringify({ color: 'rose', icon: '🧾' }),
     },
+
+    // ==================== BFA PROGRAM DEFINITIONS ====================
+
+    {
+      name: 'Selection Panel',
+      schema_config: JSON.stringify({
+        fields: [
+          { key: 'meeting_type', type: 'select', label: 'Meeting Type',
+            options: ['SP#1', 'SP#2', 'AO', 'CA'], required: true },
+          { key: 'members', type: 'textarea', label: 'Panel Members' },
+          { key: 'shortlisted_artists', type: 'textarea', label: 'Shortlisted Artists' },
+          { key: 'alternates', type: 'textarea', label: 'Alternates' },
+          { key: 'selected_artist', type: 'text', label: 'Selected Artist' },
+          { key: 'artwork_title', type: 'text', label: 'Artwork Title' },
+        ],
+      }),
+      styling: JSON.stringify({ color: 'fuchsia', icon: '🎨' }),
+    },
   ];
 
   // ==================== CONTAINER DEFINITIONS ====================
@@ -227,7 +245,24 @@ export async function seed(db: Kysely<Database>): Promise<void> {
       name: 'Phase',
       definition_kind: 'container' as const,
       is_system: true,
-      schema_config: JSON.stringify({ fields: [] }),
+      schema_config: JSON.stringify({
+        fields: [
+          { key: 'phase_kind', type: 'select', label: 'Kind',
+            options: ['General', 'Milestone', 'Stage', 'Gate'] },
+          { key: 'target_date', type: 'date', label: 'Target Date' },
+          { key: 'actual_date', type: 'date', label: 'Actual Date' },
+          { key: 'milestone_type', type: 'select', label: 'Milestone Type',
+            options: ['DPAP', 'PPAP', 'Install', 'Fabrication Start', 'Contract', 'Design Approval', 'Other'] },
+          { key: 'status', type: 'status', label: 'Status',
+            options: ['Scheduled', 'Completed', 'Overdue'],
+            statusConfig: {
+              Scheduled: { label: 'Scheduled', colorClass: 'bg-blue-100 text-blue-700' },
+              Completed: { label: 'Completed', colorClass: 'bg-green-100 text-green-700' },
+              Overdue: { label: 'Overdue', colorClass: 'bg-amber-100 text-amber-700' },
+            },
+          },
+        ],
+      }),
       styling: JSON.stringify({ color: 'slate', icon: '📂' }),
     },
     {
