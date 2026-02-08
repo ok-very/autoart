@@ -7,8 +7,8 @@
  * Each submenu has a "+" action to save the current arrangement into that category.
  */
 
-import { ChevronDown, Copy, Dna, Folder, Plus, Save, Trash2 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { ChevronDown, Copy, Dna, Folder, Pencil, Plus, Save, Trash2 } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
 
 import { Button, type ButtonColor } from '@autoart/ui';
 import { Menu } from '@autoart/ui';
@@ -94,10 +94,20 @@ function getActiveColorClass(color: string): string {
     return WORKSPACE_COLOR_CONFIG[color]?.active ?? WORKSPACE_COLOR_CONFIG[DEFAULT_COLOR].active;
 }
 
-/** Inline hover actions for custom workspace items (duplicate + delete) */
-function CustomItemActions({ onDuplicate, onDelete }: { onDuplicate: () => void; onDelete: () => void }) {
+/** Inline hover actions for custom workspace items (rename + duplicate + delete) */
+function CustomItemActions({ onRename, onDuplicate, onDelete }: { onRename: () => void; onDuplicate: () => void; onDelete: () => void }) {
     return (
         <span className="flex items-center gap-0.5 opacity-0 group-hover/custom:opacity-100 transition-opacity">
+            <span
+                role="button"
+                tabIndex={0}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRename(); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); onRename(); } }}
+                className="p-1 hover:bg-slate-200 rounded text-ws-muted hover:text-ws-text-secondary transition-colors cursor-pointer"
+                title="Rename"
+            >
+                <Pencil size={12} />
+            </span>
             <span
                 role="button"
                 tabIndex={0}
@@ -149,6 +159,7 @@ interface WorkspaceMenuEntryProps {
     activeSubviewId: string | null;
     onSelect: (workspaceId: string, subviewId?: string) => void;
     onOpenAddDialog: (parentWorkspaceId: string) => void;
+    onRenameCustom: (id: string) => void;
     onDeleteCustom: (id: string) => void;
     onDuplicateCustom: (id: string) => void;
     onDuplicateSubview: (parentId: string, subview: WorkspaceSubview) => void;
@@ -163,6 +174,7 @@ function WorkspaceMenuEntry({
     activeSubviewId,
     onSelect,
     onOpenAddDialog,
+    onRenameCustom,
     onDeleteCustom,
     onDuplicateCustom,
     onDuplicateSubview,
@@ -224,6 +236,7 @@ function WorkspaceMenuEntry({
                                             className={isChildActive ? getActiveColorClass(child.color) : ''}
                                             rightSection={
                                                 <CustomItemActions
+                                                    onRename={() => onRenameCustom(child.id)}
                                                     onDuplicate={() => onDuplicateCustom(child.id)}
                                                     onDelete={() => onDeleteCustom(child.id)}
                                                 />
@@ -268,6 +281,9 @@ export function WorkspaceDropdown() {
     const [dialogParentId, setDialogParentId] = useState<string | undefined>();
     const [dialogDefaultColor, setDialogDefaultColor] = useState<string | undefined>();
     const [confirmTarget, setConfirmTarget] = useState<{ workspaceId: string; subviewId?: string } | null>(null);
+    const [renameTarget, setRenameTarget] = useState<{ id: string; currentName: string } | null>(null);
+    const [renameValue, setRenameValue] = useState('');
+    const renameInputRef = useRef<HTMLInputElement>(null);
     const activeWorkspaceId = useActiveWorkspaceId();
     const activeSubviewId = useActiveSubviewId();
     const customWorkspaces = useCustomWorkspaces();
@@ -313,6 +329,21 @@ export function WorkspaceDropdown() {
         useWorkspaceStore.getState().duplicateCustomWorkspace(id);
     };
 
+    const handleStartRename = useCallback((id: string) => {
+        const ws = customWorkspaces.find(w => w.id === id);
+        if (!ws) return;
+        setRenameTarget({ id, currentName: ws.label });
+        setRenameValue(ws.label);
+        requestAnimationFrame(() => renameInputRef.current?.select());
+    }, [customWorkspaces]);
+
+    const handleConfirmRename = useCallback(() => {
+        if (renameTarget && renameValue.trim()) {
+            useWorkspaceStore.getState().renameCustomWorkspace(renameTarget.id, renameValue);
+        }
+        setRenameTarget(null);
+    }, [renameTarget, renameValue]);
+
     const handleDuplicateSubview = (parentId: string, subview: WorkspaceSubview) => {
         useWorkspaceStore.getState().duplicateSubview(parentId, subview.id, `${subview.label} (custom)`);
     };
@@ -356,6 +387,7 @@ export function WorkspaceDropdown() {
                                 activeSubviewId={activeSubviewId}
                                 onSelect={handleSelectWorkspace}
                                 onOpenAddDialog={handleOpenAddDialog}
+                                onRenameCustom={handleStartRename}
                                 onDeleteCustom={handleDeleteCustom}
                                 onDuplicateCustom={handleDuplicateCustom}
                                 onDuplicateSubview={handleDuplicateSubview}
@@ -384,6 +416,7 @@ export function WorkspaceDropdown() {
                                             }
                                             rightSection={
                                                 <CustomItemActions
+                                                    onRename={() => handleStartRename(workspace.id)}
                                                     onDuplicate={() => handleDuplicateCustom(workspace.id)}
                                                     onDelete={() => handleDeleteCustom(workspace.id)}
                                                 />
@@ -462,6 +495,38 @@ export function WorkspaceDropdown() {
                             }}
                         >
                             Save as new
+                        </Button>
+                    </Inline>
+                </div>
+            </Modal>
+
+            {/* Rename dialog for custom workspaces */}
+            <Modal
+                open={!!renameTarget}
+                onOpenChange={(open) => { if (!open) setRenameTarget(null); }}
+                title="Rename workspace"
+                size="sm"
+            >
+                <div className="space-y-3">
+                    <input
+                        ref={renameInputRef}
+                        type="text"
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmRename(); }}
+                        className="w-full px-3 py-2 text-sm border border-ws-panel-border rounded bg-ws-bg focus:outline-none focus:border-ws-accent"
+                        placeholder="Workspace name"
+                    />
+                    <Inline gap="sm" justify="end">
+                        <Button variant="secondary" onClick={() => setRenameTarget(null)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="primary"
+                            onClick={handleConfirmRename}
+                            disabled={!renameValue.trim() || renameValue.trim() === renameTarget?.currentName}
+                        >
+                            Rename
                         </Button>
                     </Inline>
                 </div>
