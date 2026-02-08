@@ -242,7 +242,7 @@ export function Step1SelectBoards({ onNext, onBack, onSessionCreated }: StepProp
             )}
 
             <Inline justify="between" className="pt-2">
-                <Button variant="secondary" onClick={onBack}>Cancel</Button>
+                <Button variant="secondary" onClick={onBack} disabled={isCreatingSession}>Cancel</Button>
                 <Button
                     onClick={handleCreateSession}
                     variant="primary"

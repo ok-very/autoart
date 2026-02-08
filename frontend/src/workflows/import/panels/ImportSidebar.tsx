@@ -157,8 +157,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
         setError(null);
     }, [onReset]);
 
-    // If session exists and NOT Monday source, show session info only
-    // For Monday source, we persist the board list below the session header
+    // If session exists, show session info and reset button
     if (session) {
         return (
             <aside style={{ width }} className="shrink-0 border-r border-ws-panel-border bg-ws-panel-bg flex flex-col">
