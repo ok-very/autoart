@@ -30,6 +30,7 @@ import { pollRoutes, pollPublicRoutes } from './modules/polls/index.js';
 import { workflowSurfaceRoutes } from './modules/projections/workflow-surface.routes.js';
 import { factKindsRoutes } from './modules/records/fact-kinds.routes.js';
 import { recordsRoutes } from './modules/records/records.routes.js';
+import { programsRoutes } from './modules/programs/index.js';
 import { runnerRoutes } from './modules/runner/runner.routes.js';
 import { searchRoutes } from './modules/search/search.routes.js';
 import { vocabularyRoutes } from './modules/vocabulary/index.js';
@@ -139,6 +140,9 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Action vocabulary suggestions (learned from import classifications)
   await fastify.register(vocabularyRoutes, { prefix: '/api/vocabulary' });
+
+  // Program-specific sync (BFA)
+  await fastify.register(programsRoutes, { prefix: '/api/programs' });
 
   // Transient mail browsing/triage handled by AutoHelper on port 8100
 
