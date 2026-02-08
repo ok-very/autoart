@@ -12,6 +12,7 @@
 import { useCallback, useState, useMemo, useEffect } from 'react';
 
 import type { ImportSession, ImportPlan } from '../api/hooks/imports';
+import { usePrefetchClassifications } from '../api/hooks/imports';
 import { useUIStore } from '../stores/uiStore';
 import { ImportSidebar } from '../workflows/import/panels/ImportSidebar';
 import { ImportWorkbenchView } from '../workflows/import/views/ImportWorkbenchView';
@@ -42,6 +43,10 @@ export function ImportPage() {
     // Use uiStore for session/plan (aliased for compatibility with child components)
     const session = importSession;
     const plan = importPlan;
+
+    // Prefetch classification data as soon as session is available,
+    // so the ClassificationPanel has cached data when it opens
+    usePrefetchClassifications(session?.id ?? null);
 
     // Derive source type from session connector type
     const sourceType = useMemo<ImportSourceType>(() => {

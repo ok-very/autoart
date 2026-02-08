@@ -7,7 +7,8 @@
  */
 
 import { Save, Loader2, Sparkles, Clock, ArrowUpDown, MoreVertical, Trash2, Layers, CheckSquare, Square, Lightbulb } from 'lucide-react';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { useSaveResolutions, useClassificationSuggestions } from '../../../api/hooks/imports';
 import type { ImportPlan, Resolution, ItemClassification } from '../../../api/hooks/imports';
 import { toFactKindKey } from '../../../utils/formatFactKind';
@@ -248,6 +249,50 @@ export function ClassificationPanel({
     // Check if there are any resolutions to save
     const hasResolutions = resolvedCount > 0;
 
+    // Virtualization: flatten grouped view into row descriptors
+    type VirtualRow =
+        | { type: 'group-header'; groupKey: string; items: ItemClassification[] }
+        | { type: 'classification'; classification: ItemClassification; indented: boolean };
+
+    const flattenedRows = useMemo<VirtualRow[]>(() => {
+        if (viewMode === 'grouped' && groupedByField.size > 0) {
+            const rows: VirtualRow[] = [];
+            for (const [groupKey, items] of groupedByField.entries()) {
+                rows.push({ type: 'group-header', groupKey, items });
+                for (const classification of items) {
+                    rows.push({ type: 'classification', classification, indented: true });
+                }
+            }
+            return rows;
+        }
+        return allClassifications.map((classification) => ({
+            type: 'classification' as const,
+            classification,
+            indented: false,
+        }));
+    }, [viewMode, groupedByField, allClassifications]);
+
+    // Virtualizer setup
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const virtualizer = useVirtualizer({
+        count: flattenedRows.length,
+        getScrollElement: () => scrollContainerRef.current,
+        estimateSize: (index) => {
+            const row = flattenedRows[index];
+            if (row.type === 'group-header') return 40;
+            // Expanded rows are taller
+            if (row.classification.itemTempId === expandedItem) return 300;
+            return 60;
+        },
+        overscan: 5,
+    });
+
+    // When expanded item changes, invalidate measurements so the virtualizer
+    // picks up the new row height after expand/collapse animation
+    useEffect(() => {
+        virtualizer.measure();
+    }, [expandedItem, virtualizer]);
+
     // Handle save
     const handleSave = useCallback(async () => {
         if (!sessionId || !hasResolutions) return;
@@ -428,10 +473,10 @@ export function ClassificationPanel({
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 flex flex-col overflow-hidden">
                 {/* View mode toggle + Group bulk actions */}
                 {viewMode === 'grouped' && groupedByField.size > 0 && (
-                    <div className="px-6 py-2 bg-ws-bg border-b border-ws-panel-border flex items-center justify-between">
+                    <div className="px-6 py-2 bg-ws-bg border-b border-ws-panel-border flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-2">
                             <span className="text-xs font-medium text-ws-text-secondary">
                                 {selectedGroups.size} of {groupedByField.size} groups selected
@@ -458,65 +503,69 @@ export function ClassificationPanel({
                     </div>
                 )}
 
-                {viewMode === 'grouped' ? (
-                    /* Grouped View */
-                    Array.from(groupedByField.entries()).map(([groupKey, items]) => (
-                        <div key={groupKey} className="border-b border-ws-panel-border last:border-b-0">
-                            {/* Group Header */}
-                            <div
-                                className="flex items-center gap-3 px-6 py-2 bg-ws-bg hover:bg-slate-100 cursor-pointer"
-                                onClick={() => handleToggleGroup(groupKey)}
-                            >
-                                {selectedGroups.has(groupKey) ? (
-                                    <CheckSquare className="w-4 h-4 text-blue-600" />
-                                ) : (
-                                    <Square className="w-4 h-4 text-ws-muted" />
-                                )}
-                                <span className="font-medium text-ws-text-secondary">{groupKey}</span>
-                                <span className="text-xs text-ws-text-secondary">({items.length} items)</span>
-                            </div>
-                            {/* Group Items */}
-                            <div className="pl-4">
-                                {items.map((classification) => (
-                                    <ClassificationRow
-                                        key={classification.itemTempId}
-                                        classification={classification}
-                                        itemTitle={getItemTitle(classification.itemTempId)}
-                                        isExpanded={expandedItem === classification.itemTempId}
-                                        onToggle={() => setExpandedItem(
-                                            expandedItem === classification.itemTempId ? null : classification.itemTempId
-                                        )}
-                                        pending={pendingResolutions.get(classification.itemTempId)}
-                                        onOutcomeSelect={(outcome) => handleOutcomeSelect(classification.itemTempId, outcome)}
-                                        onFactKindSelect={(factKind) => handleFactKindSelect(classification.itemTempId, factKind)}
-                                        onHintTypeSelect={(hintType) => handleHintTypeSelect(classification.itemTempId, hintType)}
-                                        onCustomFactLabelChange={(label) => handleCustomFactLabelChange(classification.itemTempId, label)}
-                                        suggestions={suggestions?.[classification.itemTempId]}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    ))
-                ) : (
-                    /* Flat View */
-                    allClassifications.map((classification) => (
-                        <ClassificationRow
-                            key={classification.itemTempId}
-                            classification={classification}
-                            itemTitle={getItemTitle(classification.itemTempId)}
-                            isExpanded={expandedItem === classification.itemTempId}
-                            onToggle={() => setExpandedItem(
-                                expandedItem === classification.itemTempId ? null : classification.itemTempId
-                            )}
-                            pending={pendingResolutions.get(classification.itemTempId)}
-                            onOutcomeSelect={(outcome) => handleOutcomeSelect(classification.itemTempId, outcome)}
-                            onFactKindSelect={(factKind) => handleFactKindSelect(classification.itemTempId, factKind)}
-                            onHintTypeSelect={(hintType) => handleHintTypeSelect(classification.itemTempId, hintType)}
-                            onCustomFactLabelChange={(label) => handleCustomFactLabelChange(classification.itemTempId, label)}
-                            suggestions={suggestions?.[classification.itemTempId]}
-                        />
-                    ))
-                )}
+                {/* Virtualized scroll container */}
+                <div
+                    ref={scrollContainerRef}
+                    className="flex-1 overflow-y-auto"
+                >
+                    <div
+                        style={{
+                            height: `${virtualizer.getTotalSize()}px`,
+                            width: '100%',
+                            position: 'relative',
+                        }}
+                    >
+                        {virtualizer.getVirtualItems().map((virtualRow) => {
+                            const row = flattenedRows[virtualRow.index];
+                            return (
+                                <div
+                                    key={virtualRow.key}
+                                    data-index={virtualRow.index}
+                                    ref={virtualizer.measureElement}
+                                    style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100%',
+                                        transform: `translateY(${virtualRow.start}px)`,
+                                    }}
+                                >
+                                    {row.type === 'group-header' ? (
+                                        <div
+                                            className="flex items-center gap-3 px-6 py-2 bg-ws-bg hover:bg-slate-100 cursor-pointer border-b border-ws-panel-border"
+                                            onClick={() => handleToggleGroup(row.groupKey)}
+                                        >
+                                            {selectedGroups.has(row.groupKey) ? (
+                                                <CheckSquare className="w-4 h-4 text-blue-600" />
+                                            ) : (
+                                                <Square className="w-4 h-4 text-ws-muted" />
+                                            )}
+                                            <span className="font-medium text-ws-text-secondary">{row.groupKey}</span>
+                                            <span className="text-xs text-ws-text-secondary">({row.items.length} items)</span>
+                                        </div>
+                                    ) : (
+                                        <div className={row.indented ? 'pl-4' : ''}>
+                                            <ClassificationRow
+                                                classification={row.classification}
+                                                itemTitle={getItemTitle(row.classification.itemTempId)}
+                                                isExpanded={expandedItem === row.classification.itemTempId}
+                                                onToggle={() => setExpandedItem(
+                                                    expandedItem === row.classification.itemTempId ? null : row.classification.itemTempId
+                                                )}
+                                                pending={pendingResolutions.get(row.classification.itemTempId)}
+                                                onOutcomeSelect={(outcome) => handleOutcomeSelect(row.classification.itemTempId, outcome)}
+                                                onFactKindSelect={(factKind) => handleFactKindSelect(row.classification.itemTempId, factKind)}
+                                                onHintTypeSelect={(hintType) => handleHintTypeSelect(row.classification.itemTempId, hintType)}
+                                                onCustomFactLabelChange={(label) => handleCustomFactLabelChange(row.classification.itemTempId, label)}
+                                                suggestions={suggestions?.[row.classification.itemTempId]}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
         </div>
     );

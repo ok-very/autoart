@@ -6,6 +6,8 @@
 ## Bug List
 
 **Active — unphased:**
+- **Project binding in workspaces is implementation theater:** Phase 1.2 wired WorkspaceContext consumption, but panels don't actually use the bound project ID. UI shows binding UI, backend may store it, but the connection between "user binds project to workspace" and "panels render that project's data" is broken or never existed. Trace the full path: workspace save → project binding persistence → panel mount → data fetch with bound ID.
+- **Theme assignment coupled to workspaces — meaningless complexity:** Each workspace carries its own theme, but themes are undifferentiated (Compact, Minimal, Floating, Default are essentially identical). Per-workspace theme assignment adds complexity without payoff. Either decouple theme selection from workspace identity (global user preference), or differentiate themes first per DESIGN.md variant guidance. Got muddied in during the Phase 1 workspace rewrite.
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
 - **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
@@ -24,7 +26,9 @@
 
 ---
 
-## Phase 3: Import Pipeline Completion
+## Phase 3: Import Pipeline Completion ✓
+
+**Status: Complete** — All items merged via PRs #439-446 (Feb 8, 2026).
 
 *Unblock production-quality imports. The wizard works end-to-end but lacks interpretation hooks for frontend consumers and degrades under volume.*
 
@@ -32,18 +36,27 @@
 
 | # | Issue | Category | Status |
 |---|-------|----------|--------|
-| 217 | Expose interpretation HTTP routes for frontend hooks | Backend | ✓ Done (PRs #439-443) |
-| — | Records/Fields/Actions registry browser UI unification: consistent layout and shared filter system | UX | ✓ Done (PRs #439-443) |
-| — | Action vocabulary: store classification verbs/nouns/adjectives from imports as heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret action type construction | Classification | ✓ Done (PRs #439-443) |
-| 79 | Enhance Workflow View Interactions — backend (migration + routes + auto-linking) | Backend | ✓ Done (PRs #439-443) |
-| 79 | Enhance Workflow View Interactions — frontend (badges + context menu + link dialog) | Frontend | **In-flight (PR #443)** |
-| 237 | Performance Optimization & Caching | Backend + Frontend | **Pending** |
+| 217 | Expose interpretation HTTP routes for frontend hooks | Backend | ✓ Done (PR #439) |
+| — | Records/Fields/Actions registry browser UI unification: consistent layout and shared filter system | UX | ✓ Done (PR #440) |
+| — | Action vocabulary: store classification verbs/nouns/adjectives from imports as heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret action type construction | Classification | ✓ Done (PR #441, #443) |
+| 79 | Enhance Workflow View Interactions — backend (migration + routes + auto-linking) | Backend | ✓ Done (PR #443) |
+| 79 | Enhance Workflow View Interactions — frontend (badges + context menu + link dialog) | Frontend | ✓ Done (PR #444) |
+| 237 | Performance Optimization & Caching — backend (indexes + classification cache) | Backend | ✓ Done (PR #445) |
+| 237 | Performance Optimization & Caching — frontend (virtualization + prefetch) | Frontend | ✓ Done (PR #446) |
 
 **Dependencies:** None — foundation phases cleared the path. #217 (interpretation routes) is the critical enabler; #237 (performance) and #79 (workflow interactions) build on top.
 
 **Done when:** Frontend can call interpretation endpoints via TanStack Query hooks, imports complete in <2s for typical payloads, and workflow view supports direct interaction with imported actions.
 
-**Note:** Phase 3.4 frontend portion (ActionRegistryTable badges, context menu, link dialog) and Phase 3.7 (performance optimization) remain. Five PRs awaiting review.
+**Key deliverables:**
+- Interpretation HTTP routes + Zod schemas + TanStack Query hooks
+- Registry browser UI unification (RegistryFilterBar, 280px sidebar consistency)
+- Action vocabulary extraction (migration 004, vocabulary.service.ts, classification hooks)
+- Composer vocabulary integration (useVocabularySuggestions, UnifiedComposerBar ranking)
+- Import-action linking (migration 005, import_action_links table, auto-linking in ExecutionContext)
+- ActionRegistryTable import badges + "Link to Import Item" context menu + ImportLinkDialog
+- Performance: migration 006 indexes, in-memory classification cache with TTL
+- ClassificationPanel virtualization (@tanstack/react-virtual) + query prefetch on session load
 
 ---
 
@@ -225,7 +238,7 @@
 
 | PRs | Description |
 |-----|-------------|
-| #439-443 | **Phase 3: Import Pipeline (sub-phases 3.1-3.6):** (3.1) Interpretation HTTP routes + Zod schemas (3.2) TanStack Query hooks (3.3) Registry browser UI unification (RegistryFilterBar, 280px sidebar) (3.4) Workflow view backend (migration 005, import_action_links table, auto-linking in ExecutionContext) (3.5) Action vocabulary extraction (migration 004, vocabulary.service.ts, classification hooks) (3.6) Composer vocabulary integration (useVocabularySuggestions hook, UnifiedComposerBar ranking). Frontend portion of 3.4 (ActionRegistryTable badges, link dialog) and Phase 3.7 (performance) remain. |
+| #439-446 | **Phase 3: Import Pipeline Completion (Feb 8 2026):** (3.1) Interpretation HTTP routes + Zod schemas (3.2) TanStack Query hooks (3.3) Registry browser UI unification (RegistryFilterBar, 280px sidebar) (3.4) Workflow view backend (migration 005, import_action_links table, auto-linking) + frontend (ActionRegistryTable badges, "Link to Import Item" menu, ImportLinkDialog) (3.5) Action vocabulary extraction (migration 004, vocabulary.service.ts, classification hooks) (3.6) Composer vocabulary integration (useVocabularySuggestions hook, UnifiedComposerBar ranking) (3.7) Performance optimization (migration 006 indexes, in-memory classification cache, ClassificationPanel virtualization, query prefetch). Eight PRs, all complete. |
 
 ---
 
