@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Stack, Card, Text, ProgressBar, Inline } from '@autoart/ui';
+import { Stack, Card, Text, ProgressBar, Inline, Button } from '@autoart/ui';
 
 import { useContextStore } from '../../../stores/contextStore';
 import { ImportContextProvider, type ImportContextValue } from '../context/ImportContextProvider';
@@ -37,7 +37,7 @@ export function MondayImportWizardView({
     session,
     plan,
     onSelectItem,
-    onReset: _onReset,
+    onReset,
     onSessionCreated,
 }: MondayImportWizardViewProps) {
     const [currentStep, setCurrentStep] = useState(1);
@@ -104,8 +104,10 @@ export function MondayImportWizardView({
     const handleBack = useCallback(() => {
         if (currentStep > 1) {
             setCurrentStep((s) => s - 1);
+        } else {
+            onReset();
         }
-    }, [currentStep]);
+    }, [currentStep, onReset]);
 
     return (
         <ImportContextProvider value={contextValue}>
@@ -116,7 +118,10 @@ export function MondayImportWizardView({
                         <Stack gap="sm">
                             <Inline align="center" justify="between">
                                 <Text size="lg" weight="bold">Monday.com Import Wizard</Text>
-                                <Text size="sm" color="muted">Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1].title}</Text>
+                                <Inline align="center" gap="md">
+                                    <Text size="sm" color="muted">Step {currentStep} of {STEPS.length}: {STEPS[currentStep - 1].title}</Text>
+                                    <Button variant="ghost" size="sm" onClick={onReset}>Cancel Import</Button>
+                                </Inline>
                             </Inline>
                             <ProgressBar value={progress} size="sm" />
                         </Stack>

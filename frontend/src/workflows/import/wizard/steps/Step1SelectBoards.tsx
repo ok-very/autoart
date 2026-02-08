@@ -21,7 +21,7 @@ interface StepProps {
     onSessionCreated: (session: ImportSession, plan: ImportPlan) => void;
 }
 
-export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
+export function Step1SelectBoards({ onNext, onBack, onSessionCreated }: StepProps) {
     const { data: connections } = useConnections();
     const { data: boards, isLoading, error } = useMondayBoards();
     const { data: projects, isLoading: projectsLoading } = useProjects();
@@ -241,7 +241,8 @@ export function Step1SelectBoards({ onNext, onSessionCreated }: StepProps) {
                 </Inline>
             )}
 
-            <Inline justify="end" className="pt-2">
+            <Inline justify="between" className="pt-2">
+                <Button variant="secondary" onClick={onBack}>Cancel</Button>
                 <Button
                     onClick={handleCreateSession}
                     variant="primary"
