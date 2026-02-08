@@ -1,0 +1,90 @@
+/**
+ * WorkspaceContext
+ *
+ * Provides workspace state to panels via React Context instead of
+ * direct Zustand store reads. Panels use useWorkspaceContext() to access
+ * binding state, scope, and content type without coupling to store internals.
+ *
+ * Provider is wired in MainLayout wrapping the Dockview area.
+ * Derived from workspaceStore + uiStore state.
+ */
+
+import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import type { WorkspaceScope } from '../types/workspace';
+import type { CenterContentType } from '../stores/uiStore';
+import { useWorkspaceStore } from '../stores/workspaceStore';
+import { useUIStore } from '../stores/uiStore';
+import { BUILT_IN_WORKSPACES } from './workspacePresets';
+
+export interface WorkspaceContextValue {
+    /** Active workspace preset ID */
+    workspaceId: string | null;
+    /** Active subview within workspace */
+    subviewId: string | null;
+    /** Workspace's bound project */
+    boundProjectId: string | null;
+    /** Check if a panel is bound to the workspace project */
+    isBound: (panelId: string) => boolean;
+    /** Workspace scope: 'global' | 'project' | 'subprocess' */
+    scope: WorkspaceScope | null;
+    /** What center-workspace should display */
+    contentType: CenterContentType;
+}
+
+const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
+
+/**
+ * Hook to access workspace context. Throws if not within provider.
+ */
+export function useWorkspaceContext(): WorkspaceContextValue {
+    const ctx = useContext(WorkspaceContext);
+    if (!ctx) {
+        throw new Error('useWorkspaceContext must be used within WorkspaceContextProvider');
+    }
+    return ctx;
+}
+
+/**
+ * Optional hook — returns null if not within provider.
+ * Use in components that may render outside the workspace (e.g., overlays).
+ */
+export function useWorkspaceContextOptional(): WorkspaceContextValue | null {
+    return useContext(WorkspaceContext);
+}
+
+interface WorkspaceContextProviderProps {
+    children: ReactNode;
+}
+
+export function WorkspaceContextProvider({ children }: WorkspaceContextProviderProps) {
+    const workspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+    const subviewId = useWorkspaceStore((s) => s.activeSubviewId);
+    const boundProjectId = useWorkspaceStore((s) => s.boundProjectId);
+    const boundPanelIds = useWorkspaceStore((s) => s.boundPanelIds);
+    const contentType = useUIStore((s) => s.centerContentType);
+
+    const scope = useMemo(() => {
+        if (!workspaceId) return null;
+        const preset = BUILT_IN_WORKSPACES.find((w) => w.id === workspaceId);
+        return preset?.scope ?? null;
+    }, [workspaceId]);
+
+    const isBound = useMemo(
+        () => (panelId: string) => boundPanelIds.has(panelId),
+        [boundPanelIds],
+    );
+
+    const value = useMemo<WorkspaceContextValue>(
+        () => ({
+            workspaceId,
+            subviewId,
+            boundProjectId,
+            isBound,
+            scope,
+            contentType,
+        }),
+        [workspaceId, subviewId, boundProjectId, isBound, scope, contentType],
+    );
+
+    return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
+}
