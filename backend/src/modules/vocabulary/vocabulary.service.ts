@@ -162,7 +162,7 @@ export async function storeVocabulary(vocab: {
       .values({
         verb: vocab.verb,
         noun: vocab.noun,
-        adjective: vocab.adjective ?? null,
+        adjective: vocab.adjective ?? '',
         classification_outcome: vocab.classificationOutcome,
       })
       .onConflict((oc) =>
