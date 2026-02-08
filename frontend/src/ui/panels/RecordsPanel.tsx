@@ -1,8 +1,8 @@
 /**
  * RecordsPanel
  *
- * Docker-compatible version of RecordsPage.
- * Registry view for Record Definitions and Record Instances.
+ * Dockview-compatible panel for Record Definitions and Record Instances.
+ * Uses unified RegistryFilterBar via DefinitionListSidebar.
  */
 
 import { Database } from 'lucide-react';
@@ -21,7 +21,7 @@ const TAB_DATA = [
 
 export function RecordsPanel() {
     const { openOverlay } = useUIStore();
-    const [sidebarWidth, setSidebarWidth] = useState(260);
+    const [sidebarWidth, setSidebarWidth] = useState(280);
     const [selectedDefinitionId, setSelectedDefinitionId] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<RegistryTab>('instances');
 
@@ -52,7 +52,6 @@ export function RecordsPanel() {
                     createLabel="Create Record Definition"
                     showTabSwitch={false}
                 />
-                {/* Definitions/Instances toggle using bespoke SegmentedControl */}
                 <SegmentedControl
                     size="xs"
                     value={activeTab}
@@ -73,14 +72,12 @@ export function RecordsPanel() {
 
                 {/* Main Content Area */}
                 <div className="flex-1 overflow-hidden flex flex-col">
-                    {/* Content based on tab */}
                     <div className="flex-1 overflow-hidden">
                         {activeTab === 'definitions' ? (
-                            <div className="h-full flex items-center justify-center text-ws-muted">
-                                <div className="text-center">
-                                    <p className="text-ws-body text-ws-text-secondary">Record Definitions</p>
-                                    <p>Select a definition from the sidebar to view its schema.</p>
-                                </div>
+                            <div className="h-full flex items-center justify-center">
+                                <p className="text-sm text-ws-text-secondary">
+                                    Select a definition from the sidebar to view its schema.
+                                </p>
                             </div>
                         ) : (
                             <RecordView
@@ -95,5 +92,3 @@ export function RecordsPanel() {
         </div>
     );
 }
-
-

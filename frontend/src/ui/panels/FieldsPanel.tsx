@@ -1,11 +1,11 @@
 /**
  * FieldsPanel
  *
- * Docker-compatible version of FieldsPage.
- * Registry view for Field Definitions.
+ * Dockview-compatible panel for Field Definitions and Field Instances.
+ * Uses unified RegistryFilterBar for consistent search/sort across registry panels.
  */
 
-import { TableProperties, ClipboardList } from 'lucide-react';
+import { TableProperties } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 import type { FieldDescriptor } from '@autoart/shared';
@@ -29,7 +29,7 @@ export function FieldsPanel() {
     const setFieldsViewMode = useWorkspaceStore((s) => s.setFieldsViewMode);
     const { openOverlay } = useUIStore();
     const collectionMode = useCollectionModeOptional();
-    const [sidebarWidth, setSidebarWidth] = useState(300);
+    const [sidebarWidth, setSidebarWidth] = useState(280);
     const [selectedField, setSelectedField] = useState<FieldDescriptor | null>(null);
     const [activeTab, setActiveTab] = useState<RegistryTab>('definitions');
 
@@ -47,7 +47,7 @@ export function FieldsPanel() {
 
     return (
         <div className="flex flex-col h-full bg-ws-bg overflow-hidden">
-            {/* Page Header with Definitions/Instances tabs on right */}
+            {/* Header with title and Definitions/Instances toggle */}
             <div className="flex items-center justify-between px-4 py-2 border-b border-ws-panel-border bg-ws-panel-bg">
                 <RegistryPageHeader
                     title="Fields"
@@ -57,7 +57,6 @@ export function FieldsPanel() {
                     createLabel="Create Field"
                     showTabSwitch={false}
                 />
-                {/* Definitions/Instances toggle using bespoke SegmentedControl */}
                 <SegmentedControl
                     size="xs"
                     value={activeTab}
@@ -67,77 +66,51 @@ export function FieldsPanel() {
             </div>
 
             <div className="flex flex-1 overflow-hidden">
-                {activeTab === 'instances' ? (
-                    /* Instances View - Miller Columns for field browsing + Instances table */
-                    <>
-                        {/* Left Sidebar - Miller Columns for field browsing */}
-                        <div
-                            style={{ width: sidebarWidth }}
-                            className="flex flex-col border-r border-ws-panel-border bg-slate-100"
-                        >
-                            <FieldsMillerColumnsView
-                                onSelectField={setSelectedField}
+                {/* Left Sidebar - Miller Columns for field browsing */}
+                <div
+                    style={{ width: sidebarWidth }}
+                    className="flex flex-col border-r border-ws-panel-border bg-ws-bg shrink-0"
+                >
+                    <FieldsMillerColumnsView
+                        onSelectField={setSelectedField}
+                    />
+                </div>
+
+                <ResizeHandle
+                    direction="right"
+                    onResize={(d) => setSidebarWidth(w => Math.max(280, Math.min(1200, w + d)))}
+                />
+
+                {/* Main Content Area */}
+                <div className="flex-1 bg-ws-panel-bg overflow-hidden">
+                    {activeTab === 'instances' ? (
+                        selectedField ? (
+                            <FieldInstancesReview
+                                key={selectedField.id}
+                                field={selectedField}
                             />
-                        </div>
-
-                        <ResizeHandle
-                            direction="right"
-                            onResize={(d) => setSidebarWidth(w => Math.max(300, Math.min(1200, w + d)))}
-                        />
-
-                        {/* Main Workspace - Field Instances */}
-                        <div className="flex-1 bg-ws-panel-bg overflow-hidden">
-                            {selectedField ? (
-                                <FieldInstancesReview
-                                    key={selectedField.id}
-                                    field={selectedField}
-                                />
-                            ) : (
-                                <div className="h-full flex flex-col items-center justify-center text-ws-muted gap-4">
-                                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
-                                        <ClipboardList size={32} className="text-ws-muted" />
-                                    </div>
-                                    <p>Select a field to view its instances</p>
-                                </div>
-                            )}
-                        </div>
-                    </>
-                ) : (
-                    /* Definitions View - Miller columns browser */
-                    <>
-                        {/* Left Drawer / Sidebar - Miller Columns */}
-                        <div
-                            style={{ width: sidebarWidth }}
-                            className="flex flex-col border-r border-ws-panel-border bg-slate-100"
-                        >
-                            <FieldsMillerColumnsView
-                                onSelectField={setSelectedField}
+                        ) : (
+                            <div className="h-full flex items-center justify-center">
+                                <p className="text-sm text-ws-text-secondary">
+                                    Select a field to view its instances
+                                </p>
+                            </div>
+                        )
+                    ) : (
+                        selectedField ? (
+                            <FieldDefinitionEditor
+                                key={selectedField.id}
+                                field={selectedField}
                             />
-                        </div>
-
-                        <ResizeHandle
-                            direction="right"
-                            onResize={(d) => setSidebarWidth(w => Math.max(300, Math.min(1200, w + d)))}
-                        />
-
-                        {/* Main Workspace - Editor */}
-                        <div className="flex-1 bg-ws-panel-bg overflow-hidden">
-                            {selectedField ? (
-                                <FieldDefinitionEditor
-                                    key={selectedField.id}
-                                    field={selectedField}
-                                />
-                            ) : (
-                                <div className="h-full flex flex-col items-center justify-center text-ws-muted gap-4">
-                                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
-                                        <ClipboardList size={32} className="text-ws-muted" />
-                                    </div>
-                                    <p>Select a field from the browser to edit its definition</p>
-                                </div>
-                            )}
-                        </div>
-                    </>
-                )}
+                        ) : (
+                            <div className="h-full flex items-center justify-center">
+                                <p className="text-sm text-ws-text-secondary">
+                                    Select a field from the browser to edit its definition
+                                </p>
+                            </div>
+                        )
+                    )}
+                </div>
             </div>
         </div>
     );
