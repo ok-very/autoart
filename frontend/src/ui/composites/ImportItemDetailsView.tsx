@@ -11,6 +11,7 @@
  * - Validation issues
  */
 
+import { resolveEntityKind } from '@autoart/shared';
 import { Tag, AlertCircle, List, CheckCircle2, User, Calendar, Hash, FileText } from 'lucide-react';
 
 import { useUIStore } from '../../stores/uiStore';
@@ -360,9 +361,7 @@ export function ImportItemDetailsView({ itemId, tab, plan: propPlan }: ImportIte
                     </Text>
                     <div className="mt-3 flex items-center gap-2">
                         <Badge variant="neutral" size="sm" className="uppercase text-[10px] font-semibold">
-                            {isContainer
-                                ? (selectedItem as { type?: string }).type || 'container'
-                                : (selectedItem as { entityType?: string }).entityType || 'item'}
+                            {resolveEntityKind(selectedItem as unknown as Record<string, unknown>)}
                         </Badge>
                         {classification && (
                             <Badge

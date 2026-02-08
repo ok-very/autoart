@@ -9,6 +9,15 @@ export const NodeTypeSchema = z.enum(['project', 'process', 'stage', 'subprocess
 export type NodeType = z.infer<typeof NodeTypeSchema>;
 
 /**
+ * Definition kind enum - discriminator for record definition types
+ * - record: Standard data records
+ * - action_arrangement: Action/workflow templates
+ * - container: Hierarchy container definitions (Process, Stage, Subprocess)
+ */
+export const DefinitionKindSchema = z.enum(['record', 'action_arrangement', 'container']);
+export type DefinitionKind = z.infer<typeof DefinitionKindSchema>;
+
+/**
  * Reference mode enum - static vs dynamic references
  * Used for input when creating/updating references
  */

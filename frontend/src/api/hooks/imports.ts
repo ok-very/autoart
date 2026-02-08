@@ -4,6 +4,7 @@
  * React Query hooks for import sessions API.
  */
 
+import type { EntityKind } from '@autoart/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '../client';
@@ -35,8 +36,8 @@ export interface ImportPlanItem {
     /** Parent container or item temp ID (optional for top-level items) */
     parentTempId?: string;
     metadata: Record<string, unknown>;
-    /** Entity type inferred from source (project, process, stage, subprocess, action, record, template) */
-    entityType?: 'project' | 'process' | 'stage' | 'subprocess' | 'action' | 'record' | 'template';
+    /** Entity kind resolved from source data */
+    entityType?: EntityKind;
     /** Planned action for execution (optional for connector imports) */
     plannedAction?: {
         type: string;

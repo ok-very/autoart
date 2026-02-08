@@ -83,3 +83,17 @@ export {
     groupViewModelsByCategory,
     createEmptyFieldViewModel,
 } from './fieldViewModel.js';
+
+// ==================== ENTITY KIND ====================
+
+export type {
+    EntityKind,
+    EntityKindInput,
+    DefinitionLike,
+} from './entity-kind.js';
+
+export {
+    resolveEntityKind,
+    definitionKindToEntityKind,
+    isEntityKind,
+} from './entity-kind.js';

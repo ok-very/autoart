@@ -36,6 +36,9 @@ export type {
   Reference,
   FieldViewModel,
   EntityContext,
+  EntityKind,
+  EntityKindInput,
+  DefinitionLike,
 } from './domain/index.js';
 
 export {
@@ -71,6 +74,10 @@ export {
   filterVisibleViewModels,
   groupViewModelsByCategory,
   createEmptyFieldViewModel,
+  // Entity kind resolver
+  resolveEntityKind,
+  definitionKindToEntityKind,
+  isEntityKind,
 } from './domain/index.js';
 
 export type { BuildFieldViewModelOptions } from './domain/index.js';
