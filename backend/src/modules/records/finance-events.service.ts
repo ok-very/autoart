@@ -20,6 +20,7 @@ interface EmitFactOptions {
   contextType: ContextType;
   actorId: string | null;
   factKind: string;
+  recordId?: string;
   payload: Record<string, unknown>;
 }
 
@@ -28,13 +29,14 @@ interface EmitFactOptions {
  * Creates an event directly in the events table (no Action needed).
  */
 export async function emitFinanceFact(options: EmitFactOptions): Promise<string> {
-  const { contextId, contextType, actorId, factKind, payload } = options;
+  const { contextId, contextType, actorId, factKind, recordId, payload } = options;
 
   const factPayload = {
     factKind,
     occurredAt: new Date().toISOString(),
     source: 'system' as const,
     confidence: 'high' as const,
+    ...(recordId ? { recordId } : {}),
     ...payload,
   };
 
@@ -60,6 +62,7 @@ export async function emitFinanceFact(options: EmitFactOptions): Promise<string>
 export async function emitInvoiceCreated(params: {
   contextId: string;
   actorId: string | null;
+  recordId?: string;
   counterparty?: string;
   amount?: number;
   currency?: string;
@@ -70,6 +73,7 @@ export async function emitInvoiceCreated(params: {
     contextType: 'project',
     actorId: params.actorId,
     factKind: 'INVOICE_PREPARED',
+    recordId: params.recordId,
     payload: {
       counterparty: params.counterparty,
       amount: params.amount,
@@ -85,6 +89,7 @@ export async function emitInvoiceCreated(params: {
 export async function emitPaymentRecorded(params: {
   contextId: string;
   actorId: string | null;
+  recordId?: string;
   counterparty?: string;
   amount?: number;
   currency?: string;
@@ -95,6 +100,7 @@ export async function emitPaymentRecorded(params: {
     contextType: 'project',
     actorId: params.actorId,
     factKind: 'PAYMENT_RECORDED',
+    recordId: params.recordId,
     payload: {
       counterparty: params.counterparty,
       amount: params.amount,
@@ -110,6 +116,7 @@ export async function emitPaymentRecorded(params: {
 export async function emitBudgetAllocated(params: {
   contextId: string;
   actorId: string | null;
+  recordId?: string;
   budgetName?: string;
   allocationType?: string;
   amount?: number;
@@ -120,6 +127,7 @@ export async function emitBudgetAllocated(params: {
     contextType: 'project',
     actorId: params.actorId,
     factKind: 'BUDGET_ALLOCATED',
+    recordId: params.recordId,
     payload: {
       budgetName: params.budgetName,
       allocationType: params.allocationType,
@@ -135,6 +143,7 @@ export async function emitBudgetAllocated(params: {
 export async function emitExpenseRecorded(params: {
   contextId: string;
   actorId: string | null;
+  recordId?: string;
   description?: string;
   category?: string;
   amount?: number;
@@ -145,6 +154,7 @@ export async function emitExpenseRecorded(params: {
     contextType: 'project',
     actorId: params.actorId,
     factKind: 'EXPENSE_RECORDED',
+    recordId: params.recordId,
     payload: {
       description: params.description,
       category: params.category,
@@ -160,6 +170,7 @@ export async function emitExpenseRecorded(params: {
 export async function emitBillReceived(params: {
   contextId: string;
   actorId: string | null;
+  recordId?: string;
   vendor?: string;
   billNumber?: string;
   amount?: number;
@@ -170,6 +181,7 @@ export async function emitBillReceived(params: {
     contextType: 'project',
     actorId: params.actorId,
     factKind: 'BILL_RECEIVED',
+    recordId: params.recordId,
     payload: {
       vendor: params.vendor,
       billNumber: params.billNumber,

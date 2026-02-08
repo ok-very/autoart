@@ -479,6 +479,7 @@ export async function recordsRoutes(app: FastifyInstance) {
                   await emitInvoiceCreated({
                     contextId,
                     actorId,
+                    recordId: record.id,
                     counterparty: data.client_name as string | undefined,
                     amount: extractAmount(data, 'total'),
                     currency: data.currency as string | undefined,
@@ -489,6 +490,7 @@ export async function recordsRoutes(app: FastifyInstance) {
                   await emitPaymentRecorded({
                     contextId,
                     actorId,
+                    recordId: record.id,
                     amount: extractAmount(data, 'amount'),
                     currency: data.currency as string | undefined,
                     direction: data.direction as string | undefined,
@@ -498,6 +500,7 @@ export async function recordsRoutes(app: FastifyInstance) {
                   await emitBudgetAllocated({
                     contextId,
                     actorId,
+                    recordId: record.id,
                     budgetName: (data.name as string | undefined) ?? record.unique_name,
                     allocationType: data.allocation_type as string | undefined,
                     amount: extractAmount(data, 'allocated_amount'),
@@ -508,6 +511,7 @@ export async function recordsRoutes(app: FastifyInstance) {
                   await emitExpenseRecorded({
                     contextId,
                     actorId,
+                    recordId: record.id,
                     description: (data.description as string | undefined) ?? record.unique_name,
                     category: data.category as string | undefined,
                     amount: extractAmount(data, 'amount'),
@@ -518,6 +522,7 @@ export async function recordsRoutes(app: FastifyInstance) {
                   await emitBillReceived({
                     contextId,
                     actorId,
+                    recordId: record.id,
                     vendor: data.vendor as string | undefined,
                     billNumber: data.bill_number as string | undefined,
                     amount: extractAmount(data, 'amount'),

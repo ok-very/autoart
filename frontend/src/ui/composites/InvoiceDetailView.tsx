@@ -1,13 +1,16 @@
 import { clsx } from 'clsx';
-import { ArrowLeft, CreditCard } from 'lucide-react';
+import { ArrowLeft, CreditCard, Loader2 } from 'lucide-react';
 import { useCallback } from 'react';
 
-import { useFinanceRecord, useLinkedRecords } from '../../api/hooks/finance';
+import { formatCurrency, renderFact, type BaseFactPayload, type Event } from '@autoart/shared';
+import { Button } from '@autoart/ui';
+
+import { useFinanceRecord, useLinkedRecords, useRecordEvents } from '../../api/hooks/finance';
 import { useUpdateFinanceRecord } from '../../api/hooks/finance';
 import { useFinanceStore } from '../../stores/financeStore';
 import { useUIStore } from '../../stores/uiStore';
-import { formatCurrency } from '@autoart/shared';
-import { Button } from '@autoart/ui';
+import type { DataRecord } from '../../types';
+import { getEventFormatter } from '../projectLog/eventFormatters';
 import { LineItemEditor } from './LineItemEditor';
 import { ExportMenu } from './ExportMenu';
 
@@ -18,6 +21,101 @@ const STATUS_COLORS: Record<string, string> = {
   Overdue: 'bg-amber-100 text-amber-700',
   Void: 'bg-red-100 text-red-700',
 };
+
+/**
+ * Format timestamp as relative time for the history section.
+ */
+function formatRelativeTime(dateValue: string | Date): string {
+  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return `Yesterday ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+/**
+ * Renders the history timeline for an invoice record.
+ * Shows FACT_RECORDED events that reference this record's ID.
+ * Displays nothing when empty (silence is a feature).
+ */
+function InvoiceHistorySection({ record }: { record: DataRecord }) {
+  const { data: events, isLoading } = useRecordEvents(record);
+
+  if (isLoading) {
+    return (
+      <section>
+        <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
+          History
+        </h3>
+        <div className="flex items-center gap-2 py-3">
+          <Loader2 size={14} className="text-slate-400 animate-spin" />
+          <span className="text-xs text-slate-400">Loading history...</span>
+        </div>
+      </section>
+    );
+  }
+
+  // Empty: show nothing (design system: silence is a feature)
+  if (!events || events.length === 0) return null;
+
+  return (
+    <section>
+      <h3 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
+        History
+      </h3>
+      <div className="space-y-0">
+        {events.map((event: Event) => {
+          const payload = event.payload as Record<string, unknown>;
+          const formatter = getEventFormatter(event.type, payload);
+          const Icon = formatter.icon;
+
+          let narrative: string | null = null;
+          try {
+            narrative = renderFact(payload as BaseFactPayload);
+          } catch {
+            narrative = formatter.summarize(payload);
+          }
+
+          const occurredAt = event.occurredAt instanceof Date
+            ? event.occurredAt
+            : String(event.occurredAt);
+
+          return (
+            <div
+              key={event.id}
+              className="flex items-start gap-2.5 py-2 first:pt-0"
+            >
+              <div
+                className={clsx(
+                  'shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center',
+                  formatter.dotBgClass,
+                )}
+              >
+                <Icon size={12} className={formatter.dotTextClass} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-sm text-slate-600">
+                  {narrative || formatter.label}
+                </span>
+              </div>
+              <span className="shrink-0 text-xs text-slate-400 ml-auto">
+                {formatRelativeTime(occurredAt)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 export function InvoiceDetailView() {
   const { selectedInvoiceId, setSelectedInvoiceId } = useFinanceStore();
@@ -203,6 +301,9 @@ export function InvoiceDetailView() {
             <p className="text-sm text-slate-600">{invoiceData.notes as string}</p>
           </section>
         ) : null}
+
+        {/* History */}
+        <InvoiceHistorySection record={invoice} />
       </div>
     </div>
   );
