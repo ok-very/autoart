@@ -52,21 +52,33 @@ All four items shipped and merged to main. Entity kind resolver unified; import/
 
 ## Features
 
-All foundation phases complete. Everything below is unblocked and ready to build.
+All foundation phases complete. Ordered by import pipeline priority — top items unblock end-to-end imports.
+
+**Import pipeline:**
 
 | # | Issue | Category |
 |---|-------|----------|
 | 217 | Expose interpretation HTTP routes for frontend hooks | Backend |
-| 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
 | 237 | Performance Optimization & Caching | Backend + Frontend |
-| 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 79 | Enhance Workflow View Interactions | Feature |
-| — | Poll editor: support different/multiple time block selections per day | Polls |
 | — | Records/Fields/Actions registry browser UI unification: consistent layout and shared filter system | UX |
+
+**Workspace polish:**
+
+| # | Issue | Category |
+|---|-------|----------|
+| 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
+| 81 | Enhance Record Inspector Assignee Chip | Feature |
+| — | Composer bar as sleek dockview popout window (replace modal) | UX |
+
+**New capability:**
+
+| # | Issue | Category |
+|---|-------|----------|
 | — | Consolidate Calendar/Gantt/future view expansions: link Application views to Project View segmented equivalents; cross-project filter/overlay | Feature |
 | — | Finances UI unification: dedicated panel architecture, math/formula ESM, project bindings | Finance |
 | — | Formula/math module: standalone ESM for computed fields, financial calculations, relationship math | Feature |
-| — | Composer bar as sleek dockview popout window (replace modal) | UX |
+| — | Poll editor: support different/multiple time block selections per day | Polls |
 
 ---
 
