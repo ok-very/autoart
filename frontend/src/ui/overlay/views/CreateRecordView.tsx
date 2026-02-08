@@ -108,7 +108,7 @@ export function CreateRecordView(props: CreateRecordViewProps | LegacyCreateReco
           onSubmit({
             success: true,
             data: { recordId: result.record.id },
-            sideEffects: [{ type: 'create', entityType: 'record' }],
+            sideEffects: [{ type: 'create', entityKind: 'record' }],
           });
         } else {
           // Legacy: close and select

@@ -80,7 +80,7 @@ export function CreateProjectView(props: CreateProjectViewProps | LegacyCreatePr
           onSubmit({
             success: true,
             data: { projectId: projectResult.node.id },
-            sideEffects: [{ type: 'create', entityType: 'project' }],
+            sideEffects: [{ type: 'create', entityKind: 'project' }],
           });
         } else {
           // Legacy: auto-select and close

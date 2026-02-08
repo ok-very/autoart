@@ -260,7 +260,7 @@ export function AddFieldView(props: AddFieldViewProps | LegacyAddFieldViewProps)
       onSubmit({
         success: true,
         data: { field },
-        sideEffects: [{ type: 'update', entityType: 'definition' }],
+        sideEffects: [{ type: 'update', entityKind: 'definition' }],
       });
     } else if (legacyOnSubmit) {
       // Legacy: call callback and close

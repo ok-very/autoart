@@ -31,15 +31,15 @@ export const OVERLAY_SIZES: Record<OverlaySize, number> = {
  * This prevents hidden state mutations.
  */
 export type OverlaySideEffect =
-    | { type: 'create'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
-    | { type: 'update'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
-    | { type: 'delete'; entityType: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
-    | { type: 'assign'; entityType: 'record' }
+    | { type: 'create'; entityKind: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
+    | { type: 'update'; entityKind: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
+    | { type: 'delete'; entityKind: 'record' | 'node' | 'definition' | 'link' | 'project' | 'connection' }
+    | { type: 'assign'; entityKind: 'record' }
     /** @deprecated Use 'assign' instead */
-    | { type: 'classify'; entityType: 'record' }
-    | { type: 'clone'; entityType: 'definition' | 'project' }
+    | { type: 'classify'; entityKind: 'record' }
+    | { type: 'clone'; entityKind: 'definition' | 'project' }
     | { type: 'navigate'; target: string }
-    | { type: 'select'; entityType: 'record' | 'node' };
+    | { type: 'select'; entityKind: 'record' | 'node' };
 
 // ==================== OVERLAY RESULT ====================
 

@@ -109,7 +109,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
         onSubmit({
           success: true,
           data: { definitionId: result.definition?.id || '' },
-          sideEffects: [{ type: 'create', entityType: 'definition' }],
+          sideEffects: [{ type: 'create', entityKind: 'definition' }],
         });
       } else {
         // Legacy: close
