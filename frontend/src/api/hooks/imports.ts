@@ -11,6 +11,8 @@ import type {
     ReclassifyRequest,
     ReclassifyResponse,
     ClassificationsResponse,
+    LinkActionRequest,
+    ActionLinksResponse,
 } from '@autoart/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -383,6 +385,68 @@ export function useCreateConnectorSession() {
                 '/imports/sessions/connector',
                 data
             );
+        },
+    });
+}
+
+// ============================================================================
+// IMPORT-ACTION LINK HOOKS
+// ============================================================================
+
+/**
+ * List all import sessions (for session selector in link dialog).
+ */
+export function useImportSessions(options?: { status?: ImportSession['status']; limit?: number }) {
+    return useQuery({
+        queryKey: ['import-sessions', options?.status, options?.limit],
+        queryFn: async () => {
+            const params = new URLSearchParams();
+            if (options?.status) params.set('status', options.status);
+            if (options?.limit) params.set('limit', String(options.limit));
+            const qs = params.toString();
+            return api.get<{ sessions: ImportSession[] }>(
+                `/imports/sessions${qs ? `?${qs}` : ''}`
+            );
+        },
+        staleTime: 30 * 1000, // 30 seconds
+    });
+}
+
+/**
+ * Fetch import-action links for a given action.
+ * Used to show "Imported" badge on action registry rows.
+ */
+export function useActionImportLinks(actionId: string | undefined) {
+    return useQuery({
+        queryKey: ['action-import-links', actionId],
+        queryFn: async () => {
+            return api.get<ActionLinksResponse>(
+                `/imports/action-links/${actionId}`
+            );
+        },
+        enabled: !!actionId,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+}
+
+/**
+ * Link an import item to an action.
+ * Invalidates action-import-links queries on success.
+ */
+export function useLinkAction() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (data: LinkActionRequest) => {
+            return api.post<ActionLinksResponse>(
+                '/imports/link-action',
+                data
+            );
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ['action-import-links'],
+            });
         },
     });
 }

@@ -23,13 +23,16 @@ import {
   SlidersHorizontal,
   ArrowUpDown,
   Download,
+  Link2,
 } from 'lucide-react';
 import { useState, useMemo, useCallback } from 'react';
 
 import type { WorkflowSurfaceNode, DerivedStatus } from '@autoart/shared';
 
+import { useActionImportLinks } from '../../api/hooks/imports';
 import { buildChildrenMap } from '../../api/hooks/workflowSurface';
 import { StatusFieldEditor } from '../semantic/StatusFieldEditor';
+import { ImportLinkDialog } from './ImportLinkDialog';
 import {
   Dropdown,
   DropdownTrigger,
@@ -147,6 +150,26 @@ function StatusBadge({ status, config }: StatusBadgeProps) {
 // AssigneeChipGroup is imported from atoms - supports multiple assignees
 import { AssigneeChipGroup } from '../atoms/AssigneeChipGroup';
 
+// ==================== IMPORT BADGE ====================
+
+/**
+ * Small badge shown on rows linked to import items.
+ * Color reflects the classification outcome of the linked item.
+ */
+function ImportedBadge({ actionId }: { actionId: string }) {
+  const { data } = useActionImportLinks(actionId);
+  if (!data?.links?.length) return null;
+
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-2 text-xs font-medium rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700"
+    >
+      <Link2 size={10} />
+      Imported
+    </span>
+  );
+}
+
 // ==================== MAIN COMPONENT ====================
 
 export function ActionRegistryTable({
@@ -164,6 +187,8 @@ export function ActionRegistryTable({
 }: ActionRegistryTableProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [filterText, setFilterText] = useState('');
+  const [linkDialogActionId, setLinkDialogActionId] = useState<string | null>(null);
+  const [linkDialogActionTitle, setLinkDialogActionTitle] = useState<string | undefined>();
 
   // Build children map for O(1) lookup
   const childrenMap = useMemo(() => buildChildrenMap(nodes), [nodes]);
@@ -201,6 +226,16 @@ export function ActionRegistryTable({
       }
       return next;
     });
+  }, []);
+
+  const handleOpenLinkDialog = useCallback((actionId: string, title?: string) => {
+    setLinkDialogActionId(actionId);
+    setLinkDialogActionTitle(title);
+  }, []);
+
+  const handleCloseLinkDialog = useCallback(() => {
+    setLinkDialogActionId(null);
+    setLinkDialogActionTitle(undefined);
   }, []);
 
   if (nodes.length === 0) {
@@ -358,6 +393,7 @@ export function ActionRegistryTable({
                       <span className="font-medium text-ws-fg truncate">
                         {node.payload.title || 'Untitled'}
                       </span>
+                      <ImportedBadge actionId={node.actionId} />
                     </div>
                   </td>
 
@@ -422,6 +458,10 @@ export function ActionRegistryTable({
                           <Clock size={14} className="mr-2" />
                           View History
                         </DropdownItem>
+                        <DropdownItem onSelect={() => handleOpenLinkDialog(node.actionId, node.payload.title)}>
+                          <Link2 size={14} className="mr-2" />
+                          Link to Import Item
+                        </DropdownItem>
                         <DropdownSeparator />
                         <DropdownItem
                           onSelect={() => onRowAction?.(node.actionId, 'retract')}
@@ -439,6 +479,16 @@ export function ActionRegistryTable({
           </tbody>
         </table>
       </div>
+
+      {/* Import Link Dialog */}
+      {linkDialogActionId && (
+        <ImportLinkDialog
+          open={!!linkDialogActionId}
+          onClose={handleCloseLinkDialog}
+          actionId={linkDialogActionId}
+          actionTitle={linkDialogActionTitle}
+        />
+      )}
     </div>
   );
 }
