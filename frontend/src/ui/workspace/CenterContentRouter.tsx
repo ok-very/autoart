@@ -23,6 +23,7 @@ import {
     CalendarContent,
     FinanceContent,
     PollsContent,
+    BfaSyncContent,
 } from './content';
 
 export function CenterContentRouter() {
@@ -56,6 +57,8 @@ export function CenterContentRouter() {
             return <FinanceContent />;
         case 'polls':
             return <PollsContent />;
+        case 'bfa-sync':
+            return <BfaSyncContent />;
         default:
             // Fallback to projects (default behavior)
             return <ProjectContentAdapter />;

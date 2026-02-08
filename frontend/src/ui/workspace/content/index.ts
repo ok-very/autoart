@@ -12,3 +12,4 @@ export { MailContent } from './MailContent';
 export { CalendarContent } from './CalendarContent';
 export { FinanceContent } from './FinanceContent';
 export { PollsContent } from './PollsContent';
+export { BfaSyncContent } from './BfaSyncContent';

@@ -20,7 +20,8 @@ export type CenterContentType =
     | 'mail'          // Communication
     | 'calendar'      // Calendar view
     | 'finance'       // Finance hub (invoices, budgets, expenses)
-    | 'polls';        // Availability polls
+    | 'polls'         // Availability polls
+    | 'bfa-sync';    // BFA reconciliation sync
 
 /**
  * Hint for which sidebar a content view should show.

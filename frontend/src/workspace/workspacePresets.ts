@@ -38,7 +38,7 @@ export const BUILT_IN_WORKSPACES: WorkspacePreset[] = [
         color: 'amber',
         scope: 'global',
         isBuiltIn: true,
-        ownedContentTypes: ['projects', 'mail', 'calendar', 'finance', 'polls', 'artcollector'],
+        ownedContentTypes: ['projects', 'mail', 'calendar', 'finance', 'polls', 'artcollector', 'bfa-sync'],
         panels: [
             { panelId: 'project-panel', position: 'center', bound: true },
             { panelId: 'mail-panel', position: 'right', bound: true },
