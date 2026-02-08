@@ -128,7 +128,7 @@ export async function seedBfaWorkspaceConfig(db: Kysely<Database>): Promise<void
         board_config_id: boardConfig.id,
         group_id: 'active_projects',
         group_title: 'Active Projects',
-        role: 'stage',
+        role: 'phase',
         stage_order: 0,
       },
       {

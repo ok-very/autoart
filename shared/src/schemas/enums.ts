@@ -2,17 +2,17 @@ import { z } from 'zod';
 
 /**
  * Node type enum - defines the 4-level project hierarchy
- * (project → process → stage → subprocess) plus template
+ * (project → process → phase → subprocess) plus template
  * for hierarchy-agnostic singleton records
  */
-export const NodeTypeSchema = z.enum(['project', 'process', 'stage', 'subprocess', 'template']);
+export const NodeTypeSchema = z.enum(['project', 'process', 'phase', 'subprocess', 'template']);
 export type NodeType = z.infer<typeof NodeTypeSchema>;
 
 /**
  * Definition kind enum - discriminator for record definition types
  * - record: Standard data records
  * - action_arrangement: Action/workflow templates
- * - container: Hierarchy container definitions (Process, Stage, Subprocess)
+ * - container: Hierarchy container definitions (Process, Phase, Subprocess)
  */
 export const DefinitionKindSchema = z.enum(['record', 'action_arrangement', 'container']);
 export type DefinitionKind = z.infer<typeof DefinitionKindSchema>;

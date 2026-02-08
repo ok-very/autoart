@@ -18,7 +18,7 @@ import type { ContextType } from '../../db/schema.js';
 // Querystring schema using Zod (required for fastify-type-provider-zod)
 const querystringSchema = z.object({
   contextId: z.string().uuid(),
-  contextType: z.enum(['subprocess', 'stage', 'process', 'project', 'record']),
+  contextType: z.enum(['subprocess', 'phase', 'process', 'project', 'record']),
 });
 
 export async function workflowSurfaceRoutes(fastify: FastifyInstance) {
@@ -28,7 +28,7 @@ export async function workflowSurfaceRoutes(fastify: FastifyInstance) {
    *
    * Query params:
    * - contextId: UUID (required)
-   * - contextType: 'subprocess' | 'stage' | 'process' | 'project' (required)
+   * - contextType: 'subprocess' | 'phase' | 'process' | 'project' (required)
    */
   fastify.get(
     '/surfaces/workflow_table',

@@ -44,7 +44,7 @@ export function useActionViews(
             // Currently supporting hierarchy levels: subprocess, stage, process
             // Project level might be added later
             let endpoint = '';
-            if (['subprocess', 'stage', 'process'].includes(contextType)) {
+            if (['subprocess', 'phase', 'process'].includes(contextType)) {
                 endpoint = `/hierarchy/${contextType}/${contextId}/action-views`;
             } else {
                 // Fallback or other contexts if implemented
@@ -85,7 +85,7 @@ export function useActionViewsSummary(
         queryKey: ['actionViews', 'summary', contextType, contextId],
         queryFn: () => {
             let endpoint = '';
-            if (['subprocess', 'stage', 'process'].includes(contextType)) {
+            if (['subprocess', 'phase', 'process'].includes(contextType)) {
                 endpoint = `/hierarchy/${contextType}/${contextId}/action-views/summary`;
             } else {
                 throw new Error(`Unsupported context type for action views summary: ${contextType}`);

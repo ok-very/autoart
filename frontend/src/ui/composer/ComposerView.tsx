@@ -61,7 +61,7 @@ export interface ComposerViewProps {
     /** Pre-selected context ID */
     contextId?: string;
     /** Context type (defaults to subprocess) */
-    contextType?: 'subprocess' | 'stage' | 'process' | 'project';
+    contextType?: 'subprocess' | 'phase' | 'process' | 'project';
     /** Pre-selected project ID */
     projectId?: string;
     /** Callback when action is created successfully */

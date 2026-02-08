@@ -3,7 +3,7 @@
  *
  * Rules for interpreting CSV rows as STAGE_ENTERED events.
  * Handles phase-to-stage migration: "phase" language is deprecated,
- * mapped to "stage" terminology (Planning, Selection, Design, Installation, Complete).
+ * mapped to "phase" terminology (Planning, Selection, Design, Installation, Complete).
  */
 
 import type { MappingRule, MappingContext, InterpretationOutput } from './types.js';

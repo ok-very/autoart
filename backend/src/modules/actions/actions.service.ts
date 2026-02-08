@@ -30,7 +30,7 @@ export interface CreateActionInput {
  */
 export async function createAction(input: CreateActionInput): Promise<Action> {
   // Guard: Stage context is deprecated
-  if (input.contextType === 'stage') {
+  if (input.contextType === 'phase') {
     throw new Error('Stage context is deprecated; use subprocess context with stage metadata');
   }
 
@@ -157,7 +157,7 @@ export async function countActionsByContext(
 }
 
 // Container types for hierarchical action structure
-const CONTAINER_TYPES = ['Process', 'Stage', 'Subprocess'];
+const CONTAINER_TYPES = ['Process', 'Phase', 'Subprocess'];
 
 /**
  * Get container actions for a project.

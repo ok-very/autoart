@@ -224,7 +224,7 @@ export async function seed(db: Kysely<Database>): Promise<void> {
       styling: JSON.stringify({ color: 'slate', icon: '⚙️' }),
     },
     {
-      name: 'Stage',
+      name: 'Phase',
       definition_kind: 'container' as const,
       is_system: true,
       schema_config: JSON.stringify({ fields: [] }),

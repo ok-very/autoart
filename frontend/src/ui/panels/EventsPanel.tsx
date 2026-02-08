@@ -43,7 +43,7 @@ export function EventsPanel() {
                         <option value="">All</option>
                         <option value="project">Project</option>
                         <option value="subprocess">Subprocess</option>
-                        <option value="stage">Stage</option>
+                        <option value="phase">Phase</option>
                         <option value="record">Record</option>
                     </select>
                 </div>

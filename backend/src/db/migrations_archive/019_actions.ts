@@ -25,7 +25,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await sql`
     CREATE TYPE context_type AS ENUM (
       'subprocess',
-      'stage',
+      'phase',
       'process',
       'project',
       'record'

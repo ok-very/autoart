@@ -211,7 +211,7 @@ export class GoogleSheetsConnector {
             'Project',
             'Location',
             'Category',
-            'Stage',
+            'Phase',
             'Artwork Budget',
             'Total Budget',
             'Install Date',

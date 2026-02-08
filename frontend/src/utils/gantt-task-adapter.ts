@@ -5,7 +5,7 @@
  *
  * NOMENCLATURE BOUNDARY:
  * The gantt-task-react library uses "Task" as its core type, which conflicts
- * with our hierarchy nomenclature (project → process → stage → subprocess).
+ * with our hierarchy nomenclature (project → process → phase → subprocess).
  * This adapter quarantines that terminology - the library's "Task" type is used
  * ONLY internally. Our codebase sees GanttRenderItem and GanttRenderOutput.
  *
@@ -141,7 +141,7 @@ export function renderHierarchy(
 
     // Group by type for hierarchy
     const subprocesses = children.filter(n => n.type === 'subprocess');
-    const nonSubprocessNodes = children.filter(n => n.type !== 'subprocess' && n.type !== 'process' && n.type !== 'stage' && n.type !== 'project');
+    const nonSubprocessNodes = children.filter(n => n.type !== 'subprocess' && n.type !== 'process' && n.type !== 'phase' && n.type !== 'project');
     const nodesBySubprocess = new Map<string, HierarchyNode[]>();
 
     nonSubprocessNodes.forEach(t => {
@@ -601,7 +601,7 @@ function autoDetectFieldMapping(fields: FieldDef[]): RecordTimelineFieldMapping 
         fields.find(f => f.type === 'status') ||
         fields.find(f =>
             (f.type === 'select' || f.type === 'status') &&
-            f.key && ['status', 'state', 'stage'].includes(f.key.toLowerCase())
+            f.key && ['status', 'state', 'phase'].includes(f.key.toLowerCase())
         );
 
     // For progress: prioritize type='percent', then fall back to conventional names with number/percent type

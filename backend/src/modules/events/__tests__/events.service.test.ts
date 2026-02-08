@@ -61,7 +61,7 @@ describe('events.service', () => {
       await expect(
         eventsService.emitEvent({
           contextId: fixtures.projectId,
-          contextType: 'stage' as 'subprocess',
+          contextType: 'phase' as 'subprocess',
           type: 'TEST_EVENT',
         })
       ).rejects.toThrow('Stage context is deprecated');

@@ -179,7 +179,7 @@ export const HierarchyProjection: ProjectionPreset<
 
     // Add containers (project, process, subprocess)
     for (const container of containers) {
-      if (container.type !== 'stage') { // Explicitly skip stage containers
+      if (container.type !== 'phase') { // Explicitly skip stage containers
         nodes.push({
           id: container.id,
           type: container.type as any,
@@ -220,15 +220,15 @@ export const HierarchyProjection: ProjectionPreset<
 ```typescript
 import { z } from 'zod';
 
-// REMOVE 'stage' from the primary enum (soft deprecation; keep for migration compatibility only)
+// REMOVE 'phase' from the primary enum (soft deprecation; keep for migration compatibility only)
 export const nodeTypeSchema = z.enum(['project', 'process', 'subprocess', 'task', 'subtask']);
 
 // Legacy stage type (migration only)
-export const legacyNodeTypeSchema = z.enum(['project', 'process', 'stage', 'subprocess', 'task', 'subtask']);
+export const legacyNodeTypeSchema = z.enum(['project', 'process', 'phase', 'subprocess', 'task', 'subtask']);
 
 export const createNodeSchema = z.object({
   parentId: z.string().uuid().nullable().optional(),
-  type: nodeTypeSchema, // No longer accepts 'stage' for new creations
+  type: nodeTypeSchema, // No longer accepts 'phase' for new creations
   title: z.string().min(1, 'Title is required'),
   description: z.unknown().optional(),
   metadata: z.record(z.unknown()).optional(),
@@ -279,7 +279,7 @@ export const useProjectionStore = create<ProjectionState>()(
 
 ## Migration plan
 1. **Database:** Add migration to mark existing `stage` nodes with `metadata.legacy = true` (do not delete).
-2. **Create paths:** Composer and hierarchy creation endpoints reject `type: 'stage'` for new nodes (validation error).
+2. **Create paths:** Composer and hierarchy creation endpoints reject `type: 'phase'` for new nodes (validation error).
 3. **Read paths:** Existing stage nodes can still be queried but are filtered out of `HierarchyProjection` by default.
 4. **UI:** Remove "Create Stage" affordances; add projection selector instead.
 
@@ -308,7 +308,7 @@ export const useProjectionStore = create<ProjectionState>()(
 Replace the current `IngestionView` with an Import Workbench surface that is projection-driven, plan-centric, and aligned with the new import sessions API. Shows hierarchy and stage projections side-by-side without implying stages are structural containers.
 
 ## Motivation
-The current `IngestionView` renders `node.type === 'stage'` and displays `stageCount` in the preview header, which reinforces the legacy stage-as-container model.  The Import Workbench surface replaces this with a projection-aware interface that treats stage grouping as one optional lens among many.
+The current `IngestionView` renders `node.type === 'phase'` and displays `stageCount` in the preview header, which reinforces the legacy stage-as-container model.  The Import Workbench surface replaces this with a projection-aware interface that treats stage grouping as one optional lens among many.
 
 ## UI Architecture
 

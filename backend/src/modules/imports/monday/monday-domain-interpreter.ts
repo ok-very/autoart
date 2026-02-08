@@ -280,7 +280,7 @@ function createContainerFromGroup(
     const role = groupConfig?.role ?? boardConfig.settings?.defaultGroupRole ?? 'subprocess';
 
     const roleToType: Record<MondayGroupRole, ImportPlanContainer['type'] | null> = {
-        stage: 'stage',
+        stage: 'phase',
         subprocess: 'subprocess',
         backlog: 'subprocess',
         done: 'subprocess',
@@ -309,7 +309,7 @@ function createContainerFromGroup(
         type,
         title: groupConfig?.subprocessNameOverride ?? node.name,
         parentTempId,
-        definitionName: role === 'stage' ? `Stage (${groupConfig?.stageKind ?? 'todo'})` : undefined,
+        definitionName: role === 'stage' ? `Phase (${groupConfig?.stageKind ?? 'todo'})` : undefined,
     };
 }
 

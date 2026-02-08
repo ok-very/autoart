@@ -34,7 +34,7 @@ export interface CreateEventInput {
  */
 export async function emitEvent(input: CreateEventInput): Promise<Event> {
   // Guard: Stage context is deprecated
-  if (input.contextType === 'stage') {
+  if (input.contextType === 'phase') {
     throw new Error('Stage context is deprecated; use subprocess context with stage metadata');
   }
 

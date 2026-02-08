@@ -122,7 +122,7 @@ export function ExportPreview({ projectId, format, options, sessionId }: ExportP
                         </Badge>
                     )}
                 </Inline>
-                <Badge variant="stage">{format.toUpperCase()}</Badge>
+                <Badge variant="phase">{format.toUpperCase()}</Badge>
             </Inline>
 
             {/* Two-column comparison */}
@@ -182,7 +182,7 @@ export function ExportPreview({ projectId, format, options, sessionId }: ExportP
                     </div>
                     <div>
                         <Text size="xs" color="dimmed">Stage</Text>
-                        <Badge variant="stage">{exportModel.statusBlock.stage || 'Unknown'}</Badge>
+                        <Badge variant="phase">{exportModel.statusBlock.stage || 'Unknown'}</Badge>
                     </div>
                 </div>
 

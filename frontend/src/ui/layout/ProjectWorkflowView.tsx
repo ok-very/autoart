@@ -61,7 +61,7 @@ function collectSubprocessesForProcess(
     const directSubprocesses = getChildren(process.id).filter((n) => n.type === 'subprocess');
     if (directSubprocesses.length > 0) return directSubprocesses;
 
-    const stages = getChildren(process.id).filter((n) => n.type === 'stage');
+    const stages = getChildren(process.id).filter((n) => n.type === 'phase');
     const subprocesses: HierarchyNode[] = [];
     for (const stage of stages) {
         subprocesses.push(...getChildren(stage.id).filter((n) => n.type === 'subprocess'));

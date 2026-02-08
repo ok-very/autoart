@@ -22,7 +22,7 @@ import { useUIStore } from '../../../stores/uiStore';
 // TYPES
 // ============================================================================
 
-type PreviewMode = 'hierarchy' | 'stage';
+type PreviewMode = 'hierarchy' | 'phase';
 
 const OUTCOME_COLORS: Record<string, { bg: string; text: string }> = {
     FACT_EMITTED: { bg: 'bg-emerald-100', text: 'text-emerald-700' },
@@ -111,10 +111,10 @@ export function ImportWorkbenchContent() {
                         Hierarchy
                     </button>
                     <button
-                        onClick={() => setPreviewMode('stage')}
+                        onClick={() => setPreviewMode('phase')}
                         className={clsx(
                             'flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors',
-                            previewMode === 'stage'
+                            previewMode === 'phase'
                                 ? 'bg-blue-100 text-blue-700'
                                 : 'text-ws-text-secondary hover:bg-slate-100'
                         )}
@@ -169,7 +169,7 @@ export function ImportWorkbenchContent() {
                         onSelect={handleSelectItem}
                     />
                 )}
-                {previewMode === 'stage' && (
+                {previewMode === 'phase' && (
                     <StagePreview
                         plan={plan}
                         selectedRecordId={selectedItemId}

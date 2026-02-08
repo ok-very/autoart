@@ -58,7 +58,7 @@ export function CreateNodeView(props: CreateNodeViewProps | LegacyCreateNodeView
   };
 
   const nodeLabel = {
-    stage: 'Stage',
+    phase: 'Phase',
     subprocess: 'Subprocess',
     task: 'Task',
     subtask: 'Subtask',

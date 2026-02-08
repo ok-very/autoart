@@ -18,7 +18,7 @@ import { useNodePath } from '../../api/hooks';
 
 /** Context types that correspond to hierarchy nodes */
 const HIERARCHY_CONTEXT_TYPES: ReadonlySet<string> = new Set([
-  'project', 'process', 'stage', 'subprocess',
+  'project', 'process', 'phase', 'subprocess',
 ]);
 
 interface EventBreadcrumbProps {

@@ -193,7 +193,7 @@ export function ActionsTableFlat({
                     const action = row.data as Action;
                     const contextLabels: Record<string, string> = {
                         subprocess: 'Subprocess',
-                        stage: 'Stage',
+                        stage: 'Phase',
                         process: 'Process',
                         project: 'Project',
                         record: 'Record',

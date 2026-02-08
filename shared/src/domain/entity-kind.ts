@@ -31,7 +31,7 @@ import type { NodeType, DefinitionKind } from '../schemas/enums.js';
 export type EntityKind =
   | 'project'
   | 'process'
-  | 'stage'
+  | 'phase'
   | 'subprocess'
   | 'template'
   | 'record'
@@ -41,7 +41,7 @@ export type EntityKind =
 const ENTITY_KINDS: ReadonlySet<string> = new Set<EntityKind>([
   'project',
   'process',
-  'stage',
+  'phase',
   'subprocess',
   'template',
   'record',
@@ -52,7 +52,7 @@ const ENTITY_KINDS: ReadonlySet<string> = new Set<EntityKind>([
 const NODE_TYPES: ReadonlySet<string> = new Set<NodeType>([
   'project',
   'process',
-  'stage',
+  'phase',
   'subprocess',
   'template',
 ]);
@@ -98,7 +98,7 @@ export function definitionKindToEntityKind(
       if (!name) return 'subprocess'; // safe default for unnamed containers
       const lower = name.toLowerCase();
       if (lower === 'process') return 'process';
-      if (lower === 'stage') return 'stage';
+      if (lower === 'phase') return 'phase';
       if (lower === 'subprocess') return 'subprocess';
       return 'subprocess'; // unknown container name → default
     }

@@ -118,7 +118,7 @@ export const ProcessProjection: ProjectionPreset<
                     id: `stage:${stage}`,
                     title: stage,
                     items,
-                    source: 'stage',
+                    source: 'phase',
                 });
             } else {
                 // Single item - float it
