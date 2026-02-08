@@ -1,18 +1,18 @@
 #!/bin/bash
-# Block stackit checkout and stackit restack during sessions.
+# PreToolUse hook for git/stackit safety.
 #
-# Rule: NEVER navigate between stack branches to apply fixes.
-# All fixes go on the current branch. Restacking rewrites history
-# and forces pushes on downstream branches.
+# DENY:
+#   stackit checkout — NEVER navigate between stack branches to apply fixes
+#   stackit restack  — rewrites history and forces pushes
 #
-# Allowed alternatives:
-#   stackit sync   — pull main, cleanup merged branches
-#   stackit up/down — only via /stack-status skill
-#   stackit log    — inspect stack
+# ASK (require user confirmation):
+#   stackit merge    — destructive stack operation, confirm before proceeding
+#   gh pr merge      — irreversible merge, confirm before proceeding
 
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 
+# Hard deny: stack navigation and restacking
 if echo "$COMMAND" | grep -qE 'stackit\s+(checkout|restack)'; then
   jq -n '{
     hookSpecificOutput: {
@@ -21,6 +21,20 @@ if echo "$COMMAND" | grep -qE 'stackit\s+(checkout|restack)'; then
       permissionDecisionReason: "BLOCKED: stackit checkout/restack is forbidden. Fix review comments by committing on the current branch. See CLAUDE.md Non-Negotiable Rules."
     }
   }'
-else
   exit 0
 fi
+
+# Gate: merge operations require user confirmation
+if echo "$COMMAND" | grep -qE 'stackit\s+merge|gh\s+pr\s+merge'; then
+  jq -n '{
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "ask",
+      permissionDecisionReason: "Merge operation detected. Confirm before proceeding — this is irreversible."
+    }
+  }'
+  exit 0
+fi
+
+# Everything else: pass through
+exit 0
