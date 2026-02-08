@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronDown, AlertTriangle, X } from 'lucide-react';
 import { clsx } from 'clsx';
 import {
@@ -303,6 +303,8 @@ export function Step3Columns({ onNext, onBack, session, onSessionCreated }: Step
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [inflightMutations, setInflightMutations] = useState(0);
+    const inflightRef = useRef(0);
+    useEffect(() => { inflightRef.current = inflightMutations; }, [inflightMutations]);
 
     // Extract board IDs
     const boardIds = useMemo(() => {
@@ -364,10 +366,10 @@ export function Step3Columns({ onNext, onBack, session, onSessionCreated }: Step
         try {
             setIsRefreshing(true);
             // Wait for any in-flight column updates to settle
-            if (inflightMutations > 0) {
+            if (inflightRef.current > 0) {
                 await new Promise<void>(resolve => {
                     const check = () => {
-                        if (inflightMutations <= 0) resolve();
+                        if (inflightRef.current <= 0) resolve();
                         else setTimeout(check, 50);
                     };
                     check();

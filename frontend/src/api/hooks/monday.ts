@@ -90,8 +90,10 @@ export function useUpdateMondayColumnConfigs() {
         onMutate: async (variables) => {
             await queryClient.cancelQueries({ queryKey: ['monday', 'boards', 'configs'] });
             const queryFilter = { queryKey: ['monday', 'boards', 'configs'] };
-            const queries = queryClient.getQueriesData<MondayBoardConfig[]>(queryFilter);
-            for (const [key, data] of queries) {
+            // Snapshot before mutation for rollback
+            const previousQueries = queryClient.getQueriesData<MondayBoardConfig[]>(queryFilter)
+                .map(([key, data]) => [key, data ? structuredClone(data) : data] as const);
+            for (const [key, data] of previousQueries) {
                 if (!data) continue;
                 const updated = data.map(board =>
                     board.id === variables.boardConfigId
@@ -100,11 +102,11 @@ export function useUpdateMondayColumnConfigs() {
                 );
                 queryClient.setQueryData(key, updated);
             }
-            return { queries };
+            return { previousQueries };
         },
         onError: (_err, _vars, context) => {
-            if (context?.queries) {
-                for (const [key, data] of context.queries) {
+            if (context?.previousQueries) {
+                for (const [key, data] of context.previousQueries) {
                     queryClient.setQueryData(key, data);
                 }
             }
