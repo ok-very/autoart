@@ -1,30 +1,43 @@
 #!/bin/bash
 # PreToolUse hook for git/stackit safety.
 #
-# DENY:
-#   stackit checkout — NEVER navigate between stack branches to apply fixes
-#   stackit restack  — rewrites history and forces pushes
+# Gates dangerous operations behind user confirmation ("ask").
+# None are hard-denied — all have legitimate uses — but all
+# warrant a pause before execution.
 #
-# ASK (require user confirmation):
-#   stackit merge    — destructive stack operation, confirm before proceeding
-#   gh pr merge      — irreversible merge, confirm before proceeding
+#   stackit checkout — switches branches, can lose uncommitted context
+#   stackit restack  — rewrites history, force-pushes downstream
+#   stackit merge    — irreversible stack merge
+#   gh pr merge      — irreversible PR merge
 
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
 
-# Hard deny: stack navigation and restacking
-if echo "$COMMAND" | grep -qE 'stackit\s+(checkout|restack)'; then
+# stackit checkout — switching branches mid-work
+if echo "$COMMAND" | grep -qE 'stackit\s+checkout'; then
   jq -n '{
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
-      permissionDecision: "deny",
-      permissionDecisionReason: "BLOCKED: stackit checkout/restack is forbidden. Fix review comments by committing on the current branch. See CLAUDE.md Non-Negotiable Rules."
+      permissionDecision: "ask",
+      permissionDecisionReason: "Branch switch. Confirm uncommitted work is safe before proceeding."
     }
   }'
   exit 0
 fi
 
-# Gate: merge operations require user confirmation
+# stackit restack — rebases all branches, force-pushes
+if echo "$COMMAND" | grep -qE 'stackit\s+restack'; then
+  jq -n '{
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "ask",
+      permissionDecisionReason: "Restack rewrites history and force-pushes downstream branches. Confirm."
+    }
+  }'
+  exit 0
+fi
+
+# stackit merge / gh pr merge — irreversible
 if echo "$COMMAND" | grep -qE 'stackit\s+merge|gh\s+pr\s+merge'; then
   jq -n '{
     hookSpecificOutput: {

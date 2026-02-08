@@ -124,7 +124,7 @@ This happened because:
 - **NEVER** use `gh pr merge --squash` on individual stacked PRs — it orphans child branches. Use `stackit merge squash` to consolidate the stack safely.
 - **NEVER** amend pushed commits. Create new commits.
 - **NEVER** use `git stash`. Commit changes so branch switching works.
-- **NEVER** navigate between stack branches to apply fixes.
+- **Gated operations** (pretooluse hook prompts for confirmation): `stackit checkout`, `stackit restack`, `stackit merge`, `gh pr merge`. All have legitimate uses but warrant a pause.
 
 **Code:**
 - **Use `--ws-*` tokens** for workspace UI, `--pub-*` for public surfaces. Never cross.
