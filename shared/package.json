@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "docx": "catalog:",
+    "handlebars": "catalog:",
     "json-logic-js": "catalog:",
     "zod": "catalog:"
   },

@@ -58,5 +58,8 @@ catalog:
   # Document preview
   react-pdf: "^10.0.0"
 
+  # Template engine
+  handlebars: "^4.7.8"
+
   # Sanitization
   dompurify: "^3.2.0"

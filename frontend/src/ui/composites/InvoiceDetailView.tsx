@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import { ArrowLeft, CreditCard, Loader2 } from 'lucide-react';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { formatCurrency, renderFact, type BaseFactPayload, type Event } from '@autoart/shared';
 import { Button } from '@autoart/ui';
@@ -13,6 +13,7 @@ import type { DataRecord } from '../../types';
 import { getEventFormatter } from '../projectLog/eventFormatters';
 import { LineItemEditor } from './LineItemEditor';
 import { ExportMenu } from './ExportMenu';
+import { InvoicePreviewView } from './InvoicePreviewView';
 
 const STATUS_COLORS: Record<string, string> = {
   Draft: 'bg-slate-100 text-slate-700',
@@ -126,6 +127,7 @@ export function InvoiceDetailView() {
   const { data: payments = [] } = useLinkedRecords(selectedInvoiceId, 'payment');
 
   const updateMutation = useUpdateFinanceRecord();
+  const [showPreview, setShowPreview] = useState(false);
 
   const invoice = invoiceResult?.record;
   const computed = invoiceResult?._computed;
@@ -179,6 +181,10 @@ export function InvoiceDetailView() {
     );
   }
 
+  if (showPreview) {
+    return <InvoicePreviewView invoiceId={selectedInvoiceId} onClose={() => setShowPreview(false)} />;
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -218,6 +224,7 @@ export function InvoiceDetailView() {
             <ExportMenu
               invoiceId={selectedInvoiceId}
               invoiceNumber={(invoiceData?.invoice_number as string) || invoice.unique_name}
+              onPreview={() => setShowPreview(true)}
             />
           </div>
         </div>
