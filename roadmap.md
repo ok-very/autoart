@@ -2,40 +2,25 @@
 
 *Created: 2026-02-07*
 
-Three architectural seams keep producing regressions faster than they get fixed. This roadmap replaces the flat priority list with a dependency-ordered plan that fixes the seams before building on top of them.
+Three architectural seams were producing regressions faster than they got fixed. This roadmap replaced the flat priority list with a dependency-ordered plan that fixed the seams before building on top of them. **All three foundation phases are now complete** (Feb 8, 2026). See `todo.md` for active priorities.
 
 ---
 
-## Diagnosis: Why Regressions Recur
+## Diagnosis: What Was Wrong (Resolved)
 
-### Seam 1: The Workspace System Is Half-Built
+Three seams identified Feb 7, 2026. All resolved by Phases 0-2.
 
-Three layers that don't talk to each other:
+### Seam 1: The Workspace System Was Half-Built → Resolved by Phase 1
 
-| Layer | Status | Where |
-|-------|--------|-------|
-| Panel layout (Dockview grid) | Works | `workspaceStore.ts`, `MainLayout.tsx` |
-| Content routing (CenterContentRouter) | Works | `uiStore.ts`, `CenterContentRouter.tsx` |
-| Context binding (boundProjectId, panel params) | Wired but never consumed | `workspaceStore.ts:83-85` |
+Panel layout, content routing, and context binding were three disconnected layers. Desk was broken, CenterView routing was broken, workspace save was a timing hack. Phase 1 unified everything: single `WorkspaceContext` interface, panels consume context via params, one store owns workspace identity + content type + view mode + layout, dirty tracking and save with confirmation dialog.
 
-The Desk workspace references `project-panel` and `mail-panel` with binding, but neither panel reads `boundProjectId`. Workspace presets apply content types *once* on switch, but user changes aren't tracked. Six independent persisted stores with separate version numbers means any structural change risks desyncing the others.
+### Seam 2: Two Type Systems Coexisted → Resolved by Phase 2
 
-**Consequence:** Desk is broken. CenterView routing is broken. Workspace save is a timing hack. These aren't separate bugs — they're the same incomplete feature.
+Import wizard, overlay creation, and seed data used explicit `entityType` string checks while sidebars used `definition_kind`. Phase 2 introduced `resolveEntityKind()` in `@autoart/shared`, migrated import adapters and overlay types, and fixed a phantom `kind` field in `RecordDefinitionSchema` that broke Composer filters.
 
-### Seam 2: Two Type Systems Coexist
+### Seam 3: Dev/Prod Path Divergence → Resolved by Phases 0 + 2
 
-| Pattern | Where | How It Works |
-|---------|-------|-------------|
-| `entityType === 'project'` (old) | Import adapter, overlay types, seed data | Explicit string checks |
-| `definition_kind` field (new) | Sidebars, registry panels | Database-driven |
-
-CLAUDE.md says "soft-intrinsic type derivation — derive from relationships, not strings." But import wizard, overlay creation, and seed data all use explicit type strings. When a new entity kind appears, three different systems need updating.
-
-### Seam 3: Dev/Prod Path Divergence
-
-- **Seeds bypass Composer** — insert raw actions/events without the orchestration layer that real users hit. Composer bugs don't surface in dev.
-- **Preview buttons open dead ports** — `pnpm dev` starts the dashboard (5173) but not intake (5174) or poll (5175). Preview buttons construct valid URLs to ports nobody's listening on.
-- **Direct fetch in ExecutionControls** — one endpoint uses raw `fetch()` bypassing the API client, auth, and error handling.
+Seeds bypassed Composer (fixed by Phase 2.4 — seed through Composer). Preview buttons opened dead ports (fixed by Phase 0.3 — dev server startup). Direct fetch in ExecutionControls (fixed by Phase 0.4 — API client migration).
 
 ---
 
@@ -75,14 +60,12 @@ Fixed the workspace system so everything built on top of it stops regressing. Th
 | 1.8 | **Workspace sidebar overrides** — Workspaces declare sidebar visibility rules via `sidebarHint` on subviews. ProjectWorkflowView auto-collapses sidebar when hint is 'none', auto-expands when 'project'. | P1: Workspace sidebar overrides | 1.4 | ✓ Merged PR #429 |
 
 **Key files:**
-- `frontend/src/stores/uiStore.ts` — will be partially absorbed into workspaceStore
-- `frontend/src/stores/workspaceStore.ts` — becomes the single source of truth
-- `frontend/src/ui/workspace/CenterContentRouter.tsx` — adds validation
-- `frontend/src/workspace/workspacePresets.ts` — adds contentType ownership
+- `frontend/src/stores/uiStore.ts` — partially absorbed into workspaceStore
+- `frontend/src/stores/workspaceStore.ts` — single source of truth for workspace state
+- `frontend/src/ui/workspace/CenterContentRouter.tsx` — validates content vs active workspace
+- `frontend/src/workspace/workspacePresets.ts` — declares contentType ownership
 - `frontend/src/workspace/panelRegistry.ts` — panels consume WorkspaceContext
 - `frontend/src/ui/layout/MainLayout.tsx` — passes context to panels
-
-**Delegation:** `/architect` for 1.1 data flow design, `/frontend-dev` for 1.2-1.8, `/integrator` for workspace switching E2E after 1.4.
 
 ---
 
@@ -122,27 +105,18 @@ All three foundation phases complete. Features section is fully unblocked.
 
 ---
 
-## What Gets Promoted
+## Current State
 
-These items weren't prioritized correctly in the old structure:
+All three foundation phases are complete. The architectural seams that caused recurring regressions are resolved. `todo.md` drives day-to-day priorities. Top feature areas now unblocked:
 
-| Item | Was | Now | Why |
-|------|-----|-----|-----|
-| Desk workspace | Bug list | Phase 1.3 | Proves workspace context works. The deliverable. |
-| CenterView routing | P1 architecture review | Phase 1.4 | Core of workspace ownership. Everything else depends on it. |
-| Store consolidation | Not on todo | Phase 1.5 | Highest-impact change for reducing regressions. Six stores → one authority. |
-| Workspace save | P2 #182 | Phase 1.6 | Trivial once store is consolidated. Blocked until then. |
+- **Calendar/Gantt consolidation** — CenterView routing now supports it
+- **Finances UI unification** — workspace context binding available
+- **Formula/math module** — workspace panel architecture in place
+- **Composer bar popout** — Dockview infrastructure ready
+- **Interpretation HTTP routes** — independent, can start any time
+- **Record inspector / assignee chip** — independent
 
-## What Gets Deprioritized
-
-These items are valid but building them on broken foundations guarantees regressions:
-
-| Item | Was | Now | Blocked By |
-|------|-----|-----|-----------|
-| Calendar/Gantt consolidation | P1 | Features (Blocked) | Phase 1.4 — needs CenterView routing |
-| Finances UI unification | P1 | Features (Blocked) | Phase 1.1 — needs workspace context binding |
-| Formula/math module | P1 | Features (Blocked) | Phase 1.1 — needs workspace panel architecture |
-| Composer bar popout | P2 | Features (Blocked) | Phase 1 — needs Dockview popout infrastructure |
+See `todo.md` Features sections for the full list.
 
 ---
 

@@ -1,7 +1,7 @@
 # AutoArt Priorities
 
 *Last Updated: 2026-02-08*
-*Strategy: See [roadmap.md](roadmap.md) for phased implementation plan and architectural diagnosis.*
+*Strategy: All three foundation phases (0-2) complete. See [roadmap.md](roadmap.md) for architectural history. This file drives active priorities.*
 
 ## Bug List
 
@@ -13,7 +13,6 @@
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
 
 **Deferred:**
-- Subprocesses and stages not populating from seed projections — seed inserts actions/events directly without triggering projector. Addressed by [Phase 2.4](roadmap.md#phase-2-type-system-unification) (seed through Composer).
 - AutoHelper sessions lost on backend restart (#340) — link key IS persisted in `connection_credentials` DB table. Issue is tray icon staleness — needs design decision, not a bugfix.
 
 **UX polish:**
@@ -23,7 +22,7 @@
 - Placeholder themes: Compact, Minimal, Floating, and Default still essentially identical — differentiate per DESIGN.md theme variant guidance. Glass and neumorphic variants pending implementation (see Housekeeping).
 - Project View: "New project" dropdown UI broken under "Your projects" section — formatting not clean
 
-**Confirmed resolved (29+ items):** See Recently Closed section for PR references. Covers: Phase 0 stack (React Compiler memo, Classification Panel partial save, preview servers, ExecutionControls API client, unused vars), Phase 1 stack (workspace foundation: context contract, panel consumption, Desk workspace, CenterView routing, store consolidation, workspace save, custom lifecycle, sidebar hints), import hierarchy labels, connector sidebar escape hatch, intake record binding UUID, workspace save prompt timing, `[object Object]` field rendering, poll editor, poll public URLs, finance overlay contacts, 401 cascade, AutoHelper settings (now uses backend bridge), Google/Monday OAuth, and 18 earlier items (Monday null group_title, poll editor granularity, dropdown transparency, project spawn, Miller Columns, DOMPurify build, SelectionInspector close, panel spawner glassmorphism, AutoHelper tray pairing, applications dropdown bleed, panel spawn visibility, tab accent, action definitions seed, calendar link, header spacing, `/pair` async I/O, disconnect spinner).
+**Confirmed resolved (30+ items):** See Recently Closed section for PR references. Covers: Phase 0 stack (React Compiler memo, Classification Panel partial save, preview servers, ExecutionControls API client, unused vars), Phase 1 stack (workspace foundation: context contract, panel consumption, Desk workspace, CenterView routing, store consolidation, workspace save, custom lifecycle, sidebar hints), Phase 2 stack (entity kind resolver, import/overlay migrations, seed through Composer — subprocess/stage projections now populate correctly, RecordDefinitionSchema phantom field removed), import hierarchy labels, connector sidebar escape hatch, intake record binding UUID, workspace save prompt timing, `[object Object]` field rendering, poll editor, poll public URLs, finance overlay contacts, 401 cascade, AutoHelper settings (now uses backend bridge), Google/Monday OAuth, and 18 earlier items (Monday null group_title, poll editor granularity, dropdown transparency, project spawn, Miller Columns, DOMPurify build, SelectionInspector close, panel spawner glassmorphism, AutoHelper tray pairing, applications dropdown bleed, panel spawn visibility, tab accent, action definitions seed, calendar link, header spacing, `/pair` async I/O, disconnect spinner).
 
 ---
 
@@ -51,9 +50,9 @@ All four items shipped and merged to main. Entity kind resolver unified; import/
 
 ---
 
-## Features (Unblocked)
+## Features
 
-Items that can be built independently of the workspace/type phases.
+All foundation phases complete. Everything below is unblocked and ready to build.
 
 | # | Issue | Category |
 |---|-------|----------|
@@ -64,25 +63,14 @@ Items that can be built independently of the workspace/type phases.
 | 79 | Enhance Workflow View Interactions | Feature |
 | — | Poll editor: support different/multiple time block selections per day | Polls |
 | — | Records/Fields/Actions registry browser UI unification: consistent layout and shared filter system | UX |
+| — | Consolidate Calendar/Gantt/future view expansions: link Application views to Project View segmented equivalents; cross-project filter/overlay | Feature |
+| — | Finances UI unification: dedicated panel architecture, math/formula ESM, project bindings | Finance |
+| — | Formula/math module: standalone ESM for computed fields, financial calculations, relationship math | Feature |
+| — | Composer bar as sleek dockview popout window (replace modal) | UX |
 
 ---
 
-## Features (Previously Blocked — Now Unblocked)
-
-Phase 1 complete. These items are now ready to build.
-
-| Issue | Category | Notes |
-|-------|----------|-------|
-| Consolidate Calendar/Gantt/future view expansions: Applications views not linked to Project View segmented equivalents; no project/process selection outside single-project setting; Application view should perform general-purpose filter/overlay across projects | Feature | Was blocked by Phase 1.4 (CenterView routing) |
-| Finances UI unification: Finances call gets pulled into Project View rather than spawning its own panel; needs formalization and dedicated panel architecture; institute math/formula ESM; missing project bindings | Finance | Was blocked by Phase 1.1 (workspace context) |
-| **Formula/math module:** Standalone ESM for computed fields, financial calculations, and relationship math. Currently sub-points of Finances UI and Schema editor but never scoped independently. | Feature | Was blocked by Phase 1.1 (workspace context) |
-| Composer bar as sleek dockview popout window (replace modal) | UX | Was blocked by Phase 1 (Dockview infrastructure) |
-
----
-
-## P2: Near-term (Independent)
-
-Items that don't depend on workspace or type phases.
+## P2: Near-term
 
 | # | Issue | Category |
 |---|-------|----------|
@@ -103,7 +91,7 @@ Items that don't depend on workspace or type phases.
 
 **Note:** AutoHelper settings bridge (was P2) is **resolved** — frontend now correctly uses backend bridge endpoints. See [roadmap.md](roadmap.md#autohelper-status-resolved).
 
-**Note:** Workspace modification tracking (#182), route/project context (#180), and panel reconciliation (#179) are absorbed into [Phase 1](roadmap.md#phase-1-workspace-foundation) items 1.5-1.7.
+**Note:** Workspace modification tracking (#182), route/project context (#180), and panel reconciliation (#179) were absorbed into Phase 1 items 1.5-1.7 (now complete).
 
 ---
 
@@ -116,13 +104,12 @@ Items that don't depend on workspace or type phases.
 | Parchment theme | Text color bleeding into forms (`--pub-*` inheriting `--ws-*` parchment colors); Serif 4 not applied to workspace at all yet — only shows up in forms (ironic). Add moderate Serif 4 usage to parchment theme per DESIGN.md | — |
 | Intake forms + poll deployments | Need verification: localhost vs production endpoint config | — |
 | Future outbound subdomains | `polls.autoart.work`, `forms.autoart.work` endpoint routing not wired | — |
-| SelectionInspector / Record view | Handle `definition_kind` system for filtering/classification | 2.1 |
+| SelectionInspector / Record view | Handle `definition_kind` system for filtering/classification — resolver exists but inspector doesn't use it yet | — |
 | Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate | — |
 | Selection editor | "Plan" link badge system could just be a pointer to the active window name / binding group color | — |
 | `UniversalTableCore.tsx` + composites | All tables div-based with `role` attributes — migrate to Table atom primitives from PR #350 | — |
 | `packages/ui/src/atoms/Badge.tsx` | Badge variant colors use domain-semantic Tailwind colors — needs separate approach (not chrome tokens) | — |
-| `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` has no explicit UI/behavior mapping (CodeAnt #324) | 2.1 |
-| `frontend/src/ui/sidebars/` + definition filtering | Definitions without `definition_kind` excluded by filter — add fallback or migration (CodeAnt #324) | 2.1 |
+| `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` — type declared and filtered but no distinct UI treatment (icon, section, color) | — |
 | `ExportMenu.tsx` | `invoiceNumber` sent to PDF/DOCX endpoints — backend should consume for Content-Disposition filenames | — |
 
 **Low priority (CodeAnt #332 nitpicks):**
@@ -139,7 +126,6 @@ Items that don't depend on workspace or type phases.
 
 | # | Issue | Category |
 |---|-------|----------|
-| 184 | Q1 2026 Roadmap: Workspace System & Client Reports | Roadmap |
 | 118 | Gemini AI: drafts, filenames, contacts | AI |
 | 117 | Gemini Vision: deep crawl fallback | AI |
 | 74 | Import Workbench: Runner + Gemini | Import |
@@ -206,8 +192,7 @@ Items that don't depend on workspace or type phases.
 |-----|-------------|
 | #214 | Date format + timezone user settings |
 | #215 | Restructure .claude/ for Claude Code best practices |
-| #205 | Wire theme variables to global styles |
-| #204 | Modernize tabs, remove Bound labels (superseded by PRs #307-311) |
 | #198, #201 | Design system docs (palette, typography, layout) |
-| #189-195 | React Compiler fixes (Tier 1-3) |
 | #188 | Add referenceSlots to action arrangements |
+
+*Pruned: #204 (superseded by #307-311), #205 (superseded by token migration work), #189-195 (Phase 0.1 addressed React Compiler issues)*
