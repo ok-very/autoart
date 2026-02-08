@@ -15,6 +15,7 @@ import { logger } from '@utils/logger.js';
 
 import { extractVocabulary, storeVocabulary } from '../../vocabulary/vocabulary.service.js';
 
+import { invalidateSession as invalidateClassificationCache } from './classification-cache.js';
 import { getSession } from './import-sessions.service.js';
 import { type InterpretationOutput, interpretCsvRowPlan } from '../../interpreter/interpreter.service.js';
 import { matchSchema } from '../schema-matcher.js';
@@ -326,6 +327,10 @@ export async function saveResolutions(
 ): Promise<ImportPlan> {
     const session = await getSession(sessionId);
     if (!session) throw new Error('Session not found');
+
+    // Invalidate classification cache — resolutions change the effective outcome,
+    // so cached classifications would be stale.
+    invalidateClassificationCache(sessionId);
 
     return await db.transaction().execute(async (trx) => {
         // Lock the plan row to prevent concurrent modifications (FOR UPDATE)
