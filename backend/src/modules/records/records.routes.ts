@@ -1,8 +1,16 @@
 import { FastifyInstance } from 'fastify';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { sql } from 'kysely';
 import { z } from 'zod';
 
 import { resolveComputedFields } from './computed-fields.service.js';
+import {
+  emitInvoiceCreated,
+  emitPaymentRecorded,
+  emitBudgetAllocated,
+  emitExpenseRecorded,
+  emitBillReceived,
+} from './finance-events.service.js';
 import { detectOverdueInvoices } from './overdue-detection.service.js';
 import {
   createDefinitionSchema,
@@ -14,7 +22,21 @@ import {
   listRecordsQuerySchema,
 } from './records.schemas.js';
 import * as recordsService from './records.service.js';
+import { db } from '../../db/client.js';
 import { AppError } from '../../utils/errors.js';
+
+/**
+ * Extract a numeric amount from record data.
+ * Handles both plain numbers and money objects with an `amount` property.
+ */
+function extractAmount(data: Record<string, unknown>, key: string): number | undefined {
+  const val = data[key];
+  if (typeof val === 'number') return val;
+  if (typeof val === 'object' && val !== null && 'amount' in val) {
+    return (val as { amount: number }).amount;
+  }
+  return undefined;
+}
 
 export async function recordsRoutes(app: FastifyInstance) {
   const fastify = app.withTypeProvider<ZodTypeProvider>();
@@ -442,6 +464,74 @@ export async function recordsRoutes(app: FastifyInstance) {
     async (request, reply) => {
       try {
         const record = await recordsService.createRecord(request.body, request.user.userId);
+
+        // Post-insert: emit finance event if applicable (fire-and-forget)
+        try {
+          const def = await recordsService.getDefinitionById(request.body.definitionId);
+          if (def) {
+            const data = request.body.data as Record<string, unknown>;
+            const actorId = request.user?.userId ?? null;
+            const contextId = request.body.classificationNodeId;
+
+            if (contextId) {
+              switch (def.name) {
+                case 'Invoice':
+                  await emitInvoiceCreated({
+                    contextId,
+                    actorId,
+                    counterparty: data.client_name as string | undefined,
+                    amount: extractAmount(data, 'total'),
+                    currency: data.currency as string | undefined,
+                    invoiceNumber: data.invoice_number as string | undefined,
+                  });
+                  break;
+                case 'Payment':
+                  await emitPaymentRecorded({
+                    contextId,
+                    actorId,
+                    amount: extractAmount(data, 'amount'),
+                    currency: data.currency as string | undefined,
+                    direction: data.direction as string | undefined,
+                  });
+                  break;
+                case 'Budget':
+                  await emitBudgetAllocated({
+                    contextId,
+                    actorId,
+                    budgetName: (data.name as string | undefined) ?? record.unique_name,
+                    allocationType: data.allocation_type as string | undefined,
+                    amount: extractAmount(data, 'allocated_amount'),
+                    currency: data.currency as string | undefined,
+                  });
+                  break;
+                case 'Expense':
+                  await emitExpenseRecorded({
+                    contextId,
+                    actorId,
+                    description: (data.description as string | undefined) ?? record.unique_name,
+                    category: data.category as string | undefined,
+                    amount: extractAmount(data, 'amount'),
+                    currency: data.currency as string | undefined,
+                  });
+                  break;
+                case 'Vendor Bill':
+                  await emitBillReceived({
+                    contextId,
+                    actorId,
+                    vendor: data.vendor as string | undefined,
+                    billNumber: data.bill_number as string | undefined,
+                    amount: extractAmount(data, 'amount'),
+                    currency: data.currency as string | undefined,
+                  });
+                  break;
+              }
+            }
+          }
+        } catch (err) {
+          // Fire-and-forget: record creation must not fail because event emission fails
+          console.error('Finance event emission failed:', err);
+        }
+
         return reply.code(201).send({ record });
       } catch (err) {
         if (err instanceof AppError) {
@@ -519,6 +609,76 @@ export async function recordsRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const aliases = await recordsService.getRecordAliases(request.params.id);
       return reply.send({ aliases });
+    }
+  );
+
+  // Validate invoice number (uniqueness + format)
+  fastify.post(
+    '/validate-invoice-number',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        body: z.object({
+          invoiceNumber: z.string().min(1),
+          excludeRecordId: z.string().uuid().optional(),
+        }),
+      },
+    },
+    async (request, reply) => {
+      const { invoiceNumber, excludeRecordId } = request.body;
+
+      // Find Invoice definition
+      const invoiceDefRow = await db
+        .selectFrom('record_definitions')
+        .select('id')
+        .where('name', '=', 'Invoice')
+        .executeTakeFirst();
+
+      const conflicts: string[] = [];
+      if (invoiceDefRow) {
+        let q = db
+          .selectFrom('records')
+          .select(['id', 'unique_name'])
+          .where('definition_id', '=', invoiceDefRow.id)
+          .where((eb) =>
+            eb.or([
+              eb('unique_name', '=', invoiceNumber),
+              eb(sql`data->>'invoice_number'`, '=', invoiceNumber),
+            ])
+          );
+
+        if (excludeRecordId) {
+          q = q.where('id', '!=', excludeRecordId);
+        }
+
+        const existing = await q.execute();
+        conflicts.push(...existing.map((r) => r.unique_name));
+      }
+
+      // Format validation: INV-{YYYY}-{####} or INV-{digits}
+      const formatValid =
+        /^[A-Z]{2,5}-\d{4}-\d{3,6}$/.test(invoiceNumber) ||
+        /^INV-\d+$/.test(invoiceNumber);
+
+      // Suggest a number if there are conflicts
+      let suggestion: string | undefined;
+      if (conflicts.length > 0 && invoiceDefRow) {
+        const year = new Date().getFullYear();
+        const count = await db
+          .selectFrom('records')
+          .select(sql<number>`count(*)::int`.as('count'))
+          .where('definition_id', '=', invoiceDefRow.id)
+          .executeTakeFirst();
+        const next = (count?.count ?? 0) + 1;
+        suggestion = `INV-${year}-${String(next).padStart(4, '0')}`;
+      }
+
+      return reply.send({
+        valid: conflicts.length === 0,
+        formatValid,
+        conflicts,
+        suggestion,
+      });
     }
   );
 }
