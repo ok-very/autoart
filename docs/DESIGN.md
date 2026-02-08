@@ -15,6 +15,7 @@ This palette says: *"You can put heavy things here. They won't be judged or lost
 2. No color for decoration alone
 3. Motion replaces color where possible
 4. Dark mode is material inversion, not rebrand
+5. Themes are material variations, not costume changes
 
 ---
 
@@ -22,21 +23,27 @@ This palette says: *"You can put heavy things here. They won't be judged or lost
 
 ### Primary Typeface: Source Serif 4
 
-Body text, table content, metadata, form labels.
+The serif is the soul of the archival aesthetic. It communicates permanence and care.
+
+**Where it belongs:** Headings, page titles, record names, project labels — places where content deserves weight. The Parchment theme uses it most liberally.
+
+**Where it doesn't:** Dense tables, small metadata, form chrome, button labels, navigation. These stay sans-serif for scannability. A full-serif UI is a newspaper, not a tool.
 
 - Weights: Regular (400), Semibold (600) for headings
 - No bold body copy ever
+- Themes may increase or decrease serif coverage, but the scale below is the floor
 
 ```css
 font-family: "Source Serif 4", serif;
 font-optical-sizing: auto;
 ```
 
-### Secondary Typeface: Source Sans 3 (UI-only)
+### Secondary Typeface: Source Sans 3 (Default body + UI)
 
-Buttons, small UI chrome, dropdowns, toggles, system messages.
+Body text, table content, form labels, buttons, small UI chrome, dropdowns, toggles, system messages.
 
-- Never for content - if text represents user data, it's serif
+- Default for body content across all themes
+- Themes like Parchment may promote Serif 4 into headings and record names, but Sans 3 remains the workhorse
 
 ### Console Font: IBM Plex Mono
 
@@ -82,7 +89,9 @@ font-feature-settings: "liga" 0;
 
 ---
 
-## Core Palette
+## Core Palette (Parchment Reference)
+
+The colors below define the Parchment theme — the design system's reference palette. Other themes substitute their own foundation neutrals and accents while preserving the structural roles (background, text, accent, feedback).
 
 ### Foundation Neutrals
 
@@ -109,13 +118,15 @@ font-feature-settings: "liga" 0;
 
 ---
 
-## Color Application
+## Color Application (Parchment Reference)
+
+These concrete values are the Parchment theme. Other themes follow the same structural roles via `--ws-*` tokens.
 
 ### Backgrounds
 
-- App: `#F5F2ED`
+- App: `#F5F2ED` (`--ws-bg`)
 - Table: transparent
-- Expanded row: `rgba(63, 92, 110, 0.04)`
+- Expanded row: `rgba(63, 92, 110, 0.04)` (`--ws-row-expanded-bg`)
 - If you can see the color, it's too much
 
 ### Text
@@ -223,7 +234,7 @@ The workspace *is* the backend application — everything behind login. Public s
 The workspace token contract is defined in:
 `frontend/src/workspace/themes/variables.css`
 
-### Parchment Theme Variables
+### Parchment Theme Variables (Reference Implementation)
 
 ```css
 /* Foundation Neutrals */
@@ -261,7 +272,9 @@ The workspace token contract is defined in:
 
 ## Dark Mode (Material Inversion)
 
-Dark mode inverts the foundation while keeping accents muted:
+Dark mode inverts the foundation while keeping accents muted. Each theme provides its own dark palette, but the principle is consistent: invert surfaces, lighten accents, reduce contrast.
+
+Parchment dark reference:
 
 | Light | Dark | Role |
 |-------|------|------|
@@ -272,6 +285,63 @@ Dark mode inverts the foundation while keeping accents muted:
 
 - Reduced contrast overall
 - For late, tired cognition, not aesthetics
+- Glass and neumorphic variants: reduce blur/shadow intensity in dark mode — effects that feel subtle in light become distracting in dark
+
+---
+
+## Theme System
+
+AutoArt supports pluggable workspace themes. Each theme is a material variation — same structure, different texture. Themes are registered in `frontend/src/workspace/themes/` and composed from two axes:
+
+### Axes
+
+**Density** controls spacing and information density:
+
+| Density | Character |
+|---------|-----------|
+| `compact` | Tighter spacing, smaller tabs. For users who want everything visible at once. |
+| `default` | Standard spacing. The baseline. |
+| `comfortable` | More breathing room. Not implemented yet — reserved. |
+
+**Variant** controls surface treatment:
+
+| Variant | Character | Guidance |
+|---------|-----------|----------|
+| `solid` | Opaque backgrounds, clean borders. The honest default. | Structure comes from borders and background contrast. |
+| `floating` | Elevated panels with shadow. Panels feel like objects on a desk. | Shadows must be subtle — `0 1px 3px` range. If it looks like Material Design, it's too much. |
+| `minimal` | Reduced chrome. Fewer borders, more whitespace. | Must still be navigable — hiding borders is not hiding structure. Tab active states need compensation (bolder indicator, subtle background). |
+| `glass` | Translucent panels with backdrop blur. | Blur radius 8-16px max. Tinted, not transparent — content behind must not be readable. Fall back to solid if `backdrop-filter` unsupported. Never on text-heavy surfaces. |
+| `neumorphic` | Soft inner/outer shadows simulating extruded surfaces. | Keep shadow spread tight (2-4px). Works for cards and controls, not for text areas. Must pass WCAG contrast on every surface — if the shadow eats the border, add one back. Reference tool: [neumorphism.io](https://neumorphism.io/) ([source](https://github.com/adamgiebl/neumorphism)). |
+
+### Built-in Themes
+
+| Theme | Density | Variant | Character |
+|-------|---------|---------|-----------|
+| Default | default | solid | Clean, neutral. Tailwind slate palette. |
+| Compact | compact | solid | Same as Default, less padding. |
+| Floating | default | floating | Subtle elevation, panel cards. |
+| Minimal | default | minimal | Reduced borders, quiet chrome. |
+| Parchment | default | solid | Warm archival palette (see Core Palette). Serif 4 in headings and record names. |
+
+### Theme Constraints
+
+Every theme, regardless of variant, must satisfy:
+
+1. **The token contract.** All `--ws-*` variables must be defined. Missing tokens break components silently.
+2. **The palette rules.** Feedback colors (success/warning/error) must remain distinguishable. Desaturation is fine, ambiguity is not.
+3. **The type scale.** Font sizes from the scale table are hard limits across all themes. Themes choose *which* typeface at each level, not the size.
+4. **The interaction rules.** Focus rings, motion duration, empty state behavior — these don't change per theme.
+5. **The 2:14am test.** If a theme makes the interface feel urgent, anxious, or clever, it fails.
+
+### Creating a New Theme
+
+Implement `WorkspaceThemeModule` from `frontend/src/workspace/themes/types.ts`. At minimum:
+
+- `id`, `label`, `density`, `variant`
+- `css.variables` — full `--ws-*` token set
+- Call `registerWorkspaceTheme()` to self-register
+
+Optional: `css.text` for custom CSS rules, `components` for tab/watermark overrides, `behavior` for animation hooks.
 
 ---
 

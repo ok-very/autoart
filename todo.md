@@ -1,13 +1,11 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-07*
+*Last Updated: 2026-02-08*
 *Strategy: See [roadmap.md](roadmap.md) for phased implementation plan and architectural diagnosis.*
 
 ## Bug List
 
-**Active — addressed by [Phase 1](roadmap.md#phase-1-workspace-foundation):**
-- **CenterView routing conceptual breakage:** Forms, imports, and other non-project views populate default Project CenterView. Should map to owning workspaces, with Desk as catch-all. [Phase 1.4]
-- **Desk workspace:** Broken layout, should be first in workspace list and default view. [Phase 1.3]
+**Active — unphased:**
 
 **Active — unphased:**
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
@@ -17,17 +15,15 @@
 **Deferred:**
 - Subprocesses and stages not populating from seed projections — seed inserts actions/events directly without triggering projector. Addressed by [Phase 2.4](roadmap.md#phase-2-type-system-unification) (seed through Composer).
 - AutoHelper sessions lost on backend restart (#340) — link key IS persisted in `connection_credentials` DB table. Issue is tray icon staleness — needs design decision, not a bugfix.
-- Workspace preset timing (#181) — `pendingPanelPositions` workaround in place. Replaced by [Phase 1.6](roadmap.md#phase-1-workspace-foundation) (workspace save).
 
 **UX polish:**
 - "Import" tab hides in overflow menu despite ample space in tab bar
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong — remove the feature
 - Emoji/icon selector overlay — search doesn't work; consider switching to Phosphor Icons
-- Glassmorphism missing from tab strip where it was implemented — should be doable now with first-class theme variables
-- Placeholder themes: Compact, Minimal, Floating, and Default are all essentially identical — four names, one skin. Either differentiate them or cull to one honest default.
+- Placeholder themes: Compact, Minimal, Floating, and Default still essentially identical — differentiate per DESIGN.md theme variant guidance. Glass and neumorphic variants pending implementation (see Housekeeping).
 - Project View: "New project" dropdown UI broken under "Your projects" section — formatting not clean
 
-**Confirmed resolved (25+ items):** See Recently Closed section for PR references. Covers: Phase 0 stack (React Compiler memo, Classification Panel partial save, preview servers, ExecutionControls API client, unused vars), import hierarchy labels, connector sidebar escape hatch, intake record binding UUID, workspace save prompt timing, `[object Object]` field rendering, poll editor, poll public URLs, finance overlay contacts, 401 cascade, AutoHelper settings (now uses backend bridge), Google/Monday OAuth, and 18 earlier items (Monday null group_title, poll editor granularity, dropdown transparency, project spawn, Miller Columns, DOMPurify build, SelectionInspector close, panel spawner glassmorphism, AutoHelper tray pairing, applications dropdown bleed, panel spawn visibility, tab accent, action definitions seed, calendar link, header spacing, `/pair` async I/O, disconnect spinner).
+**Confirmed resolved (29+ items):** See Recently Closed section for PR references. Covers: Phase 0 stack (React Compiler memo, Classification Panel partial save, preview servers, ExecutionControls API client, unused vars), Phase 1 stack (workspace foundation: context contract, panel consumption, Desk workspace, CenterView routing, store consolidation, workspace save, custom lifecycle, sidebar hints), import hierarchy labels, connector sidebar escape hatch, intake record binding UUID, workspace save prompt timing, `[object Object]` field rendering, poll editor, poll public URLs, finance overlay contacts, 401 cascade, AutoHelper settings (now uses backend bridge), Google/Monday OAuth, and 18 earlier items (Monday null group_title, poll editor granularity, dropdown transparency, project spawn, Miller Columns, DOMPurify build, SelectionInspector close, panel spawner glassmorphism, AutoHelper tray pairing, applications dropdown bleed, panel spawn visibility, tab accent, action definitions seed, calendar link, header spacing, `/pair` async I/O, disconnect spinner).
 
 ---
 
@@ -39,20 +35,11 @@ All five items shipped and merged to main. Typecheck and lint pass clean. Phase 
 
 ---
 
-## Phase 1: Workspace Foundation
+## Phase 1: Workspace Foundation ✓
 
-*Full details: [roadmap.md Phase 1](roadmap.md#phase-1-workspace-foundation)*
+*Complete — PRs #421-429 merged (Feb 8 2026)*
 
-| # | Issue | Absorbs From | Depends On |
-|---|-------|-------------|-----------|
-| 1.1 | Workspace context contract (`WorkspaceContext` interface) | — | Phase 0 |
-| 1.2 | Panel context consumption (project-panel, mail-panel, inspector) | Workspace binding (was P1) | 1.1 |
-| 1.3 | Desk workspace (first in list, default on login) | Bug: Desk broken | 1.1, 1.2 |
-| 1.4 | CenterView routing ownership (workspace declares content type) | P1: CenterView routing, Bug: CenterView breakage | 1.1 |
-| 1.5 | Store consolidation (uiStore content state -> workspaceStore) | — (new) | 1.4 |
-| 1.6 | Workspace save (full state snapshot) | P2 #182: modification tracking | 1.5 |
-| 1.7 | Custom workspace lifecycle (create, rename, delete) | — | 1.5, 1.6 |
-| 1.8 | Workspace sidebar overrides (per-workspace sidebar rules) | P1: sidebar overrides | 1.4 |
+All eight items shipped and merged to main. Workspace system unified: single store owns content type + view mode + layout; context contract consumed by panels; Desk workspace default; CenterView routing validated; workspace save with dirty tracking; custom workspace CRUD; sidebar hints auto-collapse. Phase 2 (Type System Unification) now unblocked.
 
 ---
 
@@ -129,9 +116,9 @@ Items that don't depend on workspace or type phases.
 
 | File | Issue | Phase |
 |------|-------|-------|
-| Project Log view | Missing project sidebar (inconsistent with other project-scoped views) | 1.8 |
 | Records view | Align layout with Fields view: definitions filter + search bar, no redundant dropdown title | — |
-| `packages/ui/src/molecules/SegmentedControl.tsx` | Still using glassmorphism (`bg-[var(--ws-tabstrip-bg,#f1f5f9)]`) — not in DESIGN.md, should be solid background | — |
+| `packages/ui/src/molecules/SegmentedControl.tsx` | Implement glass theme (plus remove it from the non-glass theme); also add neumorphic theme for funsies | — |
+| Parchment theme | Text color bleeding into forms (`--pub-*` inheriting `--ws-*` parchment colors); Serif 4 not applied to workspace at all yet — only shows up in forms (ironic). Add moderate Serif 4 usage to parchment theme per DESIGN.md | — |
 | Intake forms + poll deployments | Need verification: localhost vs production endpoint config | — |
 | Future outbound subdomains | `polls.autoart.work`, `forms.autoart.work` endpoint routing not wired | — |
 | SelectionInspector / Record view | Handle `definition_kind` system for filtering/classification | 2.1 |
@@ -174,7 +161,7 @@ Items that don't depend on workspace or type phases.
 
 | PRs | Description |
 |-----|-------------|
-| #421-425 | **Phase 1.1-1.4 stack:** (1.1) WorkspaceContext contract + provider, (1.2) Panel context consumption (project-panel, mail-panel twice), (1.3) CenterView routing ownership, (1.4) Desk workspace default and first in list |
+| #426-429 | **Phase 1.5-1.8 stack:** (1.5) Store consolidation (centerContentType + view modes → workspaceStore), (1.6) Workspace save with modification tracking + confirmation dialog, (1.7) Custom workspace rename + context menu, (1.8) Sidebar hints with auto-collapse support |
 | #394 | **MiniCalendar molecule for polls:** Compact month-grid date selector with multi-select toggle for poll configuration |
 | #369-372, #381-386 | **Intake forms -> records pipeline:** Block connector architecture (RecordMapping schemas, SubmissionsTable with CSV export + record badges, RecordMappingPanel for staff config, Responses tab integration, Records editor tab, backend handler processes mappings) |
 | #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
@@ -185,6 +172,7 @@ Items that don't depend on workspace or type phases.
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Phase 1.1-1.4: Workspace Foundation (Feb 7 2026):** (1.1) WorkspaceContext contract + provider, (1.2) Panel context consumption (project-panel, mail-panel bind to workspace project), (1.3) CenterView routing ownership (workspace declares owned content types), (1.4) Desk workspace default and first in list | PRs #421-425 |
 | — | **Phase 0: Stop the Bleeding (Feb 7 2026):** (0.1) React Compiler memo fix, (0.2) Classification Panel partial save (unblocked import wizard), (0.3) Preview dev servers (intake 5174 + poll 5175), (0.4) ExecutionControls API client (replaced raw fetch), (0.5) Unused var cleanup | PRs #416-420 |
 | — | **Bug fix stack (Feb 7 2026):** (1) Guard ClassificationRow outcome render against null (2) `build:all:clean` resilient to Windows EBUSY file locks (3) Hook to block stackit checkout/restack during sessions (4) Restore ExternalLink alongside Preview button in poll editor (5) Filter incomplete record bindings from intake auto-save (6) Workspace save dialog timing fix (rAF after Radix close) (7) DataFieldWidget object rendering (8) Poll public URLs via env vars (9) Polls panel + registry entry for workspace presets | PRs #411-415 |
 | 403 | **OAuth graceful status checks:** Added `/auth/google/status`, `/auth/microsoft/status`, `/auth/monday/status` endpoints; changed 500->501 for unconfigured providers; frontend disables Connect buttons when server reports unavailable; fixed OAuth availability prop defaults (false->true) to prevent dead buttons in overlay contexts; resolved stale redirect URI concerns (intentional localhost dev defaults, overrideable via env) | PR #403 |
