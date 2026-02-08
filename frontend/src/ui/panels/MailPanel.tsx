@@ -22,6 +22,7 @@ import {
 import { usePromotedIds } from '../../api/hooks/mailMessages';
 import type { ProcessedEmail, Priority, TriageStatus as TriageStatusType } from '../../api/types/mail';
 import { EmailActionsMenu } from '../mail/EmailActionsMenu';
+import { useWorkspaceContextOptional } from '../../workspace/WorkspaceContext';
 
 const ITEMS_PER_PAGE = 25;
 
@@ -139,9 +140,14 @@ function StatusIndicator() {
     );
 }
 
-export function MailPanel(_props: IDockviewPanelProps) {
+export function MailPanel(props: IDockviewPanelProps) {
     const [offset, setOffset] = useState(0);
     const [useEnrichment, setUseEnrichment] = useState(true);
+
+    // When bound to a workspace project, filter mail to that project
+    const wsCtx = useWorkspaceContextOptional();
+    const isBound = wsCtx?.isBound(props.api.id) ?? false;
+    const projectFilter = isBound ? wsCtx?.boundProjectId ?? undefined : undefined;
 
     const { data: promotedIds } = usePromotedIds();
     const promotedSet = useMemo(
@@ -152,11 +158,13 @@ export function MailPanel(_props: IDockviewPanelProps) {
     const basicQuery = useInbox({
         limit: ITEMS_PER_PAGE,
         offset,
+        projectId: projectFilter,
     });
 
     const enrichedQuery = useEnrichedInbox({
         limit: ITEMS_PER_PAGE,
         offset,
+        projectId: projectFilter,
     });
 
     const { data, isLoading, isError, error, refetch, isFetching } = useEnrichment

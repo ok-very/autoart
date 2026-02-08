@@ -28,7 +28,7 @@ import { SchemaEditor, ReferencesManager, LinksManager } from '../semantic';
 import { InterpretationInspectorView } from './interpretation/InterpretationInspectorView';
 import { useNode, useRecord, useInterpretationAvailable } from '../../api/hooks';
 import { useUIStore, type InspectorTabId } from '../../stores/uiStore';
-import { useBoundPanelIds, useActiveWorkspaceId } from '../../stores/workspaceStore';
+import { useWorkspaceContextOptional } from '../../workspace/WorkspaceContext';
 import { BUILT_IN_WORKSPACES } from '../../workspace/workspacePresets';
 import { getWorkspaceColorClasses } from '../../workspace/workspaceColors';
 import { ActionDetailsPanel } from '../inspector/ActionDetailsPanel';
@@ -86,7 +86,7 @@ export interface SelectionInspectorProps {
  * Determines whether a selection should be accepted by a bound inspector.
  * When bound, the inspector only shows selections from workspace-scoped origins.
  */
-function shouldAcceptSelection(selection: Selection, boundPanelIds: Set<string>): boolean {
+function shouldAcceptSelection(selection: Selection, isBound: (panelId: string) => boolean): boolean {
     if (!selection) return true;
     const origin = selection.origin;
     // No origin = global (command palette, keyboard shortcut) — always accept
@@ -94,7 +94,7 @@ function shouldAcceptSelection(selection: Selection, boundPanelIds: Set<string>)
     // center-workspace is always workspace-relevant
     if (origin === 'center-workspace') return true;
     // Accept if origin panel is also bound to this workspace
-    if (boundPanelIds.has(origin)) return true;
+    if (isBound(origin)) return true;
     // Reject: origin is from a panel outside the workspace scope
     return false;
 }
@@ -102,13 +102,12 @@ function shouldAcceptSelection(selection: Selection, boundPanelIds: Set<string>)
 export function SelectionInspector({ importContext, onClose }: SelectionInspectorProps = {}) {
     const { selection: globalSelection, inspectorTabMode, setInspectorMode, importPlan: globalPlan } = useUIStore();
     const collectionMode = useCollectionModeOptional();
-    const boundPanelIds = useBoundPanelIds();
-    const activeWorkspaceId = useActiveWorkspaceId();
+    const wsCtx = useWorkspaceContextOptional();
 
-    const isBound = boundPanelIds.has('selection-inspector');
+    const isBound = wsCtx?.isBound('selection-inspector') ?? false;
     const activeWorkspace = useMemo(
-        () => activeWorkspaceId ? BUILT_IN_WORKSPACES.find((w) => w.id === activeWorkspaceId) : null,
-        [activeWorkspaceId],
+        () => wsCtx?.workspaceId ? BUILT_IN_WORKSPACES.find((w) => w.id === wsCtx.workspaceId) : null,
+        [wsCtx?.workspaceId],
     );
     const colorClasses = getWorkspaceColorClasses(isBound ? activeWorkspace?.color : null);
 
@@ -118,7 +117,8 @@ export function SelectionInspector({ importContext, onClose }: SelectionInspecto
         : globalSelection;
 
     // When bound, filter selections to workspace-scoped origins only
-    const selection = isBound && rawSelection && !shouldAcceptSelection(rawSelection, boundPanelIds)
+    const isBoundFn = wsCtx?.isBound ?? (() => false);
+    const selection = isBound && rawSelection && !shouldAcceptSelection(rawSelection, isBoundFn)
         ? null
         : rawSelection;
 

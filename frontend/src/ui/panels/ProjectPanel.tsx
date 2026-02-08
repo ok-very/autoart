@@ -87,7 +87,7 @@ export function ProjectPanelContent({ panelId }: ProjectPanelProps) {
                                 {p.title}
                             </Menu.Item>
                         ))}
-                        {!isBound && boundProjectId && (
+                        {!isBound && ctx.boundProjectId && (
                             <>
                                 <Menu.Divider />
                                 <Menu.Item onClick={handleRebind} leftSection={<Unlink size={14} />}>
