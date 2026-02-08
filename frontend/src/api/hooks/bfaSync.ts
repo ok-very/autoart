@@ -11,6 +11,7 @@ import type {
     BfaSubmitDecision,
     BfaApplyResult,
     BfaInjectionResult,
+    BfaImportResult,
 } from '@autoart/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -160,6 +161,25 @@ export function useInjectBfaToGoogleDoc() {
                 `/programs/bfa/sync/${boardConfigId}/inject`,
                 { documentId }
             );
+        },
+    });
+}
+
+/**
+ * Import BFA projects into AutoArt hierarchy.
+ */
+export function useImportBfaToAutoArt() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ boardConfigId }: { boardConfigId: string }) => {
+            return api.post<BfaImportResult>(
+                `/programs/bfa/sync/${boardConfigId}/import`,
+                {}
+            );
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['hierarchy'] });
+            queryClient.invalidateQueries({ queryKey: ['projects'] });
         },
     });
 }

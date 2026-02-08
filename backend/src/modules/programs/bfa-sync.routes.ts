@@ -8,6 +8,8 @@
  * - POST /sync/:id/decisions — Submit/update decisions for field changes
  * - GET  /sync/:id/decisions  — List decisions for a board config
  * - POST /sync/:id/apply     — Apply accepted decisions to local entities
+ * - POST /sync/:id/inject    — Inject changes into a Google Doc
+ * - POST /sync/:id/import    — Import BFA projects into AutoArt hierarchy
  */
 
 import type { FastifyInstance } from 'fastify';
@@ -15,6 +17,7 @@ import { z } from 'zod';
 
 import { BfaSubmitDecisionsInputSchema } from '@autoart/shared';
 
+import * as bfaImportService from './bfa-import.service.js';
 import * as bfaSyncService from './bfa-sync.service.js';
 
 // ============================================================================
@@ -187,6 +190,26 @@ export async function bfaSyncRoutes(app: FastifyInstance) {
         const result = await bfaSyncService.injectToGoogleDoc(
             boardConfigId, documentId, userId,
         );
+        return reply.send(result);
+    });
+
+    // ========================================================================
+    // IMPORT ROUTE
+    // ========================================================================
+
+    /**
+     * Import BFA projects into AutoArt hierarchy.
+     * Creates/updates project nodes, milestone phases, next step subprocesses,
+     * and associated records (contacts, selection panels).
+     * Requires applied decisions to exist for the board config.
+     */
+    app.post('/sync/:id/import', {
+        preHandler: [app.authenticate],
+    }, async (request, reply) => {
+        const { id: boardConfigId } = BoardConfigIdParamSchema.parse(request.params);
+        const userId = (request.user as { userId: string }).userId;
+
+        const result = await bfaImportService.importToAutoArt(boardConfigId, userId);
         return reply.send(result);
     });
 }

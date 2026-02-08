@@ -5,10 +5,10 @@ import { z } from 'zod';
 // ============================================================================
 
 /**
- * Primary node type schema (stage removed from new creations).
- * Stage is demoted to projection-only - see projections module.
+ * Node types available for creation.
+ * Phase was re-enabled after 4B.1 expanded the Phase container with milestone fields.
  */
-export const nodeTypeSchema = z.enum(['project', 'process', 'subprocess']);
+export const nodeTypeSchema = z.enum(['project', 'process', 'phase', 'subprocess']);
 
 // ============================================================================
 // CREATE/UPDATE SCHEMAS
@@ -16,7 +16,7 @@ export const nodeTypeSchema = z.enum(['project', 'process', 'subprocess']);
 
 export const createNodeSchema = z.object({
   parentId: z.string().uuid().nullable().optional(),
-  type: nodeTypeSchema, // No longer accepts 'phase' for new creations
+  type: nodeTypeSchema,
   title: z.string().min(1, 'Title is required'),
   description: z.unknown().optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
