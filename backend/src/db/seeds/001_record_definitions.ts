@@ -98,6 +98,10 @@ export async function seed(db: Kysely<Database>): Promise<void> {
           { key: 'tax_total', type: 'rollup', label: 'Tax Total', rollupConfig: { linkType: 'line_item', targetField: 'line_tax', aggregation: 'sum' } },
           // Computed: subtotal + tax_total
           { key: 'total', type: 'computed', label: 'Total', formula: { "+": [{ "var": "subtotal" }, { "var": "tax_total" }] } },
+          // Rollup: sum of linked payment records' amount field
+          { key: 'paid_amount', type: 'rollup', label: 'Paid', rollupConfig: { linkType: 'payment', targetField: 'amount', aggregation: 'sum' } },
+          // Computed: total - paid_amount
+          { key: 'balance_due', type: 'computed', label: 'Balance Due', formula: { "-": [{ "var": "total" }, { "var": "paid_amount" }] } },
           {
             key: 'status', type: 'status', label: 'Status',
             options: ['Draft', 'Sent', 'Paid', 'Overdue', 'Void'],
