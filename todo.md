@@ -1,7 +1,7 @@
 # AutoArt Priorities
 
 *Last Updated: 2026-02-08*
-*Strategy: Foundation phases 0-2 complete (see [roadmap.md](roadmap.md) for architectural history). Forward phases organize remaining work by dependency chain and domain scope. This file drives active priorities.*
+*Strategy: Foundation phases 0-2 complete (see [roadmap.md](roadmap.md) for architectural history). Phase 3 (import pipeline) in progress. Phase 4/4B (BFA integration, #437/#438) and Phase 5/6 (Finance) are independent tracks. This file drives active priorities.*
 
 ## Bug List
 
@@ -44,9 +44,54 @@
 
 ---
 
-## Phase 4: Finance Foundation
+## Phase 4: BFA Reconciliation Pipeline Integration (#437)
 
-*Stand up the data layer for the Finance epic (#173). Seed definitions first, then computed fields, then records. No UI surfaces yet — this phase is backend + shared.*
+*Integrate the BFA-todo reconciliation pipeline into AutoArt's export workflow. Monday.com Excel uploads, field-level diff approval, Google Docs styled injection -- all through the web UI. AutoHelper evolves from file-operations-only to general Python task runner.*
+
+**Scope:**
+
+| # | Issue | Sub-phase | Category |
+|---|-------|-----------|----------|
+| 437 | AutoHelper BFA runner: copy `bfa_pipeline/` to AutoHelper, create runner wrapper, add command handlers | 4.1 | AutoHelper |
+| 437 | Backend reconciliation service: file upload, report storage, apply decisions routes | 4.2 | Backend |
+| 437 | Frontend reconciliation panel: diff review, accept/reject, summary stats | 4.3 | Frontend |
+| 437 | Google Docs injection: resolve placeholders, call Docs API, inject styled content | 4.4 | Backend + Frontend |
+
+**Dependencies:** Phase 3 infrastructure stable. Google OAuth (#403) resolved for Phase 4.4.
+
+**Internal order:** 4.1 -> 4.2 -> 4.3 -> 4.4 (strict chain -- each sub-phase depends on the prior)
+
+**Cross-system risk:** This touches AutoHelper (Python), backend (Fastify), frontend (React), and BFA-todo (standalone Python pipeline). Every sub-phase requires end-to-end data flow verification. See [roadmap.md](roadmap.md) for full architecture, risks, and per-sub-phase verification requirements.
+
+**Done when:** User uploads Monday.com Excel, sees field-level diffs in a reconciliation panel, approves changes, receives `gdocs_inject.json`, and can optionally inject styled content into a Google Doc.
+
+---
+
+## Phase 4B: BFA Import to AutoArt Records (#438)
+
+*Depends on Phase 4. After reconciliation, optionally push approved changes back into AutoArt's hierarchy and records system via the Composer.*
+
+**Scope:**
+
+| # | Issue | Sub-phase | Category |
+|---|-------|-----------|----------|
+| 438 | Schema transformation layer: BFA -> AutoArt hierarchy/records mapping, dedup via BFA UID | 4B.1 | Backend |
+| 438 | Composer integration: BFA import actions -> events, project lattice creation, projection updates | 4B.2 | Backend |
+| 438 | Frontend import toggle: checkbox in ReconciliationPanel, preview, result modal with project links | 4B.3 | Frontend |
+
+**Dependencies:** Phase 4 complete. Uses Composer service (stable since Phase 2.4).
+
+**Internal order:** 4B.1 -> 4B.2 -> 4B.3 (strict chain)
+
+**Done when:** User checks "Import to AutoArt records" in reconciliation panel, approved changes create hierarchy nodes (Project -> Process -> Stage), records (contacts, milestones, artists), and events via Composer. New projects appear in the workspace sidebar.
+
+---
+
+## Phase 5: Finance Foundation
+
+*Stand up the data layer for the Finance epic (#173). Seed definitions first, then computed fields, then records. No UI surfaces yet -- this phase is backend + shared.*
+
+**Previously Phase 4.** Renumbered to accommodate BFA integration. Independent of Phase 4/4B -- can run in parallel.
 
 **Scope:**
 
@@ -58,7 +103,7 @@
 | 168 | Vendor bills + expense tracking (invoice receipts, payments, stage reconciliation) | Finance |
 | 167 | Project Budgets surface (stage allocations + reconciliation rollups + spreadsheet export) | Finance |
 
-**Dependencies:** #171 (seed) must land first — all other finance issues depend on the RecordDefinition schemas existing. #166 (computed fields) unblocks #165, #167, #168 by providing the rollup mechanism.
+**Dependencies:** #171 (seed) must land first -- all other finance issues depend on the RecordDefinition schemas existing. #166 (computed fields) unblocks #165, #167, #168 by providing the rollup mechanism.
 
 **Internal order:** #171 -> #166 -> (#165, #167, #168 can parallelize)
 
@@ -66,9 +111,11 @@
 
 ---
 
-## Phase 5: Finance Surfaces & Integration
+## Phase 6: Finance Surfaces & Integration
 
-*Wire finance data into the UI, Composer event log, and export pipeline. Depends on Phase 4 data layer being solid.*
+*Wire finance data into the UI, Composer event log, and export pipeline. Depends on Phase 5 data layer being solid.*
+
+**Previously Phase 5.** Renumbered.
 
 **Scope:**
 
@@ -80,15 +127,17 @@
 | 183 | Evolve export into live client reports system | Reports |
 | 291 | Schema editor / Composer relationship-math builder | Feature |
 
-**Dependencies:** Phase 4 complete. #170 (Composer wiring) should land before #169 (surfaces) so the UI can show real events. #172 (exports) depends on #165 (invoices) and #167 (budgets) from Phase 4.
+**Dependencies:** Phase 5 complete. #170 (Composer wiring) should land before #169 (surfaces) so the UI can show real events. #172 (exports) depends on #165 (invoices) and #167 (budgets) from Phase 5.
 
 **Done when:** Users can create invoices/budgets/expenses from the UI, see finance events in the Project Log, export Invoice PDFs and Budget CSVs, and the client reports system serves live data.
 
 ---
 
-## Phase 6: Platform Polish & Integrations
+## Phase 7: Platform Polish & Integrations
 
-*Independent improvements that don't gate each other. Work from this phase in any order as bandwidth allows.*
+*Independent improvements that do not gate each other. Work from this phase in any order as bandwidth allows.*
+
+**Previously Phase 6.** Renumbered.
 
 **Workspace polish:**
 
@@ -96,15 +145,15 @@
 |---|-------|----------|
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
-| — | Composer bar as sleek dockview popout window (replace modal) | UX |
-| — | Consolidate Calendar/Gantt/future view expansions: link Application views to Project View segmented equivalents; cross-project filter/overlay | Feature |
-| — | Poll editor: support different/multiple time block selections per day | Polls |
+| -- | Composer bar as sleek dockview popout window (replace modal) | UX |
+| -- | Consolidate Calendar/Gantt/future view expansions: link Application views to Project View segmented equivalents; cross-project filter/overlay | Feature |
+| -- | Poll editor: support different/multiple time block selections per day | Polls |
 
 **Intake & records:**
 
 | # | Issue | Category |
 |---|-------|----------|
-| — | Intake forms -> records verification: E2E test block mapping, record creation, completion flow | Intake |
+| -- | Intake forms -> records verification: E2E test block mapping, record creation, completion flow | Intake |
 | 178 | Manual file link support in intake forms | Intake |
 | 177 | Integrate intake forms with records system | Intake |
 
@@ -117,12 +166,12 @@
 | 85 | Templating Engine | Feature |
 | 86 | Monday.com Board Sync Settings | Integration |
 | 393 | File Detection & Alignment Service with watchdog | AutoHelper |
-| — | **AutoHelper local-only config:** Roots, DB path, garbage collection settings should be stored locally with AutoHelper, not in global DB | AutoHelper |
-| — | **AutoHelper "Rebuild Index" is theater:** Carries stale DB path, hangs when triggered — needs real backend handler or correct path | AutoHelper |
+| -- | **AutoHelper local-only config:** Roots, DB path, garbage collection settings should be stored locally with AutoHelper, not in global DB | AutoHelper |
+| -- | **AutoHelper "Rebuild Index" is theater:** Carries stale DB path, hangs when triggered -- needs real backend handler or correct path | AutoHelper |
 
-**Note:** AutoHelper settings bridge (was P2) is **resolved** — frontend now correctly uses backend bridge endpoints. See [roadmap.md](roadmap.md#autohelper-status-resolved).
+**Note:** AutoHelper settings bridge (was P2) is **resolved** -- frontend now correctly uses backend bridge endpoints. See [roadmap.md](roadmap.md#autohelper-status-resolved).
 
-**Note:** Workspace issues #179-182 closed on GitHub — absorbed into Phase 1 (PRs #421-429).
+**Note:** Workspace issues #179-182 closed on GitHub -- absorbed into Phase 1 (PRs #421-429).
 
 ---
 
