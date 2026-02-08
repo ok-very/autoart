@@ -98,9 +98,11 @@ export function ProjectWorkflowView() {
     const { data: allProjects } = useProjects();
 
     // Sidebar state
-    const [sidebarWidth, setSidebarWidth] = useState(320);
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const wsContext = useWorkspaceContextOptional();
+    const [sidebarWidth, setSidebarWidth] = useState(320);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+        () => wsContext?.sidebarHint === 'none',
+    );
 
     // Respect workspace sidebarHint: auto-collapse when 'none', auto-expand when 'project'
     useEffect(() => {
@@ -110,7 +112,7 @@ export function ProjectWorkflowView() {
         } else if (wsContext.sidebarHint === 'project') {
             setIsSidebarCollapsed(false);
         }
-    }, [wsContext?.sidebarHint]);
+    }, [wsContext?.workspaceId, wsContext?.sidebarHint]);
 
     const handleSidebarResize = useCallback((delta: number) => {
         setSidebarWidth((prev) => Math.max(200, Math.min(600, prev + delta)));

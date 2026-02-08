@@ -10,7 +10,7 @@
  */
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import type { WorkspaceScope, CenterContentType } from '../types/workspace';
+import type { WorkspaceScope, CenterContentType, SidebarHint } from '../types/workspace';
 import { useWorkspaceStore } from '../stores/workspaceStore';
 import { BUILT_IN_WORKSPACES } from './workspacePresets';
 
@@ -29,8 +29,8 @@ export interface WorkspaceContextValue {
     contentType: CenterContentType;
     /** Content types this workspace can display. Null = no restriction. */
     ownedContentTypes: CenterContentType[] | null;
-    /** Sidebar hint from active subview (e.g., 'project', 'import', 'none'). Null = no hint. */
-    sidebarHint: string | null;
+    /** Sidebar hint from active subview. Null = no hint. */
+    sidebarHint: SidebarHint | null;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
@@ -74,7 +74,7 @@ export function WorkspaceContextProvider({ children }: WorkspaceContextProviderP
     const ownedContentTypes = preset?.ownedContentTypes ?? null;
 
     // Derive sidebarHint from the active subview
-    const sidebarHint = useMemo(() => {
+    const sidebarHint = useMemo((): SidebarHint | null => {
         if (!preset?.subviews) return null;
         const subview = subviewId
             ? preset.subviews.find(s => s.id === subviewId)
