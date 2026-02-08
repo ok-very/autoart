@@ -314,7 +314,7 @@ export async function importsRoutes(app: FastifyInstance) {
      * Fetch all classifications for a session.
      * Returns classification results along with summary counts.
      */
-    app.get('/sessions/:id/classifications', async (request, reply) => {
+    app.get('/sessions/:id/classifications', { preHandler: [app.authenticate] }, async (request, reply) => {
         const { id } = SessionIdParamSchema.parse(request.params);
 
         const plan = await importsService.getLatestPlan(id);
@@ -360,17 +360,28 @@ export async function importsRoutes(app: FastifyInstance) {
             return reply.status(404).send({ error: 'Action not found' });
         }
 
-        const link = await db
+        const inserted = await db
             .insertInto('import_action_links')
             .values({
                 import_session_id: body.sessionId,
                 item_temp_id: body.itemTempId,
                 action_id: body.actionId,
             })
+            .onConflict((oc) =>
+                oc.columns(['import_session_id', 'item_temp_id', 'action_id']).doNothing()
+            )
             .returningAll()
+            .executeTakeFirst();
+
+        const link = inserted ?? await db
+            .selectFrom('import_action_links')
+            .selectAll()
+            .where('import_session_id', '=', body.sessionId)
+            .where('item_temp_id', '=', body.itemTempId)
+            .where('action_id', '=', body.actionId)
             .executeTakeFirstOrThrow();
 
-        return reply.status(201).send({
+        return reply.status(inserted ? 201 : 200).send({
             id: link.id,
             importSessionId: link.import_session_id,
             itemTempId: link.item_temp_id,
@@ -382,7 +393,7 @@ export async function importsRoutes(app: FastifyInstance) {
     /**
      * Get all import-action links for a given action.
      */
-    app.get('/action-links/:actionId', async (request, reply) => {
+    app.get('/action-links/:actionId', { preHandler: [app.authenticate] }, async (request, reply) => {
         const ActionIdParamSchema = z.object({
             actionId: z.string().uuid(),
         });
