@@ -12,6 +12,7 @@ import type {
     ReclassifyResponse,
     ClassificationsResponse,
     LinkActionRequest,
+    ImportActionLink,
     ActionLinksResponse,
 } from '@autoart/shared';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -475,7 +476,7 @@ export function useLinkAction() {
 
     return useMutation({
         mutationFn: async (data: LinkActionRequest) => {
-            return api.post<ActionLinksResponse>(
+            return api.post<ImportActionLink>(
                 '/imports/link-action',
                 data
             );

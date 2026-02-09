@@ -74,12 +74,13 @@ function deriveContentHash(items: ImportPlanItem[], definitions: RecordDefinitio
     if (item.metadata) hasher.update(JSON.stringify(item.metadata));
     if (item.fieldRecordings) hasher.update(JSON.stringify(item.fieldRecordings));
   }
-  // Hash definition identifiers to detect schema changes
+  // Hash definition identifiers and schema to detect changes
   for (const def of definitions) {
     hasher.update(def.id);
     hasher.update(def.name);
+    if (def.schema_config) hasher.update(JSON.stringify(def.schema_config));
   }
-  return hasher.digest('hex').slice(0, 16); // Truncated — collisions are harmless (cache miss)
+  return hasher.digest('hex').slice(0, 32);
 }
 
 function buildKey(sessionId: string, contentHash: string): string {

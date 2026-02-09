@@ -266,7 +266,7 @@ export async function importsRoutes(app: FastifyInstance) {
             title: body.title,
             metadata: body.metadata ?? {},
             fieldRecordings: body.fieldRecordings ?? [],
-            entityType: body.entityType as import('./types.js').ImportPlanItem['entityType'],
+            entityType: body.entityType,
         };
 
         const definitions = await listDefinitions({ definitionKind: 'record' });
