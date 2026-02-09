@@ -7,7 +7,7 @@
 
 **Active — unphased:**
 - **Project binding in workspaces is implementation theater:** Phase 1.2 wired WorkspaceContext consumption, but panels don't actually use the bound project ID. UI shows binding UI, backend may store it, but the connection between "user binds project to workspace" and "panels render that project's data" is broken or never existed. Trace the full path: workspace save → project binding persistence → panel mount → data fetch with bound ID.
-- **Composer popout Phase 2/3 remaining:** Phase 1 infrastructure complete (PR #470) — portal overlay, extracted form hook, arrangement picker, schema fields, submit, keyboard shortcut. Phase 2: replace ProjectWorkflowView dialog, add CommandPalette command, wire workspace context. Phase 3: delete UnifiedComposerBar, ComposerView, ComposerPanel.
+- **Composer popout Phase 3 remaining:** Phase 1 infrastructure complete (PR #470). Phase 2 done (in-flight): ProjectWorkflowView uses popout, CommandPalette "New Action" command, Header button opens popout, workspace context fallback wired. Phase 3 revised: delete UnifiedComposerBar (dead code), keep ComposerView as expanded composer panel (deep compose: reference slots, context selection, agent routing), re-wire `composer-workbench` in MainLayout COMPONENTS. Future: migrate ComposerView internals to `useComposerForm` + `@autoart/ui` components.
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
 - **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
@@ -36,7 +36,7 @@
 **UX polish:**
 - "Import" tab hides in overflow menu despite ample space in tab bar
 - Emoji/icon selector overlay — search doesn't work; consider switching to Phosphor Icons
-- Placeholder themes: Compact, Minimal, Floating, and Default still essentially identical — differentiate per DESIGN.md theme variant guidance. Glass and neumorphic variants pending implementation (see Housekeeping).
+- ~~Placeholder themes~~ — Promoted to Phase 7 Workspace polish (theme alignment stage).
 - Project View: "New project" dropdown UI broken under "Your projects" section — formatting not clean
 
 **Confirmed resolved (32+ items):** See Recently Closed section for PR references. Covers: import wizard stale plan regeneration (PR #434), ClassificationRow atom migration (PR #435), Phase 0 stack (React Compiler memo, Classification Panel partial save, preview servers, ExecutionControls API client, unused vars), Phase 1 stack (workspace foundation: context contract, panel consumption, Desk workspace, CenterView routing, store consolidation, workspace save, custom lifecycle, sidebar hints), Phase 2 stack (entity kind resolver, import/overlay migrations, seed through Composer — subprocess/stage projections now populate correctly, RecordDefinitionSchema phantom field removed), import hierarchy labels, connector sidebar escape hatch, intake record binding UUID, workspace save prompt timing, `[object Object]` field rendering, poll editor, poll public URLs, finance overlay contacts, 401 cascade, AutoHelper settings (now uses backend bridge), Google/Monday OAuth, and 18 earlier items (Monday null group_title, poll editor granularity, dropdown transparency, project spawn, Miller Columns, DOMPurify build, SelectionInspector close, panel spawner glassmorphism, AutoHelper tray pairing, applications dropdown bleed, panel spawn visibility, tab accent, action definitions seed, calendar link, header spacing, `/pair` async I/O, disconnect spinner).
@@ -201,9 +201,10 @@
 |---|-------|----------|
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
-| -- | Composer bar as sleek dockview popout window (replace modal) | UX |
+| -- | **Composer dual-surface:** Popout (quick declare) complete. ComposerView retained as expanded composer panel — future: migrate to `useComposerForm`, add agent selection/routing, `@autoart/ui` components, `--ws-*` tokens. UnifiedComposerBar deleted. | UX |
 | -- | Consolidate Calendar/Gantt/future view expansions: link Application views to Project View segmented equivalents; cross-project filter/overlay | Feature |
 | -- | Poll editor: support different/multiple time block selections per day | Polls |
+| -- | **Theme alignment stage:** Design review + development of all workspace themes. Existing themes (Default, Compact, Minimal, Floating) are near-identical placeholders — differentiate per DESIGN.md variant guidance (solid, floating, minimal, glass, neumorphic). SegmentedControl variants landed in PR #468; full theme modules need registration in `frontend/src/workspace/themes/`. Requires design agent review of palette, density, and variant axes before implementation. | Themes |
 
 **Intake & records:**
 
@@ -283,6 +284,7 @@
 | PRs | Description |
 |-----|-------------|
 | #466-470 | **Phase 7 polish stack (Streams 1-6, Feb 9):** Bug fixes (double border, sidebar stats, import dialog, vocab trim), Records/Actions panel layout alignment, Parchment Serif 4 + Badge tokens + SegmentedControl variants (glass/neumorphic), accessibility (ARIA attributes, heading semantics), dead code removal (ProjectPage, ComposerPage), Composer headless popout Phase 1 (portal overlay, useComposerForm hook, arrangement picker, schema fields, Ctrl+Shift+N shortcut). Table migration cancelled (UniversalTableCore flexbox engine is intentional). |
+| WIP | **Stream 7: Composer Popout Phase 2 + revised Phase 3:** Phase 2 complete (ProjectWorkflowView popout, CommandPalette command, Header button, workspace context fallback). Phase 3 revised: delete UnifiedComposerBar, keep ComposerView as expanded composer panel, re-wire `composer-workbench` in MainLayout. |
 
 ---
 

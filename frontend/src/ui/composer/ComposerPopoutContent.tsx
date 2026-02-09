@@ -27,11 +27,15 @@ import { EventPreview, buildPendingEvents } from './EventPreview';
 export interface ComposerPopoutContentProps {
   context: ComposerPopoutContext | null;
   onHasContentChange?: (hasContent: boolean) => void;
+  onClose?: () => void;
+  onDragStart?: (e: React.MouseEvent) => void;
 }
 
 export function ComposerPopoutContent({
   context,
   onHasContentChange,
+  onClose,
+  onDragStart,
 }: ComposerPopoutContentProps) {
   const [schemaFieldsExpanded, setSchemaFieldsExpanded] = useState(false);
 
@@ -42,7 +46,7 @@ export function ComposerPopoutContent({
     parentActionId: context?.parentActionId,
     defaultArrangement: context?.defaultArrangement,
     onSuccess: () => {
-      // Success handled by parent (close popout)
+      onClose?.();
     },
   });
 
@@ -257,37 +261,48 @@ export function ComposerPopoutContent({
       <div className="px-4 py-3 border-t border-ws-panel-border bg-ws-bg shrink-0">
         <Stack gap="sm">
           <div className="flex items-center justify-between gap-2">
-            <Text size="xs" className="text-ws-muted">
-              {form.selectedArrangement ? (
-                <>
-                  Creating <strong>{form.selectedArrangement.name}</strong>
-                </>
-              ) : (
-                'Select an action type to continue'
-              )}
-            </Text>
-            <Button
-              onClick={form.handleSubmit}
-              disabled={!form.canSubmit}
-              variant={form.canSubmit ? 'primary' : 'secondary'}
-              size="sm"
+            <div
+              className="flex-1 min-w-0 cursor-move select-none"
+              onMouseDown={onDragStart}
             >
-              {form.isSubmitting ? (
-                <>
-                  <Spinner size="sm" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 size={14} />
-                  Create Action
-                </>
+              <Text size="xs" className="text-ws-muted">
+                {form.selectedArrangement ? (
+                  <>
+                    Creating <strong>{form.selectedArrangement.name}</strong>
+                    {' · '}
+                    <kbd className="px-1 py-0.5 bg-slate-200 rounded text-[10px]">Ctrl+Enter</kbd>
+                  </>
+                ) : (
+                  'Select an action type'
+                )}
+              </Text>
+            </div>
+            <div className="flex items-center gap-2">
+              {onClose && (
+                <Button onClick={onClose} variant="secondary" size="sm">
+                  Close
+                </Button>
               )}
-            </Button>
+              <Button
+                onClick={form.handleSubmit}
+                disabled={!form.canSubmit}
+                variant={form.canSubmit ? 'primary' : 'secondary'}
+                size="sm"
+              >
+                {form.isSubmitting ? (
+                  <>
+                    <Spinner size="sm" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={14} />
+                    Create
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
-          <Text size="xs" className="text-ws-muted text-center">
-            <kbd className="px-1 py-0.5 bg-slate-200 rounded text-[10px]">Ctrl+Enter</kbd> to submit
-          </Text>
         </Stack>
       </div>
     </div>

@@ -244,9 +244,6 @@ function SpawnHandle({ api }: SpawnHandleProps) {
           <DropdownItem onSelect={() => handleSpawn('export-workbench', 'tab')}>
             <span>Export</span>
           </DropdownItem>
-          <DropdownItem onSelect={() => handleSpawn('composer-workbench', 'tab')}>
-            <span>Composer</span>
-          </DropdownItem>
           <DropdownItem onSelect={() => handleSpawn('mail-panel', 'tab')}>
             <span>Mail</span>
           </DropdownItem>

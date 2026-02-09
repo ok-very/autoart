@@ -27,7 +27,6 @@ import { DataTableFlat } from '../../ui/composites/DataTableFlat';
 import { DataTableHierarchy, type HierarchyFieldDef } from '../../ui/composites/DataTableHierarchy';
 import { ActionRegistryTable } from '../../ui/composites/ActionRegistryTable';
 import { deriveTaskStatus, TASK_STATUS_CONFIG } from '../../utils/nodeMetadata';
-import { ComposerView } from '../composer';
 import { Dropdown, DropdownTrigger, DropdownContent, DropdownItem, DropdownSeparator, DropdownLabel, Menu, Text } from '@autoart/ui';
 
 /**
@@ -92,7 +91,7 @@ export function ProjectWorkflowView() {
     const setNodes = useHierarchyStore((state) => state.setNodes);
     const getNode = useHierarchyStore((state) => state.getNode);
     const getChildren = useHierarchyStore((state) => state.getChildren);
-    const { activeProjectId, selection, inspectNode, setInspectorMode, openOverlay, setActiveProject } = useUIStore();
+    const { activeProjectId, selection, inspectNode, setInspectorMode, openOverlay, setActiveProject, openComposerPopout } = useUIStore();
 
     // Fetch all projects for the project selector
     const { data: allProjects } = useProjects();
@@ -117,19 +116,6 @@ export function ProjectWorkflowView() {
     const handleSidebarResize = useCallback((delta: number) => {
         setSidebarWidth((prev) => Math.max(200, Math.min(600, prev + delta)));
     }, []);
-
-
-
-
-
-    // Let's scroll down to where other useState calls are (around line 216 or 303).
-    // line 303: const [useWorkflowSurface, setUseWorkflowSurface] = useState(true);
-    // I will add my state there.
-
-    // Then I will replace the return block.
-
-    // Actually, let's do the return block replacement first, as it contains the main visual changes.
-    // And for the state, I can insert it after `useWorkflowSurface`.
 
 
 
@@ -288,7 +274,6 @@ export function ProjectWorkflowView() {
 
     // Track locally selected subprocess (can be changed via sidebar or header dropdown)
     const [localSubprocessId, setLocalSubprocessId] = useState<string | null>(null);
-    const [isComposerOpen, setIsComposerOpen] = useState(false);
 
     // Track last focused table for contextual Add button
     // 'tasks' = Task table, or definition ID for record tables
@@ -648,28 +633,16 @@ export function ProjectWorkflowView() {
 
                                     {/* Composer Button */}
                                     <button
-                                        onClick={() => setIsComposerOpen(true)}
+                                        onClick={() => openComposerPopout({
+                                            contextId: activeSubprocessId,
+                                            contextType: 'subprocess',
+                                        })}
                                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 rounded shadow-sm transition-all"
                                     >
                                         <Wand2 size={14} />
                                         <span>Composer</span>
                                     </button>
                                 </div>
-                            )}
-
-                            {/* Composer Dialog */}
-                            {isComposerOpen && activeSubprocessId && (
-                                <>
-                                    <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setIsComposerOpen(false)} />
-                                    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[80vh] bg-ws-panel-bg rounded-xl shadow-2xl overflow-hidden">
-                                        <ComposerView
-                                            mode="drawer"
-                                            contextId={activeSubprocessId}
-                                            onSuccess={() => setIsComposerOpen(false)}
-                                            onClose={() => setIsComposerOpen(false)}
-                                        />
-                                    </div>
-                                </>
                             )}
                         </div>
 
@@ -712,7 +685,7 @@ export function ProjectWorkflowView() {
                                             onRowSelect={handleSurfaceRowSelect}
                                             onFieldChange={handleSurfaceFieldChange}
                                             onStatusChange={handleSurfaceStatusChange}
-                                            onAddAction={activeSubprocessId ? () => setIsComposerOpen(true) : undefined}
+                                            onAddAction={activeSubprocessId ? () => openComposerPopout({ contextId: activeSubprocessId, contextType: 'subprocess' }) : undefined}
                                             onRowAction={(actionId, action) => {
                                                 if (action === 'view') handleSurfaceRowSelect(actionId);
                                             }}

@@ -37,7 +37,7 @@ export function Header() {
   const { data: projects } = useProjects();
   const { data: currentUser } = useCurrentUser();
   const { getNode: _getNode } = useHierarchyStore();
-  const { openOverlay } = useUIStore();
+  const { openOverlay, openComposerPopout, composerPopoutVisible } = useUIStore();
   const fieldsViewMode = useWorkspaceStore((s) => s.fieldsViewMode);
   const setFieldsViewMode = useWorkspaceStore((s) => s.setFieldsViewMode);
   const setCenterContentType = useWorkspaceStore((s) => s.setCenterContentType);
@@ -299,11 +299,11 @@ export function Header() {
 
             {/* Composer */}
             <Button
-              variant={isComposerActive ? 'light' : 'subtle'}
-              color={isComposerActive ? 'violet' : 'gray'}
+              variant={(isComposerActive || composerPopoutVisible) ? 'light' : 'subtle'}
+              color="violet"
               size="sm"
               leftSection={<Wand2 size={14} />}
-              onClick={() => handleOpenPanel('composer-workbench')}
+              onClick={() => openComposerPopout()}
             >
               Composer
             </Button>

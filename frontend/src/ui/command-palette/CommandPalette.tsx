@@ -7,6 +7,7 @@ import {
   Zap,
   FolderPlus,
   FilePlus,
+  Wand2,
   PanelLeft,
   PanelRight,
   GitBranch,
@@ -72,6 +73,7 @@ export function CommandPalette() {
   const toggleInspector = useUIStore((s) => s.toggleInspector);
   const setProjectViewMode = useWorkspaceStore((s) => s.setProjectViewMode);
   const openOverlay = useUIStore((s) => s.openOverlay);
+  const openComposerPopout = useUIStore((s) => s.openComposerPopout);
 
   // Generate unique IDs for ARIA
   const listboxId = 'command-palette-listbox';
@@ -104,6 +106,12 @@ export function CommandPalette() {
       label: 'Create Record',
       icon: FilePlus,
       action: () => openOverlay('create-record'),
+    },
+    {
+      id: 'new-action',
+      label: 'New Action',
+      icon: Wand2,
+      action: () => openComposerPopout(),
     },
     {
       id: 'toggle-sidebar',
@@ -141,7 +149,7 @@ export function CommandPalette() {
       icon: Columns,
       action: () => setProjectViewMode('columns' as ProjectViewMode),
     },
-  ], [openOverlay, toggleSidebar, toggleInspector, setProjectViewMode]);
+  ], [openOverlay, openComposerPopout, toggleSidebar, toggleInspector, setProjectViewMode]);
 
   // Filtered commands
   const filteredCommands = useMemo(() => {
