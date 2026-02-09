@@ -235,16 +235,16 @@
 
 | File | Issue | Phase |
 |------|-------|-------|
-| Records view | Align layout with Fields view: definitions filter + search bar, no redundant dropdown title | — |
-| `packages/ui/src/molecules/SegmentedControl.tsx` | Implement glass theme (plus remove it from the non-glass theme); also add neumorphic theme for funsies | — |
-| Parchment theme | Text color bleeding into forms (`--pub-*` inheriting `--ws-*` parchment colors); Serif 4 not applied to workspace at all yet — only shows up in forms (ironic). Add moderate Serif 4 usage to parchment theme per DESIGN.md | — |
+| ~~Records view~~ | ~~Align layout with Fields view~~ — Fixed in Phase 7 Stream 4 (PR #467) | — |
+| ~~`SegmentedControl.tsx`~~ | ~~Glass + neumorphic variants~~ — Added in Phase 7 Stream 2 (PR #468) | — |
+| ~~Parchment theme~~ | ~~Serif 4 + badge tokens~~ — Source Serif 4 headings + `--ws-badge-*` tokens in Phase 7 Stream 2 (PR #468) | — |
 | Intake forms + poll deployments | Need verification: localhost vs production endpoint config | — |
 | Future outbound subdomains | `polls.autoart.work`, `forms.autoart.work` endpoint routing not wired | — |
 | SelectionInspector / Record view | Handle `definition_kind` system for filtering/classification — resolver exists but inspector doesn't use it yet | — |
 | Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate | — |
 | Selection editor | "Plan" link badge system could just be a pointer to the active window name / binding group color | — |
-| `UniversalTableCore.tsx` + composites | All tables div-based with `role` attributes — migrate to Table atom primitives from PR #350 | — |
-| `packages/ui/src/atoms/Badge.tsx` | Badge variant colors use domain-semantic Tailwind colors — needs separate approach (not chrome tokens) | — |
+| ~~`UniversalTableCore.tsx`~~ | ~~Table atom migration~~ — Cancelled: UniversalTableCore is a flexbox grid engine (resize, sort, features). Div-based layout is intentional, not a bug. Table atom is for simple semantic tables. | — |
+| ~~`Badge.tsx`~~ | ~~Badge variant colors~~ — Migrated to `--ws-badge-*` CSS tokens in Phase 7 Stream 2 (PR #468) | — |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` — type declared and filtered but no distinct UI treatment (icon, section, color) | — |
 | `ExportMenu.tsx` | `invoiceNumber` sent to PDF/DOCX endpoints — backend should consume for Content-Disposition filenames |
 | ~~`vocabulary.routes.ts`~~ | ~~Whitespace-only prefix~~ — `.trim()` added before `.min(1)` (Phase 7 Stream 1) |
@@ -257,8 +257,8 @@
 | File | Issue |
 |------|-------|
 | `packages/ui/src/atoms/Card.tsx` | Tailwind arbitrary value parsing: `theme(...)` nested inside `var(...)` fallback may be dropped by some JIT parsers |
-| `frontend/src/ui/sidebars/ProjectSidebar.tsx` | Section headings (`<p>` at lines 78, 138) lack proper heading semantics for assistive tech |
-| `frontend/src/intake/components/blocks/*.tsx` | Email, Phone, Time inputs missing ARIA attributes (`aria-invalid`, `aria-describedby`, `aria-required`) |
+| ~~`ProjectSidebar.tsx`~~ | ~~Section headings `<p>` → `<h3>`~~ — Fixed in Phase 7 Stream 5 (PR #469) |
+| ~~`intake/blocks/*.tsx`~~ | ~~Missing ARIA attributes~~ — Added `aria-invalid`, `aria-describedby`, `aria-required` in Phase 7 Stream 5 (PR #469) |
 
 ---
 
@@ -280,7 +280,12 @@
 
 ## In-Flight (Awaiting Review)
 
-*None currently.*
+| PRs | Description |
+|-----|-------------|
+| #466 | fix: double border, actions sidebar stats, import dialog count, vocabulary trim (Stream 1) |
+| #467 | refactor: align Records/Actions panel layout with Fields panel (Stream 4) |
+| #468 | feat: Parchment Serif 4, Badge tokens, SegmentedControl variants (Stream 2) |
+| #469 | fix: accessibility, dead code removal (Stream 5) |
 
 ---
 
