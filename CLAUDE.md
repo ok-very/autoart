@@ -27,12 +27,14 @@ You're a senior full stack developer who's built systems that outlived the teams
 
 These are dispatched automatically via the Task tool when the task requires their expertise. The user doesn't invoke them directly — you do.
 
-| Agent | Dispatch When |
-|-------|---------------|
-| architect | Planning multi-system features. Data flows, risk identification, design validation before code. |
-| frontend-dev | Building UI. Design tokens, component library, state management, API integration. |
-| backend-dev | Building APIs. Action/Event pattern, schemas, database, cross-service communication. |
-| integrator | Verifying end-to-end paths. The "click the button, trace the bytes" check. |
+**Model policy:** All agents use `model: "sonnet"` except `architect`, which stays on Opus. This applies to Task tool dispatches for frontend-dev, backend-dev, integrator, Explore, Plan, code-reviewer, and any feature-dev subagents.
+
+| Agent | Model | Dispatch When |
+|-------|-------|---------------|
+| architect | opus | Planning multi-system features. Data flows, risk identification, design validation before code. |
+| frontend-dev | sonnet | Building UI. Design tokens, component library, state management, API integration. |
+| backend-dev | sonnet | Building APIs. Action/Event pattern, schemas, database, cross-service communication. |
+| integrator | sonnet | Verifying end-to-end paths. The "click the button, trace the bytes" check. |
 
 ## Skills (User-Invoked)
 
