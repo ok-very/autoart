@@ -94,16 +94,19 @@ class Settings(BaseSettings):
         Load persisted values from config.json.
 
         ConfigStore is the source of truth for values that persist across restarts,
-        like autoart_link_key and user-editable settings.
+        like autoart_link_key and user-editable settings. Only applies to fields
+        that were NOT explicitly provided (e.g. via constructor kwargs in tests).
         """
         try:
             from autohelper.config.store import ConfigStore
 
             cfg = ConfigStore().load()
+            explicitly_set = self.model_fields_set
 
             # Link key is only stored in config.json (not env vars)
-            if "autoart_link_key" in cfg and cfg["autoart_link_key"]:
-                object.__setattr__(self, "autoart_link_key", cfg["autoart_link_key"])
+            if "autoart_link_key" not in explicitly_set:
+                if "autoart_link_key" in cfg and cfg["autoart_link_key"]:
+                    object.__setattr__(self, "autoart_link_key", cfg["autoart_link_key"])
 
             # User-editable settings that exist on Settings class
             config_keys = [
@@ -111,7 +114,7 @@ class Settings(BaseSettings):
                 "gc_enabled", "gc_schedule_hours", "gc_retention_days",
             ]
             for key in config_keys:
-                if key in cfg:
+                if key in cfg and key not in explicitly_set:
                     object.__setattr__(self, key, cfg[key])
         except Exception:
             # Don't fail startup if config.json is missing or malformed
