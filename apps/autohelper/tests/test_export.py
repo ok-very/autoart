@@ -2,6 +2,7 @@
 
 import csv
 from pathlib import Path
+from typing import Any
 
 from fastapi.testclient import TestClient
 
@@ -12,7 +13,7 @@ from autohelper.modules.export.service import ExportService
 class TestExportService:
     """Test export service logic."""
 
-    def test_export_creates_csv_file(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_export_creates_csv_file(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """export_intake_csv should create a CSV file."""
         service = ExportService()
 
@@ -39,7 +40,7 @@ class TestExportService:
         assert "name" in columns
         assert "email" in columns
 
-    def test_export_flattens_metadata(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_export_flattens_metadata(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """export_intake_csv should flatten metadata into columns."""
         service = ExportService()
 
@@ -83,7 +84,7 @@ class TestExportService:
         # field_b should be empty for row 2
         assert rows[1]["field_b"] == ""
 
-    def test_export_includes_headers(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_export_includes_headers(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """CSV should have correct headers."""
         service = ExportService()
 
@@ -114,7 +115,7 @@ class TestExportService:
         assert "custom_field" in headers
 
     def test_export_handles_empty_submissions(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """Empty submissions list should produce headers-only file."""
         service = ExportService()
@@ -132,7 +133,7 @@ class TestExportService:
         assert "id" in columns
         assert "upload_code" in columns
 
-    def test_export_sanitizes_filename(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_export_sanitizes_filename(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """Filename should be sanitized for special characters."""
         service = ExportService()
 
@@ -154,7 +155,7 @@ class TestExportEndpoint:
     """Test export API endpoints."""
 
     def test_intake_csv_endpoint_returns_200(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """POST /export/intake-csv should return 200."""
         response = client.post(
@@ -182,7 +183,7 @@ class TestExportEndpoint:
         assert data["row_count"] == 1
 
     def test_intake_csv_endpoint_validates_request(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """POST /export/intake-csv should validate required fields."""
         # Missing form_id

@@ -62,7 +62,7 @@ class FiletreeService:
                 query += f" AND ext IN ({placeholders})"
                 params.extend(extensions)
 
-            cursor = self.db.execute(query, params)
+            cursor = self.db.execute(query, tuple(params))
             files = cursor.fetchall()
 
             # 3. Build tree for this root
@@ -75,7 +75,7 @@ class FiletreeService:
         self,
         root_name: str,
         root_path: str,
-        files: list[dict],
+        files: list[dict[str, Any]],
         max_depth: int,
     ) -> FiletreeNode:
         """Build a tree from a list of file records."""
@@ -118,7 +118,7 @@ class FiletreeService:
         self,
         name: str,
         path: str,
-        tree_dict: dict,
+        tree_dict: dict[str, Any],
     ) -> FiletreeNode:
         """Recursively convert dict tree to FiletreeNode."""
         children: list[FiletreeNode] = []

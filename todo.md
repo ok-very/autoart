@@ -31,7 +31,7 @@
 - ~~ImportLinkDialog available count mismatch~~ — Header now shows "X total, Y available" matching list contents.
 
 **Deferred:**
-- AutoHelper sessions lost on backend restart (#340) — link key IS persisted in `connection_credentials` DB table. Issue is tray icon staleness — needs design decision, not a bugfix.
+- ~~AutoHelper sessions lost on backend restart (#340)~~ — Fixed: `ConnectionStateManager` singleton with 3-state tracking (unpaired/paired_connected/paired_disconnected). Tray icon reads state from manager, poller updates on 401/network errors. PR #475.
 
 **UX polish:**
 - "Import" tab hides in overflow menu despite ample space in tab bar
@@ -222,7 +222,7 @@
 | 84 | Email Notices API | Backend |
 | 85 | Templating Engine | Feature |
 | 86 | Monday.com Board Sync Settings | Integration |
-| 393 | File Detection & Alignment Service with watchdog | AutoHelper |
+| 393 | File Detection & Alignment Service with watchdog — **Phase 1 done** (detection + event queue + ref matching, PR #475). Phase 2: alignment logic, backend endpoints, UI. | AutoHelper |
 | -- | **AutoHelper local-only config:** ~~GC settings now sync from backend~~ via `_apply_settings` key mapping + `ConfigStore` whitelist. DB path remains hardcoded (intentional — not user-configurable). Roots + mail + crawl settings already synced. | AutoHelper |
 | -- | ~~**AutoHelper "Rebuild Index" crash:**~~ `_cmd_rescan_index` and `_cmd_rebuild_index` accessed `result.message` but `RunResponse` only has `run_id`, `status`, `started_at`. Fixed: return correct attributes. | AutoHelper |
 
@@ -283,11 +283,15 @@
 
 | PRs | Description |
 |-----|-------------|
-| — | No active stacks. Phase 7 Streams 1-20 merged (PR #472). |
+| #473-475 | AutoHelper hardening stack: test infrastructure fix, MyPy 89→0, tray staleness (#340), file watch Phase 1 (#393) |
 
 ---
 
 ## Recently Closed
+
+| # | Issue | Closed By |
+|---|-------|-----------|
+| 340, 393 | **AutoHelper hardening (Feb 8 2026):** (PR #473) Test infrastructure — `Settings.load_from_config_store` model_validator now checks `model_fields_set` before overwriting constructor kwargs (fixed 22 test failures); mail tests mock `_HAS_WIN32` directly instead of fighting `@functools.cache` (fixed 4 failures). Tests: 49/75 → 75/75. (PR #474) MyPy cleanup — 89 errors → 0 across 24 files: `types-requests` stubs, `dict[str, Any]` annotations, `cast()` for no-any-return, test function `-> None` + fixture types, async iterator overrides. (PR #475) Tray staleness (#340) — `ConnectionStateManager` thread-safe singleton with 3 states (unpaired/paired_connected/paired_disconnected), poller sets state on 401/network errors, tray reads from manager. File watch Phase 1 (#393) — watchdog-based `modules/file_watch/` (schemas, handler, service, router), 500ms debounce, ref matching, poller command handlers (watch_root/unwatch_root/drain_file_events). Tests: 75 → 98. | PRs #473-475 |
 
 | # | Issue | Closed By |
 |---|-------|-----------|

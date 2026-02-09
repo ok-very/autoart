@@ -3,8 +3,12 @@
 import logging
 import re
 from pathlib import Path
+from typing import Union
 
 from watchdog.events import (
+    DirCreatedEvent,
+    DirDeletedEvent,
+    DirMovedEvent,
     FileCreatedEvent,
     FileDeletedEvent,
     FileMovedEvent,
@@ -62,7 +66,7 @@ class InvoiceWatchHandler(FileSystemEventHandler):
         self.project_root = project_root
         self.event_queue = event_queue
 
-    def on_created(self, event: FileCreatedEvent) -> None:
+    def on_created(self, event: Union[FileCreatedEvent, DirCreatedEvent]) -> None:
         if event.is_directory:
             return
 
@@ -81,7 +85,7 @@ class InvoiceWatchHandler(FileSystemEventHandler):
                 folder.value,
             )
 
-    def on_moved(self, event: FileMovedEvent) -> None:
+    def on_moved(self, event: Union[FileMovedEvent, DirMovedEvent]) -> None:
         if event.is_directory:
             return
 
@@ -108,7 +112,7 @@ class InvoiceWatchHandler(FileSystemEventHandler):
                 dest_path,
             )
 
-    def on_deleted(self, event: FileDeletedEvent) -> None:
+    def on_deleted(self, event: Union[FileDeletedEvent, DirDeletedEvent]) -> None:
         if event.is_directory:
             return
 

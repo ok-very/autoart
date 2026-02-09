@@ -1,6 +1,7 @@
 """Tests for rename detection and file aliases."""
 
 from pathlib import Path
+from typing import Any
 
 from fastapi.testclient import TestClient
 
@@ -9,7 +10,7 @@ from autohelper.modules.index.service import IndexService
 from autohelper.modules.search.service import SearchService
 
 
-def get_file_id(db, path: str) -> str | None:
+def get_file_id(db: Any, path: str) -> str | None:
     """Helper to get file_id handling Windows casing."""
     row = db.execute("SELECT file_id FROM files WHERE canonical_path = ?", (path,)).fetchone()
     if not row:
@@ -23,7 +24,7 @@ class TestRenameDetection:
     """Test rename detection logic."""
 
     def test_rename_preserves_file_id_and_creates_alias(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """
         Verify that renaming a REFERENCED file preserves its ID and creates an alias.
@@ -80,7 +81,7 @@ class TestRenameDetection:
         ).fetchone()
         assert row_ref["canonical_path"].lower() == canonical_new.lower()
 
-    def test_rename_chain_resolution(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_rename_chain_resolution(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """
         Verify A -> B -> C rename chain allows searching by A or B to find C.
         """
@@ -147,7 +148,7 @@ class TestRenameDetection:
         assert match_c.matched_alias is False  # Direct match
 
     def test_unreferenced_file_is_treated_as_new(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """
         Verify that an unreferenced file is NOT tracked for renames (old deleted, new created).

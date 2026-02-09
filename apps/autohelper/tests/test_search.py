@@ -1,6 +1,7 @@
 """Tests for the search service."""
 
 from pathlib import Path
+from typing import Any
 
 from fastapi.testclient import TestClient
 
@@ -10,7 +11,7 @@ from autohelper.modules.index.service import IndexService
 class TestSearchEndpoints:
     """Test search API endpoints."""
 
-    def test_search_returns_matches(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_search_returns_matches(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """GET /search should return matching files."""
         # Create structure
         (temp_dir / "apple.txt").write_text("content")
@@ -32,7 +33,7 @@ class TestSearchEndpoints:
         assert any("apple_pie.txt" in p for p in paths)
         assert not any("banana.txt" in p for p in paths)
 
-    def test_search_no_matches(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_search_no_matches(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """GET /search should return empty list for no matches."""
         (temp_dir / "test.txt").write_text("content")
         IndexService().rebuild_index()
@@ -44,21 +45,21 @@ class TestSearchEndpoints:
         assert len(data["items"]) == 0
 
     def test_search_empty_query_returns_422(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """GET /search with empty q should return 422 due to min_length=1."""
         response = client.get("/search/?q=")
         assert response.status_code == 422
 
     def test_search_missing_query_returns_422(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """GET /search without q should return 422 due to required param."""
         response = client.get("/search/")
         # FastAPI might return 422 for missing required query param
         assert response.status_code == 422
 
-    def test_search_limit(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_search_limit(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """GET /search should respect limit."""
         for i in range(10):
             (temp_dir / f"file_{i}.txt").write_text("content")

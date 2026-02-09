@@ -387,7 +387,7 @@ class IndexService:
 
         return stats
 
-    def _resolve_rename_ambiguity(self, candidates: list[dict], rel_path: str) -> dict | None:
+    def _resolve_rename_ambiguity(self, candidates: list[dict[str, Any]], rel_path: str) -> dict[str, Any] | None:
         """Resolve multiple rename candidates."""
         if len(candidates) == 1:
             return candidates[0]
@@ -409,7 +409,7 @@ class IndexService:
         return None
 
     def _execute_rename(
-        self, root_id: str, old_file: dict, new_rel_path: str, root_path: Path, stat: Any
+        self, root_id: str, old_file: dict[str, Any], new_rel_path: str, root_path: Path, stat: Any
     ) -> None:
         """Update DB for a detected rename."""
         file_id = old_file["file_id"]

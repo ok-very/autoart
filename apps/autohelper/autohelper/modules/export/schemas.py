@@ -2,6 +2,8 @@
 Export module schemas.
 """
 
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -11,7 +13,7 @@ class IntakeSubmissionData(BaseModel):
     id: str
     form_id: str
     upload_code: str
-    metadata: dict  # Flattened for CSV
+    metadata: dict[str, Any]  # Flattened for CSV
     created_at: str
 
 

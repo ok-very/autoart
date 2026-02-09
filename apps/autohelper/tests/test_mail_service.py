@@ -7,6 +7,7 @@ with patch.dict(
     {"win32com": MagicMock(), "win32com.client": MagicMock(), "pythoncom": MagicMock()},
 ):
     from autohelper.modules.mail.service import MailService, clean_subject, extract_project_info
+    import autohelper.modules.mail.service as _mail_svc
 
 
 def test_extract_project_info():
@@ -35,6 +36,10 @@ def test_ingest_pst(tmp_path):
 
     # Reset any cached settings from other tests
     reset_settings()
+
+    # Enable win32 code path on non-Windows (mocked above)
+    _mail_svc._HAS_WIN32 = True
+    _mail_svc.pythoncom = MagicMock()
 
     # Setup settings with tmp_path as the ingest path
     settings = Settings(mail_enabled=True, mail_ingest_path=tmp_path)
@@ -128,6 +133,8 @@ def test_ingest_pst_invalid_extension(tmp_path):
     from autohelper.db import init_db
 
     reset_settings()
+    _mail_svc._HAS_WIN32 = True
+    _mail_svc.pythoncom = MagicMock()
     settings = Settings(mail_enabled=True, mail_ingest_path=tmp_path)
     init_settings(settings)
 
@@ -176,6 +183,8 @@ def test_ingest_pst_outside_ingest_path(tmp_path):
     from autohelper.db import init_db
 
     reset_settings()
+    _mail_svc._HAS_WIN32 = True
+    _mail_svc.pythoncom = MagicMock()
     ingest_dir = tmp_path / "ingest"
     ingest_dir.mkdir()
     settings = Settings(mail_enabled=True, mail_ingest_path=ingest_dir)
@@ -226,6 +235,8 @@ def test_ingest_pst_missing_file(tmp_path):
     from autohelper.db import init_db
 
     reset_settings()
+    _mail_svc._HAS_WIN32 = True
+    _mail_svc.pythoncom = MagicMock()
     settings = Settings(mail_enabled=True, mail_ingest_path=tmp_path)
     init_settings(settings)
 

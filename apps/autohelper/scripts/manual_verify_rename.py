@@ -19,12 +19,12 @@ DB_PATH = os.getenv("AUTOHELPER_DEV_DB", str(AUTOHELPER_ROOT / "autohelper/db/de
 TEST_ROOT = os.getenv("AUTOHELPER_TEST_ROOT", str(AUTOHELPER_ROOT / "test_playground"))
 
 
-def setup_path():
+def setup_path() -> None:
     """Ensure autohelper can be imported."""
     sys.path.append(str(AUTOHELPER_ROOT.resolve()))
 
 
-def manual_test():
+def manual_test() -> None:
     setup_path()  # Ensure we can import the app
 
     print("--- Starting Manual Verification ---")
