@@ -76,12 +76,71 @@ export const parchmentTheme: WorkspaceThemeModule = {
       // Watermark
       '--ws-watermark-bg': '#F5F2ED',
       '--ws-watermark-fg': '#A39E96',
+
+      // Badge variants - muted archival palette
+      '--ws-badge-project-bg': '#E8E2D8',
+      '--ws-badge-project-fg': '#3F5C6E',
+      '--ws-badge-project-border': '#D6D2CB',
+
+      '--ws-badge-process-bg': '#E8E0D4',
+      '--ws-badge-process-fg': '#6B5A4E',
+      '--ws-badge-process-border': '#D6D2CB',
+
+      '--ws-badge-phase-bg': '#EDEAE5',
+      '--ws-badge-phase-fg': '#5A5A57',
+      '--ws-badge-phase-border': '#D6D2CB',
+
+      '--ws-badge-subprocess-bg': '#EDE7DD',
+      '--ws-badge-subprocess-fg': '#8A5A3C',
+      '--ws-badge-subprocess-border': '#D6D2CB',
+
+      '--ws-badge-task-bg': '#E6EAE0',
+      '--ws-badge-task-fg': '#5A6B4E',
+      '--ws-badge-task-border': '#D6D2CB',
+
+      '--ws-badge-default-bg': '#EDEAE5',
+      '--ws-badge-default-fg': '#5A5A57',
+      '--ws-badge-default-border': '#D6D2CB',
+
+      '--ws-badge-warning-bg': '#F0E8D8',
+      '--ws-badge-warning-fg': '#8A6F3C',
+      '--ws-badge-warning-border': '#D6D2CB',
+
+      '--ws-badge-light-bg': '#F5F2ED',
+      '--ws-badge-light-fg': '#6B6560',
+      '--ws-badge-light-border': '#D6D2CB',
+
+      '--ws-badge-success-bg': '#E2E8DA',
+      '--ws-badge-success-fg': '#6F7F5C',
+      '--ws-badge-success-border': '#D6D2CB',
+
+      '--ws-badge-error-bg': '#EDE0DC',
+      '--ws-badge-error-fg': '#8C4A4A',
+      '--ws-badge-error-border': '#D6D2CB',
+
+      '--ws-badge-neutral-bg': '#EDEAE5',
+      '--ws-badge-neutral-fg': '#5A5A57',
+      '--ws-badge-neutral-border': '#D6D2CB',
+
+      '--ws-badge-info-bg': '#E0E6EC',
+      '--ws-badge-info-fg': '#3F5C6E',
+      '--ws-badge-info-border': '#D6D2CB',
     },
 
     text: `
       /* Parchment theme - warm backgrounds */
       [data-workspace-theme="parchment"] {
         --focus-ring-color: #2F4F65;
+      }
+
+      /* Source Serif 4 for headings and record names per DESIGN.md */
+      [data-workspace-theme="parchment"] h1,
+      [data-workspace-theme="parchment"] h2,
+      [data-workspace-theme="parchment"] h3,
+      [data-workspace-theme="parchment"] .text-ws-h1,
+      [data-workspace-theme="parchment"] .text-ws-h2 {
+        font-family: "Source Serif 4", serif;
+        font-optical-sizing: auto;
       }
 
       /* Softer borders for the archival feel */

@@ -37,6 +37,7 @@ import {
 import { Header } from './Header';
 import { OverlayRegistry } from '../registry/OverlayRegistry';
 import { CommandPalette } from '../command-palette';
+import { ComposerPopout } from '../composer/ComposerPopout';
 import { useWorkspaceStore, useOpenPanelIds, useLayout, usePendingPanelPositions } from '../../stores/workspaceStore';
 import { WorkspaceContextProvider } from '../../workspace/WorkspaceContext';
 import { useVisiblePanels } from '../../stores/contextStore';
@@ -242,9 +243,6 @@ function SpawnHandle({ api }: SpawnHandleProps) {
           </DropdownItem>
           <DropdownItem onSelect={() => handleSpawn('export-workbench', 'tab')}>
             <span>Export</span>
-          </DropdownItem>
-          <DropdownItem onSelect={() => handleSpawn('composer-workbench', 'tab')}>
-            <span>Composer</span>
           </DropdownItem>
           <DropdownItem onSelect={() => handleSpawn('mail-panel', 'tab')}>
             <span>Mail</span>
@@ -576,11 +574,14 @@ export function MainLayout() {
     return () => { root.style.removeProperty('--ws-tabstrip-tint'); };
   }, [activeWorkspaceIdForTint]);
 
-  // Command palette global hotkey (Cmd+K / Ctrl+K)
+  // Global keyboard shortcuts
   const openCommandPalette = useUIStore((s) => s.openCommandPalette);
   const closeOverlay = useUIStore((s) => s.closeOverlay);
+  const { composerPopoutVisible, openComposerPopout, closeComposerPopout } = useUIStore();
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+K / Ctrl+K - Command Palette
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         // Guard against focused form elements (except when already in command palette)
         const activeEl = document.activeElement;
@@ -599,10 +600,20 @@ export function MainLayout() {
         closeOverlay(); // Close any active overlay before opening palette
         openCommandPalette();
       }
+
+      // Cmd+Shift+N / Ctrl+Shift+N - Toggle Composer Popout
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'N') {
+        e.preventDefault();
+        if (composerPopoutVisible) {
+          closeComposerPopout();
+        } else {
+          openComposerPopout();
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [openCommandPalette, closeOverlay]);
+  }, [openCommandPalette, closeOverlay, composerPopoutVisible, openComposerPopout, closeComposerPopout]);
 
   // Build tab components - theme can override the default
   const defaultTab = (theme?.components?.tabComponent || ThemedTab) as FunctionComponent<IDockviewPanelHeaderProps>;
@@ -798,6 +809,9 @@ export function MainLayout() {
 
       {/* Global Command Palette (Cmd+K / Ctrl+K) */}
       <CommandPalette />
+
+      {/* Global Composer Popout (Ctrl+Shift+N / Cmd+Shift+N) */}
+      <ComposerPopout />
     </div>
   );
 }

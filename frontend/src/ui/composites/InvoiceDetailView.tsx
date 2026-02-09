@@ -223,7 +223,6 @@ export function InvoiceDetailView() {
             )}
             <ExportMenu
               invoiceId={selectedInvoiceId}
-              invoiceNumber={(invoiceData?.invoice_number as string) || invoice.unique_name}
               onPreview={() => setShowPreview(true)}
             />
           </div>

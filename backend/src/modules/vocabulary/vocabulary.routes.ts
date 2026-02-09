@@ -15,7 +15,7 @@ import { getSuggestions } from './vocabulary.service.js';
 // ============================================================================
 
 const SuggestionsQuerySchema = z.object({
-  prefix: z.string().min(1),
+  prefix: z.string().trim().min(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(10),
 });
 

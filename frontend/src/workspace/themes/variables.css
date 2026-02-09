@@ -179,6 +179,59 @@
   --ws-watermark-bg: #f8fafc;
   --ws-watermark-fg: #94a3b8;
   --ws-watermark-icon-size: 48px;
+
+  /* -------------------------------------------------------------------------
+     Badge Variants
+     Each badge variant gets bg, fg, and border tokens.
+     Themes override these to match their palette.
+     ------------------------------------------------------------------------- */
+  --ws-badge-project-bg: #dbeafe;
+  --ws-badge-project-fg: #1e40af;
+  --ws-badge-project-border: #bfdbfe;
+
+  --ws-badge-process-bg: #f3e8ff;
+  --ws-badge-process-fg: #6b21a8;
+  --ws-badge-process-border: #e9d5ff;
+
+  --ws-badge-phase-bg: #f1f5f9;
+  --ws-badge-phase-fg: #475569;
+  --ws-badge-phase-border: #e2e8f0;
+
+  --ws-badge-subprocess-bg: #fff7ed;
+  --ws-badge-subprocess-fg: #c2410c;
+  --ws-badge-subprocess-border: #fed7aa;
+
+  --ws-badge-task-bg: #f0fdf4;
+  --ws-badge-task-fg: #15803d;
+  --ws-badge-task-border: #bbf7d0;
+
+  --ws-badge-default-bg: #f1f5f9;
+  --ws-badge-default-fg: #475569;
+  --ws-badge-default-border: #e2e8f0;
+
+  --ws-badge-warning-bg: #fffbeb;
+  --ws-badge-warning-fg: #b45309;
+  --ws-badge-warning-border: #fde68a;
+
+  --ws-badge-light-bg: #f8fafc;
+  --ws-badge-light-fg: #475569;
+  --ws-badge-light-border: #e2e8f0;
+
+  --ws-badge-success-bg: #d1fae5;
+  --ws-badge-success-fg: #047857;
+  --ws-badge-success-border: #a7f3d0;
+
+  --ws-badge-error-bg: #fee2e2;
+  --ws-badge-error-fg: #b91c1c;
+  --ws-badge-error-border: #fecaca;
+
+  --ws-badge-neutral-bg: #f1f5f9;
+  --ws-badge-neutral-fg: #475569;
+  --ws-badge-neutral-border: #e2e8f0;
+
+  --ws-badge-info-bg: #dbeafe;
+  --ws-badge-info-fg: #1d4ed8;
+  --ws-badge-info-border: #bfdbfe;
 }
 
 /* ============================================================================

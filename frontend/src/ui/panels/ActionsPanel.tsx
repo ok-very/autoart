@@ -40,7 +40,7 @@ export function ActionsPanel() {
     };
 
     return (
-        <div className="flex flex-col h-full overflow-hidden bg-ws-panel-bg">
+        <div className="flex flex-col h-full overflow-hidden bg-ws-bg">
             {/* Header with title and Definitions/Instances toggle */}
             <div className="flex items-center justify-between px-4 py-2 border-b border-ws-panel-border bg-ws-panel-bg">
                 <RegistryPageHeader
@@ -70,26 +70,24 @@ export function ActionsPanel() {
                 <ResizeHandle direction="right" onResize={handleSidebarResize} />
 
                 {/* Main Content Area */}
-                <div className="flex-1 overflow-hidden flex flex-col">
-                    <div className="flex-1 overflow-hidden">
-                        {activeTab === 'definitions' ? (
-                            <div className="h-full flex items-center justify-center">
-                                <div className="text-center">
-                                    <p className="text-sm text-ws-text-secondary">
-                                        Select a definition from the sidebar to view its schema.
-                                    </p>
-                                    <p className="text-xs mt-2 text-ws-text-secondary">
-                                        Use the Composer panel to create new definitions.
-                                    </p>
-                                </div>
+                <div className="flex-1 bg-ws-panel-bg overflow-hidden">
+                    {activeTab === 'definitions' ? (
+                        <div className="h-full flex items-center justify-center">
+                            <div className="text-center">
+                                <p className="text-sm text-ws-text-secondary">
+                                    Select a definition from the sidebar to view its schema.
+                                </p>
+                                <p className="text-xs mt-2 text-ws-text-secondary">
+                                    Use the Composer panel to create new definitions.
+                                </p>
                             </div>
-                        ) : (
-                            <ActionInstancesView
-                                definitionId={selectedDefinitionId}
-                                className="h-full"
-                            />
-                        )}
-                    </div>
+                        </div>
+                    ) : (
+                        <ActionInstancesView
+                            definitionId={selectedDefinitionId}
+                            className="h-full"
+                        />
+                    )}
                 </div>
             </div>
         </div>

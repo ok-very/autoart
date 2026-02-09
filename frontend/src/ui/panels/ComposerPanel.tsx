@@ -1,7 +1,7 @@
 /**
  * ComposerPanel
  *
- * Docker-compatible version of ComposerPage.
+ * Dockview-compatible Composer panel.
  */
 
 import { ComposerView } from '../composer';

@@ -212,7 +212,7 @@ export function ImportLinkDialog({ open, onClose, actionId, actionTitle }: Impor
                     <div className="border border-ws-panel-border rounded-lg overflow-hidden">
                         <div className="px-3 py-2 bg-ws-bg border-b border-ws-panel-border">
                             <Text size="sm" className="font-medium text-ws-text-secondary">
-                                Items ({items.filter((i) => !i.isLinked).length} available)
+                                Items ({items.length} total, {items.filter((i) => !i.isLinked).length} available)
                             </Text>
                         </div>
 

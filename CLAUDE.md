@@ -27,12 +27,14 @@ You're a senior full stack developer who's built systems that outlived the teams
 
 These are dispatched automatically via the Task tool when the task requires their expertise. The user doesn't invoke them directly — you do.
 
-| Agent | Dispatch When |
-|-------|---------------|
-| architect | Planning multi-system features. Data flows, risk identification, design validation before code. |
-| frontend-dev | Building UI. Design tokens, component library, state management, API integration. |
-| backend-dev | Building APIs. Action/Event pattern, schemas, database, cross-service communication. |
-| integrator | Verifying end-to-end paths. The "click the button, trace the bytes" check. |
+**Model policy:** All agents use `model: "sonnet"` except `architect`, which stays on Opus. This applies to Task tool dispatches for frontend-dev, backend-dev, integrator, Explore, Plan, code-reviewer, and any feature-dev subagents.
+
+| Agent | Model | Dispatch When |
+|-------|-------|---------------|
+| architect | opus | Planning multi-system features. Data flows, risk identification, design validation before code. |
+| frontend-dev | sonnet | Building UI. Design tokens, component library, state management, API integration. |
+| backend-dev | sonnet | Building APIs. Action/Event pattern, schemas, database, cross-service communication. |
+| integrator | sonnet | Verifying end-to-end paths. The "click the button, trace the bytes" check. |
 
 ## Skills (User-Invoked)
 
@@ -49,7 +51,7 @@ The user triggers these directly with `/skill-name`. Each has its own perspectiv
 
 ## Loaded Plugins
 
-Five plugins are loaded. They define **process** and **capability** — project agents provide **judgment**.
+Five plugins and one MCP server are loaded. They define **process** and **capability** — project agents provide **judgment**.
 
 **superpowers** — Process skills (writing-plans, verification-before-completion, systematic-debugging, etc.). These auto-trigger based on workflow context. Do not duplicate their process logic in agent skills — agents focus on project-specific direction, superpowers handle the mechanical workflow.
 
@@ -60,7 +62,7 @@ Five plugins are loaded. They define **process** and **capability** — project 
 
 Agents dispatch these via `Task` tool with `subagent_type` set to `feature-dev:code-explorer`, `feature-dev:code-architect`, or `feature-dev:code-reviewer`.
 
-**typescript-lsp** — Precision type queries. Faster than Grep for type-level questions: go-to-definition, find-references, hover for type info. Use to mechanically verify connections ("is this hook calling the right endpoint?") rather than grepping and hoping.
+**Serena** (MCP server, configured in `.mcp.json`) — Semantic code navigation across TypeScript and Python. Provides `find_symbol`, `find_referencing_symbols`, and `get_symbols_overview` for type-level lookups, reference tracing, and module structure analysis. Replaces typescript-lsp with cross-language support. Editing tools are disabled — Serena is read-only in this project; use Claude Code's native Edit/Write tools for modifications.
 
 **github** — Authenticated MCP server. Use for GitHub operations where available; falls back to `gh` CLI.
 
@@ -77,13 +79,15 @@ All plugins install via the Claude Code plugin marketplace. Run on a fresh check
 # Required plugins (install in any order)
 claude plugin install superpowers          # Process skills (TDD, debugging, plans)
 claude plugin install feature-dev          # Subagents: code-explorer, code-architect, code-reviewer
-claude plugin install typescript-lsp       # LSP for go-to-definition, find-references, type queries
 claude plugin install github               # GitHub MCP server (issues, PRs, code search)
 claude plugin install frontend-design      # UI generation (RESTRICTED — see above)
 ```
 
+**MCP Server (Serena):**
+Configured in `.mcp.json` at project root. Requires `uvx` (install via `pip install uv` or `pipx install uv`). Serena spawns TypeScript and Python language servers automatically based on `.serena.yaml` config. On first run, Serena will index the project — use its `onboarding` tool to initialize.
+
 **Prerequisites:**
-- **typescript-lsp** requires a global install: `npm install -g typescript-language-server typescript`
+- **Serena** requires `uvx` available on PATH (`pip install uv` or `pipx install uv`)
 - **github** requires `GITHUB_PERSONAL_ACCESS_TOKEN` env var (or `gh auth` configured)
 
 ---

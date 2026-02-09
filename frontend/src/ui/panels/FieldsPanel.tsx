@@ -69,7 +69,7 @@ export function FieldsPanel() {
                 {/* Left Sidebar - Miller Columns for field browsing */}
                 <div
                     style={{ width: sidebarWidth }}
-                    className="flex flex-col border-r border-ws-panel-border bg-ws-bg shrink-0"
+                    className="flex flex-col bg-ws-bg shrink-0"
                 >
                     <FieldsMillerColumnsView
                         onSelectField={setSelectedField}

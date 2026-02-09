@@ -7,6 +7,7 @@ import {
   Zap,
   FolderPlus,
   FilePlus,
+  Wand2,
   PanelLeft,
   PanelRight,
   GitBranch,
@@ -41,6 +42,7 @@ interface Command {
   label: string;
   icon: typeof Folder;
   action: () => void;
+  shortcut?: string;
 }
 
 const CATEGORY_CONFIG: Record<ResultCategory, { icon: typeof Folder; label: string }> = {
@@ -72,6 +74,7 @@ export function CommandPalette() {
   const toggleInspector = useUIStore((s) => s.toggleInspector);
   const setProjectViewMode = useWorkspaceStore((s) => s.setProjectViewMode);
   const openOverlay = useUIStore((s) => s.openOverlay);
+  const openComposerPopout = useUIStore((s) => s.openComposerPopout);
 
   // Generate unique IDs for ARIA
   const listboxId = 'command-palette-listbox';
@@ -104,6 +107,13 @@ export function CommandPalette() {
       label: 'Create Record',
       icon: FilePlus,
       action: () => openOverlay('create-record'),
+    },
+    {
+      id: 'new-action',
+      label: 'New Action',
+      icon: Wand2,
+      shortcut: '⌘⇧N',
+      action: () => openComposerPopout(),
     },
     {
       id: 'toggle-sidebar',
@@ -141,7 +151,7 @@ export function CommandPalette() {
       icon: Columns,
       action: () => setProjectViewMode('columns' as ProjectViewMode),
     },
-  ], [openOverlay, toggleSidebar, toggleInspector, setProjectViewMode]);
+  ], [openOverlay, openComposerPopout, toggleSidebar, toggleInspector, setProjectViewMode]);
 
   // Filtered commands
   const filteredCommands = useMemo(() => {
@@ -378,6 +388,9 @@ export function CommandPalette() {
                     >
                       <Icon className="w-4 h-4 text-violet-500 flex-shrink-0" />
                       <span className="text-sm font-medium">{command.label}</span>
+                      {command.shortcut && (
+                        <span className="ml-auto text-xs text-ws-text-disabled font-mono">{command.shortcut}</span>
+                      )}
                     </button>
                   );
                 })}

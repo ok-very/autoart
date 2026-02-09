@@ -37,6 +37,7 @@ export function DefinitionListSidebar({
 }: DefinitionListSidebarProps) {
     const { data: definitions, isLoading } = useRecordDefinitions();
     const { data: stats } = useRecordStats();
+    const showCounts = definitionKind === 'record';
     const { openOverlay } = useUIStore();
 
     // Filter bar state
@@ -155,9 +156,11 @@ export function DefinitionListSidebar({
                         >
                             <div className="flex-1 min-w-0">
                                 <div className="text-sm font-medium">All {isRecords ? 'Records' : 'Actions'}</div>
-                                <div className="text-[10px] text-ws-text-secondary">
-                                    {stats ? stats.reduce((sum, s) => sum + s.count, 0) : 0} total
-                                </div>
+                                {showCounts && (
+                                    <div className="text-[10px] text-ws-text-secondary">
+                                        {stats ? stats.reduce((sum, s) => sum + s.count, 0) : 0} total
+                                    </div>
+                                )}
                             </div>
                         </button>
 
@@ -186,9 +189,11 @@ export function DefinitionListSidebar({
                                     {/* Name and Count */}
                                     <div className="flex-1 min-w-0">
                                         <div className="text-sm font-medium truncate">{def.name}</div>
-                                        <div className="text-[10px] text-ws-text-secondary">
-                                            {count} {instanceLabel}{count !== 1 ? 's' : ''}
-                                        </div>
+                                        {showCounts && (
+                                            <div className="text-[10px] text-ws-text-secondary">
+                                                {count} {instanceLabel}{count !== 1 ? 's' : ''}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Edit Schema button on hover */}
