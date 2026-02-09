@@ -32,9 +32,12 @@ export function Phone({ block }: PhoneProps) {
             type="tel"
             placeholder={block.placeholder ?? '+1 (555) 000-0000'}
             className={`pub-input ${fieldState.error ? 'pub-input--error' : ''}`}
+            aria-required={block.required || undefined}
+            aria-invalid={fieldState.error ? true : undefined}
+            aria-describedby={fieldState.error ? `${block.id}-error` : undefined}
           />
           {fieldState.error && (
-            <p className="pub-error">{fieldState.error.message}</p>
+            <p id={`${block.id}-error`} className="pub-error">{fieldState.error.message}</p>
           )}
         </div>
       )}
