@@ -7,7 +7,7 @@
 
 **Active — unphased:**
 - **Project binding in workspaces is implementation theater:** Phase 1.2 wired WorkspaceContext consumption, but panels don't actually use the bound project ID. UI shows binding UI, backend may store it, but the connection between "user binds project to workspace" and "panels render that project's data" is broken or never existed. Trace the full path: workspace save → project binding persistence → panel mount → data fetch with bound ID.
-- **Composer needs full rebuild as headless popout:** ProjectPage is dead code (no routes reference it). UnifiedComposerBar is unmounted dead code. InspectorFooterComposer is the current standard. Dockview v4 has no floating API — build as position:fixed overlay with custom chrome. See Phase 7 Stream 6.
+- **Composer popout Phase 2/3 remaining:** Phase 1 infrastructure complete (PR #470) — portal overlay, extracted form hook, arrangement picker, schema fields, submit, keyboard shortcut. Phase 2: replace ProjectWorkflowView dialog, add CommandPalette command, wire workspace context. Phase 3: delete UnifiedComposerBar, ComposerView, ComposerPanel.
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
 - **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
@@ -282,10 +282,7 @@
 
 | PRs | Description |
 |-----|-------------|
-| #466 | fix: double border, actions sidebar stats, import dialog count, vocabulary trim (Stream 1) |
-| #467 | refactor: align Records/Actions panel layout with Fields panel (Stream 4) |
-| #468 | feat: Parchment Serif 4, Badge tokens, SegmentedControl variants (Stream 2) |
-| #469 | fix: accessibility, dead code removal (Stream 5) |
+| #466-470 | **Phase 7 polish stack (Streams 1-6, Feb 9):** Bug fixes (double border, sidebar stats, import dialog, vocab trim), Records/Actions panel layout alignment, Parchment Serif 4 + Badge tokens + SegmentedControl variants (glass/neumorphic), accessibility (ARIA attributes, heading semantics), dead code removal (ProjectPage, ComposerPage), Composer headless popout Phase 1 (portal overlay, useComposerForm hook, arrangement picker, schema fields, Ctrl+Shift+N shortcut). Table migration cancelled (UniversalTableCore flexbox engine is intentional). |
 
 ---
 
