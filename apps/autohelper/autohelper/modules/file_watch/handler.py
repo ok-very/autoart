@@ -5,6 +5,7 @@ import time
 from collections import defaultdict
 from pathlib import Path
 from threading import Lock
+from typing import TYPE_CHECKING
 
 from autohelper.db.conn import Database
 
@@ -20,6 +21,9 @@ from watchdog.events import (
 
 from .schemas import FileEventType, FileWatchEvent
 
+if TYPE_CHECKING:
+    from .service import ThreadSafeEventQueue
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,7 +33,7 @@ class FileWatchHandler(FileSystemEventHandler):
     def __init__(
         self,
         root_id: str,
-        event_queue: list[FileWatchEvent],
+        event_queue: "ThreadSafeEventQueue",
         db: Database,
         debounce_window: float = 0.5,
     ) -> None:
@@ -38,7 +42,7 @@ class FileWatchHandler(FileSystemEventHandler):
 
         Args:
             root_id: Root directory identifier
-            event_queue: Shared list to append events to
+            event_queue: Thread-safe queue to append events to
             db: Database wrapper for ref lookups
             debounce_window: Seconds to wait before emitting event for same path
         """
@@ -69,8 +73,7 @@ class FileWatchHandler(FileSystemEventHandler):
             root_id=self.root_id,
         )
 
-        with self._lock:
-            self.event_queue.append(file_event)
+        self.event_queue.append(file_event)
 
         logger.info(
             "File watch: created %s (ref_id=%s)",
@@ -87,7 +90,8 @@ class FileWatchHandler(FileSystemEventHandler):
         if not self._should_emit(str(path)):
             return
 
-        canonical_path = str(path.resolve())
+        # Use absolute() instead of resolve() — file is already gone, resolve() can raise
+        canonical_path = str(path.absolute())
         ref_id = self._lookup_ref(canonical_path)
 
         file_event = FileWatchEvent(
@@ -97,8 +101,7 @@ class FileWatchHandler(FileSystemEventHandler):
             root_id=self.root_id,
         )
 
-        with self._lock:
-            self.event_queue.append(file_event)
+        self.event_queue.append(file_event)
 
         logger.info(
             "File watch: deleted %s (ref_id=%s)",
@@ -131,8 +134,7 @@ class FileWatchHandler(FileSystemEventHandler):
             root_id=self.root_id,
         )
 
-        with self._lock:
-            self.event_queue.append(file_event)
+        self.event_queue.append(file_event)
 
         logger.info(
             "File watch: moved %s -> %s (ref_id=%s)",

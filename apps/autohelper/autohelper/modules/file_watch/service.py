@@ -18,13 +18,31 @@ from .schemas import FileWatchEvent, WatchRootConfig
 logger = logging.getLogger(__name__)
 
 
+class ThreadSafeEventQueue:
+    """Thread-safe queue for file watch events."""
+
+    def __init__(self) -> None:
+        self._lock = Lock()
+        self._items: list[FileWatchEvent] = []
+
+    def append(self, item: FileWatchEvent) -> None:
+        with self._lock:
+            self._items.append(item)
+
+    def drain(self) -> list[FileWatchEvent]:
+        with self._lock:
+            items = self._items[:]
+            self._items.clear()
+            return items
+
+
 class FileWatchService:
     """Manages filesystem watchers for root directories."""
 
     def __init__(self) -> None:
         self._observers: dict[str, "BaseObserver"] = {}  # root_id -> Observer
         self._handlers: dict[str, FileWatchHandler] = {}
-        self._event_queues: dict[str, list[FileWatchEvent]] = {}
+        self._event_queues: dict[str, ThreadSafeEventQueue] = {}
         self._lock = Lock()
 
     def watch(self, root_id: str, path: str) -> bool:
@@ -53,7 +71,7 @@ class FileWatchService:
                 return False
 
             # Set up event queue and handler
-            event_queue: list[FileWatchEvent] = []
+            event_queue = ThreadSafeEventQueue()
             db = get_db()
             handler = FileWatchHandler(
                 root_id=root_id,
@@ -105,8 +123,7 @@ class FileWatchService:
         with self._lock:
             events: list[FileWatchEvent] = []
             for queue in self._event_queues.values():
-                events.extend(queue)
-                queue.clear()
+                events.extend(queue.drain())
             return events
 
     def get_watched_roots(self) -> list[WatchRootConfig]:

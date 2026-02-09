@@ -1,5 +1,7 @@
 """File Watch routes."""
 
+from threading import Lock
+
 from fastapi import APIRouter
 
 from .schemas import DrainResponse, WatchRootConfig
@@ -7,15 +9,18 @@ from .service import FileWatchService
 
 router = APIRouter(prefix="/file-watch", tags=["file-watch"])
 
-# Module-level singleton
+# Module-level singleton (double-checked locking)
 _service: FileWatchService | None = None
+_service_lock = Lock()
 
 
 def get_service() -> FileWatchService:
     """Get or create the file watch service singleton."""
     global _service  # noqa: PLW0603
     if _service is None:
-        _service = FileWatchService()
+        with _service_lock:
+            if _service is None:
+                _service = FileWatchService()
     return _service
 
 

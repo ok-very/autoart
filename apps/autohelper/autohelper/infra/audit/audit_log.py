@@ -156,8 +156,14 @@ def audit_operation(verb: str) -> Callable[[Callable[..., T]], Callable[..., T]]
             try:
                 result = func(*args, **kwargs)
 
-                # Convert result for logging
-                result_data = result if isinstance(result, dict) else {"result": str(result)}
+                # Convert result for logging (must be faithfully replayable for idempotency)
+                result_data: dict[str, Any]
+                if isinstance(result, dict):
+                    result_data = result
+                elif hasattr(result, "model_dump"):
+                    result_data = result.model_dump(mode="json")
+                else:
+                    result_data = {"result": str(result)}
 
                 audit.log(
                     verb=verb,
