@@ -271,6 +271,9 @@ class BackendPoller:
             "excludes": "excludes",
             "mail_enabled": "mail_enabled",
             "mail_poll_interval": "mail_poll_interval",
+            "gc_enabled": "gc_enabled",
+            "gc_schedule_hours": "gc_schedule_hours",
+            "gc_retention_days": "gc_retention_days",
             "crawl_depth": "crawl_depth",
             "min_width": "min_width",
             "max_width": "max_width",
@@ -376,7 +379,7 @@ class BackendPoller:
 
         svc = IndexService()
         result = svc.rescan()
-        return {"status": result.status, "message": result.message}
+        return {"run_id": result.run_id, "status": result.status, "started_at": result.started_at.isoformat()}
 
     def _cmd_rebuild_index(self) -> dict[str, Any]:
         """Execute rebuild_index command."""
@@ -384,7 +387,7 @@ class BackendPoller:
 
         svc = IndexService()
         result = svc.rebuild_index()
-        return {"status": result.status, "message": result.message}
+        return {"run_id": result.run_id, "status": result.status, "started_at": result.started_at.isoformat()}
 
     def _cmd_run_collector(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Execute run_collector command."""

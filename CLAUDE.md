@@ -62,7 +62,7 @@ Five plugins and one MCP server are loaded. They define **process** and **capabi
 
 Agents dispatch these via `Task` tool with `subagent_type` set to `feature-dev:code-explorer`, `feature-dev:code-architect`, or `feature-dev:code-reviewer`.
 
-**Serena** (MCP server, configured in `.mcp.json`) — Semantic code navigation across TypeScript and Python. Provides `find_symbol`, `find_referencing_symbols`, and `get_symbols_overview` for type-level lookups, reference tracing, and module structure analysis. Replaces typescript-lsp with cross-language support. Editing tools are disabled — Serena is read-only in this project; use Claude Code's native Edit/Write tools for modifications.
+**Serena** (MCP server, configured in `.mcp.json`) — Semantic code navigation and editing across TypeScript and Python. Provides `find_symbol`, `find_referencing_symbols`, `get_symbols_overview` for type-level lookups, reference tracing, and module structure analysis. Also provides `replace_symbol_body`, `insert_before_symbol`, `insert_after_symbol`, and `rename_symbol` for precise symbolic edits. Prefer Serena's symbolic editing for method/class-level changes; use Claude Code's native Edit/Write for line-level or non-code edits.
 
 **github** — Authenticated MCP server. Use for GitHub operations where available; falls back to `gh` CLI.
 
@@ -106,15 +106,7 @@ Quality and consistency matter more than speed. Check references before acting.
 
 ---
 
-## The Pairing/Settings Gap (Feb 2026)
-
-This happened because:
-- Pairing was rewritten 3× to solve connection problems
-- Each rewrite narrowed scope to "can AutoHelper authenticate to backend?"
-- Nobody checked whether the *original goal* (control AutoHelper settings from web UI) still worked
-- 25 commits later: pairing works, settings UI exists, but they're in different universes
-
-**The lesson:** Check the full path after every pivot. Especially when the pivot felt like progress.
+**IMPORTAN** Check the full path after every pivot. Especially when the pivot felt like progress.
 
 ---
 

@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-09*
+*Last Updated: 2026-02-08*
 *Strategy: Foundation phases 0-6 complete (see [roadmap.md](roadmap.md) for architectural history). Phase 7 (Platform Polish & Integrations) active — parallel work streams, no dependency chain. This file drives active priorities.*
 
 ## Bug List
@@ -35,7 +35,7 @@
 
 **UX polish:**
 - "Import" tab hides in overflow menu despite ample space in tab bar
-- Emoji/icon selector overlay — search doesn't work; consider switching to Phosphor Icons
+- ~~Emoji/icon selector overlay~~ — Search filtering added in Stream 20 (PR #472)
 - ~~Placeholder themes~~ — Promoted to Phase 7 Workspace polish (theme alignment stage).
 - Project View: "New project" dropdown UI broken under "Your projects" section — formatting not clean
 
@@ -223,8 +223,8 @@
 | 85 | Templating Engine | Feature |
 | 86 | Monday.com Board Sync Settings | Integration |
 | 393 | File Detection & Alignment Service with watchdog | AutoHelper |
-| -- | **AutoHelper local-only config:** Roots, DB path, garbage collection settings should be stored locally with AutoHelper, not in global DB | AutoHelper |
-| -- | **AutoHelper "Rebuild Index" is theater:** Carries stale DB path, hangs when triggered -- needs real backend handler or correct path | AutoHelper |
+| -- | **AutoHelper local-only config:** ~~GC settings now sync from backend~~ via `_apply_settings` key mapping + `ConfigStore` whitelist. DB path remains hardcoded (intentional — not user-configurable). Roots + mail + crawl settings already synced. | AutoHelper |
+| -- | ~~**AutoHelper "Rebuild Index" crash:**~~ `_cmd_rescan_index` and `_cmd_rebuild_index` accessed `result.message` but `RunResponse` only has `run_id`, `status`, `started_at`. Fixed: return correct attributes. | AutoHelper |
 
 **Note:** AutoHelper settings bridge (was P2) is **resolved** -- frontend now correctly uses backend bridge endpoints. See [roadmap.md](roadmap.md).
 
@@ -247,17 +247,17 @@
 | ~~`UniversalTableCore.tsx`~~ | ~~Table atom migration~~ — Cancelled: UniversalTableCore is a flexbox grid engine (resize, sort, features). Div-based layout is intentional, not a bug. Table atom is for simple semantic tables. | — |
 | ~~`Badge.tsx`~~ | ~~Badge variant colors~~ — Migrated to `--ws-badge-*` CSS tokens in Phase 7 Stream 2 (PR #468) | — |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` — type declared and filtered but no distinct UI treatment (icon, section, color) | — |
-| `ExportMenu.tsx` | `invoiceNumber` sent to PDF/DOCX endpoints — backend should consume for Content-Disposition filenames |
+| ~~`ExportMenu.tsx`~~ | ~~`invoiceNumber` prop~~ — Dead prop removed in Stream 20 (PR #472) |
 | ~~`vocabulary.routes.ts`~~ | ~~Whitespace-only prefix~~ — `.trim()` added before `.min(1)` (Phase 7 Stream 1) |
 | `vocabulary` migration 004 | Composite btree index on `(verb, noun)` won't be used for `ILIKE ... OR ILIKE` prefix queries — consider separate `text_pattern_ops` indexes per column (PR #441) |
 | ~~`classification-cache.ts`~~ | ~~Hash truncated to 16 hex chars~~ — Already 32 chars (128-bit) and hashes `schema_config`. Resolved. |
-| `todo.md` | Broken anchor `#autohelper-status-resolved` — roadmap heading changed to "AutoHelper Status (Resolved, Evolving)" (PR #442) | — |
+| ~~`todo.md`~~ | ~~Broken anchor `#autohelper-status-resolved`~~ — Fixed in Stream 20 (PR #472) | — |
 
 **Low priority (CodeAnt #332 nitpicks):**
 
 | File | Issue |
 |------|-------|
-| `packages/ui/src/atoms/Card.tsx` | Tailwind arbitrary value parsing: `theme(...)` nested inside `var(...)` fallback may be dropped by some JIT parsers |
+| ~~`packages/ui/src/atoms/Card.tsx`~~ | ~~Tailwind `theme(...)` parsing~~ — No `theme()` usage found in Card.tsx; uses `--ws-*` tokens directly |
 | ~~`ProjectSidebar.tsx`~~ | ~~Section headings `<p>` → `<h3>`~~ — Fixed in Phase 7 Stream 5 (PR #469) |
 | ~~`intake/blocks/*.tsx`~~ | ~~Missing ARIA attributes~~ — Added `aria-invalid`, `aria-describedby`, `aria-required` in Phase 7 Stream 5 (PR #469) |
 
@@ -283,8 +283,7 @@
 
 | PRs | Description |
 |-----|-------------|
-| #466-470 | **Phase 7 polish stack (Streams 1-6, Feb 9):** Bug fixes (double border, sidebar stats, import dialog, vocab trim), Records/Actions panel layout alignment, Parchment Serif 4 + Badge tokens + SegmentedControl variants (glass/neumorphic), accessibility (ARIA attributes, heading semantics), dead code removal (ProjectPage, ComposerPage), Composer headless popout Phase 1 (portal overlay, useComposerForm hook, arrangement picker, schema fields, Ctrl+Shift+N shortcut). Table migration cancelled (UniversalTableCore flexbox engine is intentional). |
-| WIP | **Stream 7: Composer Popout Phase 2 + revised Phase 3:** Phase 2 complete (ProjectWorkflowView popout, CommandPalette command, Header button, workspace context fallback). Phase 3 revised: delete UnifiedComposerBar, keep ComposerView as expanded composer panel, re-wire `composer-workbench` in MainLayout. |
+| — | No active stacks. Phase 7 Streams 1-20 merged (PR #472). |
 
 ---
 

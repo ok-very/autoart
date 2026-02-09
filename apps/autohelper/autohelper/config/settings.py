@@ -106,7 +106,10 @@ class Settings(BaseSettings):
                 object.__setattr__(self, "autoart_link_key", cfg["autoart_link_key"])
 
             # User-editable settings that exist on Settings class
-            config_keys = ["allowed_roots", "mail_enabled", "mail_poll_interval"]
+            config_keys = [
+                "allowed_roots", "mail_enabled", "mail_poll_interval",
+                "gc_enabled", "gc_schedule_hours", "gc_retention_days",
+            ]
             for key in config_keys:
                 if key in cfg:
                     object.__setattr__(self, key, cfg[key])
