@@ -4,6 +4,7 @@ Mail module API routes.
 
 import json
 from datetime import datetime, timezone
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 
@@ -31,8 +32,10 @@ _EMAIL_COLUMNS = """
 """
 
 
-def _row_to_email(row: tuple) -> TransientEmail:
+def _row_to_email(row: tuple[str, ...]) -> TransientEmail:
     """Convert a database row to a TransientEmail model."""
+    from datetime import datetime
+
     metadata = None
     if row[6]:
         try:
@@ -40,16 +43,20 @@ def _row_to_email(row: tuple) -> TransientEmail:
         except (json.JSONDecodeError, TypeError):
             metadata = None
 
+    # Parse datetime strings if present
+    received_at = datetime.fromisoformat(row[3]) if row[3] else None
+    created_at = datetime.fromisoformat(row[8]) if row[8] else None
+
     return TransientEmail(
         id=row[0],
         subject=row[1],
         sender=row[2],
-        received_at=row[3],
+        received_at=received_at,
         project_id=row[4],
         body_preview=row[5],
         metadata=metadata,
-        ingestion_id=row[7],
-        created_at=row[8],
+        ingestion_id=int(row[7]) if row[7] else None,
+        created_at=created_at,
         triage_status=row[9],
         triage_notes=row[10],
         triaged_at=row[11],

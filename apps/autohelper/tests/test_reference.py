@@ -1,6 +1,7 @@
 """Tests for the reference service."""
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -14,7 +15,7 @@ from autohelper.modules.reference.service import ReferenceService
 class TestReferenceService:
     """Test reference logic."""
 
-    def test_register_creates_ref(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_register_creates_ref(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """Registering a new path should create a reference."""
         # Setup file
         path = temp_dir / "ref_test.txt"
@@ -38,7 +39,7 @@ class TestReferenceService:
         assert row is not None
         assert row["file_id"] is not None  # Linked to indexed file
 
-    def test_resolve_exact_match(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_resolve_exact_match(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """Resolve should return path if it exists exact match."""
         path = temp_dir / "exact.txt"
         path.write_text("content")
@@ -61,7 +62,7 @@ class TestReferenceService:
         assert res.strategy == "exact"
         assert res.path == str(path.resolve())
 
-    def test_resolve_hash_recovery(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_resolve_hash_recovery(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """Resolve should find file by hash if moved."""
         # 1. Create original file with unique content
         original_name = "original.txt"
@@ -112,7 +113,7 @@ class TestReferenceService:
         assert str(p2.resolve()).lower() in (res.path or "").lower()
 
     def test_resolve_missing_ref_returns_error(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """Resolving a non-existent ref_id should raise Error."""
         service = ReferenceService()
@@ -122,7 +123,7 @@ class TestReferenceService:
             service.resolve("non_existent_ref")
 
     def test_resolve_deleted_file_no_hash_match(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """Resolving a ref whose file is deleted and has no hash match should fail gracefully."""
         # 1. Create file (no hash forced)

@@ -20,7 +20,7 @@ class LocalFileSystem:
         is_offline = False
         if hasattr(st, "st_file_attributes"):  # Windows only
             FILE_ATTRIBUTE_OFFLINE = 0x1000
-            is_offline = bool(st.st_file_attributes & FILE_ATTRIBUTE_OFFLINE)
+            is_offline = bool(st.st_file_attributes & FILE_ATTRIBUTE_OFFLINE)  # type: ignore[attr-defined]
 
         return FileStat(
             path=path,

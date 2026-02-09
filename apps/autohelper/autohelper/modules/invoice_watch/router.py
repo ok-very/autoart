@@ -1,5 +1,7 @@
 """Invoice Watch routes."""
 
+from typing import Any
+
 from fastapi import APIRouter
 
 from .schemas import (
@@ -40,7 +42,7 @@ async def unwatch_project(project_id: str) -> dict[str, bool]:
 
 
 @router.get("/events")
-async def get_events(project_id: str | None = None) -> dict[str, list[dict]]:
+async def get_events(project_id: str | None = None) -> dict[str, list[dict[str, Any]]]:
     """Drain pending events from the watch queue."""
     service = get_service()
     events = service.drain_events(project_id)

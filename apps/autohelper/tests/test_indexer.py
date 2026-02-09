@@ -2,6 +2,7 @@
 
 import shutil
 from pathlib import Path
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -13,7 +14,7 @@ from autohelper.modules.index.service import IndexService
 class TestIndexService:
     """Test index service logic."""
 
-    def test_rebuild_creates_index_run(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_rebuild_creates_index_run(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """Rebuild should create an index run record."""
         # Create some test files
         (temp_dir / "file1.txt").write_text("hello")
@@ -32,7 +33,7 @@ class TestIndexService:
         assert files >= 3
 
     def test_rebuild_with_specific_root_id(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """rebuild_index(specific_root_id=...) only indexes the requested root."""
         # Create two roots
@@ -89,7 +90,7 @@ class TestIndexService:
         assert files_r2 == 0, "Root 2 should NOT be scanned"
 
     def test_rebuild_with_specific_root_id_not_found(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """rebuild_index with invalid root_id raises NotFound (404 via API)."""
         service = IndexService()
@@ -98,7 +99,7 @@ class TestIndexService:
         with pytest.raises(NotFoundError):
             service.rebuild_index(specific_root_id="bad_id")
 
-    def test_rebuild_indexes_files(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_rebuild_indexes_files(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """Rebuild should create file entries in database."""
         test_file = temp_dir / "test.txt"
         test_file.write_text("test content")
@@ -125,7 +126,7 @@ class TestIndexService:
         assert file_entry["size"] == len("test content")
 
     def test_rebuild_includes_content_hash_for_small_files(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """rebuild(force_hash=True) should set content_hash for small files."""
         test_file = temp_dir / "hash_me.txt"
@@ -149,7 +150,7 @@ class TestIndexService:
         assert file_entry["content_hash"] is not None
 
     def test_rebuild_skips_content_hash_for_large_files_if_not_forced(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """Standard rebuild should NOT hash large files unless forced."""
         test_file = temp_dir / "large_file.txt"
@@ -183,7 +184,7 @@ class TestIndexService:
         ).fetchone()
         assert row["content_hash"] is not None, "Large file SHOULD be hashed when forced"
 
-    def test_rebuild_handles_nested_dirs(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_rebuild_handles_nested_dirs(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """Rebuild should handle deeply nested directories."""
         # Create nested structure
         deep = temp_dir / "a" / "b" / "c" / "d"
@@ -207,7 +208,7 @@ class TestIndexService:
         assert file_entry is not None
 
     def test_rescan_removes_deleted_files(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """Rescan should remove files that no longer exist."""
         test_file = temp_dir / "temporary.txt"
@@ -243,7 +244,7 @@ class TestIndexService:
         assert row is None
 
     def test_rescan_removes_deleted_directories(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """Rescan should remove files in deleted directories."""
         nested_dir = temp_dir / "nested" / "subdir"
@@ -279,7 +280,7 @@ class TestIndexService:
             ).fetchone()
         assert row is None
 
-    def test_get_status(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_get_status(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """Get status should return index information."""
         service = IndexService()
 
@@ -295,7 +296,7 @@ class TestIndexService:
         assert status["last_completed"] is not None
         assert status["last_completed"]["status"] == "completed"
 
-    def test_get_status_when_running(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_get_status_when_running(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """Get status should show running state."""
         from autohelper.shared.ids import generate_index_run_id
 
@@ -360,7 +361,7 @@ class TestIndexEndpoints:
         assert file_entry["content_hash"] is not None
 
     def test_rebuild_endpoint_conflict_returns_409(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """POST /index/rebuild should return 409 when running."""
         from autohelper.shared.ids import generate_index_run_id
@@ -377,7 +378,7 @@ class TestIndexEndpoints:
         assert response.status_code == 409
 
     def test_rescan_endpoint_conflict_returns_409(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """POST /index/rescan should return 409 when running."""
         from autohelper.shared.ids import generate_index_run_id

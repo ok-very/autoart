@@ -15,6 +15,7 @@ extraction yields poor results (< N images, low confidence, etc.).
 
 import logging
 from dataclasses import dataclass
+from typing import Any
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -43,7 +44,7 @@ class DeepCrawlResult:
     additional_image_urls: list[str]
     validated_image_urls: list[str]  # Confirmed as actual artwork
     rejected_image_urls: list[str]  # Identified as UI/icons/noise
-    extracted_metadata: dict  # Structured data from page
+    extracted_metadata: dict[str, Any]  # Structured data from page
     confidence: float
     tokens_used: int
     error: str | None = None

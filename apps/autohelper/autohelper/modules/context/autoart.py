@@ -7,7 +7,7 @@ Provides a fallback context source alongside Monday.com.
 
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import requests
 
@@ -84,7 +84,7 @@ class AutoArtClient:
                 f"HTTP {response.status_code}: {response.text}", status_code=response.status_code
             )
 
-        return response.json()
+        return cast(dict[str, Any], response.json())
 
     def test_connection(self) -> bool:
         """Test if the AutoArt API is reachable."""

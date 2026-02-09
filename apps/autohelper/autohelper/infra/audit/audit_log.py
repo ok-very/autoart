@@ -6,7 +6,7 @@ Records before/after state for filesystem operations.
 import json
 from collections.abc import Callable
 from functools import wraps
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from autohelper.db import get_db
 from autohelper.shared.ids import generate_audit_id
@@ -145,7 +145,7 @@ def audit_operation(verb: str) -> Callable[[Callable[..., T]], Callable[..., T]]
                 existing = audit.check_idempotency(context.idempotency_key)
                 if existing and existing["status"] == "success":
                     logger.info(f"Idempotency hit for {verb}: {context.idempotency_key}")
-                    return existing["result"]
+                    return cast(T, existing["result"])
 
             # Prepare request data from kwargs
             request_data = {

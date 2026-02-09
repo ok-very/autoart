@@ -7,7 +7,7 @@ Provides consistent API access with settings-based configuration.
 
 import logging
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 import requests
 
@@ -27,7 +27,7 @@ class MondayClientError(Exception):
     """Error from Monday.com API"""
 
     def __init__(
-        self, message: str, errors: list[dict] | None = None, status_code: int | None = None
+        self, message: str, errors: list[dict[str, Any]] | None = None, status_code: int | None = None
     ):
         super().__init__(message)
         self.errors = errors
@@ -116,7 +116,7 @@ class MondayClient:
                 "; ".join(messages), errors=errors, status_code=response.status_code
             )
 
-        return result.get("data", {})
+        return cast(dict[str, Any], result.get("data", {}))
 
     def get_me(self) -> dict[str, Any]:
         """Get current user info - useful for testing connection"""
@@ -190,7 +190,7 @@ class MondayClient:
         boards = result.get("boards", [])
         if not boards:
             return []
-        return boards[0].get("groups", [])
+        return cast(list[dict[str, Any]], boards[0].get("groups", []))
 
     @staticmethod
     def _parse_board_name(name: str) -> tuple[str, str, str]:

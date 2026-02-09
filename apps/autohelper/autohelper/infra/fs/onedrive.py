@@ -34,7 +34,7 @@ class OneDriveManager:
             try:
                 import ctypes
 
-                self._kernel32 = ctypes.windll.kernel32
+                self._kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
             except Exception as e:
                 logger.warning(f"Failed to load kernel32: {e}")
 
@@ -59,7 +59,7 @@ class OneDriveManager:
         try:
             st = path.stat()
             if hasattr(st, "st_file_attributes"):
-                return bool(st.st_file_attributes & FILE_ATTRIBUTE_OFFLINE)
+                return bool(st.st_file_attributes & FILE_ATTRIBUTE_OFFLINE)  # type: ignore[attr-defined]
         except Exception as e:
             logger.debug(f"Failed to check offline status for {path}: {e}")
 
@@ -90,7 +90,7 @@ class OneDriveManager:
             current_attrs = self._kernel32.GetFileAttributesW(path_str)
 
             if current_attrs == 0xFFFFFFFF:  # INVALID_FILE_ATTRIBUTES
-                error_code = ctypes.get_last_error()
+                error_code = ctypes.get_last_error()  # type: ignore[attr-defined]
                 logger.error(f"Failed to get file attributes for {path}: error {error_code}")
                 return False
 
@@ -102,7 +102,7 @@ class OneDriveManager:
                 logger.info(f"Marked file for space reclamation: {path}")
                 return True
             else:
-                error_code = ctypes.get_last_error()
+                error_code = ctypes.get_last_error()  # type: ignore[attr-defined]
                 logger.error(f"Failed to set file attributes for {path}: error {error_code}")
                 return False
 
@@ -131,7 +131,7 @@ class OneDriveManager:
             current_attrs = self._kernel32.GetFileAttributesW(path_str)
 
             if current_attrs == 0xFFFFFFFF:
-                error_code = ctypes.get_last_error()
+                error_code = ctypes.get_last_error()  # type: ignore[attr-defined]
                 logger.error(f"Failed to get file attributes for {path}: error {error_code}")
                 return False
 
@@ -142,7 +142,7 @@ class OneDriveManager:
                 logger.info(f"Pinned file to device: {path}")
                 return True
             else:
-                error_code = ctypes.get_last_error()
+                error_code = ctypes.get_last_error()  # type: ignore[attr-defined]
                 logger.error(f"Failed to pin file {path}: error {error_code}")
                 return False
 

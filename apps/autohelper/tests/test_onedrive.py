@@ -3,6 +3,7 @@ Tests for OneDrive Files On-Demand support.
 """
 
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from autohelper.infra.fs.protocols import FileStat
@@ -151,7 +152,7 @@ class TestOneDriveManager:
 class TestIndexServiceOfflineHandling:
     """Tests for IndexService handling of offline files."""
 
-    def test_upsert_skips_hash_for_offline(self, tmp_path) -> None:
+    def test_upsert_skips_hash_for_offline(self, tmp_path: Path) -> None:
         """_upsert_file should skip hashing for offline files."""
         from unittest.mock import MagicMock, patch
 
@@ -189,7 +190,7 @@ class TestIndexServiceOfflineHandling:
             # Assert hasher was never called for offline file
             mock_hasher.hash_file.assert_not_called()
 
-    def test_upsert_hashes_online_file(self, tmp_path) -> None:
+    def test_upsert_hashes_online_file(self, tmp_path: Path) -> None:
         """_upsert_file should hash online files (when small enough)."""
         from unittest.mock import MagicMock, patch
 
