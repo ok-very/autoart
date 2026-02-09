@@ -422,6 +422,33 @@ export type ExportSession = Selectable<ExportSessionsTable>;
 export type NewExportSession = Insertable<ExportSessionsTable>;
 export type ExportSessionUpdate = Updateable<ExportSessionsTable>;
 
+// Export Packages Table (Migration 010)
+export interface ExportPackagesTable {
+  id: Generated<string>;
+  label: string;
+  source_type: string;
+  source_payload: unknown; // JSONB
+  resolution_state: unknown | null; // JSONB
+  format: string | null;
+  options: Generated<unknown>; // JSONB
+  target_config: unknown | null; // JSONB
+  status: Generated<string>;
+  projection_cache: unknown | null; // JSONB
+  output_path: string | null;
+  output_mime_type: string | null;
+  error: string | null;
+  export_session_id: string | null;
+  submitted_by: string | null;
+  position: Generated<number>;
+  created_at: Generated<Date>;
+  updated_at: Generated<Date>;
+  executed_at: Date | null;
+}
+
+export type ExportPackageRow = Selectable<ExportPackagesTable>;
+export type NewExportPackage = Insertable<ExportPackagesTable>;
+export type ExportPackageUpdate = Updateable<ExportPackagesTable>;
+
 // ============================================
 // MONDAY WORKSPACE TABLES (Migration 038)
 // Configuration-driven Monday.com integration
@@ -800,6 +827,7 @@ export interface Database {
   user_settings: UserSettingsTable;
   inference_learnings: InferenceLearningsTable;
   export_sessions: ExportSessionsTable;
+  export_packages: ExportPackagesTable;
 
   monday_workspaces: MondayWorkspacesTable;
   monday_board_configs: MondayBoardConfigsTable;

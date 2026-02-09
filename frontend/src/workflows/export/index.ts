@@ -22,6 +22,14 @@ export { TemplatePresetSelector } from './components/TemplatePresetSelector';
 export { CollectionPanel } from './panels/CollectionPanel';
 export { CollectionPreview } from './components/CollectionPreview';
 
+// Queue components (Phase 1)
+export { ExportQueuePanel } from './panels/ExportQueuePanel';
+export { ExportQueueContent } from './views/ExportQueueContent';
+export { PackageDetailView } from './views/PackageDetailView';
+export { PackageListItem } from './components/PackageListItem';
+export { PackageHeader } from './components/PackageHeader';
+export { AddPackageMenu } from './components/AddPackageMenu';
+
 // Re-export types
 export * from './types';
 

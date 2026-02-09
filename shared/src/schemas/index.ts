@@ -403,6 +403,21 @@ export {
     type ExportResult,
 } from './exports.js';
 
+// ==================== EXPORT PACKAGES ====================
+export {
+    PackageSourceTypeSchema,
+    PackageStatusSchema,
+    ExportPackageSchema,
+    SubmitProjectSelectionSchema,
+    SubmitPackageBodySchema,
+    UpdatePackageBodySchema,
+    type PackageSourceType,
+    type PackageStatus,
+    type ExportPackage,
+    type SubmitPackageBody,
+    type UpdatePackageBody,
+} from './export-packages.js';
+
 // ==================== ENGAGEMENT ====================
 export {
     EngagementKind,

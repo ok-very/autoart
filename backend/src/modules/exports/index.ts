@@ -7,10 +7,12 @@
 
 // Service exports
 export * from './exports.service.js';
+export * from './packages.service.js';
 export * from './output-store.js';
 
 // Routes
 export { exportsRoutes } from './exports.routes.js';
+export { packageRoutes } from './packages.routes.js';
 
 // Types
 export * from './types.js';

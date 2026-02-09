@@ -17,6 +17,7 @@ import { definitionsRoutes } from './modules/definitions/index.js';
 import { eventsRoutes } from './modules/events/events.routes.js';
 import { workflowRoutes } from './modules/events/workflow.routes.js';
 import { exportsRoutes } from './modules/exports/exports.routes.js';
+import { packageRoutes } from './modules/exports/packages.routes.js';
 import { gcRoutes } from './modules/gc/gc.routes.js';
 import { hierarchyRoutes } from './modules/hierarchy/hierarchy.routes.js';
 import { projectMembersRoutes } from './modules/hierarchy/project-members.routes.js';
@@ -120,6 +121,7 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Export sessions - export workflow
   await fastify.register(exportsRoutes, { prefix: '/api/exports' });
+  await fastify.register(packageRoutes, { prefix: '/api/exports/packages' });
 
   // Garbage collection stats and monitoring
   await fastify.register(gcRoutes, { prefix: '/api/gc' });
