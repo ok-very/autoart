@@ -77,7 +77,11 @@ const sizeStyles = {
 };
 
 export function Badge({ variant = 'default', size = 'sm', children, className }: BadgeProps) {
-    const tokens = variantTokens[variant] ?? variantTokens.default;
+    const hasCustomColors =
+        typeof className === 'string' &&
+        (className.includes('bg-') || className.includes('text-') || className.includes('border-'));
+
+    const tokens = hasCustomColors ? null : (variantTokens[variant] ?? variantTokens.default);
 
     return (
         <span
@@ -86,11 +90,15 @@ export function Badge({ variant = 'default', size = 'sm', children, className }:
                 sizeStyles[size],
                 className
             )}
-            style={{
-                backgroundColor: tokens.bg,
-                color: tokens.fg,
-                borderColor: tokens.border,
-            }}
+            style={
+                tokens
+                    ? {
+                          backgroundColor: tokens.bg,
+                          color: tokens.fg,
+                          borderColor: tokens.border,
+                      }
+                    : undefined
+            }
         >
             {children}
         </span>
