@@ -13,11 +13,12 @@ import json
 import threading
 import urllib.error
 import urllib.request
-from typing import Any
+from typing import Any, cast
 
 from autohelper.config import get_settings, reset_settings
 from autohelper.config.store import ConfigStore
 from autohelper.shared.logging import get_logger
+from autohelper.sync.connection_state import ConnectionState, ConnectionStateManager
 
 logger = get_logger(__name__)
 
@@ -43,6 +44,14 @@ class BackendPoller:
             logger.warning("Backend poller already running")
             return
 
+        # Set initial state - optimistic if we have a link key
+        settings = get_settings()
+        state_mgr = ConnectionStateManager()
+        if settings.autoart_link_key:
+            state_mgr.set_state(ConnectionState.PAIRED_CONNECTED)
+        else:
+            state_mgr.set_state(ConnectionState.UNPAIRED)
+
         self._stop_event.clear()
         self._thread = threading.Thread(target=self._poll_loop, daemon=True)
         self._thread.start()
@@ -67,9 +76,11 @@ class BackendPoller:
     def _poll_once(self) -> None:
         """Single poll iteration: heartbeat + fetch settings/commands."""
         settings = get_settings()
+        state_mgr = ConnectionStateManager()
 
         # Skip if not paired
         if not settings.autoart_link_key:
+            state_mgr.set_state(ConnectionState.UNPAIRED)
             return
 
         base_url = settings.autoart_api_url
@@ -78,21 +89,43 @@ class BackendPoller:
         try:
             status = self._gather_status()
             self._post(f"{base_url}/api/autohelper/heartbeat", {"status": status})
-        except Exception as e:
-            logger.debug("Heartbeat failed: %s", e)
-
-        # 2. Poll for settings and commands
-        try:
-            poll_response = self._get(f"{base_url}/api/autohelper/poll")
         except urllib.error.HTTPError as e:
             if e.code == 401:
                 logger.warning("Link key invalid or expired, clearing pairing")
                 self._clear_pairing()
+                state_mgr.set_state(ConnectionState.UNPAIRED)
+                return
+            else:
+                logger.debug("Heartbeat failed: HTTP %d", e.code)
+                state_mgr.set_state(ConnectionState.PAIRED_DISCONNECTED)
+        except (urllib.error.URLError, ConnectionError, TimeoutError) as e:
+            logger.debug("Heartbeat failed: network error: %s", e)
+            state_mgr.set_state(ConnectionState.PAIRED_DISCONNECTED)
+        except Exception as e:
+            logger.debug("Heartbeat failed: %s", e)
+            state_mgr.set_state(ConnectionState.PAIRED_DISCONNECTED)
+
+        # 2. Poll for settings and commands
+        try:
+            poll_response = self._get(f"{base_url}/api/autohelper/poll")
+            # Successful poll - we're connected
+            state_mgr.set_state(ConnectionState.PAIRED_CONNECTED)
+        except urllib.error.HTTPError as e:
+            if e.code == 401:
+                logger.warning("Link key invalid or expired, clearing pairing")
+                self._clear_pairing()
+                state_mgr.set_state(ConnectionState.UNPAIRED)
             else:
                 logger.debug("Poll failed: HTTP %d", e.code)
+                state_mgr.set_state(ConnectionState.PAIRED_DISCONNECTED)
+            return
+        except (urllib.error.URLError, ConnectionError, TimeoutError) as e:
+            logger.debug("Poll failed: network error: %s", e)
+            state_mgr.set_state(ConnectionState.PAIRED_DISCONNECTED)
             return
         except Exception as e:
             logger.debug("Poll failed: %s", e)
+            state_mgr.set_state(ConnectionState.PAIRED_DISCONNECTED)
             return
 
         # 3. Apply settings if version changed
@@ -152,10 +185,11 @@ class BackendPoller:
 
             index_svc = IndexService()
             index_status = index_svc.get_status()
+            last_run = index_status.get("last_run")
             status["index"] = {
                 "status": "running" if index_status.get("is_running") else "idle",
                 "total_files": index_status.get("total_files", 0),
-                "last_run": index_status.get("last_run"),
+                "last_run": last_run.isoformat() if last_run is not None else None,
             }
         except Exception:
             status["index"] = {"status": "unknown"}
@@ -179,9 +213,12 @@ class BackendPoller:
 
             gc_svc = GarbageCollectionService()
             scheduler = get_scheduler()
+            last_run = None
+            if gc_svc.last_result and gc_svc.last_result.completed_at:
+                last_run = gc_svc.last_result.completed_at.isoformat()
             status["gc"] = {
                 "enabled": get_settings().gc_enabled,
-                "last_run": gc_svc.last_result.completed_at.isoformat() if gc_svc.last_result else None,
+                "last_run": last_run,
             }
         except Exception:
             status["gc"] = {"enabled": False}
@@ -352,6 +389,15 @@ class BackendPoller:
                 elif cmd_type == "ping":
                     result = self._cmd_ping()
                     success = True
+                elif cmd_type == "watch_root":
+                    result = self._cmd_watch_root(payload)
+                    success = result.get("success", False) if result else False
+                elif cmd_type == "unwatch_root":
+                    result = self._cmd_unwatch_root(payload)
+                    success = result.get("success", False) if result else False
+                elif cmd_type == "drain_file_events":
+                    result = self._cmd_drain_file_events()
+                    success = True
                 else:
                     logger.warning("Unknown command type: %s", cmd_type)
                     result = {"error": f"Unknown command: {cmd_type}"}
@@ -403,11 +449,12 @@ class BackendPoller:
 
         runner_svc = get_runner_service()
         output_path = payload.get("output_path")
+        output_folder = Path(output_path) if output_path else Path.home() / "Collected"
 
         request = InvokeRequest(
             runner_id=RunnerId.AUTOCOLLECTOR,
             config={"url": url},
-            output_folder=Path(output_path) if output_path else Path.home() / "Collected",
+            output_folder=str(output_folder),
         )
 
         # Run synchronously using asyncio
@@ -436,7 +483,7 @@ class BackendPoller:
 
         svc = MailService()
         svc.stop()
-        return {"stopped": True}
+        return cast(dict[str, Any], {"stopped": True})
 
     def _cmd_run_gc(self) -> dict[str, Any]:
         """Execute run_gc command."""
@@ -450,7 +497,7 @@ class BackendPoller:
         from autohelper.modules.config.router import _open_folder_dialog
 
         path = _open_folder_dialog()
-        return {"path": path}
+        return cast(dict[str, Any], {"path": path})
 
     def _cmd_ping(self) -> dict[str, Any]:
         """Execute ping command — echo back timestamp and version."""
@@ -462,6 +509,44 @@ class BackendPoller:
             "version": "0.1.0",
         }
 
+    def _cmd_watch_root(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Execute watch_root command — start watching a root directory."""
+        from autohelper.modules.file_watch.router import get_service
+
+        root_id = payload.get("root_id")
+        path = payload.get("path")
+
+        if not root_id or not path:
+            return {"success": False, "error": "Missing root_id or path"}
+
+        service = get_service()
+        success = service.watch(root_id, path)
+        return {"success": success}
+
+    def _cmd_unwatch_root(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Execute unwatch_root command — stop watching a root directory."""
+        from autohelper.modules.file_watch.router import get_service
+
+        root_id = payload.get("root_id")
+
+        if not root_id:
+            return {"success": False, "error": "Missing root_id"}
+
+        service = get_service()
+        success = service.unwatch(root_id)
+        return {"success": success}
+
+    def _cmd_drain_file_events(self) -> dict[str, Any]:
+        """Execute drain_file_events command — return and clear all pending file events."""
+        from autohelper.modules.file_watch.router import get_service
+
+        service = get_service()
+        events = service.drain_events()
+        return {
+            "events": [e.model_dump(mode="json") for e in events],
+            "count": len(events),
+        }
+
     def _clear_pairing(self) -> None:
         """Clear the local pairing key."""
         store = ConfigStore()
@@ -469,6 +554,8 @@ class BackendPoller:
         cfg.pop("autoart_link_key", None)
         store.save(cfg)
         reset_settings()
+
+        # State transition is handled by caller
         logger.info("Pairing cleared due to invalid link key")
 
     def _get(self, url: str) -> dict[str, Any]:
@@ -479,7 +566,7 @@ class BackendPoller:
         req.add_header("Content-Type", "application/json")
 
         with urllib.request.urlopen(req, timeout=10) as resp:
-            return json.loads(resp.read())
+            return cast(dict[str, Any], json.loads(resp.read()))
 
     def _post(self, url: str, data: dict[str, Any]) -> dict[str, Any]:
         """Make POST request with link key auth."""
@@ -490,7 +577,7 @@ class BackendPoller:
         req.add_header("Content-Type", "application/json")
 
         with urllib.request.urlopen(req, timeout=10) as resp:
-            return json.loads(resp.read())
+            return cast(dict[str, Any], json.loads(resp.read()))
 
 
 def start_backend_poller() -> bool:

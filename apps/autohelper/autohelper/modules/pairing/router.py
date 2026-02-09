@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from autohelper.config import get_settings, reset_settings
 from autohelper.config.store import ConfigStore
 from autohelper.shared.logging import get_logger
+from autohelper.sync.connection_state import ConnectionState, ConnectionStateManager
 from autohelper.sync.poller import start_backend_poller
 
 logger = get_logger(__name__)
@@ -81,6 +82,9 @@ def claim(body: ClaimRequest) -> ClaimResponse:
     reset_settings()
     start_backend_poller()
 
+    # Update connection state
+    ConnectionStateManager().set_state(ConnectionState.PAIRED_CONNECTED)
+
     logger.info("Paired via /pair/claim (backend %s)", body.backend_url)
     return ClaimResponse(paired=True)
 
@@ -119,6 +123,9 @@ def unpair() -> UnpairResponse:
     store.save(cfg)
 
     reset_settings()
+
+    # Update connection state
+    ConnectionStateManager().set_state(ConnectionState.UNPAIRED)
 
     # Reinit in background to avoid blocking the HTTP response
     threading.Thread(target=_reinit_clients_background, daemon=True).start()
