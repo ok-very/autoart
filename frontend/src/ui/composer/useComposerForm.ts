@@ -60,6 +60,7 @@ export function useComposerForm(options: UseComposerFormOptions): ComposerFormSt
     projectId,
     contextId: initialContextId,
     contextType: initialContextType = 'subprocess',
+    parentActionId,
     defaultArrangement,
     onSuccess,
   } = options;
@@ -172,6 +173,7 @@ export function useComposerForm(options: UseComposerFormOptions): ComposerFormSt
           contextType: resolvedContextType,
           type: selectedArrangement.name,
           fieldBindings: fieldBindings.length > 0 ? fieldBindings : [{ fieldKey: 'title' }],
+          ...(parentActionId ? { parentActionId } : {}),
         },
         fieldValues: fieldValueEvents,
         ...(referencesPayload ? { references: referencesPayload } : {}),
@@ -190,7 +192,7 @@ export function useComposerForm(options: UseComposerFormOptions): ComposerFormSt
     } catch (err) {
       console.error('Failed to compose action:', err);
     }
-  }, [title, description, fieldValues, references, resolvedContextId, resolvedContextType, selectedArrangement, compose, onSuccess]);
+  }, [title, description, fieldValues, references, resolvedContextId, resolvedContextType, selectedArrangement, parentActionId, compose, onSuccess]);
 
   // Reset handler
   const reset = useCallback(() => {

@@ -212,7 +212,12 @@ export function ComposerPopoutContent({
                       <input
                         type="number"
                         value={(form.fieldValues.get(field.key) as number) || ''}
-                        onChange={(e) => form.setFieldValue(field.key, e.target.valueAsNumber)}
+                        onChange={(e) =>
+                          form.setFieldValue(
+                            field.key,
+                            e.target.value === '' ? undefined : e.target.valueAsNumber
+                          )
+                        }
                         placeholder="0"
                         className="w-full px-3 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                       />
