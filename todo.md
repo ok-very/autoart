@@ -1,14 +1,13 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-08*
-*Strategy: Foundation phases 0-2 complete (see [roadmap.md](roadmap.md) for architectural history). Phase 3 (import pipeline) complete. Phase 4/4B (BFA integration, #437/#438) complete. Phase 5 (Finance Foundation) complete (PRs #456-458). Phase 6 (Finance Surfaces) next. This file drives active priorities.*
+*Last Updated: 2026-02-09*
+*Strategy: Foundation phases 0-6 complete (see [roadmap.md](roadmap.md) for architectural history). Phase 7 (Platform Polish & Integrations) active — parallel work streams, no dependency chain. This file drives active priorities.*
 
 ## Bug List
 
 **Active — unphased:**
 - **Project binding in workspaces is implementation theater:** Phase 1.2 wired WorkspaceContext consumption, but panels don't actually use the bound project ID. UI shows binding UI, backend may store it, but the connection between "user binds project to workspace" and "panels render that project's data" is broken or never existed. Trace the full path: workspace save → project binding persistence → panel mount → data fetch with bound ID.
-- **Theme assignment coupled to workspaces — meaningless complexity:** Each workspace carries its own theme, but themes are undifferentiated (Compact, Minimal, Floating, Default are essentially identical). Per-workspace theme assignment adds complexity without payoff. Either decouple theme selection from workspace identity (global user preference), or differentiate themes first per DESIGN.md variant guidance. Got muddied in during the Phase 1 workspace rewrite.
-- **UnifiedComposerBar not rendering on Project page:** Phase 3.6 wired vocabulary suggestions into UnifiedComposerBar, but the bar doesn't appear in the accessibility tree on ProjectPage despite being mounted with `visible={composerBarVisible}` (defaults to true). The legacy ComposerView renders in the Composer nav panel instead. Related to Phase 7 "Composer bar as sleek dockview popout window" item — bar is currently pinned to ProjectPage as fixed-position overlay (wrong place). Needs investigation: why isn't it rendering, and should it be a proper dockview panel first before debugging visibility.
+- **Composer needs full rebuild as headless popout:** ProjectPage is dead code (no routes reference it). UnifiedComposerBar is unmounted dead code. InspectorFooterComposer is the current standard. Dockview v4 has no floating API — build as position:fixed overlay with custom chrome. See Phase 7 Stream 6.
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
 - **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
@@ -21,22 +20,21 @@
 - ~~`/link-action` 500 on duplicate~~ — Checks for existing link before insert, returns 200 with existing row
 - ~~Vocabulary upsert NULL adjective duplicates~~ — `adjective: vocab.adjective ?? ''` normalizes before insert
 
-*Open logic bugs:*
-- **Classification cache hash ignores definition schema (PR #445):** `deriveContentHash()` only hashes `def.id` + `def.name`. Schema changes (field edits, constraint updates) don't invalidate cache → stale classifications served for up to 1 hour. Fix: hash full definition or include `updatedAt`.
-- **`useLinkAction` wrong response type (PR #444):** Hook declares `api.post<ActionLinksResponse>` (array wrapper) but backend returns single link object. Latent type mismatch — no current consumer reads `.data`, but will break if anyone does.
-- **`entityType` cast bypasses validation (PR #439):** `InterpretItemRequestSchema` accepts `z.string().optional()` for `entityType` then asserts to `ImportPlanItem['entityType']` union — any string passes through without runtime check.
+*Resolved logic bugs (confirmed Feb 9):*
+- ~~Classification cache hash ignores definition schema~~ — `deriveContentHash()` now hashes `def.schema_config` (line 81) and uses 128-bit hash (32 hex chars). Fixed in PR #458.
+- ~~`useLinkAction` wrong response type~~ — Hook already uses `api.post<ImportActionLink>` (single object), matching backend response. Stale bug entry.
+- ~~`entityType` cast bypasses validation~~ — Schema now uses `z.enum([...])`, validates at parse time. Resolved.
 
-*Visual/UX:*
-- **Double border in Fields panel (PR #440):** Both sidebar wrapper (`FieldsPanel.tsx:72`) and `FieldsMillerColumnsView` root add `border-r border-ws-panel-border` — double divider line.
-- **Actions sidebar shows record stats (PR #440):** "All Actions" row displays `useRecordStats()` total which only counts `DataRecord` instances. Per-definition rows always show "0 instances". Should hide counts or use action-specific stats for non-record kinds.
-- **ImportLinkDialog available count mismatch (PR #444):** Header shows "Items (X available)" filtering linked items, but list renders all items including linked ones.
+*Visual/UX (fixed in Phase 7 Stream 1):*
+- ~~Double border in Fields panel~~ — Removed duplicate `border-r` from sidebar wrapper.
+- ~~Actions sidebar shows record stats~~ — DefinitionListSidebar now hides counts for non-record definitions.
+- ~~ImportLinkDialog available count mismatch~~ — Header now shows "X total, Y available" matching list contents.
 
 **Deferred:**
 - AutoHelper sessions lost on backend restart (#340) — link key IS persisted in `connection_credentials` DB table. Issue is tray icon staleness — needs design decision, not a bugfix.
 
 **UX polish:**
 - "Import" tab hides in overflow menu despite ample space in tab bar
-- "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong — remove the feature
 - Emoji/icon selector overlay — search doesn't work; consider switching to Phosphor Icons
 - Placeholder themes: Compact, Minimal, Floating, and Default still essentially identical — differentiate per DESIGN.md theme variant guidance. Glass and neumorphic variants pending implementation (see Housekeeping).
 - Project View: "New project" dropdown UI broken under "Your projects" section — formatting not clean
@@ -147,7 +145,7 @@
 
 **Previously Phase 4.** Renumbered to accommodate BFA integration. Independent of Phase 4/4B -- can run in parallel.
 
-**Status:** Partial — computed fields complete (PRs #456-458 merged). Remaining: invoice generation, vendor bills, budgets.
+**Status: Complete** — Computed fields (PRs #456-458), finance surfaces, export templates all merged.
 
 **Scope:**
 
@@ -167,7 +165,9 @@
 
 ---
 
-## Phase 6: Finance Surfaces & Integration
+## Phase 6: Finance Surfaces & Integration ✓
+
+**Status: Complete** — PRs #460-464 merged (Feb 8, 2026). Finance events in Composer, overlay views, Handlebars invoice template, preview endpoint, AutoHelper invoice watchdog.
 
 *Wire finance data into the UI, Composer event log, and export pipeline. Depends on Phase 5 data layer being solid.*
 
@@ -247,9 +247,9 @@
 | `packages/ui/src/atoms/Badge.tsx` | Badge variant colors use domain-semantic Tailwind colors — needs separate approach (not chrome tokens) | — |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` — type declared and filtered but no distinct UI treatment (icon, section, color) | — |
 | `ExportMenu.tsx` | `invoiceNumber` sent to PDF/DOCX endpoints — backend should consume for Content-Disposition filenames |
-| `vocabulary.routes.ts` | Whitespace-only prefix passes `z.string().min(1)` — add `.trim()` before `.min(1)` (PR #441) |
+| ~~`vocabulary.routes.ts`~~ | ~~Whitespace-only prefix~~ — `.trim()` added before `.min(1)` (Phase 7 Stream 1) |
 | `vocabulary` migration 004 | Composite btree index on `(verb, noun)` won't be used for `ILIKE ... OR ILIKE` prefix queries — consider separate `text_pattern_ops` indexes per column (PR #441) |
-| `classification-cache.ts` | Hash truncated to 16 hex chars (64-bit) — collision = wrong result served, not a miss. Use full hash or 32+ chars (PR #445) |
+| ~~`classification-cache.ts`~~ | ~~Hash truncated to 16 hex chars~~ — Already 32 chars (128-bit) and hashes `schema_config`. Resolved. |
 | `todo.md` | Broken anchor `#autohelper-status-resolved` — roadmap heading changed to "AutoHelper Status (Resolved, Evolving)" (PR #442) | — |
 
 **Low priority (CodeAnt #332 nitpicks):**
