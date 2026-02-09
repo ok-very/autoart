@@ -30,6 +30,21 @@ const PRESET_COLORS = [
 
 const PRESET_EMOJIS = ['📋', '📁', '👤', '🏢', '🎨', '📦', '🔧', '📝', '💼', '🏷️', '📊', '🎯'];
 
+const EMOJI_NAMES: Record<string, string> = {
+  '📋': 'clipboard',
+  '📁': 'folder',
+  '👤': 'person user',
+  '🏢': 'building office',
+  '🎨': 'art palette',
+  '📦': 'package box',
+  '🔧': 'wrench tool',
+  '📝': 'note memo',
+  '💼': 'briefcase business',
+  '🏷️': 'tag label',
+  '📊': 'chart graph',
+  '🎯': 'target goal',
+};
+
 // Legacy props interface (deprecated - use OverlayProps)
 interface LegacyCreateDefinitionViewProps {
   copyFromId?: string;
@@ -61,6 +76,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
   const [selectedColor, setSelectedColor] = useState('blue');
   const [selectedEmoji, setSelectedEmoji] = useState('📋');
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
@@ -127,6 +143,13 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
   };
 
   const selectedColorConfig = PRESET_COLORS.find((c) => c.name === selectedColor) || PRESET_COLORS[1];
+
+  // Filter emojis based on search query
+  const filteredEmojis = PRESET_EMOJIS.filter((emoji) => {
+    if (!searchQuery) return true;
+    const lowerQuery = searchQuery.toLowerCase();
+    return EMOJI_NAMES[emoji]?.includes(lowerQuery) || emoji.includes(searchQuery);
+  });
 
   return (
     <div className="max-w-lg mx-auto">
@@ -206,7 +229,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
                 {emojiPickerOpen && (
                   <div className="absolute top-full left-0 mt-1 z-10 bg-ws-panel-bg border border-ws-panel-border rounded-lg shadow-md p-2">
                     <div className="grid grid-cols-6 gap-1">
-                      {PRESET_EMOJIS.map((emoji) => (
+                      {filteredEmojis.map((emoji) => (
                         <button
                           key={emoji}
                           type="button"
@@ -216,6 +239,7 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
                           }}
                           onClick={() => {
                             setSelectedEmoji(emoji);
+                            setSearchQuery('');
                             setEmojiPickerOpen(false);
                           }}
                         >
@@ -227,14 +251,18 @@ export function CreateDefinitionView(props: CreateDefinitionViewProps | LegacyCr
                       placeholder="Or type any emoji..."
                       size="sm"
                       className="mt-2"
+                      value={searchQuery}
                       onChange={(e) => {
-                        if (e.currentTarget.value) {
-                          setSelectedEmoji(e.currentTarget.value);
-                        }
+                        setSearchQuery(e.currentTarget.value);
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
+                          // If searchQuery is non-empty and no presets matched, treat as custom emoji
+                          if (searchQuery && filteredEmojis.length === 0) {
+                            setSelectedEmoji(searchQuery);
+                          }
+                          setSearchQuery('');
                           setEmojiPickerOpen(false);
                         }
                       }}

@@ -21,11 +21,10 @@ import { Button, Menu } from '@autoart/ui';
 
 interface ExportMenuProps {
     invoiceId: string;
-    invoiceNumber: string;
     onPreview?: () => void;
 }
 
-export function ExportMenu({ invoiceId, invoiceNumber, onPreview }: ExportMenuProps) {
+export function ExportMenu({ invoiceId, onPreview }: ExportMenuProps) {
     const { data: cloudStatus } = useCloudConnectionStatus();
     const exportOneDrive = useExportInvoiceToOneDrive();
     const exportGoogleDrive = useExportInvoiceToGoogleDrive();
@@ -55,21 +54,15 @@ export function ExportMenu({ invoiceId, invoiceNumber, onPreview }: ExportMenuPr
         idInput.name = 'invoiceId';
         idInput.value = invoiceId;
         form.appendChild(idInput);
-        const numInput = document.createElement('input');
-        numInput.type = 'hidden';
-        numInput.name = 'invoiceNumber';
-        numInput.value = invoiceNumber;
-        form.appendChild(numInput);
         document.body.appendChild(form);
         form.submit();
         document.body.removeChild(form);
-    }, [invoiceId, invoiceNumber]);
+    }, [invoiceId]);
 
     const handleDocxDownload = useCallback(() => {
         setExportError(null);
-        const params = new URLSearchParams({ invoiceNumber });
-        window.open(`/api/exports/finance/invoice-docx/${invoiceId}/download?${params}`, '_blank', 'noopener,noreferrer');
-    }, [invoiceId, invoiceNumber]);
+        window.open(`/api/exports/finance/invoice-docx/${invoiceId}/download`, '_blank', 'noopener,noreferrer');
+    }, [invoiceId]);
 
     const handleOneDrive = useCallback(async () => {
         setExportError(null);

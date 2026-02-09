@@ -42,6 +42,7 @@ interface Command {
   label: string;
   icon: typeof Folder;
   action: () => void;
+  shortcut?: string;
 }
 
 const CATEGORY_CONFIG: Record<ResultCategory, { icon: typeof Folder; label: string }> = {
@@ -111,6 +112,7 @@ export function CommandPalette() {
       id: 'new-action',
       label: 'New Action',
       icon: Wand2,
+      shortcut: '⌘⇧N',
       action: () => openComposerPopout(),
     },
     {
@@ -386,6 +388,9 @@ export function CommandPalette() {
                     >
                       <Icon className="w-4 h-4 text-violet-500 flex-shrink-0" />
                       <span className="text-sm font-medium">{command.label}</span>
+                      {command.shortcut && (
+                        <span className="ml-auto text-xs text-ws-text-disabled font-mono">{command.shortcut}</span>
+                      )}
                     </button>
                   );
                 })}

@@ -96,7 +96,7 @@ export function ComposerPopoutContent({
               projectTitle: null, // Derived by hook
               contextId: context?.contextId ?? null,
               contextTitle: null, // Derived by hook
-              contextType: (context?.contextType as any) ?? 'subprocess',
+              contextType: context?.contextType ?? 'subprocess',
               parentActionId: context?.parentActionId ?? null,
               parentActionTitle: null, // Derived by hook
             }}

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import type { ProjectViewMode, RecordsViewMode, FieldsViewMode, ViewMode } from '@autoart/shared';
+import type { ProjectViewMode, RecordsViewMode, FieldsViewMode, ViewMode, ContextType } from '@autoart/shared';
 import type { ImportSession, ImportPlan } from '../api/hooks/imports';
 import {
   PROJECT_VIEW_MODE_LABELS,
@@ -124,7 +124,7 @@ interface UIState {
 interface ComposerPopoutContext {
   projectId?: string;
   contextId?: string;
-  contextType?: string;
+  contextType?: ContextType;
   parentActionId?: string;
   defaultArrangement?: string;
 }
