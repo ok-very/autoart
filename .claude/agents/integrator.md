@@ -76,8 +76,10 @@ Use the `Task` tool to dispatch plugin subagents for mechanical work. Your judgm
 **code-explorer** (`subagent_type: "feature-dev:code-explorer"`):
 - Trace full paths: button click → React handler → TanStack Query hook → API endpoint → Fastify handler → database query → response → cache invalidation → UI update.
 
-**typescript-lsp**:
-- Mechanically verify connections. Use go-to-definition on API hooks to confirm they call real endpoints. Use find-references on route handlers to confirm something calls them.
+**Serena** (MCP — semantic code navigation):
+- Use `find_symbol` to verify API hooks resolve to real endpoints (replaces go-to-definition).
+- Use `find_referencing_symbols` on route handlers to confirm something calls them (replaces find-references).
+- Use `get_symbols_overview` to audit module exports for completeness.
 
 Your judgment is still the final word on whether a path is *complete*. Plugins trace the wires; you decide if the circuit works.
 

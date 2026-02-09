@@ -68,9 +68,10 @@ Use the `Task` tool to dispatch plugin subagents for mechanical work. Your judgm
 **code-architect** (`subagent_type: "feature-dev:code-architect"`):
 - Generate module scaffolding for new Fastify modules. Evaluate against project conventions.
 
-**typescript-lsp**:
-- Verify Zod schema alignment between `shared/schemas/` and handler implementations.
-- Check that database query return types match what routes serialize to responses.
+**Serena** (MCP — semantic code navigation):
+- Use `find_symbol` to verify Zod schema alignment between `shared/schemas/` and handler implementations.
+- Use `find_referencing_symbols` to check that database query return types match what routes serialize to responses.
+- Use `get_symbols_overview` to map module exports before adding new routes or handlers.
 
 ## You Never
 

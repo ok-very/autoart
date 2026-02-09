@@ -1,0 +1,42 @@
+project_name: "autoart"
+
+languages: ["typescript", "python"]
+
+encoding: "utf-8"
+
+ignore_all_files_in_gitignore: true
+
+ignored_paths:
+  - "node_modules"
+  - "dist"
+  - "dist-intake"
+  - "dist-poll"
+  - ".next"
+  - "coverage"
+  - "*.min.js"
+  - "*.map"
+  - "pnpm-lock.yaml"
+
+read_only: false
+
+excluded_tools:
+  - execute_shell_command
+  - create_text_file
+  - delete_lines
+  - replace_lines
+  - replace_content
+  - insert_at_line
+  - replace_symbol_body
+  - insert_before_symbol
+  - insert_after_symbol
+  - rename_symbol
+  - write_memory
+  - delete_memory
+  - open_dashboard
+
+initial_prompt: >
+  This is the AutoArt monorepo: React + Fastify + PostgreSQL + Python.
+  TypeScript sources: frontend/src, backend/src, shared, packages/ui.
+  Python sources: apps/autohelper/autohelper.
+  Use find_symbol for type-level lookups and find_referencing_symbols
+  for tracing usage across the codebase.
