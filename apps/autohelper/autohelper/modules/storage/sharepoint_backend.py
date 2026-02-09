@@ -14,7 +14,7 @@ import json
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from ..runner.types import (
     ArtifactManifestEntry,
@@ -183,6 +183,7 @@ class SharePointStorageBackend:
             logger.warning(f"Malformed FileSize for artifact {item.get('Title')}")
 
         collected_at_value = item.get("CollectedAt") or None
+        collected_at_str = str(collected_at_value) if collected_at_value is not None else ""
 
         return ArtifactManifestEntry(
             artifact_id=item.get("Title", ""),
@@ -191,7 +192,7 @@ class SharePointStorageBackend:
             content_hash=item.get("ContentHash", ""),
             source_url=item.get("SourceUrl") or None,
             source_path=item.get("SourcePath") or None,
-            collected_at=collected_at_value,
+            collected_at=collected_at_str,
             mime_type=item.get("MimeType", "application/octet-stream"),
             size=file_size,
             metadata=metadata,
@@ -248,7 +249,7 @@ class SharePointStorageBackend:
             ctx.execute_query()
 
             if len(items) > 0:
-                return items[0].properties
+                return cast(dict[str, Any], items[0].properties)
             return None
 
         result = await asyncio.to_thread(_find)
@@ -394,7 +395,7 @@ class SharePointStorageBackend:
             ctx.execute_query()
 
             if len(items) > 0:
-                return items[0].properties
+                return cast(dict[str, Any], items[0].properties)
             return None
 
         collection_data = await asyncio.to_thread(_load)

@@ -3,8 +3,9 @@
 import logging
 from pathlib import Path
 from threading import Lock
+from typing import Any
 
-from watchdog.observers import Observer
+from watchdog.observers import Observer as WatchdogObserver
 
 from .handlers import InvoiceWatchHandler
 from .schemas import (
@@ -22,7 +23,7 @@ class InvoiceWatchService:
     """Manages filesystem watchers for project invoice directories."""
 
     def __init__(self) -> None:
-        self._observers: dict[str, Observer] = {}  # project_id -> Observer
+        self._observers: dict[str, Any] = {}  # project_id -> Observer
         self._handlers: dict[str, InvoiceWatchHandler] = {}
         self._event_queues: dict[str, list[FileEvent]] = {}
         self._lock = Lock()
@@ -53,7 +54,7 @@ class InvoiceWatchService:
             )
 
             # Create and start observer
-            observer = Observer()
+            observer = WatchdogObserver()
             observer.schedule(handler, str(root), recursive=True)
             observer.start()
 

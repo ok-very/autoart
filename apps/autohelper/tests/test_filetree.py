@@ -1,6 +1,7 @@
 """Tests for the filetree module."""
 
 from pathlib import Path
+from typing import Any
 
 from fastapi.testclient import TestClient
 
@@ -13,7 +14,7 @@ class TestFiletreeService:
     """Test filetree service logic."""
 
     def test_get_tree_returns_empty_for_no_index(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """get_tree should return empty roots when no files are indexed."""
         service = FiletreeService()
@@ -26,7 +27,7 @@ class TestFiletreeService:
             # But we just check no crash
 
     def test_get_tree_builds_hierarchy_from_files(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """get_tree should build correct hierarchy from indexed files."""
         # Create test file structure
@@ -54,7 +55,7 @@ class TestFiletreeService:
         assert any("root-file.txt" in p for p in all_paths)
         assert any("document.pdf" in p for p in all_paths)
 
-    def test_get_tree_respects_max_depth(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_get_tree_respects_max_depth(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """get_tree should truncate at max_depth."""
         # Create deep structure
         deep = temp_dir / "a" / "b" / "c" / "d" / "e"
@@ -75,7 +76,7 @@ class TestFiletreeService:
         assert not any("deep.txt" in p for p in all_paths)
 
     def test_get_tree_filters_by_extension(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """get_tree should filter by extension."""
         (temp_dir / "doc.pdf").write_text("pdf")
@@ -98,7 +99,7 @@ class TestFiletreeService:
         assert not any("notes.txt" in p for p in all_paths)
         assert not any("image.png" in p for p in all_paths)
 
-    def test_get_tree_filters_by_root_id(self, client: TestClient, temp_dir: Path, test_db) -> None:
+    def test_get_tree_filters_by_root_id(self, client: TestClient, temp_dir: Path, test_db: Any) -> None:
         """get_tree should filter by root_id."""
         (temp_dir / "file.txt").write_text("content")
 
@@ -118,7 +119,7 @@ class TestFiletreeService:
         assert len(result) == 1
         assert result[0].is_dir is True
 
-    def _collect_paths(self, node) -> list[str]:
+    def _collect_paths(self, node: Any) -> list[str]:
         """Recursively collect all paths from a tree node."""
         paths = [node.path]
         if node.children:
@@ -131,7 +132,7 @@ class TestFiletreeEndpoint:
     """Test filetree API endpoints."""
 
     def test_filetree_endpoint_returns_200(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """GET /filetree should return 200."""
         (temp_dir / "test.txt").write_text("test")
@@ -147,7 +148,7 @@ class TestFiletreeEndpoint:
         assert isinstance(data["roots"], list)
 
     def test_filetree_endpoint_with_extensions(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """GET /filetree with extensions param should filter."""
         (temp_dir / "doc.pdf").write_text("pdf")
@@ -163,7 +164,7 @@ class TestFiletreeEndpoint:
         assert "roots" in data
 
     def test_filetree_endpoint_with_max_depth(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """GET /filetree with max_depth param should work."""
         response = client.get("/filetree?max_depth=5")
@@ -171,7 +172,7 @@ class TestFiletreeEndpoint:
         assert response.status_code == 200
 
     def test_filetree_endpoint_with_root_id(
-        self, client: TestClient, temp_dir: Path, test_db
+        self, client: TestClient, temp_dir: Path, test_db: Any
     ) -> None:
         """GET /filetree with root_id param should filter to one root."""
         (temp_dir / "file.txt").write_text("content")

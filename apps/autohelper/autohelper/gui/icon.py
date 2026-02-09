@@ -18,6 +18,7 @@ Menu:
 import json
 import threading
 import tkinter as tk
+from typing import Any
 from tkinter import messagebox, simpledialog
 import urllib.request
 from collections.abc import Callable
@@ -28,6 +29,7 @@ from pystray import MenuItem as item
 
 from autohelper.gui.popup import open_settings_in_browser
 from autohelper.shared.logging import get_logger
+from autohelper.sync.connection_state import ConnectionState, ConnectionStateManager
 
 logger = get_logger(__name__)
 
@@ -40,8 +42,8 @@ def _show_dialog(title: str, message: str, kind: str = "error") -> None:
     # Set icon for any child windows (including the messagebox)
     icon_image = _make_icon(wearing_hat=False)
     photo = ImageTk.PhotoImage(icon_image)
-    root.iconphoto(True, photo)
-    root._icon_photo = photo  # prevent GC
+    root.iconphoto(True, photo)  # type: ignore[arg-type]
+    root._icon_photo = photo  # type: ignore[attr-defined]  # prevent GC
 
     # Show the dialog (messagebox handles its own focus)
     if kind == "info":
@@ -137,23 +139,18 @@ class AutoHelperIcon:
         self.stop_callback = stop_callback
         self.icon: pystray.Icon | None = None
         self._hat_on = False
-        self._paired = self._check_paired()
+        self._connection_state = ConnectionStateManager().state
         self._stop_polling = threading.Event()
         self._setup_icon()
 
-    @staticmethod
-    def _check_paired() -> bool:
-        """Check if a link key is present in config."""
-        try:
-            from autohelper.config.store import ConfigStore
-
-            cfg = ConfigStore().load()
-            has_key = bool(cfg.get("autoart_link_key"))
-            logger.debug("_check_paired: has_key=%s", has_key)
-            return has_key
-        except Exception:
-            logger.exception("_check_paired failed")
-            return False
+    def _get_connection_label(self, _: Any) -> str:
+        """Return the connection status label for the tray menu."""
+        if self._connection_state == ConnectionState.UNPAIRED:
+            return "Not paired"
+        elif self._connection_state == ConnectionState.PAIRED_CONNECTED:
+            return "Paired (Connected)"
+        else:  # PAIRED_DISCONNECTED
+            return "Paired (Disconnected)"
 
     # ── Icon setup ───────────────────────────────────────────────────
 
@@ -167,19 +164,19 @@ class AutoHelperIcon:
                 enabled=False,
             ),
             item(
-                lambda _: "Paired" if self._paired else "Not paired",
+                self._get_connection_label,
                 lambda *_: None,
                 enabled=False,
             ),
             item(
                 "Pair...",
                 self._on_pair,
-                visible=lambda _: not self._paired,
+                visible=lambda _: self._connection_state == ConnectionState.UNPAIRED,
             ),
             item(
                 "Unpair",
                 self._on_unpair,
-                visible=lambda _: self._paired,
+                visible=lambda _: self._connection_state != ConnectionState.UNPAIRED,
             ),
             pystray.Menu.SEPARATOR,
             item("Open Settings", self._on_open_settings),
@@ -193,7 +190,7 @@ class AutoHelperIcon:
     def _on_pair(self, icon: pystray.Icon, menu_item: pystray.MenuItem) -> None:
         """Open a dialog to enter the pairing code, then redeem it."""
         # Run tkinter dialog in a separate thread to avoid blocking pystray
-        def do_pair():
+        def do_pair() -> None:
             root = None
             try:
                 logger.info("Opening pairing dialog...")
@@ -203,8 +200,8 @@ class AutoHelperIcon:
                 # Set icon for the dialog
                 icon_image = _make_icon(wearing_hat=False)
                 photo = ImageTk.PhotoImage(icon_image)
-                root.iconphoto(True, photo)
-                root._icon_photo = photo  # prevent GC
+                root.iconphoto(True, photo)  # type: ignore[arg-type]
+                root._icon_photo = photo  # type: ignore[attr-defined]  # prevent GC
 
                 # Show pairing dialog
                 code = simpledialog.askstring(
@@ -276,7 +273,9 @@ class AutoHelperIcon:
                 except Exception as exc:
                     logger.warning("Failed to start backend poller: %s", exc)
 
-                self._paired = True
+                # Update connection state
+                ConnectionStateManager().set_state(ConnectionState.PAIRED_CONNECTED)
+                self._connection_state = ConnectionState.PAIRED_CONNECTED
                 if self.icon:
                     self.icon.update_menu()
 
@@ -337,7 +336,7 @@ class AutoHelperIcon:
                 logger.warning("Failed to stop backend poller: %s", exc)
 
             # Reinit context service in background
-            def reinit():
+            def reinit() -> None:
                 try:
                     from autohelper.modules.context.service import ContextService
                     ContextService().reinit_clients()
@@ -346,7 +345,9 @@ class AutoHelperIcon:
 
             threading.Thread(target=reinit, daemon=True).start()
 
-            self._paired = False
+            # Update connection state
+            ConnectionStateManager().set_state(ConnectionState.UNPAIRED)
+            self._connection_state = ConnectionState.UNPAIRED
             if self.icon:
                 self.icon.update_menu()
             logger.info("Unpaired via tray menu")
@@ -360,13 +361,13 @@ class AutoHelperIcon:
         print("Stopping AutoHelper...")
         self._stop_polling.set()
         icon.stop()
-        if self.stop_callback:
+        if self.stop_callback is not None:
             self.stop_callback()
 
     # ── Job polling ──────────────────────────────────────────────────
 
     def _poll_loop(self) -> None:
-        """Poll job status + pairing every 3 s, update tray accordingly."""
+        """Poll job status + connection state every 3 s, update tray accordingly."""
         while not self._stop_polling.wait(3):
             menu_dirty = False
 
@@ -381,9 +382,10 @@ class AutoHelperIcon:
                     self.icon.icon = _make_icon(wearing_hat=active, running=active)
                 menu_dirty = True
 
-            paired = self._check_paired()
-            if paired != self._paired:
-                self._paired = paired
+            # Read connection state from singleton
+            current_state = ConnectionStateManager().state
+            if current_state != self._connection_state:
+                self._connection_state = current_state
                 menu_dirty = True
 
             if menu_dirty and self.icon:

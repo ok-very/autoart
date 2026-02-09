@@ -3,6 +3,7 @@
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -35,7 +36,7 @@ def test_settings(temp_dir: Path) -> Settings:
 
 
 @pytest.fixture
-def test_db(test_settings: Settings):
+def test_db(test_settings: Settings) -> Generator[Any, None, None]:
     """Initialize test database with migrations."""
     # Initialize settings so services use test settings
     init_settings(test_settings)
@@ -47,7 +48,7 @@ def test_db(test_settings: Settings):
 
 
 @pytest.fixture
-def client(test_settings: Settings, test_db) -> Generator[TestClient, None, None]:
+def client(test_settings: Settings, test_db: Any) -> Generator[TestClient, None, None]:
     """Create test client with initialized database."""
     app = build_app(test_settings)
     with TestClient(app) as c:

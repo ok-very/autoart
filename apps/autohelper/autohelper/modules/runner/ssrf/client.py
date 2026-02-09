@@ -5,13 +5,14 @@ Provides an HTTP client wrapper that validates URLs and redirects for SSRF prote
 """
 
 import types
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from urllib.parse import urljoin
 
 from .validation import is_safe_url
 
 if TYPE_CHECKING:
     import httpx
+    from httpx import Response
 
 # Lazy import for optional httpx dependency
 _httpx = None
@@ -92,6 +93,6 @@ class SSRFProtectedClient:
                     continue
 
                 # Not a redirect, return response
-                return response
+                return cast("Response", response)
 
             raise ValueError(f"Too many redirects (max {max_redirects})")
