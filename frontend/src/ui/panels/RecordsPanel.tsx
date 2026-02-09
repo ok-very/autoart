@@ -41,7 +41,7 @@ export function RecordsPanel() {
     };
 
     return (
-        <div className="flex flex-col h-full bg-ws-panel-bg overflow-hidden">
+        <div className="flex flex-col h-full bg-ws-bg overflow-hidden">
             {/* Header with title and Definitions/Instances toggle */}
             <div className="flex items-center justify-between px-4 py-2 border-b border-ws-panel-border bg-ws-panel-bg">
                 <RegistryPageHeader
@@ -71,22 +71,20 @@ export function RecordsPanel() {
                 <ResizeHandle direction="right" onResize={handleSidebarResize} />
 
                 {/* Main Content Area */}
-                <div className="flex-1 overflow-hidden flex flex-col">
-                    <div className="flex-1 overflow-hidden">
-                        {activeTab === 'definitions' ? (
-                            <div className="h-full flex items-center justify-center">
-                                <p className="text-sm text-ws-text-secondary">
-                                    Select a definition from the sidebar to view its schema.
-                                </p>
-                            </div>
-                        ) : (
-                            <RecordView
-                                definitionId={selectedDefinitionId}
-                                onDefinitionChange={(id) => setSelectedDefinitionId(id)}
-                                className="h-full"
-                            />
-                        )}
-                    </div>
+                <div className="flex-1 bg-ws-panel-bg overflow-hidden">
+                    {activeTab === 'definitions' ? (
+                        <div className="h-full flex items-center justify-center">
+                            <p className="text-sm text-ws-text-secondary">
+                                Select a definition from the sidebar to view its schema.
+                            </p>
+                        </div>
+                    ) : (
+                        <RecordView
+                            definitionId={selectedDefinitionId}
+                            onDefinitionChange={(id) => setSelectedDefinitionId(id)}
+                            className="h-full"
+                        />
+                    )}
                 </div>
             </div>
         </div>

@@ -51,9 +51,10 @@ Use the `Task` tool to dispatch plugin subagents for mechanical work. Your judgm
 - Trace state flow through Zustand stores, TanStack Query hooks, and component props before modifying shared state.
 - Map which components consume a store slice before changing its shape.
 
-**typescript-lsp**:
-- Verify prop types when connecting components to new data sources.
-- Check that API hook return types match what components destructure from them.
+**Serena** (MCP — semantic code navigation):
+- Use `find_symbol` to verify prop types when connecting components to new data sources.
+- Use `find_referencing_symbols` to check what consumes a hook or store slice before changing its shape.
+- Use `get_symbols_overview` to understand component exports and interface contracts.
 
 **frontend-design** — **NEVER** use for `--ws-*` workspace surfaces. DESIGN.md and `variables.css` govern workspace aesthetics. Only use for `--pub-*` public/client-facing surfaces, and only with explicit user request.
 

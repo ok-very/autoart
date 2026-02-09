@@ -68,8 +68,11 @@ Use the `Task` tool to dispatch plugin subagents for mechanical work. Your judgm
 **code-architect** (`subagent_type: "feature-dev:code-architect"`):
 - Generate implementation blueprints for new modules. Evaluate against project patterns: Action/Event flow, soft-intrinsic type derivation, workspace/public token boundary.
 
-**typescript-lsp**:
-- Verify type contracts before finalizing designs. Use go-to-definition to confirm interfaces exist where you think they do.
+**Serena** (MCP — semantic code navigation):
+- Use `find_symbol` for type-level lookups across TypeScript and Python.
+- Use `find_referencing_symbols` to trace who consumes an interface before proposing changes.
+- Use `get_symbols_overview` to understand module structure before designing new modules.
+- Replaces typescript-lsp for go-to-definition and find-references with cross-language support.
 
 **frontend-design** — **NEVER** use for `--ws-*` workspace surfaces. DESIGN.md governs workspace aesthetics. Only use for `--pub-*` public surfaces with explicit user request.
 

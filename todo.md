@@ -1,14 +1,13 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-08*
-*Strategy: Foundation phases 0-2 complete (see [roadmap.md](roadmap.md) for architectural history). Phase 3 (import pipeline) complete. Phase 4/4B (BFA integration, #437/#438) complete. Phase 5 (Finance Foundation) complete (PRs #456-458). Phase 6 (Finance Surfaces) next. This file drives active priorities.*
+*Last Updated: 2026-02-09*
+*Strategy: Foundation phases 0-6 complete (see [roadmap.md](roadmap.md) for architectural history). Phase 7 (Platform Polish & Integrations) active — parallel work streams, no dependency chain. This file drives active priorities.*
 
 ## Bug List
 
 **Active — unphased:**
 - **Project binding in workspaces is implementation theater:** Phase 1.2 wired WorkspaceContext consumption, but panels don't actually use the bound project ID. UI shows binding UI, backend may store it, but the connection between "user binds project to workspace" and "panels render that project's data" is broken or never existed. Trace the full path: workspace save → project binding persistence → panel mount → data fetch with bound ID.
-- **Theme assignment coupled to workspaces — meaningless complexity:** Each workspace carries its own theme, but themes are undifferentiated (Compact, Minimal, Floating, Default are essentially identical). Per-workspace theme assignment adds complexity without payoff. Either decouple theme selection from workspace identity (global user preference), or differentiate themes first per DESIGN.md variant guidance. Got muddied in during the Phase 1 workspace rewrite.
-- **UnifiedComposerBar not rendering on Project page:** Phase 3.6 wired vocabulary suggestions into UnifiedComposerBar, but the bar doesn't appear in the accessibility tree on ProjectPage despite being mounted with `visible={composerBarVisible}` (defaults to true). The legacy ComposerView renders in the Composer nav panel instead. Related to Phase 7 "Composer bar as sleek dockview popout window" item — bar is currently pinned to ProjectPage as fixed-position overlay (wrong place). Needs investigation: why isn't it rendering, and should it be a proper dockview panel first before debugging visibility.
+- **Composer popout Phase 3 remaining:** Phase 1 infrastructure complete (PR #470). Phase 2 done (in-flight): ProjectWorkflowView uses popout, CommandPalette "New Action" command, Header button opens popout, workspace context fallback wired. Phase 3 revised: delete UnifiedComposerBar (dead code), keep ComposerView as expanded composer panel (deep compose: reference slots, context selection, agent routing), re-wire `composer-workbench` in MainLayout COMPONENTS. Future: migrate ComposerView internals to `useComposerForm` + `@autoart/ui` components.
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
 - **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
@@ -21,24 +20,23 @@
 - ~~`/link-action` 500 on duplicate~~ — Checks for existing link before insert, returns 200 with existing row
 - ~~Vocabulary upsert NULL adjective duplicates~~ — `adjective: vocab.adjective ?? ''` normalizes before insert
 
-*Open logic bugs:*
-- **Classification cache hash ignores definition schema (PR #445):** `deriveContentHash()` only hashes `def.id` + `def.name`. Schema changes (field edits, constraint updates) don't invalidate cache → stale classifications served for up to 1 hour. Fix: hash full definition or include `updatedAt`.
-- **`useLinkAction` wrong response type (PR #444):** Hook declares `api.post<ActionLinksResponse>` (array wrapper) but backend returns single link object. Latent type mismatch — no current consumer reads `.data`, but will break if anyone does.
-- **`entityType` cast bypasses validation (PR #439):** `InterpretItemRequestSchema` accepts `z.string().optional()` for `entityType` then asserts to `ImportPlanItem['entityType']` union — any string passes through without runtime check.
+*Resolved logic bugs (confirmed Feb 9):*
+- ~~Classification cache hash ignores definition schema~~ — `deriveContentHash()` now hashes `def.schema_config` (line 81) and uses 128-bit hash (32 hex chars). Fixed in PR #458.
+- ~~`useLinkAction` wrong response type~~ — Hook already uses `api.post<ImportActionLink>` (single object), matching backend response. Stale bug entry.
+- ~~`entityType` cast bypasses validation~~ — Schema now uses `z.enum([...])`, validates at parse time. Resolved.
 
-*Visual/UX:*
-- **Double border in Fields panel (PR #440):** Both sidebar wrapper (`FieldsPanel.tsx:72`) and `FieldsMillerColumnsView` root add `border-r border-ws-panel-border` — double divider line.
-- **Actions sidebar shows record stats (PR #440):** "All Actions" row displays `useRecordStats()` total which only counts `DataRecord` instances. Per-definition rows always show "0 instances". Should hide counts or use action-specific stats for non-record kinds.
-- **ImportLinkDialog available count mismatch (PR #444):** Header shows "Items (X available)" filtering linked items, but list renders all items including linked ones.
+*Visual/UX (fixed in Phase 7 Stream 1):*
+- ~~Double border in Fields panel~~ — Removed duplicate `border-r` from sidebar wrapper.
+- ~~Actions sidebar shows record stats~~ — DefinitionListSidebar now hides counts for non-record definitions.
+- ~~ImportLinkDialog available count mismatch~~ — Header now shows "X total, Y available" matching list contents.
 
 **Deferred:**
 - AutoHelper sessions lost on backend restart (#340) — link key IS persisted in `connection_credentials` DB table. Issue is tray icon staleness — needs design decision, not a bugfix.
 
 **UX polish:**
 - "Import" tab hides in overflow menu despite ample space in tab bar
-- "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong — remove the feature
 - Emoji/icon selector overlay — search doesn't work; consider switching to Phosphor Icons
-- Placeholder themes: Compact, Minimal, Floating, and Default still essentially identical — differentiate per DESIGN.md theme variant guidance. Glass and neumorphic variants pending implementation (see Housekeeping).
+- ~~Placeholder themes~~ — Promoted to Phase 7 Workspace polish (theme alignment stage).
 - Project View: "New project" dropdown UI broken under "Your projects" section — formatting not clean
 
 **Confirmed resolved (32+ items):** See Recently Closed section for PR references. Covers: import wizard stale plan regeneration (PR #434), ClassificationRow atom migration (PR #435), Phase 0 stack (React Compiler memo, Classification Panel partial save, preview servers, ExecutionControls API client, unused vars), Phase 1 stack (workspace foundation: context contract, panel consumption, Desk workspace, CenterView routing, store consolidation, workspace save, custom lifecycle, sidebar hints), Phase 2 stack (entity kind resolver, import/overlay migrations, seed through Composer — subprocess/stage projections now populate correctly, RecordDefinitionSchema phantom field removed), import hierarchy labels, connector sidebar escape hatch, intake record binding UUID, workspace save prompt timing, `[object Object]` field rendering, poll editor, poll public URLs, finance overlay contacts, 401 cascade, AutoHelper settings (now uses backend bridge), Google/Monday OAuth, and 18 earlier items (Monday null group_title, poll editor granularity, dropdown transparency, project spawn, Miller Columns, DOMPurify build, SelectionInspector close, panel spawner glassmorphism, AutoHelper tray pairing, applications dropdown bleed, panel spawn visibility, tab accent, action definitions seed, calendar link, header spacing, `/pair` async I/O, disconnect spinner).
@@ -147,7 +145,7 @@
 
 **Previously Phase 4.** Renumbered to accommodate BFA integration. Independent of Phase 4/4B -- can run in parallel.
 
-**Status:** Partial — computed fields complete (PRs #456-458 merged). Remaining: invoice generation, vendor bills, budgets.
+**Status: Complete** — Computed fields (PRs #456-458), finance surfaces, export templates all merged.
 
 **Scope:**
 
@@ -167,7 +165,9 @@
 
 ---
 
-## Phase 6: Finance Surfaces & Integration
+## Phase 6: Finance Surfaces & Integration ✓
+
+**Status: Complete** — PRs #460-464 merged (Feb 8, 2026). Finance events in Composer, overlay views, Handlebars invoice template, preview endpoint, AutoHelper invoice watchdog.
 
 *Wire finance data into the UI, Composer event log, and export pipeline. Depends on Phase 5 data layer being solid.*
 
@@ -201,9 +201,10 @@
 |---|-------|----------|
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
-| -- | Composer bar as sleek dockview popout window (replace modal) | UX |
+| -- | **Composer dual-surface:** Popout (quick declare) complete. ComposerView retained as expanded composer panel — future: migrate to `useComposerForm`, add agent selection/routing, `@autoart/ui` components, `--ws-*` tokens. UnifiedComposerBar deleted. | UX |
 | -- | Consolidate Calendar/Gantt/future view expansions: link Application views to Project View segmented equivalents; cross-project filter/overlay | Feature |
 | -- | Poll editor: support different/multiple time block selections per day | Polls |
+| -- | **Theme alignment stage:** Design review + development of all workspace themes. Existing themes (Default, Compact, Minimal, Floating) are near-identical placeholders — differentiate per DESIGN.md variant guidance (solid, floating, minimal, glass, neumorphic). SegmentedControl variants landed in PR #468; full theme modules need registration in `frontend/src/workspace/themes/`. Requires design agent review of palette, density, and variant axes before implementation. | Themes |
 
 **Intake & records:**
 
@@ -225,7 +226,7 @@
 | -- | **AutoHelper local-only config:** Roots, DB path, garbage collection settings should be stored locally with AutoHelper, not in global DB | AutoHelper |
 | -- | **AutoHelper "Rebuild Index" is theater:** Carries stale DB path, hangs when triggered -- needs real backend handler or correct path | AutoHelper |
 
-**Note:** AutoHelper settings bridge (was P2) is **resolved** -- frontend now correctly uses backend bridge endpoints. See [roadmap.md](roadmap.md#autohelper-status-resolved).
+**Note:** AutoHelper settings bridge (was P2) is **resolved** -- frontend now correctly uses backend bridge endpoints. See [roadmap.md](roadmap.md).
 
 **Note:** Workspace issues #179-182 closed on GitHub -- absorbed into Phase 1 (PRs #421-429).
 
@@ -235,21 +236,21 @@
 
 | File | Issue | Phase |
 |------|-------|-------|
-| Records view | Align layout with Fields view: definitions filter + search bar, no redundant dropdown title | — |
-| `packages/ui/src/molecules/SegmentedControl.tsx` | Implement glass theme (plus remove it from the non-glass theme); also add neumorphic theme for funsies | — |
-| Parchment theme | Text color bleeding into forms (`--pub-*` inheriting `--ws-*` parchment colors); Serif 4 not applied to workspace at all yet — only shows up in forms (ironic). Add moderate Serif 4 usage to parchment theme per DESIGN.md | — |
+| ~~Records view~~ | ~~Align layout with Fields view~~ — Fixed in Phase 7 Stream 4 (PR #467) | — |
+| ~~`SegmentedControl.tsx`~~ | ~~Glass + neumorphic variants~~ — Added in Phase 7 Stream 2 (PR #468) | — |
+| ~~Parchment theme~~ | ~~Serif 4 + badge tokens~~ — Source Serif 4 headings + `--ws-badge-*` tokens in Phase 7 Stream 2 (PR #468) | — |
 | Intake forms + poll deployments | Need verification: localhost vs production endpoint config | — |
 | Future outbound subdomains | `polls.autoart.work`, `forms.autoart.work` endpoint routing not wired | — |
 | SelectionInspector / Record view | Handle `definition_kind` system for filtering/classification — resolver exists but inspector doesn't use it yet | — |
 | Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate | — |
 | Selection editor | "Plan" link badge system could just be a pointer to the active window name / binding group color | — |
-| `UniversalTableCore.tsx` + composites | All tables div-based with `role` attributes — migrate to Table atom primitives from PR #350 | — |
-| `packages/ui/src/atoms/Badge.tsx` | Badge variant colors use domain-semantic Tailwind colors — needs separate approach (not chrome tokens) | — |
+| ~~`UniversalTableCore.tsx`~~ | ~~Table atom migration~~ — Cancelled: UniversalTableCore is a flexbox grid engine (resize, sort, features). Div-based layout is intentional, not a bug. Table atom is for simple semantic tables. | — |
+| ~~`Badge.tsx`~~ | ~~Badge variant colors~~ — Migrated to `--ws-badge-*` CSS tokens in Phase 7 Stream 2 (PR #468) | — |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` — type declared and filtered but no distinct UI treatment (icon, section, color) | — |
 | `ExportMenu.tsx` | `invoiceNumber` sent to PDF/DOCX endpoints — backend should consume for Content-Disposition filenames |
-| `vocabulary.routes.ts` | Whitespace-only prefix passes `z.string().min(1)` — add `.trim()` before `.min(1)` (PR #441) |
+| ~~`vocabulary.routes.ts`~~ | ~~Whitespace-only prefix~~ — `.trim()` added before `.min(1)` (Phase 7 Stream 1) |
 | `vocabulary` migration 004 | Composite btree index on `(verb, noun)` won't be used for `ILIKE ... OR ILIKE` prefix queries — consider separate `text_pattern_ops` indexes per column (PR #441) |
-| `classification-cache.ts` | Hash truncated to 16 hex chars (64-bit) — collision = wrong result served, not a miss. Use full hash or 32+ chars (PR #445) |
+| ~~`classification-cache.ts`~~ | ~~Hash truncated to 16 hex chars~~ — Already 32 chars (128-bit) and hashes `schema_config`. Resolved. |
 | `todo.md` | Broken anchor `#autohelper-status-resolved` — roadmap heading changed to "AutoHelper Status (Resolved, Evolving)" (PR #442) | — |
 
 **Low priority (CodeAnt #332 nitpicks):**
@@ -257,8 +258,8 @@
 | File | Issue |
 |------|-------|
 | `packages/ui/src/atoms/Card.tsx` | Tailwind arbitrary value parsing: `theme(...)` nested inside `var(...)` fallback may be dropped by some JIT parsers |
-| `frontend/src/ui/sidebars/ProjectSidebar.tsx` | Section headings (`<p>` at lines 78, 138) lack proper heading semantics for assistive tech |
-| `frontend/src/intake/components/blocks/*.tsx` | Email, Phone, Time inputs missing ARIA attributes (`aria-invalid`, `aria-describedby`, `aria-required`) |
+| ~~`ProjectSidebar.tsx`~~ | ~~Section headings `<p>` → `<h3>`~~ — Fixed in Phase 7 Stream 5 (PR #469) |
+| ~~`intake/blocks/*.tsx`~~ | ~~Missing ARIA attributes~~ — Added `aria-invalid`, `aria-describedby`, `aria-required` in Phase 7 Stream 5 (PR #469) |
 
 ---
 
@@ -280,7 +281,10 @@
 
 ## In-Flight (Awaiting Review)
 
-*None currently.*
+| PRs | Description |
+|-----|-------------|
+| #466-470 | **Phase 7 polish stack (Streams 1-6, Feb 9):** Bug fixes (double border, sidebar stats, import dialog, vocab trim), Records/Actions panel layout alignment, Parchment Serif 4 + Badge tokens + SegmentedControl variants (glass/neumorphic), accessibility (ARIA attributes, heading semantics), dead code removal (ProjectPage, ComposerPage), Composer headless popout Phase 1 (portal overlay, useComposerForm hook, arrangement picker, schema fields, Ctrl+Shift+N shortcut). Table migration cancelled (UniversalTableCore flexbox engine is intentional). |
+| WIP | **Stream 7: Composer Popout Phase 2 + revised Phase 3:** Phase 2 complete (ProjectWorkflowView popout, CommandPalette command, Header button, workspace context fallback). Phase 3 revised: delete UnifiedComposerBar, keep ComposerView as expanded composer panel, re-wire `composer-workbench` in MainLayout. |
 
 ---
 
