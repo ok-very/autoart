@@ -21,6 +21,15 @@ export type { ContextIndicatorProps, DerivedContext } from './ContextIndicator';
 export { EventPreview, buildPendingEvents } from './EventPreview';
 export type { EventPreviewProps, PendingEvent } from './EventPreview';
 
+// Composer popout
+export { ComposerPopout } from './ComposerPopout';
+export { ComposerPopoutContent } from './ComposerPopoutContent';
+export type { ComposerPopoutContentProps } from './ComposerPopoutContent';
+
+// Composer form hook
+export { useComposerForm } from './useComposerForm';
+export type { UseComposerFormOptions, ComposerFormState } from './useComposerForm';
+
 // Legacy exports (deprecated - prefer UnifiedComposerBar for new usage)
 export { ComposerView, InlineComposer } from './ComposerView';
 export type { ComposerViewProps, InlineComposerProps } from './ComposerView';

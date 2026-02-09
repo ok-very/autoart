@@ -19,6 +19,9 @@ import { useWorkspaceStore } from './workspaceStore';
 // Re-export for compatibility if needed, or prefer importing from types/ui
 export type { Selection, UIPanels, InspectorMode, InspectorTabId };
 
+// Composer popout types
+export type { ComposerPopoutContext };
+
 // Re-export view mode types and utilities from shared schemas
 export type { ProjectViewMode, RecordsViewMode, FieldsViewMode, ViewMode };
 export { PROJECT_VIEW_MODE_LABELS, RECORDS_VIEW_MODE_LABELS, FIELDS_VIEW_MODE_LABELS };
@@ -110,6 +113,20 @@ interface UIState {
   commandPaletteOpen: boolean;
   openCommandPalette: () => void;
   closeCommandPalette: () => void;
+
+  // Composer popout state
+  composerPopoutVisible: boolean;
+  composerPopoutContext: ComposerPopoutContext | null;
+  openComposerPopout: (context?: ComposerPopoutContext) => void;
+  closeComposerPopout: () => void;
+}
+
+interface ComposerPopoutContext {
+  projectId?: string;
+  contextId?: string;
+  contextType?: string;
+  parentActionId?: string;
+  defaultArrangement?: string;
 }
 
 export const useUIStore = create<UIState>()(
@@ -202,6 +219,12 @@ export const useUIStore = create<UIState>()(
       commandPaletteOpen: false,
       openCommandPalette: () => set({ commandPaletteOpen: true }),
       closeCommandPalette: () => set({ commandPaletteOpen: false }),
+
+      // Composer popout state
+      composerPopoutVisible: false,
+      composerPopoutContext: null,
+      openComposerPopout: (context) => set({ composerPopoutVisible: true, composerPopoutContext: context ?? null }),
+      closeComposerPopout: () => set({ composerPopoutVisible: false, composerPopoutContext: null }),
     }),
     {
       name: 'ui-storage',
