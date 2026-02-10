@@ -18,7 +18,7 @@ import { API_BASE } from '../../../api/client';
 
 export function PackageDetailView() {
     const { activePackageId, setActivePackage } = useExportQueueStore();
-    const { data: pkg, isLoading } = useExportPackage(activePackageId);
+    const { data: pkg, isLoading, isError } = useExportPackage(activePackageId);
     const deletePackage = useDeleteExportPackage();
 
     const handleDelete = async () => {
@@ -33,6 +33,17 @@ export function PackageDetailView() {
                 <div className="text-center">
                     <FileText size={32} className="mx-auto text-ws-muted mb-3" />
                     <Text size="sm" color="muted">Select a package from the queue</Text>
+                </div>
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                    <AlertCircle size={20} className="mx-auto text-[var(--ws-color-error)] mb-2" />
+                    <Text size="sm" color="muted">Failed to load package</Text>
                 </div>
             </div>
         );

@@ -79,6 +79,8 @@ export async function packageRoutes(app: FastifyInstance) {
     // POST /:id/projection — Generate projection
     app.post('/:id/projection', async (request, reply) => {
         const { id } = PackageIdParamSchema.parse(request.params);
+        const exists = await packagesService.getPackage(id);
+        if (!exists) return reply.status(404).send({ error: 'Package not found' });
         const projection = await packagesService.generatePackageProjection(id);
         return reply.send({ projection });
     });
@@ -86,6 +88,8 @@ export async function packageRoutes(app: FastifyInstance) {
     // POST /:id/execute — Execute export
     app.post('/:id/execute', async (request, reply) => {
         const { id } = PackageIdParamSchema.parse(request.params);
+        const exists = await packagesService.getPackage(id);
+        if (!exists) return reply.status(404).send({ error: 'Package not found' });
         const result = await packagesService.executePackageExport(id);
         return reply.send(result);
     });
