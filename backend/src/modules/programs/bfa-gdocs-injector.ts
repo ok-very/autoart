@@ -279,6 +279,11 @@ function formatProjectContent(
         lines.push('');
     }
 
+    // Phase (canonical phase name from interpreter pipeline)
+    if (project.statusBlock.stage) {
+        lines.push(`Phase: ${project.statusBlock.stage}`);
+    }
+
     // Status
     if (options.includeStatusNotes) {
         if (project.statusBlock.projectStatusText) {
@@ -290,7 +295,7 @@ function formatProjectContent(
         if (project.statusBlock.nextStepsNarrative) {
             lines.push(project.statusBlock.nextStepsNarrative);
         }
-        if (project.statusBlock.projectStatusText || project.statusBlock.bfaProjectStatusText) {
+        if (project.statusBlock.stage || project.statusBlock.projectStatusText || project.statusBlock.bfaProjectStatusText) {
             lines.push('');
         }
     }
@@ -321,6 +326,7 @@ function formatProjectContent(
 
 /** Known label prefixes to bold in the output */
 const LABEL_PREFIXES = [
+    'Phase:',
     'Selection Panel:',
     'Shortlist:',
     'Selected Artist:',
