@@ -69,7 +69,7 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| — | **TanStack Table integration:** Add `@tanstack/table-core` as headless logic layer for filtering, sorting, column visibility across all table surfaces. Already have `@tanstack/react-virtual`. Wire into DataTable and UniversalTableCore. Goal: filtering built into the atoms. | Tables |
+| — | **Filtering, sorting, column visibility:** Headless `@tanstack/react-table` as state machine for all table surfaces + `match-sorter` for sidebar lists. Phase 0 (foundation) done — `useTableState` hook, `FilterChip` atom, `FilterBar` molecule, `ColumnPicker` moved to `@autoart/ui`, filter function registry. 4 phases remain: (1) DataTableFlat migration, (2) sidebar list filtering, (3) remaining core tables, (4) standalone tables. Roadmap: [`docs/roadmap-filtering.md`](docs/roadmap-filtering.md) | Tables |
 | — | **Export Workbench P4:** E2E verification — full flow per format: select → session → projection → preview → export → download. Verify finance exports unbroken. *(P5 target registry cleanup done — dead registry deleted, switch is canonical.)* | Export |
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |

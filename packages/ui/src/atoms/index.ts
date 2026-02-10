@@ -6,6 +6,7 @@ export * from './Checkbox';
 export * from './ColorPicker';
 export * from './EmojiPicker';
 export * from './ErrorBoundary';
+export * from './FilterChip';
 export * from './IconButton';
 export * from './Inline';
 export * from './InlineError';
