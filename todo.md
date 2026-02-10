@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-09*
+*Last Updated: 2026-02-10*
 *Strategy: Foundation phases 0–6 complete (see [roadmap.md](roadmap.md) for architectural history). Active work tracked by priority tier: P0 (blocking), P1 (next up), P2 (near-term), P3 (backlog). This file drives active priorities.*
 
 ## Bug List
@@ -55,7 +55,6 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| — | **Export Workbench P1: Interpreter Coverage** — Wire 4 dead rule files into `mappings/index.ts`, seed Artwork/Milestone/Permit entities, augment rules with BFA-specific patterns, verify event coverage for P2 projector. 6 work items (W1–W6). Plan: `docs/exportworkbench-plan-p1-realigned.md` | Export |
 | — | **Composer dual-surface completion:** ComposerView as expanded panel — migrate to `useComposerForm`, agent selection/routing, `@autoart/ui` components, `--ws-*` tokens. UnifiedComposerBar deleted. | UX |
 
 ---
@@ -65,7 +64,7 @@
 | # | Issue | Category |
 |---|-------|----------|
 | — | **TanStack Table integration:** Add `@tanstack/table-core` as headless logic layer for filtering, sorting, column visibility across all table surfaces. Already have `@tanstack/react-virtual`. Wire into DataTable and UniversalTableCore. Goal: filtering built into the atoms. | Tables |
-| — | **Export Workbench P2–P5:** Backend export module, context helper/reminders, frontend integration, modular targets. Plan: `docs/exportworkbench-plan.md` | Export |
+| — | **Export Workbench P4-P5:** (P4) E2E verification — full flow per format: select → session → projection → preview → export → download. Verify finance exports unbroken. (P5) Target registry cleanup — decide registry vs switch, delete dead code if switch stays. | Export |
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 393 | File Detection & Alignment Service Phase 2: alignment logic, backend endpoints, UI (Phase 1 done, PR #475) | AutoHelper |
@@ -104,7 +103,10 @@
 | `backend/src/modules/exports/packages.service.ts` | `reorderPackages()` is N+1 (individual UPDATE per ID in loop) — should use transaction or single `CASE WHEN` batch UPDATE | — |
 | `backend/src/modules/exports/packages.routes.ts` | `listPackages()` has no user scoping — returns all packages across all users despite `app.authenticate` hook | — |
 | `frontend/src/workflows/export/views/PackageDetailView.tsx` | Download URL uses `window.open(${API_BASE}/exports/sessions/...)` bypassing API client auth headers — should use existing `useDownloadExportOutput()` hook instead | — |
-| `frontend/src/workflows/export/views/ExportWorkbench.tsx` | Old workbench replaced by `ExportQueueContent` in PR #477 — now unreferenced dead code, track for cleanup | — |
+| `frontend/src/workflows/export/views/ExportWorkbench.tsx` | Old collection-based workbench — no mounted path renders it. Replaced by `ExportQueueContent` in PR #477. Dead code, track for cleanup | — |
+| `frontend/src/pages/ExportPage.tsx` | `/export` route not registered in `App.tsx` — page exists but is unreachable | — |
+| `backend/src/modules/exports/targets/` | `ExportTargetRegistryImpl` has 3 implementations but `executeExport()` uses hardcoded switch — registry is dead code unless wired | — |
+| `backend/src/` | 39 lint errors (import/order + escape-char) in files not touched by export stack — pre-existing debt | — |
 
 **Low priority (CodeAnt #332 nitpicks):**
 
@@ -142,7 +144,8 @@
 
 | PRs | Description |
 |-----|-------------|
-| #477 | **Export Package Queue — Phase 1 (Feb 9 2026):** Complete queue foundation with project_selection only. Backend: `export_packages` table (migration 010), projector registry, packages service (CRUD + projection + execution), 8 REST endpoints at `/api/exports/packages`. Frontend: exportQueueStore, 7 TanStack Query hooks, three-panel layout (queue sidebar, detail view, inspector), inline project picker, status tracking. Queue is now default export surface (replaces legacy ExportWorkbench). 13 new files, 5 modified. +1616/-5 lines. |
+| #479-483 | **Export Workbench P0-P3 (Feb 10 2026):** Stack covering interpreter coverage (P1), export UI reconciliation (P0), projector fixes (P1-P2), and context helper frontend (P3). PRs: #479 (wire dead interpreter rules + seed entities), #480 (augment rules with BFA patterns), #481 (session-based export UI + ExportOptions schema reconciliation), #482 (BFA projector budget fallback + injector phase output), #483 (projector tests + ExportPreview cleanup + statusBlock.stage JSDoc). Total: 5 PRs, 2 commits on head, +990/-38 on #483. |
+| #477 | **Export Package Queue — Phase 1 (Feb 9 2026):** Complete queue foundation with project_selection only. Backend: `export_packages` table (migration 010), projector registry, packages service (CRUD + projection + execution), 8 REST endpoints at `/api/exports/packages`. Frontend: exportQueueStore, 7 TanStack Query hooks, three-panel layout (queue sidebar, detail view, inspector), inline project picker, status tracking. Queue is now default export surface (replaces legacy ExportWorkbench). 13 new files, 5 modified. +1616/-5 lines. **Note:** Needs restack due to divergence from main. |
 
 ---
 
