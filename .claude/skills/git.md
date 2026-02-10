@@ -85,6 +85,10 @@ stackit submit           # Submit current branch
 stackit submit --stack   # Submit entire stack (alias: ss)
 ```
 
+PRs use the template at `.github/PULL_REQUEST_TEMPLATE.md`. Fill in all sections:
+- **Backend endpoint(s) called** — every endpoint added, modified, or depended on
+- **Verification trace** — **required** for workspace-touching or cross-service PRs, even when the reviewer is you. 3-6 mechanical bullets: Trigger → State → API → Result. If you can't write the trace, the feature isn't verified.
+
 ### Merging a Stack
 
 #### Pre-merge checklist
