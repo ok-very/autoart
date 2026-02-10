@@ -121,6 +121,7 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
                 Email
               </label>
               <input
+                data-testid="email-input"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -143,6 +144,7 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
                 Password
               </label>
               <input
+                data-testid="password-input"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -159,6 +161,7 @@ export function LoginPage({ initialMode = 'login' }: LoginPageProps) {
             </div>
 
             <Button
+              data-testid="submit-button"
               type="submit"
               className="w-full"
               disabled={login.isPending || register.isPending}
