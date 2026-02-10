@@ -345,4 +345,36 @@ export const permitMappingRules: MappingRule[] = [
         priority: 11,
         terminal: true,
     },
+
+    // =========================================================================
+    // BFA-specific patterns
+    // =========================================================================
+    {
+        id: 'milestone-pac',
+        description: 'PAC presentation/meeting/committee milestone',
+        pattern: /pac\s+(?:presentation|meeting|committee)/i,
+        emits: (): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
+            factKind: MILESTONE_ACHIEVED,
+            payload: {
+                milestoneType: 'PAC',
+                milestoneName: 'Public Art Committee',
+            },
+            confidence: 'high',
+        }],
+        priority: 10,
+        // NOT terminal — let meeting-rules also fire for PAC meetings
+    },
+    {
+        id: 'loc-due',
+        description: 'LOC (Letter of Credit) due/required/needed',
+        pattern: /loc\s+(?:due|required|needed)/i,
+        emits: (ctx: MappingContext): InterpretationOutput[] => [{
+            kind: 'action_hint',
+            hintType: 'prepare',
+            text: ctx.text,
+            phase: 'before_completion',
+        }],
+        priority: 6,
+    },
 ];

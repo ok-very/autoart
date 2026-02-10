@@ -72,6 +72,7 @@ function extractAllocationType(text: string): string {
     if (lowerText.includes('maintenance')) return 'maintenance';
     if (lowerText.includes('admin')) return 'admin';
     if (lowerText.includes('consultant')) return 'consultant';
+    if (lowerText.includes('bfa_fee') || lowerText.includes('bfa fee')) return 'bfa_fee';
 
     return 'budget';
 }
@@ -230,6 +231,47 @@ export const budgetMappingRules: MappingRule[] = [
             }];
         },
         priority: 8,
+    },
+    {
+        id: 'bfa-header-budget',
+        description: 'BFA header budget pattern: (Art: $X | Total: $Y)',
+        pattern: /\((?:Art|Total):\s*\$[\d,]+(?:\.\d{2})?\s*(?:\||\))/i,
+        emits: (ctx: MappingContext): InterpretationOutput[] => {
+            const outputs: InterpretationOutput[] = [];
+
+            const artMatch = ctx.text.match(/Art:\s*\$([\d,]+(?:\.\d{2})?)/i);
+            if (artMatch) {
+                const amount = parseFloat(artMatch[1].replace(/,/g, ''));
+                outputs.push({
+                    kind: 'fact_candidate',
+                    factKind: BUDGET_ALLOCATED,
+                    payload: {
+                        allocationType: 'artwork',
+                        amount,
+                        currency: 'CAD',
+                    },
+                    confidence: 'high',
+                });
+            }
+
+            const totalMatch = ctx.text.match(/Total:\s*\$([\d,]+(?:\.\d{2})?)/i);
+            if (totalMatch) {
+                const amount = parseFloat(totalMatch[1].replace(/,/g, ''));
+                outputs.push({
+                    kind: 'fact_candidate',
+                    factKind: BUDGET_ALLOCATED,
+                    payload: {
+                        allocationType: 'total',
+                        amount,
+                        currency: 'CAD',
+                    },
+                    confidence: 'high',
+                });
+            }
+
+            return outputs;
+        },
+        priority: 11,
     },
     {
         id: 'phase-budget',
