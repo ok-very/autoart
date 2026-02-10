@@ -233,6 +233,97 @@ export async function seed(db: Kysely<Database>): Promise<void> {
       }),
       styling: JSON.stringify({ color: 'fuchsia', icon: '🎨' }),
     },
+    {
+      name: 'Artwork',
+      schema_config: JSON.stringify({
+        fields: [
+          { key: 'artwork_title', type: 'text', label: 'Artwork Title' },
+          { key: 'artist_name', type: 'text', label: 'Artist Name', required: true },
+          { key: 'medium', type: 'text', label: 'Medium' },
+          { key: 'dimensions', type: 'text', label: 'Dimensions' },
+          { key: 'fabricator', type: 'text', label: 'Fabricator' },
+          { key: 'artwork_budget', type: 'currency', label: 'Artwork Budget', currencyDefault: 'CAD' },
+          { key: 'install_date', type: 'text', label: 'Install Date' },
+          {
+            key: 'status', type: 'status', label: 'Status',
+            options: ['Shortlisted', 'Selected', 'Contracted', 'In Design', 'In Fabrication', 'Installed', 'Complete'],
+            statusConfig: {
+              Shortlisted: { label: 'Shortlisted', colorClass: 'bg-amber-100 text-amber-700' },
+              Selected: { label: 'Selected', colorClass: 'bg-blue-100 text-blue-700' },
+              Contracted: { label: 'Contracted', colorClass: 'bg-indigo-100 text-indigo-700' },
+              'In Design': { label: 'In Design', colorClass: 'bg-purple-100 text-purple-700' },
+              'In Fabrication': { label: 'In Fabrication', colorClass: 'bg-orange-100 text-orange-700' },
+              Installed: { label: 'Installed', colorClass: 'bg-green-100 text-green-700' },
+              Complete: { label: 'Complete', colorClass: 'bg-slate-100 text-slate-700' },
+            },
+          },
+          { key: 'selection_process', type: 'text', label: 'Selection Process' },
+          { key: 'notes', type: 'textarea', label: 'Notes' },
+        ],
+      }),
+      styling: JSON.stringify({ color: 'violet', icon: '🎨' }),
+    },
+    {
+      name: 'Milestone',
+      schema_config: JSON.stringify({
+        fields: [
+          { key: 'milestone_name', type: 'text', label: 'Milestone Name', required: true },
+          {
+            key: 'milestone_type', type: 'select', label: 'Type',
+            options: [
+              'Checklist', 'PPAP', 'DPAP', 'SP#1', 'AO', 'CA', 'SP#2',
+              'EOI', 'TOR', 'Artist Contract',
+              'Fabrication 25%', 'Fabrication 50%', 'Fabrication 100%',
+              'Install', 'Final Documents', 'Photo', 'Other',
+            ],
+          },
+          { key: 'scheduled_date', type: 'date', label: 'Scheduled Date' },
+          { key: 'actual_date', type: 'date', label: 'Actual Date' },
+          {
+            key: 'status', type: 'status', label: 'Status',
+            options: ['Scheduled', 'Completed', 'Overdue', 'TBC'],
+            statusConfig: {
+              Scheduled: { label: 'Scheduled', colorClass: 'bg-blue-100 text-blue-700' },
+              Completed: { label: 'Completed', colorClass: 'bg-green-100 text-green-700' },
+              Overdue: { label: 'Overdue', colorClass: 'bg-amber-100 text-amber-700' },
+              TBC: { label: 'TBC', colorClass: 'bg-slate-100 text-slate-700' },
+            },
+          },
+          { key: 'responsible_party', type: 'text', label: 'Responsible Party' },
+          { key: 'notes', type: 'textarea', label: 'Notes' },
+        ],
+      }),
+      styling: JSON.stringify({ color: 'cyan', icon: '🎯' }),
+    },
+    {
+      name: 'Permit',
+      schema_config: JSON.stringify({
+        fields: [
+          {
+            key: 'permit_type', type: 'select', label: 'Permit Type', required: true,
+            options: ['Development Permit', 'Building Permit', 'Rezoning', 'Occupancy Permit', 'Electrical Permit', 'Other'],
+          },
+          { key: 'permit_number', type: 'text', label: 'Permit Number' },
+          { key: 'application_date', type: 'date', label: 'Application Date' },
+          { key: 'approval_date', type: 'date', label: 'Approval Date' },
+          { key: 'expiry_date', type: 'date', label: 'Expiry Date' },
+          { key: 'issuing_authority', type: 'text', label: 'Issuing Authority' },
+          {
+            key: 'status', type: 'status', label: 'Status',
+            options: ['Pending', 'Submitted', 'Approved', 'Expired', 'Rejected'],
+            statusConfig: {
+              Pending: { label: 'Pending', colorClass: 'bg-slate-100 text-slate-700' },
+              Submitted: { label: 'Submitted', colorClass: 'bg-blue-100 text-blue-700' },
+              Approved: { label: 'Approved', colorClass: 'bg-green-100 text-green-700' },
+              Expired: { label: 'Expired', colorClass: 'bg-amber-100 text-amber-700' },
+              Rejected: { label: 'Rejected', colorClass: 'bg-red-100 text-red-700' },
+            },
+          },
+          { key: 'notes', type: 'textarea', label: 'Notes' },
+        ],
+      }),
+      styling: JSON.stringify({ color: 'pink', icon: '📋' }),
+    },
   ];
 
   // ==================== CONTAINER DEFINITIONS ====================
