@@ -350,4 +350,77 @@ export const artworkMappingRules: MappingRule[] = [
         },
         priority: 10,
     },
+
+    // =========================================================================
+    // BFA-specific patterns
+    // =========================================================================
+    {
+        id: 'selected-artist-prefix',
+        description: 'BFA "Selected Artist: [Name]" pattern (88 projects)',
+        pattern: /selected\s+artist:\s*(.+)/i,
+        emits: (ctx: MappingContext): InterpretationOutput[] => {
+            const match = ctx.text.match(/selected\s+artist:\s*(.+)/i);
+            return [{
+                kind: 'fact_candidate',
+                factKind: ARTWORK_SELECTED,
+                payload: {
+                    artistName: match?.[1]?.trim(),
+                    artworkTitle: extractArtworkTitle(ctx.text),
+                },
+                confidence: 'high',
+            }];
+        },
+        priority: 12,
+        terminal: true,
+    },
+    {
+        id: 'shortlisted-artists',
+        description: 'BFA "Shortlisted Artists: [names]" pattern',
+        pattern: /shortlisted\s+artists?:\s*(.+)/i,
+        emits: (ctx: MappingContext): InterpretationOutput[] => {
+            const match = ctx.text.match(/shortlisted\s+artists?:\s*(.+)/i);
+            return [{
+                kind: 'fact_candidate',
+                factKind: ARTWORK_INITIATED,
+                payload: {
+                    shortlistedArtists: match?.[1]?.trim(),
+                },
+                confidence: 'high',
+            }];
+        },
+        priority: 11,
+    },
+    {
+        id: 'fabrication-started',
+        description: 'BFA "fabrication has started" pattern',
+        pattern: /fabrication\s+(?:has\s+)?started/i,
+        emits: (): InterpretationOutput[] => [{
+            kind: 'fact_candidate',
+            factKind: ARTWORK_FABRICATED,
+            payload: {
+                progress: 0,
+            },
+            confidence: 'high',
+        }],
+        priority: 11,
+        terminal: true,
+    },
+    {
+        id: 'fabrication-progress',
+        description: 'BFA "25% Fabrication" / "50% Fabrication" / "100% Fabrication" pattern',
+        pattern: /(\d+)%\s*fabrication/i,
+        emits: (ctx: MappingContext): InterpretationOutput[] => {
+            const match = ctx.text.match(/(\d+)%\s*fabrication/i);
+            const progress = match ? parseInt(match[1], 10) : 0;
+            return [{
+                kind: 'fact_candidate',
+                factKind: ARTWORK_FABRICATED,
+                payload: {
+                    progress,
+                },
+                confidence: 'high',
+            }];
+        },
+        priority: 11,
+    },
 ];

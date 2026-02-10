@@ -1,7 +1,7 @@
 # AutoArt Priorities
 
 *Last Updated: 2026-02-09*
-*Strategy: Foundation phases 0-6 complete (see [roadmap.md](roadmap.md) for architectural history). Phase 7 (Platform Polish & Integrations) active — parallel work streams, no dependency chain. This file drives active priorities.*
+*Strategy: Foundation phases 0–6 complete (see [roadmap.md](roadmap.md) for architectural history). Active work tracked by priority tier: P0 (blocking), P1 (next up), P2 (near-term), P3 (backlog). This file drives active priorities.*
 
 ## Bug List
 
@@ -51,192 +51,31 @@
 
 ---
 
-## Phase 3: Import Pipeline Completion ✓
-
-**Status: Complete** — All items merged via PRs #439-446 (Feb 8, 2026).
-
-*Unblock production-quality imports. The wizard works end-to-end but lacks interpretation hooks for frontend consumers and degrades under volume.*
-
-**Scope:**
-
-| # | Issue | Category | Status |
-|---|-------|----------|--------|
-| 217 | Expose interpretation HTTP routes for frontend hooks | Backend | ✓ Done (PR #439) |
-| — | Records/Fields/Actions registry browser UI unification: consistent layout and shared filter system | UX | ✓ Done (PR #440) |
-| — | Action vocabulary: store classification verbs/nouns/adjectives from imports as heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret action type construction | Classification | ✓ Done (PR #441, #443) |
-| 79 | Enhance Workflow View Interactions — backend (migration + routes + auto-linking) | Backend | ✓ Done (PR #443) |
-| 79 | Enhance Workflow View Interactions — frontend (badges + context menu + link dialog) | Frontend | ✓ Done (PR #444) |
-| 237 | Performance Optimization & Caching — backend (indexes + classification cache) | Backend | ✓ Done (PR #445) |
-| 237 | Performance Optimization & Caching — frontend (virtualization + prefetch) | Frontend | ✓ Done (PR #446) |
-
-**Dependencies:** None — foundation phases cleared the path. #217 (interpretation routes) is the critical enabler; #237 (performance) and #79 (workflow interactions) build on top.
-
-**Done when:** Frontend can call interpretation endpoints via TanStack Query hooks, imports complete in <2s for typical payloads, and workflow view supports direct interaction with imported actions.
-
-**Key deliverables:**
-- Interpretation HTTP routes + Zod schemas + TanStack Query hooks
-- Registry browser UI unification (RegistryFilterBar, 280px sidebar consistency)
-- Action vocabulary extraction (migration 004, vocabulary.service.ts, classification hooks)
-- Composer vocabulary integration (useVocabularySuggestions, UnifiedComposerBar ranking)
-- Import-action linking (migration 005, import_action_links table, auto-linking in ExecutionContext)
-- ActionRegistryTable import badges + "Link to Import Item" context menu + ImportLinkDialog
-- Performance: migration 006 indexes, in-memory classification cache with TTL
-- ClassificationPanel virtualization (@tanstack/react-virtual) + query prefetch on session load
-
----
-
-## Phase 4: BFA Reconciliation Pipeline Integration (#437) ✓
-
-**Status: Complete** — All sub-phases merged via PRs #448-455 (Feb 8, 2026).
-
-*Port BFA domain logic into the TypeScript backend, use the existing Monday.com connector for data sync, and build a reconciliation UI for field-level diff review. Google Docs injection via API.*
-
-**Architecture (revised Feb 2026):** Instead of copying the BFA Python pipeline into AutoHelper, BFA's phase system, authority rules, and column semantics are ported as TypeScript code-as-config in `backend/src/modules/programs/bfa-program.config.ts`. Shared types live in `shared/src/schemas/bfa.ts`. The existing Monday.com connector + workspace/board/column config tables provide the data pipeline; the BFA program config provides the interpretation layer.
-
-> **Abstraction flag:** When a second program needs phase/authority/column config, evaluate extracting `programs/` into database-driven config (JSON in a `program_configs` table). Current code-as-config approach is correct for single-program usage.
-
-**Scope:**
-
-| # | Issue | Sub-phase | Category | Status |
-|---|-------|-----------|----------|--------|
-| 437 | BFA program configuration: shared schemas, program config, Monday workspace seed | 4.1 | Shared + Backend | ✓ Done (PR #448) |
-| 437 | Monday connector → BFA sync differ: field-level diff engine using program config + authority rules | 4.2 | Backend | ✓ Done (PR #449) |
-| 437 | Backend reconciliation service: diff report storage, apply decisions routes, rollup handling | 4.3 | Backend | ✓ Done (PR #450) |
-| 437 | Frontend reconciliation panel: diff review, accept/reject, summary stats | 4.4 | Frontend | ✓ Done (PR #451) |
-| 437 | Google Docs injection: resolve placeholders, call Docs API, inject styled content | 4.5 | Backend + Frontend | ✓ Done (PRs #453-455) |
-
-**Dependencies:** Phase 3 infrastructure stable. Google OAuth (#403) resolved for Phase 4.5.
-
-**Internal order:** 4.1 → 4.2 → 4.3 → 4.4 → 4.5 (strict chain — each sub-phase depends on the prior)
-
-**Done when:** User triggers Monday sync for BFA board, sees field-level diffs in a reconciliation panel, approves changes, and can optionally inject styled content into a Google Doc.
-
-**Key deliverables:**
-- BFA program config (shared Zod schemas, TypeScript code-as-config, phase canonicalization, authority rules)
-- Sync differ (pure diff engine, LocalEntitySnapshot construction, HTTP routes)
-- Reconciliation service (migration 007, sync decisions table, apply logic, rollup handling)
-- Frontend panel (diff review UI, accept/reject controls, summary stats)
-- Google Docs injection (Phase expansion transform, entity→project resolution, Docs API integration, contact uniqueName collision fix)
-
----
-
-## Phase 4B: BFA Import to AutoArt Records (#438) ✓
-
-**Status: Complete** — All sub-phases merged via PRs #452-455 (Feb 8, 2026).
-
-*Depends on Phase 4. After reconciliation, optionally push approved changes back into AutoArt's hierarchy and records system via the Composer.*
-
-**Scope:**
-
-| # | Issue | Sub-phase | Category | Status |
-|---|-------|-----------|----------|--------|
-| 438 | Schema transformation layer: BFA -> AutoArt hierarchy/records mapping, dedup via BFA UID | 4B.1 | Backend | ✓ Done (PRs #452-453) |
-| 438 | Composer integration: BFA import actions -> events, project lattice creation, projection updates | 4B.2 | Backend | ✓ Done (PRs #452-453) |
-| 438 | Frontend import toggle: checkbox in ReconciliationPanel, preview, result modal with project links | 4B.3 | Frontend | ✓ Done (PRs #454-455) |
-
-**Dependencies:** Phase 4 complete. Uses Composer service (stable since Phase 2.4).
-
-**Internal order:** 4B.1 -> 4B.2 -> 4B.3 (strict chain)
-
-**Done when:** User checks "Import to AutoArt records" in reconciliation panel, approved changes create hierarchy nodes (Project -> Process -> Stage), records (contacts, milestones, artists), and events via Composer. New projects appear in the workspace sidebar.
-
-**Key deliverables:**
-- Schema transformation (BFA → AutoArt hierarchy/records mapping, Phase expansion, UID-based deduplication)
-- Composer integration (import service, actions → events, project lattice creation via Composer)
-- Frontend controls (import toggle checkbox, preview modal, result modal with project links)
-
----
-
-## Phase 5: Finance Foundation
-
-*Stand up the data layer for the Finance epic (#173). Seed definitions first, then computed fields, then records. No UI surfaces yet -- this phase is backend + shared.*
-
-**Previously Phase 4.** Renumbered to accommodate BFA integration. Independent of Phase 4/4B -- can run in parallel.
-
-**Status: Complete** — Computed fields (PRs #456-458), finance surfaces, export templates all merged.
-
-**Scope:**
-
-| # | Issue | Category | Status |
-|---|-------|----------|--------|
-| 171 | Seed: Finance RecordDefinitions (Invoice, Vendor Bill, Budget, Payment, Expense) | Finance | ✓ Done (#171 merged earlier) |
-| 166 | Computed fields + relationship rollups (no-scripting, budgets/invoices/stage sums) | Finance | ✓ Done (PRs #456-458) |
-| 165 | Invoice generation + tracking (records + PDF export + payments) | Finance | Partial (data layer done) |
-| 168 | Vendor bills + expense tracking (invoice receipts, payments, stage reconciliation) | Finance | |
-| 167 | Project Budgets surface (stage allocations + reconciliation rollups + spreadsheet export) | Finance | |
-
-**Dependencies:** #171 (seed) and #166 (computed fields) landed. #165, #167, #168 can parallelize.
-
-**Internal order:** #171 ✓ -> #166 ✓ -> (#165, #167, #168 can parallelize)
-
-**Done when:** Finance record definitions seed correctly through Composer ✓, computed fields derive budget/invoice/expense totals ✓, and invoice/bill/budget records can be created and queried via API.
-
----
-
-## Phase 6: Finance Surfaces & Integration ✓
-
-**Status: Complete** — PRs #460-464 merged (Feb 8, 2026). Finance events in Composer, overlay views, Handlebars invoice template, preview endpoint, AutoHelper invoice watchdog.
-
-*Wire finance data into the UI, Composer event log, and export pipeline. Depends on Phase 5 data layer being solid.*
-
-**Previously Phase 5.** Renumbered.
-
-**Scope:**
+## P1: Ready to Build
 
 | # | Issue | Category |
 |---|-------|----------|
-| 169 | Finance surfaces + quick overlays (budgets/invoices/expenses hub) | Finance |
-| 170 | Wire finance actions into Composer + Project Log (invoice/bill/payment events) | Finance |
-| 172 | Finance export modules (Invoice PDF, Budget CSV, export presets) | Finance |
-| 183 | Evolve export into live client reports system | Reports |
-| 291 | Schema editor / Composer relationship-math builder | Feature |
-
-**Dependencies:** Phase 5 complete. #170 (Composer wiring) should land before #169 (surfaces) so the UI can show real events. #172 (exports) depends on #165 (invoices) and #167 (budgets) from Phase 5.
-
-**Done when:** Users can create invoices/budgets/expenses from the UI, see finance events in the Project Log, export Invoice PDFs and Budget CSVs, and the client reports system serves live data.
+| — | **Export Workbench P1: Interpreter Coverage** — Wire 4 dead rule files into `mappings/index.ts`, seed Artwork/Milestone/Permit entities, augment rules with BFA-specific patterns, verify event coverage for P2 projector. 6 work items (W1–W6). Plan: `docs/exportworkbench-plan-p1-realigned.md` | Export |
+| — | **Composer dual-surface completion:** ComposerView as expanded panel — migrate to `useComposerForm`, agent selection/routing, `@autoart/ui` components, `--ws-*` tokens. UnifiedComposerBar deleted. | UX |
 
 ---
 
-## Phase 7: Platform Polish & Integrations
-
-*Independent improvements that do not gate each other. Work from this phase in any order as bandwidth allows.*
-
-**Previously Phase 6.** Renumbered.
-
-**Workspace polish:**
+## P2: Near-term
 
 | # | Issue | Category |
 |---|-------|----------|
+| — | **TanStack Table integration:** Add `@tanstack/table-core` as headless logic layer for filtering, sorting, column visibility across all table surfaces. Already have `@tanstack/react-virtual`. Wire into DataTable and UniversalTableCore. Goal: filtering built into the atoms. | Tables |
+| — | **Export Workbench P2–P5:** Backend export module, context helper/reminders, frontend integration, modular targets. Plan: `docs/exportworkbench-plan.md` | Export |
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
-| -- | **Composer dual-surface:** Popout (quick declare) complete. ComposerView retained as expanded composer panel — future: migrate to `useComposerForm`, add agent selection/routing, `@autoart/ui` components, `--ws-*` tokens. UnifiedComposerBar deleted. | UX |
-| -- | Consolidate Calendar/Gantt/future view expansions: link Application views to Project View segmented equivalents; cross-project filter/overlay | Feature |
-| -- | Poll editor: support different/multiple time block selections per day | Polls |
-| -- | **Theme alignment stage:** Design review + development of all workspace themes. Existing themes (Default, Compact, Minimal, Floating) are near-identical placeholders — differentiate per DESIGN.md variant guidance (solid, floating, minimal, glass, neumorphic). SegmentedControl variants landed in PR #468; full theme modules need registration in `frontend/src/workspace/themes/`. Requires design agent review of palette, density, and variant axes before implementation. | Themes |
-
-**Intake & records:**
-
-| # | Issue | Category |
-|---|-------|----------|
-| -- | Intake forms -> records verification: E2E test block mapping, record creation, completion flow | Intake |
-| 178 | Manual file link support in intake forms | Intake |
+| 393 | File Detection & Alignment Service Phase 2: alignment logic, backend endpoints, UI (Phase 1 done, PR #475) | AutoHelper |
+| — | Intake forms → records E2E verification: block mapping, record creation, completion flow | Intake |
 | 177 | Integrate intake forms with records system | Intake |
-
-**Integrations & services:**
-
-| # | Issue | Category |
-|---|-------|----------|
-| 159 | Contacts quick-export overlay (vCard, recipient formats) | Feature |
-| 84 | Email Notices API | Backend |
-| 85 | Templating Engine | Feature |
-| 86 | Monday.com Board Sync Settings | Integration |
-| 393 | File Detection & Alignment Service with watchdog — **Phase 1 done** (detection + event queue + ref matching, PR #475). Phase 2: alignment logic, backend endpoints, UI. | AutoHelper |
-| -- | **AutoHelper local-only config:** ~~GC settings now sync from backend~~ via `_apply_settings` key mapping + `ConfigStore` whitelist. DB path remains hardcoded (intentional — not user-configurable). Roots + mail + crawl settings already synced. | AutoHelper |
-| -- | ~~**AutoHelper "Rebuild Index" crash:**~~ `_cmd_rescan_index` and `_cmd_rebuild_index` accessed `result.message` but `RunResponse` only has `run_id`, `status`, `started_at`. Fixed: return correct attributes. | AutoHelper |
-
-**Note:** AutoHelper settings bridge (was P2) is **resolved** -- frontend now correctly uses backend bridge endpoints. See [roadmap.md](roadmap.md).
-
-**Note:** Workspace issues #179-182 closed on GitHub -- absorbed into Phase 1 (PRs #421-429).
+| — | Consolidate Calendar/Gantt/future view expansions: link Application views to Project View segmented equivalents; cross-project filter/overlay | Feature |
+| — | **Theme alignment stage:** Design review + development of all workspace themes per DESIGN.md variant guidance (solid, floating, minimal, glass, neumorphic). SegmentedControl variants landed (PR #468); full theme modules need registration. | Themes |
+| 165 | Invoice generation + tracking (data layer done, UI remaining) | Finance |
+| 167 | Project Budgets surface: stage allocations + reconciliation rollups + spreadsheet export | Finance |
+| 168 | Vendor bills + expense tracking: invoice receipts, payments, stage reconciliation | Finance |
 
 ---
 
@@ -261,6 +100,11 @@
 | `vocabulary` migration 004 | Composite btree index on `(verb, noun)` won't be used for `ILIKE ... OR ILIKE` prefix queries — consider separate `text_pattern_ops` indexes per column (PR #441) |
 | ~~`classification-cache.ts`~~ | ~~Hash truncated to 16 hex chars~~ — Already 32 chars (128-bit) and hashes `schema_config`. Resolved. |
 | ~~`todo.md`~~ | ~~Broken anchor `#autohelper-status-resolved`~~ — Fixed in Stream 20 (PR #472) | — |
+| `.serena/memories/` in PR #477 | Session artifacts committed — should be `.gitignore`d and dropped from PR | — |
+| `backend/src/modules/exports/packages.service.ts` | `reorderPackages()` is N+1 (individual UPDATE per ID in loop) — should use transaction or single `CASE WHEN` batch UPDATE | — |
+| `backend/src/modules/exports/packages.routes.ts` | `listPackages()` has no user scoping — returns all packages across all users despite `app.authenticate` hook | — |
+| `frontend/src/workflows/export/views/PackageDetailView.tsx` | Download URL uses `window.open(${API_BASE}/exports/sessions/...)` bypassing API client auth headers — should use existing `useDownloadExportOutput()` hook instead | — |
+| `frontend/src/workflows/export/views/ExportWorkbench.tsx` | Old workbench replaced by `ExportQueueContent` in PR #477 — now unreferenced dead code, track for cleanup | — |
 
 **Low priority (CodeAnt #332 nitpicks):**
 
@@ -285,6 +129,12 @@
 | 55 | Automail Phase 4: Testing | Testing |
 | 17 | InDesign data merge CSV export | Export |
 | 8 | Documentation + Automation tooling | Tooling |
+| 178 | Manual file link support in intake forms | Intake |
+| — | Poll editor: support different/multiple time block selections per day | Polls |
+| 159 | Contacts quick-export overlay (vCard, recipient formats) | Feature |
+| 84 | Email Notices API | Backend |
+| 85 | Templating Engine | Feature |
+| 86 | Monday.com Board Sync Settings | Integration |
 
 ---
 
@@ -304,6 +154,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Phase 6: Finance Surfaces & Integration (Feb 8 2026):** Finance events in Composer, overlay views (budgets/invoices/expenses hub), Handlebars invoice template + preview endpoint, AutoHelper invoice watchdog, schema editor/relationship-math builder. | PRs #460-464 |
 | 166 | **Phase 5: Finance Foundation — computed fields (Feb 8 2026):** (PR #456) Migrate formula engine from custom tokenizer/parser to `json-logic-js` — 452-line custom parser replaced with JsonLogic evaluation, new API `evaluateFormula(rule, data)` + `buildFormulaData()`, converted all 4 seed formulas (Invoice total, Line Item line_total/line_tax, Budget remaining) to JsonLogic objects, 37 unit tests (28 formula engine + 9 rollup engine). (PR #457) Invoice `paid_amount` rollup (sum of linked payment records) + `balance_due` computed field (total - paid_amount), full rollup chain: line items → subtotal/tax_total → total → paid_amount → balance_due. | PRs #456-458 |
 
 | # | Issue | Closed By |
@@ -348,6 +199,8 @@
 | — | Bugfixes: Methodology->Process rename, fieldBindings crash, Bound->Linked, LoginPage tokens, Chladni badge/loader tile | PR #312 |
 | — | Dockview v4 theme, swoopy tab corners, unified ThemedTab, tab strip + button | PRs #307-311 |
 | *(older entries pruned — see git log for PRs #174-306)* | | |
+
+*Phases 3–6 cleared from active tracking (Feb 9 2026). All were complete; see entries above for PR references. Remaining Phase 5 finance items (#165, #167, #168) re-slotted to P2. Phase 7 dissolved — items re-slotted to P1/P2/P3 by priority.*
 
 ---
 

@@ -2,8 +2,9 @@
  * BFA Google Docs Injector
  *
  * Per-project section replacement in a Google Doc after sync apply.
- * Finds project headers in the target doc, replaces their content sections
- * with fresh projections, and highlights changed field values.
+ * Finds project headers in the target doc and replaces their content sections
+ * with fresh projections. Existing highlighting in the doc is maintained
+ * through the reinjection loop — no programmatic highlight generation.
  *
  * Pure module — no DB access. Receives everything it needs.
  */
@@ -34,7 +35,7 @@ interface ProjectMatch {
  * 1. Matches export model to existing doc header by client+project name
  * 2. Deletes the content between this header and the next
  * 3. Inserts fresh formatted content
- * 4. Applies bold formatting to labels and yellow highlight to changed values
+ * 4. Applies bold formatting to labels
  *
  * Requests are sorted in reverse document order to avoid index drift.
  */
@@ -43,7 +44,6 @@ export async function injectProjects(
     client: GoogleDocsClient,
     documentId: string,
     projects: BfaProjectExportModel[],
-    changedFields: Map<string, Set<string>>,
 ): Promise<BfaInjectionResult> {
     const errors: Array<{ projectId: string; projectLabel: string; error: string }> = [];
     let projectsInjected = 0;
@@ -97,11 +97,9 @@ export async function injectProjects(
 
     for (const { project, header } of matches) {
         try {
-            const projectChanges = changedFields.get(project.projectId) ?? new Set<string>();
             const { requests } = buildProjectReplacement(
                 project,
                 header,
-                projectChanges,
             );
             allRequests.push(...requests);
             projectsInjected++;
@@ -184,12 +182,10 @@ function normalize(s: string): string {
  * 1. Delete existing content (from end of header line to start of next project)
  * 2. Insert new formatted content at the deletion point
  * 3. Apply bold to label prefixes
- * 4. Apply yellow highlight to changed field values
  */
 function buildProjectReplacement(
     project: BfaProjectExportModel,
     header: ParsedProjectHeader,
-    changedFieldPaths: Set<string>,
 ): { requests: GoogleDocumentRequest[] } {
     const requests: GoogleDocumentRequest[] = [];
 
@@ -231,7 +227,6 @@ function buildProjectReplacement(
         const formatRequests = buildFormattingRequests(
             contentText,
             headerLineEnd,
-            changedFieldPaths,
         );
         requests.push(...formatRequests);
     }
@@ -334,21 +329,12 @@ const LABEL_PREFIXES = [
     'BFA Project Status:',
 ];
 
-/** Field path → label prefix mapping for highlight targeting */
-const FIELD_LABEL_MAP: Record<string, string> = {
-    'fields.project_status': 'Project Status:',
-    'fields.bfa_project_status': 'BFA Project Status:',
-    'fields.selected_artist': 'Selected Artist:',
-    'fields.artwork_title': 'Artwork:',
-};
-
 /**
- * Build text style requests for bold labels and yellow highlight on changed values.
+ * Build text style requests for bold labels.
  */
 function buildFormattingRequests(
     contentText: string,
     insertOffset: number,
-    changedFieldPaths: Set<string>,
 ): GoogleDocumentRequest[] {
     const requests: GoogleDocumentRequest[] = [];
 
@@ -398,102 +384,6 @@ function buildFormattingRequests(
         lineOffset += line.length + 1; // +1 for newline
     }
 
-    // Yellow highlight for changed field values
-    if (changedFieldPaths.size > 0) {
-        for (const fieldPath of changedFieldPaths) {
-            const labelPrefix = FIELD_LABEL_MAP[fieldPath];
-            if (!labelPrefix) continue;
-
-            const idx = contentText.indexOf(labelPrefix);
-            if (idx === -1) continue;
-
-            // Highlight the value after the label (to end of line)
-            const valueStart = idx + labelPrefix.length;
-            const lineEnd = contentText.indexOf('\n', valueStart);
-            const valueEnd = lineEnd === -1 ? contentText.length : lineEnd;
-
-            if (valueEnd > valueStart) {
-                requests.push({
-                    updateTextStyle: {
-                        range: {
-                            startIndex: insertOffset + valueStart,
-                            endIndex: insertOffset + valueEnd,
-                        },
-                        textStyle: {
-                            backgroundColor: {
-                                color: {
-                                    rgbColor: { red: 1, green: 1, blue: 0 },
-                                },
-                            },
-                        },
-                        fields: 'backgroundColor',
-                    },
-                });
-            }
-        }
-
-        // Also highlight budget/phase/contact changes by looking for common patterns
-        // in the content text that correspond to changed field paths
-        highlightGenericChanges(contentText, insertOffset, changedFieldPaths, requests);
-    }
-
     return requests;
 }
 
-/**
- * Highlight field values in content for changed fields that don't have
- * a direct label mapping. Matches "Label: Value" patterns on each line
- * against known field-to-label associations.
- */
-function highlightGenericChanges(
-    contentText: string,
-    insertOffset: number,
-    changedFieldPaths: Set<string>,
-    requests: GoogleDocumentRequest[],
-): void {
-    const genericMap: Record<string, string[]> = {
-        'fields.total_budget': ['Total:'],
-        'fields.artwork_budget': ['Art:'],
-        'fields.install_date': ['Install:'],
-        'fields.phase': ['Phase:'],
-    };
-
-    for (const fieldPath of changedFieldPaths) {
-        const labels = genericMap[fieldPath];
-        if (!labels) continue;
-
-        for (const label of labels) {
-            const idx = contentText.indexOf(label);
-            if (idx === -1) continue;
-
-            const valueStart = idx + label.length;
-            // Find end of this value segment (next | or ) or newline)
-            let valueEnd = contentText.length;
-            for (const terminator of [' |', ')', '\n']) {
-                const termIdx = contentText.indexOf(terminator, valueStart);
-                if (termIdx !== -1 && termIdx < valueEnd) {
-                    valueEnd = termIdx;
-                }
-            }
-
-            if (valueEnd > valueStart) {
-                requests.push({
-                    updateTextStyle: {
-                        range: {
-                            startIndex: insertOffset + valueStart,
-                            endIndex: insertOffset + valueEnd,
-                        },
-                        textStyle: {
-                            backgroundColor: {
-                                color: {
-                                    rgbColor: { red: 1, green: 1, blue: 0 },
-                                },
-                            },
-                        },
-                        fields: 'backgroundColor',
-                    },
-                });
-            }
-        }
-    }
-}
