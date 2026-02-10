@@ -302,7 +302,8 @@ function buildBudgets(
 
         if (allocationType === 'artwork') {
             budgets.artwork = budgetValue;
-        } else if (allocationType === 'total') {
+        } else if (allocationType === 'total' || allocationType === 'budget') {
+            // Generic 'budget' events (no artwork/total qualifier) slot into total
             budgets.total = budgetValue;
         }
     }
