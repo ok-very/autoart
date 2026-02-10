@@ -100,6 +100,11 @@
 | `vocabulary` migration 004 | Composite btree index on `(verb, noun)` won't be used for `ILIKE ... OR ILIKE` prefix queries — consider separate `text_pattern_ops` indexes per column (PR #441) |
 | ~~`classification-cache.ts`~~ | ~~Hash truncated to 16 hex chars~~ — Already 32 chars (128-bit) and hashes `schema_config`. Resolved. |
 | ~~`todo.md`~~ | ~~Broken anchor `#autohelper-status-resolved`~~ — Fixed in Stream 20 (PR #472) | — |
+| `.serena/memories/` in PR #477 | Session artifacts committed — should be `.gitignore`d and dropped from PR | — |
+| `backend/src/modules/exports/packages.service.ts` | `reorderPackages()` is N+1 (individual UPDATE per ID in loop) — should use transaction or single `CASE WHEN` batch UPDATE | — |
+| `backend/src/modules/exports/packages.routes.ts` | `listPackages()` has no user scoping — returns all packages across all users despite `app.authenticate` hook | — |
+| `frontend/src/workflows/export/views/PackageDetailView.tsx` | Download URL uses `window.open(${API_BASE}/exports/sessions/...)` bypassing API client auth headers — should use existing `useDownloadExportOutput()` hook instead | — |
+| `frontend/src/workflows/export/views/ExportWorkbench.tsx` | Old workbench replaced by `ExportQueueContent` in PR #477 — now unreferenced dead code, track for cleanup | — |
 
 **Low priority (CodeAnt #332 nitpicks):**
 
