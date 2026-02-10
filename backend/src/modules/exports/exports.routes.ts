@@ -187,8 +187,9 @@ export async function exportsRoutes(app: FastifyInstance) {
         const status = query.status as 'configuring' | 'projecting' | 'ready' | 'executing' | 'completed' | 'failed' | undefined;
         const format = query.format as ExportFormat | undefined;
         const limit = query.limit ? parseInt(query.limit, 10) : 20;
+        const userId = (request.user as { id?: string })?.id;
 
-        const sessions = await exportsService.listExportSessions({ status, format, limit });
+        const sessions = await exportsService.listExportSessions({ status, format, limit, userId });
         return reply.send({ sessions });
     });
 

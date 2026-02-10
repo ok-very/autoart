@@ -14,7 +14,6 @@
 
 import type {
   BfaColumnMapping,
-  BfaFieldAuthority,
   BfaFieldAuthorityMap,
   BfaPhase,
   BfaPhaseLegacy,

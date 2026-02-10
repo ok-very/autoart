@@ -2,7 +2,7 @@
  * MillerColumnsView - Miller columns browser for hierarchy navigation
  *
  * This is a COMPOSITE that provides a multi-column drill-down view
- * of the project hierarchy: Project → Process → Stage → Subprocess → Task
+ * of the project hierarchy: Project → Process → Phase → Subprocess → Task
  *
  * Features:
  * - Progressive disclosure via column selection
@@ -134,7 +134,7 @@ export function MillerColumnsView({ className }: MillerColumnsViewProps) {
     // Add handlers for each level
     const handleAddProject = () => openOverlay('create-project', {});
     const handleAddProcess = () => selections.project && openOverlay('create-node', { parentId: selections.project, nodeType: 'process' });
-    const handleAddStage = () => selections.process && openOverlay('create-node', { parentId: selections.process, nodeType: 'phase' });
+    const handleAddPhase = () => selections.process && openOverlay('create-node', { parentId: selections.process, nodeType: 'phase' });
     const handleAddSubprocess = () => selections.stage && openOverlay('create-node', { parentId: selections.stage, nodeType: 'subprocess' });
 
     return (
@@ -170,14 +170,14 @@ export function MillerColumnsView({ className }: MillerColumnsViewProps) {
                     />
                 )}
 
-                {/* Column 3: Stages (if process selected) */}
+                {/* Column 3: Phases (if process selected) */}
                 {selections.process && (
                     <MillerColumn
                         type="phase"
                         items={stages}
                         selectedId={selections.stage}
                         onSelect={(id) => handleSelect('phase', id)}
-                        onAdd={handleAddStage}
+                        onAdd={handleAddPhase}
                         hasChildren={hasChildren}
                     />
                 )}

@@ -64,7 +64,7 @@
 | # | Issue | Category |
 |---|-------|----------|
 | — | **TanStack Table integration:** Add `@tanstack/table-core` as headless logic layer for filtering, sorting, column visibility across all table surfaces. Already have `@tanstack/react-virtual`. Wire into DataTable and UniversalTableCore. Goal: filtering built into the atoms. | Tables |
-| — | **Export Workbench P4-P5:** (P4) E2E verification — full flow per format: select → session → projection → preview → export → download. Verify finance exports unbroken. (P5) Target registry cleanup — decide registry vs switch, delete dead code if switch stays. | Export |
+| — | **Export Workbench P4:** E2E verification — full flow per format: select → session → projection → preview → export → download. Verify finance exports unbroken. *(P5 target registry cleanup done — dead registry deleted, switch is canonical.)* | Export |
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 393 | File Detection & Alignment Service Phase 2: alignment logic, backend endpoints, UI (Phase 1 done, PR #475) | AutoHelper |
@@ -93,20 +93,20 @@
 | ~~`UniversalTableCore.tsx`~~ | ~~Table atom migration~~ — Cancelled: UniversalTableCore is a flexbox grid engine (resize, sort, features). Div-based layout is intentional, not a bug. Table atom is for simple semantic tables. | — |
 | ~~`Badge.tsx`~~ | ~~Badge variant colors~~ — Migrated to `--ws-badge-*` CSS tokens in Phase 7 Stream 2 (PR #468) | — |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` — type declared and filtered but no distinct UI treatment (icon, section, color) | — |
-| `frontend/src/ui/composites/MillerColumnsView.tsx` | Column header label "stage" should be "phase" to align with the phase model rename (see W1-W4 interpreter coverage work) | — |
+| ~~`frontend/src/ui/composites/MillerColumnsView.tsx`~~ | ~~Column header label "stage" → "phase"~~ — Renamed comment + `handleAddStage` → `handleAddPhase` | — |
 | ~~`ExportMenu.tsx`~~ | ~~`invoiceNumber` prop~~ — Dead prop removed in Stream 20 (PR #472) |
 | ~~`vocabulary.routes.ts`~~ | ~~Whitespace-only prefix~~ — `.trim()` added before `.min(1)` (Phase 7 Stream 1) |
 | `vocabulary` migration 004 | Composite btree index on `(verb, noun)` won't be used for `ILIKE ... OR ILIKE` prefix queries — consider separate `text_pattern_ops` indexes per column (PR #441) |
 | ~~`classification-cache.ts`~~ | ~~Hash truncated to 16 hex chars~~ — Already 32 chars (128-bit) and hashes `schema_config`. Resolved. |
 | ~~`todo.md`~~ | ~~Broken anchor `#autohelper-status-resolved`~~ — Fixed in Stream 20 (PR #472) | — |
-| `.serena/memories/` in PR #477 | Session artifacts committed — should be `.gitignore`d and dropped from PR | — |
-| `backend/src/modules/exports/packages.service.ts` | `reorderPackages()` is N+1 (individual UPDATE per ID in loop) — should use transaction or single `CASE WHEN` batch UPDATE | — |
-| `backend/src/modules/exports/packages.routes.ts` | `listPackages()` has no user scoping — returns all packages across all users despite `app.authenticate` hook | — |
-| `frontend/src/workflows/export/views/PackageDetailView.tsx` | Download URL uses `window.open(${API_BASE}/exports/sessions/...)` bypassing API client auth headers — should use existing `useDownloadExportOutput()` hook instead | — |
-| `frontend/src/workflows/export/views/ExportWorkbench.tsx` | Old collection-based workbench — no mounted path renders it. Replaced by `ExportQueueContent` in PR #477. Dead code, track for cleanup | — |
-| `frontend/src/pages/ExportPage.tsx` | `/export` route not registered in `App.tsx` — page exists but is unreachable | — |
-| `backend/src/modules/exports/targets/` | `ExportTargetRegistryImpl` has 3 implementations but `executeExport()` uses hardcoded switch — registry is dead code unless wired | — |
-| `backend/src/` | 39 lint errors (import/order + escape-char) in files not touched by export stack — pre-existing debt | — |
+| ~~`.serena/memories/`~~ | ~~Session artifacts committed~~ — Added to `.gitignore` | — |
+| `backend/src/modules/exports/packages.service.ts` | `reorderPackages()` is N+1 (individual UPDATE per ID in loop) — should use transaction or single `CASE WHEN` batch UPDATE. **Lives on PR #477 branch.** | — |
+| `backend/src/modules/exports/packages.routes.ts` | `listPackages()` has no user scoping — returns all packages across all users despite `app.authenticate` hook. **Lives on PR #477 branch.** | — |
+| `frontend/src/workflows/export/views/PackageDetailView.tsx` | Download URL uses `window.open(...)` bypassing API client auth headers — should use `useDownloadExportOutput()`. **Lives on PR #477 branch.** | — |
+| ~~`frontend/src/workflows/export/views/ExportWorkbench.tsx`~~ | ~~Dead collection-based workbench~~ — Deleted (+ `ExportWorkbenchView.tsx`, `ExportPage.tsx`). Barrel export cleaned. | — |
+| ~~`frontend/src/pages/ExportPage.tsx`~~ | ~~Orphaned page, no route~~ — Deleted (see above) | — |
+| ~~`backend/src/modules/exports/targets/`~~ | ~~Dead target registry~~ — Deleted entire directory (5 files). `executeExport()` switch is the real dispatcher. | — |
+| ~~`backend/src/` lint~~ | ~~39 lint errors~~ — Stale count. Only 1 unused import (`BfaFieldAuthority`) remained; removed. 0 errors, 1 informational warning (TanStack Virtual vs React Compiler). | — |
 
 **Low priority (CodeAnt #332 nitpicks):**
 
