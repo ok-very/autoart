@@ -11,6 +11,12 @@
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
 - **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
+- **`stage-entered-passive` regex anchor mismatch (PR #480):** Rule pattern matches mid-string (`/[a-zA-Z0-9\s#%./]+\s+(?:stage|phase)\s+(?:entered|started|begun)/i`), but `extractStageFromText` has `^` anchor requiring match at string start. When rule matches but extraction returns null, terminal flag prevents later rules from firing. Stage transitions silently dropped for text like `"Note: Detailed Design phase entered 2024-05-01"`. Fix: remove `^` anchor from `enteredMatch` in `stage-rules.ts:135`. (CodeAnt review)
+
+**PR #477 review findings (CodeAnt — lives on packages branch):**
+- `packages.routes.ts` projection + execute endpoints return 500 instead of 404 for missing package IDs — need try/catch with "Package not found" → 404 mapping
+- `AddPackageMenu.tsx` `handleSubmit` — `mutateAsync` has no try/catch, unhandled promise rejection on network failure
+- `PackageDetailView.tsx` — `isLoading || !pkg` guard treats error state as loading, permanent spinner on API failure. Needs explicit error + not-found states.
 
 **Phase 3 review findings (PRs #439-447):**
 
