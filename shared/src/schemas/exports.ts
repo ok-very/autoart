@@ -74,6 +74,7 @@ export const ExportOptionsSchema = z.object({
     includeSelectionPanel: z.boolean(),
     includeOnlyOpenNextSteps: z.boolean(),
     includeStatusNotes: z.boolean(),
+    highlightCurrentMonth: z.boolean(),
 });
 export type ExportOptions = z.infer<typeof ExportOptionsSchema>;
 
@@ -84,6 +85,7 @@ export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
     includeSelectionPanel: true,
     includeOnlyOpenNextSteps: false,
     includeStatusNotes: true,
+    highlightCurrentMonth: false,
 };
 
 // ============================================================================

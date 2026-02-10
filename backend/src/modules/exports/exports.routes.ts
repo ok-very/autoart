@@ -31,6 +31,7 @@ const ExportFormatSchema = z.enum(['rtf', 'markdown', 'plaintext', 'csv', 'googl
 
 const ExportOptionsSchema = z.object({
     includeContacts: z.boolean().optional(),
+    includeBudgets: z.boolean().optional(),
     includeMilestones: z.boolean().optional(),
     includeStatusNotes: z.boolean().optional(),
     includeSelectionPanel: z.boolean().optional(),
