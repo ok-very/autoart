@@ -35,6 +35,13 @@ These are dispatched automatically via the Task tool when the task requires thei
 | frontend-dev | sonnet | Building UI. Design tokens, component library, state management, API integration. |
 | backend-dev | sonnet | Building APIs. Action/Event pattern, schemas, database, cross-service communication. |
 | integrator | sonnet | Verifying end-to-end paths. The "click the button, trace the bytes" check. |
+| Explore | sonnet | Codebase research. Symbol lookup, reference tracing, architecture questions. |
+
+### Explore agent: Serena-first dispatch
+
+Explore agents have access to Serena's MCP tools. When dispatching an Explore agent, **always include these instructions in the prompt:**
+
+> Use the `mcp__serena__find_symbol` tool for type/function/class lookups (pass `name_path_pattern` and optionally `relative_path` to scope). Use `mcp__serena__get_symbols_overview` to understand file structure. Use `mcp__serena__find_referencing_symbols` to trace callers/consumers. Use `mcp__serena__search_for_pattern` for regex search across the codebase. Prefer these over raw Glob/Grep for code exploration — they return structured symbol data with locations, not just text matches.
 
 ## Skills (User-Invoked)
 
