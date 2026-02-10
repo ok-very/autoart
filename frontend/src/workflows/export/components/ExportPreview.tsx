@@ -68,11 +68,11 @@ export function ExportPreview({ projectId, format, options, sessionId }: ExportP
             statusBlock: {
                 projectStatusText: 'In progress',
                 bfaProjectStatusText: 'Awaiting DPAP approval',
-                stage: 'planning' as const,
+                stage: '3. Schematic Design',
             },
             nextStepsBullets: [
-                { text: 'Submit DPAP documents', completed: false, ownerHint: 'BFA' },
-                { text: 'Schedule SP#1', completed: false, ownerHint: 'BFA' },
+                { text: 'Submit DPAP documents', completed: false, assigneeHint: 'BFA' },
+                { text: 'Schedule SP#1', completed: false, assigneeHint: 'BFA' },
             ],
             rawBlockText: '(JB/NY) Sample Client: Sample Project, Vancouver (Art: $500,000 | Total: $650,000) Install: 2026\n\nPM: Jane Doe (Sample Corp)\nArchitect: John Smith (ABC Architecture)\n\nPPAP: March 2025\nDPAP: June 2025\n\nProject Status: In progress\nBFA Project Status: Awaiting DPAP approval\n\n● Submit DPAP documents\n● Schedule SP#1',
             hasChanges: false,
