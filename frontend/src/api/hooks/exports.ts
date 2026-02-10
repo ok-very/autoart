@@ -15,6 +15,12 @@ import type {
     ExportSession,
     ExportResult,
     BfaProjectExportModel,
+    StaleProjectInfo,
+    StalenessSummary,
+    EmailDecayInfo,
+    EmailDecaySummary,
+    BackfeedAnalysis,
+    BackfeedMatch,
 } from '../../workflows/export/types';
 import { api, API_BASE } from '../client';
 
@@ -337,6 +343,99 @@ export function useInvoicePreview(invoiceId: string | null) {
 
 // ============================================================================
 // HELPER HOOKS
+// ============================================================================
+
+// ============================================================================
+// CONTEXT HELPER HOOKS
+// ============================================================================
+
+interface StalenessResponse {
+    projects: StaleProjectInfo[];
+    summary: StalenessSummary;
+}
+
+interface EmailDecayResponse {
+    projects: EmailDecayInfo[];
+    summary: EmailDecaySummary;
+    needingFollowup: EmailDecayInfo[];
+}
+
+interface BackfeedResponse {
+    analysis: BackfeedAnalysis;
+    matches: BackfeedMatch[];
+    existingProjectIds: string[];
+    suggestedOrdering: string[];
+}
+
+/**
+ * Detect stale projects by last update date.
+ * Fires when projectIds are provided; results cached 1 minute.
+ */
+export function useStalenessDetection(projectIds: string[], thresholdDays: number = 7) {
+    const sortedKey = [...projectIds].sort().join(',');
+
+    return useQuery({
+        queryKey: ['context-staleness', sortedKey, thresholdDays],
+        queryFn: async () => {
+            const params = new URLSearchParams({
+                projectIds: projectIds.join(','),
+                thresholdDays: thresholdDays.toString(),
+            });
+            return api.get<StalenessResponse>(`/exports/context/staleness?${params}`);
+        },
+        enabled: projectIds.length > 0,
+        staleTime: 60000,
+    });
+}
+
+/**
+ * Detect email decay (unanswered outreach) for projects.
+ * Fires when projectIds are provided; results cached 1 minute.
+ */
+export function useEmailDecayDetection(projectIds: string[]) {
+    const sortedKey = [...projectIds].sort().join(',');
+
+    return useQuery({
+        queryKey: ['context-email-decay', sortedKey],
+        queryFn: async () => {
+            const params = new URLSearchParams({
+                projectIds: projectIds.join(','),
+            });
+            return api.get<EmailDecayResponse>(`/exports/context/email-decay?${params}`);
+        },
+        enabled: projectIds.length > 0,
+        staleTime: 60000,
+    });
+}
+
+/**
+ * Analyze a Google Doc for existing project content (backfeed).
+ * User-triggered mutation — not auto-fired.
+ */
+export function useBackfeedAnalysis() {
+    return useMutation({
+        mutationFn: async (docId: string) => {
+            return api.post<BackfeedResponse>(`/exports/context/backfeed/${docId}`, {});
+        },
+    });
+}
+
+/**
+ * Single-project email decay detail.
+ */
+export function useEmailDecayForProject(projectId: string | null) {
+    return useQuery({
+        queryKey: ['context-email-decay-single', projectId],
+        queryFn: async () => {
+            return api.get<EmailDecayInfo>(`/exports/context/email-decay/${projectId}`);
+        },
+        enabled: !!projectId,
+        staleTime: 60000,
+    });
+}
+
+// ============================================================================
+// WORKFLOW HELPERS
 // ============================================================================
 
 /**

@@ -97,3 +97,54 @@ export const EXPORT_FORMATS: ExportFormatOption[] = [
     //     extension: '.pdf',
     // },
 ];
+
+// ============================================================================
+// CONTEXT HELPER TYPES (Frontend mirrors of backend types.ts)
+// ============================================================================
+
+export interface StaleProjectInfo {
+    projectId: string;
+    projectName: string;
+    lastUpdateDate: string;
+    daysSinceUpdate: number;
+    isStale: boolean;
+}
+
+export interface StalenessSummary {
+    total: number;
+    stale: number;
+    fresh: number;
+    averageDaysSinceUpdate: number;
+}
+
+export interface EmailDecayInfo {
+    projectId: string;
+    lastEmailDate?: string;
+    hasReply: boolean;
+    daysSinceEmail?: number;
+    suggestFollowup: boolean;
+    suggestedAction?: string;
+}
+
+export interface EmailDecaySummary {
+    total: number;
+    withEmails: number;
+    needingFollowup: number;
+    averageDaysSinceEmail: number;
+}
+
+export interface BackfeedMatch {
+    docProjectIndex: number;
+    matchedProjectId: string | null;
+    matchScore: number;
+    clientName?: string;
+    projectName?: string;
+    lastUpdatedInDoc?: string;
+}
+
+export interface BackfeedAnalysis {
+    docId: string;
+    matches: BackfeedMatch[];
+    existingProjectIds: string[];
+    suggestedOrder: string[];
+}
