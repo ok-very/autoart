@@ -47,14 +47,18 @@ export function AddPackageMenu({ onAdded }: AddPackageMenuProps) {
 
     const handleSubmit = async () => {
         if (selectedIds.size === 0) return;
-        await submitPackage.mutateAsync({
-            sourceType: 'project_selection',
-            projectIds: Array.from(selectedIds),
-        });
-        setSelectedIds(new Set());
-        setFilterQuery('');
-        setIsOpen(false);
-        onAdded?.();
+        try {
+            await submitPackage.mutateAsync({
+                sourceType: 'project_selection',
+                projectIds: Array.from(selectedIds),
+            });
+            setSelectedIds(new Set());
+            setFilterQuery('');
+            setIsOpen(false);
+            onAdded?.();
+        } catch {
+            // Mutation error surfaces via submitPackage.isError — keep selection intact
+        }
     };
 
     if (!isOpen) {
@@ -142,6 +146,11 @@ export function AddPackageMenu({ onAdded }: AddPackageMenuProps) {
 
             {/* Submit */}
             <div className="p-2 border-t border-ws-panel-border">
+                {submitPackage.isError && (
+                    <Text size="xs" className="text-[var(--ws-color-error)] px-1 pb-1.5">
+                        Failed to add package
+                    </Text>
+                )}
                 <Button
                     variant="primary"
                     size="sm"
