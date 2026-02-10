@@ -88,3 +88,6 @@ apps/autohelper/_collected/
 
 # Claude Code local settings (agent-specific, not shared)
 .claude/settings.local.json
+
+# Serena MCP server memories (agent-specific, not shared)
+.serena/memories/

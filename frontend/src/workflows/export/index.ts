@@ -6,9 +6,6 @@
 export { ExportWorkbenchSidebar } from './panels/ExportWorkbenchSidebar';
 export { ExportWorkbenchContent } from './views/ExportWorkbenchContent';
 
-// Legacy monolithic workbench (deprecated - use sidebar + content components)
-export { ExportWorkbench } from './views/ExportWorkbench';
-
 // Preview components
 export { ExportPreview } from './components/ExportPreview';
 export { ExportProjectList } from './components/ExportProjectList';

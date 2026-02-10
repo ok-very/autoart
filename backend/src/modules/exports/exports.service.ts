@@ -100,6 +100,7 @@ export async function listExportSessions(params: {
     status?: ExportSessionStatus;
     format?: ExportFormat;
     limit?: number;
+    userId?: string;
 }): Promise<ExportSession[]> {
     let query = db
         .selectFrom('export_sessions')
@@ -112,6 +113,9 @@ export async function listExportSessions(params: {
     }
     if (params.format) {
         query = query.where('format', '=', params.format);
+    }
+    if (params.userId) {
+        query = query.where('created_by', '=', params.userId);
     }
 
     const results = await query.execute();

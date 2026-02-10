@@ -566,3 +566,14 @@ function generateRawBlockText(model: BfaProjectExportModel): string {
 
     return lines.join('\n');
 }
+
+/** @internal Exported for unit testing only. */
+export const _testing = {
+    buildBudgets,
+    deriveCurrentStage,
+    buildSelectionPanelBlock,
+    formatMilestones,
+    formatNextSteps,
+    formatCurrency,
+    deriveCategory,
+};

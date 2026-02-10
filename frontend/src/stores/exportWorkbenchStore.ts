@@ -27,6 +27,10 @@ interface ExportWorkbenchState {
     step: ExportStep;
     activeSessionId: string | null;
 
+    // Context helper state
+    stalenessThresholdDays: number;
+    linkedDocId: string | null;
+
     // Actions
     toggleProject: (id: string) => void;
     selectAll: (ids: string[]) => void;
@@ -36,6 +40,8 @@ interface ExportWorkbenchState {
     setOption: <K extends keyof ExportOptions>(key: K, value: ExportOptions[K]) => void;
     setStep: (step: ExportStep) => void;
     setActiveSession: (sessionId: string | null) => void;
+    setStalenessThreshold: (days: number) => void;
+    setLinkedDocId: (docId: string | null) => void;
     reset: () => void;
 }
 
@@ -49,6 +55,8 @@ export const useExportWorkbenchStore = create<ExportWorkbenchState>()(
             options: DEFAULT_EXPORT_OPTIONS,
             step: 'configure',
             activeSessionId: null,
+            stalenessThresholdDays: 7,
+            linkedDocId: null,
 
             // Actions
             toggleProject: (id) =>
@@ -79,6 +87,10 @@ export const useExportWorkbenchStore = create<ExportWorkbenchState>()(
 
             setActiveSession: (activeSessionId) => set({ activeSessionId }),
 
+            setStalenessThreshold: (days) => set({ stalenessThresholdDays: days }),
+
+            setLinkedDocId: (docId) => set({ linkedDocId: docId }),
+
             reset: () =>
                 set({
                     selectedProjectIds: new Set(),
@@ -87,16 +99,20 @@ export const useExportWorkbenchStore = create<ExportWorkbenchState>()(
                     options: DEFAULT_EXPORT_OPTIONS,
                     step: 'configure',
                     activeSessionId: null,
+                    stalenessThresholdDays: 7,
+                    linkedDocId: null,
                 }),
         }),
         {
             name: 'export-workbench-storage',
-            version: 2,
+            version: 3,
             partialize: (state) => ({
                 format: state.format,
                 options: state.options,
                 step: state.step,
                 activeSessionId: state.activeSessionId,
+                stalenessThresholdDays: state.stalenessThresholdDays,
+                linkedDocId: state.linkedDocId,
             }),
         },
     ),

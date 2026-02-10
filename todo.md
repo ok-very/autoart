@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-09*
+*Last Updated: 2026-02-10*
 *Strategy: Foundation phases 0–6 complete (see [roadmap.md](roadmap.md) for architectural history). Active work tracked by priority tier: P0 (blocking), P1 (next up), P2 (near-term), P3 (backlog). This file drives active priorities.*
 
 ## Bug List
@@ -11,6 +11,12 @@
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
 - **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
+- **`stage-entered-passive` regex anchor mismatch (PR #480):** Rule pattern matches mid-string (`/[a-zA-Z0-9\s#%./]+\s+(?:stage|phase)\s+(?:entered|started|begun)/i`), but `extractStageFromText` has `^` anchor requiring match at string start. When rule matches but extraction returns null, terminal flag prevents later rules from firing. Stage transitions silently dropped for text like `"Note: Detailed Design phase entered 2024-05-01"`. Fix: remove `^` anchor from `enteredMatch` in `stage-rules.ts:135`. (CodeAnt review)
+
+**PR #477 review findings (CodeAnt — lives on packages branch):**
+- `packages.routes.ts` projection + execute endpoints return 500 instead of 404 for missing package IDs — need try/catch with "Package not found" → 404 mapping
+- `AddPackageMenu.tsx` `handleSubmit` — `mutateAsync` has no try/catch, unhandled promise rejection on network failure
+- `PackageDetailView.tsx` — `isLoading || !pkg` guard treats error state as loading, permanent spinner on API failure. Needs explicit error + not-found states.
 
 **Phase 3 review findings (PRs #439-447):**
 
@@ -55,7 +61,6 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| — | **Export Workbench P1: Interpreter Coverage** — Wire 4 dead rule files into `mappings/index.ts`, seed Artwork/Milestone/Permit entities, augment rules with BFA-specific patterns, verify event coverage for P2 projector. 6 work items (W1–W6). Plan: `docs/exportworkbench-plan-p1-realigned.md` | Export |
 | — | **Composer dual-surface completion:** ComposerView as expanded panel — migrate to `useComposerForm`, agent selection/routing, `@autoart/ui` components, `--ws-*` tokens. UnifiedComposerBar deleted. | UX |
 
 ---
@@ -65,7 +70,7 @@
 | # | Issue | Category |
 |---|-------|----------|
 | — | **TanStack Table integration:** Add `@tanstack/table-core` as headless logic layer for filtering, sorting, column visibility across all table surfaces. Already have `@tanstack/react-virtual`. Wire into DataTable and UniversalTableCore. Goal: filtering built into the atoms. | Tables |
-| — | **Export Workbench P2–P5:** Backend export module, context helper/reminders, frontend integration, modular targets. Plan: `docs/exportworkbench-plan.md` | Export |
+| — | **Export Workbench P4:** E2E verification — full flow per format: select → session → projection → preview → export → download. Verify finance exports unbroken. *(P5 target registry cleanup done — dead registry deleted, switch is canonical.)* | Export |
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
 | 393 | File Detection & Alignment Service Phase 2: alignment logic, backend endpoints, UI (Phase 1 done, PR #475) | AutoHelper |
@@ -94,17 +99,20 @@
 | ~~`UniversalTableCore.tsx`~~ | ~~Table atom migration~~ — Cancelled: UniversalTableCore is a flexbox grid engine (resize, sort, features). Div-based layout is intentional, not a bug. Table atom is for simple semantic tables. | — |
 | ~~`Badge.tsx`~~ | ~~Badge variant colors~~ — Migrated to `--ws-badge-*` CSS tokens in Phase 7 Stream 2 (PR #468) | — |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` — type declared and filtered but no distinct UI treatment (icon, section, color) | — |
-| `frontend/src/ui/composites/MillerColumnsView.tsx` | Column header label "stage" should be "phase" to align with the phase model rename (see W1-W4 interpreter coverage work) | — |
+| ~~`frontend/src/ui/composites/MillerColumnsView.tsx`~~ | ~~Column header label "stage" → "phase"~~ — Renamed comment + `handleAddStage` → `handleAddPhase` | — |
 | ~~`ExportMenu.tsx`~~ | ~~`invoiceNumber` prop~~ — Dead prop removed in Stream 20 (PR #472) |
 | ~~`vocabulary.routes.ts`~~ | ~~Whitespace-only prefix~~ — `.trim()` added before `.min(1)` (Phase 7 Stream 1) |
 | `vocabulary` migration 004 | Composite btree index on `(verb, noun)` won't be used for `ILIKE ... OR ILIKE` prefix queries — consider separate `text_pattern_ops` indexes per column (PR #441) |
 | ~~`classification-cache.ts`~~ | ~~Hash truncated to 16 hex chars~~ — Already 32 chars (128-bit) and hashes `schema_config`. Resolved. |
 | ~~`todo.md`~~ | ~~Broken anchor `#autohelper-status-resolved`~~ — Fixed in Stream 20 (PR #472) | — |
-| `.serena/memories/` in PR #477 | Session artifacts committed — should be `.gitignore`d and dropped from PR | — |
-| `backend/src/modules/exports/packages.service.ts` | `reorderPackages()` is N+1 (individual UPDATE per ID in loop) — should use transaction or single `CASE WHEN` batch UPDATE | — |
-| `backend/src/modules/exports/packages.routes.ts` | `listPackages()` has no user scoping — returns all packages across all users despite `app.authenticate` hook | — |
-| `frontend/src/workflows/export/views/PackageDetailView.tsx` | Download URL uses `window.open(${API_BASE}/exports/sessions/...)` bypassing API client auth headers — should use existing `useDownloadExportOutput()` hook instead | — |
-| `frontend/src/workflows/export/views/ExportWorkbench.tsx` | Old workbench replaced by `ExportQueueContent` in PR #477 — now unreferenced dead code, track for cleanup | — |
+| ~~`.serena/memories/`~~ | ~~Session artifacts committed~~ — Added to `.gitignore` | — |
+| `backend/src/modules/exports/packages.service.ts` | `reorderPackages()` is N+1 (individual UPDATE per ID in loop) — should use transaction or single `CASE WHEN` batch UPDATE. **Lives on PR #477 branch.** | — |
+| `backend/src/modules/exports/packages.routes.ts` | `listPackages()` has no user scoping — returns all packages across all users despite `app.authenticate` hook. **Lives on PR #477 branch.** | — |
+| `frontend/src/workflows/export/views/PackageDetailView.tsx` | Download URL uses `window.open(...)` bypassing API client auth headers — should use `useDownloadExportOutput()`. **Lives on PR #477 branch.** | — |
+| ~~`frontend/src/workflows/export/views/ExportWorkbench.tsx`~~ | ~~Dead collection-based workbench~~ — Deleted (+ `ExportWorkbenchView.tsx`, `ExportPage.tsx`). Barrel export cleaned. | — |
+| ~~`frontend/src/pages/ExportPage.tsx`~~ | ~~Orphaned page, no route~~ — Deleted (see above) | — |
+| ~~`backend/src/modules/exports/targets/`~~ | ~~Dead target registry~~ — Deleted entire directory (5 files). `executeExport()` switch is the real dispatcher. | — |
+| ~~`backend/src/` lint~~ | ~~39 lint errors~~ — Stale count. Only 1 unused import (`BfaFieldAuthority`) remained; removed. 0 errors, 1 informational warning (TanStack Virtual vs React Compiler). | — |
 
 **Low priority (CodeAnt #332 nitpicks):**
 
@@ -142,7 +150,8 @@
 
 | PRs | Description |
 |-----|-------------|
-| #477 | **Export Package Queue — Phase 1 (Feb 9 2026):** Complete queue foundation with project_selection only. Backend: `export_packages` table (migration 010), projector registry, packages service (CRUD + projection + execution), 8 REST endpoints at `/api/exports/packages`. Frontend: exportQueueStore, 7 TanStack Query hooks, three-panel layout (queue sidebar, detail view, inspector), inline project picker, status tracking. Queue is now default export surface (replaces legacy ExportWorkbench). 13 new files, 5 modified. +1616/-5 lines. |
+| #479-483 | **Export Workbench P0-P3 (Feb 10 2026):** Stack covering interpreter coverage (P1), export UI reconciliation (P0), projector fixes (P1-P2), and context helper frontend (P3). PRs: #479 (wire dead interpreter rules + seed entities), #480 (augment rules with BFA patterns), #481 (session-based export UI + ExportOptions schema reconciliation), #482 (BFA projector budget fallback + injector phase output), #483 (projector tests + ExportPreview cleanup + statusBlock.stage JSDoc). Total: 5 PRs, 2 commits on head, +990/-38 on #483. |
+| #477 | **Export Package Queue — Phase 1 (Feb 9 2026):** Complete queue foundation with project_selection only. Backend: `export_packages` table (migration 010), projector registry, packages service (CRUD + projection + execution), 8 REST endpoints at `/api/exports/packages`. Frontend: exportQueueStore, 7 TanStack Query hooks, three-panel layout (queue sidebar, detail view, inspector), inline project picker, status tracking. Queue is now default export surface (replaces legacy ExportWorkbench). 13 new files, 5 modified. +1616/-5 lines. **Note:** Needs restack due to divergence from main. |
 
 ---
 

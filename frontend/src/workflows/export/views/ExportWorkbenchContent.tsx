@@ -10,8 +10,9 @@
 
 import { clsx } from 'clsx';
 import { Eye, FileText, Download, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
+import { ContextSummaryPanel } from '../components/ContextSummaryPanel';
 import { ExportOutputPanel } from '../components/ExportOutputPanel';
 import { ExportPreview } from '../components/ExportPreview';
 import { ExportStepIndicator } from '../components/ExportStepIndicator';
@@ -36,9 +37,11 @@ export function ExportWorkbenchContent() {
         previewProjectId,
         step,
         activeSessionId,
+        stalenessThresholdDays,
         setFormat,
         setStep,
         setActiveSession,
+        setStalenessThreshold,
     } = useExportWorkbenchStore();
 
     const createSession = useCreateExportSession();
@@ -49,6 +52,7 @@ export function ExportWorkbenchContent() {
 
     const isExporting = createSession.isPending || generateProjection.isPending || executeExport.isPending;
     const selectedCount = selectedProjectIds.size;
+    const selectedIds = useMemo(() => Array.from(selectedProjectIds), [selectedProjectIds]);
 
     const handleExport = async () => {
         if (selectedCount === 0) return;
@@ -167,6 +171,13 @@ export function ExportWorkbenchContent() {
                     </div>
                 </div>
             </div>
+
+            {/* Context Summary */}
+            <ContextSummaryPanel
+                projectIds={selectedIds}
+                thresholdDays={stalenessThresholdDays}
+                onThresholdChange={setStalenessThreshold}
+            />
 
             {/* Preview Area */}
             <div className="flex-1 overflow-auto p-4">

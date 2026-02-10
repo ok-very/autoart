@@ -196,6 +196,7 @@ export const BfaProjectExportModelSchema = z.object({
         projectStatusText: z.string().optional(),
         bfaProjectStatusText: z.string().optional(),
         nextStepsNarrative: z.string().optional(),
+        /** Canonical BFA phase name (e.g. "6. Detailed Design", "On Hold"). Set by interpreter STAGE_ENTERED events via deriveCurrentStage(). */
         stage: z.string().optional(),
         originalText: z.string().optional(),
     }),

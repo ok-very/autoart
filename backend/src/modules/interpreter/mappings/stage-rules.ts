@@ -132,7 +132,7 @@ function extractStageFromText(text: string): { stageName: string; previousStage?
     }
 
     // Pattern: "[stage] stage/phase entered"
-    const enteredMatch = text.match(/^([a-zA-Z0-9\s#%.\/]+?)\s+(?:stage|phase)\s+(?:entered|started|begun)/i);
+    const enteredMatch = text.match(/([a-zA-Z0-9\s#%.\/]+?)\s+(?:stage|phase)\s+(?:entered|started|begun)/i);
     if (enteredMatch) {
         const stage = normalizeStage(enteredMatch[1]);
         if (stage) return { stageName: stage };
