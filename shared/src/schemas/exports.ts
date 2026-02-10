@@ -194,14 +194,14 @@ export const BfaProjectExportModelSchema = z.object({
         projectStatusText: z.string().optional(),
         bfaProjectStatusText: z.string().optional(),
         nextStepsNarrative: z.string().optional(),
-        stage: z.enum(['planning', 'selection', 'design', 'installation']).optional(),
+        stage: z.string().optional(),
         originalText: z.string().optional(),
     }),
     nextStepsBullets: z.array(BfaNextStepBulletSchema),
     rawBlockText: z.string(),
     unparsedFragments: z.array(z.string()).optional(),
     hasChanges: z.boolean(),
-});
+});;
 export type BfaProjectExportModel = z.infer<typeof BfaProjectExportModelSchema>;
 
 // ============================================================================

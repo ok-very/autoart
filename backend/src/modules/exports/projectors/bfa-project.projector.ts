@@ -448,18 +448,14 @@ function buildSelectionPanelBlock(
 
 function deriveCurrentStage(
     stageEvents: Array<{ payload: Record<string, unknown> }>
-): 'planning' | 'selection' | 'design' | 'installation' | undefined {
+): string | undefined {
     if (stageEvents.length === 0) return undefined;
 
-    // Most recent stage event
+    // Most recent stage event — return canonical phase name directly.
+    // stage-rules.ts normalizes all inputs to 12 BFA canonical phases
+    // (e.g. "6. Detailed Design", "On Hold", "TBC"), so no collapsing needed.
     const latestStage = stageEvents[0].payload.stageName as string | undefined;
-    if (!latestStage) return undefined;
-
-    const stageLower = latestStage.toLowerCase();
-    if (stageLower.includes('install')) return 'installation';
-    if (stageLower.includes('design') || stageLower.includes('fabricat')) return 'design';
-    if (stageLower.includes('select')) return 'selection';
-    return 'planning';
+    return latestStage || undefined;
 }
 
 function extractProjectStatus(metadata: Record<string, unknown> | null): string | undefined {

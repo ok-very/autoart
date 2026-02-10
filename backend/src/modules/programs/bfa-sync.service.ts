@@ -291,8 +291,7 @@ export async function applyDecisions(
  * 1. Load diff report + applied decisions
  * 2. Resolve entity IDs → project IDs via hierarchy
  * 3. Project export models for affected projects
- * 4. Build changedFields map from applied decisions
- * 5. Call injector to perform per-project replacement
+ * 4. Call injector to perform per-project replacement
  */
 export async function injectToGoogleDoc(
     boardConfigId: string,
@@ -334,24 +333,12 @@ export async function injectToGoogleDoc(
     // 6. Project export models for affected projects
     const exportModels = await projectBfaExportModels(projectIds, DEFAULT_EXPORT_OPTIONS);
 
-    // 7. Build changedFields map: projectId → Set<fieldPath>
-    const changedFields = new Map<string, Set<string>>();
-
-    for (const decision of appliedDecisions) {
-        const projectId = entityToProject.get(decision.entity_id);
-        if (!projectId) continue;
-
-        const fields = changedFields.get(projectId) ?? new Set<string>();
-        fields.add(decision.field);
-        changedFields.set(projectId, fields);
-    }
-
-    // 8. Initialize Google Docs connector and client
+    // 7. Initialize Google Docs connector and client
     const client = new GoogleDocsClient({ accessToken: token });
     const connector = new GoogleDocsConnector({ accessToken: token });
 
-    // 9. Inject
-    return injectProjects(connector, client, documentId, exportModels, changedFields);
+    // 8. Inject
+    return injectProjects(connector, client, documentId, exportModels);
 }
 
 /**
