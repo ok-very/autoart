@@ -255,6 +255,7 @@
 | ~~`UniversalTableCore.tsx`~~ | ~~Table atom migration~~ — Cancelled: UniversalTableCore is a flexbox grid engine (resize, sort, features). Div-based layout is intentional, not a bug. Table atom is for simple semantic tables. | — |
 | ~~`Badge.tsx`~~ | ~~Badge variant colors~~ — Migrated to `--ws-badge-*` CSS tokens in Phase 7 Stream 2 (PR #468) | — |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` — type declared and filtered but no distinct UI treatment (icon, section, color) | — |
+| `frontend/src/ui/composites/MillerColumnsView.tsx` | Column header label "stage" should be "phase" to align with the phase model rename (see W1-W4 interpreter coverage work) | — |
 | ~~`ExportMenu.tsx`~~ | ~~`invoiceNumber` prop~~ — Dead prop removed in Stream 20 (PR #472) |
 | ~~`vocabulary.routes.ts`~~ | ~~Whitespace-only prefix~~ — `.trim()` added before `.min(1)` (Phase 7 Stream 1) |
 | `vocabulary` migration 004 | Composite btree index on `(verb, noun)` won't be used for `ILIKE ... OR ILIKE` prefix queries — consider separate `text_pattern_ops` indexes per column (PR #441) |
@@ -291,7 +292,7 @@
 
 | PRs | Description |
 |-----|-------------|
-| — | None |
+| #477 | **Export Package Queue — Phase 1 (Feb 9 2026):** Complete queue foundation with project_selection only. Backend: `export_packages` table (migration 010), projector registry, packages service (CRUD + projection + execution), 8 REST endpoints at `/api/exports/packages`. Frontend: exportQueueStore, 7 TanStack Query hooks, three-panel layout (queue sidebar, detail view, inspector), inline project picker, status tracking. Queue is now default export surface (replaces legacy ExportWorkbench). 13 new files, 5 modified. +1616/-5 lines. |
 
 ---
 
