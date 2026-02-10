@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-08*
+*Last Updated: 2026-02-09*
 *Strategy: Foundation phases 0-6 complete (see [roadmap.md](roadmap.md) for architectural history). Phase 7 (Platform Polish & Integrations) active — parallel work streams, no dependency chain. This file drives active priorities.*
 
 ## Bug List
@@ -40,6 +40,14 @@
 - Project View: "New project" dropdown UI broken under "Your projects" section — formatting not clean
 
 **Confirmed resolved (32+ items):** See Recently Closed section for PR references. Covers: import wizard stale plan regeneration (PR #434), ClassificationRow atom migration (PR #435), Phase 0 stack (React Compiler memo, Classification Panel partial save, preview servers, ExecutionControls API client, unused vars), Phase 1 stack (workspace foundation: context contract, panel consumption, Desk workspace, CenterView routing, store consolidation, workspace save, custom lifecycle, sidebar hints), Phase 2 stack (entity kind resolver, import/overlay migrations, seed through Composer — subprocess/stage projections now populate correctly, RecordDefinitionSchema phantom field removed), import hierarchy labels, connector sidebar escape hatch, intake record binding UUID, workspace save prompt timing, `[object Object]` field rendering, poll editor, poll public URLs, finance overlay contacts, 401 cascade, AutoHelper settings (now uses backend bridge), Google/Monday OAuth, and 18 earlier items (Monday null group_title, poll editor granularity, dropdown transparency, project spawn, Miller Columns, DOMPurify build, SelectionInspector close, panel spawner glassmorphism, AutoHelper tray pairing, applications dropdown bleed, panel spawn visibility, tab accent, action definitions seed, calendar link, header spacing, `/pair` async I/O, disconnect spinner).
+
+---
+
+## P0: Blocking
+
+| # | Issue | Category |
+|---|-------|----------|
+| — | **Export Package Queue Architecture** — Redesign export workbench to accept packages from multiple sources (collections, import handoff, project selections) via a persistent queue. Snapshots on submit, deferred resolution for import items, projector registry per source type. Three phases: (1) Queue foundation with project_selection only, (2) Collection + import handoff with inline resolution panel, (3) Cleanup + future sources (record_set, filtered_view, batch execution). Plan: `docs/plans/export-queue-architecture.md` | Export |
 
 ---
 
@@ -283,7 +291,7 @@
 
 | PRs | Description |
 |-----|-------------|
-| #473-475 | AutoHelper hardening stack: test infrastructure fix, MyPy 89→0, tray staleness (#340), file watch Phase 1 (#393) |
+| — | None |
 
 ---
 
@@ -291,7 +299,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
-| 340, 393 | **AutoHelper hardening (Feb 8 2026):** (PR #473) Test infrastructure — `Settings.load_from_config_store` model_validator now checks `model_fields_set` before overwriting constructor kwargs (fixed 22 test failures); mail tests mock `_HAS_WIN32` directly instead of fighting `@functools.cache` (fixed 4 failures). Tests: 49/75 → 75/75. (PR #474) MyPy cleanup — 89 errors → 0 across 24 files: `types-requests` stubs, `dict[str, Any]` annotations, `cast()` for no-any-return, test function `-> None` + fixture types, async iterator overrides. (PR #475) Tray staleness (#340) — `ConnectionStateManager` thread-safe singleton with 3 states (unpaired/paired_connected/paired_disconnected), poller sets state on 401/network errors, tray reads from manager. File watch Phase 1 (#393) — watchdog-based `modules/file_watch/` (schemas, handler, service, router), 500ms debounce, ref matching, poller command handlers (watch_root/unwatch_root/drain_file_events). Tests: 75 → 98. | PRs #473-475 |
+| 340, 393 | **AutoHelper hardening + CodeAnt review fixes (Feb 9 2026):** (PR #473) Test infrastructure — `Settings.load_from_config_store` model_validator now checks `model_fields_set` before overwriting constructor kwargs (fixed 22 test failures); mail tests mock `_HAS_WIN32` directly instead of fighting `@functools.cache` (fixed 4 failures). Tests: 49/75 → 75/75. (PR #474) MyPy cleanup — 89 errors → 0 across 24 files: `types-requests` stubs, `dict[str, Any]` annotations, `cast()` for no-any-return, test function `-> None` + fixture types, async iterator overrides. (PR #475) Tray staleness (#340) — `ConnectionStateManager` thread-safe singleton with 3 states (unpaired/paired_connected/paired_disconnected), poller sets state on 401/network errors, tray reads from manager. File watch Phase 1 (#393) — watchdog-based `modules/file_watch/` (schemas, handler, service, router), 500ms debounce, ref matching, poller command handlers (watch_root/unwatch_root/drain_file_events). Tests: 75 → 98. **CodeAnt review fixes (commit 568b715):** Thread safety — double-checked locking on `get_service()` singleton, `ThreadSafeEventQueue` replaces bare list to prevent event loss between watchdog producer and drain consumer. Idempotency bug — audit_log stores Pydantic `model_dump()` for replay instead of `str(result)`, fixing wrong-type return on cache hit. Path safety — `path.absolute()` instead of `resolve()` for deletion events where file no longer exists. | PR #476 (stack merge #473-475) |
 
 | # | Issue | Closed By |
 |---|-------|-----------|

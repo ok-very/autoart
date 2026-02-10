@@ -105,12 +105,3 @@ Pairing exists: AutoHelper can authenticate to backend using a link key. But no 
 
 The settings UI (`AutoHelperSection.tsx`) calls `localhost:8100` directly and fails unless AutoHelper is local and running.
 
----
-
-## Common Commands
-
-```bash
-pnpm migrate          # Run DB migrations
-pnpm db:rebuild       # Nuke + migrate + seed
-pnpm --filter backend # Run in backend package
-```
