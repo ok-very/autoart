@@ -145,6 +145,13 @@ export interface UniversalTableCoreProps {
     // Column resize persistence
     /** Called when a column is resized */
     onColumnResize?: (columnId: string, newWidth: number) => void;
+
+    /** When true, rows are already sorted externally. Core skips internal sort. */
+    externalSort?: boolean;
+    /** External sort state for rendering indicators when externalSort=true */
+    externalSortState?: SortState;
+    /** External sort handler — called instead of internal setSortState */
+    onSortChange?: (columnId: string) => void;
 }
 
 // ============================================================================
@@ -171,10 +178,14 @@ export function UniversalTableCore({
     renderFooter,
     className,
     onColumnResize,
+    externalSort = false,
+    externalSortState,
+    onSortChange,
 }: UniversalTableCoreProps) {
     // =========== STATE ===========
 
     const [sortState, setSortState] = useState<SortState>(null);
+    const effectiveSortState = externalSort ? (externalSortState ?? null) : sortState;
 
     // User-resized widths (only stores columns user has manually resized)
     const [userWidths, setUserWidths] = useState<Map<string, number>>(new Map());
@@ -233,19 +244,24 @@ export function UniversalTableCore({
     // =========== SORTING ===========
 
     const handleSort = useCallback((columnId: string) => {
+        if (onSortChange) {
+            onSortChange(columnId);
+            return;
+        }
         setSortState((prev) => {
             if (prev?.columnId === columnId) {
                 if (prev.direction === 'asc') {
                     return { columnId, direction: 'desc' };
                 }
-                return null; // Clear sort
+                return null;
             }
             return { columnId, direction: 'asc' };
         });
-    }, []);
+    }, [onSortChange]);
 
     const sortedRows = useMemo(() => {
         const rows = rowModel.getRows();
+        if (externalSort) return rows;
         if (!sortState) return rows;
 
         const sortColumn = decoratedColumns.find((c) => c.id === sortState.columnId);
@@ -255,12 +271,10 @@ export function UniversalTableCore({
             const aVal = sortColumn.sortKey!(a);
             const bVal = sortColumn.sortKey!(b);
 
-            // Null handling
             if (aVal == null && bVal == null) return 0;
             if (aVal == null) return 1;
             if (bVal == null) return -1;
 
-            // Comparison
             let comparison = 0;
             if (typeof aVal === 'string' && typeof bVal === 'string') {
                 comparison = aVal.localeCompare(bVal);
@@ -272,7 +286,7 @@ export function UniversalTableCore({
 
             return sortState.direction === 'asc' ? comparison : -comparison;
         });
-    }, [rowModel, sortState, decoratedColumns]);
+    }, [rowModel, sortState, externalSort, decoratedColumns]);
 
     // =========== RESIZE ===========
 
@@ -369,7 +383,7 @@ export function UniversalTableCore({
                     {decoratedColumns.map((column) => {
                         const width = columnWidths.get(column.id) ?? column.width;
                         const widthStyle = typeof width === 'number' ? `${width}px` : undefined;
-                        const isSorted = sortState?.columnId === column.id;
+                        const isSorted = effectiveSortState?.columnId === column.id;
                         const isSortable = !!column.sortKey;
                         const isResizable = column.resizable !== false && typeof width === 'number';
 
@@ -395,7 +409,7 @@ export function UniversalTableCore({
                                 )}
                                 {isSortable && isSorted && (
                                     <span className="text-ws-muted">
-                                        {sortState.direction === 'asc' ? (
+                                        {effectiveSortState!.direction === 'asc' ? (
                                             <ChevronUp size={12} />
                                         ) : (
                                             <ChevronDown size={12} />
