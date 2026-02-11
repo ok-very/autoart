@@ -1,9 +1,11 @@
 import { clsx } from 'clsx';
-import { Plus, FolderOpen, Search, Settings } from 'lucide-react';
+import { Plus, FolderOpen, Settings } from 'lucide-react';
 import { useState } from 'react';
 
 import { useRecordDefinitions, useRecordStats } from '../../api/hooks';
+import { useListFilter } from '../../hooks/useListFilter';
 import { useUIStore } from '../../stores/uiStore';
+import { FilterBar, Spinner } from '@autoart/ui';
 
 interface RecordTypeSidebarProps {
   width: number;
@@ -36,11 +38,10 @@ export function RecordTypeSidebar({
     return defKind === 'record';
   });
 
-  const filteredDefinitions = searchQuery.trim()
-    ? recordDefinitions.filter((def) =>
-      def.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    : recordDefinitions;
+  const filteredDefinitions = useListFilter(recordDefinitions, searchQuery, {
+    keys: ['name'],
+    sortFn: (a, b) => a.name.localeCompare(b.name),
+  });
 
   const getRecordCount = (definitionId: string): number => {
     if (!stats) return 0;
@@ -70,29 +71,19 @@ export function RecordTypeSidebar({
         </div>
         <button
           onClick={handleCreateDefinition}
-          className="p-1.5 text-ws-muted hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          className="p-1.5 text-ws-text-secondary hover:bg-ws-row-expanded-bg rounded-lg transition-colors"
           title="Create new definition"
         >
           <Plus size={18} />
         </button>
       </div>
 
-      {/* Search */}
-      <div className="p-3 border-b border-ws-panel-border">
-        <div className="relative">
-          <Search
-            size={14}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-ws-muted"
-          />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search types..."
-            className="w-full pl-9 pr-3 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-      </div>
+      <FilterBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        resultCount={filteredDefinitions.length}
+        placeholder="Filter record types..."
+      />
 
       {/* "All Records" option */}
       <div className="px-2 pt-2">
@@ -101,8 +92,8 @@ export function RecordTypeSidebar({
           className={clsx(
             'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors',
             selectedDefinitionId === null
-              ? 'bg-blue-100 text-blue-800'
-              : 'hover:bg-slate-100 text-ws-text-secondary'
+              ? 'bg-ws-row-expanded-bg text-ws-fg'
+              : 'hover:bg-ws-row-expanded-bg text-ws-text-secondary'
           )}
         >
           <span className="text-lg">📋</span>
@@ -119,21 +110,13 @@ export function RecordTypeSidebar({
       <div className="flex-1 overflow-y-auto custom-scroll px-2 py-2">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin w-5 h-5 border-2 border-slate-300 border-t-blue-500 rounded-full" />
+            <Spinner size="sm" />
           </div>
         ) : filteredDefinitions.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-sm text-ws-muted">
-              {searchQuery ? 'No matching types' : 'No record types defined'}
+          <div className="py-8 px-4">
+            <p className="text-xs text-ws-text-secondary">
+              {searchQuery ? `0 of ${recordDefinitions.length} types` : ''}
             </p>
-            {!searchQuery && (
-              <button
-                onClick={handleCreateDefinition}
-                className="mt-2 text-xs text-blue-600 hover:underline"
-              >
-                Create your first type
-              </button>
-            )}
           </div>
         ) : (
           <div className="space-y-1">
@@ -141,7 +124,6 @@ export function RecordTypeSidebar({
               const count = getRecordCount(def.id);
               const isSelected = selectedDefinitionId === def.id;
               const icon = def.styling?.icon;
-              const color = def.styling?.color || 'slate';
 
               return (
                 <div
@@ -150,14 +132,9 @@ export function RecordTypeSidebar({
                   className={clsx(
                     'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors group cursor-pointer',
                     isSelected
-                      ? `bg-${color}-100 text-${color}-800`
-                      : 'hover:bg-slate-100 text-ws-text-secondary'
+                      ? 'bg-ws-row-expanded-bg text-ws-fg'
+                      : 'hover:bg-ws-row-expanded-bg text-ws-text-secondary'
                   )}
-                  style={{
-                    backgroundColor: isSelected
-                      ? `var(--tw-color-${color}-100, #f1f5f9)`
-                      : undefined,
-                  }}
                 >
                   {/* Icon */}
                   <span className="text-lg shrink-0">
@@ -175,7 +152,7 @@ export function RecordTypeSidebar({
                   {/* Edit Schema button on hover */}
                   <button
                     onClick={(e) => handleEditDefinition(e, def.id)}
-                    className="p-1 text-ws-muted hover:text-ws-text-secondary hover:bg-slate-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="p-1 text-ws-muted hover:text-ws-text-secondary hover:bg-ws-row-expanded-bg rounded opacity-0 group-hover:opacity-100 transition-opacity"
                     title={`Edit ${def.name} schema`}
                   >
                     <Settings size={14} />
@@ -187,7 +164,7 @@ export function RecordTypeSidebar({
                       e.stopPropagation();
                       openOverlay('create-record', { definitionId: def.id });
                     }}
-                    className="p-1 text-ws-muted hover:text-blue-600 hover:bg-blue-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="p-1 text-ws-muted hover:text-ws-fg hover:bg-ws-row-expanded-bg rounded opacity-0 group-hover:opacity-100 transition-opacity"
                     title={`Create new ${def.name}`}
                   >
                     <Plus size={14} />
