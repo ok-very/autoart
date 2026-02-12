@@ -13,4 +13,5 @@ export { useExportWorkbenchStore } from './exportWorkbenchStore';
 export { useProjectionStore } from './projectionStore';
 export { useCollectionStore } from './collectionStore';
 export type { Collection, SelectionReference, SelectionType, TemplatePreset } from './collectionStore';
+export { useTableFilterStore } from './tableFilterStore';
 

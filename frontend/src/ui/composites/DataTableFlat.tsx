@@ -10,162 +10,115 @@
  * Features:
  * - Dynamic columns from definition schema
  * - Inline editing via EditableCell
- * - Column visibility picker
- * - Sorting (delegated to UniversalTableCore)
+ * - Column visibility (persisted via Zustand store)
+ * - Sorting via TanStack Table (state layer) + UniversalTableCore (renderer)
+ * - Global text filter via FilterBar
  * - Row selection with multi-select
  * - Pagination (internal state)
  * - Builds FieldViewModels for cells
  *
  * Architecture:
- * - Uses UniversalTableCore for rendering
- * - Wrapper handles pagination, selection, column visibility
+ * - TanStack Table manages state (sorting, filtering, column visibility)
+ * - UniversalTableCore renders pre-sorted, pre-filtered rows
+ * - Wrapper handles pagination, selection, cell rendering
  * - Wrapper provides cell() functions with domain factory calls
  */
 
 import { clsx } from 'clsx';
-import { Columns, Plus } from 'lucide-react';
-import { useState, useMemo, useCallback } from 'react';
+import { Plus } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import type { ColumnDef, VisibilityState } from '@tanstack/react-table';
 
 import { buildFieldViewModel, type FieldViewModel, type FieldDefinition, type ProjectState, type EntityContext } from '@autoart/shared/domain';
+import { ColumnPicker, FilterBar, type ColumnPickerField } from '@autoart/ui';
 
 import type { DataRecord, RecordDefinition, FieldDef } from '../../types';
 import { stringifyFieldValue } from '../../utils/stringifyFieldValue';
+import { fuzzyFilter, exactFilter, includesFilter, dateRangeFilter } from '../../utils/filterFunctions';
+import { useTableState } from '../../hooks/useTableState';
+import { useTableFilterStore } from '../../stores/tableFilterStore';
 import { DataFieldWidget, type DataFieldKind } from '../../ui/molecules/DataFieldWidget';
 import { EditableCell } from '../../ui/molecules/EditableCell';
 import { StatusColumnSummary } from '../../ui/molecules/StatusColumnSummary';
-import { UniversalTableCore, makeFlatRowModel, type TableColumn as CoreTableColumn, type TableRow, type TableFeature } from '../table-core';
+import { UniversalTableCore, type TableColumn as CoreTableColumn, type TableRow, type TableFeature, type SortState } from '../table-core';
 import { useCollectionModeOptional } from '../../workflows/export/context/CollectionModeProvider';
 import { SelectableWrapper } from '../../workflows/export/components/SelectableWrapper';
 
 // ==================== TYPES ====================
 
 export interface TableColumn {
-    /** Unique column key */
     key: string;
-    /** Display label */
     label: string;
-    /** Field definition (for editing) */
     field?: FieldDef;
-    /** Column width in pixels */
     width?: number;
-    /** Minimum width */
     minWidth?: number;
-    /** Is column sortable */
     sortable?: boolean;
-    /** Is column editable */
     editable?: boolean;
-    /** Is column resizable */
     resizable?: boolean;
-    /** Custom cell renderer (overrides default) */
     renderCell?: (record: DataRecord, viewModel: FieldViewModel) => React.ReactNode;
 }
 
 export interface DataTableFlatProps {
-    /** Records to display */
     records: DataRecord[];
-    /** Record definition (for column schema) */
     definition: RecordDefinition | null;
-    /** Loading state */
     isLoading?: boolean;
-    /** Currently selected record ID */
     selectedRecordId?: string | null;
-    /** Callback when a record row is clicked */
     onRowSelect?: (recordId: string) => void;
-    /** Callback when a cell value changes */
     onCellChange?: (recordId: string, fieldKey: string, value: unknown) => void;
-    /** Callback when selection changes (multi-select) */
     onSelectionChange?: (selectedIds: Set<string>) => void;
-    /** Callback to add a new record */
     onAddRecord?: () => void;
-    /** Column overrides/additions */
     columnOverrides?: Partial<Record<string, Partial<TableColumn>>>;
-    /** Which columns to show (by key). If not provided, shows first 6 */
     visibleColumns?: string[];
-    /** Whether inline editing is enabled */
     editable?: boolean;
-    /** Whether multi-select is enabled */
     multiSelect?: boolean;
-    /** Page size for pagination */
     pageSize?: number;
-    /** Compact display mode */
     compact?: boolean;
-    /**
-     * Row height configuration.
-     * - number: Fixed height in pixels
-     * - 'auto': Height adjusts to content (enables text wrapping)
-     * Default: undefined (uses compact sizing)
-     */
     rowHeight?: number | 'auto';
-    /**
-     * Whether text should wrap in cells.
-     * When true, long text wraps instead of truncating.
-     * Default: false
-     */
     wrapText?: boolean;
-    /** Empty state message */
     emptyMessage?: string;
-    /** Custom header content (replaces default) */
     renderHeader?: () => React.ReactNode;
-    /** Custom footer content */
     renderFooter?: (info: { totalRecords: number; page: number; totalPages: number; selectedIds: Set<string> }) => React.ReactNode;
-    /** Additional className */
     className?: string;
-}
-
-// ==================== COLUMN VISIBILITY PICKER ====================
-
-interface ColumnPickerProps {
-    allColumns: TableColumn[];
-    visibleKeys: Set<string>;
-    onToggle: (key: string) => void;
-}
-
-function ColumnPicker({ allColumns, visibleKeys, onToggle }: ColumnPickerProps) {
-    const [isOpen, setIsOpen] = useState(false);
-
-    return (
-        <div className="relative">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="p-2 rounded hover:bg-slate-100 text-ws-text-secondary"
-                title="Toggle columns"
-            >
-                <Columns size={16} />
-            </button>
-
-            {isOpen && (
-                <>
-                    <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-                    <div className="absolute top-full right-0 mt-1 w-48 bg-ws-panel-bg border border-ws-panel-border rounded-lg shadow-lg z-20 py-1 max-h-64 overflow-y-auto">
-                        <div className="px-3 py-1.5 text-[10px] font-semibold text-ws-muted uppercase">
-                            Visible Columns
-                        </div>
-                        {allColumns.map((col) => (
-                            <label
-                                key={col.key}
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-ws-bg cursor-pointer"
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={visibleKeys.has(col.key)}
-                                    onChange={() => onToggle(col.key)}
-                                    className="rounded border-slate-300"
-                                />
-                                <span className="truncate">{col.label}</span>
-                            </label>
-                        ))}
-                    </div>
-                </>
-            )}
-        </div>
-    );
 }
 
 // ==================== HELPERS ====================
 
-/**
- * Create minimal project state for building view models
- */
+function getFilterFnForFieldType(type?: string) {
+    switch (type) {
+        case 'status':
+        case 'select':
+            return exactFilter;
+        case 'date':
+            return dateRangeFilter;
+        case 'tags':
+            return includesFilter;
+        default:
+            return fuzzyFilter;
+    }
+}
+
+function deriveInitialVisibility(
+    visibleColumnsProp: string[] | undefined,
+    allColumns: TableColumn[],
+    storedVisibility: VisibilityState,
+): VisibilityState {
+    if (visibleColumnsProp) {
+        const vis: VisibilityState = {};
+        allColumns.forEach((col) => {
+            vis[col.key] = visibleColumnsProp.includes(col.key);
+        });
+        return vis;
+    }
+    if (Object.keys(storedVisibility).length > 0) {
+        return storedVisibility;
+    }
+    const vis: VisibilityState = {};
+    allColumns.forEach((col, i) => {
+        vis[col.key] = i < 6;
+    });
+    return vis;
+}
+
 function createMinimalProjectState(): ProjectState {
     return {
         projectId: '',
@@ -179,9 +132,6 @@ function createMinimalProjectState(): ProjectState {
 
 // ==================== DATA TABLE FLAT ====================
 
-/**
- * DataTableFlat - Table composite for flat DataRecord data
- */
 export function DataTableFlat({
     records,
     definition,
@@ -204,18 +154,14 @@ export function DataTableFlat({
     renderFooter,
     className,
 }: DataTableFlatProps) {
-    // Collection mode
     const collectionMode = useCollectionModeOptional();
     const isCollecting = collectionMode?.isCollecting ?? false;
 
-    // Internal state
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-    const [internalVisibleKeys, setInternalVisibleKeys] = useState<Set<string>>(new Set());
     const [page, setPage] = useState(0);
 
     // Build columns from definition schema
     const allColumns = useMemo<TableColumn[]>(() => {
-        // Name column (always present)
         const nameColumn: TableColumn = {
             key: 'unique_name',
             label: 'Name',
@@ -227,7 +173,6 @@ export function DataTableFlat({
             field: { key: 'unique_name', type: 'text', label: 'Name' },
         };
 
-        // Dynamic columns from schema
         const fields = definition?.schema_config?.fields || [];
         const fieldColumns = fields
             .filter((field: FieldDef) => field.key !== 'name' && field.key !== 'unique_name')
@@ -253,7 +198,6 @@ export function DataTableFlat({
                 };
             });
 
-        // Updated at column
         const updatedColumn: TableColumn = {
             key: 'updated_at',
             label: 'Updated',
@@ -267,42 +211,112 @@ export function DataTableFlat({
         return [nameColumn, ...fieldColumns, updatedColumn];
     }, [definition, editable, columnOverrides]);
 
-    // Determine visible columns
-    const visibleColumnKeys = useMemo(() => {
+    // ==================== TANSTACK TABLE SETUP ====================
+
+    const definitionId = definition?.id ?? '';
+    const storedVisibility = useTableFilterStore((s) => s.getColumnVisibility(definitionId));
+    const storedSorting = useTableFilterStore((s) => s.getSorting(definitionId));
+    const setStoredVisibility = useTableFilterStore((s) => s.setColumnVisibility);
+    const setStoredSorting = useTableFilterStore((s) => s.setSorting);
+
+    const tanstackColumns = useMemo<ColumnDef<DataRecord, any>[]>(() => {
+        return allColumns.map((col): ColumnDef<DataRecord, any> => ({
+            id: col.key,
+            accessorFn: (record) => {
+                if (col.key === 'unique_name') return record.unique_name;
+                if (col.key === 'updated_at') return record.updated_at ?? '';
+                return record.data?.[col.key];
+            },
+            header: col.label,
+            filterFn: getFilterFnForFieldType(col.field?.type),
+            enableSorting: col.sortable ?? false,
+            enableHiding: true,
+        }));
+    }, [allColumns]);
+
+    const table = useTableState({
+        data: records,
+        columns: tanstackColumns,
+        initialSorting: storedSorting,
+        initialColumnVisibility: deriveInitialVisibility(visibleColumnsProp, allColumns, storedVisibility),
+        initialGlobalFilter: '',
+    });
+
+    // Sync visibleColumnsProp → TanStack state when prop changes
+    useEffect(() => {
         if (visibleColumnsProp) {
-            return new Set(visibleColumnsProp);
+            const visibility: VisibilityState = {};
+            allColumns.forEach((col) => {
+                visibility[col.key] = visibleColumnsProp.includes(col.key);
+            });
+            table.setColumnVisibility(visibility);
         }
-        if (internalVisibleKeys.size > 0) {
-            return internalVisibleKeys;
+    }, [visibleColumnsProp, allColumns, table]);
+
+    // Sync column visibility to store (only when not prop-controlled)
+    const visibility = table.getState().columnVisibility;
+    useEffect(() => {
+        if (definitionId && !visibleColumnsProp) {
+            setStoredVisibility(definitionId, visibility);
         }
-        // Default: first 6 columns
-        return new Set(allColumns.slice(0, 6).map((c) => c.key));
-    }, [visibleColumnsProp, internalVisibleKeys, allColumns]);
+    }, [visibility, definitionId, visibleColumnsProp, setStoredVisibility]);
+
+    // Sync sorting to store
+    const sorting = table.getState().sorting;
+    useEffect(() => {
+        if (definitionId) {
+            setStoredSorting(definitionId, sorting);
+        }
+    }, [sorting, definitionId, setStoredSorting]);
+
+    // ==================== DERIVED FROM TANSTACK ====================
+
+    const globalFilter = table.getState().globalFilter;
+    const columnFilters = table.getState().columnFilters;
+    const filterSortKey = `${globalFilter}-${JSON.stringify(columnFilters)}-${JSON.stringify(sorting)}`;
+
+    const [pageResetKey, setPageResetKey] = useState(filterSortKey);
+    if (filterSortKey !== pageResetKey) {
+        setPageResetKey(filterSortKey);
+        setPage(0);
+    }
+
+    const filteredSortedRows = table.getFilteredRowModel().rows;
+    const totalFilteredCount = filteredSortedRows.length;
+
+    const paginatedRows = useMemo(() => {
+        const start = page * pageSize;
+        return filteredSortedRows.slice(start, start + pageSize);
+    }, [filteredSortedRows, page, pageSize]);
+
+    const totalPages = Math.ceil(totalFilteredCount / pageSize);
 
     const displayColumns = useMemo(() => {
-        return allColumns.filter((col) => visibleColumnKeys.has(col.key));
-    }, [allColumns, visibleColumnKeys]);
-
-    // Paginate records (sorting delegated to core)
-    const paginatedRecords = useMemo(() => {
-        const start = page * pageSize;
-        return records.slice(start, start + pageSize);
-    }, [records, page, pageSize]);
-
-    const totalPages = Math.ceil(records.length / pageSize);
-
-    // Handlers
-    const handleToggleColumn = useCallback((key: string) => {
-        setInternalVisibleKeys((prev) => {
-            const next = new Set(prev.size > 0 ? prev : visibleColumnKeys);
-            if (next.has(key)) {
-                next.delete(key);
-            } else {
-                next.add(key);
-            }
-            return next;
+        return allColumns.filter((col) => {
+            const tsCol = table.getColumn(col.key);
+            return tsCol ? tsCol.getIsVisible() : true;
         });
-    }, [visibleColumnKeys]);
+    }, [allColumns, visibility, table]);
+
+    const coreSortState: SortState = useMemo(() => {
+        if (sorting.length === 0) return null;
+        return { columnId: sorting[0].id, direction: sorting[0].desc ? 'desc' : 'asc' };
+    }, [sorting]);
+
+    const handleSortChange = useCallback((columnId: string) => {
+        const current = table.getState().sorting;
+        if (current.length > 0 && current[0].id === columnId) {
+            if (!current[0].desc) {
+                table.setSorting([{ id: columnId, desc: true }]);
+            } else {
+                table.setSorting([]);
+            }
+        } else {
+            table.setSorting([{ id: columnId, desc: false }]);
+        }
+    }, [table]);
+
+    // ==================== HANDLERS ====================
 
     const handleRowClick = useCallback((recordId: string) => {
         onRowSelect?.(recordId);
@@ -320,6 +334,10 @@ export function DataTableFlat({
             return next;
         });
     }, [onSelectionChange]);
+
+    const paginatedRecords = useMemo(() => {
+        return paginatedRows.map((row) => row.original);
+    }, [paginatedRows]);
 
     const handleSelectAll = useCallback(() => {
         setSelectedIds((prev) => {
@@ -369,7 +387,6 @@ export function DataTableFlat({
             entityContext,
         });
 
-        // Override editable based on column config
         return {
             ...viewModel,
             editable: (column.editable ?? editable) && viewModel.editable,
@@ -380,7 +397,6 @@ export function DataTableFlat({
     const coreColumns = useMemo<CoreTableColumn[]>(() => {
         const cols: CoreTableColumn[] = [];
 
-        // Checkbox column for multi-select
         if (multiSelect) {
             const allOnPageSelected = paginatedRecords.length > 0 &&
                 paginatedRecords.every((r) => selectedIds.has(r.id));
@@ -415,7 +431,6 @@ export function DataTableFlat({
             });
         }
 
-        // Data columns
         for (const col of displayColumns) {
             cols.push({
                 id: col.key,
@@ -424,7 +439,6 @@ export function DataTableFlat({
                 minWidth: col.minWidth,
                 resizable: col.resizable,
                 align: 'left',
-                // sortKey for sortable columns
                 sortKey: col.sortable ? (row: TableRow) => {
                     const record = row.data as DataRecord;
                     if (col.key === 'unique_name') return record.unique_name;
@@ -432,28 +446,22 @@ export function DataTableFlat({
                     const val = record.data?.[col.key];
                     return stringifyFieldValue(val);
                 } : undefined,
-                // cell renderer with EditableCell
                 cell: (row: TableRow) => {
                     const record = row.data as DataRecord;
                     const viewModel = buildCellViewModel(record, col);
 
                     let cellContent: React.ReactNode;
 
-                    // Custom renderer
                     if (col.renderCell) {
                         cellContent = col.renderCell(record, viewModel);
-                    }
-                    // Updated at special handling
-                    else if (col.key === 'updated_at') {
+                    } else if (col.key === 'updated_at') {
                         const date = record.updated_at ? new Date(record.updated_at) : null;
                         cellContent = (
                             <div className="text-xs text-ws-text-secondary">
                                 {date ? date.toLocaleDateString() : '-'}
                             </div>
                         );
-                    }
-                    // Editable cell (but not during collection mode)
-                    else if (col.editable && editable && !isCollecting) {
+                    } else if (col.editable && editable && !isCollecting) {
                         cellContent = (
                             <EditableCell
                                 viewModel={viewModel}
@@ -462,14 +470,11 @@ export function DataTableFlat({
                                 wrapText={wrapText}
                             />
                         );
-                    }
-                    // Read-only display
-                    else {
+                    } else {
                         const renderAs = (col.field?.type || 'text') as DataFieldKind;
                         cellContent = <DataFieldWidget kind={renderAs} value={viewModel.value} wrapText={wrapText} />;
                     }
 
-                    // Wrap with SelectableWrapper when in collection mode
                     if (isCollecting) {
                         return (
                             <SelectableWrapper
@@ -494,38 +499,70 @@ export function DataTableFlat({
 
     // Row model from paginated records
     const rowModel = useMemo(() => {
-        return makeFlatRowModel(paginatedRecords);
-    }, [paginatedRecords]);
+        const tableRows: TableRow[] = paginatedRecords.map((record) => ({
+            id: record.id,
+            data: record,
+        }));
+        return {
+            getRows: () => tableRows,
+            capabilities: { selectable: multiSelect },
+        };
+    }, [paginatedRecords, multiSelect]);
 
-    // Features: column picker in toolbar
+    // ==================== FEATURES ====================
+
+    const columnPickerFields: ColumnPickerField[] = useMemo(() => {
+        return allColumns.map((col) => ({
+            fieldName: col.key,
+            label: col.label,
+        }));
+    }, [allColumns]);
+
+    const visibleKeys = useMemo(() => {
+        return new Set(
+            allColumns.filter((col) => table.getColumn(col.key)?.getIsVisible()).map((c) => c.key)
+        );
+    }, [allColumns, visibility, table]);
+
     const features = useMemo<TableFeature[]>(() => {
-        if (renderHeader) return []; // Custom header replaces default
+        if (renderHeader) return [];
 
-        return [{
-            id: 'column-picker',
-            renderToolbarRight: () => (
-                <ColumnPicker
-                    allColumns={allColumns}
-                    visibleKeys={visibleColumnKeys}
-                    onToggle={handleToggleColumn}
-                />
-            ),
-        }];
-    }, [renderHeader, allColumns, visibleColumnKeys, handleToggleColumn]);
+        return [
+            {
+                id: 'filter-bar',
+                renderToolbarLeft: () => (
+                    <FilterBar
+                        searchQuery={table.getState().globalFilter ?? ''}
+                        onSearchChange={(query) => table.setGlobalFilter(query)}
+                        resultCount={totalFilteredCount}
+                        placeholder={`Filter ${definition?.name || 'records'}...`}
+                    />
+                ),
+            },
+            {
+                id: 'column-picker',
+                renderToolbarRight: () => (
+                    <ColumnPicker
+                        allFields={columnPickerFields}
+                        visibleKeys={visibleKeys}
+                        onToggle={(fieldName) => {
+                            const column = table.getColumn(fieldName);
+                            column?.toggleVisibility();
+                        }}
+                    />
+                ),
+            },
+        ];
+    }, [renderHeader, table, totalFilteredCount, definition?.name, columnPickerFields, visibleKeys]);
 
-    // Select-all checkbox in header feature
     const selectAllFeature = useMemo<TableFeature | null>(() => {
         if (!multiSelect) return null;
         return {
             id: 'select-all',
             decorateColumns: (cols) => {
-                // Find checkbox column and add header checkbox
                 return cols.map((col) => {
                     if (col.id === '__checkbox__') {
-                        return {
-                            ...col,
-                            // Header will show select-all checkbox via custom render
-                        };
+                        return { ...col };
                     }
                     return col;
                 });
@@ -537,7 +574,8 @@ export function DataTableFlat({
         return [...features, selectAllFeature].filter(Boolean) as TableFeature[];
     }, [features, selectAllFeature]);
 
-    // Get row class for selection highlighting
+    // ==================== ROW STYLING ====================
+
     const getRowClassName = useCallback((row: TableRow) => {
         const record = row.data as DataRecord;
         const isActive = selectedRecordId === record.id;
@@ -547,17 +585,15 @@ export function DataTableFlat({
         return '';
     }, [selectedRecordId, selectedIds]);
 
-    // Status summary footer
+    // ==================== FOOTER ====================
+
     const statusSummaryFooter = useCallback(() => {
         const statusColumns = displayColumns.filter((col) => col.field?.type === 'status');
         if (statusColumns.length === 0) return null;
 
         return (
             <div className="flex items-center h-8 border-t border-ws-panel-border">
-                {/* Checkbox placeholder */}
                 {multiSelect && <div className="w-10 px-3" />}
-
-                {/* Columns with status summary */}
                 {displayColumns.map((col) => {
                     if (col.field?.type === 'status') {
                         const statusCounts: Record<string, number> = {};
@@ -597,7 +633,6 @@ export function DataTableFlat({
         );
     }, [displayColumns, records, multiSelect]);
 
-    // Combined footer with status summary and pagination
     const combinedFooter = useCallback(() => {
         const statusFooter = statusSummaryFooter();
         const hasStatusFooter = !!statusFooter;
@@ -611,7 +646,7 @@ export function DataTableFlat({
                 {statusFooter}
                 {hasCustomFooter ? (
                     renderFooter({
-                        totalRecords: records.length,
+                        totalRecords: totalFilteredCount,
                         page,
                         totalPages,
                         selectedIds,
@@ -619,7 +654,8 @@ export function DataTableFlat({
                 ) : hasPagination && (
                     <div className="flex items-center justify-between px-4 py-2 bg-ws-bg border-t border-ws-panel-border">
                         <span className="text-xs text-ws-text-secondary">
-                            {records.length} record{records.length !== 1 ? 's' : ''}
+                            {totalFilteredCount} record{totalFilteredCount !== 1 ? 's' : ''}
+                            {totalFilteredCount !== records.length && ` of ${records.length}`}
                         </span>
                         <div className="flex items-center gap-2">
                             <button
@@ -644,9 +680,10 @@ export function DataTableFlat({
                 )}
             </>
         );
-    }, [statusSummaryFooter, totalPages, renderFooter, records.length, page, selectedIds]);
+    }, [statusSummaryFooter, totalPages, renderFooter, totalFilteredCount, records.length, page, selectedIds]);
 
-    // Loading state
+    // ==================== RENDER ====================
+
     if (isLoading) {
         return (
             <div className={clsx('flex items-center justify-center h-64 text-ws-muted', className)}>
@@ -655,7 +692,6 @@ export function DataTableFlat({
         );
     }
 
-    // Empty state - no definition
     if (!definition) {
         return (
             <div className={clsx('flex flex-col items-center justify-center h-64 text-ws-muted', className)}>
@@ -665,7 +701,6 @@ export function DataTableFlat({
         );
     }
 
-    // Empty state - no records
     if (records.length === 0) {
         return (
             <div className={clsx('flex flex-col items-center justify-center h-64 text-ws-muted', className)}>
@@ -676,10 +711,8 @@ export function DataTableFlat({
 
     return (
         <div className={clsx('flex flex-col h-full', className)}>
-            {/* Custom header */}
             {renderHeader && renderHeader()}
 
-            {/* Core table */}
             <UniversalTableCore
                 rowModel={rowModel}
                 columns={coreColumns}
@@ -692,9 +725,11 @@ export function DataTableFlat({
                 rowHeight={rowHeight}
                 wrapText={wrapText}
                 renderFooter={combinedFooter}
+                externalSort
+                externalSortState={coreSortState}
+                onSortChange={handleSortChange}
             />
 
-            {/* Add Record button */}
             {onAddRecord && (
                 <button
                     onClick={onAddRecord}

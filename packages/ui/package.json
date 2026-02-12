@@ -34,6 +34,7 @@
         "clsx": "catalog:",
         "date-fns": "catalog:",
         "lucide-react": "catalog:",
+        "match-sorter": "catalog:",
         "tailwind-merge": "catalog:"
     }
 }

@@ -1,10 +1,12 @@
 import { clsx } from 'clsx';
-import { Plus, FolderOpen, Search, Settings, ChevronDown, ChevronRight, Activity } from 'lucide-react';
+import { Plus, FolderOpen, Settings, ChevronDown, ChevronRight, Activity } from 'lucide-react';
 import { useState } from 'react';
 
 import { useRecordDefinitions, useRecordStats } from '../../api/hooks';
 import { useFactKindStats } from '../../api/hooks/factKinds';
+import { useListFilter } from '../../hooks/useListFilter';
 import { useUIStore } from '../../stores/uiStore';
+import { FilterBar, Spinner } from '@autoart/ui';
 
 type RegistrySection = 'records' | 'events';
 
@@ -47,11 +49,10 @@ export function RegistrySidebar({
     });
 
     // Apply search filter
-    const filterRecordsBySearch = searchQuery.trim()
-        ? recordDefinitions.filter((def) =>
-            def.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        : recordDefinitions;
+    const filteredRecords = useListFilter(recordDefinitions, searchQuery, {
+        keys: ['name'],
+        sortFn: (a, b) => a.name.localeCompare(b.name),
+    });
 
     // Stats helpers
     const getRecordCount = (definitionId: string): number => {
@@ -84,26 +85,19 @@ export function RegistrySidebar({
 
             {/* Search */}
             <div className="p-3 border-b border-ws-panel-border">
-                <div className="relative">
-                    <Search
-                        size={14}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-ws-muted"
-                    />
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search definitions..."
-                        className="w-full pl-9 pr-3 py-2 text-sm border border-ws-panel-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                </div>
+                <FilterBar
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    resultCount={filteredRecords.length}
+                    placeholder="Filter definitions..."
+                />
             </div>
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto custom-scroll">
                 {isLoading ? (
                     <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin w-5 h-5 border-2 border-slate-300 border-t-blue-500 rounded-full" />
+                        <Spinner size="sm" />
                     </div>
                 ) : (
                     <>
@@ -111,14 +105,14 @@ export function RegistrySidebar({
                         <div className="border-b border-ws-panel-border">
                             <button
                                 onClick={() => setRecordsExpanded(!recordsExpanded)}
-                                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-100 transition-colors"
+                                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-ws-row-expanded-bg transition-colors"
                             >
                                 <div className="flex items-center gap-2">
-                                    <FolderOpen size={14} className="text-blue-500" />
+                                    <FolderOpen size={14} className="text-ws-accent" />
                                     <span className="text-xs font-semibold text-ws-text-secondary uppercase tracking-wider">
                                         Data Definitions
                                     </span>
-                                    <span className="text-[10px] text-ws-muted bg-slate-100 px-1.5 py-0.5 rounded">
+                                    <span className="text-[10px] text-ws-muted bg-ws-row-expanded-bg px-1.5 py-0.5 rounded">
                                         {recordDefinitions.length}
                                     </span>
                                 </div>
@@ -128,7 +122,7 @@ export function RegistrySidebar({
                                             e.stopPropagation();
                                             handleCreateDefinition();
                                         }}
-                                        className="p-1 text-ws-muted hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                        className="p-1 text-ws-muted hover:text-ws-fg hover:bg-ws-row-expanded-bg rounded transition-colors"
                                         title="Create data definition"
                                     >
                                         <Plus size={14} />
@@ -150,8 +144,8 @@ export function RegistrySidebar({
                                             className={clsx(
                                                 'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors',
                                                 selectedDefinitionId === null && activeSection === 'records'
-                                                    ? 'bg-blue-100 text-blue-800'
-                                                    : 'hover:bg-slate-100 text-ws-text-secondary'
+                                                    ? 'bg-ws-row-expanded-bg text-ws-fg'
+                                                    : 'hover:bg-ws-row-expanded-bg text-ws-text-secondary'
                                             )}
                                         >
                                             <span className="text-base">📋</span>
@@ -165,13 +159,13 @@ export function RegistrySidebar({
                                     </div>
 
                                     {/* Record definitions list */}
-                                    {filterRecordsBySearch.length === 0 ? (
+                                    {filteredRecords.length === 0 ? (
                                         <div className="text-center py-4 px-2">
                                             <p className="text-xs text-ws-muted">No data definitions</p>
                                         </div>
                                     ) : (
                                         <div className="space-y-0.5 px-1">
-                                            {filterRecordsBySearch.map((def) => {
+                                            {filteredRecords.map((def) => {
                                                 const count = getRecordCount(def.id);
                                                 const isSelected = selectedDefinitionId === def.id && activeSection === 'records';
                                                 const icon = def.styling?.icon;
@@ -183,8 +177,8 @@ export function RegistrySidebar({
                                                         className={clsx(
                                                             'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors group cursor-pointer',
                                                             isSelected
-                                                                ? 'bg-blue-100 text-blue-800'
-                                                                : 'hover:bg-slate-100 text-ws-text-secondary'
+                                                                ? 'bg-ws-row-expanded-bg text-ws-fg'
+                                                                : 'hover:bg-ws-row-expanded-bg text-ws-text-secondary'
                                                         )}
                                                     >
                                                         <span className="text-base shrink-0">
@@ -198,7 +192,7 @@ export function RegistrySidebar({
                                                         </div>
                                                         <button
                                                             onClick={(e) => handleEditDefinition(e, def.id)}
-                                                            className="p-1 text-ws-muted hover:text-ws-text-secondary hover:bg-slate-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            className="p-1 text-ws-muted hover:text-ws-text-secondary hover:bg-ws-row-expanded-bg rounded opacity-0 group-hover:opacity-100 transition-opacity"
                                                             title={`Edit ${def.name} schema`}
                                                         >
                                                             <Settings size={12} />
@@ -208,7 +202,7 @@ export function RegistrySidebar({
                                                                 e.stopPropagation();
                                                                 openOverlay('create-record', { definitionId: def.id });
                                                             }}
-                                                            className="p-1 text-ws-muted hover:text-blue-600 hover:bg-blue-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            className="p-1 text-ws-muted hover:text-ws-fg hover:bg-ws-row-expanded-bg rounded opacity-0 group-hover:opacity-100 transition-opacity"
                                                             title={`Create ${def.name}`}
                                                         >
                                                             <Plus size={12} />
@@ -226,10 +220,10 @@ export function RegistrySidebar({
                         <div className="border-b border-ws-panel-border">
                             <button
                                 onClick={() => setEventsExpanded(!eventsExpanded)}
-                                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-100 transition-colors"
+                                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-ws-row-expanded-bg transition-colors"
                             >
                                 <div className="flex items-center gap-2">
-                                    <Activity size={14} className="text-blue-500" />
+                                    <Activity size={14} className="text-ws-accent" />
                                     <span className="text-xs font-semibold text-ws-text-secondary uppercase tracking-wider">
                                         Events & Facts
                                     </span>
@@ -251,11 +245,11 @@ export function RegistrySidebar({
                                         className={clsx(
                                             'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors',
                                             selectedDefinitionId === 'event-catalog' && activeSection === 'events'
-                                                ? 'bg-blue-100 text-blue-800'
-                                                : 'hover:bg-slate-100 text-ws-text-secondary'
+                                                ? 'bg-ws-row-expanded-bg text-ws-fg'
+                                                : 'hover:bg-ws-row-expanded-bg text-ws-text-secondary'
                                         )}
                                     >
-                                        <Activity size={16} className="text-blue-500 shrink-0" />
+                                        <Activity size={16} className="text-ws-accent shrink-0" />
                                         <div className="flex-1 min-w-0">
                                             <div className="text-sm font-medium">Event Types</div>
                                             <div className="text-[10px] text-ws-muted">15 event types</div>
@@ -268,8 +262,8 @@ export function RegistrySidebar({
                                         className={clsx(
                                             'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors',
                                             selectedDefinitionId === 'fact-kinds' && activeSection === 'events'
-                                                ? 'bg-blue-100 text-blue-800'
-                                                : 'hover:bg-slate-100 text-ws-text-secondary'
+                                                ? 'bg-ws-row-expanded-bg text-ws-fg'
+                                                : 'hover:bg-ws-row-expanded-bg text-ws-text-secondary'
                                         )}
                                     >
                                         <span className="text-base shrink-0">📊</span>
