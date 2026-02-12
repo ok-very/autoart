@@ -2,26 +2,37 @@
  * Export Workbench Store
  *
  * Zustand store for Export Workbench state.
- * Manages project selection, format, options, preview, and step flow.
+ * Manages format, section configuration, and session flow.
+ *
+ * Project selection is handled by the Collection System (collectionStore).
+ * This store handles export-specific configuration that sits alongside it.
  */
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import { DEFAULT_EXPORT_OPTIONS } from '@autoart/shared';
+import { DEFAULT_EXPORT_OPTIONS, SECTION_DEFINITIONS } from '@autoart/shared';
 
 import type { ExportFormat, ExportOptions } from '../workflows/export/types';
 
 type ExportStep = 'configure' | 'output';
 
-interface ExportWorkbenchState {
-    // Selection state
-    selectedProjectIds: Set<string>;
-    previewProjectId: string | null;
+/** Build initial section config from SECTION_DEFINITIONS defaults */
+function buildDefaultSectionConfig(): Record<string, boolean> {
+    const config: Record<string, boolean> = {};
+    for (const def of SECTION_DEFINITIONS) {
+        config[def.id] = def.defaultEnabled;
+    }
+    return config;
+}
 
+interface ExportWorkbenchState {
     // Export configuration
     format: ExportFormat;
     options: ExportOptions;
+
+    // Section toggles (keyed by ExportOptions field name)
+    sectionConfig: Record<string, boolean>;
 
     // Step flow
     step: ExportStep;
@@ -32,55 +43,48 @@ interface ExportWorkbenchState {
     linkedDocId: string | null;
 
     // Actions
-    toggleProject: (id: string) => void;
-    selectAll: (ids: string[]) => void;
-    selectNone: () => void;
-    setPreviewProject: (id: string | null) => void;
     setFormat: (format: ExportFormat) => void;
     setOption: <K extends keyof ExportOptions>(key: K, value: ExportOptions[K]) => void;
+    setSectionConfig: (config: Record<string, boolean>) => void;
+    toggleSection: (sectionId: string) => void;
     setStep: (step: ExportStep) => void;
     setActiveSession: (sessionId: string | null) => void;
     setStalenessThreshold: (days: number) => void;
     setLinkedDocId: (docId: string | null) => void;
     reset: () => void;
+
+    /** Build ExportOptions by merging section toggles into base options */
+    getMergedOptions: () => ExportOptions;
 }
 
 export const useExportWorkbenchStore = create<ExportWorkbenchState>()(
     persist(
-        (set) => ({
+        (set, get) => ({
             // Initial state
-            selectedProjectIds: new Set(),
-            previewProjectId: null,
             format: 'rtf',
             options: DEFAULT_EXPORT_OPTIONS,
+            sectionConfig: buildDefaultSectionConfig(),
             step: 'configure',
             activeSessionId: null,
             stalenessThresholdDays: 7,
             linkedDocId: null,
 
             // Actions
-            toggleProject: (id) =>
-                set((state) => {
-                    const next = new Set(state.selectedProjectIds);
-                    if (next.has(id)) {
-                        next.delete(id);
-                    } else {
-                        next.add(id);
-                    }
-                    return { selectedProjectIds: next };
-                }),
-
-            selectAll: (ids) => set({ selectedProjectIds: new Set(ids) }),
-
-            selectNone: () => set({ selectedProjectIds: new Set() }),
-
-            setPreviewProject: (previewProjectId) => set({ previewProjectId }),
-
             setFormat: (format) => set({ format }),
 
             setOption: (key, value) =>
                 set((state) => ({
                     options: { ...state.options, [key]: value },
+                })),
+
+            setSectionConfig: (config) => set({ sectionConfig: config }),
+
+            toggleSection: (sectionId) =>
+                set((state) => ({
+                    sectionConfig: {
+                        ...state.sectionConfig,
+                        [sectionId]: !state.sectionConfig[sectionId],
+                    },
                 })),
 
             setStep: (step) => set({ step }),
@@ -93,22 +97,33 @@ export const useExportWorkbenchStore = create<ExportWorkbenchState>()(
 
             reset: () =>
                 set({
-                    selectedProjectIds: new Set(),
-                    previewProjectId: null,
                     format: 'rtf',
                     options: DEFAULT_EXPORT_OPTIONS,
+                    sectionConfig: buildDefaultSectionConfig(),
                     step: 'configure',
                     activeSessionId: null,
                     stalenessThresholdDays: 7,
                     linkedDocId: null,
                 }),
+
+            getMergedOptions: () => {
+                const state = get();
+                const merged = { ...state.options };
+                for (const [key, enabled] of Object.entries(state.sectionConfig)) {
+                    if (key in merged) {
+                        (merged as Record<string, unknown>)[key] = enabled;
+                    }
+                }
+                return merged;
+            },
         }),
         {
             name: 'export-workbench-storage',
-            version: 3,
+            version: 4,
             partialize: (state) => ({
                 format: state.format,
                 options: state.options,
+                sectionConfig: state.sectionConfig,
                 step: state.step,
                 activeSessionId: state.activeSessionId,
                 stalenessThresholdDays: state.stalenessThresholdDays,

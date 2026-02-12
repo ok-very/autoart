@@ -391,6 +391,8 @@ export {
     type PdfPagePreset,
     FINANCE_EXPORT_PRESETS,
     type FinanceExportPreset,
+    SECTION_DEFINITIONS,
+    type SectionDefinition,
     type ExportFormat,
     type ExportSessionStatus,
     type ExportOptions,

@@ -47,11 +47,18 @@ export function CollectionItemCard({ item, onRemove, isDragging = false }: Colle
 
     return (
         <div
-            className={`
-        flex items-center gap-3 p-3 rounded-lg border
-        ${isDragging ? 'border-violet-400 bg-violet-50 shadow-lg' : 'border-ws-panel-border bg-ws-panel-bg hover:border-slate-300'}
-        transition-all duration-150
-      `}
+            className="flex items-center gap-3 p-3 rounded-lg border transition-all duration-150"
+            style={isDragging
+                ? {
+                    borderColor: 'var(--ws-accent, #3F5C6E)',
+                    background: 'color-mix(in srgb, var(--ws-accent, #3F5C6E) 6%, transparent)',
+                    boxShadow: '0 4px 12px -2px rgba(0,0,0,0.12)',
+                }
+                : {
+                    borderColor: 'var(--ws-panel-border, var(--ws-text-disabled, #D6D2CB))',
+                    background: 'var(--ws-bg, #F5F2ED)',
+                }
+            }
         >
             {/* Drag handle */}
             <button
@@ -63,7 +70,8 @@ export function CollectionItemCard({ item, onRemove, isDragging = false }: Colle
             </button>
 
             {/* Type icon */}
-            <div className="flex-shrink-0 w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center">
+            <div className="flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center"
+                style={{ background: 'color-mix(in srgb, var(--ws-text-disabled, #8C8C88) 12%, transparent)' }}>
                 <Icon size={16} className="text-ws-text-secondary" />
             </div>
 
@@ -101,7 +109,16 @@ export function CollectionItemCard({ item, onRemove, isDragging = false }: Colle
             <button
                 type="button"
                 onClick={() => onRemove(item.id)}
-                className="flex-shrink-0 p-1.5 rounded-md text-ws-muted hover:text-red-500 hover:bg-red-50 transition-colors"
+                className="flex-shrink-0 p-1.5 rounded-md transition-colors"
+                style={{ color: 'var(--ws-text-disabled, #8C8C88)' }}
+                onMouseOver={(e) => {
+                    e.currentTarget.style.color = 'var(--ws-color-error, #8C4A4A)';
+                    e.currentTarget.style.background = 'color-mix(in srgb, var(--ws-color-error, #8C4A4A) 10%, transparent)';
+                }}
+                onMouseOut={(e) => {
+                    e.currentTarget.style.color = 'var(--ws-text-disabled, #8C8C88)';
+                    e.currentTarget.style.background = 'transparent';
+                }}
                 aria-label="Remove from collection"
             >
                 <X size={14} weight="bold" />

@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck — Dead code: replaced by CollectionPanel in ExportContent. Pending Phase 3 removal.
 /**
  * ExportWorkbenchSidebar
  *
