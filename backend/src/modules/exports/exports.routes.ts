@@ -27,7 +27,7 @@ import { getGoogleToken, getMicrosoftToken, isProviderConnected } from '../impor
 // SCHEMAS
 // ============================================================================
 
-const ExportFormatSchema = z.enum(['rtf', 'markdown', 'plaintext', 'csv', 'google-doc', 'google-sheets', 'google-slides', 'pdf', 'docx']);
+const ExportFormatSchema = z.enum(['rtf', 'markdown', 'plaintext', 'csv', 'json', 'google-doc', 'google-sheets', 'google-slides', 'pdf', 'docx']);
 
 const ExportOptionsSchema = z.object({
     includeContacts: z.boolean().optional(),
@@ -273,6 +273,32 @@ export async function exportsRoutes(app: FastifyInstance) {
             deleted_count: sessionIds.length,
             session_ids: sessionIds,
         });
+    });
+
+    // ========================================================================
+    // STATELESS PREVIEW
+    // ========================================================================
+
+    /**
+     * Generate a projection preview without creating a session.
+     * Returns BfaProjectExportModel[] for client-side rendering.
+     */
+    app.post('/preview', async (request, reply) => {
+        const body = z.object({
+            projectIds: z.array(z.string().uuid()).min(1),
+            options: ExportOptionsSchema.optional(),
+        }).parse(request.body);
+
+        try {
+            const projection = await exportsService.previewProjection(
+                body.projectIds,
+                body.options as ExportOptions | undefined,
+            );
+            return reply.send({ projects: projection });
+        } catch (err) {
+            const message = (err as Error).message;
+            return reply.status(500).send({ error: message });
+        }
     });
 
     // ========================================================================
