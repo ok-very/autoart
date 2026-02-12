@@ -1,6 +1,7 @@
 // Hook exports
 export { useClickOutside } from './useClickOutside';
 export { useDebounce } from './useDebounce';
+export { useListFilter, type UseListFilterOptions } from './useListFilter';
 export { useInteractionHandlers } from './useInteractionHandlers';
 export { useDragHotZones, type HotZoneConfig, type UseDragHotZonesOptions } from './useDragHotZones';
 

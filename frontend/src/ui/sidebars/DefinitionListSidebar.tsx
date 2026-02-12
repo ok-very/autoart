@@ -4,7 +4,7 @@
  * Focused sidebar that shows only ONE type of definitions (either records or actions).
  * Used by the separated Records and Actions pages/panels.
  *
- * Integrates RegistryFilterBar for unified search, sort, and result count display.
+ * Integrates FilterBar from @autoart/ui for unified search, sort, and result count display.
  */
 
 import { clsx } from 'clsx';
@@ -13,10 +13,12 @@ import { useMemo, useState } from 'react';
 
 import type { DefinitionKind } from '@autoart/shared';
 
-import { Spinner } from '@autoart/ui';
+import { FilterBar, Spinner } from '@autoart/ui';
 import { useRecordDefinitions, useRecordStats } from '../../api/hooks';
+import { useListFilter } from '../../hooks/useListFilter';
 import { useUIStore } from '../../stores/uiStore';
-import { RegistryFilterBar, type RegistrySortKey } from '../registry/RegistryFilterBar';
+
+const DEFINITION_FILTER_KEYS = ['name'] as const;
 
 interface DefinitionListSidebarProps {
     width: number;
@@ -40,9 +42,8 @@ export function DefinitionListSidebar({
     const showCounts = definitionKind === 'record';
     const { openOverlay } = useUIStore();
 
-    // Filter bar state
     const [searchQuery, setSearchQuery] = useState('');
-    const [sortKey, setSortKey] = useState<RegistrySortKey>('name');
+    const [sortKey, setSortKey] = useState<'name' | 'created'>('name');
 
     // Filter definitions by kind
     const filteredDefinitions = useMemo(() => {
@@ -52,29 +53,22 @@ export function DefinitionListSidebar({
         });
     }, [definitions, definitionKind]);
 
-    // Apply search filter
-    const searchedDefinitions = useMemo(() => {
-        const filtered = searchQuery.trim()
-            ? filteredDefinitions.filter((def) =>
-                def.name.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-            : filteredDefinitions;
+    const sortFn = useMemo(() => {
+        switch (sortKey) {
+            case 'name':
+                return (a: typeof filteredDefinitions[number], b: typeof filteredDefinitions[number]) => a.name.localeCompare(b.name);
+            case 'created':
+                return (a: typeof filteredDefinitions[number], b: typeof filteredDefinitions[number]) =>
+                    new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            default:
+                return undefined;
+        }
+    }, [sortKey]);
 
-        // Sort
-        return [...filtered].sort((a, b) => {
-            switch (sortKey) {
-                case 'name':
-                    return a.name.localeCompare(b.name);
-                case 'created':
-                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-                case 'updated':
-                    // Definitions don't have updated_at; fall back to created_at
-                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-                default:
-                    return 0;
-            }
-        });
-    }, [filteredDefinitions, searchQuery, sortKey]);
+    const searchedDefinitions = useListFilter(filteredDefinitions, searchQuery, {
+        keys: DEFINITION_FILTER_KEYS,
+        sortFn,
+    });
 
     const getCount = (definitionId: string): number => {
         if (!stats) return 0;
@@ -121,16 +115,26 @@ export function DefinitionListSidebar({
             </div>
 
             {/* Unified filter bar */}
-            <RegistryFilterBar
+            <FilterBar
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
-                definitionKind={null}
-                onDefinitionKindChange={() => {}}
-                sortKey={sortKey}
-                onSortChange={setSortKey}
                 resultCount={searchedDefinitions.length}
-                hideKindFilter
-            />
+                placeholder={`Filter ${isRecords ? 'records' : 'actions'}...`}
+            >
+                <select
+                    value={sortKey}
+                    onChange={(e) => setSortKey(e.target.value as 'name' | 'created')}
+                    className="text-xs px-1.5 py-0.5 rounded border"
+                    style={{
+                        borderColor: 'var(--ws-panel-border)',
+                        backgroundColor: 'var(--ws-panel-bg)',
+                        color: 'var(--ws-fg)',
+                    }}
+                >
+                    <option value="name">Name</option>
+                    <option value="created">Created</option>
+                </select>
+            </FilterBar>
 
             {/* List */}
             <div className="flex-1 overflow-y-auto custom-scroll">

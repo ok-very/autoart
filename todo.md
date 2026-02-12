@@ -53,7 +53,7 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| — | **Export Package Queue Architecture** — Redesign export workbench to accept packages from multiple sources (collections, import handoff, project selections) via a persistent queue. Snapshots on submit, deferred resolution for import items, projector registry per source type. Three phases: (1) Queue foundation with project_selection only, (2) Collection + import handoff with inline resolution panel, (3) Cleanup + future sources (record_set, filtered_view, batch execution). Plan: `docs/plans/export-queue-architecture.md` | Export |
+| — | **Export Package Queue Architecture** — Redesign export workbench to accept packages from multiple sources (collections, import handoff, project selections) via a persistent queue. Snapshots on submit, deferred resolution for import items, projector registry per source type. Three phases: (1) Queue foundation with project_selection only, (2) Collection + import handoff with inline resolution panel, (3) Cleanup + future sources (record_set, filtered_view, batch execution). Plan: `docs/plans/export-queue-architecture.md`. *Phase 1 PR #477 closed without merge — approach needs rethinking after export UI design review (see P1).* | Export |
 
 ---
 
@@ -61,6 +61,7 @@
 
 | # | Issue | Category |
 |---|-------|----------|
+| — | **Export interface design review:** Thorough review of the merged export UI (PRs #479-483). Implementation needs revision — assess layout, interaction patterns, component structure, and alignment with DESIGN.md. Coordinate with in-house design. | Export |
 | — | **Composer dual-surface completion:** ComposerView as expanded panel — migrate to `useComposerForm`, agent selection/routing, `@autoart/ui` components, `--ws-*` tokens. UnifiedComposerBar deleted. | UX |
 
 ---
@@ -69,7 +70,7 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| — | **TanStack Table integration:** Add `@tanstack/table-core` as headless logic layer for filtering, sorting, column visibility across all table surfaces. Already have `@tanstack/react-virtual`. Wire into DataTable and UniversalTableCore. Goal: filtering built into the atoms. | Tables |
+| — | **Filtering, sorting, column visibility:** Headless `@tanstack/react-table` as state machine for all table surfaces + `match-sorter` for sidebar lists. Phase 0 (foundation) done — `useTableState` hook, `FilterChip` atom, `FilterBar` molecule, `ColumnPicker` moved to `@autoart/ui`, filter function registry. 4 phases remain: (1) DataTableFlat migration, (2) sidebar list filtering, (3) remaining core tables, (4) standalone tables. Roadmap: [`docs/roadmap-filtering.md`](docs/roadmap-filtering.md) | Tables |
 | — | **Export Workbench P4:** E2E verification — full flow per format: select → session → projection → preview → export → download. Verify finance exports unbroken. *(P5 target registry cleanup done — dead registry deleted, switch is canonical.)* | Export |
 | 216 | Derived field: "Last Updated / Last Touched" with Project Log linkage | Feature |
 | 81 | Enhance Record Inspector Assignee Chip | Feature |
@@ -150,8 +151,7 @@
 
 | PRs | Description |
 |-----|-------------|
-| #479-483 | **Export Workbench P0-P3 (Feb 10 2026):** Stack covering interpreter coverage (P1), export UI reconciliation (P0), projector fixes (P1-P2), and context helper frontend (P3). PRs: #479 (wire dead interpreter rules + seed entities), #480 (augment rules with BFA patterns), #481 (session-based export UI + ExportOptions schema reconciliation), #482 (BFA projector budget fallback + injector phase output), #483 (projector tests + ExportPreview cleanup + statusBlock.stage JSDoc). Total: 5 PRs, 2 commits on head, +990/-38 on #483. |
-| #477 | **Export Package Queue — Phase 1 (Feb 9 2026):** Complete queue foundation with project_selection only. Backend: `export_packages` table (migration 010), projector registry, packages service (CRUD + projection + execution), 8 REST endpoints at `/api/exports/packages`. Frontend: exportQueueStore, 7 TanStack Query hooks, three-panel layout (queue sidebar, detail view, inspector), inline project picker, status tracking. Queue is now default export surface (replaces legacy ExportWorkbench). 13 new files, 5 modified. +1616/-5 lines. **Note:** Needs restack due to divergence from main. |
+*(empty)*
 
 ---
 
@@ -159,6 +159,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Export Workbench P0-P3 (Feb 10 2026):** Interpreter coverage (#479), export UI reconciliation (#481), BFA projector fixes (#482), projector tests + ExportPreview cleanup (#483). **Needs design review — logged as P1.** PR #477 (Package Queue Phase 1) closed without merge. | PRs #479-483 (merged), #477 (closed) |
 | 340, 393 | **AutoHelper hardening + CodeAnt review fixes (Feb 9 2026):** (PR #473) Test infrastructure — `Settings.load_from_config_store` model_validator now checks `model_fields_set` before overwriting constructor kwargs (fixed 22 test failures); mail tests mock `_HAS_WIN32` directly instead of fighting `@functools.cache` (fixed 4 failures). Tests: 49/75 → 75/75. (PR #474) MyPy cleanup — 89 errors → 0 across 24 files: `types-requests` stubs, `dict[str, Any]` annotations, `cast()` for no-any-return, test function `-> None` + fixture types, async iterator overrides. (PR #475) Tray staleness (#340) — `ConnectionStateManager` thread-safe singleton with 3 states (unpaired/paired_connected/paired_disconnected), poller sets state on 401/network errors, tray reads from manager. File watch Phase 1 (#393) — watchdog-based `modules/file_watch/` (schemas, handler, service, router), 500ms debounce, ref matching, poller command handlers (watch_root/unwatch_root/drain_file_events). Tests: 75 → 98. **CodeAnt review fixes (commit 568b715):** Thread safety — double-checked locking on `get_service()` singleton, `ThreadSafeEventQueue` replaces bare list to prevent event loss between watchdog producer and drain consumer. Idempotency bug — audit_log stores Pydantic `model_dump()` for replay instead of `str(result)`, fixing wrong-type return on cache hit. Path safety — `path.absolute()` instead of `resolve()` for deletion events where file no longer exists. | PR #476 (stack merge #473-475) |
 
 | # | Issue | Closed By |
