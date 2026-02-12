@@ -1,17 +1,33 @@
 /**
  * Output Panel
- * 
+ *
  * Right sidebar for Export Workbench.
  * Combines output format selection with generation actions.
  * Settings fold out based on selected output module.
+ *
+ * Executes exports through the backend session pipeline
+ * (create session → generate projection → execute export).
  */
 
 import { useState } from 'react';
-import { FileText, Table, Loader2, AlertCircle, Check, ChevronDown, ChevronRight, Settings } from 'lucide-react';
+import { FileText, Table, Loader2, AlertCircle, Check, ChevronDown, ChevronRight, Settings, Download, ExternalLink } from 'lucide-react';
 import { GoogleLogo } from '@phosphor-icons/react';
-import { generateReport, type ArtifactResponse } from '../../../api/generate';
 import { useCollectionStore, type TemplatePreset } from '../../../stores';
+import { useExportWorkflow, useDownloadExportOutput } from '../../../api/hooks/exports';
 import { Text } from '@autoart/ui';
+
+import type { ExportFormat, ExportResult } from '@autoart/shared';
+
+// ============================================================================
+// TemplatePreset → ExportFormat mapping
+// ============================================================================
+
+const PRESET_TO_FORMAT: Record<TemplatePreset, ExportFormat> = {
+    bfa_rtf: 'rtf',
+    csv: 'csv',
+    google_docs: 'google-doc',
+    custom: 'json',
+};
 
 // ============================================================================
 // Output Module Configuration
@@ -50,8 +66,35 @@ const OUTPUT_MODULES: OutputModuleConfig[] = [
 ];
 
 // ============================================================================
+// Helpers
+// ============================================================================
+
+/**
+ * Extract project IDs from collection selections.
+ * Phase 1: node-type selections use sourceId directly as project ID.
+ * Phase 2 will add record/field → root_project_id resolution.
+ */
+function resolveProjectIds(selections: { type: string; sourceId: string }[]): string[] {
+    const ids = new Set<string>();
+    for (const sel of selections) {
+        if (sel.type === 'node' || sel.type === 'record') {
+            ids.add(sel.sourceId);
+        }
+    }
+    return Array.from(ids);
+}
+
+// ============================================================================
 // Component
 // ============================================================================
+
+interface ExportResultEntry {
+    id: string;
+    sessionId: string;
+    format: ExportFormat;
+    result: ExportResult;
+    timestamp: string;
+}
 
 export function GenerationPanel() {
     const activeCollection = useCollectionStore(s =>
@@ -59,9 +102,9 @@ export function GenerationPanel() {
     );
     const { setTemplatePreset } = useCollectionStore();
 
-    const [isLoading, setIsLoading] = useState(false);
-    const [artifacts, setArtifacts] = useState<ArtifactResponse[]>([]);
-    const [error, setError] = useState<string | null>(null);
+    const workflow = useExportWorkflow();
+    const downloadOutput = useDownloadExportOutput();
+    const [results, setResults] = useState<ExportResultEntry[]>([]);
     const [expandedModule, setExpandedModule] = useState<TemplatePreset | null>(null);
 
     const selectedPreset = activeCollection?.templatePreset ?? 'bfa_rtf';
@@ -69,43 +112,35 @@ export function GenerationPanel() {
     const handleSelectModule = (moduleId: TemplatePreset) => {
         if (!activeCollection) return;
         setTemplatePreset(activeCollection.id, moduleId);
-        // Expand settings if selecting
         setExpandedModule(moduleId === expandedModule ? null : moduleId);
     };
 
     const handleGenerate = async () => {
-        if (!activeCollection) return;
+        if (!activeCollection || activeCollection.selections.length === 0) return;
 
-        const defaultPath = '';
-        const outputFolder = window.prompt("Enter output folder:", defaultPath);
-        if (!outputFolder) return;
+        const format = PRESET_TO_FORMAT[selectedPreset];
+        const projectIds = resolveProjectIds(activeCollection.selections);
 
-        const template = `# Report: {{name}}\n\n**Collection ID:** {{id}}\n**Items:** {{count}}\n\n## Selections\n\n{{selections}}\n\nGenerated via AutoHelper.`;
+        if (projectIds.length === 0) return;
 
-        const selectionsList = activeCollection.selections
-            .map(s => `- [${s.type}] ${s.displayLabel}`)
-            .join('\n');
-
-        setIsLoading(true);
-        setError(null);
         try {
-            const result = await generateReport({
-                context_id: activeCollection.id,
-                template: template,
-                payload: {
-                    name: activeCollection.name,
-                    id: activeCollection.id,
-                    count: activeCollection.selections.length,
-                    selections: selectionsList
-                },
-                options: { output_folder: outputFolder, overwrite: true }
-            });
-            setArtifacts(prev => [result, ...prev]);
-        } catch (e: unknown) {
-            const message = e instanceof Error ? e.message : 'Failed to generate';
-            setError(message);
-        } finally {
-            setIsLoading(false);
+            const session = await workflow.startExport({ format, projectIds });
+            const result = await workflow.finishExport(session.id);
+
+            setResults(prev => [{
+                id: crypto.randomUUID(),
+                sessionId: session.id,
+                format,
+                result,
+                timestamp: new Date().toISOString(),
+            }, ...prev]);
+
+            // Cloud formats open directly
+            if (result.externalUrl) {
+                window.open(result.externalUrl, '_blank');
+            }
+        } catch {
+            // Error is surfaced via workflow.error
         }
     };
 
@@ -116,6 +151,10 @@ export function GenerationPanel() {
             </div>
         );
     }
+
+    const errorMessage = workflow.error instanceof Error
+        ? workflow.error.message
+        : workflow.error ? String(workflow.error) : null;
 
     return (
         <div className="flex flex-col h-full bg-ws-bg relative">
@@ -176,7 +215,6 @@ export function GenerationPanel() {
                                         {/* Module-specific settings */}
                                         {module.id === 'bfa_rtf' && (
                                             <div className="space-y-3 text-xs">
-                                                {/* Document ID Input */}
                                                 <div>
                                                     <label className="block text-ws-text-secondary font-medium mb-1">
                                                         Target Document
@@ -189,8 +227,6 @@ export function GenerationPanel() {
                                                         <option value="new">+ Create new document</option>
                                                     </select>
                                                 </div>
-
-                                                {/* Document ID Manual Entry */}
                                                 <div>
                                                     <label className="block text-ws-text-secondary font-medium mb-1">
                                                         Or enter Document ID
@@ -201,8 +237,6 @@ export function GenerationPanel() {
                                                         className="w-full px-2 py-1.5 border border-ws-panel-border rounded text-sm placeholder:text-ws-muted"
                                                     />
                                                 </div>
-
-                                                {/* Options */}
                                                 <div className="pt-2 border-t border-ws-panel-border space-y-2">
                                                     <label className="flex items-center gap-2">
                                                         <input type="checkbox" defaultChecked className="rounded" />
@@ -250,45 +284,72 @@ export function GenerationPanel() {
                 <div className="p-3 border-t border-ws-panel-border">
                     <button
                         onClick={handleGenerate}
-                        disabled={isLoading || activeCollection.selections.length === 0}
+                        disabled={workflow.isLoading || activeCollection.selections.length === 0}
                         className={`
                             w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-colors
-                            ${activeCollection.selections.length > 0 && !isLoading
+                            ${activeCollection.selections.length > 0 && !workflow.isLoading
                                 ? 'bg-emerald-500 text-white hover:bg-emerald-600'
                                 : 'bg-slate-200 text-ws-muted cursor-not-allowed'
                             }
                         `}
                     >
-                        {isLoading ? 'Generating...' : 'Generate Output'}
+                        {workflow.isCreating && 'Creating session...'}
+                        {workflow.isProjecting && 'Generating projection...'}
+                        {workflow.isExecuting && 'Exporting...'}
+                        {!workflow.isLoading && 'Generate Output'}
                     </button>
                 </div>
 
                 {/* Error */}
-                {error && (
+                {errorMessage && (
                     <div className="mx-3 mb-3 p-3 bg-red-50 text-red-600 text-xs rounded border border-red-100 flex items-start gap-2">
                         <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
-                        {error}
+                        {errorMessage}
                     </div>
                 )}
 
-                {/* Artifacts List */}
-                {artifacts.length > 0 && (
+                {/* Results List */}
+                {results.length > 0 && (
                     <div className="p-3 border-t border-ws-panel-border">
                         <Text size="xs" weight="bold" color="dimmed" className="mb-2 uppercase tracking-wider">
-                            Generated ({artifacts.length})
+                            Generated ({results.length})
                         </Text>
                         <div className="space-y-2">
-                            {artifacts.map((art) => (
-                                <div key={art.ref_id} className="p-2 bg-ws-panel-bg border border-ws-panel-border rounded shadow-sm">
+                            {results.map((entry) => (
+                                <div key={entry.id} className="p-2 bg-ws-panel-bg border border-ws-panel-border rounded shadow-sm">
                                     <div className="flex items-center gap-2">
                                         <FileText size={12} className="text-emerald-500" />
                                         <span className="text-xs font-medium text-ws-text-secondary flex-1 truncate">
-                                            {art.artifact_type.replace(/_/g, ' ')}
+                                            {entry.format.toUpperCase()}
                                         </span>
-                                        <Check size={12} className="text-green-500" />
+                                        {entry.result.success && <Check size={12} className="text-green-500" />}
                                     </div>
-                                    <div className="text-[10px] text-ws-muted truncate mt-1" title={art.path}>
-                                        {art.path}
+                                    <div className="flex items-center gap-1.5 mt-1">
+                                        {entry.result.downloadUrl && (
+                                            <button
+                                                onClick={() => downloadOutput.mutate(entry.sessionId)}
+                                                className="text-[10px] text-ws-accent flex items-center gap-0.5 hover:underline"
+                                            >
+                                                <Download size={10} />
+                                                Download
+                                            </button>
+                                        )}
+                                        {entry.result.externalUrl && (
+                                            <a
+                                                href={entry.result.externalUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[10px] text-ws-accent flex items-center gap-0.5 hover:underline"
+                                            >
+                                                <ExternalLink size={10} />
+                                                Open
+                                            </a>
+                                        )}
+                                        {entry.result.content && (
+                                            <span className="text-[10px] text-ws-muted">
+                                                {entry.result.content.length} chars
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -298,9 +359,16 @@ export function GenerationPanel() {
             </div>
 
             {/* Loading Overlay */}
-            {isLoading && (
+            {workflow.isLoading && (
                 <div className="absolute inset-0 bg-ws-panel-bg/70 flex items-center justify-center z-10 backdrop-blur-sm">
-                    <Loader2 className="animate-spin text-emerald-500" size={32} />
+                    <div className="text-center">
+                        <Loader2 className="animate-spin text-emerald-500 mx-auto" size={32} />
+                        <p className="text-xs text-ws-text-secondary mt-2">
+                            {workflow.isCreating && 'Creating session...'}
+                            {workflow.isProjecting && 'Building projection...'}
+                            {workflow.isExecuting && 'Formatting output...'}
+                        </p>
+                    </div>
                 </div>
             )}
         </div>
