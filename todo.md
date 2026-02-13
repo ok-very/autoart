@@ -6,8 +6,7 @@
 ## Bug List
 
 **Active — unphased:**
-- **Project binding in workspaces is implementation theater:** Phase 1.2 wired WorkspaceContext consumption, but panels don't actually use the bound project ID. UI shows binding UI, backend may store it, but the connection between "user binds project to workspace" and "panels render that project's data" is broken or never existed. Trace the full path: workspace save → project binding persistence → panel mount → data fetch with bound ID.
-- **CollectionPreview.tsx lint error:** React Compiler error on line 268 — "Cannot access refs during render". `groups.map()` callback reads `expandedGroups` ref during render. Pre-existing from export work (PRs #495-496).
+- **Project binding (EventsPanel only):** Records/Fields/Actions panels now consume workspace context and filter by bound project. EventsPanel deferred — events scoped through context hierarchy, requires recursive CTE to walk project tree. Architectural decision needed.
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
 - **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
