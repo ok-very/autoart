@@ -13,7 +13,6 @@ from typing import Literal
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from autohelper.config.manifest import CONFIG_KEYS
 from autohelper.shared.paths import data_dir
 
 # =============================================================================
@@ -43,11 +42,6 @@ class Settings(BaseSettings):
 
     # Filesystem roots (comma-separated paths)
     allowed_roots: list[str] = Field(default_factory=list)
-
-    # Exclusion patterns
-    excludes: list[str] = Field(
-        default_factory=lambda: ["pyc", "__pycache__", ".git", ".idea", "node_modules"]
-    )
 
     # Security
     block_symlinks: bool = True
@@ -126,8 +120,18 @@ class Settings(BaseSettings):
             if "autoart_link_key" in cfg and cfg["autoart_link_key"]:
                 object.__setattr__(self, "autoart_link_key", cfg["autoart_link_key"])
 
-            # User-editable settings — manifest is the single source of truth
-            for key in CONFIG_KEYS:
+            # User-editable settings that exist on Settings class
+            config_keys = [
+                "allowed_roots", "mail_enabled", "mail_poll_interval",
+                "contact_sync_enabled", "contact_sync_csv_path",
+                "contact_sync_interval_minutes", "contact_sync_work_hours_start",
+                "contact_sync_work_hours_end", "contact_sync_timezone",
+                "contact_sync_exchange_upn", "contact_sync_exchange_org",
+                "contact_sync_exchange_app_id", "contact_sync_exchange_cert_thumbprint",
+                "contact_sync_dry_run", "contact_sync_batch_size",
+                "contact_sync_managed_prefix",
+            ]
+            for key in config_keys:
                 if key in cfg:
                     object.__setattr__(self, key, cfg[key])
         except Exception:

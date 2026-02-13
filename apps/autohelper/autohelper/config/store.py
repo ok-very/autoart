@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 from typing import Any, cast
 
-from autohelper.config.manifest import DEFAULTS
 from autohelper.shared.logging import get_logger
 from autohelper.shared.paths import data_dir
 
@@ -63,5 +62,19 @@ class ConfigStore:
             raise
 
     def _get_defaults(self) -> dict[str, Any]:
-        """Return default configuration derived from the manifest."""
-        return dict(DEFAULTS)
+        """Return default configuration."""
+        # Try to infer from environment/existing settings if possible,
+        # but otherwise valid empty defaults
+        return {
+            "allowed_roots": [],
+            "excludes": ["pyc", "__pycache__", ".git", ".idea", "node_modules"],
+            "mail_enabled": False,
+            "mail_poll_interval": 30,
+            "crawl_depth": 20,
+            "min_width": 100,
+            "max_width": 5000,
+            "min_height": 100,
+            "max_height": 5000,
+            "min_filesize_kb": 100,
+            "max_filesize_kb": 12000,
+        }
