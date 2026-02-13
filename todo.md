@@ -62,7 +62,6 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| — | **Export interface design review:** Thorough review of the merged export UI (PRs #479-483). Implementation needs revision — assess layout, interaction patterns, component structure, and alignment with DESIGN.md. Coordinate with in-house design. | Export |
 | — | **Composer dual-surface completion:** ComposerView as expanded panel — migrate to `useComposerForm`, agent selection/routing, `@autoart/ui` components, `--ws-*` tokens. UnifiedComposerBar deleted. | UX |
 
 ---
