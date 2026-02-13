@@ -9,7 +9,7 @@ autoart/
 ├── shared/         # @autoart/shared (schemas, types)
 ├── packages/ui/    # @autoart/ui
 ├── apps/
-│   ├── autohelper/ # Python desktop app (automation)
+│   ├── autohelper/ # Python desktop app (standalone-capable, tray + dashboard)
 │   └── mail/       # @autoart/mail-client
 ```
 

@@ -56,6 +56,26 @@ pnpm --filter autohelper dev      # or dev:win
 pnpm --filter autohelper start    # or start:win
 ```
 
+### Standalone Mode (No AutoArt)
+
+AutoHelper works without the AutoArt backend. When unpaired, the built-in dashboard at `/dashboard` is the primary configuration UI — accessed from the system tray via "Open Settings" or directly in a browser.
+
+The dashboard provides:
+- Service health and status
+- Schema-driven settings editor (all config persisted to `config.json`)
+- Contact sync status, history, and manual trigger
+
+No AutoArt backend or React frontend required. All features (file indexing, contact sync, mail polling, garbage collection) run locally and are configured through the dashboard.
+
+On Windows, AutoHelper can also run as a Windows service:
+
+```bash
+autohelper.exe --service install
+net start AutoHelper
+```
+
+The service runs the same FastAPI server and tray icon — the only difference is lifecycle management via the Windows Service Control Manager.
+
 ### Available Scripts
 
 | Script | Description |
