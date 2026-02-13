@@ -69,93 +69,227 @@ async function loadStatus() {
 }
 
 // ---------------------------------------------------------------------------
-// Config (General Settings)
+// Schema-Driven Settings
 // ---------------------------------------------------------------------------
 
 let _config = {};
+let _schema = null;
 
-async function loadConfig() {
+async function loadSchemaAndConfig() {
   try {
-    _config = await api("GET", "/config");
-    populateGeneralSettings();
-    populateContactSettings();
-    populateMailSettings();
+    const [schema, config] = await Promise.all([
+      api("GET", "/config/schema"),
+      api("GET", "/config"),
+    ]);
+    _schema = schema;
+    _config = config;
+    renderSettingsSections(schema, config);
     populatePairingStatus();
   } catch (e) {
     toast("Failed to load config", "error");
   }
 }
 
-function populateGeneralSettings() {
-  const rootsEl = $("#cfg-allowed-roots");
-  const excludesEl = $("#cfg-excludes");
-  const logLevelEl = $("#cfg-log-level");
+function renderSettingsSections(schema, config) {
+  const container = $("#settings-sections");
+  container.innerHTML = "";
 
-  if (rootsEl) rootsEl.value = (_config.allowed_roots || []).join("\n");
-  if (excludesEl) excludesEl.value = (_config.excludes || []).join(", ");
-  if (logLevelEl) logLevelEl.value = _config.log_level || "INFO";
+  for (const section of schema.sections) {
+    const sectionEl = document.createElement("section");
+    if (section.admin_only) sectionEl.classList.add("admin-only");
+
+    const h2 = document.createElement("h2");
+    h2.textContent = section.label;
+    if (section.admin_only) {
+      const badge = document.createElement("span");
+      badge.className = "admin-badge";
+      badge.textContent = "Admin";
+      h2.appendChild(badge);
+    }
+    sectionEl.appendChild(h2);
+
+    const body = document.createElement("div");
+    body.className = "section-body";
+
+    // Group fields by row_group
+    const rendered = new Set();
+    for (const field of section.fields) {
+      if (rendered.has(field.key)) continue;
+
+      if (field.row_group) {
+        // Collect all fields in the same row group
+        const group = section.fields.filter(f => f.row_group === field.row_group);
+        const row = document.createElement("div");
+        row.className = "field-row";
+        for (const gf of group) {
+          row.appendChild(renderField(gf, config[gf.key]));
+          rendered.add(gf.key);
+        }
+        body.appendChild(row);
+      } else {
+        body.appendChild(renderField(field, config[field.key]));
+        rendered.add(field.key);
+      }
+    }
+
+    // Save button
+    const btnRow = document.createElement("div");
+    btnRow.className = "button-row";
+    const btn = document.createElement("button");
+    btn.className = "primary";
+    btn.textContent = "Save";
+    btn.addEventListener("click", () => saveSection(section));
+    btnRow.appendChild(btn);
+    body.appendChild(btnRow);
+
+    sectionEl.appendChild(body);
+    container.appendChild(sectionEl);
+  }
+
+  // Apply depends_on visibility
+  updateDependsOn();
 }
 
-async function saveGeneralSettings() {
-  const rootsVal = $("#cfg-allowed-roots").value.trim();
-  const excludesVal = $("#cfg-excludes").value.trim();
+function renderField(field, value) {
+  const wrapper = document.createElement("div");
 
-  const patch = {
-    allowed_roots: rootsVal ? rootsVal.split("\n").map(s => s.trim()).filter(Boolean) : [],
-    excludes: excludesVal ? excludesVal.split(",").map(s => s.trim()).filter(Boolean) : [],
-    log_level: $("#cfg-log-level").value,
-  };
+  if (field.type === "bool") {
+    wrapper.className = "toggle";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.id = "cfg-" + field.key;
+    input.checked = !!value;
+    const label = document.createElement("label");
+    label.htmlFor = input.id;
+    label.textContent = field.label;
+    wrapper.appendChild(input);
+    wrapper.appendChild(label);
 
-  try {
-    _config = await api("PUT", "/config", patch);
-    toast("Settings saved", "success");
-  } catch (e) {
-    toast("Failed to save settings", "error");
+    // Bool fields that other fields depend on: update visibility on change
+    input.addEventListener("change", updateDependsOn);
+  } else {
+    wrapper.className = "field";
+    const label = document.createElement("label");
+    label.htmlFor = "cfg-" + field.key;
+    label.textContent = field.label;
+    wrapper.appendChild(label);
+
+    let input;
+
+    switch (field.type) {
+      case "int": {
+        input = document.createElement("input");
+        input.type = "number";
+        input.id = "cfg-" + field.key;
+        input.value = value ?? field.default ?? "";
+        if (field.min != null) input.min = field.min;
+        if (field.max != null) input.max = field.max;
+        break;
+      }
+      case "select": {
+        input = document.createElement("select");
+        input.id = "cfg-" + field.key;
+        for (const opt of (field.options || [])) {
+          const option = document.createElement("option");
+          option.value = opt;
+          option.textContent = opt;
+          if (opt === (value ?? field.default)) option.selected = true;
+          input.appendChild(option);
+        }
+        break;
+      }
+      case "string_list": {
+        input = document.createElement("textarea");
+        input.id = "cfg-" + field.key;
+        input.rows = 3;
+        input.value = Array.isArray(value) ? value.join("\n") : (value || "");
+        if (field.placeholder) input.placeholder = field.placeholder;
+        break;
+      }
+      case "tag_list": {
+        input = document.createElement("input");
+        input.type = "text";
+        input.id = "cfg-" + field.key;
+        input.value = Array.isArray(value) ? value.join(", ") : (value || "");
+        if (field.placeholder) input.placeholder = field.placeholder;
+        break;
+      }
+      case "text": {
+        input = document.createElement("textarea");
+        input.id = "cfg-" + field.key;
+        input.rows = 4;
+        input.value = value ?? field.default ?? "";
+        if (field.placeholder) input.placeholder = field.placeholder;
+        break;
+      }
+      default: {
+        // "string"
+        input = document.createElement("input");
+        input.type = "text";
+        input.id = "cfg-" + field.key;
+        input.value = value ?? field.default ?? "";
+        if (field.placeholder) input.placeholder = field.placeholder;
+        break;
+      }
+    }
+
+    wrapper.appendChild(input);
+  }
+
+  // depends_on attribute for visibility toggling
+  if (field.depends_on) {
+    wrapper.dataset.dependsOn = field.depends_on;
+  }
+
+  return wrapper;
+}
+
+function updateDependsOn() {
+  const dependents = document.querySelectorAll("[data-depends-on]");
+  for (const el of dependents) {
+    const dep = el.dataset.dependsOn;
+    const toggle = document.getElementById("cfg-" + dep);
+    if (toggle) {
+      el.style.display = toggle.checked ? "" : "none";
+    }
   }
 }
 
-// ---------------------------------------------------------------------------
-// Contact Sync Settings
-// ---------------------------------------------------------------------------
+function readFieldValue(field) {
+  const el = document.getElementById("cfg-" + field.key);
+  if (!el) return field.default;
 
-function populateContactSettings() {
-  $("#cfg-contact-enabled").checked = _config.contact_sync_enabled || false;
-  $("#cfg-contact-csv-path").value = _config.contact_sync_csv_path || "";
-  $("#cfg-contact-interval").value = _config.contact_sync_interval_minutes || 30;
-  $("#cfg-contact-hours-start").value = _config.contact_sync_work_hours_start || 8;
-  $("#cfg-contact-hours-end").value = _config.contact_sync_work_hours_end || 18;
-  $("#cfg-contact-timezone").value = _config.contact_sync_timezone || "America/Los_Angeles";
-  $("#cfg-contact-upn").value = _config.contact_sync_exchange_upn || "";
-  $("#cfg-contact-org").value = _config.contact_sync_exchange_org || "";
-  $("#cfg-contact-app-id").value = _config.contact_sync_exchange_app_id || "";
-  $("#cfg-contact-cert-thumb").value = _config.contact_sync_exchange_cert_thumbprint || "";
-  $("#cfg-contact-dry-run").checked = _config.contact_sync_dry_run || false;
-  $("#cfg-contact-batch-size").value = _config.contact_sync_batch_size || 50;
-  $("#cfg-contact-prefix").value = _config.contact_sync_managed_prefix || "BFA-";
+  switch (field.type) {
+    case "bool":
+      return el.checked;
+    case "int":
+      return parseInt(el.value, 10) || field.default;
+    case "string_list": {
+      const raw = el.value.trim();
+      return raw ? raw.split("\n").map(s => s.trim()).filter(Boolean) : [];
+    }
+    case "tag_list": {
+      const raw = el.value.trim();
+      return raw ? raw.split(",").map(s => s.trim()).filter(Boolean) : [];
+    }
+    case "select":
+      return el.value;
+    default:
+      return el.value.trim();
+  }
 }
 
-async function saveContactSettings() {
-  const patch = {
-    contact_sync_enabled: $("#cfg-contact-enabled").checked,
-    contact_sync_csv_path: $("#cfg-contact-csv-path").value.trim(),
-    contact_sync_interval_minutes: parseInt($("#cfg-contact-interval").value, 10) || 30,
-    contact_sync_work_hours_start: parseInt($("#cfg-contact-hours-start").value, 10) || 8,
-    contact_sync_work_hours_end: parseInt($("#cfg-contact-hours-end").value, 10) || 18,
-    contact_sync_timezone: $("#cfg-contact-timezone").value.trim() || "America/Los_Angeles",
-    contact_sync_exchange_upn: $("#cfg-contact-upn").value.trim(),
-    contact_sync_exchange_org: $("#cfg-contact-org").value.trim(),
-    contact_sync_exchange_app_id: $("#cfg-contact-app-id").value.trim(),
-    contact_sync_exchange_cert_thumbprint: $("#cfg-contact-cert-thumb").value.trim(),
-    contact_sync_dry_run: $("#cfg-contact-dry-run").checked,
-    contact_sync_batch_size: parseInt($("#cfg-contact-batch-size").value, 10) || 50,
-    contact_sync_managed_prefix: $("#cfg-contact-prefix").value.trim() || "BFA-",
-  };
+async function saveSection(section) {
+  const patch = {};
+  for (const field of section.fields) {
+    patch[field.key] = readFieldValue(field);
+  }
 
   try {
     _config = await api("PUT", "/config", patch);
-    toast("Contact sync settings saved", "success");
+    toast(section.label + " saved", "success");
   } catch (e) {
-    toast("Failed to save contact settings", "error");
+    toast("Failed to save " + section.label.toLowerCase(), "error");
   }
 }
 
@@ -235,29 +369,6 @@ async function triggerManualSync() {
 }
 
 // ---------------------------------------------------------------------------
-// Mail Settings
-// ---------------------------------------------------------------------------
-
-function populateMailSettings() {
-  $("#cfg-mail-enabled").checked = _config.mail_enabled || false;
-  $("#cfg-mail-interval").value = _config.mail_poll_interval || 30;
-}
-
-async function saveMailSettings() {
-  const patch = {
-    mail_enabled: $("#cfg-mail-enabled").checked,
-    mail_poll_interval: parseInt($("#cfg-mail-interval").value, 10) || 30,
-  };
-
-  try {
-    _config = await api("PUT", "/config", patch);
-    toast("Mail settings saved", "success");
-  } catch (e) {
-    toast("Failed to save mail settings", "error");
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Pairing
 // ---------------------------------------------------------------------------
 
@@ -329,14 +440,9 @@ async function doUnpair() {
 document.addEventListener("DOMContentLoaded", () => {
   // Load all data
   loadStatus();
-  loadConfig();
+  loadSchemaAndConfig();
   loadContactStatus();
   loadContactHistory();
-
-  // Bind save buttons
-  $("#btn-save-general").addEventListener("click", saveGeneralSettings);
-  $("#btn-save-contacts").addEventListener("click", saveContactSettings);
-  $("#btn-save-mail").addEventListener("click", saveMailSettings);
 
   // Contact sync actions
   $("#btn-manual-sync").addEventListener("click", triggerManualSync);

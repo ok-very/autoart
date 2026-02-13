@@ -58,6 +58,10 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 | — | Finances UI unification: Finances call gets pulled into Project View rather than spawning its own panel; needs formalization and dedicated panel architecture; institute math/formula ESM to design and handle logic; missing project bindings and unclear how it interacts with records system | Finance |
 | — | Records/Fields/Actions registry browser UI unification: needs consistent layout and shared filter system across all three panels | UX |
 | — | Workspace project binding + conditional sidebars: project binding only appears under "4. Review" tab; conditional sidebar appearance not implemented; complex feature requiring focused design and implementation plan | Workspace |
+| — | Rewrite `AutoHelperSection.tsx` to consume `GET /config/schema` via backend bridge instead of hardcoded cards | AutoHelper |
+| — | Admin role gating: hide `admin_only` settings sections in AutoArt web UI for non-admin users | AutoHelper |
+| — | Sync backend bridge `SettingsUpdateSchema` (Zod) with manifest — currently hardcoded in `autohelper.routes.ts` | AutoHelper |
+| — | Formalize collector settings (`crawl_depth`, image dimension/filesize constraints) — add to Settings class and manifest; currently read from config.json by `autocollector.py` directly | AutoHelper |
 
 ---
 
