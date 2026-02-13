@@ -88,6 +88,21 @@ class Settings(BaseSettings):
     gc_cleanup_orphaned_manifests: bool = False  # Disabled by default (risky)
     gc_cleanup_mail_ingest: bool = True  # Clean up processed mail files
 
+    # Contact Sync Settings
+    contact_sync_enabled: bool = False
+    contact_sync_csv_path: str = ""
+    contact_sync_interval_minutes: int = Field(default=30, ge=5)
+    contact_sync_work_hours_start: int = Field(default=8, ge=0, le=23)
+    contact_sync_work_hours_end: int = Field(default=18, ge=0, le=23)
+    contact_sync_timezone: str = "America/Los_Angeles"
+    contact_sync_exchange_upn: str = ""  # admin@ballardfineart.com
+    contact_sync_exchange_org: str = ""
+    contact_sync_exchange_app_id: str = ""  # Azure AD app registration
+    contact_sync_exchange_cert_thumbprint: str = ""  # Certificate-based auth
+    contact_sync_dry_run: bool = False
+    contact_sync_batch_size: int = Field(default=50, ge=1, le=500)
+    contact_sync_managed_prefix: str = "BFA-"  # Prefix to identify managed contacts
+
     @model_validator(mode="after")
     def load_from_config_store(self) -> "Settings":
         """
@@ -106,7 +121,16 @@ class Settings(BaseSettings):
                 object.__setattr__(self, "autoart_link_key", cfg["autoart_link_key"])
 
             # User-editable settings that exist on Settings class
-            config_keys = ["allowed_roots", "mail_enabled", "mail_poll_interval"]
+            config_keys = [
+                "allowed_roots", "mail_enabled", "mail_poll_interval",
+                "contact_sync_enabled", "contact_sync_csv_path",
+                "contact_sync_interval_minutes", "contact_sync_work_hours_start",
+                "contact_sync_work_hours_end", "contact_sync_timezone",
+                "contact_sync_exchange_upn", "contact_sync_exchange_org",
+                "contact_sync_exchange_app_id", "contact_sync_exchange_cert_thumbprint",
+                "contact_sync_dry_run", "contact_sync_batch_size",
+                "contact_sync_managed_prefix",
+            ]
             for key in config_keys:
                 if key in cfg:
                     object.__setattr__(self, key, cfg[key])
