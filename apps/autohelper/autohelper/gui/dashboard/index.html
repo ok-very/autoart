@@ -22,102 +22,8 @@
       </div>
     </section>
 
-    <!-- General Settings -->
-    <section>
-      <h2>General Settings</h2>
-      <div class="section-body">
-        <div class="field">
-          <label for="cfg-allowed-roots">Allowed Roots (one path per line)</label>
-          <textarea id="cfg-allowed-roots" rows="3"></textarea>
-        </div>
-        <div class="field">
-          <label for="cfg-excludes">Excludes (comma-separated)</label>
-          <input type="text" id="cfg-excludes">
-        </div>
-        <div class="field">
-          <label for="cfg-log-level">Log Level</label>
-          <select id="cfg-log-level">
-            <option value="DEBUG">DEBUG</option>
-            <option value="INFO">INFO</option>
-            <option value="WARNING">WARNING</option>
-            <option value="ERROR">ERROR</option>
-          </select>
-        </div>
-        <div class="button-row">
-          <button id="btn-save-general" class="primary">Save</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Contact Sync Settings -->
-    <section>
-      <h2>Contact Sync</h2>
-      <div class="section-body">
-        <div class="toggle">
-          <input type="checkbox" id="cfg-contact-enabled">
-          <label for="cfg-contact-enabled">Enable contact sync</label>
-        </div>
-        <div class="field">
-          <label for="cfg-contact-csv-path">CSV File Path</label>
-          <input type="text" id="cfg-contact-csv-path" placeholder="C:\path\to\master_contacts.csv">
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="cfg-contact-interval">Interval (minutes)</label>
-            <input type="number" id="cfg-contact-interval" min="5" max="1440">
-          </div>
-          <div class="field">
-            <label for="cfg-contact-hours-start">Work Hours Start</label>
-            <input type="number" id="cfg-contact-hours-start" min="0" max="23">
-          </div>
-          <div class="field">
-            <label for="cfg-contact-hours-end">Work Hours End</label>
-            <input type="number" id="cfg-contact-hours-end" min="0" max="23">
-          </div>
-        </div>
-        <div class="field">
-          <label for="cfg-contact-timezone">Timezone</label>
-          <input type="text" id="cfg-contact-timezone" placeholder="America/Los_Angeles">
-        </div>
-
-        <div class="field">
-          <label for="cfg-contact-upn">Exchange UPN</label>
-          <input type="text" id="cfg-contact-upn" placeholder="admin@ballardfineart.com">
-        </div>
-        <div class="field">
-          <label for="cfg-contact-org">Exchange Organization</label>
-          <input type="text" id="cfg-contact-org">
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="cfg-contact-app-id">Azure App ID (service mode)</label>
-            <input type="text" id="cfg-contact-app-id">
-          </div>
-          <div class="field">
-            <label for="cfg-contact-cert-thumb">Certificate Thumbprint</label>
-            <input type="text" id="cfg-contact-cert-thumb">
-          </div>
-        </div>
-
-        <div class="field-row">
-          <div class="field">
-            <label for="cfg-contact-batch-size">Batch Size</label>
-            <input type="number" id="cfg-contact-batch-size" min="1" max="500">
-          </div>
-          <div class="field">
-            <label for="cfg-contact-prefix">Managed Prefix</label>
-            <input type="text" id="cfg-contact-prefix" placeholder="BFA-">
-          </div>
-        </div>
-        <div class="toggle">
-          <input type="checkbox" id="cfg-contact-dry-run">
-          <label for="cfg-contact-dry-run">Dry run (no Exchange changes)</label>
-        </div>
-        <div class="button-row">
-          <button id="btn-save-contacts" class="primary">Save</button>
-        </div>
-      </div>
-    </section>
+    <!-- Settings sections rendered dynamically from /config/schema -->
+    <div id="settings-sections"></div>
 
     <!-- Contact Sync Status -->
     <section>
@@ -150,24 +56,6 @@
             <tr><td colspan="5" class="empty">Loading...</td></tr>
           </tbody>
         </table>
-      </div>
-    </section>
-
-    <!-- Mail Settings -->
-    <section>
-      <h2>Mail Settings</h2>
-      <div class="section-body">
-        <div class="toggle">
-          <input type="checkbox" id="cfg-mail-enabled">
-          <label for="cfg-mail-enabled">Enable mail polling</label>
-        </div>
-        <div class="field">
-          <label for="cfg-mail-interval">Poll Interval (seconds)</label>
-          <input type="number" id="cfg-mail-interval" min="5" max="3600">
-        </div>
-        <div class="button-row">
-          <button id="btn-save-mail" class="primary">Save</button>
-        </div>
       </div>
     </section>
 
