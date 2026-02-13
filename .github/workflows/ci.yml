@@ -63,6 +63,9 @@ jobs:
       - name: Build shared package
         run: pnpm build:shared
 
+      - name: Build UI package
+        run: pnpm --filter @autoart/ui build
+
       - name: Build backend
         run: pnpm build:backend
 
