@@ -435,6 +435,30 @@ export function useEmailDecayForProject(projectId: string | null) {
 }
 
 // ============================================================================
+// STATELESS PREVIEW
+// ============================================================================
+
+/**
+ * Stateless projection preview.
+ * Hits POST /exports/preview — returns BfaProjectExportModel[] without
+ * creating a session. Useful for live preview in the export surface.
+ */
+export function usePreviewProjection() {
+    return useMutation({
+        mutationFn: async (data: {
+            projectIds: string[];
+            options?: Partial<ExportOptions>;
+        }) => {
+            const result = await api.post<{ projects: BfaProjectExportModel[] }>(
+                '/exports/preview',
+                data,
+            );
+            return result.projects;
+        },
+    });
+}
+
+// ============================================================================
 // WORKFLOW HELPERS
 // ============================================================================
 

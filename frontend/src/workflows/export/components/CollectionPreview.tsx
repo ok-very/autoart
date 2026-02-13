@@ -1,11 +1,12 @@
 /**
  * CollectionPreview
- * 
+ *
  * Center panel showing start/stop collecting controls and item display.
+ * Supports drag-and-drop reorder in list view via HTML5 drag API.
  */
 
 import { List, LayoutGrid, Code, ChevronRight, ChevronDown, Database, Play, Square } from 'lucide-react';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { SegmentedControl } from '@autoart/ui';
 
 import { useCollectionStore, type SelectionReference } from '../../../stores';
@@ -33,6 +34,7 @@ export function CollectionPreview() {
     );
     const {
         removeFromCollection,
+        reorderSelections,
         isCollecting,
         startCollecting,
         stopCollecting,
@@ -51,7 +53,6 @@ export function CollectionPreview() {
             if (existing) {
                 existing.items.push(item);
             } else {
-                // Extract source label from first item's displayLabel
                 const sourceLabel = item.displayLabel.split(' → ')[0] || item.sourceId.slice(0, 8);
                 groups.set(item.sourceId, {
                     sourceId: item.sourceId,
@@ -62,6 +63,15 @@ export function CollectionPreview() {
         }
 
         return Array.from(groups.values());
+    }, [activeCollection]);
+
+    // Build flat index lookup: item.id → index in selections[]
+    const flatIndexMap = useMemo(() => {
+        const map = new Map<string, number>();
+        if (activeCollection) {
+            activeCollection.selections.forEach((item, i) => map.set(item.id, i));
+        }
+        return map;
     }, [activeCollection]);
 
     const toggleGroup = useCallback((sourceId: string) => {
@@ -80,29 +90,44 @@ export function CollectionPreview() {
         removeFromCollection(id);
     }, [removeFromCollection]);
 
+    const handleReorder = useCallback((fromId: string, toId: string) => {
+        const fromIndex = flatIndexMap.get(fromId);
+        const toIndex = flatIndexMap.get(toId);
+        if (fromIndex !== undefined && toIndex !== undefined && fromIndex !== toIndex) {
+            reorderSelections(fromIndex, toIndex);
+        }
+    }, [flatIndexMap, reorderSelections]);
+
     if (!activeCollection) {
         return (
-            <div className="h-full flex items-center justify-center text-ws-muted text-sm">
+            <div className="h-full flex items-center justify-center text-sm"
+                style={{ color: 'var(--ws-text-disabled, #8C8C88)' }}>
                 Select a collection to preview
             </div>
         );
     }
 
-    // Render controls + content for active collection
     return (
         <div className="flex flex-col h-full">
-            {/* Controls Header - Start/Stop Collecting */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-ws-panel-border bg-ws-panel-bg shadow-[0_2px_4px_-1px_rgba(0,0,0,0.06)]">
-                {/* Start/Stop Collecting Button */}
+            {/* Controls Header */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b"
+                style={{
+                    borderColor: 'var(--ws-panel-border, var(--ws-text-disabled, #D6D2CB))',
+                    background: 'var(--ws-bg, #F5F2ED)',
+                }}>
                 <button
                     onClick={isCollecting ? stopCollecting : startCollecting}
-                    className={`
-                        flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors
-                        ${isCollecting
-                            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                            : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    style={isCollecting
+                        ? {
+                            background: 'color-mix(in srgb, var(--ws-color-warning, #B89B5E) 15%, transparent)',
+                            color: 'var(--ws-color-warning, #B89B5E)',
                         }
-                    `}
+                        : {
+                            background: 'color-mix(in srgb, var(--ws-color-success, #6F7F5C) 15%, transparent)',
+                            color: 'var(--ws-color-success, #6F7F5C)',
+                        }
+                    }
                 >
                     {isCollecting ? (
                         <>
@@ -118,27 +143,34 @@ export function CollectionPreview() {
                 </button>
 
                 {isCollecting && (
-                    <span className="text-[10px] text-amber-600">
+                    <span className="text-[10px]"
+                        style={{ color: 'var(--ws-color-warning, #B89B5E)' }}>
                         Click items in panels to add them
                     </span>
                 )}
 
-                {/* Item count on right */}
-                <span className="ml-auto text-xs text-ws-muted">
+                <span className="ml-auto text-xs"
+                    style={{ color: 'var(--ws-text-disabled, #8C8C88)' }}>
                     {activeCollection.selections.length} item{activeCollection.selections.length !== 1 ? 's' : ''}
                 </span>
             </div>
 
             {/* Content Area */}
             {activeCollection.selections.length === 0 ? (
-                <div className="flex-1 flex items-center justify-center text-ws-muted text-sm">
+                <div className="flex-1 flex items-center justify-center text-sm"
+                    style={{ color: 'var(--ws-text-disabled, #8C8C88)' }}>
                     No items in collection
                 </div>
             ) : (
                 <>
-                    {/* View Mode Toggle Header */}
-                    <div className="flex items-center justify-between px-4 py-2 border-b border-ws-panel-border bg-ws-bg">
-                        <span className="text-xs font-medium text-ws-text-secondary">
+                    {/* View Mode Toggle */}
+                    <div className="flex items-center justify-between px-4 py-2 border-b"
+                        style={{
+                            borderColor: 'var(--ws-panel-border, var(--ws-text-disabled, #D6D2CB))',
+                            background: 'var(--ws-bg, #F5F2ED)',
+                        }}>
+                        <span className="text-xs font-medium"
+                            style={{ color: 'var(--ws-text-secondary, #5A5A57)' }}>
                             {activeCollection.selections.length} item{activeCollection.selections.length !== 1 ? 's' : ''}
                         </span>
 
@@ -162,6 +194,7 @@ export function CollectionPreview() {
                                 expandedGroups={expandedGroups}
                                 onToggleGroup={toggleGroup}
                                 onRemove={handleRemove}
+                                onReorder={handleReorder}
                             />
                         )}
                         {viewMode === 'cards' && (
@@ -181,10 +214,8 @@ export function CollectionPreview() {
 }
 
 
-
-
 // ============================================================================
-// List View (Hierarchical)
+// List View (Hierarchical + Drag-and-Drop)
 // ============================================================================
 
 interface ListViewProps {
@@ -192,9 +223,46 @@ interface ListViewProps {
     expandedGroups: Set<string>;
     onToggleGroup: (id: string) => void;
     onRemove: (id: string) => void;
+    onReorder: (fromId: string, toId: string) => void;
 }
 
-function ListView({ groups, expandedGroups, onToggleGroup, onRemove }: ListViewProps) {
+function ListView({ groups, expandedGroups, onToggleGroup, onRemove, onReorder }: ListViewProps) {
+    const dragItemId = useRef<string | null>(null);
+    const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+
+    const handleDragStart = useCallback((e: React.DragEvent, itemId: string) => {
+        dragItemId.current = itemId;
+        e.dataTransfer.effectAllowed = 'move';
+        // Use a minimal drag image — the browser default is fine
+        e.dataTransfer.setData('text/plain', itemId);
+    }, []);
+
+    const handleDragOver = useCallback((e: React.DragEvent, itemId: string) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (dragItemId.current && dragItemId.current !== itemId) {
+            setDropTargetId(itemId);
+        }
+    }, []);
+
+    const handleDragLeave = useCallback(() => {
+        setDropTargetId(null);
+    }, []);
+
+    const handleDrop = useCallback((e: React.DragEvent, targetId: string) => {
+        e.preventDefault();
+        setDropTargetId(null);
+        if (dragItemId.current && dragItemId.current !== targetId) {
+            onReorder(dragItemId.current, targetId);
+        }
+        dragItemId.current = null;
+    }, [onReorder]);
+
+    const handleDragEnd = useCallback(() => {
+        dragItemId.current = null;
+        setDropTargetId(null);
+    }, []);
+
     return (
         <div className="p-2">
             {groups.map(group => {
@@ -203,36 +271,56 @@ function ListView({ groups, expandedGroups, onToggleGroup, onRemove }: ListViewP
 
                 return (
                     <div key={group.sourceId} className="mb-1">
-                        {/* Group Header (only if multiple items) */}
                         {hasMultiple ? (
                             <button
                                 onClick={() => onToggleGroup(group.sourceId)}
-                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-ws-bg text-left"
+                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-left transition-colors"
+                                style={{ color: 'var(--ws-text-secondary, #5A5A57)' }}
+                                onMouseOver={(e) => { e.currentTarget.style.background = 'var(--ws-bg, #F5F2ED)'; }}
+                                onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; }}
                             >
                                 {isExpanded ? (
-                                    <ChevronDown size={14} className="text-ws-muted" />
+                                    <ChevronDown size={14} style={{ color: 'var(--ws-text-disabled, #8C8C88)' }} />
                                 ) : (
-                                    <ChevronRight size={14} className="text-ws-muted" />
+                                    <ChevronRight size={14} style={{ color: 'var(--ws-text-disabled, #8C8C88)' }} />
                                 )}
-                                <Database size={14} className="text-blue-500" />
-                                <span className="text-sm font-medium text-ws-text-secondary truncate">
+                                <Database size={14} style={{ color: 'var(--ws-accent, #3F5C6E)' }} />
+                                <span className="text-sm font-medium truncate">
                                     {group.sourceLabel}
                                 </span>
-                                <span className="text-[10px] text-ws-muted bg-slate-100 px-1.5 py-0.5 rounded-full ml-auto">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full ml-auto"
+                                    style={{
+                                        color: 'var(--ws-text-disabled, #8C8C88)',
+                                        background: 'color-mix(in srgb, var(--ws-text-disabled, #8C8C88) 12%, transparent)',
+                                    }}>
                                     {group.items.length}
                                 </span>
                             </button>
                         ) : null}
 
-                        {/* Items */}
                         {(isExpanded || !hasMultiple) && (
-                            <div className={hasMultiple ? 'ml-6 border-l border-ws-panel-border pl-2 space-y-2' : 'space-y-2'}>
+                            <div className={hasMultiple ? 'ml-6 border-l pl-2 space-y-2' : 'space-y-2'}
+                                style={hasMultiple ? { borderColor: 'var(--ws-panel-border, var(--ws-text-disabled, #D6D2CB))' } : undefined}>
                                 {group.items.map(item => (
-                                    <CollectionItemCard
+                                    <div
                                         key={item.id}
-                                        item={item}
-                                        onRemove={onRemove}
-                                    />
+                                        draggable
+                                        onDragStart={(e) => handleDragStart(e, item.id)}
+                                        onDragOver={(e) => handleDragOver(e, item.id)}
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={(e) => handleDrop(e, item.id)}
+                                        onDragEnd={handleDragEnd}
+                                        style={dropTargetId === item.id
+                                            ? { borderTop: `2px solid var(--ws-accent, #3F5C6E)` }
+                                            : undefined
+                                        }
+                                    >
+                                        <CollectionItemCard
+                                            item={item}
+                                            onRemove={onRemove}
+                                            isDragging={dragItemId.current === item.id}
+                                        />
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -283,7 +371,12 @@ function RawView({ selections }: RawViewProps) {
 
     return (
         <div className="p-3">
-            <pre className="p-3 bg-slate-900 text-slate-100 rounded-lg text-xs overflow-x-auto font-mono">
+            <pre className="p-3 rounded-lg text-xs overflow-x-auto"
+                style={{
+                    fontFamily: '"IBM Plex Mono", monospace',
+                    background: 'var(--ws-mono-bg, rgba(63, 92, 110, 0.035))',
+                    color: 'var(--ws-mono-fg, #3A3A38)',
+                }}>
                 {rawData}
             </pre>
         </div>

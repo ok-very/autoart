@@ -123,6 +123,22 @@ export async function listExportSessions(params: {
 }
 
 // ============================================================================
+// STATELESS PREVIEW
+// ============================================================================
+
+/**
+ * Generate a projection preview without creating a session.
+ * No database writes, no status tracking — purely for client-side preview rendering.
+ */
+export async function previewProjection(
+    projectIds: string[],
+    options?: Partial<ExportOptions>,
+): Promise<BfaProjectExportModel[]> {
+    const mergedOptions = { ...DEFAULT_EXPORT_OPTIONS, ...options };
+    return projectBfaExportModels(projectIds, mergedOptions);
+}
+
+// ============================================================================
 // PROJECTION GENERATION
 // ============================================================================
 
@@ -210,6 +226,9 @@ export async function executeExport(sessionId: string): Promise<ExportResult> {
                 break;
             case 'csv':
                 result = await exportAsCsv(projection, session);
+                break;
+            case 'json':
+                result = exportAsJson(projection);
                 break;
             case 'google-doc':
                 result = await exportToGoogleDoc(projection, session);
@@ -324,6 +343,16 @@ async function exportAsCsv(
         success: true,
         format: 'csv',
         content: csvContent,
+    };
+}
+
+function exportAsJson(
+    projection: BfaProjectExportModel[],
+): ExportResult {
+    return {
+        success: true,
+        format: 'json',
+        content: JSON.stringify(projection, null, 2),
     };
 }
 

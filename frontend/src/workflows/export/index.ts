@@ -2,14 +2,6 @@
  * Export Surface Components
  */
 
-// Workbench components (for WorkbenchPage)
-export { ExportWorkbenchSidebar } from './panels/ExportWorkbenchSidebar';
-export { ExportWorkbenchContent } from './views/ExportWorkbenchContent';
-
-// Preview components
-export { ExportPreview } from './components/ExportPreview';
-export { ExportProjectList } from './components/ExportProjectList';
-
 // Collection system
 export { CollectionModeProvider, useCollectionMode, useCollectionModeOptional } from './context/CollectionModeProvider';
 export { SelectableWrapper } from './components/SelectableWrapper';
@@ -19,6 +11,9 @@ export { TemplatePresetSelector } from './components/TemplatePresetSelector';
 export { CollectionPanel } from './panels/CollectionPanel';
 export { CollectionPreview } from './components/CollectionPreview';
 
+// Document preview
+export { ExportDocumentPreview } from './components/ExportDocumentPreview';
+export { ExportResultScreen } from './components/ExportResultScreen';
+
 // Re-export types
 export * from './types';
-

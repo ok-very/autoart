@@ -12,12 +12,13 @@ import { z } from 'zod';
 // EXPORT FORMATS
 // ============================================================================
 
-/** Must match database CHECK constraint in migration 033/034/048 */
+/** Must match database CHECK constraint in migration 033/034/048/NNN */
 export const ExportFormatSchema = z.enum([
     'rtf',
     'plaintext',
     'markdown',
     'csv',
+    'json',
     'google-doc',
     'google-sheets',
     'google-slides',
@@ -74,6 +75,8 @@ export const ExportOptionsSchema = z.object({
     includeSelectionPanel: z.boolean(),
     includeOnlyOpenNextSteps: z.boolean(),
     includeStatusNotes: z.boolean(),
+    includeRiskRegister: z.boolean(),
+    includeArtworkImagery: z.boolean(),
     highlightCurrentMonth: z.boolean(),
 });
 export type ExportOptions = z.infer<typeof ExportOptionsSchema>;
@@ -85,8 +88,30 @@ export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {
     includeSelectionPanel: true,
     includeOnlyOpenNextSteps: false,
     includeStatusNotes: true,
+    includeRiskRegister: false,
+    includeArtworkImagery: true,
     highlightCurrentMonth: false,
 };
+
+// ============================================================================
+// SECTION DEFINITIONS (UI rendering + defaults)
+// ============================================================================
+
+export interface SectionDefinition {
+    id: keyof ExportOptions;
+    label: string;
+    defaultEnabled: boolean;
+}
+
+/** Sections surfaced as primary toggles in the export interface. */
+export const SECTION_DEFINITIONS: SectionDefinition[] = [
+    { id: 'includeStatusNotes', label: 'Executive Summary', defaultEnabled: true },
+    { id: 'includeContacts', label: 'Key Contacts', defaultEnabled: true },
+    { id: 'includeBudgets', label: 'Budget Status', defaultEnabled: true },
+    { id: 'includeMilestones', label: 'Milestone Timeline', defaultEnabled: true },
+    { id: 'includeRiskRegister', label: 'Risk Register', defaultEnabled: false },
+    { id: 'includeArtworkImagery', label: 'Artwork Imagery', defaultEnabled: true },
+];
 
 // ============================================================================
 // FINANCE EXPORT PRESETS

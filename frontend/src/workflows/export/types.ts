@@ -26,11 +26,14 @@ export {
 
 import type { ExportFormat } from '@autoart/shared';
 
+export type ExportFormatGroup = 'document' | 'data' | 'cloud';
+
 export interface ExportFormatOption {
     id: ExportFormat;
     label: string;
     description: string;
     extension: string;
+    group: ExportFormatGroup;
 }
 
 export const EXPORT_FORMATS: ExportFormatOption[] = [
@@ -39,63 +42,71 @@ export const EXPORT_FORMATS: ExportFormatOption[] = [
         label: 'BFA To-Do (RTF)',
         description: 'Rich Text Format matching original BFA document structure',
         extension: '.rtf',
+        group: 'document',
     },
     {
         id: 'plaintext',
         label: 'Plain Text',
         description: 'Simple text format for copying/pasting',
         extension: '.txt',
+        group: 'document',
     },
     {
         id: 'markdown',
         label: 'Markdown',
         description: 'Structured markdown for documentation',
         extension: '.md',
+        group: 'document',
     },
     {
         id: 'csv',
         label: 'CSV Summary',
         description: 'Spreadsheet-compatible tabular data',
         extension: '.csv',
+        group: 'data',
+    },
+    {
+        id: 'json',
+        label: 'JSON',
+        description: 'Structured JSON projection data',
+        extension: '.json',
+        group: 'data',
     },
     {
         id: 'google-doc',
         label: 'Google Docs',
         description: 'Export directly to Google Docs',
         extension: '',
+        group: 'cloud',
     },
     {
         id: 'google-sheets',
         label: 'Google Sheets',
         description: 'Export to spreadsheet with budget tracking',
         extension: '',
+        group: 'cloud',
     },
     {
         id: 'google-slides',
         label: 'Google Slides',
         description: 'Export to presentation format',
         extension: '',
+        group: 'cloud',
     },
     {
         id: 'pdf',
         label: 'PDF Document',
         description: 'PDF document (via AutoHelper)',
         extension: '.pdf',
+        group: 'document',
     },
     {
         id: 'docx',
         label: 'Word Document',
         description: 'Word .docx document',
         extension: '.docx',
+        group: 'document',
     },
-    // NOTE: Gantt export is triggered directly from TimelineWrapper panel,
-    // not through ExportWorkbench. Re-enable when batch workflow is added.
-    // {
-    //     id: 'gantt',
-    //     label: 'Gantt Chart (PDF)',
-    //     description: 'Visual timeline with drag-and-drop',
-    //     extension: '.pdf',
-    // },
 ];
 
 // ============================================================================
