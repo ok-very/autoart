@@ -1,0 +1,104 @@
+name: Build AutoHelper Installer
+
+on:
+  push:
+    tags:
+      - "autohelper-v*"
+
+permissions:
+  contents: write  # Required for creating releases
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: apps/autohelper
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: apps/autohelper/pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install pyinstaller
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
+
+      - name: Extract version from tag
+        id: version
+        shell: bash
+        run: echo "version=${GITHUB_REF_NAME#autohelper-v}" >> "$GITHUB_OUTPUT"
+
+      - name: Update version in __init__.py
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $initFile = "autohelper/__init__.py"
+          (Get-Content $initFile) -replace '__version__ = ".*"', "__version__ = `"$version`"" | Set-Content $initFile
+        shell: pwsh
+
+      - name: Build with PyInstaller
+        run: python -m PyInstaller scripts/autohelper.spec --clean --noconfirm
+
+      - name: Verify PyInstaller output
+        run: |
+          if (!(Test-Path "dist/autohelper/autohelper.exe")) {
+            Write-Error "autohelper.exe not found in dist/"
+            exit 1
+          }
+          Write-Output "Build artifacts:"
+          Get-ChildItem -Path "dist/autohelper/" -Recurse | Where-Object { !$_.PSIsContainer } | Select-Object Length, FullName | Format-Table -AutoSize
+        shell: pwsh
+
+      - name: Install Inno Setup
+        run: choco install innosetup --yes --no-progress
+        shell: pwsh
+
+      - name: Update installer version
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $issFile = "scripts/installer.iss"
+          (Get-Content $issFile) -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$version`"" | Set-Content $issFile
+        shell: pwsh
+
+      - name: Build installer
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" scripts/installer.iss
+        shell: pwsh
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: autohelper-installer
+          path: apps/autohelper/dist/AutoHelper-Setup-*.exe
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: AutoHelper ${{ steps.version.outputs.version }}
+          body: |
+            ## AutoHelper ${{ steps.version.outputs.version }}
+
+            ### Installation
+            1. Download `AutoHelper-Setup-${{ steps.version.outputs.version }}.exe`
+            2. Run the installer
+            3. Choose whether to install as a Windows service
+            4. Open the dashboard at http://127.0.0.1:8100/dashboard
+
+            ### Requirements
+            - Windows 10/11
+            - PowerShell 5.1+ (for Exchange sync)
+            - ExchangeOnlineManagement module (for contact sync)
+          files: apps/autohelper/dist/AutoHelper-Setup-*.exe
+          draft: false
+          prerelease: false
