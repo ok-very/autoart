@@ -297,7 +297,7 @@ function buildBudgets(
         const { allocationType, amount, currency } = event.payload;
         const budgetValue = {
             numeric: amount as number,
-            text: formatCurrency(amount as number, currency as string),
+            text: formatCurrency(amount as number, typeof currency === 'string' ? currency : undefined),
         };
 
         if (allocationType === 'artwork') {
