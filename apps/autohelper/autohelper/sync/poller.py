@@ -16,7 +16,6 @@ import urllib.request
 from typing import Any, cast
 
 from autohelper.config import get_settings, reset_settings
-from autohelper.config.manifest import CONFIG_KEYS
 from autohelper.config.store import ConfigStore
 from autohelper.shared.logging import get_logger
 from autohelper.sync.connection_state import ConnectionState, ConnectionStateManager
@@ -303,10 +302,24 @@ class BackendPoller:
         store = ConfigStore()
         cfg = store.load()
 
-        # Apply any key the manifest knows about
-        for key in CONFIG_KEYS:
-            if key in new_settings:
-                cfg[key] = new_settings[key]
+        # Update config with new values
+        key_mapping = {
+            "allowed_roots": "allowed_roots",
+            "excludes": "excludes",
+            "mail_enabled": "mail_enabled",
+            "mail_poll_interval": "mail_poll_interval",
+            "crawl_depth": "crawl_depth",
+            "min_width": "min_width",
+            "max_width": "max_width",
+            "min_height": "min_height",
+            "max_height": "max_height",
+            "min_filesize_kb": "min_filesize_kb",
+            "max_filesize_kb": "max_filesize_kb",
+        }
+
+        for backend_key, local_key in key_mapping.items():
+            if backend_key in new_settings:
+                cfg[local_key] = new_settings[backend_key]
 
         store.save(cfg)
         reset_settings()

@@ -13,7 +13,6 @@ from typing import Literal
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from autohelper.config.manifest import CONFIG_KEYS
 from autohelper.shared.paths import data_dir
 
 # =============================================================================
@@ -43,11 +42,6 @@ class Settings(BaseSettings):
 
     # Filesystem roots (comma-separated paths)
     allowed_roots: list[str] = Field(default_factory=list)
-
-    # Exclusion patterns
-    excludes: list[str] = Field(
-        default_factory=lambda: ["pyc", "__pycache__", ".git", ".idea", "node_modules"]
-    )
 
     # Security
     block_symlinks: bool = True
