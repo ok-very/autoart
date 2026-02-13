@@ -13,7 +13,10 @@ def _settings_url() -> str:
     from autohelper.config import get_settings
 
     settings = get_settings()
-    return f"http://{settings.host}:{settings.port}/dashboard"
+    host = settings.host
+    if host in ("0.0.0.0", "::"):
+        host = "127.0.0.1"
+    return f"http://{host}:{settings.port}/dashboard"
 
 
 def open_settings_in_browser() -> None:

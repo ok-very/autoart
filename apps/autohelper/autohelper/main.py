@@ -186,6 +186,12 @@ def main() -> None:
         _handle_service(action)
         return
 
+    # Acquire PID lock before any server mode
+    if not _acquire_lock():
+        print("ERROR: Another AutoHelper instance is already running.")
+        print(f"Lock file: {LOCKFILE}")
+        sys.exit(1)
+
     # Check if started by Windows SCM (no args, frozen exe)
     if getattr(sys, "frozen", False) and not args:
         # PyInstaller exe with no args — could be SCM invocation
@@ -195,12 +201,6 @@ def main() -> None:
             return
         except Exception:
             pass  # Fall through to console mode
-
-    # Acquire PID lock
-    if not _acquire_lock():
-        print("ERROR: Another AutoHelper instance is already running.")
-        print(f"Lock file: {LOCKFILE}")
-        sys.exit(1)
 
     settings = get_settings()
 

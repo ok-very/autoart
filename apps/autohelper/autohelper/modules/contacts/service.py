@@ -399,7 +399,10 @@ class ContactSyncService:
             self._last_result = result
 
         finally:
-            self._log_sync_run(sync_id, result)
+            try:
+                self._log_sync_run(sync_id, result)
+            except Exception:
+                logger.exception("Failed to log sync run %s", sync_id)
             with self._run_lock:
                 self._running = False
 

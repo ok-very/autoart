@@ -131,7 +131,7 @@ def install_service() -> None:
     if exe_path.endswith("python.exe") or exe_path.endswith("python3.exe"):
         # Running from Python interpreter - use module invocation
         win32serviceutil.InstallService(
-            AutoHelperService._svc_name_,
+            AutoHelperService,
             AutoHelperService._svc_name_,
             AutoHelperService._svc_display_name_,
             startType=win32service.SERVICE_AUTO_START,

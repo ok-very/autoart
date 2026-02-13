@@ -32,7 +32,7 @@ $result = @{
 
 try {
     # Read input
-    $input = Get-Content -Path $InputFile -Raw | ConvertFrom-Json
+    $input = Get-Content -Path $InputFile -Raw -Encoding UTF8 | ConvertFrom-Json
     $auth = $input.auth
 
     # Import Exchange Online module
@@ -75,7 +75,7 @@ try {
     foreach ($contact in $input.create) {
         try {
             $newParams = @{
-                Name                 = $contact.DisplayName
+                Name                 = $contact.Identity
                 ExternalEmailAddress = $contact.ExternalEmailAddress
                 FirstName            = $contact.FirstName
                 LastName             = $contact.LastName
@@ -170,6 +170,8 @@ try {
 }
 catch {
     $result.errors += "Fatal: $($_.Exception.Message)"
+    $result | ConvertTo-Json -Compress
+    exit 1
 }
 
 # Output JSON result

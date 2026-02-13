@@ -25,6 +25,7 @@ async def get_contact_status() -> ContactStatusResponse:
     settings = get_settings()
     service = ContactSyncService()
 
+    last_sync_at = None
     last_status = None
     last_file_hash = None
 
@@ -34,6 +35,7 @@ async def get_contact_status() -> ContactStatusResponse:
             "SELECT last_sync_at, last_status, file_hash FROM contact_sync_state WHERE id = 1"
         ).fetchone()
         if row:
+            last_sync_at = row[0]
             last_status = row[1]
             last_file_hash = row[2]
     except Exception:
@@ -41,7 +43,7 @@ async def get_contact_status() -> ContactStatusResponse:
 
     return ContactStatusResponse(
         enabled=settings.contact_sync_enabled,
-        last_sync=service.last_sync,
+        last_sync=last_sync_at or service.last_sync,
         next_sync=get_next_contact_sync_time(),
         last_status=last_status,
         last_file_hash=last_file_hash,

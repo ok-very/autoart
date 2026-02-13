@@ -262,8 +262,10 @@ function readFieldValue(field) {
   switch (field.type) {
     case "bool":
       return el.checked;
-    case "int":
-      return parseInt(el.value, 10) || field.default;
+    case "int": {
+      const n = parseInt(el.value, 10);
+      return Number.isNaN(n) ? field.default : n;
+    }
     case "string_list": {
       const raw = el.value.trim();
       return raw ? raw.split("\n").map(s => s.trim()).filter(Boolean) : [];
