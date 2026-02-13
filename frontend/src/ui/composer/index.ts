@@ -29,5 +29,5 @@ export { EventPreview, buildPendingEvents } from './EventPreview';
 export type { EventPreviewProps, PendingEvent } from './EventPreview';
 
 // Expanded composer panel (deep compose — reference slots, context selection, detailed fields)
-export { ComposerView, InlineComposer } from './ComposerView';
-export type { ComposerViewProps, InlineComposerProps } from './ComposerView';
+export { ComposerView } from './ComposerView';
+export type { ComposerViewProps } from './ComposerView';

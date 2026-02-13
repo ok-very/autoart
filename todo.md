@@ -47,14 +47,6 @@
 
 ---
 
-## P0: Blocking
-
-| # | Issue | Category |
-|---|-------|----------|
-| — | ~~**Export Package Queue Architecture**~~ — Superseded by collection-driven export interface (PRs #495-496). Collection system serves as intake layer; backend only sees `projectIds[]`. Queue plan (`docs/plans/export-queue-architecture.md`) archived. PR #477 closed without merge. | Export |
-
----
-
 ## P1: Ready to Build
 
 | # | Issue | Category |
