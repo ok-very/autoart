@@ -6,8 +6,8 @@
  * Executes exports through the backend session pipeline.
  */
 
-import { useState } from 'react';
-import { FileText, Table, Loader2, AlertCircle, Check, ChevronDown, ChevronRight, Settings, Download, ExternalLink } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { FileText, Table, Loader2, Check, ChevronDown, ChevronRight, Settings, Download, ExternalLink } from 'lucide-react';
 import { GoogleLogo } from '@phosphor-icons/react';
 import { useCollectionStore, type TemplatePreset } from '../../../stores';
 import { useExportWorkbenchStore } from '../../../stores/exportWorkbenchStore';
@@ -16,6 +16,7 @@ import { useResolvedProjectIds } from '../utils/resolveProjectIds';
 import { Text } from '@autoart/ui';
 
 import { SECTION_DEFINITIONS, type ExportFormat, type ExportResult } from '@autoart/shared';
+import { ExportResultScreen } from '../components/ExportResultScreen';
 
 // ============================================================================
 // TemplatePreset → ExportFormat mapping
@@ -103,6 +104,7 @@ export function GenerationPanel() {
     const downloadOutput = useDownloadExportOutput();
     const [results, setResults] = useState<ExportResultEntry[]>([]);
     const [expandedModule, setExpandedModule] = useState<TemplatePreset | null>(null);
+    const [activeResult, setActiveResult] = useState<ExportResult | null>(null);
 
     const selectedPreset = activeCollection?.templatePreset ?? 'bfa_rtf';
     const currentFormat = PRESET_TO_FORMAT[selectedPreset];
@@ -116,11 +118,12 @@ export function GenerationPanel() {
         setExpandedModule(moduleId === expandedModule ? null : moduleId);
     };
 
-    const handleGenerate = async () => {
+    const handleGenerate = useCallback(async () => {
         if (!activeCollection || resolved.projectIds.length === 0) return;
 
         const format = currentFormat;
         const options = getMergedOptions();
+        setActiveResult(null);
 
         try {
             const session = await workflow.startExport({
@@ -138,13 +141,20 @@ export function GenerationPanel() {
                 timestamp: new Date().toISOString(),
             }, ...prev]);
 
+            setActiveResult(result);
+
             if (result.externalUrl) {
                 window.open(result.externalUrl, '_blank');
             }
         } catch {
-            // Error surfaced via workflow.error
+            // Surface error via activeResult
+            setActiveResult({ success: false, format, error: workflow.error instanceof Error ? workflow.error.message : 'Export failed' });
         }
-    };
+    }, [activeCollection, resolved.projectIds, currentFormat, getMergedOptions, workflow]);
+
+    const handleReset = useCallback(() => {
+        setActiveResult(null);
+    }, []);
 
     if (!activeCollection) {
         return (
@@ -154,12 +164,21 @@ export function GenerationPanel() {
         );
     }
 
-    const errorMessage = workflow.error instanceof Error
-        ? workflow.error.message
-        : workflow.error ? String(workflow.error) : null;
-
     const selectionCount = activeCollection.selections.length;
     const canGenerate = resolved.projectIds.length > 0 && !workflow.isLoading;
+
+    // Show result screen after export completes
+    if (activeResult) {
+        return (
+            <div className="flex flex-col h-full" style={{ background: 'var(--ws-bg, #F5F2ED)' }}>
+                <ExportResultScreen
+                    result={activeResult}
+                    onReset={handleReset}
+                    onRetry={!activeResult.success ? handleGenerate : undefined}
+                />
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col h-full bg-ws-bg relative">
@@ -360,21 +379,6 @@ export function GenerationPanel() {
                         {!workflow.isLoading && 'Generate Output'}
                     </button>
                 </div>
-
-                {/* Error */}
-                {errorMessage && (
-                    <div
-                        className="mx-3 mb-3 p-3 text-xs rounded flex items-start gap-2"
-                        style={{
-                            background: 'color-mix(in srgb, var(--ws-color-error, #8C4A4A) 8%, transparent)',
-                            color: 'var(--ws-color-error, #8C4A4A)',
-                            border: '1px solid color-mix(in srgb, var(--ws-color-error, #8C4A4A) 20%, transparent)',
-                        }}
-                    >
-                        <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
-                        {errorMessage}
-                    </div>
-                )}
 
                 {/* Results List */}
                 {results.length > 0 && (
