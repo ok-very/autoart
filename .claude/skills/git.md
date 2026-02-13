@@ -98,16 +98,7 @@ stackit sync                 # Pull main, cleanup any already-merged branches
 stackit log                  # Confirm stack order and PR numbers
 ```
 
-**Run lint before merging.** This repo has no CI — lint locally before starting the merge:
-
-```bash
-stackit bottom --no-interactive
-pnpm --filter @autoart/shared --filter @autoart/ui build   # Build workspace deps
-pnpm typecheck                                              # Must pass
-pnpm lint                                                   # Must pass
-```
-
-If either fails, fix the errors before merging. Use `/stack-fix` or `/stack-verify` to locate which branch introduced the failure.
+**CI runs on GitHub Actions.** Lint and typecheck are validated automatically on PRs.
 
 #### Primary method: `stackit merge squash`
 
