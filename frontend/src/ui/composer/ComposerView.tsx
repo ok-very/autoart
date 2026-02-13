@@ -68,7 +68,7 @@ import { ContextIndicator } from './ContextIndicator';
 
 export interface ComposerViewProps {
     /** Display mode: page (full-page) or drawer (slide-out panel) */
-    mode: 'page' | 'drawer' | 'inline';
+    mode: 'page' | 'drawer';
     /** Pre-selected context ID */
     contextId?: string;
     /** Context type (defaults to subprocess) */
@@ -240,17 +240,12 @@ export function ComposerView({
 
     // ==================== RENDER ====================
 
-    const containerClass = clsx('flex flex-col bg-ws-bg text-ws-fg', {
-        'h-full': mode === 'page' || mode === 'drawer',
-        'rounded-lg border border-ws-panel-border': mode === 'inline',
-    });
+    const containerClass = 'flex flex-col h-full bg-ws-bg text-ws-fg';
 
     return (
         <div className={containerClass}>
             {/* Header */}
-            {mode !== 'inline' && (
-                <>
-                    <div className="flex items-center justify-between h-16 px-6 bg-ws-panel-bg border-b border-ws-panel-border shrink-0">
+            <div className="flex items-center justify-between h-16 px-6 bg-ws-panel-bg border-b border-ws-panel-border shrink-0">
                         <Inline gap="sm" align="center">
                             <div className="w-10 h-10 rounded-lg bg-ws-accent flex items-center justify-center text-ws-accent-fg">
                                 <Wand2 size={20} />
@@ -277,11 +272,9 @@ export function ComposerView({
                             size="md"
                         />
                     </div>
-                </>
-            )}
 
             {/* Body */}
-            <div className={clsx('flex-1 overflow-y-auto p-6', { 'custom-scroll': mode !== 'inline' })}>
+            <div className="flex-1 overflow-y-auto p-6 custom-scroll">
                 <form onSubmit={handleSubmit} className="space-y-5">
                     {/* Section 1: Project Context */}
                     <Card shadow="sm" padding="md" radius="md">
