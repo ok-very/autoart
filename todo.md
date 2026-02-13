@@ -14,10 +14,7 @@
 - **4 backend integration tests fail in CI:** auth.service, composer.service, events.service, hierarchy.service — `Database not initialized. Call initializeDatabase() first`. Tests need `initializeDatabase()` in setup. Marked `continue-on-error` in CI workflow as stopgap.
 - ~~**`stage-entered-passive` regex anchor mismatch (PR #480):**~~ Fixed — `^` anchor removed from `extractStageFromText` `enteredMatch` regex. Verified: pattern now allows mid-string matches.
 
-**PR #477 review findings (CodeAnt — lives on packages branch):**
-- `packages.routes.ts` projection + execute endpoints return 500 instead of 404 for missing package IDs — need try/catch with "Package not found" → 404 mapping
-- `AddPackageMenu.tsx` `handleSubmit` — `mutateAsync` has no try/catch, unhandled promise rejection on network failure
-- `PackageDetailView.tsx` — `isLoading || !pkg` guard treats error state as loading, permanent spinner on API failure. Needs explicit error + not-found states.
+~~**PR #477 review findings (CodeAnt — lives on packages branch):**~~ Dead — PR #477 branch abandoned, package queue superseded by collection-driven export (PRs #495-496).
 
 **Phase 3 review findings (PRs #439-447):**
 
@@ -54,7 +51,7 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| — | **Export Package Queue Architecture** — Redesign export workbench to accept packages from multiple sources (collections, import handoff, project selections) via a persistent queue. Snapshots on submit, deferred resolution for import items, projector registry per source type. Three phases: (1) Queue foundation with project_selection only, (2) Collection + import handoff with inline resolution panel, (3) Cleanup + future sources (record_set, filtered_view, batch execution). Plan: `docs/plans/export-queue-architecture.md`. *Phase 1 PR #477 closed without merge — approach needs rethinking after export UI design review (see P1).* | Export |
+| — | ~~**Export Package Queue Architecture**~~ — Superseded by collection-driven export interface (PRs #495-496). Collection system serves as intake layer; backend only sees `projectIds[]`. Queue plan (`docs/plans/export-queue-architecture.md`) archived. PR #477 closed without merge. | Export |
 
 ---
 
@@ -107,9 +104,9 @@
 | ~~`classification-cache.ts`~~ | ~~Hash truncated to 16 hex chars~~ — Already 32 chars (128-bit) and hashes `schema_config`. Resolved. |
 | ~~`todo.md`~~ | ~~Broken anchor `#autohelper-status-resolved`~~ — Fixed in Stream 20 (PR #472) | — |
 | ~~`.serena/memories/`~~ | ~~Session artifacts committed~~ — Added to `.gitignore` | — |
-| `backend/src/modules/exports/packages.service.ts` | `reorderPackages()` is N+1 (individual UPDATE per ID in loop) — should use transaction or single `CASE WHEN` batch UPDATE. **Lives on PR #477 branch.** | — |
-| `backend/src/modules/exports/packages.routes.ts` | `listPackages()` has no user scoping — returns all packages across all users despite `app.authenticate` hook. **Lives on PR #477 branch.** | — |
-| `frontend/src/workflows/export/views/PackageDetailView.tsx` | Download URL uses `window.open(...)` bypassing API client auth headers — should use `useDownloadExportOutput()`. **Lives on PR #477 branch.** | — |
+| ~~`packages.service.ts`~~ | ~~N+1 reorder~~ — Dead: PR #477 branch abandoned, package queue superseded by collection system | — |
+| ~~`packages.routes.ts`~~ | ~~No user scoping~~ — Dead: PR #477 branch abandoned | — |
+| ~~`PackageDetailView.tsx`~~ | ~~`window.open` bypasses auth~~ — Dead: PR #477 branch abandoned | — |
 | ~~`frontend/src/workflows/export/views/ExportWorkbench.tsx`~~ | ~~Dead collection-based workbench~~ — Deleted (+ `ExportWorkbenchView.tsx`, `ExportPage.tsx`). Barrel export cleaned. | — |
 | ~~`frontend/src/pages/ExportPage.tsx`~~ | ~~Orphaned page, no route~~ — Deleted (see above) | — |
 | ~~`backend/src/modules/exports/targets/`~~ | ~~Dead target registry~~ — Deleted entire directory (5 files). `executeExport()` switch is the real dispatcher. | — |
@@ -159,8 +156,9 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Export Interface + CLAUDE.md cockpit + CodeAnt fixes (Feb 13 2026):** (PR #495) Collection-driven export surface — 3-phase implementation: mount Collection System + rewire GenerationPanel to backend sessions, section toggles + drag-and-drop reorder + export config store, document preview + result screen + dead code removal (8 old files deleted, 4 new). JSON formatter, stateless preview endpoint, `resolveProjectIds` utility. Plan: `docs/plans/plan-export-interface.md`. (PR #496) CLAUDE.md distilled to ~140-line cockpit at `~/dev/CLAUDE.md` — agents load reference docs on-demand instead of preloading. Session commands (`/session-init`, `/session-save`) for Serena memory persistence. CI lint gate removed (GitHub Actions). CodeAnt review validation: ExportOptions schema fields given `.default()` values for backwards compat, drifted local schema in `exports.routes.ts` replaced with shared import, `formatCurrency` currency param guarded against undefined. PR #497 closed (stale — migration fix already on main via #498). | PRs #495-496 (merged), #497 (closed) |
 | — | **GitHub Actions CI pipeline (Feb 13 2026):** CI workflow established — Postgres 15 service, pnpm frozen-lockfile, build chain (shared → ui → backend), lint, typecheck, unit tests. Fixes: idempotent migration 009 (conditional enum rename for fresh vs legacy DBs), stale lockfile (match-sorter catalog sync), JWT_SECRET env var, @autoart/ui build step for typecheck. 4 integration tests marked continue-on-error (see Bug List). | PRs #487, #498, #499, #500 |
-| — | **Export Workbench P0-P3 (Feb 10 2026):** Interpreter coverage (#479), export UI reconciliation (#481), BFA projector fixes (#482), projector tests + ExportPreview cleanup (#483). **Needs design review — logged as P1.** PR #477 (Package Queue Phase 1) closed without merge. | PRs #479-483 (merged), #477 (closed) |
+| — | **Export Workbench P0-P3 (Feb 10 2026):** Interpreter coverage (#479), export UI reconciliation (#481), BFA projector fixes (#482), projector tests + ExportPreview cleanup (#483). Design review completed; collection-driven interface shipped in PRs #495-496. PR #477 (Package Queue Phase 1) closed without merge. | PRs #479-483 (merged), #477 (closed) |
 | 340, 393 | **AutoHelper hardening + CodeAnt review fixes (Feb 9 2026):** (PR #473) Test infrastructure — `Settings.load_from_config_store` model_validator now checks `model_fields_set` before overwriting constructor kwargs (fixed 22 test failures); mail tests mock `_HAS_WIN32` directly instead of fighting `@functools.cache` (fixed 4 failures). Tests: 49/75 → 75/75. (PR #474) MyPy cleanup — 89 errors → 0 across 24 files: `types-requests` stubs, `dict[str, Any]` annotations, `cast()` for no-any-return, test function `-> None` + fixture types, async iterator overrides. (PR #475) Tray staleness (#340) — `ConnectionStateManager` thread-safe singleton with 3 states (unpaired/paired_connected/paired_disconnected), poller sets state on 401/network errors, tray reads from manager. File watch Phase 1 (#393) — watchdog-based `modules/file_watch/` (schemas, handler, service, router), 500ms debounce, ref matching, poller command handlers (watch_root/unwatch_root/drain_file_events). Tests: 75 → 98. **CodeAnt review fixes (commit 568b715):** Thread safety — double-checked locking on `get_service()` singleton, `ThreadSafeEventQueue` replaces bare list to prevent event loss between watchdog producer and drain consumer. Idempotency bug — audit_log stores Pydantic `model_dump()` for replay instead of `str(result)`, fixing wrong-type return on cache hit. Path safety — `path.absolute()` instead of `resolve()` for deletion events where file no longer exists. | PR #476 (stack merge #473-475) |
 
 | # | Issue | Closed By |
