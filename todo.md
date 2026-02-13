@@ -7,7 +7,7 @@
 
 **Active — unphased:**
 - **Project binding in workspaces is implementation theater:** Phase 1.2 wired WorkspaceContext consumption, but panels don't actually use the bound project ID. UI shows binding UI, backend may store it, but the connection between "user binds project to workspace" and "panels render that project's data" is broken or never existed. Trace the full path: workspace save → project binding persistence → panel mount → data fetch with bound ID.
-- **Composer remaining work:** ComposerView migration phases 1-3 done (PR #501 in-flight) — `useComposerForm` hook, `@autoart/ui` atoms, `composer.css` deleted, `ContextIndicator` integrated, agent routing slot placed, ComposerPanel thinned. Phase 4 (verification pass) not yet done. Broader remaining: delete UnifiedComposerBar (dead code), re-wire `composer-workbench` in MainLayout COMPONENTS.
+- **CollectionPreview.tsx lint error:** React Compiler error on line 268 — "Cannot access refs during render". `groups.map()` callback reads `expandedGroups` ref during render. Pre-existing from export work (PRs #495-496).
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
 - **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
@@ -51,7 +51,6 @@
 
 | # | Issue | Category |
 |---|-------|----------|
-| — | **Composer completion:** Phase 4 verification pass (typecheck, build, theme test, E2E submit test, dead import scan). Delete UnifiedComposerBar (dead code). Re-wire `composer-workbench` in MainLayout COMPONENTS. *(Phases 1-3 done: hook migration, atom replacement, CSS deletion, ContextIndicator, agent routing slot — PR #501 in-flight)* | UX |
 
 ---
 
@@ -140,7 +139,7 @@
 
 | PRs | Description |
 |-----|-------------|
-| #501 | **Composer migration phases 1-3:** ComposerView migrated to `useComposerForm` hook + `@autoart/ui` atoms, `composer.css` deleted (519 lines), `InlineComposer` removed, `ContextIndicator` integrated, `data-slot="agent-routing"` placed, ComposerPanel thinned to wrapper. Plan: `docs/plans/plan-composer-migration.md`. Remaining: Phase 4 verification, UnifiedComposerBar deletion, MainLayout re-wire. |
+| #501 | **Composer migration complete (phases 1-4):** ComposerView migrated to `useComposerForm` hook + `@autoart/ui` atoms, `composer.css` deleted (519 lines), `InlineComposer` removed, `ContextIndicator` integrated, `data-slot="agent-routing"` placed, ComposerPanel thinned, dead `mode='inline'` stripped. Phase 4 verification clean (typecheck, build, cross-ref audit). UnifiedComposerBar already deleted. MainLayout wiring correct. Plan: `docs/plans/plan-composer-migration.md`. |
 
 ---
 
