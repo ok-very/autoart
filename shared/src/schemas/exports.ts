@@ -69,16 +69,16 @@ export type ExportSessionStatus = z.infer<typeof ExportSessionStatusSchema>;
 // ============================================================================
 
 export const ExportOptionsSchema = z.object({
-    includeContacts: z.boolean(),
-    includeBudgets: z.boolean(),
-    includeMilestones: z.boolean(),
-    includeSelectionPanel: z.boolean(),
-    includeOnlyOpenNextSteps: z.boolean(),
-    includeStatusNotes: z.boolean(),
-    includeRiskRegister: z.boolean(),
-    includeArtworkImagery: z.boolean(),
-    highlightCurrentMonth: z.boolean(),
-});
+    includeContacts: z.boolean().default(true),
+    includeBudgets: z.boolean().default(true),
+    includeMilestones: z.boolean().default(true),
+    includeSelectionPanel: z.boolean().default(false),
+    includeOnlyOpenNextSteps: z.boolean().default(false),
+    includeStatusNotes: z.boolean().default(true),
+    includeRiskRegister: z.boolean().default(false),
+    includeArtworkImagery: z.boolean().default(false),
+    highlightCurrentMonth: z.boolean().default(false),
+});;
 export type ExportOptions = z.infer<typeof ExportOptionsSchema>;
 
 export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {

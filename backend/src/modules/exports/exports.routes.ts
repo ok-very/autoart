@@ -20,6 +20,7 @@ import { OneDriveClient } from './connectors/onedrive-client.js';
 import * as emailDecayService from './email-decay.service.js';
 import * as exportsService from './exports.service.js';
 import * as stalenessService from './staleness.service.js';
+import { ExportOptionsSchema } from '@autoart/shared';
 import type { ExportFormat, ExportOptions } from './types.js';
 import { getGoogleToken, getMicrosoftToken, isProviderConnected } from '../imports/connections.service.js';
 
@@ -28,16 +29,6 @@ import { getGoogleToken, getMicrosoftToken, isProviderConnected } from '../impor
 // ============================================================================
 
 const ExportFormatSchema = z.enum(['rtf', 'markdown', 'plaintext', 'csv', 'json', 'google-doc', 'google-sheets', 'google-slides', 'pdf', 'docx']);
-
-const ExportOptionsSchema = z.object({
-    includeContacts: z.boolean().optional(),
-    includeBudgets: z.boolean().optional(),
-    includeMilestones: z.boolean().optional(),
-    includeStatusNotes: z.boolean().optional(),
-    includeSelectionPanel: z.boolean().optional(),
-    includeOnlyOpenNextSteps: z.boolean().optional(),
-    highlightCurrentMonth: z.boolean().optional(),
-});
 
 const CreateSessionBodySchema = z.object({
     format: ExportFormatSchema,
