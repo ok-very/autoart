@@ -3,8 +3,10 @@
  *
  * Dockview-compatible panel for Field Definitions and Field Instances.
  * Uses unified RegistryFilterBar for consistent search/sort across registry panels.
+ * Consumes WorkspaceContext for project-scoped filtering when bound.
  */
 
+import type { IDockviewPanelProps } from 'dockview';
 import { TableProperties } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -12,6 +14,7 @@ import type { FieldDescriptor } from '@autoart/shared';
 
 import { useUIStore } from '../../stores/uiStore';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { useWorkspaceContextOptional } from '../../workspace/WorkspaceContext';
 import { useCollectionModeOptional } from '../../workflows/export/context/CollectionModeProvider';
 import { ResizeHandle, SegmentedControl } from '@autoart/ui';
 import { FieldsMillerColumnsView } from '../composites/FieldsMillerColumnsView';
@@ -25,13 +28,18 @@ const TAB_DATA = [
     { value: 'instances', label: 'Instances' },
 ];
 
-export function FieldsPanel() {
+export function FieldsPanel(props: IDockviewPanelProps) {
     const setFieldsViewMode = useWorkspaceStore((s) => s.setFieldsViewMode);
     const { openOverlay } = useUIStore();
     const collectionMode = useCollectionModeOptional();
     const [sidebarWidth, setSidebarWidth] = useState(280);
     const [selectedField, setSelectedField] = useState<FieldDescriptor | null>(null);
     const [activeTab, setActiveTab] = useState<RegistryTab>('definitions');
+
+    // Project binding: use workspace project when panel is bound
+    const wsCtx = useWorkspaceContextOptional();
+    const isBound = wsCtx?.isBound(props.api.id) ?? false;
+    const projectId = isBound ? wsCtx?.boundProjectId ?? undefined : undefined;
 
     // Stop collecting when switching to instances tab (aggregate only makes sense for definitions)
     useEffect(() => {
@@ -73,6 +81,7 @@ export function FieldsPanel() {
                 >
                     <FieldsMillerColumnsView
                         onSelectField={setSelectedField}
+                        projectId={projectId}
                     />
                 </div>
 

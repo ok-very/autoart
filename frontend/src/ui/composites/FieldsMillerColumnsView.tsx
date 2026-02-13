@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 
 import type { FieldDescriptor } from '@autoart/shared';
 
-import { useRecordDefinitions } from '../../api/hooks';
+import { useRecordDefinitionsFiltered } from '../../api/hooks';
 import { generateFieldIndex } from '../../utils/fieldIndexBuilder';
 import { MillerColumn, type MillerColumnItem } from '../../ui/molecules/MillerColumn';
 
@@ -10,14 +10,17 @@ export interface FieldsMillerColumnsViewProps {
     className?: string;
     onSelectField?: (field: FieldDescriptor) => void;
     onCheckChange?: (checkedIds: Set<string>) => void;
+    /** Optional project scope — when set, only shows definitions for this project */
+    projectId?: string;
 }
 
 export function FieldsMillerColumnsView({
     className,
     onSelectField,
-    onCheckChange
+    onCheckChange,
+    projectId,
 }: FieldsMillerColumnsViewProps) {
-    const { data: definitions, isLoading } = useRecordDefinitions();
+    const { data: definitions, isLoading } = useRecordDefinitionsFiltered({ projectId });
 
     // State for navigation (active path) - simplified: Definition -> Fields
     const [activeDefinitionId, setActiveDefinitionId] = useState<string | null>(null);

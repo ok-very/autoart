@@ -304,10 +304,21 @@ export async function recordsRoutes(app: FastifyInstance) {
   // ==================== RECORDS ====================
 
   // Get record stats (count per definition type)
-  fastify.get('/stats', { preHandler: [fastify.authenticate] }, async (_request, reply) => {
-    const stats = await recordsService.getRecordStats();
-    return reply.send({ stats });
-  });
+  fastify.get(
+    '/stats',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        querystring: z.object({
+          projectId: z.string().uuid().optional(),
+        }),
+      },
+    },
+    async (request, reply) => {
+      const stats = await recordsService.getRecordStats(request.query.projectId);
+      return reply.send({ stats });
+    }
+  );
 
   // Bulk classify records
   fastify.post(

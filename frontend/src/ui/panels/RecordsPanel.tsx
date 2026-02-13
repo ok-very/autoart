@@ -3,12 +3,15 @@
  *
  * Dockview-compatible panel for Record Definitions and Record Instances.
  * Uses unified RegistryFilterBar via DefinitionListSidebar.
+ * Consumes WorkspaceContext for project-scoped filtering when bound.
  */
 
+import type { IDockviewPanelProps } from 'dockview';
 import { Database } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 import { useUIStore } from '../../stores/uiStore';
+import { useWorkspaceContextOptional } from '../../workspace/WorkspaceContext';
 import { ResizeHandle, SegmentedControl } from '@autoart/ui';
 import { RecordView } from '../composites/RecordView';
 import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../registry';
@@ -19,11 +22,16 @@ const TAB_DATA = [
     { value: 'instances', label: 'Instances' },
 ];
 
-export function RecordsPanel() {
+export function RecordsPanel(props: IDockviewPanelProps) {
     const { openOverlay } = useUIStore();
     const [sidebarWidth, setSidebarWidth] = useState(280);
     const [selectedDefinitionId, setSelectedDefinitionId] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<RegistryTab>('instances');
+
+    // Project binding: use workspace project when panel is bound
+    const wsCtx = useWorkspaceContextOptional();
+    const isBound = wsCtx?.isBound(props.api.id) ?? false;
+    const projectId = isBound ? wsCtx?.boundProjectId ?? undefined : undefined;
 
     const handleSidebarResize = useCallback(
         (delta: number) => {
@@ -67,6 +75,7 @@ export function RecordsPanel() {
                     selectedDefinitionId={selectedDefinitionId}
                     onSelectDefinition={handleSelectDefinition}
                     definitionKind="record"
+                    projectId={projectId}
                 />
                 <ResizeHandle direction="right" onResize={handleSidebarResize} />
 
