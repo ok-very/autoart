@@ -1,0 +1,84 @@
+name: Build AutoHelper (Electron + NSIS)
+
+on:
+  push:
+    tags:
+      - "autohelper-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Prepare embedded Python
+        working-directory: apps/autohelper-electron
+        run: pnpm prepare-python
+
+      - name: Extract version from tag
+        id: version
+        shell: bash
+        run: echo "version=${GITHUB_REF_NAME#autohelper-v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build Electron main process
+        working-directory: apps/autohelper-electron
+        run: pnpm build
+
+      - name: Build React dashboard
+        working-directory: apps/autohelper-electron
+        run: pnpm build:dashboard
+
+      - name: Build NSIS installer
+        working-directory: apps/autohelper-electron
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: pnpm dist
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: autohelper-installer
+          path: apps/autohelper-electron/build/AutoHelper*.exe
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: AutoHelper ${{ steps.version.outputs.version }}
+          body: |
+            ## AutoHelper ${{ steps.version.outputs.version }}
+
+            ### Installation
+            Download and run `AutoHelper-Setup-${{ steps.version.outputs.version }}.exe`.
+
+            ### What's included
+            - **AutoHelper** — system tray app with embedded Python backend
+            - React dashboard at http://127.0.0.1:8100
+            - Auto-updates via GitHub releases
+
+            ### Requirements
+            - Windows 10 1809+ / Windows 11
+          files: apps/autohelper-electron/build/AutoHelper*.exe
+          draft: false
+          prerelease: false
