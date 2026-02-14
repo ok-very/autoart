@@ -13,6 +13,12 @@ class HealthResponse(BaseModel):
     version: str
 
 
+class ShutdownResponse(BaseModel):
+    """Shutdown request acknowledgement."""
+
+    status: str
+
+
 class RootStatus(BaseModel):
     """Status of a configured root."""
 
