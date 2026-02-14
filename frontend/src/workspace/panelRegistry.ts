@@ -214,7 +214,7 @@ export const PANEL_DEFINITIONS: Record<PanelId, PanelDefinition> = {
         icon: FolderOpen, // Will need import
         permanent: false,
         defaultPlacement: { area: 'center' },
-        shouldShow: (ctx) => ctx.importSession.sessionId !== null,
+        shouldShow: () => true,
         canActOn: () => true,
     },
     'export-workbench': {
