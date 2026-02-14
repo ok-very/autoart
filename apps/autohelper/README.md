@@ -9,7 +9,36 @@ Local-first Python filesystem orchestration service for AutoArt integration.
 - **Audit Logging**: Append-only log with idempotency support
 - **FastAPI**: Health/status endpoints, request context tracing
 
-## Quick Start
+## Installation (Windows)
+
+AutoHelper is distributed as an MSIX package with automatic updates.
+
+### First-time setup
+
+1. Import the signing certificate (one-time, requires admin):
+
+```powershell
+Import-Certificate -FilePath autohelper-sign.cer -CertStoreLocation Cert:\LocalMachine\TrustedPeople
+```
+
+2. Open `AutoHelper.appinstaller` from the [latest release](https://github.com/ok-very/autoart/releases). Windows handles installation.
+
+### What gets installed
+
+- **AutoHelper** — visible in Start menu. CLI and service entry point (`autohelper.exe --service install`)
+- **AutoHelper Tray** — hidden from app list, auto-starts on login via startup task
+
+### Updates
+
+Windows checks for new versions every 24 hours on app launch. New GitHub releases trigger automatic updates.
+
+### Uninstall
+
+Settings > Apps > AutoHelper > Uninstall. Clean OS-level removal.
+
+## Development
+
+### Quick Start
 
 From the **monorepo root**:
 
@@ -140,6 +169,30 @@ autohelper/
     ├── search/         # Search (M2)
     └── ...
 ```
+
+## Building the MSIX Package
+
+```bash
+# Full build (PyInstaller + MSIX, unsigned)
+python scripts/build_installer.py --skip-sign
+
+# Signed build
+python scripts/build_installer.py --pfx path/to/cert.pfx --pfx-password "password"
+
+# Repackage only (skip PyInstaller)
+python scripts/build_installer.py --skip-pyinstaller --skip-sign
+```
+
+Output: `dist/AutoHelper-{version}.msix` + `dist/AutoHelper.appinstaller`
+
+### Generating a signing certificate
+
+```powershell
+# One-time — run on Windows
+.\scripts\msix\create_cert.ps1 -Password "YourPassword"
+```
+
+This produces `autohelper-sign.pfx` (secret, for CI) and `autohelper-sign.cer` (public, commit to repo). See the script output for GitHub secrets setup.
 
 ## Integration
 

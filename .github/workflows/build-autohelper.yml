@@ -1,4 +1,4 @@
-name: Build AutoHelper Installer
+name: Build AutoHelper MSIX
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
-          pip install pyinstaller
+          pip install pyinstaller pillow
 
       - name: Run tests
         run: pytest tests/ -v --tb=short
@@ -60,27 +60,36 @@ jobs:
           Get-ChildItem -Path "dist/autohelper/" -Recurse | Where-Object { !$_.PSIsContainer } | Select-Object Length, FullName | Format-Table -AutoSize
         shell: pwsh
 
-      - name: Install Inno Setup
-        run: choco install innosetup --yes --no-progress
-        shell: pwsh
-
-      - name: Update installer version
+      - name: Decode signing certificate
         run: |
-          $version = "${{ steps.version.outputs.version }}"
-          $issFile = "scripts/installer.iss"
-          (Get-Content $issFile) -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$version`"" | Set-Content $issFile
+          $pfxBytes = [Convert]::FromBase64String("${{ secrets.AUTOHELPER_SIGN_PFX }}")
+          $pfxPath = Join-Path $env:RUNNER_TEMP "autohelper-sign.pfx"
+          [IO.File]::WriteAllBytes($pfxPath, $pfxBytes)
+          echo "PFX_PATH=$pfxPath" >> $env:GITHUB_ENV
         shell: pwsh
 
-      - name: Build installer
+      - name: Build MSIX package
         run: |
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" scripts/installer.iss
+          python scripts/build_installer.py `
+            --skip-pyinstaller `
+            --version "${{ steps.version.outputs.version }}" `
+            --pfx "$env:PFX_PATH" `
+            --pfx-password "${{ secrets.AUTOHELPER_SIGN_PFX_PASSWORD }}"
         shell: pwsh
 
-      - name: Upload installer artifact
+      - name: Cleanup signing certificate
+        if: always()
+        run: |
+          if (Test-Path $env:PFX_PATH) { Remove-Item $env:PFX_PATH -Force }
+        shell: pwsh
+
+      - name: Upload MSIX artifact
         uses: actions/upload-artifact@v4
         with:
-          name: autohelper-installer
-          path: apps/autohelper/dist/AutoHelper-Setup-*.exe
+          name: autohelper-msix
+          path: |
+            apps/autohelper/dist/AutoHelper-*.msix
+            apps/autohelper/dist/AutoHelper.appinstaller
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -89,16 +98,27 @@ jobs:
           body: |
             ## AutoHelper ${{ steps.version.outputs.version }}
 
-            ### Installation
-            1. Download `AutoHelper-Setup-${{ steps.version.outputs.version }}.exe`
-            2. Run the installer
-            3. Choose whether to install as a Windows service
-            4. Open the dashboard at http://127.0.0.1:8100/dashboard
+            ### Installation (first time)
+            1. Download `autohelper-sign.cer` and import it to trust the publisher:
+               ```powershell
+               Import-Certificate -FilePath autohelper-sign.cer -CertStoreLocation Cert:\LocalMachine\TrustedPeople
+               ```
+            2. Download and open `AutoHelper.appinstaller` — Windows handles the rest
+
+            ### Update
+            Updates are automatic. Windows checks for new versions every 24 hours on app launch.
+
+            ### What's included
+            - **AutoHelper** — CLI and service entry point (Start menu)
+            - **AutoHelper Tray** — System tray icon (auto-starts on login)
+            - Dashboard at http://127.0.0.1:8100/dashboard
 
             ### Requirements
-            - Windows 10/11
+            - Windows 10 1809+ / Windows 11
             - PowerShell 5.1+ (for Exchange sync)
-            - ExchangeOnlineManagement module (for contact sync)
-          files: apps/autohelper/dist/AutoHelper-Setup-*.exe
+          files: |
+            apps/autohelper/dist/AutoHelper-*.msix
+            apps/autohelper/dist/AutoHelper.appinstaller
+            apps/autohelper/scripts/msix/autohelper-sign.cer
           draft: false
           prerelease: false
