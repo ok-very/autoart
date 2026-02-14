@@ -19,6 +19,8 @@ import {
     Check,
     RefreshCw,
     Globe,
+    ArrowLeft,
+    X,
 } from 'lucide-react';
 import { useRef, useCallback, useState } from 'react';
 
@@ -48,6 +50,11 @@ interface ImportSidebarProps {
     plan: ImportPlan | null;
     onSessionCreated: (session: ImportSession, plan: ImportPlan) => void;
     onReset: () => void;
+    /** Wizard step tracking (from ImportPanel) */
+    currentStep?: number;
+    totalSteps?: number;
+    onBack?: () => void;
+    onCancel?: () => void;
 }
 
 // ============================================================================
@@ -92,7 +99,7 @@ function SourceIcon({ id: _id, icon, label, isActive, isConnected, isDisabled, o
 // COMPONENT
 // ============================================================================
 
-export function ImportSidebar({ width, sourceType, onSourceChange, session, onSessionCreated, onReset }: ImportSidebarProps) {
+export function ImportSidebar({ width, sourceType, onSourceChange, session, onSessionCreated, onReset, currentStep, totalSteps, onBack, onCancel }: ImportSidebarProps) {
     // State (sourceType is now controlled by parent)
     const [rawData, setRawData] = useState('');
     const [parserName, setParserName] = useState('monday');
@@ -157,7 +164,7 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
         setError(null);
     }, [onReset]);
 
-    // If session exists, show session info and reset button
+    // If session exists, show session info, step progress, and navigation
     if (session) {
         return (
             <aside style={{ width }} className="shrink-0 border-r border-ws-panel-border bg-ws-panel-bg flex flex-col">
@@ -173,11 +180,42 @@ export function ImportSidebar({ width, sourceType, onSourceChange, session, onSe
                         </div>
                     </div>
 
+                    {/* Step Indicator */}
+                    {currentStep != null && totalSteps != null && (
+                        <div className="p-4 border-b border-ws-panel-border">
+                            <div className="text-xs font-medium text-ws-text-secondary mb-2">
+                                Step {currentStep} of {totalSteps}
+                            </div>
+                            <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                                    style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     {/* Spacer */}
                     <div className="flex-1" />
 
-                    {/* Reset Button */}
-                    <div className="p-4 border-t border-ws-panel-border">
+                    {/* Navigation Buttons */}
+                    <div className="p-4 border-t border-ws-panel-border flex flex-col gap-2">
+                        {onBack && (
+                            <button
+                                onClick={onBack}
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-ws-text-secondary bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                Back
+                            </button>
+                        )}
+                        <button
+                            onClick={onCancel ?? handleReset}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                            Cancel Import
+                        </button>
                         <button
                             onClick={handleReset}
                             className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-ws-text-secondary bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"

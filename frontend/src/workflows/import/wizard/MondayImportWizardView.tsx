@@ -22,6 +22,9 @@ interface MondayImportWizardViewProps {
     onSelectItem: (item: any) => void;
     onReset: () => void;
     onSessionCreated: (session: ImportSession, plan: ImportPlan) => void;
+    /** Controlled step (lifted to ImportPanel for sidebar sync) */
+    currentStep?: number;
+    onStepChange?: (step: number) => void;
 }
 
 const STEPS = [
@@ -39,8 +42,17 @@ export function MondayImportWizardView({
     onSelectItem,
     onReset,
     onSessionCreated,
+    currentStep: controlledStep,
+    onStepChange,
 }: MondayImportWizardViewProps) {
-    const [currentStep, setCurrentStep] = useState(1);
+    // Support both controlled (from ImportPanel) and uncontrolled step
+    const [internalStep, setInternalStep] = useState(1);
+    const currentStep = controlledStep ?? internalStep;
+    const setCurrentStep = useCallback((update: number | ((s: number) => number)) => {
+        const next = typeof update === 'function' ? update(currentStep) : update;
+        if (onStepChange) onStepChange(next);
+        else setInternalStep(next);
+    }, [currentStep, onStepChange]);
     const [localPlanChanges, setLocalPlanChanges] = useState<ImportPlan | null>(null);
     const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
     const [inspectorTab, setInspectorTab] = useState('import_details');
