@@ -32,6 +32,9 @@ export function ImportPanel() {
     const [sourceType, setSourceType] = useState<ImportSourceType>('file');
     const prevSessionIdRef = useRef<string | null>(null);
 
+    // Wizard step state — lifted here so the sidebar can display progress
+    const [wizardStep, setWizardStep] = useState(1);
+
     // Use uiStore for session/plan (aliased for compatibility with child components)
     const session = importSession;
     const plan = importPlan;
@@ -57,6 +60,7 @@ export function ImportPanel() {
         setImportSession(null);
         setImportPlan(null);
         clearSelection();
+        setWizardStep(1);
     }, [setImportSession, setImportPlan, clearSelection]);
 
     // Auto-switch source type based on session connector type (only when session changes)
@@ -96,6 +100,8 @@ export function ImportPanel() {
                         onSelectItem={selectImportItem}
                         onReset={handleReset}
                         onSessionCreated={handleSessionCreated}
+                        currentStep={wizardStep}
+                        onStepChange={setWizardStep}
                     />
                 );
             case 'file':
@@ -123,6 +129,10 @@ export function ImportPanel() {
                     plan={plan}
                     onSessionCreated={handleSessionCreated}
                     onReset={handleReset}
+                    currentStep={wizardStep}
+                    totalSteps={6}
+                    onBack={wizardStep > 1 ? () => setWizardStep(s => s - 1) : undefined}
+                    onCancel={handleReset}
                 />
                 <ResizeHandle direction="right" onResize={handleSidebarResize} />
 
