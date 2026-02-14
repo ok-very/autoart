@@ -1260,6 +1260,21 @@ export function Step2ConfigureMapping({ onNext, onBack, session, plan, onSession
             await awaitMutation(updateGroupConfigs);
 
             const newPlan = await generatePlan.mutateAsync(session.id);
+
+            // Diagnostic: trace plan pipeline output at Step 2 boundary
+            if (import.meta.env.DEV) {
+                const outcomes = newPlan.classifications?.reduce((acc: Record<string, number>, c: any) => {
+                    acc[c.outcome] = (acc[c.outcome] || 0) + 1; return acc;
+                }, {});
+                console.debug('[Step2] handleNext plan result', {
+                    items: newPlan.items?.length ?? 0,
+                    containers: newPlan.containers?.length ?? 0,
+                    classifications: newPlan.classifications?.length ?? 0,
+                    outcomes,
+                    hasUnresolved: hasUnresolvedClassifications(newPlan),
+                });
+            }
+
             onSessionCreated(session, newPlan);
 
             // Gate advancement: if the new plan has unresolved classifications,
