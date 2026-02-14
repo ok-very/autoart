@@ -6,6 +6,7 @@ from typing import Any
 from fastapi import APIRouter
 
 from autohelper.config import reset_settings
+from autohelper.config.manifest import schema_as_dict
 from autohelper.config.store import ConfigStore
 from autohelper.shared.logging import get_logger
 
@@ -58,6 +59,12 @@ async def select_folder() -> dict[str, Any]:
     done.wait(timeout=120)  # 2 minute timeout for user to select
 
     return {"path": result["path"]}
+
+
+@router.get("/schema")
+async def get_schema() -> dict[str, Any]:
+    """Return the settings manifest as JSON for dynamic UI rendering."""
+    return schema_as_dict()
 
 
 @router.get("")

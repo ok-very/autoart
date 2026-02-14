@@ -1,27 +1,26 @@
 """
-Legacy popup module — replaced by React frontend settings tab.
+Settings popup — opens the local dashboard in the default browser.
 
-The configuration UI now lives at /settings#autohelper in the web frontend.
-This module retains a lightweight helper to open the browser.
+The configuration UI is served directly by FastAPI at /dashboard,
+so it works in standalone mode without the AutoArt React frontend.
 """
 
 import webbrowser
 
 
 def _settings_url() -> str:
-    """Derive the settings URL from autoart_frontend_url.
-
-    Uses the dedicated frontend URL setting so the link works in both
-    dev (Vite :5173) and production (backend-served) environments.
-    """
+    """Build the local dashboard URL from settings."""
     from autohelper.config import get_settings
 
-    frontend_url = get_settings().autoart_frontend_url
-    return f"{frontend_url.rstrip('/')}/settings#autohelper"
+    settings = get_settings()
+    host = settings.host
+    if host in ("0.0.0.0", "::"):
+        host = "127.0.0.1"
+    return f"http://{host}:{settings.port}/dashboard"
 
 
 def open_settings_in_browser() -> None:
-    """Open the AutoHelper settings tab in the default browser."""
+    """Open the AutoHelper dashboard in the default browser."""
     webbrowser.open(_settings_url())
 
 

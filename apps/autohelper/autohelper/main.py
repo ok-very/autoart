@@ -1,18 +1,74 @@
 """
-AutoHelper entrypoint - runs uvicorn server with optional system tray icon.
+AutoHelper entrypoint - runs uvicorn server with optional system tray icon
+or Windows service.
+
+Modes:
+    (no flag)           → console mode
+    --tray              → system tray mode
+    --service install   → register Windows service
+    --service remove    → deregister Windows service
+    --service start     → start via SCM
+    --service stop      → stop via SCM
 """
 
+import atexit
+import os
 import sys
 import threading
+from pathlib import Path
 
 import uvicorn
 
 from autohelper.app import build_app
 from autohelper.config import get_settings
+from autohelper.shared.paths import data_dir
 from autohelper.shared.platform import has_dbus_tray, is_windows, platform_label
 
 # Expose app for uvicorn factory/import
 app = build_app()
+
+LOCKFILE = data_dir() / "autohelper.pid"
+
+
+def _acquire_lock() -> bool:
+    """
+    Acquire PID lockfile to prevent simultaneous service + tray instances.
+
+    Returns True if lock acquired, False if another instance is running.
+    """
+    if LOCKFILE.exists():
+        try:
+            stored_pid = int(LOCKFILE.read_text().strip())
+            # Check if the process is still alive
+            if is_windows():
+                import ctypes
+                kernel32 = ctypes.windll.kernel32
+                handle = kernel32.OpenProcess(0x0400, False, stored_pid)  # PROCESS_QUERY_INFORMATION
+                if handle:
+                    kernel32.CloseHandle(handle)
+                    return False  # Process still running
+            else:
+                os.kill(stored_pid, 0)
+                return False  # Process still running
+        except (ValueError, OSError, AttributeError):
+            # Stale lockfile or process gone
+            pass
+
+    LOCKFILE.parent.mkdir(parents=True, exist_ok=True)
+    LOCKFILE.write_text(str(os.getpid()))
+    atexit.register(_release_lock)
+    return True
+
+
+def _release_lock() -> None:
+    """Release PID lockfile."""
+    try:
+        if LOCKFILE.exists():
+            stored_pid = int(LOCKFILE.read_text().strip())
+            if stored_pid == os.getpid():
+                LOCKFILE.unlink(missing_ok=True)
+    except Exception:
+        pass
 
 
 def _check_port_conflict(host: str, port: int) -> None:
@@ -94,14 +150,65 @@ def _run_with_tray(server: uvicorn.Server) -> None:
     server_thread.join(timeout=2)
 
 
+def _handle_service(action: str) -> None:
+    """Handle --service subcommands."""
+    from autohelper.winservice import (
+        install_service,
+        remove_service,
+        run_service_dispatcher,
+        start_service,
+        stop_service,
+    )
+
+    actions = {
+        "install": install_service,
+        "remove": remove_service,
+        "start": start_service,
+        "stop": stop_service,
+    }
+
+    if action in actions:
+        actions[action]()
+    else:
+        print(f"Unknown service action: {action}")
+        print("Valid actions: install, remove, start, stop")
+        sys.exit(1)
+
+
 def main() -> None:
     """Run the AutoHelper server."""
+    args = sys.argv[1:]
+
+    # Handle --service subcommands
+    if "--service" in args:
+        idx = args.index("--service")
+        action = args[idx + 1] if idx + 1 < len(args) else ""
+        _handle_service(action)
+        return
+
+    # Acquire PID lock before any server mode
+    if not _acquire_lock():
+        print("ERROR: Another AutoHelper instance is already running.")
+        print(f"Lock file: {LOCKFILE}")
+        sys.exit(1)
+
+    # Check if started by Windows SCM (no args, frozen exe)
+    if getattr(sys, "frozen", False) and not args:
+        # PyInstaller exe with no args — could be SCM invocation
+        try:
+            from autohelper.winservice import run_service_dispatcher
+            run_service_dispatcher()
+            return
+        except Exception:
+            pass  # Fall through to console mode
+
     settings = get_settings()
 
     # Check for port conflict before starting
     _check_port_conflict(settings.host, settings.port)
 
     print(f"Starting AutoHelper on http://{settings.host}:{settings.port}")
+    print(f"Dashboard: http://{settings.host}:{settings.port}/dashboard")
     print(f"Docs: http://{settings.host}:{settings.port}/docs")
     print(f"Platform: {platform_label()}")
 
@@ -114,7 +221,7 @@ def main() -> None:
     )
     server = uvicorn.Server(config)
 
-    if "--tray" in sys.argv:
+    if "--tray" in args:
         _run_with_tray(server)
     else:
         server.run()

@@ -15,6 +15,8 @@ from autohelper.config import Settings, get_settings
 from autohelper.db import get_db, init_db
 from autohelper.db.migrate import run_migrations
 from autohelper.modules.config.router import router as config_router
+from autohelper.modules.contacts.router import router as contacts_router
+from autohelper.modules.contacts.scheduler import start_contact_scheduler, stop_contact_scheduler
 from autohelper.modules.invoice_watch.router import router as invoice_watch_router
 from autohelper.modules.pairing.router import router as pairing_router
 from autohelper.modules.export.router import router as export_router
@@ -22,6 +24,7 @@ from autohelper.modules.file_watch.router import router as file_watch_router
 from autohelper.modules.filetree.router import router as filetree_router
 from autohelper.modules.gc.router import router as gc_router
 from autohelper.modules.gc.scheduler import start_gc_scheduler, stop_gc_scheduler
+from autohelper.gui.dashboard_router import router as dashboard_router, get_static_files
 from autohelper.sync import start_backend_poller, stop_backend_poller
 
 # Import routers
@@ -75,6 +78,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Start GC Scheduler
     start_gc_scheduler()
 
+    # Start Contact Sync Scheduler
+    start_contact_scheduler()
+
     # Start Backend Poller (syncs settings with AutoArt backend)
     start_backend_poller()
 
@@ -83,6 +89,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Shutdown
     logger.info("Shutting down AutoHelper...")
     stop_backend_poller()
+    stop_contact_scheduler()
     stop_gc_scheduler()
     MailService().stop()
 
@@ -180,8 +187,13 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(gc_router)
     app.include_router(config_router)
     app.include_router(pairing_router)
+    app.include_router(contacts_router)
     app.include_router(invoice_watch_router)
     app.include_router(file_watch_router)
+    app.include_router(dashboard_router)
+
+    # Mount dashboard static assets (JS, CSS)
+    app.mount("/dashboard/static", get_static_files(), name="dashboard-static")
 
     # Root endpoint
     @app.get("/")

@@ -13,6 +13,7 @@ from typing import Literal
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from autohelper.config.manifest import CONFIG_KEYS
 from autohelper.shared.paths import data_dir
 
 # =============================================================================
@@ -42,6 +43,11 @@ class Settings(BaseSettings):
 
     # Filesystem roots (comma-separated paths)
     allowed_roots: list[str] = Field(default_factory=list)
+
+    # Exclusion patterns
+    excludes: list[str] = Field(
+        default_factory=lambda: ["pyc", "__pycache__", ".git", ".idea", "node_modules"]
+    )
 
     # Security
     block_symlinks: bool = True
@@ -88,6 +94,21 @@ class Settings(BaseSettings):
     gc_cleanup_orphaned_manifests: bool = False  # Disabled by default (risky)
     gc_cleanup_mail_ingest: bool = True  # Clean up processed mail files
 
+    # Contact Sync Settings
+    contact_sync_enabled: bool = False
+    contact_sync_csv_path: str = ""
+    contact_sync_interval_minutes: int = Field(default=30, ge=5)
+    contact_sync_work_hours_start: int = Field(default=8, ge=0, le=23)
+    contact_sync_work_hours_end: int = Field(default=18, ge=0, le=23)
+    contact_sync_timezone: str = "America/Los_Angeles"
+    contact_sync_exchange_upn: str = ""  # admin@ballardfineart.com
+    contact_sync_exchange_org: str = ""
+    contact_sync_exchange_app_id: str = ""  # Azure AD app registration
+    contact_sync_exchange_cert_thumbprint: str = ""  # Certificate-based auth
+    contact_sync_dry_run: bool = False
+    contact_sync_batch_size: int = Field(default=50, ge=1, le=500)
+    contact_sync_managed_prefix: str = "BFA-"  # Prefix to identify managed contacts
+
     @model_validator(mode="after")
     def load_from_config_store(self) -> "Settings":
         """
@@ -108,12 +129,8 @@ class Settings(BaseSettings):
                 if "autoart_link_key" in cfg and cfg["autoart_link_key"]:
                     object.__setattr__(self, "autoart_link_key", cfg["autoart_link_key"])
 
-            # User-editable settings that exist on Settings class
-            config_keys = [
-                "allowed_roots", "mail_enabled", "mail_poll_interval",
-                "gc_enabled", "gc_schedule_hours", "gc_retention_days",
-            ]
-            for key in config_keys:
+            # User-editable settings — manifest is the single source of truth
+            for key in CONFIG_KEYS:
                 if key in cfg and key not in explicitly_set:
                     object.__setattr__(self, key, cfg[key])
         except Exception:
