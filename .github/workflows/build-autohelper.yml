@@ -62,16 +62,10 @@ jobs:
           $env:PATH = $essentialPaths
           Write-Output "=== Pruned PATH ==="
           $env:PATH -split ";" | ForEach-Object { Write-Output "  $_" }
-          Write-Output "=== Starting PyInstaller (debug) ==="
-          python -m PyInstaller scripts/autohelper.spec --clean --noconfirm --log-level DEBUG 2>&1 | ForEach-Object {
-            $line = $_
-            # Print all lines but highlight phase transitions
-            if ($line -match "^(INFO|DEBUG|WARNING|ERROR)") {
-              Write-Output $line
-            } else {
-              Write-Output $line
-            }
-          }
+          Write-Output "=== Starting PyInstaller ==="
+          # Run directly (no pipe) so stdout/stderr stream in real-time
+          $env:PYTHONUNBUFFERED = "1"
+          python -m PyInstaller scripts/autohelper.spec --clean --noconfirm --log-level INFO
         shell: pwsh
 
       - name: Verify PyInstaller output
