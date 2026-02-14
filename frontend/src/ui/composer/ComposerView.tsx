@@ -227,8 +227,12 @@ export function ComposerView({
     const handleRemoveRecord = useCallback((index: number) => {
         form.removeReference(index);
         setRecordDisplayNames((prev) => {
-            const next = new Map(prev);
-            next.delete(index);
+            const next = new Map<number, { id: string; name: string }>();
+            prev.forEach((value, key) => {
+                if (key === index) return;
+                const newKey = key > index ? key - 1 : key;
+                next.set(newKey, value);
+            });
             return next;
         });
     }, [form]);
@@ -545,7 +549,7 @@ export function ComposerView({
                                         ) : field.type === 'number' ? (
                                             <TextInput
                                                 type="number"
-                                                value={(form.fieldValues.get(field.key) as number) || ''}
+                                                value={(form.fieldValues.get(field.key) as number) ?? ''}
                                                 onChange={(e) =>
                                                     form.setFieldValue(field.key, e.target.value === '' ? undefined : e.target.valueAsNumber)
                                                 }
@@ -608,7 +612,6 @@ export function ComposerView({
                         <Button
                             type="submit"
                             variant="primary"
-                            onClick={handleSubmit}
                             disabled={!form.canSubmit}
                         >
                             {form.isSubmitting ? (
