@@ -1,0 +1,33 @@
+{
+  "name": "autohelper-electron",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "tsc && electron dist/main.js",
+    "dev:dashboard": "vite --config src/renderer/vite.config.ts",
+    "build": "tsc && vite build --config src/renderer/vite.config.ts",
+    "build:main": "tsc",
+    "build:dashboard": "vite build --config src/renderer/vite.config.ts",
+    "typecheck": "tsc --noEmit && tsc --noEmit --project src/renderer/tsconfig.json",
+    "pack": "pnpm build && electron-builder --dir",
+    "dist": "pnpm build && electron-builder",
+    "prepare-python": "tsx scripts/prepare-python.ts"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.0",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.0",
+    "typescript": "catalog:",
+    "tsx": "catalog:",
+    "@types/node": "catalog:",
+    "vite": "catalog:"
+  }
+}
