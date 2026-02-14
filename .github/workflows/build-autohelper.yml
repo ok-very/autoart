@@ -48,7 +48,7 @@ jobs:
         shell: pwsh
 
       - name: Build with PyInstaller
-        timeout-minutes: 15
+        timeout-minutes: 25
         run: |
           # Prune PATH to Python + System32 only. PyInstaller uses PATH entries
           # as extra DLL search dirs in find_binary_dependencies — the VS, SDK,
@@ -57,9 +57,9 @@ jobs:
           $env:PATH = "$pythonDir;$pythonDir\Scripts;$env:SystemRoot\System32"
           Write-Output "=== PATH for PyInstaller ==="
           $env:PATH -split ";" | ForEach-Object { Write-Output "  $_" }
-          Write-Output "=== Starting PyInstaller (DEBUG) ==="
+          Write-Output "=== Starting PyInstaller ==="
           $env:PYTHONUNBUFFERED = "1"
-          python -m PyInstaller scripts/autohelper.spec --clean --noconfirm --log-level DEBUG
+          python -m PyInstaller scripts/autohelper.spec --clean --noconfirm --log-level INFO
         shell: pwsh
 
       - name: Verify PyInstaller output
@@ -92,7 +92,7 @@ jobs:
       - name: Cleanup signing certificate
         if: always()
         run: |
-          if (Test-Path $env:PFX_PATH) { Remove-Item $env:PFX_PATH -Force }
+          if ($env:PFX_PATH -and (Test-Path $env:PFX_PATH)) { Remove-Item $env:PFX_PATH -Force }
         shell: pwsh
 
       - name: Upload MSIX artifact
