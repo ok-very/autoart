@@ -95,10 +95,11 @@ interface RecordStat {
   count: number;
 }
 
-export function useRecordStats() {
+export function useRecordStats(projectId?: string) {
+  const params = projectId ? `?projectId=${projectId}` : '';
   return useQuery({
-    queryKey: ['record-stats'],
-    queryFn: () => api.get<{ stats: RecordStat[] }>('/records/stats').then(r => r.stats),
+    queryKey: ['record-stats', projectId ?? null],
+    queryFn: () => api.get<{ stats: RecordStat[] }>(`/records/stats${params}`).then(r => r.stats),
     staleTime: 30000,
   });
 }

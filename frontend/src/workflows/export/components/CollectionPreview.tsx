@@ -6,7 +6,7 @@
  */
 
 import { List, LayoutGrid, Code, ChevronRight, ChevronDown, Database, Play, Square } from 'lucide-react';
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { SegmentedControl } from '@autoart/ui';
 
 import { useCollectionStore, type SelectionReference } from '../../../stores';
@@ -227,11 +227,11 @@ interface ListViewProps {
 }
 
 function ListView({ groups, expandedGroups, onToggleGroup, onRemove, onReorder }: ListViewProps) {
-    const dragItemId = useRef<string | null>(null);
+    const [dragItemId, setDragItemId] = useState<string | null>(null);
     const [dropTargetId, setDropTargetId] = useState<string | null>(null);
 
     const handleDragStart = useCallback((e: React.DragEvent, itemId: string) => {
-        dragItemId.current = itemId;
+        setDragItemId(itemId);
         e.dataTransfer.effectAllowed = 'move';
         // Use a minimal drag image — the browser default is fine
         e.dataTransfer.setData('text/plain', itemId);
@@ -240,10 +240,10 @@ function ListView({ groups, expandedGroups, onToggleGroup, onRemove, onReorder }
     const handleDragOver = useCallback((e: React.DragEvent, itemId: string) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        if (dragItemId.current && dragItemId.current !== itemId) {
+        if (dragItemId && dragItemId !== itemId) {
             setDropTargetId(itemId);
         }
-    }, []);
+    }, [dragItemId]);
 
     const handleDragLeave = useCallback(() => {
         setDropTargetId(null);
@@ -252,14 +252,14 @@ function ListView({ groups, expandedGroups, onToggleGroup, onRemove, onReorder }
     const handleDrop = useCallback((e: React.DragEvent, targetId: string) => {
         e.preventDefault();
         setDropTargetId(null);
-        if (dragItemId.current && dragItemId.current !== targetId) {
-            onReorder(dragItemId.current, targetId);
+        if (dragItemId && dragItemId !== targetId) {
+            onReorder(dragItemId, targetId);
         }
-        dragItemId.current = null;
-    }, [onReorder]);
+        setDragItemId(null);
+    }, [dragItemId, onReorder]);
 
     const handleDragEnd = useCallback(() => {
-        dragItemId.current = null;
+        setDragItemId(null);
         setDropTargetId(null);
     }, []);
 
@@ -318,7 +318,7 @@ function ListView({ groups, expandedGroups, onToggleGroup, onRemove, onReorder }
                                         <CollectionItemCard
                                             item={item}
                                             onRemove={onRemove}
-                                            isDragging={dragItemId.current === item.id}
+                                            isDragging={dragItemId === item.id}
                                         />
                                     </div>
                                 ))}
@@ -330,7 +330,6 @@ function ListView({ groups, expandedGroups, onToggleGroup, onRemove, onReorder }
         </div>
     );
 }
-
 
 
 // ============================================================================

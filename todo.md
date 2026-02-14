@@ -6,8 +6,7 @@
 ## Bug List
 
 **Active — unphased:**
-- **Project binding in workspaces is implementation theater:** Phase 1.2 wired WorkspaceContext consumption, but panels don't actually use the bound project ID. UI shows binding UI, backend may store it, but the connection between "user binds project to workspace" and "panels render that project's data" is broken or never existed. Trace the full path: workspace save → project binding persistence → panel mount → data fetch with bound ID.
-- **Composer popout Phase 3 remaining:** Phase 1 infrastructure complete (PR #470). Phase 2 done (in-flight): ProjectWorkflowView uses popout, CommandPalette "New Action" command, Header button opens popout, workspace context fallback wired. Phase 3 revised: delete UnifiedComposerBar (dead code), keep ComposerView as expanded composer panel (deep compose: reference slots, context selection, agent routing), re-wire `composer-workbench` in MainLayout COMPONENTS. Future: migrate ComposerView internals to `useComposerForm` + `@autoart/ui` components.
+- ~~**Project binding (EventsPanel only):**~~ Fixed — all 4 panels (Records/Fields/Actions/Events) now consume workspace context and filter by bound project. EventsPanel joins through `hierarchy_nodes.root_project_id` (existing indexed denorm column, no migration needed). Commit 3cc8c1a6.
 - **Intake form connections UX:** "Form connections to linked" vs "Make new entry" flow is confusing — needs UX review to clarify intent and behavior
 - **Image form block link:** No image preview loads in the editor — can't verify via Preview button either (see Phase 0.3). Editor should show inline representation rather than relying on separate preview
 - Avisina Broadway test seed data — container seeding + idempotency fixes landed recently, but full chain untested
@@ -47,19 +46,10 @@
 
 ---
 
-## P0: Blocking
-
-| # | Issue | Category |
-|---|-------|----------|
-| — | ~~**Export Package Queue Architecture**~~ — Superseded by collection-driven export interface (PRs #495-496). Collection system serves as intake layer; backend only sees `projectIds[]`. Queue plan (`docs/plans/export-queue-architecture.md`) archived. PR #477 closed without merge. | Export |
-
----
-
 ## P1: Ready to Build
 
 | # | Issue | Category |
 |---|-------|----------|
-| — | **Composer dual-surface completion:** ComposerView as expanded panel — migrate to `useComposerForm`, agent selection/routing, `@autoart/ui` components, `--ws-*` tokens. UnifiedComposerBar deleted. | UX |
 
 ---
 
@@ -148,7 +138,7 @@
 
 | PRs | Description |
 |-----|-------------|
-*(empty)*
+| #501 | **Composer migration complete (phases 1-4):** ComposerView migrated to `useComposerForm` hook + `@autoart/ui` atoms, `composer.css` deleted (519 lines), `InlineComposer` removed, `ContextIndicator` integrated, `data-slot="agent-routing"` placed, ComposerPanel thinned, dead `mode='inline'` stripped. Phase 4 verification clean (typecheck, build, cross-ref audit). UnifiedComposerBar already deleted. MainLayout wiring correct. Plan: `docs/plans/plan-composer-migration.md`. |
 
 ---
 
@@ -156,6 +146,7 @@
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **EventsPanel project binding (Feb 13 2026):** Completed workspace project binding for all 4 registry panels (Records, Fields, Actions, Events). EventsPanel joins through `hierarchy_nodes.root_project_id` — leverages existing indexed denorm column maintained by hierarchy service, no recursive CTE or migration needed. Zero-migration approach proven by architect agent design review. | Commit 3cc8c1a6 |
 | — | **Export Interface + CLAUDE.md cockpit + CodeAnt fixes (Feb 13 2026):** (PR #495) Collection-driven export surface — 3-phase implementation: mount Collection System + rewire GenerationPanel to backend sessions, section toggles + drag-and-drop reorder + export config store, document preview + result screen + dead code removal (8 old files deleted, 4 new). JSON formatter, stateless preview endpoint, `resolveProjectIds` utility. Plan: `docs/plans/plan-export-interface.md`. (PR #496) CLAUDE.md distilled to ~140-line cockpit at `~/dev/CLAUDE.md` — agents load reference docs on-demand instead of preloading. Session commands (`/session-init`, `/session-save`) for Serena memory persistence. CI lint gate removed (GitHub Actions). CodeAnt review validation: ExportOptions schema fields given `.default()` values for backwards compat, drifted local schema in `exports.routes.ts` replaced with shared import, `formatCurrency` currency param guarded against undefined. PR #497 closed (stale — migration fix already on main via #498). | PRs #495-496 (merged), #497 (closed) |
 | — | **GitHub Actions CI pipeline (Feb 13 2026):** CI workflow established — Postgres 15 service, pnpm frozen-lockfile, build chain (shared → ui → backend), lint, typecheck, unit tests. Fixes: idempotent migration 009 (conditional enum rename for fresh vs legacy DBs), stale lockfile (match-sorter catalog sync), JWT_SECRET env var, @autoart/ui build step for typecheck. 4 integration tests marked continue-on-error (see Bug List). | PRs #487, #498, #499, #500 |
 | — | **Export Workbench P0-P3 (Feb 10 2026):** Interpreter coverage (#479), export UI reconciliation (#481), BFA projector fixes (#482), projector tests + ExportPreview cleanup (#483). Design review completed; collection-driven interface shipped in PRs #495-496. PR #477 (Package Queue Phase 1) closed without merge. | PRs #479-483 (merged), #477 (closed) |

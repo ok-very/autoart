@@ -36,7 +36,6 @@ import './index.css';
 // import 'dockview/dist/styles/dockview.css'; // Moved to dockview-theme.css
 // 3. Custom overrides last
 import './styles/dockview-theme.css';
-import './styles/composer.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

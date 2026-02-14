@@ -14,7 +14,7 @@ import { useMemo, useState } from 'react';
 import type { DefinitionKind } from '@autoart/shared';
 
 import { FilterBar, Spinner } from '@autoart/ui';
-import { useRecordDefinitions, useRecordStats } from '../../api/hooks';
+import { useRecordDefinitionsFiltered, useRecordStats } from '../../api/hooks';
 import { useListFilter } from '../../hooks/useListFilter';
 import { useUIStore } from '../../stores/uiStore';
 
@@ -26,6 +26,8 @@ interface DefinitionListSidebarProps {
     onSelectDefinition: (id: string | null) => void;
     /** Which kind of definitions to show */
     definitionKind: DefinitionKind;
+    /** Optional project scope — when set, only shows definitions/stats for this project */
+    projectId?: string;
 }
 
 /**
@@ -36,22 +38,18 @@ export function DefinitionListSidebar({
     selectedDefinitionId,
     onSelectDefinition,
     definitionKind,
+    projectId,
 }: DefinitionListSidebarProps) {
-    const { data: definitions, isLoading } = useRecordDefinitions();
-    const { data: stats } = useRecordStats();
+    const { data: definitions, isLoading } = useRecordDefinitionsFiltered({ definitionKind, projectId });
+    const { data: stats } = useRecordStats(projectId);
     const showCounts = definitionKind === 'record';
     const { openOverlay } = useUIStore();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [sortKey, setSortKey] = useState<'name' | 'created'>('name');
 
-    // Filter definitions by kind
-    const filteredDefinitions = useMemo(() => {
-        return (definitions || []).filter((def) => {
-            const defKind = (def as { definition_kind?: string }).definition_kind;
-            return defKind === definitionKind;
-        });
-    }, [definitions, definitionKind]);
+    // Definitions already filtered by kind + project via backend query
+    const filteredDefinitions = definitions || [];
 
     const sortFn = useMemo(() => {
         switch (sortKey) {

@@ -571,15 +571,21 @@ export interface RecordStat {
 /**
  * Get count of records per definition type
  */
-export async function getRecordStats(): Promise<RecordStat[]> {
-  const stats = await db
+export async function getRecordStats(projectId?: string): Promise<RecordStat[]> {
+  let q = db
     .selectFrom('records')
     .innerJoin('record_definitions', 'record_definitions.id', 'records.definition_id')
     .select([
       'record_definitions.id as definitionId',
       'record_definitions.name as definitionName',
       sql<number>`count(records.id)::int`.as('count'),
-    ])
+    ]);
+
+  if (projectId) {
+    q = q.where('record_definitions.project_id', '=', projectId);
+  }
+
+  const stats = await q
     .groupBy(['record_definitions.id', 'record_definitions.name'])
     .orderBy('record_definitions.name')
     .execute();

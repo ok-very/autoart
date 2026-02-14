@@ -3,13 +3,16 @@
  *
  * Dockview-compatible panel for Action Definitions and Action Instances.
  * Uses unified RegistryFilterBar via DefinitionListSidebar.
+ * Consumes WorkspaceContext for project-scoped filtering when bound.
  */
 
+import type { IDockviewPanelProps } from 'dockview';
 import { Zap } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 import { ResizeHandle, SegmentedControl } from '@autoart/ui';
 import { useUIStore } from '../../stores/uiStore';
+import { useWorkspaceContextOptional } from '../../workspace/WorkspaceContext';
 import { RegistryPageHeader, DefinitionListSidebar, type RegistryTab } from '../registry';
 import { ActionInstancesView } from '../tables/ActionInstancesView';
 
@@ -19,10 +22,15 @@ const TAB_DATA = [
     { value: 'instances', label: 'Instances' },
 ];
 
-export function ActionsPanel() {
+export function ActionsPanel(props: IDockviewPanelProps) {
     const [sidebarWidth, setSidebarWidth] = useState(280);
     const [selectedDefinitionId, setSelectedDefinitionId] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<RegistryTab>('instances');
+
+    // Project binding: use workspace project when panel is bound
+    const wsCtx = useWorkspaceContextOptional();
+    const isBound = wsCtx?.isBound(props.api.id) ?? false;
+    const projectId = isBound ? wsCtx?.boundProjectId ?? undefined : undefined;
 
     const handleSidebarResize = useCallback(
         (delta: number) => {
@@ -66,6 +74,7 @@ export function ActionsPanel() {
                     selectedDefinitionId={selectedDefinitionId}
                     onSelectDefinition={handleSelectDefinition}
                     definitionKind="action_arrangement"
+                    projectId={projectId}
                 />
                 <ResizeHandle direction="right" onResize={handleSidebarResize} />
 
