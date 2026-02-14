@@ -1,6 +1,6 @@
 # AutoArt Priorities
 
-*Last Updated: 2026-02-06*
+*Last Updated: 2026-02-14*
 
 ## Bug List
 
@@ -14,18 +14,17 @@
 - "Save current" in menu doesn't activate save workspace prompt — handler chain exists, not confirmed working
 - Fields from seed data rendering as `[object Object]` in tables
 - Subprocesses and stages not populating from seed projections
-- Finance overlay "client" field breaks when querying contacts — placeholder query not wired
-- **AutoHelper settings:** Module detection failing (available modules not showing in settings), file root selection broken (browser), settings page needs comprehensive review
+- Finance overlay "client" field breaks when querying contacts — placeholder query not wired (finance overlays landed PRs #460-463, but "client" query still needs verification)
+- **AutoHelper settings:** Module detection failing (available modules not showing in settings), file root selection broken (browser), settings page needs comprehensive review — unified manifest PR #508 open
 
 **UX polish:**
 - "Select project" dropdown in header: conditional on `hasBoundPanels` (intentional), but position between nav links feels wrong
      remove the feature
-- Emoji/icon selector overlay — search doesn't work; consider switching to Phosphor Icons
 - Glassmorphism missing from tab strip where it was implemented — should be doable now with first-class theme variables
 - ~~"Import" tab hiding in overflow menu despite ample space in tab bar~~ — promoted to P0 stack
 - Project View: "New project" dropdown UI broken under "Your projects" section — formatting not clean
 
-**Confirmed resolved (18 items):** See Recently Closed section for PR references. Covers: Monday null group_title, poll editor granularity/missing, dropdown transparency, project spawn, Miller Columns, DOMPurify build, SelectionInspector close, panel spawner glassmorphism, AutoHelper tray pairing, applications dropdown bleed, panel spawn visibility, tab accent, action definitions seed, calendar link, header spacing, `/pair` async I/O, disconnect spinner.
+**Confirmed resolved (21 items):** See Recently Closed section for PR references. Previous 18 plus: emoji search (PR #471), sidebar section headings + intake ARIA (PR #469), invoiceNumber export param removed (PR #471).
 
 ---
 
@@ -55,8 +54,7 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 | 79 | Enhance Workflow View Interactions | Feature |
 | — | Poll editor: support different/multiple time block selections per day | Polls |
 | — | Consolidate Calendar/Gantt/future view expansions: Applications views not linked to Project View segmented equivalents; no project/process selection for these views outside single-project setting; Application view should perform general-purpose filter/overlay across projects (separate feature expansion) | Feature |
-| — | Finances UI unification: Finances call gets pulled into Project View rather than spawning its own panel; needs formalization and dedicated panel architecture; institute math/formula ESM to design and handle logic; missing project bindings and unclear how it interacts with records system | Finance |
-| — | Records/Fields/Actions registry browser UI unification: needs consistent layout and shared filter system across all three panels | UX |
+| — | Finances UI unification: Overlays landed (vendor bills, expenses, budgets — PRs #460-463), invoice validation + watchdog live. Remaining: formalize panel architecture, math/formula ESM, project bindings, records system integration | Finance |
 | — | Workspace project binding + conditional sidebars: project binding only appears under "4. Review" tab; conditional sidebar appearance not implemented; complex feature requiring focused design and implementation plan | Workspace |
 | — | Rewrite `AutoHelperSection.tsx` to consume `GET /config/schema` via backend bridge instead of hardcoded cards | AutoHelper |
 | — | Admin role gating: hide `admin_only` settings sections in AutoArt web UI for non-admin users | AutoHelper |
@@ -70,7 +68,7 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 | # | Issue | Category |
 |---|-------|----------|
 | — | Intake forms → records verification: E2E test block mapping, record creation, completion flow | Intake |
-| 173 | Epic: Finance Management System — rename "client" to "contact"; support progressive billing, budget allocation, developer record emulation | Epic |
+| 173 | Epic: Finance Management System — rename "client" to "contact"; progressive billing (invoice templates + validation landed PRs #460-463), budget allocation (overlay landed), developer record emulation | Epic |
 | 182 | Workspace modification tracking and save workflow | Workspace |
 | 180 | Add route/project context to workspace system | Workspace |
 | 179 | Context-driven automatic panel reconciliation | Workspace |
@@ -82,7 +80,6 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 | 85 | Templating Engine | Feature |
 | 86 | Monday.com Board Sync Settings | Integration |
 | 291 | Schema editor / Composer relationship-math builder | Feature |
-| — | Composer bar as sleek dockview popout window (replace modal) | UX |
 | — | Action vocabulary: store classification verbs/nouns/adjectives from imports as a heuristic JSONB tree; Composer and command toolbar use vocabulary to interpret what action type is being constructed or referenced | Classification |
 
 ---
@@ -93,17 +90,16 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 |------|-------|
 | Project Log view | Missing project sidebar (inconsistent with other project-scoped views) |
 | Records view | Align layout with Fields view: definitions filter + search bar, no redundant dropdown title |
-| `packages/ui/src/molecules/SegmentedControl.tsx` | Still using glassmorphism (`bg-[var(--ws-tabstrip-bg,#f1f5f9)]` with translucent styling) — not in DESIGN.md, should be solid background |
 | Intake forms + poll deployments | Need verification: localhost vs production endpoint config (forms and poll submit endpoints may be hardcoded or misconfigured for dev vs prod) |
 | Future outbound subdomains | `polls.autoart.work`, `forms.autoart.work` endpoint routing not wired — debug and configure for dev vs prod |
 | SelectionInspector / Record view | Handle `definition_kind` system for filtering/classification — arrangement vs container vs record kinds should drive what's shown and how |
 | Record fields | Full RichTextEditor with combobox used where simpler field types are appropriate — shared field component needs expanded options for where/how combobox is invoked |
 | Selection editor | "Plan" link badge system could just be a pointer to the active window name / binding group color instead of its own concept |
 | `frontend/src/ui/table-core/UniversalTableCore.tsx` + composites | All tables are div-based with `role` attributes — migrate to new Table atom primitives from PR #350 for semantic HTML, browser print styles, native keyboard nav |
-| `packages/ui/src/atoms/Badge.tsx` | Badge variant colors (project, process, task, etc.) use domain-semantic Tailwind colors — needs separate approach since they're not chrome tokens |
+| `packages/ui/src/atoms/Badge.tsx` | Badge variant colors migrated to theme-aware tokens (PR #468) — verify all variants render correctly across themes |
 | `frontend/src/ui/sidebars/` + definition filtering | `definition_kind = 'container'` has no explicit UI/behavior mapping — containers render as actions (icon, labels, create flow). Needs dedicated UX treatment (CodeAnt #324 review) |
 | `frontend/src/ui/sidebars/` + definition filtering | Definitions without `definition_kind` (legacy/manual rows) excluded entirely by new filter — add fallback or migration to backfill (CodeAnt #324 review) |
-| `ExportMenu.tsx` | `invoiceNumber` now sent to PDF/DOCX export endpoints — backend handlers should consume it for Content-Disposition filenames |
+| `ExportMenu.tsx` | ~~`invoiceNumber` sent to PDF/DOCX export~~ — removed entirely in PR #471; exports use invoice ID only |
 | `apps/autohelper/autohelper/modules/mail/router.py` | Triage status "pending" in `VALID_TRIAGE_STATUSES` conflicts with implicit "pending" default — callers can't distinguish never-triaged from explicitly-triaged (CodeAnt #346) |
 | `apps/autohelper/autohelper/modules/mail/router.py` | `_update_triage` shorthand endpoints (`archive`, `mark-action-required`, `mark-informational`) silently erase existing `triage_notes` when passing `None` — preserve existing notes (CodeAnt #346) |
 | `apps/autohelper/autohelper/modules/mail/schemas.py` | `TriageResponse.triaged_at` typed as `str | None` but `TransientEmail.triaged_at` is `datetime | None` — inconsistent API contract (CodeAnt #346) |
@@ -128,7 +124,7 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 | `apps/autohelper/autohelper/modules/context/autoart.py` | `get_monday_token()` method defined but never called — dead code, remove |
 | `apps/autohelper/autohelper/modules/context/service.py` | Direct Monday client init (lines 112-122) for backward compat token nobody stores — dead code, remove |
 | `packages/ui/src/atoms/ProgressBar.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
-| `packages/ui/src/molecules/SegmentedControl.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes; also using glassmorphism (not in DESIGN.md) |
+| `packages/ui/src/molecules/SegmentedControl.tsx` | Token migration + variant system landed (PR #468); verify solid variant is default where glassmorphism was removed |
 | `packages/ui/src/atoms/Table.tsx` | Arbitrary-value `bg-[var(--ws-*)]` classes break under Tailwind v4 oklch pipeline — migrate to theme classes |
 
 **Low priority (CodeAnt #332 nitpicks):**
@@ -136,8 +132,6 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 | File | Issue |
 |------|-------|
 | `packages/ui/src/atoms/Card.tsx` | Tailwind arbitrary value parsing: `theme(...)` nested inside `var(...)` fallback may be dropped by some JIT parsers — verify CI builds the stylesheet correctly |
-| `frontend/src/ui/sidebars/ProjectSidebar.tsx` | Section headings (`<p>` at lines 78, 138) lack proper heading semantics for assistive tech — use `<h2>` or add `role="heading"` + `aria-level` |
-| `frontend/src/intake/components/blocks/*.tsx` | Email, Phone, Time inputs missing ARIA attributes (`aria-invalid`, `aria-describedby`, `aria-required`); error paragraphs not programmatically linked to inputs |
 
 ---
 
@@ -162,8 +156,8 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 
 | PRs | Description |
 |-----|-------------|
-| #369-372, #381-386 | **Intake forms → records pipeline:** Block connector architecture (RecordMapping schemas, SubmissionsTable with CSV export + record badges, RecordMappingPanel for staff config, Responses tab integration, Records editor tab, backend handler processes mappings) |
-| #318 | Fix theme registry infinite re-render (React error #185 in AppearanceSection) |
+| #502-508 | **AutoHelper deployment stack:** Local settings dashboard (headless mode), contact sync module, PowerShell Exchange Online integration, Windows service support, PyInstaller + Inno Setup installer, GitHub Actions CI/CD, unified settings manifest |
+| #485-486 | **E2E test infrastructure:** Playwright setup, gitignore artifacts, CSV import golden path |
 
 ---
 
@@ -171,6 +165,17 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| — | **Composer migration:** ComposerView rewritten to useComposerForm + @autoart/ui atoms, composer.css deleted (519 lines), InlineComposer removed, project-scoped panels + events, drag-and-drop fixes | PR #501 |
+| — | **Filtering/sorting Phase 0:** useTableState hook, FilterBar + FilterChip atoms, ColumnPicker, TanStack Table integration in DataTableFlat, persisted column visibility + sort state per definition, filter functions (fuzzy/exact/date-range) | PRs #488-493 |
+| — | **Export/interpreter pipeline:** BFA projector budget fallback, interpreter rules wired + Artwork/Milestone/Permit entities seeded, session-based export UI, ExportOptions schema reconciliation, export error handling (404/rejection/spinner) | PRs #479-484 |
+| — | **AutoHelper hardening:** MyPy cleanup (89→0 errors), test infrastructure (Settings validator + mail platform mocks), tray staleness fix (ConnectionStateManager), file watch Phase 1 (watchdog-based detection + ref matching) | PRs #473-475 |
+| — | **Stream 20 UX:** Emoji search + filtering, command palette shortcuts, invoice export simplified, double border fix, actions sidebar stats, import dialog counts, vocabulary trim, accessibility (ARIA on intake inputs, semantic sidebar headings), dead code removal (ComposerPage/ProjectPage), Records/Actions panel alignment with Fields | PRs #459, #466-471 |
+| — | **Finance stack:** Invoice templates (Handlebars + preview endpoint + preview UI), invoice validation (race condition fix via version counter), finance overlay views (vendor bills, expenses, budgets), invoice watchdog module, Composer finance event wiring + narrative renderer | PRs #460-464 |
+| — | **Badge tokens + SegmentedControl variants:** Parchment Serif 4 typography, badge bg/fg/border theme tokens, SegmentedControl solid/glass/neumorphic variants | PR #468 |
+| — | **Intake forms → records pipeline:** Block connector architecture, RecordMapping schemas, SubmissionsTable with CSV export + record badges, RecordMappingPanel, Responses tab, Records editor tab, backend handler | PRs #369-372, #381-386 |
+| — | Fix theme registry infinite re-render (React error #185 in AppearanceSection) | PR #318 |
+| — | **CI:** GitHub Actions with Postgres + Playwright stub, migration 009 idempotency, pnpm-lock sync, JWT_SECRET in CI env | PRs #487, #498-500 |
+| — | **CLAUDE.md cockpit distillation + session commands** | PR #496 |
 | — | **Plugin integration upgrade:** Plugin Delegation sections added to 5 agent skills (architect, frontend-dev, backend-dev, integrator, reviewer), Loaded Plugins documentation + install checklist in CLAUDE.md, improve skill agent prompts rewritten from Go to TypeScript/React/Fastify, frontend-design plugin restricted to --pub-* surfaces only | PR #405 |
 | — | **Stackit skills recovery:** 26 orphaned command/skill files restored from git object store (f8814d8 tree); post-merge verification rule added to prevent future orphaned stack content (rapid-fire merges outran GitHub retargeting in Jan 29 incident) | Commits 73d7106, eaea487 |
 | 387 | **Unified OAuth under /api/auth:** Shared HMAC-signed state utility (stateless, 10-min expiry), Google/Microsoft/Monday all support login mode (create/find user) + link mode (connect to existing user), Monday moved from `/connections/monday/oauth/*` to `/auth/monday` with consistent callback format (JSON for login, HTML popup-close for link), deprecated old routes return 410 Gone | PRs #388-392 |
