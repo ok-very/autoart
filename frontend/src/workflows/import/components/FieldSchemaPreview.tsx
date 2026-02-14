@@ -40,6 +40,7 @@ interface FieldSchemaPreviewProps {
 interface FieldRow {
     id: string;
     fieldName: string;
+    displayLabel?: string;
     value: unknown;
     renderHint?: string;
     matchedType?: string;
@@ -81,6 +82,7 @@ export function FieldSchemaPreview({ item, schemaMatch, compact = false }: Field
             return {
                 id: `${idx}`,
                 fieldName: fr.fieldName,
+                displayLabel: fr.displayLabel,
                 value: fr.value,
                 renderHint: fr.renderHint,
                 matchedType: matchedField?.type,
@@ -98,7 +100,7 @@ export function FieldSchemaPreview({ item, schemaMatch, compact = false }: Field
             width: 120,
             renderCell: (row: FieldRow) => (
                 <div className="flex items-center gap-1.5">
-                    <span className="font-medium text-ws-text-secondary">{row.fieldName}</span>
+                    <span className="font-medium text-ws-text-secondary">{row.displayLabel ?? row.fieldName}</span>
                     {row.renderHint && (
                         <span className="text-[10px] font-mono text-ws-muted bg-slate-100 px-1 rounded">
                             {row.renderHint}

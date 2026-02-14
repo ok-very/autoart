@@ -25,21 +25,24 @@ interface TablePreviewProps {
 export function TablePreview({ plan, selectedRecordId, onSelect }: TablePreviewProps) {
     // Collect all unique field names from all items
     const columns = useMemo(() => {
-        const fieldSet = new Map<string, string>(); // fieldName -> renderHint
+        const fieldSet = new Map<string, { renderHint: string; displayLabel?: string }>();
 
         for (const item of plan.items) {
             if (!item.fieldRecordings) continue;
             for (const fr of item.fieldRecordings) {
                 if (!fieldSet.has(fr.fieldName)) {
-                    fieldSet.set(fr.fieldName, fr.renderHint || 'text');
+                    fieldSet.set(fr.fieldName, {
+                        renderHint: fr.renderHint || 'text',
+                        displayLabel: fr.displayLabel,
+                    });
                 }
             }
         }
 
-        return Array.from(fieldSet.entries()).map(([name, hint]) => ({
+        return Array.from(fieldSet.entries()).map(([name, { renderHint, displayLabel }]) => ({
             key: name,
-            label: humanizeFieldName(name),
-            renderHint: hint as DataFieldKind,
+            label: displayLabel ?? humanizeFieldName(name),
+            renderHint: renderHint as DataFieldKind,
         }));
     }, [plan.items]);
 

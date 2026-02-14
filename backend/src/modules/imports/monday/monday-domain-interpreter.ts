@@ -453,6 +453,7 @@ function convertColumnValues(
             fieldName: config?.localFieldKey ?? cv.title,
             value: extractValue(cv, semanticRole),
             renderHint: config?.renderHint ?? inferRenderHint(cv.type, semanticRole),
+            displayLabel: config?.columnTitle ?? cv.title,
         };
 
         fieldRecordings.push(recording);

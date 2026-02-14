@@ -77,21 +77,24 @@ export interface DataTableImportProps {
  * Discover all unique fields from import plan items
  */
 export function discoverImportFields(plan: ImportPlan): ImportFieldDef[] {
-    const fieldMap = new Map<string, { count: number; renderHint?: string }>();
+    const fieldMap = new Map<string, { count: number; renderHint?: string; displayLabel?: string }>();
 
     for (const item of plan.items) {
         for (const recording of item.fieldRecordings || []) {
             const existing = fieldMap.get(recording.fieldName);
             if (existing) {
                 existing.count++;
-                // Prefer non-null renderHint
                 if (!existing.renderHint && recording.renderHint) {
                     existing.renderHint = recording.renderHint;
+                }
+                if (!existing.displayLabel && recording.displayLabel) {
+                    existing.displayLabel = recording.displayLabel;
                 }
             } else {
                 fieldMap.set(recording.fieldName, {
                     count: 1,
                     renderHint: recording.renderHint,
+                    displayLabel: recording.displayLabel,
                 });
             }
         }
@@ -103,11 +106,11 @@ export function discoverImportFields(plan: ImportPlan): ImportFieldDef[] {
             if (b[1].count !== a[1].count) return b[1].count - a[1].count;
             return a[0].localeCompare(b[0]);
         })
-        .map(([fieldName, { renderHint }]) => ({
+        .map(([fieldName, { renderHint, displayLabel }]) => ({
             fieldName,
             renderHint,
             width: getWidthForRenderHint(renderHint),
-            label: humanizeFieldName(fieldName),
+            label: displayLabel ?? humanizeFieldName(fieldName),
         }));
 }
 
@@ -115,7 +118,7 @@ export function discoverImportFields(plan: ImportPlan): ImportFieldDef[] {
  * Discover fields for a specific set of items (for nested level headers)
  */
 export function discoverFieldsForItems(items: ImportPlanItem[]): ImportFieldDef[] {
-    const fieldMap = new Map<string, { count: number; renderHint?: string }>();
+    const fieldMap = new Map<string, { count: number; renderHint?: string; displayLabel?: string }>();
 
     for (const item of items) {
         for (const recording of item.fieldRecordings || []) {
@@ -125,10 +128,14 @@ export function discoverFieldsForItems(items: ImportPlanItem[]): ImportFieldDef[
                 if (!existing.renderHint && recording.renderHint) {
                     existing.renderHint = recording.renderHint;
                 }
+                if (!existing.displayLabel && recording.displayLabel) {
+                    existing.displayLabel = recording.displayLabel;
+                }
             } else {
                 fieldMap.set(recording.fieldName, {
                     count: 1,
                     renderHint: recording.renderHint,
+                    displayLabel: recording.displayLabel,
                 });
             }
         }
@@ -139,11 +146,11 @@ export function discoverFieldsForItems(items: ImportPlanItem[]): ImportFieldDef[
             if (b[1].count !== a[1].count) return b[1].count - a[1].count;
             return a[0].localeCompare(b[0]);
         })
-        .map(([fieldName, { renderHint }]) => ({
+        .map(([fieldName, { renderHint, displayLabel }]) => ({
             fieldName,
             renderHint,
             width: getWidthForRenderHint(renderHint),
-            label: humanizeFieldName(fieldName),
+            label: displayLabel ?? humanizeFieldName(fieldName),
         }));
 }
 
