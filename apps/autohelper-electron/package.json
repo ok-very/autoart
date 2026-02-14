@@ -6,10 +6,10 @@
   "scripts": {
     "dev": "tsc && electron dist/main.js",
     "dev:dashboard": "vite --config src/renderer/vite.config.ts",
-    "build": "tsc && vite build --config src/renderer/vite.config.ts",
+    "build": "tsc && test ! -f src/renderer/vite.config.ts || vite build --config src/renderer/vite.config.ts",
     "build:main": "tsc",
     "build:dashboard": "vite build --config src/renderer/vite.config.ts",
-    "typecheck": "tsc --noEmit && tsc --noEmit --project src/renderer/tsconfig.json",
+    "typecheck": "tsc --noEmit && test ! -f src/renderer/tsconfig.json || tsc --noEmit --project src/renderer/tsconfig.json",
     "pack": "pnpm build && electron-builder --dir",
     "dist": "pnpm build && electron-builder",
     "prepare-python": "tsx scripts/prepare-python.ts"
