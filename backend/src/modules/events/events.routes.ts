@@ -166,6 +166,61 @@ export async function eventsRoutes(fastify: FastifyInstance) {
   );
 
   /**
+   * GET /events/project/:projectId - Get events scoped to a project
+   *
+   * Joins through hierarchy_nodes.root_project_id to find all events
+   * under a project tree. Supports same pagination/filtering as context endpoint.
+   */
+  app.get(
+    '/project/:projectId',
+    {
+      schema: {
+        params: z.object({ projectId: z.string().uuid() }),
+        querystring: ContextEventsQuerySchema,
+      },
+    },
+    async (request) => {
+      const { projectId } = request.params;
+      const { limit, offset, includeSystem, includeNarrative, types, actorId, actionId } = request.query;
+
+      const parsedLimit = limit ? parseInt(limit, 10) : 50;
+      const parsedOffset = offset ? parseInt(offset, 10) : 0;
+      const parsedIncludeSystem = includeSystem === 'true';
+      const parsedIncludeNarrative = includeNarrative === 'true';
+      const parsedTypes = types
+        ? Array.isArray(types)
+          ? types
+          : [types]
+        : undefined;
+
+      const result = await eventsService.getEventsByProjectPaginated(projectId, {
+        limit: parsedLimit,
+        offset: parsedOffset,
+        includeSystem: parsedIncludeSystem,
+        types: parsedTypes,
+        actorId,
+        actionId,
+      });
+
+      if (parsedIncludeNarrative) {
+        const { renderFinanceNarrative } = await import('./finance-narrative.js');
+        result.events = result.events.map(event => {
+          if (event.type === 'FACT_RECORDED' && event.payload) {
+            const payload = typeof event.payload === 'string'
+              ? JSON.parse(event.payload)
+              : event.payload;
+            const narrative = renderFinanceNarrative(payload);
+            return narrative ? { ...event, _narrative: narrative } : event;
+          }
+          return event;
+        });
+      }
+
+      return result;
+    }
+  );
+
+  /**
    * GET /events/context/:contextType/:contextId - Get events for a context
    *
    * Supports pagination and filtering for the Project Log:

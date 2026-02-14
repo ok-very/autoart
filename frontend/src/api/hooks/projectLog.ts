@@ -91,6 +91,58 @@ export function useProjectLogEvents(options: UseProjectLogEventsOptions) {
 }
 
 /**
+ * Fetch paginated events scoped to a project via hierarchy tree.
+ *
+ * Uses GET /events/project/:projectId which joins through
+ * hierarchy_nodes.root_project_id. Disabled when projectId is undefined.
+ */
+export function useEventsByProject(
+  projectId: string | undefined,
+  options: {
+    includeSystem?: boolean;
+    types?: string[];
+    actorId?: string;
+    limit?: number;
+    offset?: number;
+  } = {}
+) {
+  const {
+    includeSystem = false,
+    types,
+    actorId,
+    limit = 50,
+    offset = 0,
+  } = options;
+
+  return useQuery({
+    queryKey: [
+      'events',
+      'project',
+      projectId,
+      { includeSystem, types, actorId, limit, offset },
+    ],
+    queryFn: async (): Promise<EventsPageResponse> => {
+      const params = new URLSearchParams();
+      params.set('limit', String(limit));
+      params.set('offset', String(offset));
+      params.set('includeSystem', String(includeSystem));
+
+      if (types && types.length > 0) {
+        types.forEach((t) => params.append('types', t));
+      }
+      if (actorId) {
+        params.set('actorId', actorId);
+      }
+
+      return api.get<EventsPageResponse>(
+        `/events/project/${projectId}?${params.toString()}`
+      );
+    },
+    enabled: !!projectId,
+  });
+}
+
+/**
  * Get event count for a context (useful for showing total events)
  */
 export function useProjectLogEventCount(

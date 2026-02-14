@@ -356,3 +356,73 @@ export async function getEventsByContextPaginated(
     hasMore: offset + events.length < total,
   };
 }
+
+/**
+ * Get events scoped to a project via hierarchy_nodes.root_project_id.
+ *
+ * Joins events.context_id → hierarchy_nodes.id, then filters by root_project_id.
+ * Events with context_type='record' are excluded (records aren't in hierarchy_nodes).
+ */
+export async function getEventsByProjectPaginated(
+  projectId: string,
+  options: Omit<GetEventsPaginatedOptions, 'contextId' | 'contextType'> = {}
+): Promise<EventsPage> {
+  const {
+    limit = 50,
+    offset = 0,
+    includeSystem = false,
+    types,
+    actorId,
+    actionId,
+  } = options;
+
+  let query = db
+    .selectFrom('events')
+    .innerJoin('hierarchy_nodes', 'hierarchy_nodes.id', 'events.context_id')
+    .where('hierarchy_nodes.root_project_id', '=', projectId);
+
+  if (!includeSystem) {
+    const systemTypes = getSystemEventTypes();
+    if (systemTypes.length > 0) {
+      query = query.where('events.type', 'not in', systemTypes);
+    }
+  }
+
+  if (types && types.length > 0) {
+    query = query.where('events.type', 'in', types);
+  }
+  if (actorId) {
+    query = query.where('events.actor_id', '=', actorId);
+  }
+  if (actionId) {
+    query = query.where('events.action_id', '=', actionId);
+  }
+
+  const countResult = await query
+    .select((eb) => eb.fn.countAll<string>().as('count'))
+    .executeTakeFirst();
+  const total = parseInt(countResult?.count || '0', 10);
+
+  const events = await query
+    .select([
+      'events.id',
+      'events.context_id',
+      'events.context_type',
+      'events.action_id',
+      'events.type',
+      'events.payload',
+      'events.actor_id',
+      'events.occurred_at',
+    ])
+    .orderBy('events.occurred_at', 'desc')
+    .orderBy('events.id', 'desc')
+    .limit(limit)
+    .offset(offset)
+    .execute();
+
+  return {
+    events: events as Event[],
+    total,
+    hasMore: offset + events.length < total,
+  };
+}
