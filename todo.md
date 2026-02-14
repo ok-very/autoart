@@ -155,9 +155,9 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 
 | PRs | Description |
 |-----|-------------|
-| — | **AutoHelper Electron migration (#64):** PyInstaller + MSIX → Electron + NSIS. Electron shell (main/tray/window/python-manager), React dashboard (renderer), embedded python-build-standalone, `POST /shutdown` endpoint, icon assets, electron-builder NSIS config, CI workflow (`build-autohelper-electron.yml`). Old PyInstaller workflow deleted. |
 | #502-508 | **AutoHelper deployment stack:** Local settings dashboard (headless mode), contact sync module, PowerShell Exchange Online integration, Windows service support, PyInstaller + Inno Setup installer, GitHub Actions CI/CD, unified settings manifest |
 | #485-486 | **E2E test infrastructure:** Playwright setup, gitignore artifacts, CSV import golden path |
+| #514-517 | **AutoHelper Electron migration (#64):** PyInstaller + MSIX → Electron + NSIS. Electron shell (main/tray/window/python-manager), React dashboard (renderer), embedded python-build-standalone, `POST /shutdown` endpoint, icon assets, electron-builder NSIS config, CI workflow (`build-autohelper-electron.yml`). Old PyInstaller workflow deleted. Stack: electron/shell → electron/dashboard → electron/shutdown-endpoint → electron/ci-and-docs. |
 
 ---
 
@@ -165,6 +165,7 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 
 | # | Issue | Closed By |
 |---|-------|-----------|
+| 64 | **Electron SPA shell:** PyInstaller + MSIX → Electron + NSIS. Four-branch stack: shell (main/tray/window/python-manager), React dashboard renderer, POST /shutdown endpoint, CI workflow + docs. Embedded python-build-standalone, NSIS installer, icon assets. | PRs #514-517 |
 | — | **Composer migration:** ComposerView rewritten to useComposerForm + @autoart/ui atoms, composer.css deleted (519 lines), InlineComposer removed, project-scoped panels + events, drag-and-drop fixes | PR #501 |
 | — | **Filtering/sorting Phase 0:** useTableState hook, FilterBar + FilterChip atoms, ColumnPicker, TanStack Table integration in DataTableFlat, persisted column visibility + sort state per definition, filter functions (fuzzy/exact/date-range) | PRs #488-493 |
 | — | **Export/interpreter pipeline:** BFA projector budget fallback, interpreter rules wired + Artwork/Milestone/Permit entities seeded, session-based export UI, ExportOptions schema reconciliation, export error handling (404/rejection/spinner) | PRs #479-484 |
