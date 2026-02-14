@@ -48,9 +48,9 @@ jobs:
         shell: pwsh
 
       - name: Build with PyInstaller
+        timeout-minutes: 15
         run: |
           # Prune PATH to prevent PyInstaller from scanning every VS/SDK DLL dir
-          # Keep only: Python, system32, Git, and the runner tools
           $pythonDir = Split-Path (Get-Command python).Source
           $essentialPaths = @(
             $pythonDir,
@@ -60,7 +60,18 @@ jobs:
             "$env:ProgramFiles\Git\cmd"
           ) -join ";"
           $env:PATH = $essentialPaths
-          python -m PyInstaller scripts/autohelper.spec --clean --noconfirm
+          Write-Output "=== Pruned PATH ==="
+          $env:PATH -split ";" | ForEach-Object { Write-Output "  $_" }
+          Write-Output "=== Starting PyInstaller (debug) ==="
+          python -m PyInstaller scripts/autohelper.spec --clean --noconfirm --log-level DEBUG 2>&1 | ForEach-Object {
+            $line = $_
+            # Print all lines but highlight phase transitions
+            if ($line -match "^(INFO|DEBUG|WARNING|ERROR)") {
+              Write-Output $line
+            } else {
+              Write-Output $line
+            }
+          }
         shell: pwsh
 
       - name: Verify PyInstaller output
