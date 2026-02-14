@@ -50,20 +50,16 @@ jobs:
       - name: Build with PyInstaller
         timeout-minutes: 15
         run: |
-          # Prune PATH to prevent PyInstaller from scanning every VS/SDK DLL dir
+          # Minimize PATH to just Python dirs. PyInstaller uses PATH entries as
+          # extra DLL search directories in find_binary_dependencies — including
+          # system32 causes it to walk thousands of DLLs on CI runners.
+          # The Windows loader finds system DLLs (kernel32, user32, etc.) via its
+          # own search order (KnownDLLs, SxS, system32) regardless of PATH.
           $pythonDir = Split-Path (Get-Command python).Source
-          $essentialPaths = @(
-            $pythonDir,
-            "$pythonDir\Scripts",
-            "$env:SystemRoot\system32",
-            "$env:SystemRoot",
-            "$env:ProgramFiles\Git\cmd"
-          ) -join ";"
-          $env:PATH = $essentialPaths
-          Write-Output "=== Pruned PATH ==="
+          $env:PATH = "$pythonDir;$pythonDir\Scripts"
+          Write-Output "=== PATH for PyInstaller ==="
           $env:PATH -split ";" | ForEach-Object { Write-Output "  $_" }
           Write-Output "=== Starting PyInstaller ==="
-          # Run directly (no pipe) so stdout/stderr stream in real-time
           $env:PYTHONUNBUFFERED = "1"
           python -m PyInstaller scripts/autohelper.spec --clean --noconfirm --log-level INFO
         shell: pwsh
