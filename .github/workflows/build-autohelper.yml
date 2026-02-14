@@ -48,7 +48,20 @@ jobs:
         shell: pwsh
 
       - name: Build with PyInstaller
-        run: python -m PyInstaller scripts/autohelper.spec --clean --noconfirm
+        run: |
+          # Prune PATH to prevent PyInstaller from scanning every VS/SDK DLL dir
+          # Keep only: Python, system32, Git, and the runner tools
+          $pythonDir = Split-Path (Get-Command python).Source
+          $essentialPaths = @(
+            $pythonDir,
+            "$pythonDir\Scripts",
+            "$env:SystemRoot\system32",
+            "$env:SystemRoot",
+            "$env:ProgramFiles\Git\cmd"
+          ) -join ";"
+          $env:PATH = $essentialPaths
+          python -m PyInstaller scripts/autohelper.spec --clean --noconfirm
+        shell: pwsh
 
       - name: Verify PyInstaller output
         run: |

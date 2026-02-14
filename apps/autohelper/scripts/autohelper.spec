@@ -79,7 +79,6 @@ hiddenimports = [
     "zoneinfo",
     "httpx",
     "PIL",
-    "PIL._tkinter_finder",
     "email.mime.text",
     "email.mime.multipart",
 ]
@@ -94,7 +93,15 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=["unittest", "test"],
+    excludes=[
+        "unittest", "test", "pytest",
+        # Heavy packages AutoHelper doesn't use
+        "tkinter", "_tkinter", "tk", "tcl",
+        "matplotlib", "numpy", "scipy", "pandas",
+        "IPython", "notebook", "jupyter",
+        "docutils", "sphinx",
+        "setuptools", "distutils", "pkg_resources",
+    ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
@@ -113,7 +120,7 @@ console_exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     console=True,
     icon=None,
 )
@@ -128,7 +135,7 @@ tray_exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     console=False,
     icon=None,
 )
@@ -140,7 +147,7 @@ coll = COLLECT(
     a.zipfiles,
     a.datas,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     name="autohelper",
 )
