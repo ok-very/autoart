@@ -36,6 +36,7 @@ export interface ImportPlanItem {
         fieldName: string;
         value: unknown;
         renderHint?: string;
+        displayLabel?: string;
     }>;
 }
 

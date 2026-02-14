@@ -164,11 +164,13 @@ export interface ParseResult {
     }>;
 }
 
-export type FieldRecording = { 
-    fieldName: string; 
+export type FieldRecording = {
+    fieldName: string;
     value: unknown;
     /** Rendering hint for UI component selection */
     renderHint?: string;
+    /** Human-readable column label from source (e.g. Monday column title) */
+    displayLabel?: string;
     /** Pending linked item IDs from board_relation/mirror columns for post-import resolution */
     _pendingLinks?: string[];
 };

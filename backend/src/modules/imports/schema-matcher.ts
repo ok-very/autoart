@@ -23,6 +23,7 @@ interface FieldRecording {
     fieldName: string;
     value: unknown;
     renderHint?: string;
+    displayLabel?: string;
 }
 
 /**
@@ -378,7 +379,7 @@ export function generateProposedDefinition(
     const fields = fieldRecordings.map((recording) => ({
         key: toFieldKey(recording.fieldName),
         type: renderHintToFieldType(recording.renderHint),
-        label: recording.fieldName,
+        label: recording.displayLabel ?? recording.fieldName,
     }));
 
     return {

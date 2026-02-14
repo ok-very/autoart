@@ -59,6 +59,8 @@ export interface ImportPlanItem {
         value: unknown;
         /** Rendering hint for UI component (status, date, person, etc.) */
         renderHint?: string;
+        /** Human-readable column label from source (e.g. Monday column title) */
+        displayLabel?: string;
     }>;
 }
 

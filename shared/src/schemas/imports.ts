@@ -20,6 +20,8 @@ export const FieldRecordingSchema = z.object({
     fieldName: z.string(),
     value: z.unknown(),
     renderHint: z.string().optional(),
+    /** Human-readable column label from source (e.g. Monday column title) */
+    displayLabel: z.string().optional(),
 });
 
 export const InterpretationOutputSchema = z.object({
