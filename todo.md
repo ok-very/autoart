@@ -144,7 +144,6 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 | 117 | Gemini Vision: deep crawl fallback | AI |
 | 74 | Import Workbench: Runner + Gemini | Import |
 | 66 | Mail surface + popout + mappings | Workspace |
-| 64 | Electron SPA shell | Desktop |
 | 62 | Multi-window popouts + IPC | Desktop |
 | 55 | Automail Phase 4: Testing | Testing |
 | 17 | InDesign data merge CSV export | Export |
@@ -156,6 +155,7 @@ Stack order: bottom → top. PR 1 is the archaeology + fix. PR 2 is label cleanu
 
 | PRs | Description |
 |-----|-------------|
+| — | **AutoHelper Electron migration (#64):** PyInstaller + MSIX → Electron + NSIS. Electron shell (main/tray/window/python-manager), React dashboard (renderer), embedded python-build-standalone, `POST /shutdown` endpoint, icon assets, electron-builder NSIS config, CI workflow (`build-autohelper-electron.yml`). Old PyInstaller workflow deleted. |
 | #502-508 | **AutoHelper deployment stack:** Local settings dashboard (headless mode), contact sync module, PowerShell Exchange Online integration, Windows service support, PyInstaller + Inno Setup installer, GitHub Actions CI/CD, unified settings manifest |
 | #485-486 | **E2E test infrastructure:** Playwright setup, gitignore artifacts, CSV import golden path |
 
