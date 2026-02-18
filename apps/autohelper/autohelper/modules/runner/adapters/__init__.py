@@ -15,12 +15,42 @@ class AdapterRegistry:
 
     Maintains a list of adapters and selects the best match
     based on confidence scoring. Thread-safe for concurrent access.
+
+    Adapters are registered lazily on first detect() call to avoid
+    deadlocking Python's import lock with our threading.Lock.
     """
 
     _adapters: list[SiteAdapter] = []
     _default: SiteAdapter | None = None
     _lock: threading.Lock = threading.Lock()
     _initialized: bool = False
+
+    @classmethod
+    def _ensure_initialized(cls) -> None:
+        """Lazy-init: import and register adapters on first use."""
+        if cls._initialized:
+            return
+
+        # Import OUTSIDE the lock — these trigger further imports and
+        # must not compete with Python's import machinery.
+        from .cargo import CargoAdapter
+        from .default import DefaultAdapter
+        from .squarespace import SquarespaceAdapter
+        from .wordpress import WordPressAdapter
+
+        with cls._lock:
+            if cls._initialized:
+                return  # double-check after acquiring lock
+
+            default = DefaultAdapter()
+            cls._adapters.append(default)
+            cls._default = default
+
+            cls._adapters.append(CargoAdapter())
+            cls._adapters.append(SquarespaceAdapter())
+            cls._adapters.append(WordPressAdapter())
+
+            cls._initialized = True
 
     @classmethod
     def register(cls, adapter: SiteAdapter, *, is_default: bool = False) -> None:
@@ -35,7 +65,6 @@ class AdapterRegistry:
             Duplicate adapters (by name) are silently ignored.
         """
         with cls._lock:
-            # Check for duplicate registration by adapter name
             existing_names = {a.name for a in cls._adapters}
             if adapter.name in existing_names:
                 return
@@ -56,10 +85,11 @@ class AdapterRegistry:
         Returns:
             Tuple of (adapter, match) with highest confidence
         """
+        cls._ensure_initialized()
+
         matches: list[tuple[SiteAdapter, SiteMatch]] = []
 
         with cls._lock:
-            # Copy the list to avoid holding lock during detection
             adapters = list(cls._adapters)
             default = cls._default
 
@@ -69,10 +99,8 @@ class AdapterRegistry:
                 matches.append((adapter, match))
 
         if matches:
-            # Return highest confidence match
             return max(matches, key=lambda x: x[1].confidence)
 
-        # Fallback to default adapter
         if default:
             return (default, SiteMatch("default", 0.0, {}))
 
@@ -86,33 +114,5 @@ class AdapterRegistry:
             cls._default = None
             cls._initialized = False
 
-
-def _register_adapters() -> None:
-    """Register built-in adapters (idempotent)."""
-    # Import outside lock to avoid potential deadlock with module loading
-    from .cargo import CargoAdapter
-    from .default import DefaultAdapter
-    from .squarespace import SquarespaceAdapter
-    from .wordpress import WordPressAdapter
-
-    with AdapterRegistry._lock:
-        if AdapterRegistry._initialized:
-            return
-
-        # Register default adapter first (lowest priority)
-        default = DefaultAdapter()
-        AdapterRegistry.register(default, is_default=True)
-
-        # Register site-specific adapters (higher confidence wins)
-        AdapterRegistry.register(CargoAdapter())
-        AdapterRegistry.register(SquarespaceAdapter())
-        AdapterRegistry.register(WordPressAdapter())
-
-        # Mark initialized AFTER all registrations complete
-        AdapterRegistry._initialized = True
-
-
-# Register adapters on module load
-_register_adapters()
 
 __all__ = ["AdapterRegistry", "SiteAdapter", "SiteMatch"]

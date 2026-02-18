@@ -69,9 +69,6 @@ hiddenimports = [
     "servicemanager",
     "win32api",
     "win32timezone",
-    # Pystray
-    "pystray",
-    "pystray._win32",
     # Database
     "sqlite3",
     "aiosqlite",

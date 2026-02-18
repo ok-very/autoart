@@ -13,7 +13,6 @@ dependencies = [
     "pydantic>=2.5.0",
     "pydantic-settings>=2.1.0",
     "aiosqlite>=0.19.0",
-    "pystray>=0.19.0",
     "Pillow>=10.0.0",
     # Web scraping (for autocollector runner)
     "httpx>=0.26.0",
