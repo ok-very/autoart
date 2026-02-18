@@ -98,6 +98,33 @@ def verify_pyinstaller_output() -> None:
         print(f"  Tray:    {autohelper_tray}")
 
 
+def _repack_docx_template(layout: Path) -> None:
+    """Zip the python-docx template dir to avoid OPC conflicts with MSIX.
+
+    MSIX (OPC format) reserves ``_rels/.rels`` and ``[Content_Types].xml``.
+    python-docx ships an exploded .docx template containing these files,
+    which makes MakeAppx fail with error 0x8007007b.  We re-pack the
+    template directory into a .zip so the reserved filenames are hidden
+    inside an archive.
+    """
+    import zipfile
+
+    template_dir = layout / "_internal" / "docx" / "templates" / "default-docx-template"
+    if not template_dir.is_dir():
+        return
+
+    # python-docx expects a .docx file (which is a zip).  PyInstaller bundled
+    # the exploded directory; re-pack it as default-docx-template.docx.
+    docx_path = template_dir.with_suffix(".docx")
+    with zipfile.ZipFile(docx_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for f in template_dir.rglob("*"):
+            if f.is_file():
+                zf.write(f, f.relative_to(template_dir))
+
+    shutil.rmtree(template_dir)
+    print(f"  Repacked docx template -> {docx_path.name}")
+
+
 def step_layout(version: str) -> Path:
     """Step 2: Create MSIX layout directory."""
     layout = DIST / "msix_layout"
@@ -114,6 +141,12 @@ def step_layout(version: str) -> Path:
     src = DIST / "autohelper"
     shutil.copytree(src, layout)
     print(f"  Copied {src} -> {layout}")
+
+    # MSIX uses OPC format which reserves _rels/.rels and [Content_Types].xml.
+    # python-docx bundles an unzipped .docx template containing these files,
+    # which causes MakeAppx to fail with 0x8007007b.  Re-pack the template
+    # directory into a zip so MakeAppx never sees the raw OPC files.
+    _repack_docx_template(layout)
 
     # Copy env.template
     env_template = ROOT / "env.template"
