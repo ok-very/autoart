@@ -1,0 +1,110 @@
+import { app, BrowserWindow, Menu, shell } from "electron";
+import log from "electron-log/main";
+import { handleSquirrelEvents } from "./squirrel";
+import { spawnAutoHelper, killAutoHelper, waitForHealth } from "./child-process";
+import { setupTray } from "./tray";
+
+// Handle Squirrel install/update/uninstall events — must be first.
+// During these events the app creates/removes shortcuts and quits immediately.
+if (handleSquirrelEvents()) process.exit(0);
+
+log.initialize();
+
+// Remove the default menu bar (File, Edit, View, Window, Help)
+Menu.setApplicationMenu(null);
+
+const BASE_URL = "http://127.0.0.1:8100";
+
+let mainWindow: BrowserWindow | null = null;
+let isQuitting = false;
+
+export function getIsQuitting(): boolean {
+  return isQuitting;
+}
+
+export function setIsQuitting(value: boolean): void {
+  isQuitting = value;
+}
+
+/**
+ * Show the main window, optionally navigating to a specific path.
+ * @param path - URL path to load (default: "/dashboard")
+ */
+export function showWindow(path: string = "/dashboard"): void {
+  const targetUrl = `${BASE_URL}${path}`;
+
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    // If a different path is requested, navigate to it
+    const currentUrl = mainWindow.webContents.getURL();
+    if (!currentUrl.endsWith(path)) {
+      mainWindow.loadURL(targetUrl);
+    }
+    mainWindow.show();
+    mainWindow.focus();
+    return;
+  }
+
+  mainWindow = new BrowserWindow({
+    width: 1100,
+    height: 750,
+    show: false,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  mainWindow.loadURL(targetUrl);
+
+  mainWindow.once("ready-to-show", () => {
+    mainWindow?.show();
+  });
+
+  mainWindow.on("close", (e) => {
+    if (!isQuitting) {
+      e.preventDefault();
+      mainWindow?.hide();
+    }
+  });
+
+  // Open external links in the default browser
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: "deny" };
+  });
+}
+
+// ── Single instance lock ─────────────────────────────────────────
+
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    showWindow();
+  });
+
+  app.whenReady().then(async () => {
+    log.info("AutoHelper Desktop starting...");
+
+    try {
+      await spawnAutoHelper();
+      await waitForHealth("http://127.0.0.1:8100/health");
+      log.info("AutoHelper service is healthy");
+    } catch (err) {
+      log.error("Failed to start AutoHelper service:", err);
+    }
+
+    setupTray();
+  });
+
+  app.on("before-quit", () => {
+    isQuitting = true;
+    killAutoHelper();
+  });
+
+  // Keep the app running when all windows are closed (tray mode)
+  app.on("window-all-closed", (e: Event) => {
+    e.preventDefault();
+  });
+}

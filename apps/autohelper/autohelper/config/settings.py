@@ -101,13 +101,14 @@ class Settings(BaseSettings):
     contact_sync_work_hours_start: int = Field(default=8, ge=0, le=23)
     contact_sync_work_hours_end: int = Field(default=18, ge=0, le=23)
     contact_sync_timezone: str = "America/Los_Angeles"
-    contact_sync_exchange_upn: str = ""  # admin@ballardfineart.com
-    contact_sync_exchange_org: str = ""
-    contact_sync_exchange_app_id: str = ""  # Azure AD app registration
-    contact_sync_exchange_cert_thumbprint: str = ""  # Certificate-based auth
     contact_sync_dry_run: bool = False
     contact_sync_batch_size: int = Field(default=50, ge=1, le=500)
     contact_sync_managed_prefix: str = "BFA-"  # Prefix to identify managed contacts
+
+    # Artist Records
+    artist_storage_root: str = ""
+    artist_scan_enabled: bool = False
+    artist_scan_on_change: bool = True
 
     @model_validator(mode="after")
     def load_from_config_store(self) -> "Settings":

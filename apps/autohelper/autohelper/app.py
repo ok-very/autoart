@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 
 from autohelper.config import Settings, get_settings
 from autohelper.db import get_db, init_db
-from autohelper.db.migrate import run_migrations
+from autohelper.db.migrate import get_migration_status, run_migrations
 from autohelper.modules.config.router import router as config_router
 from autohelper.modules.contacts.router import router as contacts_router
 from autohelper.modules.contacts.scheduler import start_contact_scheduler, stop_contact_scheduler
@@ -24,7 +24,12 @@ from autohelper.modules.file_watch.router import router as file_watch_router
 from autohelper.modules.filetree.router import router as filetree_router
 from autohelper.modules.gc.router import router as gc_router
 from autohelper.modules.gc.scheduler import start_gc_scheduler, stop_gc_scheduler
-from autohelper.gui.dashboard_router import router as dashboard_router, get_static_files
+from autohelper.gui.dashboard_router import (
+    router as dashboard_router,
+    get_static_files,
+    get_artists_static_files,
+)
+from autohelper.modules.artists.router import router as artists_router
 from autohelper.sync import start_backend_poller, stop_backend_poller
 
 # Import routers
@@ -68,6 +73,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     if applied:
         logger.info(f"Applied {len(applied)} migrations")
 
+    mig_status = get_migration_status(db)
+    logger.info("Database: %d applied, %d pending", mig_status["applied_count"], mig_status["pending_count"])
+
     logger.info("AutoHelper started")
 
     # Start Mail Service
@@ -83,6 +91,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Start Backend Poller (syncs settings with AutoArt backend)
     start_backend_poller()
+
+    # Start Artist File Watcher (if configured)
+    if settings.artist_scan_enabled and settings.artist_scan_on_change and settings.artist_storage_root:
+        from autohelper.modules.artists.watcher import get_artist_watcher
+
+        watcher = get_artist_watcher()
+        if watcher.start(settings.artist_storage_root):
+            logger.info("Artist file watcher active")
 
     yield
 
@@ -102,6 +118,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     from autohelper.modules.file_watch.router import get_service as get_file_watch_service
 
     get_file_watch_service().shutdown()
+
+    # Stop artist watcher
+    from autohelper.modules.artists.watcher import get_artist_watcher
+
+    get_artist_watcher().stop()
+
+    # Shutdown shared filesystem event bus (stops any remaining Observers)
+    from autohelper.shared.fs_events import get_event_bus
+
+    get_event_bus().shutdown()
 
     db = get_db()
     db.close()
@@ -190,10 +216,12 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(contacts_router)
     app.include_router(invoice_watch_router)
     app.include_router(file_watch_router)
+    app.include_router(artists_router)
     app.include_router(dashboard_router)
 
     # Mount dashboard static assets (JS, CSS)
     app.mount("/dashboard/static", get_static_files(), name="dashboard-static")
+    app.mount("/artists-dashboard/static", get_artists_static_files(), name="artists-static")
 
     # Root endpoint
     @app.get("/")

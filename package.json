@@ -48,6 +48,10 @@
     "setup:win": "pnpm build:all:win && pnpm migrate && pnpm seed:dev",
     "build:all:clean": "node scripts/clean-dist.mjs && pnpm run build:all",
     "build:all:clean:win": "node scripts/clean-dist.mjs && pnpm run build:all:win",
+    "dev:autohelper": "node -e \"process.chdir('apps/autohelper'); require('child_process').execFileSync('python',['-m','autohelper.main'],{stdio:'inherit'})\"",
+    "dev:desktop": "pnpm --filter autohelper-desktop dev",
+    "build:desktop": "pnpm --filter autohelper-desktop build",
+    "package:desktop": "pnpm --filter autohelper-desktop package",
     "git:stack": "bash scripts/git/stack-pr.sh",
     "git:merge-stack": "bash scripts/git/merge-stack.sh"
   },

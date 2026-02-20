@@ -95,6 +95,32 @@ function renderSettingsSections(schema, config) {
   container.innerHTML = "";
 
   for (const section of schema.sections) {
+    // Exchange section: render as connection test UI (no editable fields)
+    if (section.id === "exchange") {
+      const sectionEl = document.createElement("section");
+      const h2 = document.createElement("h2");
+      h2.textContent = section.label;
+      sectionEl.appendChild(h2);
+      const body = document.createElement("div");
+      body.className = "section-body";
+      body.innerHTML = `
+        <p style="font-size:13px;color:var(--fg-secondary,#888);margin:0 0 8px">
+          Connect to Exchange Online via interactive OAuth. A browser window will open for sign-in.
+        </p>
+        <div class="button-row">
+          <button id="btn-exchange-test" class="primary">Test Connection</button>
+        </div>
+        <div id="exchange-status" style="margin-top:8px;font-size:13px"></div>`;
+      sectionEl.appendChild(body);
+      container.appendChild(sectionEl);
+      // Wire up test button
+      setTimeout(() => {
+        const btn = $("#btn-exchange-test");
+        if (btn) btn.addEventListener("click", testExchangeConnection);
+      }, 0);
+      continue;
+    }
+
     const sectionEl = document.createElement("section");
     if (section.admin_only) sectionEl.classList.add("admin-only");
 
@@ -371,6 +397,88 @@ async function triggerManualSync() {
 }
 
 // ---------------------------------------------------------------------------
+// Exchange Connection
+// ---------------------------------------------------------------------------
+
+async function testExchangeConnection() {
+  const btn = $("#btn-exchange-test");
+  const status = $("#exchange-status");
+  btn.disabled = true;
+  btn.textContent = "Connecting\u2026";
+  status.textContent = "";
+
+  try {
+    const result = await api("POST", "/contacts/exchange/test");
+    if (result.connected) {
+      status.innerHTML = '<span style="color:var(--green,#4caf50)">\u2713 Connected</span>' +
+        (result.message ? ' \u2014 ' + escapeHtml(result.message) : '');
+    } else {
+      status.innerHTML = '<span style="color:var(--red,#f44336)">\u2717 ' + escapeHtml(result.message || "Failed") + '</span>';
+    }
+  } catch (e) {
+    status.innerHTML = '<span style="color:var(--red,#f44336)">\u2717 ' + escapeHtml(e.message) + '</span>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Test Connection";
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Console Log Viewer
+// ---------------------------------------------------------------------------
+
+function appendLogLine(entry) {
+  const el = $("#console-log");
+  const line = document.createElement("div");
+  line.className = "log-line";
+
+  const ts = new Date(entry.ts * 1000).toLocaleTimeString();
+  line.innerHTML =
+    `<span class="ts">${ts}</span> ` +
+    `<span class="lvl-${entry.level}">[${entry.level}]</span> ` +
+    `<span class="msg">${escapeHtml(entry.msg)}</span>`;
+
+  el.appendChild(line);
+
+  // Auto-scroll if near bottom
+  const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+  if (atBottom) el.scrollTop = el.scrollHeight;
+}
+
+function escapeHtml(s) {
+  const div = document.createElement("div");
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+async function loadInitialLogs() {
+  try {
+    const data = await api("GET", "/logs");
+    for (const entry of (data.entries || [])) {
+      appendLogLine(entry);
+    }
+    // Scroll to bottom
+    const el = $("#console-log");
+    el.scrollTop = el.scrollHeight;
+  } catch { /* ignore */ }
+}
+
+function connectLogStream() {
+  const es = new EventSource(API + "/logs/stream");
+  es.onmessage = (evt) => {
+    try {
+      const entry = JSON.parse(evt.data);
+      appendLogLine(entry);
+    } catch { /* ignore */ }
+  };
+  es.onerror = () => {
+    // Reconnect after a delay
+    es.close();
+    setTimeout(connectLogStream, 5000);
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Pairing
 // ---------------------------------------------------------------------------
 
@@ -445,6 +553,10 @@ document.addEventListener("DOMContentLoaded", () => {
   loadSchemaAndConfig();
   loadContactStatus();
   loadContactHistory();
+
+  // Console
+  loadInitialLogs();
+  connectLogStream();
 
   // Contact sync actions
   $("#btn-manual-sync").addEventListener("click", triggerManualSync);

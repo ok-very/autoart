@@ -14,6 +14,7 @@ from .schemas import (
     ContactStatusResponse,
     ContactSyncTriggerResponse,
 )
+from .exchange_sync import test_exchange_connection
 from .service import ContactSyncService
 
 router = APIRouter(prefix="/contacts", tags=["contacts"])
@@ -66,6 +67,12 @@ async def trigger_sync(background_tasks: BackgroundTasks) -> ContactSyncTriggerR
         status="started",
         message="Contact sync started in background",
     )
+
+
+@router.post("/exchange/test")
+async def test_exchange() -> dict:
+    """Test Exchange Online connectivity via interactive OAuth."""
+    return test_exchange_connection()
 
 
 @router.get("/history", response_model=ContactHistoryResponse)

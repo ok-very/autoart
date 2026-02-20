@@ -2,9 +2,8 @@
 """
 PyInstaller spec for AutoHelper.
 
-Produces two executables:
-- autohelper.exe (console) - for service registration and CLI
-- autohelper-tray.exe (windowed) - for system tray mode
+Produces one executable:
+- autohelper.exe (console) - for service registration, CLI, and Electron child process
 """
 
 import os
@@ -19,12 +18,14 @@ PACKAGE = ROOT / "autohelper"
 MIGRATIONS = PACKAGE / "db" / "migrations"
 POWERSHELL = PACKAGE / "modules" / "contacts" / "powershell"
 DASHBOARD = PACKAGE / "gui" / "dashboard"
+ARTISTS_GUI = PACKAGE / "gui" / "artists"
 
 # Data files to bundle
 datas = [
     (str(MIGRATIONS), "autohelper/db/migrations"),
     (str(POWERSHELL), "autohelper/modules/contacts/powershell"),
     (str(DASHBOARD), "autohelper/gui/dashboard"),
+    (str(ARTISTS_GUI), "autohelper/gui/artists"),
 ]
 
 # Hidden imports that PyInstaller misses (dynamic imports, plugins, etc.)
@@ -71,7 +72,6 @@ hiddenimports = [
     "win32timezone",
     # Database
     "sqlite3",
-    "aiosqlite",
     # Other
     "zoneinfo",
     "httpx",
@@ -92,7 +92,8 @@ a = Analysis(
     runtime_hooks=[],
     excludes=[
         "unittest", "test", "pytest",
-        # Heavy packages AutoHelper doesn't use
+        # GUI / heavy packages no longer needed (Electron owns the tray)
+        "pystray",
         "tkinter", "_tkinter", "tk", "tcl",
         "matplotlib", "numpy", "scipy", "pandas",
         "IPython", "notebook", "jupyter",
@@ -122,24 +123,8 @@ console_exe = EXE(
     icon=None,
 )
 
-# Windowed executable (for system tray)
-tray_exe = EXE(
-    pyz,
-    a.scripts + [("--tray", "", "OPTION")],
-    [],
-    exclude_binaries=True,
-    name="autohelper-tray",
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=False,
-    console=False,
-    icon=None,
-)
-
 coll = COLLECT(
     console_exe,
-    tray_exe,
     a.binaries,
     a.zipfiles,
     a.datas,

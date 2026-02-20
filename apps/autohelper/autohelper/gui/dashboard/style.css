@@ -311,6 +311,41 @@ button:disabled {
   vertical-align: middle;
 }
 
+/* Console log viewer */
+.console-body {
+  padding: 0;
+}
+
+.console-log {
+  height: 240px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--mono-fg);
+  background: #1E1E1E;
+  padding: 8px 12px;
+  font-feature-settings: "liga" 0;
+}
+
+.console-log .log-line {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.console-log .log-line .ts {
+  color: #6A9955;
+}
+
+.console-log .log-line .lvl-DEBUG { color: #569CD6; }
+.console-log .log-line .lvl-INFO { color: #9CDCFE; }
+.console-log .log-line .lvl-WARNING { color: #DCDCAA; }
+.console-log .log-line .lvl-ERROR { color: #F44747; }
+
+.console-log .log-line .msg {
+  color: #D4D4D4;
+}
+
 /* Empty state */
 .empty {
   font-size: 13px;

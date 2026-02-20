@@ -11,8 +11,6 @@ import tempfile
 from dataclasses import asdict
 from pathlib import Path
 
-from autohelper.config import get_settings
-
 from .types import ContactRecord
 
 logger = logging.getLogger(__name__)
@@ -61,16 +59,9 @@ def sync_contacts_to_exchange(
     Returns:
         Dict with keys: created, updated, deleted, errors
     """
-    settings = get_settings()
-
     # Build operation payload
     operations = {
-        "auth": {
-            "upn": settings.contact_sync_exchange_upn,
-            "organization": settings.contact_sync_exchange_org,
-            "app_id": settings.contact_sync_exchange_app_id,
-            "cert_thumbprint": settings.contact_sync_exchange_cert_thumbprint,
-        },
+        "auth": {},
         "create": [
             _build_exchange_contact(c, managed_prefix) for c in to_create[:batch_size]
         ],
@@ -97,7 +88,6 @@ def sync_contacts_to_exchange(
             [
                 "powershell.exe",
                 "-ExecutionPolicy", "Bypass",
-                "-NonInteractive",
                 "-File", str(script_path),
                 "-InputFile", input_path,
             ],
@@ -159,25 +149,18 @@ def test_exchange_connection() -> dict:
     Returns:
         Dict with keys: connected (bool), message (str)
     """
-    settings = get_settings()
     script_path = SCRIPTS_DIR / "test_connection.ps1"
 
     if not script_path.exists():
         return {"connected": False, "message": "Test script not found"}
 
-    auth_json = json.dumps({
-        "upn": settings.contact_sync_exchange_upn,
-        "organization": settings.contact_sync_exchange_org,
-        "app_id": settings.contact_sync_exchange_app_id,
-        "cert_thumbprint": settings.contact_sync_exchange_cert_thumbprint,
-    })
+    auth_json = json.dumps({})
 
     try:
         result = subprocess.run(
             [
                 "powershell.exe",
                 "-ExecutionPolicy", "Bypass",
-                "-NonInteractive",
                 "-File", str(script_path),
                 "-AuthJson", auth_json,
             ],

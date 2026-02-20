@@ -16,7 +16,11 @@ from watchdog.events import (
     FileCreatedEvent,
     FileDeletedEvent,
     FileMovedEvent,
+    FileSystemEvent,
     FileSystemEventHandler,
+    EVENT_TYPE_CREATED,
+    EVENT_TYPE_DELETED,
+    EVENT_TYPE_MOVED,
 )
 
 from .schemas import FileEventType, FileWatchEvent
@@ -142,6 +146,19 @@ class FileWatchHandler(FileSystemEventHandler):
             dest_path.name,
             ref_id or "none",
         )
+
+    def dispatch(self, event: FileSystemEvent) -> None:
+        """Route a raw watchdog event to the appropriate on_* method.
+
+        Called by FsEventBus instead of watchdog's internal dispatch.
+        """
+        if event.event_type == EVENT_TYPE_CREATED:
+            self.on_created(event)
+        elif event.event_type == EVENT_TYPE_DELETED:
+            self.on_deleted(event)
+        elif event.event_type == EVENT_TYPE_MOVED:
+            self.on_moved(event)
+        # modified / closed events are intentionally ignored
 
     def _should_emit(self, path: str) -> bool:
         """Check if we should emit an event for this path (debounce rapid events)."""

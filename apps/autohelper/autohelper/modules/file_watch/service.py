@@ -3,14 +3,11 @@
 import logging
 from pathlib import Path
 from threading import Lock
-from typing import TYPE_CHECKING
 
-from watchdog.observers import Observer
+from watchdog.events import FileSystemEvent
 
 from autohelper.db import get_db
-
-if TYPE_CHECKING:
-    from watchdog.observers.api import BaseObserver
+from autohelper.shared.fs_events import get_event_bus
 
 from .handler import FileWatchHandler
 from .schemas import FileWatchEvent, WatchRootConfig
@@ -40,7 +37,8 @@ class FileWatchService:
     """Manages filesystem watchers for root directories."""
 
     def __init__(self) -> None:
-        self._observers: dict[str, "BaseObserver"] = {}  # root_id -> Observer
+        self._sub_ids: dict[str, str] = {}  # root_id -> bus subscription id
+        self._paths: dict[str, str] = {}  # root_id -> resolved path
         self._handlers: dict[str, FileWatchHandler] = {}
         self._event_queues: dict[str, ThreadSafeEventQueue] = {}
         self._lock = Lock()
@@ -57,7 +55,7 @@ class FileWatchService:
             True if watching started successfully, False otherwise
         """
         with self._lock:
-            if root_id in self._observers:
+            if root_id in self._sub_ids:
                 logger.info("Already watching root %s", root_id)
                 return True
 
@@ -79,12 +77,12 @@ class FileWatchService:
                 db=db,
             )
 
-            # Create and start observer
-            observer = Observer()
-            observer.schedule(handler, str(root_path), recursive=True)
-            observer.start()
+            # Subscribe to the shared event bus
+            resolved = str(root_path.resolve())
+            sub_id = get_event_bus().subscribe(resolved, handler.dispatch)
 
-            self._observers[root_id] = observer
+            self._sub_ids[root_id] = sub_id
+            self._paths[root_id] = resolved
             self._handlers[root_id] = handler
             self._event_queues[root_id] = event_queue
 
@@ -102,13 +100,13 @@ class FileWatchService:
             True if watching stopped, False if root was not being watched
         """
         with self._lock:
-            observer = self._observers.pop(root_id, None)
+            sub_id = self._sub_ids.pop(root_id, None)
+            self._paths.pop(root_id, None)
             self._handlers.pop(root_id, None)
             self._event_queues.pop(root_id, None)
 
-            if observer:
-                observer.stop()
-                observer.join(timeout=5)
+            if sub_id:
+                get_event_bus().unsubscribe(sub_id)
                 logger.info("Stopped watching root %s", root_id)
                 return True
             return False
@@ -134,21 +132,18 @@ class FileWatchService:
             List of watch root configurations
         """
         with self._lock:
-            # We don't store paths, so we return just root_ids
-            # In a real implementation, you'd store the path in the handler
-            # For now, return minimal info
             return [
-                WatchRootConfig(root_id=root_id, path="<managed>")
-                for root_id in self._observers.keys()
+                WatchRootConfig(root_id=root_id, path=self._paths.get(root_id, "<unknown>"))
+                for root_id in self._sub_ids
             ]
 
     def shutdown(self) -> None:
-        """Stop all observers."""
+        """Unsubscribe all watchers from the event bus."""
         with self._lock:
-            for root_id, observer in list(self._observers.items()):
-                observer.stop()
-                observer.join(timeout=5)
+            for root_id, sub_id in list(self._sub_ids.items()):
+                get_event_bus().unsubscribe(sub_id)
                 logger.info("Stopped watching root %s (shutdown)", root_id)
-            self._observers.clear()
+            self._sub_ids.clear()
+            self._paths.clear()
             self._handlers.clear()
             self._event_queues.clear()
