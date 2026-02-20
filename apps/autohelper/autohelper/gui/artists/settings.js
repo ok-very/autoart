@@ -6,16 +6,16 @@
   const CONFIG_API = "/config";
   let fullLexicon = {};
   let currentSection = "categories";
-  let scanPollTimer = null;
 
   document.addEventListener("DOMContentLoaded", () => {
     loadConfig();
     loadLexicon();
-    pollScanStatus();
+    checkActiveScan();
 
     document.getElementById("btn-save-config").addEventListener("click", saveConfig);
     document.getElementById("btn-browse-root").addEventListener("click", browseRoot);
     document.getElementById("btn-scan").addEventListener("click", triggerScan);
+    document.getElementById("btn-scan-stop").addEventListener("click", stopScan);
     document.getElementById("btn-save-lexicon").addEventListener("click", saveLexicon);
     document.getElementById("btn-reset-lexicon").addEventListener("click", resetLexicon);
     document.getElementById("btn-export-lexicon").addEventListener("click", exportLexicon);
@@ -57,10 +57,18 @@
     btn.disabled = true;
     btn.textContent = "…";
     try {
-      const r = await fetch("/config/select-folder", { method: "POST" });
-      const d = await r.json();
-      if (d.path) {
-        document.getElementById("cfg-storage-root").value = d.path;
+      let path = null;
+      // Electron native dialog (packaged build)
+      if (window.electronAPI?.selectFolder) {
+        path = await window.electronAPI.selectFolder();
+      } else {
+        // Fallback: tkinter dialog (dev build)
+        const r = await fetch("/config/select-folder", { method: "POST" });
+        const d = await r.json();
+        path = d.path;
+      }
+      if (path) {
+        document.getElementById("cfg-storage-root").value = path;
       }
     } catch (e) {
       console.error("Browse:", e);
@@ -225,50 +233,127 @@
   // ------------------------------------------------------------------
   // Scan
   // ------------------------------------------------------------------
+  let scanEventSource = null;
+
   async function triggerScan() {
-    const btn = document.getElementById("btn-scan");
-    btn.disabled = true;
+    const btnScan = document.getElementById("btn-scan");
+    const btnStop = document.getElementById("btn-scan-stop");
+    const terminal = document.getElementById("scan-terminal");
+    const status = document.getElementById("scan-status");
+
+    btnScan.disabled = true;
+    btnStop.disabled = false;
+    status.textContent = "Starting\u2026";
+    terminal.innerHTML = "";
+    terminal.style.display = "block";
+
     try {
-      await fetch(API + "/scan", { method: "POST" });
-      pollScanStatus();
-    } catch (e) { btn.disabled = false; }
+      const r = await fetch(API + "/scan", { method: "POST" });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        status.textContent = d.detail || "Error";
+        btnScan.disabled = false;
+        btnStop.disabled = true;
+        return;
+      }
+    } catch (e) {
+      status.textContent = "Network error";
+      btnScan.disabled = false;
+      btnStop.disabled = true;
+      return;
+    }
+
+    status.textContent = "Scanning\u2026";
+    connectScanLog();
   }
 
-  async function pollScanStatus() {
-    clearInterval(scanPollTimer);
-    const update = async () => {
-      try {
-        const r = await fetch(API + "/scan/status");
-        const d = await r.json();
-        const el = document.getElementById("scan-status");
-        const btn = document.getElementById("btn-scan");
-        const info = document.getElementById("scan-info");
-        if (d.is_scanning) {
-          el.textContent = "Scanning\u2026";
-          btn.disabled = true;
-        } else {
-          btn.disabled = false;
-          if (d.last_run) {
-            const s = d.last_run.stats;
-            el.textContent = d.last_run.status === "completed"
-              ? `Last: ${s?.artists || 0} artists`
-              : `Last: ${d.last_run.status}`;
-            info.textContent = d.last_run.finished_at
-              ? `Finished: ${d.last_run.finished_at}`
-              : "";
-            clearInterval(scanPollTimer);
-          } else {
-            el.textContent = "No scans yet";
-            clearInterval(scanPollTimer);
-          }
-        }
-      } catch (e) {
-        const el = document.getElementById("scan-status");
-        if (el) el.textContent = "Unable to load scan status";
-        clearInterval(scanPollTimer);
+  function connectScanLog() {
+    if (scanEventSource) scanEventSource.close();
+
+    const terminal = document.getElementById("scan-terminal");
+    scanEventSource = new EventSource(API + "/scan/log");
+
+    scanEventSource.onmessage = (e) => {
+      if (e.data === "[done]") {
+        scanEventSource.close();
+        scanEventSource = null;
+        onScanFinished();
+        return;
       }
+      const line = document.createElement("div");
+      line.className = "scan-line";
+      line.textContent = e.data;
+      terminal.appendChild(line);
+      terminal.scrollTop = terminal.scrollHeight;
     };
-    await update();
-    scanPollTimer = setInterval(update, 5000);
+
+    scanEventSource.onerror = () => {
+      scanEventSource.close();
+      scanEventSource = null;
+      onScanFinished();
+    };
+  }
+
+  async function onScanFinished() {
+    const btnScan = document.getElementById("btn-scan");
+    const btnStop = document.getElementById("btn-scan-stop");
+    const status = document.getElementById("scan-status");
+    const info = document.getElementById("scan-info");
+
+    btnScan.disabled = false;
+    btnStop.disabled = true;
+
+    try {
+      const r = await fetch(API + "/scan/status");
+      const d = await r.json();
+      if (d.last_run) {
+        const s = d.last_run.stats;
+        const st = d.last_run.status;
+        if (st === "completed") {
+          status.textContent = `Done: ${s?.artists || 0} artists`;
+        } else {
+          status.textContent = st.charAt(0).toUpperCase() + st.slice(1);
+        }
+        info.textContent = d.last_run.finished_at
+          ? `Finished: ${d.last_run.finished_at}` : "";
+      } else {
+        status.textContent = "No scans yet";
+      }
+    } catch (e) {
+      status.textContent = "Unable to load status";
+    }
+  }
+
+  async function stopScan() {
+    const btnStop = document.getElementById("btn-scan-stop");
+    btnStop.disabled = true;
+    document.getElementById("scan-status").textContent = "Stopping\u2026";
+    try {
+      await fetch(API + "/scan/stop", { method: "POST" });
+    } catch (e) {
+      console.error("Stop scan:", e);
+    }
+  }
+
+  // Check if a scan is already running on page load
+  async function checkActiveScan() {
+    try {
+      const r = await fetch(API + "/scan/status");
+      const d = await r.json();
+      if (d.is_scanning) {
+        document.getElementById("btn-scan").disabled = true;
+        document.getElementById("btn-scan-stop").disabled = false;
+        document.getElementById("scan-status").textContent = "Scanning\u2026";
+        document.getElementById("scan-terminal").style.display = "block";
+        connectScanLog();
+      } else if (d.last_run) {
+        const s = d.last_run.stats;
+        const st = d.last_run.status;
+        document.getElementById("scan-status").textContent = st === "completed"
+          ? `Last: ${s?.artists || 0} artists` : `Last: ${st}`;
+        document.getElementById("scan-info").textContent = d.last_run.finished_at
+          ? `Finished: ${d.last_run.finished_at}` : "";
+      }
+    } catch (e) { /* ignore */ }
   }
 })();

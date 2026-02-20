@@ -1,4 +1,5 @@
-import { app, BrowserWindow, Menu, shell } from "electron";
+import path from "node:path";
+import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
 import log from "electron-log/main";
 import { handleSquirrelEvents } from "./squirrel";
 import { spawnAutoHelper, killAutoHelper, waitForHealth } from "./child-process";
@@ -51,6 +52,7 @@ export function showWindow(path: string = "/dashboard"): void {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
+      preload: path.join(__dirname, "..", "preload", "index.js"),
     },
   });
 
@@ -73,6 +75,17 @@ export function showWindow(path: string = "/dashboard"): void {
     return { action: "deny" };
   });
 }
+
+// ── IPC handlers ────────────────────────────────────────────────
+
+ipcMain.handle("select-folder", async () => {
+  const win = BrowserWindow.getFocusedWindow() ?? mainWindow;
+  const result = await dialog.showOpenDialog(win!, {
+    properties: ["openDirectory"],
+    title: "Select folder",
+  });
+  return result.canceled ? null : result.filePaths[0];
+});
 
 // ── Single instance lock ─────────────────────────────────────────
 

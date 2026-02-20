@@ -1,7 +1,6 @@
-import { contextBridge } from "electron";
+import { contextBridge, ipcRenderer } from "electron";
 
-// Minimal preload — expose nothing for now.
-// The dashboard is served by FastAPI and doesn't need Node APIs.
 contextBridge.exposeInMainWorld("electronAPI", {
   platform: process.platform,
+  selectFolder: () => ipcRenderer.invoke("select-folder"),
 });

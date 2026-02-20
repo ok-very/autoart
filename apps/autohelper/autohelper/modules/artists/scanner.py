@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -49,28 +51,38 @@ class ArtistScanner:
         lex = get_lexicon()
         self.categories = categories or lex.categories
 
-    def scan_all(self) -> list[dict[str, Any]]:
+    def scan_all(
+        self,
+        progress_cb: Callable[[str], None] | None = None,
+        cancel: threading.Event | None = None,
+    ) -> list[dict[str, Any]]:
         """Scan all categories under the storage root. Returns raw folder records."""
         records: list[dict[str, Any]] = []
+        emit = progress_cb or (lambda _msg: None)
 
         for cat in self.categories:
+            if cancel and cancel.is_set():
+                break
+
             cat_path = self.storage_root / cat.rel_path
             if not cat_path.is_dir():
                 logger.debug("Category path not found, skipping: %s", cat_path)
                 continue
 
-            logger.info("Scanning category '%s' at %s", cat.label, cat_path)
+            emit(f"Scanning category: {cat.label}")
 
             if cat.layout == "nation_based":
-                records.extend(self._scan_nation_based(cat_path, cat.key))
+                records.extend(self._scan_nation_based(cat_path, cat.key, emit, cancel))
             elif cat.layout == "bucketed":
-                records.extend(self._scan_bucketed(cat_path, cat.key))
+                records.extend(self._scan_bucketed(cat_path, cat.key, emit, cancel))
             elif cat.layout == "flat":
-                records.extend(self._scan_flat(cat_path, cat.key))
+                records.extend(self._scan_flat(cat_path, cat.key, emit, cancel))
             else:
                 logger.warning("Unknown layout '%s' for category '%s'", cat.layout, cat.key)
 
-        logger.info("Scanner found %d folder records across all categories", len(records))
+            emit(f"  {cat.label}: {len(records)} folders so far")
+
+        emit(f"Folder walk complete: {len(records)} records")
         return records
 
     def scan_single_folder(
@@ -92,7 +104,11 @@ class ArtistScanner:
     # Layout handlers
     # ------------------------------------------------------------------
 
-    def _scan_nation_based(self, cat_path: Path, category: str) -> list[dict]:
+    def _scan_nation_based(
+        self, cat_path: Path, category: str,
+        emit: Callable[[str], None] = lambda _: None,
+        cancel: threading.Event | None = None,
+    ) -> list[dict]:
         """Walk <Nation>/<ArtistFolder>/ structure."""
         lex = get_lexicon()
         records = []
@@ -102,11 +118,15 @@ class ArtistScanner:
             return records
 
         for nation in nations:
+            if cancel and cancel.is_set():
+                break
             nation_path = os.path.join(cat_path, nation)
             if not os.path.isdir(nation_path):
                 continue
             if nation.lower() in lex.ignore_dirs:
                 continue
+
+            emit(f"  {category}/{nation}")
 
             try:
                 artist_folders = sorted(os.listdir(nation_path))
@@ -128,7 +148,11 @@ class ArtistScanner:
 
         return records
 
-    def _scan_bucketed(self, cat_path: Path, category: str) -> list[dict]:
+    def _scan_bucketed(
+        self, cat_path: Path, category: str,
+        emit: Callable[[str], None] = lambda _: None,
+        cancel: threading.Event | None = None,
+    ) -> list[dict]:
         """Walk <LetterBucket>/<ArtistFolder>/ structure (e.g. PRIVATE ART)."""
         lex = get_lexicon()
         records = []
@@ -138,11 +162,15 @@ class ArtistScanner:
             return records
 
         for bucket in buckets:
+            if cancel and cancel.is_set():
+                break
             if bucket.startswith("z_") or bucket.lower() in lex.ignore_dirs:
                 continue
             bucket_path = os.path.join(cat_path, bucket)
             if not os.path.isdir(bucket_path):
                 continue
+
+            emit(f"  {category}/{bucket}")
 
             try:
                 artist_folders = sorted(os.listdir(bucket_path))
@@ -166,7 +194,11 @@ class ArtistScanner:
 
         return records
 
-    def _scan_flat(self, cat_path: Path, category: str) -> list[dict]:
+    def _scan_flat(
+        self, cat_path: Path, category: str,
+        emit: Callable[[str], None] = lambda _: None,
+        cancel: threading.Event | None = None,
+    ) -> list[dict]:
         """Walk flat <ArtistFolder>/ structure (e.g. CORPORATE ART)."""
         lex = get_lexicon()
         records = []
@@ -176,6 +208,8 @@ class ArtistScanner:
             return records
 
         for artist_folder in artist_folders:
+            if cancel and cancel.is_set():
+                break
             if artist_folder.lower() in lex.ignore_dirs or artist_folder.startswith("z_"):
                 continue
             artist_path = os.path.join(cat_path, artist_folder)

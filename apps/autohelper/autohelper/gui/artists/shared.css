@@ -994,6 +994,26 @@ body {
   color: var(--accent-secondary);
 }
 
+/* Scan terminal */
+.scan-terminal {
+  display: none;
+  background: #1e1e1e;
+  color: #cccccc;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 10px 12px;
+  border-radius: 4px;
+  max-height: 280px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.scan-line {
+  padding: 0;
+  margin: 0;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .settings-grid, .health-grid { grid-template-columns: 1fr; }

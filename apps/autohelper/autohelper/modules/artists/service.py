@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -38,10 +39,31 @@ class ArtistService:
 
     def __init__(self) -> None:
         self._scanning = False
+        self._cancel = threading.Event()
+        self._scan_log: list[str] = []
+        self._scan_log_cursor = 0  # for SSE consumers
 
     @property
     def is_scanning(self) -> bool:
         return self._scanning
+
+    def _log(self, msg: str) -> None:
+        """Append a line to the scan log buffer and also emit to logger."""
+        ts = datetime.now().strftime("%H:%M:%S")
+        line = f"[{ts}] {msg}"
+        self._scan_log.append(line)
+        logger.info(msg)
+
+    def get_scan_log(self, after: int = 0) -> tuple[list[str], int]:
+        """Return log lines after the given cursor, plus new cursor."""
+        lines = self._scan_log[after:]
+        return lines, len(self._scan_log)
+
+    def stop_scan(self) -> None:
+        """Signal the running scan to stop after the current artist."""
+        if self._scanning:
+            self._cancel.set()
+            self._log("Stop requested — finishing current artist…")
 
     # ------------------------------------------------------------------
     # Full scan
@@ -58,6 +80,9 @@ class ArtistService:
             return {"error": f"Invalid storage root: {storage_root}"}
 
         self._scanning = True
+        self._cancel.clear()
+        self._scan_log.clear()
+        self._scan_log_cursor = 0
         run_id = generate_request_id()
         db = get_db()
 
@@ -69,24 +94,56 @@ class ArtistService:
             )
             db.commit()
 
+            self._log("Scan started")
+            self._log(f"Storage root: {storage_root}")
+
             # Scan
             scanner = ArtistScanner(Path(storage_root))
-            records = scanner.scan_all()
-            logger.info("Scanned %d folder records", len(records))
+            records = scanner.scan_all(
+                progress_cb=self._log,
+                cancel=self._cancel,
+            )
+            self._log(f"Scanned {len(records)} folder records")
+
+            if self._cancel.is_set():
+                self._log("Scan cancelled during folder walk")
+                self._finish_scan_run(db, run_id, "cancelled", {"folder_records": len(records)})
+                return {"status": "cancelled"}
 
             # Resolve
+            self._log("Resolving artists…")
             resolved = resolve_artists(records)
-            logger.info("Resolved to %d unique artists", len(resolved))
+            self._log(f"Resolved to {len(resolved)} unique artists")
+
+            if self._cancel.is_set():
+                self._log("Scan cancelled before manifest generation")
+                self._finish_scan_run(db, run_id, "cancelled", {"folder_records": len(records), "artists": len(resolved)})
+                return {"status": "cancelled"}
 
             # Enrich contacts from existing contact_sync_contacts table
+            self._log("Enriching contacts…")
             self._enrich_contacts(resolved)
 
             # Generate manifests and cache
+            self._log("Generating manifests…")
             self._clear_cache(db)
-            for artist in resolved:
+            for i, artist in enumerate(resolved):
+                if self._cancel.is_set():
+                    self._log(f"Scan stopped at artist {i}/{len(resolved)}")
+                    db.commit()
+                    self._finish_scan_run(db, run_id, "stopped", {
+                        "folder_records": len(records),
+                        "artists": len(resolved),
+                        "completed": i,
+                    })
+                    return {"status": "stopped", "completed": i}
+
                 manifest = build_manifest(artist)
                 write_manifest_to_disk(manifest, artist)
                 self._cache_artist(db, manifest, artist)
+
+                if (i + 1) % 25 == 0 or i == len(resolved) - 1:
+                    self._log(f"Cached {i + 1}/{len(resolved)} artists")
 
             db.commit()
 
@@ -95,29 +152,27 @@ class ArtistService:
                 "folder_records": len(records),
                 "artists": len(resolved),
             }
-            db.execute(
-                """UPDATE artist_scan_runs
-                   SET finished_at = datetime('now'), status = 'completed', stats_json = ?
-                   WHERE run_id = ?""",
-                (json.dumps(stats), run_id),
-            )
-            db.commit()
+            self._finish_scan_run(db, run_id, "completed", stats)
 
-            logger.info("Full scan complete: %d artists", len(resolved))
+            self._log(f"Scan complete: {len(resolved)} artists")
             return stats
 
         except Exception as e:
             logger.error("Full scan failed: %s", e, exc_info=True)
-            db.execute(
-                """UPDATE artist_scan_runs
-                   SET finished_at = datetime('now'), status = 'failed', stats_json = ?
-                   WHERE run_id = ?""",
-                (json.dumps({"error": str(e)}), run_id),
-            )
-            db.commit()
+            self._log(f"ERROR: {e}")
+            self._finish_scan_run(db, run_id, "failed", {"error": str(e)})
             return {"error": str(e)}
         finally:
             self._scanning = False
+
+    def _finish_scan_run(self, db: Any, run_id: str, status: str, stats: dict) -> None:
+        db.execute(
+            """UPDATE artist_scan_runs
+               SET finished_at = datetime('now'), status = ?, stats_json = ?
+               WHERE run_id = ?""",
+            (status, json.dumps(stats), run_id),
+        )
+        db.commit()
 
     # ------------------------------------------------------------------
     # Single-artist rescan

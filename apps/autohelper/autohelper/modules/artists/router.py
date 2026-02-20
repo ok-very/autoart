@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 import subprocess
 import sys
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from starlette.responses import StreamingResponse
 
 from .config import get_lexicon, save_lexicon, reset_lexicon, _parse_lexicon, _serialize_lexicon
 from .service import get_artist_service
@@ -68,6 +70,39 @@ async def trigger_scan(background_tasks: BackgroundTasks) -> dict[str, str]:
 async def scan_status() -> dict[str, Any]:
     """Current scan status and last run info."""
     return get_artist_service().get_scan_status()
+
+
+@router.post("/scan/stop")
+async def stop_scan() -> dict[str, str]:
+    """Stop a running scan after the current artist finishes."""
+    svc = get_artist_service()
+    if not svc.is_scanning:
+        raise HTTPException(status_code=409, detail="No scan in progress")
+    svc.stop_scan()
+    return {"status": "stopping"}
+
+
+@router.get("/scan/log")
+async def scan_log_stream():
+    """SSE stream of scan progress lines."""
+    svc = get_artist_service()
+
+    async def event_generator():
+        cursor = 0
+        while True:
+            lines, cursor = svc.get_scan_log(cursor)
+            for line in lines:
+                yield f"data: {line}\n\n"
+            if not svc.is_scanning and not lines:
+                yield "data: [done]\n\n"
+                break
+            await asyncio.sleep(0.5)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 # ------------------------------------------------------------------
