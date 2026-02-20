@@ -53,6 +53,8 @@ class ArtistLexicon:
 
     identity_options: list[str] = field(default_factory=list)
     affiliation_types: list[str] = field(default_factory=list)
+    location_types: list[str] = field(default_factory=list)
+    name_types: list[str] = field(default_factory=list)
 
     folder_name_fixes: dict[str, str] = field(default_factory=dict)
     multi_folder_artists: dict[str, dict] = field(default_factory=dict)
@@ -155,13 +157,34 @@ DEFAULT_COMPLETENESS_GAP_LABELS: dict[str, str] = {
 }
 
 DEFAULT_IDENTITIES: list[str] = [
-    "queer", "gay", "PoC", "migrant", "immigrant", "diaspora",
-    "religious", "cultural legacy", "Indigenous",
+    # Gender & sexuality
+    "queer", "gay", "lesbian", "bisexual", "trans", "non-binary", "two-spirit",
+    # Race & ethnicity
+    "Indigenous", "First Nations", "Métis", "Inuit", "Black", "African", "PoC",
+    "South Asian", "East Asian", "Southeast Asian", "Middle Eastern",
+    "Latin American", "Caribbean",
+    # Migration & origin
+    "immigrant", "migrant", "refugee", "diaspora", "settler",
+    # Other
+    "disability", "Deaf", "religious", "cultural legacy",
 ]
 
 DEFAULT_AFFILIATION_TYPES: list[str] = [
     "nation", "collective", "duo_partner", "studio_assistant_of",
     "band", "organization",
+]
+
+DEFAULT_LOCATION_TYPES: list[str] = [
+    "origin",   # where the artist is from / born
+    "home",     # where they currently live/work
+    "studio",   # dedicated studio address
+]
+
+DEFAULT_NAME_TYPES: list[str] = [
+    "traditional",   # Indigenous traditional/ceremonial name
+    "pseudonym",     # artist alias / pen name
+    "studio",        # studio or practice name
+    "trade",         # registered trade name / business name
 ]
 
 DEFAULT_FOLDER_NAME_FIXES: dict[str, str] = {
@@ -314,6 +337,8 @@ def _build_default_lexicon() -> ArtistLexicon:
         completeness_gap_labels=dict(DEFAULT_COMPLETENESS_GAP_LABELS),
         identity_options=list(DEFAULT_IDENTITIES),
         affiliation_types=list(DEFAULT_AFFILIATION_TYPES),
+        location_types=list(DEFAULT_LOCATION_TYPES),
+        name_types=list(DEFAULT_NAME_TYPES),
         folder_name_fixes=dict(DEFAULT_FOLDER_NAME_FIXES),
         multi_folder_artists=dict(DEFAULT_MULTI_FOLDER_ARTISTS),
         collaborative_entities=dict(DEFAULT_COLLABORATIVE_ENTITIES),
@@ -347,8 +372,11 @@ def _parse_lexicon(data: dict[str, Any]) -> ArtistLexicon:
         ignore_dirs=set(data.get("ignore_dirs", DEFAULT_IGNORE_DIRS)),
         completeness_weights=data.get("completeness_weights", dict(DEFAULT_COMPLETENESS_WEIGHTS)),
         completeness_gap_labels=data.get("completeness_gap_labels", dict(DEFAULT_COMPLETENESS_GAP_LABELS)),
-        identity_options=data.get("identity_options", list(DEFAULT_IDENTITIES)),
+        # Fall back to old key name for one-time migration of pre-refactor lexicon files
+        identity_options=data.get("identity_options") or data.get("identity_labels", list(DEFAULT_IDENTITIES)),
         affiliation_types=data.get("affiliation_types", list(DEFAULT_AFFILIATION_TYPES)),
+        location_types=data.get("location_types", list(DEFAULT_LOCATION_TYPES)),
+        name_types=data.get("name_types", list(DEFAULT_NAME_TYPES)),
         folder_name_fixes=data.get("folder_name_fixes", dict(DEFAULT_FOLDER_NAME_FIXES)),
         multi_folder_artists=data.get("multi_folder_artists", dict(DEFAULT_MULTI_FOLDER_ARTISTS)),
         collaborative_entities=data.get("collaborative_entities", dict(DEFAULT_COLLABORATIVE_ENTITIES)),
@@ -376,6 +404,8 @@ def _serialize_lexicon(lex: ArtistLexicon) -> dict[str, Any]:
         "completeness_gap_labels": lex.completeness_gap_labels,
         "identity_options": lex.identity_options,
         "affiliation_types": lex.affiliation_types,
+        "location_types": lex.location_types,
+        "name_types": lex.name_types,
         "folder_name_fixes": lex.folder_name_fixes,
         "multi_folder_artists": lex.multi_folder_artists,
         "collaborative_entities": lex.collaborative_entities,
