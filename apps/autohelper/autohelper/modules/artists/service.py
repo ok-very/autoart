@@ -17,6 +17,8 @@ from autohelper.shared.ids import generate_request_id
 
 from .config import get_lexicon, MANIFEST_FILENAME
 from .generator import build_manifest, write_manifest_to_disk
+from .orchestrator import ScanOrchestrator
+from .passes import GeneralPass
 from .resolver import resolve_artists
 from .scanner import ArtistScanner
 from .utils import extract_text
@@ -97,9 +99,22 @@ class ArtistService:
             self._log("Scan started")
             self._log(f"Storage root: {storage_root}")
 
-            # Scan
-            scanner = ArtistScanner(Path(storage_root))
-            records = scanner.scan_all(
+            # Build multi-pass orchestrator
+            lex = get_lexicon()
+            passes = [
+                GeneralPass("indigenous"),
+                GeneralPass("public"),
+                GeneralPass("private"),
+                GeneralPass("corporate"),
+            ]
+            orchestrator = ScanOrchestrator(
+                passes=passes,
+                ground_truth_csv=lex.ground_truth_csv_path,
+            )
+
+            # Scan via domain-specific passes
+            records = orchestrator.run(
+                Path(storage_root),
                 progress_cb=self._log,
                 cancel=self._cancel,
             )
@@ -787,13 +802,17 @@ class ArtistService:
         """Upsert one artist + folders into the cache tables."""
         manifest_json = json.dumps(manifest.model_dump_json_friendly(), ensure_ascii=False)
 
+        gt_matched = 1 if artist.get("ground_truth_match") else 0
+        domain_sources = json.dumps(artist.get("categories", []))
+
         db.execute(
             """INSERT OR REPLACE INTO artists
                (artist_id, display_name, first_name, last_name, manifest_json,
                 completeness, has_bio, has_cv, has_tearsheet, has_contact, has_images,
                 review_status, primary_folder, categories, identity_tags, nations,
+                ground_truth_matched, domain_sources,
                 scanned_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))""",
             (
                 manifest.artist_id,
                 manifest.identity.display_name,
@@ -811,6 +830,8 @@ class ArtistService:
                 json.dumps(artist.get("categories", [])),
                 json.dumps(manifest.identity.identity_tags.identities),
                 json.dumps([a.name for a in manifest.identity.identity_tags.affiliations if a.type == "nation"]),
+                gt_matched,
+                domain_sources,
             ),
         )
 
@@ -819,8 +840,9 @@ class ArtistService:
             folder_id = generate_request_id()
             db.execute(
                 """INSERT OR REPLACE INTO artist_folders
-                   (folder_id, artist_id, folder_path, category, layout, nation, is_primary)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                   (folder_id, artist_id, folder_path, category, layout, nation, is_primary,
+                    domain_source, confidence)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     folder_id,
                     manifest.artist_id,
@@ -829,5 +851,7 @@ class ArtistService:
                     "nation_based" if fl.get("nation") else "flat",
                     fl.get("nation"),
                     int(fl["is_primary"]),
+                    fl.get("category"),  # domain_source defaults to category
+                    fl.get("confidence", 0.8),
                 ),
             )

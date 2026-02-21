@@ -13,7 +13,8 @@
     checkActiveScan();
 
     document.getElementById("btn-save-config").addEventListener("click", saveConfig);
-    document.getElementById("btn-browse-root").addEventListener("click", browseRoot);
+    document.getElementById("btn-browse-root").addEventListener("click", () => browseForPath("cfg-storage-root"));
+    document.getElementById("btn-browse-gt").addEventListener("click", () => browseForPath("cfg-ground-truth"));
     document.getElementById("btn-scan").addEventListener("click", triggerScan);
     document.getElementById("btn-scan-stop").addEventListener("click", stopScan);
     document.getElementById("btn-save-lexicon").addEventListener("click", saveLexicon);
@@ -52,24 +53,21 @@
     }
   }
 
-  async function browseRoot() {
-    const btn = document.getElementById("btn-browse-root");
+  async function browseForPath(inputId) {
+    const input = document.getElementById(inputId);
+    const btn = input.parentElement.querySelector("button");
     btn.disabled = true;
-    btn.textContent = "…";
+    btn.textContent = "\u2026";
     try {
       let path = null;
-      // Electron native dialog (packaged build)
       if (window.electronAPI?.selectFolder) {
         path = await window.electronAPI.selectFolder();
       } else {
-        // Fallback: tkinter dialog (dev build)
         const r = await fetch("/config/select-folder", { method: "POST" });
         const d = await r.json();
         path = d.path;
       }
-      if (path) {
-        document.getElementById("cfg-storage-root").value = path;
-      }
+      if (path) input.value = path;
     } catch (e) {
       console.error("Browse:", e);
     }
@@ -116,6 +114,8 @@
       const r = await fetch(API + "/lexicon");
       if (!r.ok) throw new Error("HTTP " + r.status);
       fullLexicon = await r.json();
+      // Populate ground truth CSV path from lexicon
+      document.getElementById("cfg-ground-truth").value = fullLexicon.ground_truth_csv_path || "";
       renderLexiconSection();
     } catch (e) {
       console.error("Load lexicon:", e);
@@ -157,6 +157,9 @@
 
   async function saveLexicon() {
     saveCurrentEditsToMemory();
+    // Sync ground truth CSV path into lexicon before saving
+    const gtVal = document.getElementById("cfg-ground-truth").value.trim();
+    fullLexicon.ground_truth_csv_path = gtVal || null;
     const fb = document.getElementById("lexicon-feedback");
     const btn = document.getElementById("btn-save-lexicon");
     btn.disabled = true;

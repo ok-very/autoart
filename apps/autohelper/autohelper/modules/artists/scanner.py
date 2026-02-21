@@ -93,7 +93,7 @@ class ArtistScanner:
     ) -> dict[str, Any]:
         """Re-scan a single artist folder. Used for watchdog-triggered updates."""
         folder_name = folder_path.name
-        return _scan_artist_folder(
+        return scan_artist_folder(
             category=category,
             nation=nation,
             folder_name=folder_name,
@@ -138,7 +138,7 @@ class ArtistScanner:
                 if not os.path.isdir(artist_path) or artist_folder.lower() in lex.ignore_dirs:
                     continue
 
-                record = _scan_artist_folder(
+                record = scan_artist_folder(
                     category=category,
                     nation=nation,
                     folder_name=artist_folder,
@@ -184,7 +184,7 @@ class ArtistScanner:
                 if not os.path.isdir(artist_path):
                     continue
 
-                record = _scan_artist_folder(
+                record = scan_artist_folder(
                     category=category,
                     nation=None,
                     folder_name=artist_folder,
@@ -231,7 +231,7 @@ class ArtistScanner:
 # Folder-level scanning
 # ======================================================================
 
-def _scan_artist_folder(
+def scan_artist_folder(
     category: str,
     nation: str | None,
     folder_name: str,
@@ -285,6 +285,8 @@ def _scan_artist_folder(
             identity_hints["locations"].append(loc)
         if artist_identity_cfg.get("pronouns"):
             identity_hints["pronouns"] = artist_identity_cfg["pronouns"]
+        if artist_identity_cfg.get("career_stage"):
+            identity_hints["career_stage"] = artist_identity_cfg["career_stage"]
 
     # Recover identity tags from an existing on-disk manifest (so editorial
     # tags set via the dashboard or AI enrichment are not lost on rescan)
@@ -604,6 +606,10 @@ def _recover_identity_from_manifest(
     pronouns = identity.get("pronouns")
     if pronouns and "pronouns" not in hints:
         hints["pronouns"] = pronouns
+
+    career_stage = identity.get("career_stage")
+    if career_stage and "career_stage" not in hints:
+        hints["career_stage"] = career_stage
 
 
 def _find_primary_doc(folder_path: str) -> str | None:

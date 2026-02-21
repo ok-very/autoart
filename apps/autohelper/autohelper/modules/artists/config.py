@@ -36,6 +36,15 @@ class CategoryProfile:
 
 
 @dataclass
+class DomainConfig:
+    """Per-domain scan settings (confidence, extra ignores, etc.)."""
+
+    key: str
+    confidence: float = 0.8
+    extra_ignore_dirs: list[str] = field(default_factory=list)
+
+
+@dataclass
 class ArtistLexicon:
     """All scanning configuration, loaded from artist_lexicon.json."""
 
@@ -55,14 +64,21 @@ class ArtistLexicon:
     affiliation_types: list[str] = field(default_factory=list)
     location_types: list[str] = field(default_factory=list)
     name_types: list[str] = field(default_factory=list)
+    career_stages: list[str] = field(default_factory=list)
 
     folder_name_fixes: dict[str, str] = field(default_factory=dict)
     multi_folder_artists: dict[str, dict] = field(default_factory=dict)
     collaborative_entities: dict[str, dict] = field(default_factory=dict)
     nested_artists: dict[str, dict] = field(default_factory=dict)
 
+    # Per-domain scan config (confidence, extra ignores)
+    domain_configs: dict[str, DomainConfig] = field(default_factory=dict)
+
     # Per-artist identity overrides: "category:nation:folder_name" -> {identities, affiliations, locations, pronouns}
     artist_identity_overrides: dict[str, dict] = field(default_factory=dict)
+
+    # Path to the ground-truth contacts CSV for artist validation / enrichment
+    ground_truth_csv_path: str | None = None
 
     # Derived lookup: (category, folder_name) -> canonical_id
     multi_folder_lookup: dict[tuple[str, str], str] = field(
@@ -187,6 +203,12 @@ DEFAULT_NAME_TYPES: list[str] = [
     "trade",         # registered trade name / business name
 ]
 
+DEFAULT_CAREER_STAGES: list[str] = [
+    "emerging",      # early-career, fewer than ~10 years active
+    "mid-career",    # established practice, growing recognition
+    "established",   # significant body of work, widely recognised
+]
+
 DEFAULT_FOLDER_NAME_FIXES: dict[str, str] = {
     "Martinez. Mauricio": "Martinez, Mauricio",
     "Atkins. Phyllis": "Atkins, Phyllis",
@@ -265,6 +287,13 @@ DEFAULT_NESTED_ARTISTS: dict[str, dict] = {
     },
 }
 
+DEFAULT_DOMAIN_CONFIGS: dict[str, DomainConfig] = {
+    "indigenous": DomainConfig(key="indigenous", confidence=1.0),
+    "public":     DomainConfig(key="public",     confidence=0.85),
+    "private":    DomainConfig(key="private",     confidence=0.7),
+    "corporate":  DomainConfig(key="corporate",   confidence=0.6),
+}
+
 # Category priority for choosing the primary folder
 CATEGORY_PRIORITY: list[str] = ["indigenous", "public", "private", "corporate"]
 
@@ -296,13 +325,20 @@ def get_lexicon_path() -> Path:
 
 
 def load_lexicon() -> ArtistLexicon:
-    """Load lexicon from disk, falling back to built-in defaults."""
+    """Load lexicon from disk, falling back to built-in defaults.
+
+    After loading, compares the serialized result against the raw disk JSON.
+    If defaults filled in missing keys (new fields added in code), the file
+    is auto-saved so it never stays stale.
+    """
     path = get_lexicon_path()
     if path.exists():
         try:
             with open(path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            return _parse_lexicon(data)
+                raw = json.load(f)
+            lex = _parse_lexicon(raw)
+            _auto_heal(path, raw, lex)
+            return lex
         except Exception:
             logger.warning("Failed to load %s, using defaults", path, exc_info=True)
 
@@ -313,6 +349,19 @@ def load_lexicon() -> ArtistLexicon:
     except Exception:
         logger.warning("Failed to save default lexicon to disk", exc_info=True)
     return lex
+
+
+def _auto_heal(path: Path, raw: dict[str, Any], lex: ArtistLexicon) -> None:
+    """Re-save the lexicon if _parse_lexicon filled in missing keys."""
+    canonical = _serialize_lexicon(lex)
+    if canonical != raw:
+        added = set(canonical.keys()) - set(raw.keys())
+        if added:
+            logger.info("Lexicon auto-heal: new keys %s written to %s", added, path)
+        try:
+            save_lexicon(lex)
+        except Exception:
+            logger.warning("Auto-heal save failed for %s", path, exc_info=True)
 
 
 def save_lexicon(lex: ArtistLexicon) -> None:
@@ -339,10 +388,12 @@ def _build_default_lexicon() -> ArtistLexicon:
         affiliation_types=list(DEFAULT_AFFILIATION_TYPES),
         location_types=list(DEFAULT_LOCATION_TYPES),
         name_types=list(DEFAULT_NAME_TYPES),
+        career_stages=list(DEFAULT_CAREER_STAGES),
         folder_name_fixes=dict(DEFAULT_FOLDER_NAME_FIXES),
         multi_folder_artists=dict(DEFAULT_MULTI_FOLDER_ARTISTS),
         collaborative_entities=dict(DEFAULT_COLLABORATIVE_ENTITIES),
         nested_artists=dict(DEFAULT_NESTED_ARTISTS),
+        domain_configs=dict(DEFAULT_DOMAIN_CONFIGS),
         artist_identity_overrides={},
     )
     _rebuild_lookup(lex)
@@ -377,11 +428,17 @@ def _parse_lexicon(data: dict[str, Any]) -> ArtistLexicon:
         affiliation_types=data.get("affiliation_types", list(DEFAULT_AFFILIATION_TYPES)),
         location_types=data.get("location_types", list(DEFAULT_LOCATION_TYPES)),
         name_types=data.get("name_types", list(DEFAULT_NAME_TYPES)),
+        career_stages=data.get("career_stages", list(DEFAULT_CAREER_STAGES)),
         folder_name_fixes=data.get("folder_name_fixes", dict(DEFAULT_FOLDER_NAME_FIXES)),
         multi_folder_artists=data.get("multi_folder_artists", dict(DEFAULT_MULTI_FOLDER_ARTISTS)),
         collaborative_entities=data.get("collaborative_entities", dict(DEFAULT_COLLABORATIVE_ENTITIES)),
         nested_artists=data.get("nested_artists", dict(DEFAULT_NESTED_ARTISTS)),
+        domain_configs={
+            k: DomainConfig(**v) if isinstance(v, dict) else v
+            for k, v in data.get("domain_configs", DEFAULT_DOMAIN_CONFIGS).items()
+        },
         artist_identity_overrides=data.get("artist_identity_overrides", {}),
+        ground_truth_csv_path=data.get("ground_truth_csv_path"),
     )
     _rebuild_lookup(lex)
     return lex
@@ -406,9 +463,15 @@ def _serialize_lexicon(lex: ArtistLexicon) -> dict[str, Any]:
         "affiliation_types": lex.affiliation_types,
         "location_types": lex.location_types,
         "name_types": lex.name_types,
+        "career_stages": lex.career_stages,
         "folder_name_fixes": lex.folder_name_fixes,
         "multi_folder_artists": lex.multi_folder_artists,
         "collaborative_entities": lex.collaborative_entities,
         "nested_artists": lex.nested_artists,
+        "domain_configs": {
+            k: {"key": v.key, "confidence": v.confidence, "extra_ignore_dirs": v.extra_ignore_dirs}
+            for k, v in lex.domain_configs.items()
+        },
         "artist_identity_overrides": lex.artist_identity_overrides,
+        "ground_truth_csv_path": lex.ground_truth_csv_path,
     }

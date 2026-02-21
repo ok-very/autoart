@@ -12,9 +12,6 @@
   },
   "include": [
     "src/main/**/*",
-    "src/preload/**/*",
-    "forge.config.ts",
-    "vite.main.config.ts",
-    "vite.preload.config.ts"
+    "src/preload/**/*"
   ]
 }

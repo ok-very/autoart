@@ -1,5 +1,5 @@
-import path from "node:path";
-import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
+import nodePath from "node:path";
+import { app, BrowserWindow, dialog, ipcMain, Menu, session, shell } from "electron";
 import log from "electron-log/main";
 import { handleSquirrelEvents } from "./squirrel";
 import { spawnAutoHelper, killAutoHelper, waitForHealth } from "./child-process";
@@ -14,7 +14,12 @@ log.initialize();
 // Remove the default menu bar (File, Edit, View, Window, Help)
 Menu.setApplicationMenu(null);
 
-const BASE_URL = "http://127.0.0.1:8100";
+// Dual mode: --mode=autoart points at the full AutoArt frontend,
+// default (autohelper) points at the AutoHelper Python service.
+const MODE = process.argv.includes("--mode=autoart") ? "autoart" : "autohelper";
+const BASE_URL = MODE === "autoart"
+  ? "http://127.0.0.1:3100"   // Full AutoArt frontend
+  : "http://127.0.0.1:8100";  // AutoHelper only
 
 let mainWindow: BrowserWindow | null = null;
 let isQuitting = false;
@@ -31,7 +36,7 @@ export function setIsQuitting(value: boolean): void {
  * Show the main window, optionally navigating to a specific path.
  * @param path - URL path to load (default: "/dashboard")
  */
-export function showWindow(path: string = "/dashboard"): void {
+export async function showWindow(path: string = "/dashboard"): Promise<void> {
   const targetUrl = `${BASE_URL}${path}`;
 
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -45,6 +50,10 @@ export function showWindow(path: string = "/dashboard"): void {
     return;
   }
 
+  // Always clear cache before creating a window so static assets are fresh
+  await session.defaultSession.clearCache();
+  await session.defaultSession.clearStorageData({ storages: ["cachestorage"] });
+
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 750,
@@ -52,7 +61,7 @@ export function showWindow(path: string = "/dashboard"): void {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      preload: path.join(__dirname, "..", "preload", "index.js"),
+      preload: nodePath.join(__dirname, "..", "preload", "index.js"),
     },
   });
 
@@ -98,12 +107,22 @@ if (!gotLock) {
   });
 
   app.whenReady().then(async () => {
-    log.info("AutoHelper Desktop starting...");
+    log.info("AutoHelper Desktop starting (mode=%s)...", MODE);
+
+    // Clear HTTP cache so the webview always loads fresh static assets
+    await session.defaultSession.clearCache();
+    log.info("Cleared webview cache");
 
     try {
       await spawnAutoHelper();
       await waitForHealth("http://127.0.0.1:8100/health");
-      log.info("AutoHelper service is healthy");
+      // Log server mode so we always know what we're connected to
+      try {
+        const health = await fetch("http://127.0.0.1:8100/health").then((r) => r.json());
+        log.info("AutoHelper service healthy — mode=%s, version=%s", health.mode, health.version);
+      } catch {
+        log.info("AutoHelper service is healthy (could not read mode)");
+      }
     } catch (err) {
       log.error("Failed to start AutoHelper service:", err);
     }
@@ -117,7 +136,7 @@ if (!gotLock) {
   });
 
   // Keep the app running when all windows are closed (tray mode)
-  app.on("window-all-closed", (e: Event) => {
-    e.preventDefault();
+  app.on("window-all-closed", () => {
+    // No-op: stay alive in tray mode
   });
 }

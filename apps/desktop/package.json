@@ -7,7 +7,9 @@
   "main": ".vite/build/index.js",
   "scripts": {
     "start": "electron-forge start",
-    "dev": "electron-forge start",
+    "dev": "node -e \"const fs=require('fs'),p=require('path'),ud=p.join(process.env.APPDATA||'','autohelper-desktop');['.vite','out'].forEach(d=>fs.rmSync(d,{recursive:true,force:true}));['Cache','Code Cache','GPUCache','DawnGraphiteCache','DawnWebGPUCache'].forEach(d=>{const t=p.join(ud,d);fs.rmSync(t,{recursive:true,force:true})})\" && electron-forge start",
+    "dev:autohelper": "node -e \"const fs=require('fs'),p=require('path'),ud=p.join(process.env.APPDATA||'','autohelper-desktop');['.vite','out'].forEach(d=>fs.rmSync(d,{recursive:true,force:true}));['Cache','Code Cache','GPUCache','DawnGraphiteCache','DawnWebGPUCache'].forEach(d=>{const t=p.join(ud,d);fs.rmSync(t,{recursive:true,force:true})})\" && electron-forge start",
+    "dev:autoart": "node -e \"const fs=require('fs'),p=require('path'),ud=p.join(process.env.APPDATA||'','autohelper-desktop');['.vite','out'].forEach(d=>fs.rmSync(d,{recursive:true,force:true}));['Cache','Code Cache','GPUCache','DawnGraphiteCache','DawnWebGPUCache'].forEach(d=>{const t=p.join(ud,d);fs.rmSync(t,{recursive:true,force:true})})\" && electron-forge start -- --mode=autoart",
     "build": "electron-forge make",
     "package": "electron-forge package",
     "typecheck": "tsc --noEmit -p tsconfig.node.json"

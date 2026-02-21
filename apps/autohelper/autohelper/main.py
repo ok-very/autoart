@@ -68,6 +68,33 @@ def _release_lock() -> None:
         pass
 
 
+def _kill_existing() -> None:
+    """Kill any running AutoHelper instance and clean up the lock file."""
+    if not LOCKFILE.exists():
+        return
+    try:
+        stored_pid = int(LOCKFILE.read_text().strip())
+    except (ValueError, OSError):
+        LOCKFILE.unlink(missing_ok=True)
+        return
+
+    # Try to kill the process
+    try:
+        if is_windows():
+            import signal
+            os.kill(stored_pid, signal.SIGTERM)
+        else:
+            os.kill(stored_pid, 15)  # SIGTERM
+        print(f"Killed existing AutoHelper (PID {stored_pid})")
+        # Give it a moment to release the port
+        import time
+        time.sleep(0.5)
+    except OSError:
+        pass  # Process already gone
+
+    LOCKFILE.unlink(missing_ok=True)
+
+
 def _check_port_conflict(host: str, port: int) -> None:
     """Check if port is already in use. Exit cleanly if healthy instance exists."""
     import socket
@@ -136,6 +163,11 @@ def main() -> None:
         action = args[idx + 1] if idx + 1 < len(args) else ""
         _handle_service(action)
         return
+
+    # In dev mode, kill any existing instance first
+    if "--dev" in args:
+        args.remove("--dev")
+        _kill_existing()
 
     # Acquire PID lock before any server mode
     if not _acquire_lock():

@@ -48,6 +48,7 @@ class Identity(BaseModel):
     last_name: str | None = None
     names: list[NameEntry] = Field(default_factory=list)
     pronouns: str | None = None
+    career_stage: str | None = None  # "emerging", "mid-career", "established"
     identity_tags: IdentityTags = Field(default_factory=IdentityTags)
 
 

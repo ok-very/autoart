@@ -19,6 +19,7 @@ MIGRATIONS = PACKAGE / "db" / "migrations"
 POWERSHELL = PACKAGE / "modules" / "contacts" / "powershell"
 DASHBOARD = PACKAGE / "gui" / "dashboard"
 ARTISTS_GUI = PACKAGE / "gui" / "artists"
+ARTISTS_DIST = PACKAGE / "gui" / "artists-dist"
 
 # Data files to bundle
 datas = [
@@ -27,6 +28,10 @@ datas = [
     (str(DASHBOARD), "autohelper/gui/dashboard"),
     (str(ARTISTS_GUI), "autohelper/gui/artists"),
 ]
+
+# Include Vite-built artists-dist if it exists
+if ARTISTS_DIST.is_dir():
+    datas.append((str(ARTISTS_DIST), "autohelper/gui/artists-dist"))
 
 # Hidden imports that PyInstaller misses (dynamic imports, plugins, etc.)
 hiddenimports = [

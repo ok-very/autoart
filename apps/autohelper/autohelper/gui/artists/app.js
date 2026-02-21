@@ -362,6 +362,12 @@
     h += `<div class="detail-section"><h3>Identity</h3>`;
     h += editRow("Name", "edit-display-name", id.display_name || "", "text");
     h += editRow("Pronouns", "edit-pronouns", id.pronouns || "", "text", "e.g. she/her", !id.pronouns);
+    h += `<div class="edit-row"><span class="edit-label">Career Stage</span><select class="edit-input" id="edit-career-stage">
+      <option value="">—</option>
+      <option value="emerging"${id.career_stage === "emerging" ? " selected" : ""}>Emerging</option>
+      <option value="mid-career"${id.career_stage === "mid-career" ? " selected" : ""}>Mid-career</option>
+      <option value="established"${id.career_stage === "established" ? " selected" : ""}>Established</option>
+    </select></div>`;
 
     // Typed names (traditional, pseudonym, studio, trade)
     const namesByType = {};
@@ -554,6 +560,7 @@
       identity: {
         display_name: val("edit-display-name"),
         pronouns: val("edit-pronouns") || null,
+        career_stage: val("edit-career-stage") || null,
       },
       contact: {
         email: val("edit-email") || null,

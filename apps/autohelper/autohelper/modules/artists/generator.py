@@ -61,6 +61,7 @@ def build_manifest(artist: dict[str, Any]) -> ArtistManifest:
         last_name=artist.get("last_name"),
         names=names,
         pronouns=hints.get("pronouns") or artist.get("pronouns"),
+        career_stage=hints.get("career_stage"),
         identity_tags=IdentityTags(
             identities=hints.get("identities", []),
             affiliations=affiliations,
@@ -68,15 +69,19 @@ def build_manifest(artist: dict[str, Any]) -> ArtistManifest:
         ),
     )
 
-    # --- Contact ---
+    # --- Contact (ground truth enrichment fills blanks) ---
     contact_data = artist.get("contact") or {}
+    enrichment = artist.get("contact_enrichment") or {}
+
+    email = contact_data.get("email") or enrichment.get("email")
+    phone = contact_data.get("phone") or enrichment.get("phone")
     website = contact_data.get("website")
     if not website and artist.get("website_urls"):
         website = artist["website_urls"][0]
 
     contact = Contact(
-        email=contact_data.get("email"),
-        phone=contact_data.get("phone"),
+        email=email,
+        phone=phone,
         website=website,
         notes=contact_data.get("notes"),
     )

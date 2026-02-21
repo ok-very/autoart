@@ -136,6 +136,27 @@ def _merge_records(
     # Collect categories
     categories = sorted({r["category"] for r in records})
 
+    # Propagate ground truth contact enrichment (first match wins)
+    contact_enrichment: dict[str, Any] = {}
+    ground_truth_match = None
+    for rec in records:
+        ce = rec.get("contact_enrichment")
+        if ce:
+            for k, v in ce.items():
+                if k not in contact_enrichment and v:
+                    contact_enrichment[k] = v
+        if not ground_truth_match and rec.get("ground_truth_match"):
+            ground_truth_match = rec["ground_truth_match"]
+
+    # Merge validation flags
+    all_validation_flags: list[str] = []
+    seen_flags: set[str] = set()
+    for rec in records:
+        for flag in rec.get("validation_flags", []):
+            if flag not in seen_flags:
+                seen_flags.add(flag)
+                all_validation_flags.append(flag)
+
     return {
         "artist_id": canonical_id,
         "display_name": display_name,
@@ -158,6 +179,9 @@ def _merge_records(
         "secondary_folders": [
             fl for fl in folder_locations if not fl["is_primary"]
         ],
+        "contact_enrichment": contact_enrichment,
+        "ground_truth_match": ground_truth_match,
+        "validation_flags": all_validation_flags,
     }
 
 
@@ -274,5 +298,7 @@ def _merge_identity_hints(records: list[dict[str, Any]]) -> dict[str, Any]:
         # First-wins for scalar fields
         if hints.get("pronouns") and "pronouns" not in merged:
             merged["pronouns"] = hints["pronouns"]
+        if hints.get("career_stage") and "career_stage" not in merged:
+            merged["career_stage"] = hints["career_stage"]
 
     return merged
