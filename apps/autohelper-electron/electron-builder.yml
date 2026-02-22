@@ -1,0 +1,40 @@
+appId: com.okvery.autohelper
+productName: AutoHelper
+copyright: Copyright © 2026 ok-very
+
+directories:
+  output: build
+
+files:
+  - dist/**/*
+  - package.json
+
+extraResources:
+  - from: python-embed
+    to: python
+    filter:
+      - "**/*"
+
+win:
+  icon: assets/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+  # Code signing via env vars: CSC_LINK (base64 .pfx) + CSC_KEY_PASSWORD
+  # electron-builder reads these automatically — no config needed here
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  installerIcon: assets/icon.ico
+  uninstallerIcon: assets/icon.ico
+
+publish:
+  provider: github
+  owner: ok-very
+  repo: autoart
+  releaseType: release
