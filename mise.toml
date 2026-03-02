@@ -1,0 +1,7 @@
+[tools]
+python = "3.13"
+node = "24"
+
+[env]
+# Use a project-local venv for Python deps (pyinstaller, autohelper requirements)
+VIRTUAL_ENV = "{{config_root}}/apps/autohelper/.venv"

@@ -1,0 +1,1102 @@
+[
+  {
+    "clickupId": "dry-1-0",
+    "name": "Project Introduction Meeting (client)",
+    "stage": 1,
+    "stageName": "PROJECT INITIATION",
+    "emailTemplate": "01.1 – Request Project Docs",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-1-1",
+    "name": "Submit BFA Fee Proposal to Developer",
+    "stage": 1,
+    "stageName": "PROJECT INITIATION",
+    "emailTemplate": "01.2 – Fee Proposal",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-1-2",
+    "name": "Signed Fee Proposal Received",
+    "stage": 1,
+    "stageName": "PROJECT INITIATION",
+    "emailTemplate": "",
+    "isMilestone": true,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-1-3",
+    "name": "Create Project Folder & Contacts",
+    "stage": 1,
+    "stageName": "PROJECT INITIATION",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-1-4",
+    "name": "Set Up Accounting Folder",
+    "stage": 1,
+    "stageName": "PROJECT INITIATION",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-1-5",
+    "name": "Draft & Submit Development Checklist",
+    "stage": 1,
+    "stageName": "PROJECT INITIATION",
+    "emailTemplate": "01.3 / 01.4 – Checklist",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-1-6",
+    "name": "Establish Project Timeline",
+    "stage": 1,
+    "stageName": "PROJECT INITIATION",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-2-0",
+    "name": "Client Project Kickoff Meeting",
+    "stage": 2,
+    "stageName": "PRELIMINARY PUBLIC ART PLAN (PPAP)",
+    "emailTemplate": "02.1 – Request Updated Files",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-2-1",
+    "name": "City Kickoff Meeting",
+    "stage": 2,
+    "stageName": "PRELIMINARY PUBLIC ART PLAN (PPAP)",
+    "emailTemplate": "01.4 – Submit Checklist to City",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-2-2",
+    "name": "Research PPAP",
+    "stage": 2,
+    "stageName": "PRELIMINARY PUBLIC ART PLAN (PPAP)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-2-3",
+    "name": "Write & Design PPAP",
+    "stage": 2,
+    "stageName": "PRELIMINARY PUBLIC ART PLAN (PPAP)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-2-4",
+    "name": "Submit PPAP to Client for Review",
+    "stage": 2,
+    "stageName": "PRELIMINARY PUBLIC ART PLAN (PPAP)",
+    "emailTemplate": "02.2 – Submit PPAP to Developer",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-2-5",
+    "name": "Submit PPAP to City + Confirm PAC Agenda",
+    "stage": 2,
+    "stageName": "PRELIMINARY PUBLIC ART PLAN (PPAP)",
+    "emailTemplate": "02.3 – Submit PPAP to City",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-2-6",
+    "name": "Request Developer Availability for PAC",
+    "stage": 2,
+    "stageName": "PRELIMINARY PUBLIC ART PLAN (PPAP)",
+    "emailTemplate": "02.4 – PAC Availability",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-2-7",
+    "name": "Send PAC Agenda + Confirm Attendees",
+    "stage": 2,
+    "stageName": "PRELIMINARY PUBLIC ART PLAN (PPAP)",
+    "emailTemplate": "02.5 / 02.6 – PAC Attendees",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-2-8",
+    "name": "PAC Meeting Details to Developer",
+    "stage": 2,
+    "stageName": "PRELIMINARY PUBLIC ART PLAN (PPAP)",
+    "emailTemplate": "02.7 – PAC Meeting Details",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-2-9",
+    "name": "Present PPAP at PAC Meeting",
+    "stage": 2,
+    "stageName": "PRELIMINARY PUBLIC ART PLAN (PPAP)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-2-10",
+    "name": "Approved PPAP",
+    "stage": 2,
+    "stageName": "PRELIMINARY PUBLIC ART PLAN (PPAP)",
+    "emailTemplate": "",
+    "isMilestone": true,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-2-11",
+    "name": "PPAP Follow-Up + Request Files for DPAP",
+    "stage": 2,
+    "stageName": "PRELIMINARY PUBLIC ART PLAN (PPAP)",
+    "emailTemplate": "02.8 – PPAP Follow-Up",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-2-12",
+    "name": "Submit BFA Invoice — PPAP",
+    "stage": 2,
+    "stageName": "PRELIMINARY PUBLIC ART PLAN (PPAP)",
+    "emailTemplate": "02.9 – BFA Invoice",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-3-0",
+    "name": "Develop DPAP",
+    "stage": 3,
+    "stageName": "DETAILED PUBLIC ART PLAN (DPAP)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-3-1",
+    "name": "Submit DPAP to Developer for Review",
+    "stage": 3,
+    "stageName": "DETAILED PUBLIC ART PLAN (DPAP)",
+    "emailTemplate": "03.1 – Submit DPAP to Developer",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-3-2",
+    "name": "Submit DPAP to City + City Follow-Up",
+    "stage": 3,
+    "stageName": "DETAILED PUBLIC ART PLAN (DPAP)",
+    "emailTemplate": "03.2 – DPAP to City",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-3-3",
+    "name": "Confirm Developer Availability for PAC",
+    "stage": 3,
+    "stageName": "DETAILED PUBLIC ART PLAN (DPAP)",
+    "emailTemplate": "03.3 – DPAP PAC Availability",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-3-4",
+    "name": "Send PAC Agenda + Confirm Attendees",
+    "stage": 3,
+    "stageName": "DETAILED PUBLIC ART PLAN (DPAP)",
+    "emailTemplate": "03.4 / 03.5 – DPAP PAC Attendees",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-3-5",
+    "name": "PAC Meeting Details to Developer",
+    "stage": 3,
+    "stageName": "DETAILED PUBLIC ART PLAN (DPAP)",
+    "emailTemplate": "03.6 – DPAP PAC Details",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-3-6",
+    "name": "Present DPAP at PAC Meeting",
+    "stage": 3,
+    "stageName": "DETAILED PUBLIC ART PLAN (DPAP)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-3-7",
+    "name": "DPAP Presentation Follow-Up",
+    "stage": 3,
+    "stageName": "DETAILED PUBLIC ART PLAN (DPAP)",
+    "emailTemplate": "03.7 – DPAP Follow-Up",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-3-8",
+    "name": "Approved DPAP",
+    "stage": 3,
+    "stageName": "DETAILED PUBLIC ART PLAN (DPAP)",
+    "emailTemplate": "",
+    "isMilestone": true,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-3-9",
+    "name": "10% Civic Program Contribution Reminder",
+    "stage": 3,
+    "stageName": "DETAILED PUBLIC ART PLAN (DPAP)",
+    "emailTemplate": "03.8 – 10% CPC Reminder",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-3-10",
+    "name": "City Follow-Up: DPAP Comments & Approval",
+    "stage": 3,
+    "stageName": "DETAILED PUBLIC ART PLAN (DPAP)",
+    "emailTemplate": "03.9 – City DPAP Follow-Up",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-3-11",
+    "name": "Submit BFA Invoice — DPAP",
+    "stage": 3,
+    "stageName": "DETAILED PUBLIC ART PLAN (DPAP)",
+    "emailTemplate": "03.10 – BFA Invoice",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-4-0",
+    "name": "Initiate Community Engagement Strategy",
+    "stage": 4,
+    "stageName": "COMMUNITY ENGAGEMENT  (if applicable)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-4-1",
+    "name": "Initiate Indigenous Engagement Strategy",
+    "stage": 4,
+    "stageName": "COMMUNITY ENGAGEMENT  (if applicable)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-5-0",
+    "name": "Prepare Terms of Reference",
+    "stage": 5,
+    "stageName": "ARTIST LONGLIST & SELECTION PANEL MEETING #1",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-5-1",
+    "name": "Provide Project Update to Developer",
+    "stage": 5,
+    "stageName": "ARTIST LONGLIST & SELECTION PANEL MEETING #1",
+    "emailTemplate": "04.1 – SP Next Steps",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-5-2",
+    "name": "Invite Selection Panel Members",
+    "stage": 5,
+    "stageName": "ARTIST LONGLIST & SELECTION PANEL MEETING #1",
+    "emailTemplate": "04.2 – Invite SP Members",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-5-3",
+    "name": "Invite Community Advisory Members",
+    "stage": 5,
+    "stageName": "ARTIST LONGLIST & SELECTION PANEL MEETING #1",
+    "emailTemplate": "04.3 – Invite CA Members",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-5-4",
+    "name": "Develop Artist Longlist",
+    "stage": 5,
+    "stageName": "ARTIST LONGLIST & SELECTION PANEL MEETING #1",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-5-5",
+    "name": "Submit Longlist to Developer for Review",
+    "stage": 5,
+    "stageName": "ARTIST LONGLIST & SELECTION PANEL MEETING #1",
+    "emailTemplate": "04.5 – Submit Longlist",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-5-6",
+    "name": "Coordinate SP #1 Meeting",
+    "stage": 5,
+    "stageName": "ARTIST LONGLIST & SELECTION PANEL MEETING #1",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-5-7",
+    "name": "Confirm meeting with developer",
+    "stage": 5,
+    "stageName": "ARTIST LONGLIST & SELECTION PANEL MEETING #1",
+    "emailTemplate": "04.6 – SP1 Confirm Dev",
+    "isMilestone": false,
+    "isSubtask": true,
+    "parentClickupId": "dry-5-6"
+  },
+  {
+    "clickupId": "dry-5-8",
+    "name": "Confirm with SP members",
+    "stage": 5,
+    "stageName": "ARTIST LONGLIST & SELECTION PANEL MEETING #1",
+    "emailTemplate": "04.7 – SP1 Confirm SP",
+    "isMilestone": false,
+    "isSubtask": true,
+    "parentClickupId": "dry-5-6"
+  },
+  {
+    "clickupId": "dry-5-9",
+    "name": "Confirm with community advisory",
+    "stage": 5,
+    "stageName": "ARTIST LONGLIST & SELECTION PANEL MEETING #1",
+    "emailTemplate": "04.7 – SP1 Confirm CA",
+    "isMilestone": false,
+    "isSubtask": true,
+    "parentClickupId": "dry-5-6"
+  },
+  {
+    "clickupId": "dry-5-10",
+    "name": "Submit Longlist to SP prior to meeting",
+    "stage": 5,
+    "stageName": "ARTIST LONGLIST & SELECTION PANEL MEETING #1",
+    "emailTemplate": "04.8 – SP1 Reminder",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-5-11",
+    "name": "SP #1 Meeting & Follow-Up",
+    "stage": 5,
+    "stageName": "ARTIST LONGLIST & SELECTION PANEL MEETING #1",
+    "emailTemplate": "04.9 – SP1 Follow-Up",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-5-12",
+    "name": "Invite Shortlisted Artists",
+    "stage": 5,
+    "stageName": "ARTIST LONGLIST & SELECTION PANEL MEETING #1",
+    "emailTemplate": "04.10 – Artist Shortlist Invite",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-5-13",
+    "name": "Artist Longlist Meeting Complete",
+    "stage": 5,
+    "stageName": "ARTIST LONGLIST & SELECTION PANEL MEETING #1",
+    "emailTemplate": "",
+    "isMilestone": true,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-6-0",
+    "name": "Coordinate Artist Orientation Meeting",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "05.1 – AOM Coordination",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-6-1",
+    "name": "Confirm with artists (+ project files)",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "05.3 – AOM Confirm Artists",
+    "isMilestone": false,
+    "isSubtask": true,
+    "parentClickupId": "dry-6-0"
+  },
+  {
+    "clickupId": "dry-6-2",
+    "name": "Confirm with community advisory",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "05.4 – AOM Confirm CA",
+    "isMilestone": false,
+    "isSubtask": true,
+    "parentClickupId": "dry-6-0"
+  },
+  {
+    "clickupId": "dry-6-3",
+    "name": "Group reminder + follow-up",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "05.5 / 05.6 – AOM Reminder",
+    "isMilestone": false,
+    "isSubtask": true,
+    "parentClickupId": "dry-6-0"
+  },
+  {
+    "clickupId": "dry-6-4",
+    "name": "Request Artist Honorarium Invoices",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "06.6 – Artist Honorarium Request",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-6-5",
+    "name": "Request SP Honorarium Invoices + Submit to Developer",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "06.7 / 06.8 – SP Honorarium",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-6-6",
+    "name": "Coordinate SP #2 Meeting",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-6-7",
+    "name": "Confirm with developer",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "06.1 – SP2 Confirm Dev",
+    "isMilestone": false,
+    "isSubtask": true,
+    "parentClickupId": "dry-6-6"
+  },
+  {
+    "clickupId": "dry-6-8",
+    "name": "Confirm with SP members",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "06.2 – SP2 Confirm SP",
+    "isMilestone": false,
+    "isSubtask": true,
+    "parentClickupId": "dry-6-6"
+  },
+  {
+    "clickupId": "dry-6-9",
+    "name": "Confirm with community advisory",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "06.4 – SP2 Confirm CA",
+    "isMilestone": false,
+    "isSubtask": true,
+    "parentClickupId": "dry-6-6"
+  },
+  {
+    "clickupId": "dry-6-10",
+    "name": "Confirm presentation times with artists",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "06.3 / 06.5 – SP2 Confirm Artists",
+    "isMilestone": false,
+    "isSubtask": true,
+    "parentClickupId": "dry-6-6"
+  },
+  {
+    "clickupId": "dry-6-11",
+    "name": "Submit Concept Proposals to Developer + SP",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "06.11 – Submit Proposals",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-6-12",
+    "name": "SP #2 Meeting & Post-Meeting Follow-Up",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "06.12 – SP2 Follow-Up",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-6-13",
+    "name": "Notify Successful Artist",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "06.14 – Successful Artist",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-6-14",
+    "name": "Notify Unsuccessful Artists",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "06.15 – Unsuccessful Artists",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-6-15",
+    "name": "Final Artist Selected",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "",
+    "isMilestone": true,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-6-16",
+    "name": "Submit BFA Invoice — Artist Selection",
+    "stage": 6,
+    "stageName": "ARTIST CONCEPT PROPOSALS & SELECTION PANEL MEETING #2",
+    "emailTemplate": "BFA Invoice",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-7-0",
+    "name": "Artist Kick-Off Meeting",
+    "stage": 7,
+    "stageName": "ARTIST CONTRACT",
+    "emailTemplate": "07.1 / 07.2 – Kick-Off",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-7-1",
+    "name": "Artist Kick-Off Follow-Up + Meeting Notes",
+    "stage": 7,
+    "stageName": "ARTIST CONTRACT",
+    "emailTemplate": "07.3 – Kick-Off Follow-Up",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-7-2",
+    "name": "Draft Artist Contract Agreement",
+    "stage": 7,
+    "stageName": "ARTIST CONTRACT",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-7-3",
+    "name": "Submit Contract to Developer for Review",
+    "stage": 7,
+    "stageName": "ARTIST CONTRACT",
+    "emailTemplate": "07.4 – Contract to Developer",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-7-4",
+    "name": "Submit Contract to Artist for Review",
+    "stage": 7,
+    "stageName": "ARTIST CONTRACT",
+    "emailTemplate": "07.5 – Contract to Artist",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-7-5",
+    "name": "Execute Contract via DocuSign",
+    "stage": 7,
+    "stageName": "ARTIST CONTRACT",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-7-6",
+    "name": "Executed Artist Contract",
+    "stage": 7,
+    "stageName": "ARTIST CONTRACT",
+    "emailTemplate": "",
+    "isMilestone": true,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-7-7",
+    "name": "Contract Execution — Full Group Notification",
+    "stage": 7,
+    "stageName": "ARTIST CONTRACT",
+    "emailTemplate": "07.6 – Contract Executed",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-7-8",
+    "name": "Submit Interim Report to City",
+    "stage": 7,
+    "stageName": "ARTIST CONTRACT",
+    "emailTemplate": "07.8 – Interim Report to City",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-7-9",
+    "name": "Artist Invoice — Contract Execution",
+    "stage": 7,
+    "stageName": "ARTIST CONTRACT",
+    "emailTemplate": "07.7 – Artist Invoice Request",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-7-10",
+    "name": "Submit BFA Invoice — Artist Contract",
+    "stage": 7,
+    "stageName": "ARTIST CONTRACT",
+    "emailTemplate": "BFA Invoice",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-8-0",
+    "name": "Detailed Design Kick-Off Meeting",
+    "stage": 8,
+    "stageName": "DETAILED DESIGN",
+    "emailTemplate": "07.9 – DD Kick-Off",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-8-1",
+    "name": "Request Proof of Insurance from Artist",
+    "stage": 8,
+    "stageName": "DETAILED DESIGN",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-8-2",
+    "name": "Request Progress Design Drawings",
+    "stage": 8,
+    "stageName": "DETAILED DESIGN",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-8-3",
+    "name": "Submit Design Drawings & Stamped Engineering",
+    "stage": 8,
+    "stageName": "DETAILED DESIGN",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-8-4",
+    "name": "Artist Invoice — Detailed Design",
+    "stage": 8,
+    "stageName": "DETAILED DESIGN",
+    "emailTemplate": "07.7 – Artist Invoice Request",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-9-0",
+    "name": "Confirm Commencement of Artwork Fabrication",
+    "stage": 9,
+    "stageName": "FABRICATION  (50% → 100%)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-9-1",
+    "name": "Confirm 50% Fabrication + Share Evidence",
+    "stage": 9,
+    "stageName": "FABRICATION  (50% → 100%)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-9-2",
+    "name": "Artist Invoice — 50% Fabrication",
+    "stage": 9,
+    "stageName": "FABRICATION  (50% → 100%)",
+    "emailTemplate": "07.7 – Artist Invoice Request",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-9-3",
+    "name": "Confirm 100% Fabrication + Share Evidence with Client",
+    "stage": 9,
+    "stageName": "FABRICATION  (50% → 100%)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-9-4",
+    "name": "Artist Invoice — 100% Fabrication",
+    "stage": 9,
+    "stageName": "FABRICATION  (50% → 100%)",
+    "emailTemplate": "07.7 – Artist Invoice Request",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-9-5",
+    "name": "Submit BFA Invoice — Fabrication",
+    "stage": 9,
+    "stageName": "FABRICATION  (50% → 100%)",
+    "emailTemplate": "BFA Invoice",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-10-0",
+    "name": "Coordinate Pre-Installation Meeting",
+    "stage": 10,
+    "stageName": "INSTALLATION",
+    "emailTemplate": "08.1 – Pre-Install Meeting",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-10-1",
+    "name": "Close-Out Timeline Communication",
+    "stage": 10,
+    "stageName": "INSTALLATION",
+    "emailTemplate": "08.2 – Close-Out Timeline",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-10-2",
+    "name": "Confirm Artwork Installation Date",
+    "stage": 10,
+    "stageName": "INSTALLATION",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-10-3",
+    "name": "Artwork Installed",
+    "stage": 10,
+    "stageName": "INSTALLATION",
+    "emailTemplate": "",
+    "isMilestone": true,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-10-4",
+    "name": "Submit BFA Invoice — Installation",
+    "stage": 10,
+    "stageName": "INSTALLATION",
+    "emailTemplate": "BFA Invoice",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-10-5",
+    "name": "Artist Invoice — Installation",
+    "stage": 10,
+    "stageName": "INSTALLATION",
+    "emailTemplate": "07.7 – Artist Invoice Request",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-0",
+    "name": "Prepare Plaque Mock-Up + Submit to Artist / Developer",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "09.2 – Plaque Approval",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-1",
+    "name": "Submit Plaque to Fabricator + Coordinate Installation",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-2",
+    "name": "Final Documentation — Request from Artist",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "09.1 – Final Docs to Artist",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-3",
+    "name": "Execute Letter of Acceptance (DocuSign)",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-4",
+    "name": "Execute Transfer of Title (DocuSign)",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-5",
+    "name": "Execute Statutory Declaration",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-6",
+    "name": "Request Professional Photography",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-7",
+    "name": "Receive Artist Statement, Bio & Artwork Specs",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-8",
+    "name": "Receive Maintenance Manual from Artist",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-9",
+    "name": "Draft Public Art Report (InDesign)",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "09.3 – Final Docs Update to Developer",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-10",
+    "name": "Submit Report to Developer for Review",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-11",
+    "name": "Submit Final Documentation Package to City",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "09.5 – Final Docs to City",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-12",
+    "name": "City Inspection (Burnaby / if applicable)",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-13",
+    "name": "Fill Out City Public Art Registry Form",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-14",
+    "name": "Final Public Art Report Submitted",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "",
+    "isMilestone": true,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-15",
+    "name": "Artist Invoice — Final",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "07.7 – Artist Invoice Request",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  },
+  {
+    "clickupId": "dry-11-16",
+    "name": "Submit BFA Invoice — Final",
+    "stage": 11,
+    "stageName": "CLOSE-OUT  (Plaque · Legal · Photography · Final Report)",
+    "emailTemplate": "BFA Invoice",
+    "isMilestone": false,
+    "isSubtask": false,
+    "parentClickupId": null
+  }
+]

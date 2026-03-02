@@ -1,0 +1,21 @@
+{
+  "name": "bfa-migration",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BFA Vancouver Project Template migration to ClickUp",
+  "type": "module",
+  "scripts": {
+    "migrate": "tsx src/migrate.ts",
+    "migrate:dry": "tsx src/migrate.ts --dry-run",
+    "clean": "tsx src/clean.ts"
+  },
+  "dependencies": {
+    "@autoart/clickup": "workspace:*",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "tsx": "catalog:",
+    "@types/node": "catalog:"
+  }
+}
