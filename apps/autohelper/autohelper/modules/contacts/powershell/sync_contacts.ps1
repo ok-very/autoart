@@ -47,24 +47,27 @@ try {
     # Connect to Exchange Online
     $connectParams = @{}
 
+    $connectParams = @{ ShowBanner = $false }
+
     if ($auth.app_id -and $auth.cert_thumbprint -and $auth.organization) {
         # Certificate-based auth (service mode)
-        $connectParams = @{
-            AppId               = $auth.app_id
-            CertificateThumbprint = $auth.cert_thumbprint
-            Organization        = $auth.organization
-            ShowBanner          = $false
-        }
+        $connectParams.AppId = $auth.app_id
+        $connectParams.CertificateThumbprint = $auth.cert_thumbprint
+        $connectParams.Organization = $auth.organization
     }
-    elseif ($auth.upn) {
-        # Interactive/credential-based auth (tray/dev mode)
-        $connectParams = @{
-            UserPrincipalName = $auth.upn
-            ShowBanner        = $false
-        }
+    elseif ($auth.email -and $auth.password) {
+        # Credential-based auth (email + password)
+        $secPass = ConvertTo-SecureString $auth.password -AsPlainText -Force
+        $cred = New-Object System.Management.Automation.PSCredential($auth.email, $secPass)
+        $connectParams.Credential = $cred
+        $connectParams.UserPrincipalName = $auth.email
+    }
+    elseif ($auth.email) {
+        # UPN-only
+        $connectParams.UserPrincipalName = $auth.email
     }
     else {
-        $result.errors += "No valid authentication credentials provided"
+        $result.errors += "No credentials configured. Add email and password in Settings > Exchange Connection."
         $result | ConvertTo-Json -Compress
         exit 1
     }

@@ -12,6 +12,10 @@
 
   // Active pill filters
   let activeCategories = new Set();
+  let activeIdentities = new Set();
+
+  // Identity terms that match the "Indigenous" pill
+  const INDIGENOUS_TERMS = ["indigenous", "first nations", "métis", "metis", "inuit", "two-spirit"];
 
   // Lucide icon SVGs (inline)
   const ICO = {
@@ -61,29 +65,30 @@
   // ---------------------------------------------------------------
   function buildPills() {
     const catContainer = document.getElementById("category-pills");
-    const categories = [
-      { key: "indigenous", label: "Indigenous" },
-      { key: "public", label: "Public Art" },
-      { key: "private", label: "Private Art" },
-      { key: "corporate", label: "Corporate Art" },
+    const pills = [
+      { key: "indigenous", label: "Indigenous", type: "identity" },
+      { key: "public", label: "Public Art", type: "category" },
+      { key: "private", label: "Private Art", type: "category" },
+      { key: "corporate", label: "Corporate Art", type: "category" },
     ];
-    catContainer.innerHTML = categories.map(c =>
-      `<button class="pill" data-category="${c.key}">${c.label}</button>`
+    catContainer.innerHTML = pills.map(p =>
+      `<button class="pill" data-key="${p.key}" data-filter-type="${p.type}">${p.label}</button>`
     ).join("");
     catContainer.querySelectorAll(".pill").forEach(p => {
       p.addEventListener("click", () => {
-        const cat = p.dataset.category;
-        if (activeCategories.has(cat)) {
-          activeCategories.delete(cat);
-          p.classList.remove("active", "active-" + cat);
+        const key = p.dataset.key;
+        const filterType = p.dataset.filterType;
+        const store = filterType === "identity" ? activeIdentities : activeCategories;
+        if (store.has(key)) {
+          store.delete(key);
+          p.classList.remove("active", "active-" + key);
         } else {
-          activeCategories.add(cat);
-          p.classList.add("active", "active-" + cat);
+          store.add(key);
+          p.classList.add("active", "active-" + key);
         }
         applyFilters();
       });
     });
-
   }
 
   // ---------------------------------------------------------------
@@ -191,6 +196,14 @@
         if (!(a.categories || []).some(c => activeCategories.has(c))) return false;
       }
 
+      // Pill filters: identity (e.g. indigenous)
+      if (activeIdentities.size > 0) {
+        const allId = a._all_identity.map(t => t.toLowerCase());
+        if (activeIdentities.has("indigenous")) {
+          if (!INDIGENOUS_TERMS.some(term => allId.some(t => t.includes(term)))) return false;
+        }
+      }
+
       return true;
     });
 
@@ -220,6 +233,7 @@
   function clearFilters() {
     document.getElementById("search").value = "";
     activeCategories.clear();
+    activeIdentities.clear();
     document.querySelectorAll(".pill").forEach(p => p.classList.remove("active", "active-indigenous", "active-public", "active-private", "active-corporate"));
     applyFilters();
   }

@@ -99,21 +99,18 @@ class ArtistService:
             self._log("Scan started")
             self._log(f"Storage root: {storage_root}")
 
-            # Build multi-pass orchestrator
+            # Build multi-pass orchestrator from lexicon categories
             lex = get_lexicon()
-            passes = [
-                GeneralPass("indigenous"),
-                GeneralPass("public"),
-                GeneralPass("private"),
-                GeneralPass("corporate"),
-            ]
+            passes = [GeneralPass(cat.key) for cat in lex.categories]
+            # Ground truth CSV: prefer config setting, fall back to lexicon
+            gt_csv = settings.artist_ground_truth_csv or lex.ground_truth_csv_path
             orchestrator = ScanOrchestrator(
                 passes=passes,
-                ground_truth_csv=lex.ground_truth_csv_path,
+                ground_truth_csv=gt_csv,
             )
 
             # Scan via domain-specific passes
-            records = orchestrator.run(
+            records, admin_files = orchestrator.run(
                 Path(storage_root),
                 progress_cb=self._log,
                 cancel=self._cancel,
@@ -162,10 +159,16 @@ class ArtistService:
 
             db.commit()
 
+            # Cache admin files (unattributed)
+            if admin_files:
+                self._cache_admin_files(db, admin_files, run_id)
+                self._log(f"Cached {len(admin_files)} admin files")
+
             # Update scan run
             stats = {
                 "folder_records": len(records),
                 "artists": len(resolved),
+                "admin_files": len(admin_files),
             }
             self._finish_scan_run(db, run_id, "completed", stats)
 
@@ -760,6 +763,97 @@ class ArtistService:
             "UPDATE artists SET manifest_json = ?, updated_at = datetime('now') WHERE artist_id = ?",
             (json.dumps(manifest, ensure_ascii=False), artist_id),
         )
+        db.commit()
+
+    # ------------------------------------------------------------------
+    # Admin files (unattributed files from non-artist folders)
+    # ------------------------------------------------------------------
+
+    def get_admin_files(self) -> list[dict[str, Any]]:
+        """Return unattributed admin files with candidate matches."""
+        db = get_db()
+        try:
+            rows = db.execute(
+                """SELECT file_id, file_path, folder_name, category, nation,
+                          file_type, candidate_artist_id, match_score,
+                          attributed_to, scan_run_id, created_at
+                   FROM admin_files
+                   WHERE attributed_to IS NULL
+                   ORDER BY folder_name, file_path"""
+            ).fetchall()
+        except Exception:
+            return []
+
+        results = []
+        for r in rows:
+            entry: dict[str, Any] = {
+                "file_id": r[0],
+                "file_path": r[1],
+                "file_name": os.path.basename(r[1]),
+                "folder_name": r[2],
+                "category": r[3],
+                "nation": r[4],
+                "file_type": r[5],
+                "candidate_artist_id": r[6],
+                "match_score": r[7],
+                "created_at": r[10],
+            }
+            # Look up candidate artist display name
+            if r[6]:
+                artist_row = db.execute(
+                    "SELECT display_name FROM artists WHERE artist_id = ?",
+                    (r[6],),
+                ).fetchone()
+                entry["candidate_display_name"] = artist_row[0] if artist_row else None
+            else:
+                entry["candidate_display_name"] = None
+            results.append(entry)
+
+        return results
+
+    def attribute_file(self, file_id: str, artist_id: str) -> dict[str, str]:
+        """Manually attribute an admin file to an artist."""
+        db = get_db()
+        row = db.execute(
+            "SELECT file_id FROM admin_files WHERE file_id = ?",
+            (file_id,),
+        ).fetchone()
+        if not row:
+            return {"error": "File not found"}
+
+        db.execute(
+            "UPDATE admin_files SET attributed_to = ? WHERE file_id = ?",
+            (artist_id, file_id),
+        )
+        db.commit()
+        return {"status": "ok", "file_id": file_id, "artist_id": artist_id}
+
+    def _cache_admin_files(
+        self, db: Any, admin_files: list[dict[str, Any]], run_id: str,
+    ) -> None:
+        """Insert admin files into the admin_files table."""
+        # Clear previous run's unattributed files
+        db.execute("DELETE FROM admin_files WHERE attributed_to IS NULL")
+
+        for af in admin_files:
+            file_id = generate_request_id()
+            db.execute(
+                """INSERT INTO admin_files
+                   (file_id, file_path, folder_name, category, nation,
+                    file_type, candidate_artist_id, match_score, scan_run_id)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    file_id,
+                    af["file_path"],
+                    af["folder_name"],
+                    af["category"],
+                    af.get("nation"),
+                    af.get("file_type"),
+                    af.get("candidate_artist_id"),
+                    af.get("match_score"),
+                    run_id,
+                ),
+            )
         db.commit()
 
     # ------------------------------------------------------------------

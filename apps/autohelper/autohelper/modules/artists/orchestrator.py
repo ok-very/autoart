@@ -35,8 +35,11 @@ class ScanOrchestrator:
         storage_root: Path,
         progress_cb: Callable[[str], None],
         cancel: threading.Event | None = None,
-    ) -> list[dict[str, Any]]:
-        """Execute all passes, validate, enrich, reconcile."""
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        """Execute all passes, validate, enrich, reconcile.
+
+        Returns (records, admin_files).
+        """
 
         # Load ground truth
         if self._gt_csv:
@@ -48,6 +51,7 @@ class ScanOrchestrator:
             )
 
         all_records: list[dict[str, Any]] = []
+        all_admin_files: list[dict[str, Any]] = []
 
         for domain_pass in self._passes:
             if cancel and cancel.is_set():
@@ -57,6 +61,10 @@ class ScanOrchestrator:
             records = domain_pass.execute(storage_root, progress_cb, cancel)
             progress_cb(f"  {domain_pass.label}: {len(records)} records")
 
+            # Collect admin files from the pass
+            if hasattr(domain_pass, "admin_files"):
+                all_admin_files.extend(domain_pass.admin_files)
+
             # Ground truth validation + enrichment per record
             if self._ground_truth:
                 self._validate_and_enrich(records, domain_pass.domain_key, progress_cb)
@@ -64,14 +72,17 @@ class ScanOrchestrator:
             all_records.extend(records)
 
         if cancel and cancel.is_set():
-            return all_records
+            return all_records, all_admin_files
 
         # Cross-domain reconciliation
         progress_cb("Cross-domain reconciliation...")
         all_records = self._cross_domain_reconcile(all_records, progress_cb)
 
+        if all_admin_files:
+            progress_cb(f"Admin files collected: {len(all_admin_files)}")
+
         progress_cb(f"Orchestrator complete: {len(all_records)} total records")
-        return all_records
+        return all_records, all_admin_files
 
     def _validate_and_enrich(
         self,

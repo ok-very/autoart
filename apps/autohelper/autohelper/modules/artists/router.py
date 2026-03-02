@@ -177,6 +177,25 @@ async def resolve_reconciliation(body: dict[str, Any]) -> dict[str, str]:
 
 
 # ------------------------------------------------------------------
+# Admin files (unattributed files from non-artist folders)
+# ------------------------------------------------------------------
+
+@router.get("/admin-files")
+async def get_admin_files() -> list[dict]:
+    """List unattributed admin files with candidate matches."""
+    return get_artist_service().get_admin_files()
+
+
+@router.post("/admin-files/{file_id}/attribute")
+async def attribute_file(file_id: str, body: dict[str, Any]) -> dict[str, str]:
+    """Manually attribute an admin file to an artist."""
+    artist_id = body.get("artist_id")
+    if not artist_id:
+        raise HTTPException(status_code=400, detail="Missing artist_id")
+    return get_artist_service().attribute_file(file_id, artist_id)
+
+
+# ------------------------------------------------------------------
 # Single artist (parameterised — must come after all fixed paths)
 # ------------------------------------------------------------------
 

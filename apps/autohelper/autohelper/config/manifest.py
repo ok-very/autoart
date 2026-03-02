@@ -168,6 +168,25 @@ FIELDS: tuple[FieldDef, ...] = (
         default=False,
         depends_on="contact_sync_enabled",
     ),
+    # -- Exchange --
+    FieldDef(
+        key="exchange_email",
+        label="Email",
+        section="exchange",
+        field_type="string",
+        default="",
+        placeholder="admin@yourdomain.com",
+        description="Exchange Online admin email (UPN)",
+    ),
+    FieldDef(
+        key="exchange_password",
+        label="Password",
+        section="exchange",
+        field_type="password",
+        default="",
+        placeholder="••••••••",
+        description="Exchange Online password",
+    ),
     # -- Artists --
     FieldDef(
         key="artist_storage_root",
@@ -177,6 +196,15 @@ FIELDS: tuple[FieldDef, ...] = (
         default="",
         description="Company file storage root (e.g. OneDrive sync folder)",
         placeholder=r"C:\Users\you\OneDrive\Company Files",
+    ),
+    FieldDef(
+        key="artist_ground_truth_csv",
+        label="Ground Truth CSV",
+        section="artists",
+        field_type="string",
+        default="",
+        description="Path to ground truth CSV for artist reconciliation",
+        placeholder=r"C:\path\to\final_7450_full.csv",
     ),
     FieldDef(
         key="artist_scan_enabled",
@@ -211,28 +239,70 @@ FIELDS_BY_SECTION: dict[str, list[FieldDef]] = {}
 for _f in FIELDS:
     FIELDS_BY_SECTION.setdefault(_f.section, []).append(_f)
 
-# Ordered section labels for UI rendering
-SECTION_LABELS: dict[str, str] = {
-    "general": "General Settings",
-    "mail": "Mail Settings",
-    "contacts": "Contact Sync",
-    "exchange": "Exchange Connection",
-    "artists": "Artist Records",
-}
+@dataclass(frozen=True)
+class ActionDef:
+    """A section-level action button (e.g. 'Test Connection')."""
+
+    label: str  # Button text
+    endpoint: str  # API endpoint to call (POST)
+    id: str  # HTML element id
+    status_key: str = ""  # If set, add a status div with this id
+
+
+# Ordered section definitions for UI rendering
+@dataclass(frozen=True)
+class SectionDef:
+    id: str
+    label: str
+    actions: tuple[ActionDef, ...] = ()
+
+
+SECTIONS: tuple[SectionDef, ...] = (
+    SectionDef(id="general", label="General Settings"),
+    SectionDef(id="mail", label="Mail Settings"),
+    SectionDef(id="contacts", label="Contact Sync"),
+    SectionDef(
+        id="exchange",
+        label="Exchange Connection",
+        actions=(
+            ActionDef(
+                label="Test Connection",
+                endpoint="/contacts/exchange/test",
+                id="btn-exchange-test",
+                status_key="exchange-status",
+            ),
+        ),
+    ),
+    SectionDef(id="artists", label="Artist Records"),
+)
+
+SECTION_LABELS: dict[str, str] = {s.id: s.label for s in SECTIONS}
+SECTIONS_BY_ID: dict[str, SectionDef] = {s.id: s for s in SECTIONS}
 
 
 def schema_as_dict() -> dict[str, Any]:
     """Serialize the manifest as a JSON-friendly dict for the /config/schema endpoint."""
     sections = []
-    for section_id, label in SECTION_LABELS.items():
-        fields = FIELDS_BY_SECTION.get(section_id, [])
+    for sec in SECTIONS:
+        fields = FIELDS_BY_SECTION.get(sec.id, [])
         admin_only = any(f.admin_only for f in fields) and all(f.admin_only for f in fields)
-        sections.append({
-            "id": section_id,
-            "label": label,
+        entry: dict[str, Any] = {
+            "id": sec.id,
+            "label": sec.label,
             "admin_only": admin_only,
             "fields": [_field_to_dict(f) for f in fields],
-        })
+        }
+        if sec.actions:
+            entry["actions"] = [
+                {
+                    "label": a.label,
+                    "endpoint": a.endpoint,
+                    "id": a.id,
+                    **({"status_key": a.status_key} if a.status_key else {}),
+                }
+                for a in sec.actions
+            ]
+        sections.append(entry)
     return {"sections": sections}
 
 

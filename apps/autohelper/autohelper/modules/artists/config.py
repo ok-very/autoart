@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -77,12 +78,20 @@ class ArtistLexicon:
     # Per-artist identity overrides: "category:nation:folder_name" -> {identities, affiliations, locations, pronouns}
     artist_identity_overrides: dict[str, dict] = field(default_factory=dict)
 
+    # Regex patterns for folder names that are NOT artists (admin/org folders)
+    non_artist_patterns: list[str] = field(default_factory=list)
+
     # Path to the ground-truth contacts CSV for artist validation / enrichment
     ground_truth_csv_path: str | None = None
 
     # Derived lookup: (category, folder_name) -> canonical_id
     multi_folder_lookup: dict[tuple[str, str], str] = field(
         default_factory=dict, repr=False
+    )
+
+    # Compiled regexes (not serialized)
+    _non_artist_compiled: list[re.Pattern] = field(
+        default_factory=list, repr=False
     )
 
 
@@ -92,12 +101,9 @@ class ArtistLexicon:
 
 DEFAULT_CATEGORIES: list[CategoryProfile] = [
     CategoryProfile(
-        "indigenous", "Indigenous Artists", "nation_based", "Indigenous Artists"
-    ),
-    CategoryProfile(
         "public",
         "1. PUBLIC ART/ARTIST INFORMATION/ARTIST Folders",
-        "nation_based",
+        "flat",
         "Public Art",
     ),
     CategoryProfile(
@@ -287,15 +293,53 @@ DEFAULT_NESTED_ARTISTS: dict[str, dict] = {
     },
 }
 
+# Regex patterns that match folder names which are NOT artists.
+# Applied to the raw folder name before any name parsing.
+DEFAULT_NON_ARTIST_PATTERNS: list[str] = [
+    # Date-prefixed folders (submissions, batches)
+    r"^\d{4}[_\-]\d{2}",
+    # Admin prefix conventions
+    r"^a_",
+    # Administrative / organizational folder names
+    r"(?i)^(artist\s*(roster|list)|artwork\s*information|available\s*works)$",
+    r"(?i)^(cloud\s*details|information)$",
+    r"(?i)^cover\s*letter",
+    r"(?i)^(emails?|corres?pondence|corresp[oa]ndence)$",
+    r"(?i)^(first\s*nations[_\s]various)",
+    r"(?i)^(templates?|archive|backup|old|admin|misc|general)$",
+    r"(?i)^(shortlist|longlist|jury|selection|budget)$",
+    r"(?i)^(meeting\s*notes?|minutes|agenda|reports?|schedules?)$",
+    r"(?i)^(contracts?|invoices?|receipts?|purchase\s*orders?)$",
+    # Proposal/submission/list folders (not artist names)
+    r"(?i)\bproposals?\b",
+    r"(?i)\bsubmissions?\b",
+    r"(?i)^project\s*list",
+    r"(?i)\bEOI\b.*\b(submission|list)",
+    # Project folders, cancelled/on-hold items
+    r"(?i)\(cancelled\)",
+    r"(?i)\bcancelled\s+project\b",
+    r"(?i)\(on\s*hold\)",
+    r"(?i)\bproject\s+with\b",
+    # Browser "Save Page As" artifact folders (e.g. "ADAM PARKER SMITH_files")
+    r"_files$",
+    # Document/asset folders mistaken for artists
+    r"(?i)^bio(\s+and\s+|\s*\+\s*|\s|$)",
+    r"(?i)^cv(\s|$)",
+    r"(?i)^info(\s|$)",
+    # Company abbreviations / internal names
+    r"(?i)^bfa$",
+    # EOI folders (broader than just "EOI submission/list")
+    r"(?i)\bEOI\b",
+]
+
 DEFAULT_DOMAIN_CONFIGS: dict[str, DomainConfig] = {
-    "indigenous": DomainConfig(key="indigenous", confidence=1.0),
     "public":     DomainConfig(key="public",     confidence=0.85),
     "private":    DomainConfig(key="private",     confidence=0.7),
     "corporate":  DomainConfig(key="corporate",   confidence=0.6),
 }
 
 # Category priority for choosing the primary folder
-CATEGORY_PRIORITY: list[str] = ["indigenous", "public", "private", "corporate"]
+CATEGORY_PRIORITY: list[str] = ["public", "private", "corporate"]
 
 
 # ---------------------------------------------------------------------------
@@ -352,14 +396,66 @@ def load_lexicon() -> ArtistLexicon:
 
 
 def _auto_heal(path: Path, raw: dict[str, Any], lex: ArtistLexicon) -> None:
-    """Re-save the lexicon if _parse_lexicon filled in missing keys."""
+    """Re-save the lexicon if _parse_lexicon filled in missing keys or patterns."""
+    dirty = False
     canonical = _serialize_lexicon(lex)
-    if canonical != raw:
-        added = set(canonical.keys()) - set(raw.keys())
-        if added:
-            logger.info("Lexicon auto-heal: new keys %s written to %s", added, path)
+
+    # Detect new top-level keys
+    added_keys = set(canonical.keys()) - set(raw.keys())
+    if added_keys:
+        logger.info("Lexicon auto-heal: new keys %s", added_keys)
+        dirty = True
+
+    # Merge new default non_artist_patterns into existing list
+    saved_patterns = set(lex.non_artist_patterns)
+    for pat in DEFAULT_NON_ARTIST_PATTERNS:
+        if pat not in saved_patterns:
+            lex.non_artist_patterns.append(pat)
+            logger.info("Lexicon auto-heal: added non_artist_pattern %r", pat)
+            dirty = True
+
+    # Sync category layouts with defaults (fixes misconfigured layouts)
+    default_cat_map = {c.key: c for c in DEFAULT_CATEGORIES}
+    updated_cats = []
+    removed_keys = set()
+    for cat in lex.categories:
+        default = default_cat_map.get(cat.key)
+        if default is None:
+            # Category removed from defaults — drop it
+            logger.info("Lexicon auto-heal: removing obsolete category %r", cat.key)
+            removed_keys.add(cat.key)
+            dirty = True
+            continue
+        if cat.layout != default.layout:
+            logger.info(
+                "Lexicon auto-heal: category %r layout %r -> %r",
+                cat.key, cat.layout, default.layout,
+            )
+            cat.layout = default.layout
+            dirty = True
+        if cat.rel_path != default.rel_path:
+            logger.info(
+                "Lexicon auto-heal: category %r rel_path %r -> %r",
+                cat.key, cat.rel_path, default.rel_path,
+            )
+            cat.rel_path = default.rel_path
+            dirty = True
+        updated_cats.append(cat)
+    # Add any new default categories not already present
+    existing_keys = {c.key for c in updated_cats}
+    for dc in DEFAULT_CATEGORIES:
+        if dc.key not in existing_keys:
+            logger.info("Lexicon auto-heal: adding new category %r", dc.key)
+            updated_cats.append(dc)
+            dirty = True
+    if dirty:
+        lex.categories = updated_cats
+
+    if dirty:
+        _compile_patterns(lex)
         try:
             save_lexicon(lex)
+            logger.info("Lexicon auto-healed and saved to %s", path)
         except Exception:
             logger.warning("Auto-heal save failed for %s", path, exc_info=True)
 
@@ -395,9 +491,31 @@ def _build_default_lexicon() -> ArtistLexicon:
         nested_artists=dict(DEFAULT_NESTED_ARTISTS),
         domain_configs=dict(DEFAULT_DOMAIN_CONFIGS),
         artist_identity_overrides={},
+        non_artist_patterns=list(DEFAULT_NON_ARTIST_PATTERNS),
     )
     _rebuild_lookup(lex)
+    _compile_patterns(lex)
     return lex
+
+
+def _compile_patterns(lex: ArtistLexicon) -> None:
+    """Compile non_artist_patterns into regex objects."""
+    lex._non_artist_compiled = []
+    for pat in lex.non_artist_patterns:
+        try:
+            lex._non_artist_compiled.append(re.compile(pat))
+        except re.error:
+            logger.warning("Invalid non_artist_pattern regex: %s", pat)
+
+
+def is_artist_folder(folder_name: str) -> bool:
+    """Return True if folder_name looks like a real artist, False if it matches
+    a known non-artist pattern (admin/org folder)."""
+    lex = get_lexicon()
+    for rx in lex._non_artist_compiled:
+        if rx.search(folder_name):
+            return False
+    return True
 
 
 def _rebuild_lookup(lex: ArtistLexicon) -> None:
@@ -438,9 +556,11 @@ def _parse_lexicon(data: dict[str, Any]) -> ArtistLexicon:
             for k, v in data.get("domain_configs", DEFAULT_DOMAIN_CONFIGS).items()
         },
         artist_identity_overrides=data.get("artist_identity_overrides", {}),
+        non_artist_patterns=data.get("non_artist_patterns", list(DEFAULT_NON_ARTIST_PATTERNS)),
         ground_truth_csv_path=data.get("ground_truth_csv_path"),
     )
     _rebuild_lookup(lex)
+    _compile_patterns(lex)
     return lex
 
 
@@ -473,5 +593,6 @@ def _serialize_lexicon(lex: ArtistLexicon) -> dict[str, Any]:
             for k, v in lex.domain_configs.items()
         },
         "artist_identity_overrides": lex.artist_identity_overrides,
+        "non_artist_patterns": lex.non_artist_patterns,
         "ground_truth_csv_path": lex.ground_truth_csv_path,
     }

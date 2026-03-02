@@ -1,9 +1,10 @@
-/* Reconciliation panel — loaded by health.html, exposes window.Recon */
+/* Reconciliation panel — standalone page at /artists-recon, also usable embedded */
 (function () {
   "use strict";
 
   const API = "/artists";
   let reconData = {};
+  let adminFiles = [];
   let activeTab = "orphan_eois";
 
   // ------------------------------------------------------------------
@@ -25,8 +26,12 @@
 
   async function load() {
     try {
-      const r = await fetch(API + "/reconciliation");
-      reconData = await r.json();
+      const [reconRes, adminRes] = await Promise.all([
+        fetch(API + "/reconciliation"),
+        fetch(API + "/admin-files"),
+      ]);
+      reconData = await reconRes.json();
+      adminFiles = await adminRes.json();
       updateCounts();
       render();
     } catch (e) {
@@ -57,6 +62,9 @@
       const el = document.getElementById(elId);
       if (el) el.textContent = (reconData[key] || []).length;
     }
+    // Unattributed files count
+    const unEl = document.getElementById("recon-count-unattributed");
+    if (unEl) unEl.textContent = adminFiles.length;
   }
 
   // ------------------------------------------------------------------
@@ -74,10 +82,17 @@
     identity_inconsistencies:  renderVariants("merge_identity"),
     location_variants:         renderVariants("merge_location"),
     alias_conflicts:           renderAliasConflicts,
+    unattributed_files:        renderUnattributed,
   };
 
   function render() {
     const el = document.getElementById("recon-content");
+
+    if (activeTab === "unattributed_files") {
+      el.innerHTML = renderUnattributed(adminFiles);
+      return;
+    }
+
     const items = reconData[activeTab] || [];
 
     if (!items.length) {
@@ -194,6 +209,54 @@
   }
 
   // ------------------------------------------------------------------
+  // Unattributed files renderer
+  // ------------------------------------------------------------------
+
+  function renderUnattributed(items) {
+    if (!items || !items.length) {
+      return '<p class="empty">No unattributed files</p>';
+    }
+
+    return `
+      <table class="ranking-table">
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Folder</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Candidate</th>
+            <th>Score</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map(f => `
+            <tr>
+              <td title="${esc(f.file_path)}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.file_name)}</td>
+              <td>${esc(f.folder_name)}</td>
+              <td><span class="badge badge-${f.category}">${cap(f.category)}</span></td>
+              <td style="font-size:11px">${esc(f.file_type)}</td>
+              <td>${f.candidate_display_name
+                ? `<a class="clickable-name" href="/artists-dashboard#${encodeURIComponent(f.candidate_artist_id)}">${esc(f.candidate_display_name)}</a>`
+                : '<span style="color:var(--fg-disabled)">None</span>'
+              }</td>
+              <td>${f.match_score ? Math.round(f.match_score * 100) + '%' : '—'}</td>
+              <td style="white-space:nowrap">
+                ${f.candidate_artist_id
+                  ? `<button class="btn btn-sm btn-primary" onclick="attributeFile('${escA(f.file_id)}','${escA(f.candidate_artist_id)}')">Accept</button>`
+                  : ''
+                }
+                <button class="btn btn-sm" onclick="attributeFileSearch('${escA(f.file_id)}')">Search</button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  // ------------------------------------------------------------------
   // Actions
   // ------------------------------------------------------------------
 
@@ -221,6 +284,39 @@
     load();
   }
 
+  // Attribution actions (global scope for onclick)
+  window.attributeFile = async function (fileId, artistId) {
+    await fetch(API + "/admin-files/" + encodeURIComponent(fileId) + "/attribute", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ artist_id: artistId }),
+    });
+    load();
+  };
+
+  window.attributeFileSearch = async function (fileId) {
+    const query = prompt("Search for artist name:");
+    if (!query) return;
+
+    const res = await fetch(API + "?q=" + encodeURIComponent(query) + "&limit=10");
+    const artists = await res.json();
+
+    if (!artists.length) {
+      alert("No artists found for: " + query);
+      return;
+    }
+
+    // Show simple selection
+    const choices = artists.map((a, i) => `${i + 1}. ${a.display_name} (${a.artist_id})`).join("\n");
+    const pick = prompt("Select artist:\n" + choices + "\n\nEnter number:");
+    if (!pick) return;
+
+    const idx = parseInt(pick, 10) - 1;
+    if (idx >= 0 && idx < artists.length) {
+      await window.attributeFile(fileId, artists[idx].artist_id);
+    }
+  };
+
   // ------------------------------------------------------------------
   // Helpers
   // ------------------------------------------------------------------
@@ -238,5 +334,9 @@
 
   function escA(s) {
     return (s || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  }
+
+  function cap(s) {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
   }
 })();

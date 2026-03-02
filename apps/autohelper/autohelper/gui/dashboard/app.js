@@ -46,10 +46,10 @@ async function loadStatus() {
     const rows = [
       ["Service", health.status === "ok" ? "ok" : "error",
        health.status === "ok" ? "Running" : "Error"],
-      ["Database", status.database?.accessible ? "ok" : "error",
-       status.database?.accessible ? "Connected" : "Unreachable"],
-      ["Migrations", "ok", status.database?.migration_count + " applied"],
-      ["Uptime", "ok", health.uptime || "\u2014"],
+      ["Mode", "ok", health.mode || "\u2014"],
+      ["Database", status.db_reachable ? "ok" : "error",
+       status.db_reachable ? "Connected" : "Unreachable"],
+      ["Migrations", "ok", (status.migrations?.applied_count ?? 0) + " applied"],
     ];
 
     const container = $("#status-rows");
@@ -95,32 +95,6 @@ function renderSettingsSections(schema, config) {
   container.innerHTML = "";
 
   for (const section of schema.sections) {
-    // Exchange section: render as connection test UI (no editable fields)
-    if (section.id === "exchange") {
-      const sectionEl = document.createElement("section");
-      const h2 = document.createElement("h2");
-      h2.textContent = section.label;
-      sectionEl.appendChild(h2);
-      const body = document.createElement("div");
-      body.className = "section-body";
-      body.innerHTML = `
-        <p style="font-size:13px;color:var(--fg-secondary,#888);margin:0 0 8px">
-          Connect to Exchange Online via interactive OAuth. A browser window will open for sign-in.
-        </p>
-        <div class="button-row">
-          <button id="btn-exchange-test" class="primary">Test Connection</button>
-        </div>
-        <div id="exchange-status" style="margin-top:8px;font-size:13px"></div>`;
-      sectionEl.appendChild(body);
-      container.appendChild(sectionEl);
-      // Wire up test button
-      setTimeout(() => {
-        const btn = $("#btn-exchange-test");
-        if (btn) btn.addEventListener("click", testExchangeConnection);
-      }, 0);
-      continue;
-    }
-
     const sectionEl = document.createElement("section");
     if (section.admin_only) sectionEl.classList.add("admin-only");
 
@@ -143,7 +117,6 @@ function renderSettingsSections(schema, config) {
       if (rendered.has(field.key)) continue;
 
       if (field.row_group) {
-        // Collect all fields in the same row group
         const group = section.fields.filter(f => f.row_group === field.row_group);
         const row = document.createElement("div");
         row.className = "field-row";
@@ -158,7 +131,7 @@ function renderSettingsSections(schema, config) {
       }
     }
 
-    // Save button
+    // Save button + schema-driven action buttons
     const btnRow = document.createElement("div");
     btnRow.className = "button-row";
     const btn = document.createElement("button");
@@ -166,7 +139,30 @@ function renderSettingsSections(schema, config) {
     btn.textContent = "Save";
     btn.addEventListener("click", () => saveSection(section));
     btnRow.appendChild(btn);
+
+    if (section.actions) {
+      for (const action of section.actions) {
+        const actionBtn = document.createElement("button");
+        actionBtn.id = action.id;
+        actionBtn.textContent = action.label;
+        actionBtn.addEventListener("click", () => invokeAction(action));
+        btnRow.appendChild(actionBtn);
+      }
+    }
+
     body.appendChild(btnRow);
+
+    // Schema-driven status areas
+    if (section.actions) {
+      for (const action of section.actions) {
+        if (action.status_key) {
+          const statusEl = document.createElement("div");
+          statusEl.id = action.status_key;
+          statusEl.style.cssText = "margin-top:8px;font-size:13px";
+          body.appendChild(statusEl);
+        }
+      }
+    }
 
     sectionEl.appendChild(body);
     container.appendChild(sectionEl);
@@ -246,6 +242,15 @@ function renderField(field, value) {
         input.rows = 4;
         input.value = value ?? field.default ?? "";
         if (field.placeholder) input.placeholder = field.placeholder;
+        break;
+      }
+      case "password": {
+        input = document.createElement("input");
+        input.type = "password";
+        input.id = "cfg-" + field.key;
+        input.value = value ?? field.default ?? "";
+        if (field.placeholder) input.placeholder = field.placeholder;
+        input.autocomplete = "off";
         break;
       }
       default: {
@@ -397,29 +402,41 @@ async function triggerManualSync() {
 }
 
 // ---------------------------------------------------------------------------
-// Exchange Connection
+// Schema-Driven Actions
 // ---------------------------------------------------------------------------
 
-async function testExchangeConnection() {
-  const btn = $("#btn-exchange-test");
-  const status = $("#exchange-status");
+async function invokeAction(action) {
+  const btn = document.getElementById(action.id);
+  const statusEl = action.status_key ? document.getElementById(action.status_key) : null;
+  const originalLabel = btn.textContent;
   btn.disabled = true;
-  btn.textContent = "Connecting\u2026";
-  status.textContent = "";
+  btn.textContent = "Working\u2026";
+  if (statusEl) statusEl.textContent = "";
 
   try {
-    const result = await api("POST", "/contacts/exchange/test");
-    if (result.connected) {
-      status.innerHTML = '<span style="color:var(--green,#4caf50)">\u2713 Connected</span>' +
-        (result.message ? ' \u2014 ' + escapeHtml(result.message) : '');
+    const result = await api("POST", action.endpoint);
+
+    if (statusEl) {
+      if (result.connected === true) {
+        statusEl.innerHTML = '<span style="color:var(--green,#4caf50)">\u2713 Connected</span>' +
+          (result.message ? ' \u2014 ' + escapeHtml(result.message) : '');
+      } else if (result.connected === false) {
+        statusEl.innerHTML = '<span style="color:var(--red,#f44336)">\u2717 ' + escapeHtml(result.message || "Failed") + '</span>';
+      } else if (result.message) {
+        statusEl.innerHTML = escapeHtml(result.message);
+      }
     } else {
-      status.innerHTML = '<span style="color:var(--red,#f44336)">\u2717 ' + escapeHtml(result.message || "Failed") + '</span>';
+      toast(result.message || "Done", "success");
     }
   } catch (e) {
-    status.innerHTML = '<span style="color:var(--red,#f44336)">\u2717 ' + escapeHtml(e.message) + '</span>';
+    if (statusEl) {
+      statusEl.innerHTML = '<span style="color:var(--red,#f44336)">\u2717 ' + escapeHtml(e.message) + '</span>';
+    } else {
+      toast(e.message, "error");
+    }
   } finally {
     btn.disabled = false;
-    btn.textContent = "Test Connection";
+    btn.textContent = originalLabel;
   }
 }
 

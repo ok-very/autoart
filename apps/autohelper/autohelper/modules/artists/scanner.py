@@ -22,6 +22,7 @@ from .config import (
     CATEGORY_PRIORITY,
     CategoryProfile,
     get_lexicon,
+    is_artist_folder,
 )
 from .utils import (
     classify_file,
@@ -137,6 +138,8 @@ class ArtistScanner:
                 artist_path = os.path.join(nation_path, artist_folder)
                 if not os.path.isdir(artist_path) or artist_folder.lower() in lex.ignore_dirs:
                     continue
+                if not is_artist_folder(artist_folder):
+                    continue
 
                 record = scan_artist_folder(
                     category=category,
@@ -183,6 +186,8 @@ class ArtistScanner:
                 artist_path = os.path.join(bucket_path, artist_folder)
                 if not os.path.isdir(artist_path):
                     continue
+                if not is_artist_folder(artist_folder):
+                    continue
 
                 record = scan_artist_folder(
                     category=category,
@@ -215,8 +220,10 @@ class ArtistScanner:
             artist_path = os.path.join(cat_path, artist_folder)
             if not os.path.isdir(artist_path):
                 continue
+            if not is_artist_folder(artist_folder):
+                continue
 
-            record = _scan_artist_folder(
+            record = scan_artist_folder(
                 category=category,
                 nation=None,
                 folder_name=artist_folder,

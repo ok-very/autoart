@@ -7,6 +7,13 @@
   let fullLexicon = {};
   let currentSection = "categories";
 
+  function showFeedback(id, msg, isErr) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.className = "save-feedback " + (isErr ? "save-err" : "save-ok");
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     loadConfig();
     loadLexicon();
@@ -40,16 +47,17 @@
   // ------------------------------------------------------------------
   async function loadConfig() {
     try {
-      const r = await fetch(CONFIG_API + "/schema");
-      const schema = await r.json();
       const cr = await fetch(CONFIG_API);
+      if (!cr.ok) throw new Error("HTTP " + cr.status);
       const cfg = await cr.json();
 
       document.getElementById("cfg-storage-root").value = cfg.artist_storage_root || "";
+      document.getElementById("cfg-ground-truth").value = cfg.artist_ground_truth_csv || "";
       document.getElementById("cfg-scan-enabled").checked = !!cfg.artist_scan_enabled;
       document.getElementById("cfg-scan-on-change").checked = !!cfg.artist_scan_on_change;
     } catch (e) {
       console.error("Load config:", e);
+      showFeedback("config-feedback", "\u2717 Could not load config", true);
     }
   }
 
@@ -88,6 +96,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           artist_storage_root: document.getElementById("cfg-storage-root").value.trim(),
+          artist_ground_truth_csv: document.getElementById("cfg-ground-truth").value.trim(),
           artist_scan_enabled: document.getElementById("cfg-scan-enabled").checked,
           artist_scan_on_change: document.getElementById("cfg-scan-on-change").checked,
         }),
@@ -114,16 +123,10 @@
       const r = await fetch(API + "/lexicon");
       if (!r.ok) throw new Error("HTTP " + r.status);
       fullLexicon = await r.json();
-      // Populate ground truth CSV path from lexicon
-      document.getElementById("cfg-ground-truth").value = fullLexicon.ground_truth_csv_path || "";
       renderLexiconSection();
     } catch (e) {
       console.error("Load lexicon:", e);
-      const fb = document.getElementById("lexicon-feedback");
-      if (fb) {
-        fb.textContent = "\u2717 Failed to load lexicon";
-        fb.className = "save-feedback save-err";
-      }
+      showFeedback("lexicon-feedback", "\u2717 Failed to load lexicon", true);
     }
   }
 
@@ -157,9 +160,6 @@
 
   async function saveLexicon() {
     saveCurrentEditsToMemory();
-    // Sync ground truth CSV path into lexicon before saving
-    const gtVal = document.getElementById("cfg-ground-truth").value.trim();
-    fullLexicon.ground_truth_csv_path = gtVal || null;
     const fb = document.getElementById("lexicon-feedback");
     const btn = document.getElementById("btn-save-lexicon");
     btn.disabled = true;

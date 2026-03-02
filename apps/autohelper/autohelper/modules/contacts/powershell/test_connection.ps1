@@ -3,7 +3,7 @@
     Test Exchange Online connectivity.
 
 .PARAMETER AuthJson
-    JSON string with auth credentials (upn, organization, app_id, cert_thumbprint).
+    JSON string with auth credentials (email + password, or app_id + cert_thumbprint + organization).
 #>
 
 param(
@@ -29,24 +29,27 @@ try {
 
     Import-Module ExchangeOnlineManagement -ErrorAction Stop
 
-    $connectParams = @{}
+    $connectParams = @{ ShowBanner = $false }
 
     if ($auth.app_id -and $auth.cert_thumbprint -and $auth.organization) {
-        $connectParams = @{
-            AppId               = $auth.app_id
-            CertificateThumbprint = $auth.cert_thumbprint
-            Organization        = $auth.organization
-            ShowBanner          = $false
-        }
+        # Certificate-based auth (service mode)
+        $connectParams.AppId = $auth.app_id
+        $connectParams.CertificateThumbprint = $auth.cert_thumbprint
+        $connectParams.Organization = $auth.organization
     }
-    elseif ($auth.upn) {
-        $connectParams = @{
-            UserPrincipalName = $auth.upn
-            ShowBanner        = $false
-        }
+    elseif ($auth.email -and $auth.password) {
+        # Credential-based auth (email + password)
+        $secPass = ConvertTo-SecureString $auth.password -AsPlainText -Force
+        $cred = New-Object System.Management.Automation.PSCredential($auth.email, $secPass)
+        $connectParams.Credential = $cred
+        $connectParams.UserPrincipalName = $auth.email
+    }
+    elseif ($auth.email) {
+        # UPN-only (will trigger interactive prompt if needed)
+        $connectParams.UserPrincipalName = $auth.email
     }
     else {
-        $result.message = "No valid authentication credentials provided"
+        $result.message = "No credentials configured. Add email and password in Settings > Exchange Connection."
         $result | ConvertTo-Json -Compress
         exit 1
     }

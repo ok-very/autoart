@@ -11,11 +11,24 @@ import tempfile
 from dataclasses import asdict
 from pathlib import Path
 
+from autohelper.config import get_settings
+
 from .types import ContactRecord
 
 logger = logging.getLogger(__name__)
 
 SCRIPTS_DIR = Path(__file__).parent / "powershell"
+
+
+def _get_auth() -> dict:
+    """Build auth dict from settings."""
+    settings = get_settings()
+    auth: dict[str, str] = {}
+    if settings.exchange_email:
+        auth["email"] = settings.exchange_email
+    if settings.exchange_password:
+        auth["password"] = settings.exchange_password
+    return auth
 
 
 def _build_exchange_contact(contact: ContactRecord, managed_prefix: str) -> dict:
@@ -61,7 +74,7 @@ def sync_contacts_to_exchange(
     """
     # Build operation payload
     operations = {
-        "auth": {},
+        "auth": _get_auth(),
         "create": [
             _build_exchange_contact(c, managed_prefix) for c in to_create[:batch_size]
         ],
@@ -154,7 +167,7 @@ def test_exchange_connection() -> dict:
     if not script_path.exists():
         return {"connected": False, "message": "Test script not found"}
 
-    auth_json = json.dumps({})
+    auth_json = json.dumps(_get_auth())
 
     try:
         result = subprocess.run(

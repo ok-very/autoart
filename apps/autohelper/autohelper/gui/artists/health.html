@@ -11,6 +11,7 @@
     <nav class="artist-nav">
       <a href="/artists-settings" class="nav-link">Settings</a>
       <a href="/artists-health" class="nav-link active">Health</a>
+      <a href="/artists-recon" class="nav-link">Reconciliation</a>
       <a href="/artists-dashboard" class="nav-link">Directory</a>
     </nav>
 
@@ -78,32 +79,10 @@
         <div id="review-queue"><p class="empty">Loading...</p></div>
       </div>
 
-      <!-- Reconciliation -->
-      <div class="health-card full-width">
-        <h3>Reconciliation</h3>
-        <p style="font-size:11px;color:var(--fg-disabled);margin-bottom:8px">Engagement pipeline</p>
-        <div class="recon-tabs">
-          <button class="recon-tab active" data-recon="orphan_eois">Orphan EOIs <span class="recon-count" id="recon-count-eois">0</span></button>
-          <button class="recon-tab" data-recon="orphan_proposals">Orphan Proposals <span class="recon-count" id="recon-count-proposals">0</span></button>
-          <button class="recon-tab" data-recon="stalled_projects">Stalled <span class="recon-count" id="recon-count-stalled">0</span></button>
-          <button class="recon-tab" data-recon="fuzzy_matches">Fuzzy Matches <span class="recon-count" id="recon-count-fuzzy">0</span></button>
-          <button class="recon-tab" data-recon="panel_gaps">Panel Gaps <span class="recon-count" id="recon-count-panels">0</span></button>
-        </div>
-        <p style="font-size:11px;color:var(--fg-disabled);margin:8px 0">Data quality</p>
-        <div class="recon-tabs">
-          <button class="recon-tab" data-recon="duplicate_artists">Duplicate Names <span class="recon-count" id="recon-count-dupes">0</span></button>
-          <button class="recon-tab" data-recon="affiliation_variants">Affiliation Variants <span class="recon-count" id="recon-count-affs">0</span></button>
-          <button class="recon-tab" data-recon="identity_inconsistencies">Identity Dupes <span class="recon-count" id="recon-count-ids">0</span></button>
-          <button class="recon-tab" data-recon="alias_conflicts">Alias Conflicts <span class="recon-count" id="recon-count-aliases">0</span></button>
-          <button class="recon-tab" data-recon="location_variants">Location Variants <span class="recon-count" id="recon-count-locs">0</span></button>
-        </div>
-        <div id="recon-content"><p class="empty">Loading...</p></div>
-      </div>
-
     </div>
   </div>
 
-  <script src="/artists-dashboard/static/recon.js"></script>
+  <script src="/artists-dashboard/static/nav.js"></script>
   <script src="/artists-dashboard/static/health.js"></script>
 </body>
 </html>

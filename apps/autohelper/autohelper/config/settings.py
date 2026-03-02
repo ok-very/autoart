@@ -105,8 +105,13 @@ class Settings(BaseSettings):
     contact_sync_batch_size: int = Field(default=50, ge=1, le=500)
     contact_sync_managed_prefix: str = "BFA-"  # Prefix to identify managed contacts
 
+    # Exchange Connection
+    exchange_email: str = ""
+    exchange_password: str = ""
+
     # Artist Records
     artist_storage_root: str = ""
+    artist_ground_truth_csv: str = ""
     artist_scan_enabled: bool = False
     artist_scan_on_change: bool = True
 

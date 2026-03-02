@@ -5,13 +5,12 @@
   const API = "/artists";
 
   document.addEventListener("DOMContentLoaded", () => {
-    Recon.init();
     reload();
     document.getElementById("btn-reload").addEventListener("click", reload);
   });
 
   async function reload() {
-    await Promise.all([loadStats(), loadHealth(), Recon.load()]);
+    await Promise.all([loadStats(), loadHealth()]);
   }
 
   // ------------------------------------------------------------------

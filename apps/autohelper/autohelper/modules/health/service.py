@@ -25,10 +25,13 @@ class HealthService:
 
     def get_health(self) -> HealthResponse:
         """Simple health check."""
+        import sys
+
         return HealthResponse(
             status="ok",
             timestamp=datetime.now(UTC),
             version=__version__,
+            mode="frozen" if getattr(sys, "frozen", False) else "source",
         )
 
     def get_status(self) -> StatusResponse:
