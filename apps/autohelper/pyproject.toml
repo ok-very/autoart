@@ -14,6 +14,7 @@ dependencies = [
     "pydantic-settings>=2.1.0",
     "aiosqlite>=0.19.0",
     "Pillow>=10.0.0",
+    "Jinja2>=3.1.0",
     # Web scraping (for autocollector runner)
     "httpx>=0.26.0",
     "beautifulsoup4>=4.12.0",

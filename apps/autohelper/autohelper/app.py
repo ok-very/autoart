@@ -16,6 +16,7 @@ from autohelper.db import get_db, init_db
 from autohelper.db.migrate import get_migration_status, run_migrations
 from autohelper.modules.config.router import router as config_router
 from autohelper.modules.contacts.router import router as contacts_router
+from autohelper.modules.clickup.scheduler import start_clickup_scheduler, stop_clickup_scheduler
 from autohelper.modules.contacts.scheduler import start_contact_scheduler, stop_contact_scheduler
 from autohelper.modules.invoice_watch.router import router as invoice_watch_router
 from autohelper.modules.pairing.router import router as pairing_router
@@ -28,8 +29,12 @@ from autohelper.gui.dashboard_router import (
     router as dashboard_router,
     get_static_files,
     get_artists_static_files,
+    get_manifests_static_files,
 )
 from autohelper.modules.artists.router import router as artists_router
+from autohelper.modules.clickup.router import router as clickup_router
+from autohelper.modules.documents.router import router as documents_router
+from autohelper.modules.images.router import router as images_router
 from autohelper.sync import start_backend_poller, stop_backend_poller
 
 # Import routers
@@ -89,6 +94,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Start Contact Sync Scheduler
     start_contact_scheduler()
 
+    # Start ClickUp Template Sync Scheduler
+    start_clickup_scheduler()
+
     # Start Backend Poller (syncs settings with AutoArt backend)
     start_backend_poller()
 
@@ -105,6 +113,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Shutdown
     logger.info("Shutting down AutoHelper...")
     stop_backend_poller()
+    stop_clickup_scheduler()
     stop_contact_scheduler()
     stop_gc_scheduler()
     MailService().stop()
@@ -217,15 +226,18 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(invoice_watch_router)
     app.include_router(file_watch_router)
     app.include_router(artists_router)
+    app.include_router(clickup_router)
+    app.include_router(documents_router)
+    app.include_router(images_router)
     app.include_router(dashboard_router)
 
     # Mount dashboard static assets (JS, CSS)
     app.mount("/dashboard/static", get_static_files(), name="dashboard-static")
     app.mount("/artists-dashboard/static", get_artists_static_files(), name="artists-static")
 
-    # Root endpoint
-    @app.get("/")
-    async def root() -> dict[str, str]:
-        return {"service": "AutoHelper", "version": "0.1.0"}
+    # Mount manifests directory for review engine
+    manifests_static = get_manifests_static_files()
+    if manifests_static:
+        app.mount("/manifests", manifests_static, name="manifests-static")
 
     return app

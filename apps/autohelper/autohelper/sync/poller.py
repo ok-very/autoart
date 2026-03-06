@@ -382,6 +382,9 @@ class BackendPoller:
                 elif cmd_type == "drain_file_events":
                     result = self._cmd_drain_file_events()
                     success = True
+                elif cmd_type == "execute_manifest":
+                    result = self._cmd_execute_manifest(payload)
+                    success = result.get("failed", 0) == 0 if result else False
                 else:
                     logger.warning("Unknown command type: %s", cmd_type)
                     result = {"error": f"Unknown command: {cmd_type}"}
@@ -519,6 +522,20 @@ class BackendPoller:
         service = get_service()
         success = service.unwatch(root_id)
         return {"success": success}
+
+    def _cmd_execute_manifest(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Execute execute_manifest command — create tasks in ClickUp from manifest."""
+        from autohelper.modules.clickup.manifest import ImportManifest
+        from autohelper.modules.clickup.service import execute_manifest
+
+        manifest = ImportManifest.model_validate(payload)
+
+        loop = asyncio.new_event_loop()
+        try:
+            result = loop.run_until_complete(execute_manifest(manifest))
+            return result.model_dump()
+        finally:
+            loop.close()
 
     def _cmd_drain_file_events(self) -> dict[str, Any]:
         """Execute drain_file_events command — return and clear all pending file events."""

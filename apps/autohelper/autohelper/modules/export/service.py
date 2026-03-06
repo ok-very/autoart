@@ -45,27 +45,17 @@ class ExportService:
         data_dir = Path(self.settings.db_path).parent
         base_exports_dir = data_dir / "exports"
 
-        if output_dir:
+        # Check configured export dir from settings
+        configured_dir = getattr(self.settings, 'export_output_dir', '').strip()
+        if not output_dir and configured_dir:
+            # User-configured dir is trusted — use directly
+            out_path = Path(configured_dir).resolve()
+        elif output_dir:
             try:
                 out_path = Path(output_dir).resolve()
-                # Verify output_dir is within or equal to base_exports_dir.
-                # The requirement says "verify the resolved output_dir is a subpath
-                # of that base (comparing base in resolved_path.parents)".
-                # But sometimes users might want to export elsewhere.
-                # The user request specifically mentioned: "verify the resolved
-                # output_dir is a subpath of that base... reject the input"
-
-                # Check relative path to ensure it is inside base_expots_dir
+                # API-provided paths must be within base_exports_dir for safety
                 out_path.relative_to(base_exports_dir)
             except (ValueError, RuntimeError):
-                # If path is not relative to base or other error, fallback to base.
-                # Request says: "raise an error" or fallback. The text said:
-                # "reject the input (raise an error) and fall back to or create
-                # the safe base exports directory"
-                # This is slightly ambiguous ("reject ... AND fall back").
-                # I interpret this as "If invalid, use default safe path" to be
-                # robust. Raising an error would stop execution. Falling back
-                # lets it continue. Fallback seems more serviceable.
                 logger.warning(
                     f"Invalid output_dir '{output_dir}'. Falling back to default exports directory."
                 )

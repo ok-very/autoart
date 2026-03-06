@@ -10,7 +10,7 @@ we read from config.json during Settings initialization.
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import AliasChoices, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from autohelper.config.manifest import CONFIG_KEYS
@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_prefix="AUTOHELPER_",
-        env_file=".env",
+        env_file=(".env", "../../.env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -43,6 +43,13 @@ class Settings(BaseSettings):
 
     # Filesystem roots (comma-separated paths)
     allowed_roots: list[str] = Field(default_factory=list)
+
+    # Image serving — allowed base directories for the /api/image proxy
+    image_allowed_roots: list[str] = Field(default_factory=list)
+
+    # Report thumbnails
+    report_thumbnail_max_area: int = Field(default=15000, ge=1000, le=500000)
+    report_thumbnail_quality: int = Field(default=80, ge=10, le=100)
 
     # Exclusion patterns
     excludes: list[str] = Field(
@@ -109,6 +116,17 @@ class Settings(BaseSettings):
     exchange_email: str = ""
     exchange_password: str = ""
 
+    # ClickUp Integration — env vars read without AUTOHELPER_ prefix
+    clickup_token: str = Field(default="", validation_alias=AliasChoices("CLICKUP_TOKEN", "AUTOHELPER_CLICKUP_TOKEN", "clickup_token"))
+    clickup_workspace_id: str = Field(default="", validation_alias=AliasChoices("CLICKUP_WORKSPACE_ID", "AUTOHELPER_CLICKUP_WORKSPACE_ID", "clickup_workspace_id"))
+    clickup_space_id: str = Field(default="", validation_alias=AliasChoices("CLICKUP_SPACE_ID", "AUTOHELPER_CLICKUP_SPACE_ID", "clickup_space_id"))
+    clickup_list_id: str = Field(default="", validation_alias=AliasChoices("CLICKUP_LIST_ID", "AUTOHELPER_CLICKUP_LIST_ID", "clickup_list_id"))
+    clickup_sync_enabled: bool = False
+    clickup_sync_interval_hours: int = Field(default=6, ge=1, le=168)
+
+    # Export
+    export_output_dir: str = ""
+
     # Artist Records
     artist_storage_root: str = ""
     artist_ground_truth_csv: str = ""
@@ -130,10 +148,13 @@ class Settings(BaseSettings):
             cfg = ConfigStore().load()
             explicitly_set = self.model_fields_set
 
-            # Link key is only stored in config.json (not env vars)
+            # Link key and clickup token are only stored in config.json (not env vars)
             if "autoart_link_key" not in explicitly_set:
                 if "autoart_link_key" in cfg and cfg["autoart_link_key"]:
                     object.__setattr__(self, "autoart_link_key", cfg["autoart_link_key"])
+            if "clickup_token" not in explicitly_set:
+                if "clickup_token" in cfg and cfg["clickup_token"]:
+                    object.__setattr__(self, "clickup_token", cfg["clickup_token"])
 
             # User-editable settings — manifest is the single source of truth
             for key in CONFIG_KEYS:
