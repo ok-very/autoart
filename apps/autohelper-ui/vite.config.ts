@@ -1,18 +1,18 @@
 import { defineConfig } from 'vite'
-import preact from '@preact/preset-vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
 const OUT = path.resolve(__dirname, '../autohelper/autohelper/gui/artists-dist')
 
 export default defineConfig({
   base: '/artists-dashboard/static/',
-  plugins: [preact()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      'react': 'preact/compat',
-      'react-dom': 'preact/compat',
-      'react/jsx-runtime': 'preact/jsx-runtime',
       '@': path.resolve(__dirname, 'src'),
+      '@engine': path.resolve(__dirname, 'src/engine'),
+      '@ui': path.resolve(__dirname, 'src/ui'),
     },
   },
   build: {
@@ -20,10 +20,20 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
+        home: path.resolve(__dirname, 'home.html'),
         directory: path.resolve(__dirname, 'directory.html'),
         health: path.resolve(__dirname, 'health.html'),
         recon: path.resolve(__dirname, 'recon.html'),
         settings: path.resolve(__dirname, 'settings.html'),
+        submissions: path.resolve(__dirname, 'submissions.html'),
+        'submissions-settings': path.resolve(__dirname, 'submissions-settings.html'),
+        'art-collector': path.resolve(__dirname, 'art-collector.html'),
+        analytics: path.resolve(__dirname, 'analytics.html'),
+        'system-settings': path.resolve(__dirname, 'system-settings.html'),
+        contacts: path.resolve(__dirname, 'contacts.html'),
+        'contacts-settings': path.resolve(__dirname, 'contacts-settings.html'),
+        mail: path.resolve(__dirname, 'mail.html'),
+        'mail-settings': path.resolve(__dirname, 'mail-settings.html'),
       },
     },
   },

@@ -1,1 +1,0 @@
-import{u as e}from"./shared-DdV_5ID3.js";function n(a){return a?a.charAt(0).toUpperCase()+a.slice(1):""}function t(a){return a?a.split(/[/\\]/).pop()??"":""}function i({category:a}){return e("span",{class:`badge badge-${a}`,children:n(a)})}export{i as C,t as b,n as c};

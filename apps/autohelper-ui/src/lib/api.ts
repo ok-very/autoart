@@ -106,4 +106,18 @@ export const api = {
     save: (data: Partial<AppConfig>) => put(CONFIG_API, data),
     selectFolder: () => post(`${CONFIG_API}/select-folder`).then(r => r.json() as Promise<{ path: string | null }>),
   },
+
+  clickup: {
+    validate: () => fetchJson<{ ok: boolean; workspace?: string; error?: string }>('/clickup/validate'),
+  },
+
+  contacts: {
+    status: () => fetchJson<Record<string, unknown>>('/contacts/status'),
+    history: () => fetchJson<Record<string, unknown>[]>('/contacts/history'),
+    testExchange: () => post('/contacts/exchange/test').then(r => r.json()),
+    sync: () => post('/contacts/sync').then(r => r.json()),
+  },
+
+  health: () => fetchJson<Record<string, unknown>>('/health'),
+  status: () => fetchJson<Record<string, unknown>>('/status'),
 }
