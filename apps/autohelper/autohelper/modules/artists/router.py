@@ -176,6 +176,29 @@ async def resolve_reconciliation(body: dict[str, Any]) -> dict[str, str]:
     return {"status": "ok"}
 
 
+@router.post("/reconciliation/merge")
+async def merge_artists_endpoint(body: dict[str, Any]) -> dict[str, Any]:
+    """Merge two artist records: keep one, fold the other into it."""
+    from .reconciliation import merge_artists
+    keep_id = body.get("keep_id")
+    remove_id = body.get("remove_id")
+    if not keep_id or not remove_id:
+        raise HTTPException(status_code=400, detail="Missing keep_id or remove_id")
+    try:
+        return merge_artists(keep_id, remove_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@router.post("/reconciliation/auto-merge")
+async def auto_merge_endpoint(body: dict[str, Any]) -> dict[str, Any]:
+    """Auto-merge high-confidence duplicate pairs."""
+    from .reconciliation import auto_merge
+    threshold = body.get("threshold", 0.95)
+    dry_run = body.get("dry_run", True)
+    return auto_merge(threshold=threshold, dry_run=dry_run)
+
+
 # ------------------------------------------------------------------
 # Admin files (unattributed files from non-artist folders)
 # ------------------------------------------------------------------

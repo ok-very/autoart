@@ -245,6 +245,32 @@ async def clickup_project_status(
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+# ── Artist Sync ──────────────────────────────────────────────────────────
+
+
+@router.post("/artist-sync")
+async def clickup_artist_sync(
+    list_id: str = Query("", description="ClickUp list ID for artist records"),
+    dry_run: bool = Query(True, description="Preview only (default: true)"),
+    body: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Sync artist records to a ClickUp list."""
+    from .artist_sync import sync_artists, _get_artist_list_id
+
+    try:
+        resolved_list_id = _get_artist_list_id(list_id or None)
+        artist_ids = (body or {}).get("artist_ids")
+        return await sync_artists(
+            list_id=resolved_list_id,
+            dry_run=dry_run,
+            artist_ids=artist_ids,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
 # ── Email Compose ─────────────────────────────────────────────────────────
 
 

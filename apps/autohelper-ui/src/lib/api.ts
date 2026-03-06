@@ -87,6 +87,12 @@ export const api = {
 
     resolveRecon: (body: Record<string, unknown>) =>
       post(`${API}/reconciliation/resolve`, body),
+
+    merge: (keepId: string, removeId: string) =>
+      post(`${API}/reconciliation/merge`, { keep_id: keepId, remove_id: removeId }).then(r => r.json()),
+
+    autoMerge: (threshold: number, dryRun: boolean) =>
+      post(`${API}/reconciliation/auto-merge`, { threshold, dry_run: dryRun }).then(r => r.json()),
   },
 
   scan: {
@@ -109,6 +115,8 @@ export const api = {
 
   clickup: {
     validate: () => fetchJson<{ ok: boolean; workspace?: string; error?: string }>('/clickup/validate'),
+    artistSync: (listId: string, dryRun: boolean, artistIds?: string[]) =>
+      post(`/clickup/artist-sync?list_id=${encodeURIComponent(listId)}&dry_run=${dryRun}`, { artist_ids: artistIds ?? null }).then(r => r.json()),
   },
 
   contacts: {

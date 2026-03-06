@@ -307,6 +307,16 @@ function ClickUpCard() {
         </label>
       </FieldRow>
 
+      <FieldRow label="Artist List ID">
+        <ConnectedValue
+          value={String(config.clickup_artist_list_id ?? '')}
+          placeholder="901400000000"
+          onSave={v => saveField('clickup_artist_list_id', v)}
+        />
+      </FieldRow>
+
+      <ArtistSyncRow listId={String(config.clickup_artist_list_id ?? '')} connected={connected === true} />
+
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
         <button className="btn btn-sm" onClick={testConnection} disabled={testing}>
           {testing ? 'Testing\u2026' : 'Test Connection'}
@@ -314,6 +324,59 @@ function ClickUpCard() {
         <FeedbackMessage message={feedback} isError={feedbackErr} />
       </div>
     </CardShell>
+  )
+}
+
+function ArtistSyncRow({ listId, connected }: { listId: string; connected: boolean }) {
+  const [syncing, setSyncing] = useState(false)
+  const [preview, setPreview] = useState<{ created: number; updated: number; unchanged: number; errors: string[] } | null>(null)
+  const [feedback, setFeedback] = useState('')
+  const [feedbackErr, setFeedbackErr] = useState(false)
+
+  const dryRun = async () => {
+    if (!listId) { setFeedback('\u2717 Set Artist List ID first'); setFeedbackErr(true); return }
+    setSyncing(true); setFeedback('')
+    try {
+      const result = await api.clickup.artistSync(listId, true)
+      setPreview(result)
+      setFeedback(`Will create ${result.created}, update ${result.updated}, ${result.unchanged} unchanged`)
+      setFeedbackErr(false)
+    } catch (e) {
+      setFeedback(`\u2717 ${e}`); setFeedbackErr(true)
+    }
+    setSyncing(false)
+  }
+
+  const apply = async () => {
+    if (!listId) return
+    setSyncing(true); setFeedback('')
+    try {
+      const result = await api.clickup.artistSync(listId, false)
+      setPreview(null)
+      setFeedback(`\u2713 Created ${result.created}, updated ${result.updated}${result.errors.length ? `, ${result.errors.length} errors` : ''}`)
+      setFeedbackErr(result.errors.length > 0)
+    } catch (e) {
+      setFeedback(`\u2717 ${e}`); setFeedbackErr(true)
+    }
+    setSyncing(false)
+  }
+
+  if (!connected) return null
+
+  return (
+    <FieldRow label="Artist Sync">
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <button className="btn btn-sm" onClick={dryRun} disabled={syncing || !listId}>
+          {syncing ? 'Syncing\u2026' : 'Preview Sync'}
+        </button>
+        {preview && (
+          <button className="btn btn-sm btn-primary" onClick={apply} disabled={syncing}>
+            Apply Sync
+          </button>
+        )}
+        <FeedbackMessage message={feedback} isError={feedbackErr} />
+      </div>
+    </FieldRow>
   )
 }
 

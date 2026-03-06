@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'preact/hooks'
-import { Nav } from '@/components/Nav'
+import { useState, useEffect, useCallback } from 'react'
+import { ModuleLayout } from '@/components/ModuleLayout'
+import { CssSpinner } from '@/components/CssSpinner'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { api } from '@/lib/api'
 import { capitalize } from '@/lib/helpers'
@@ -35,8 +36,8 @@ const QUALITY_TABS: { key: TabKey; label: string; countId: string }[] = [
 
 function artistLink(id: string, name: string) {
   return (
-    <span class="recon-name">
-      <a class="clickable-name" href={`/artists-dashboard#${encodeURIComponent(id)}`}>{name}</a>
+    <span className="recon-name">
+      <a className="clickable-name" href={`/artists-dashboard#${encodeURIComponent(id)}`}>{name}</a>
     </span>
   )
 }
@@ -45,14 +46,24 @@ export function ReconPage() {
   const [reconData, setReconData] = useState<ReconciliationData | null>(null)
   const [adminFiles, setAdminFiles] = useState<AdminFile[]>([])
   const [activeTab, setActiveTab] = useState<TabKey>('orphan_eois')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   const load = useCallback(async () => {
-    const [r, a] = await Promise.all([
-      api.artists.reconciliation().catch(() => null),
-      api.artists.adminFiles().catch(() => []),
-    ])
-    if (r) setReconData(r)
-    setAdminFiles(a)
+    setLoading(true)
+    setError(false)
+    try {
+      const [r, a] = await Promise.all([
+        api.artists.reconciliation().catch(() => null),
+        api.artists.adminFiles().catch(() => []),
+      ])
+      if (r) setReconData(r)
+      else setError(true)
+      setAdminFiles(a)
+    } catch {
+      setError(true)
+    }
+    setLoading(false)
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -101,17 +112,30 @@ export function ReconPage() {
   }
 
   return (
-    <>
-      <Nav active="recon" />
+    <ModuleLayout module="artist-directory" activePage="recon">
 
-      <header class="header">
+      <header className="header">
         <h1>Reconciliation</h1>
-        <div class="header-actions">
-          <button class="btn btn-ghost" onClick={load}>&#x27F3; Reload</button>
+        <div className="header-actions">
+          <button className="btn btn-ghost" onClick={load}>&#x27F3; Reload</button>
         </div>
       </header>
 
-      <div class="health-card full-width" style={{ marginBottom: '16px' }}>
+      {loading && (
+        <div className="loading-center">
+          <CssSpinner size="lg" />
+          Loading reconciliation data…
+        </div>
+      )}
+
+      {error && !loading && (
+        <div className="loading-center">
+          <p style={{ color: 'var(--color-error)' }}>Failed to load reconciliation data.</p>
+          <button className="btn" onClick={load}>Retry</button>
+        </div>
+      )}
+
+      {!loading && !error && <div className="health-card full-width" style={{ marginBottom: '16px' }}>
         <h3>Engagement Pipeline</h3>
         <TabBar tabs={ENGAGEMENT_TABS} active={activeTab} onSelect={setActiveTab} getCount={getCount} />
 
@@ -135,10 +159,11 @@ export function ReconPage() {
             mergeValues={mergeValues}
             attributeFile={attributeFile}
             attributeFileSearch={attributeFileSearch}
+            reload={load}
           />
         </div>
-      </div>
-    </>
+      </div>}
+    </ModuleLayout>
   )
 }
 
@@ -153,14 +178,14 @@ function TabBar({ tabs, active, onSelect, getCount }: {
   getCount: (key: TabKey) => number
 }) {
   return (
-    <div class="recon-tabs">
+    <div className="recon-tabs">
       {tabs.map(t => (
         <button
           key={t.key}
-          class={`recon-tab${t.key === active ? ' active' : ''}`}
+          className={`recon-tab${t.key === active ? ' active' : ''}`}
           onClick={() => onSelect(t.key)}
         >
-          {t.label} <span class="recon-count">{getCount(t.key)}</span>
+          {t.label} <span className="recon-count">{getCount(t.key)}</span>
         </button>
       ))}
     </div>
@@ -171,7 +196,7 @@ function TabBar({ tabs, active, onSelect, getCount }: {
 // Tab Content Router
 // ---------------------------------------------------------------------------
 
-function TabContent({ tab, reconData, adminFiles, reconAction, mergeValues, attributeFile, attributeFileSearch }: {
+function TabContent({ tab, reconData, adminFiles, reconAction, mergeValues, attributeFile, attributeFileSearch, reload }: {
   tab: TabKey
   reconData: ReconciliationData | null
   adminFiles: AdminFile[]
@@ -179,8 +204,9 @@ function TabContent({ tab, reconData, adminFiles, reconAction, mergeValues, attr
   mergeValues: (action: string, oldValue: string, newValue: string) => void
   attributeFile: (fileId: string, artistId: string) => void
   attributeFileSearch: (fileId: string) => void
+  reload: () => void
 }) {
-  if (!reconData && tab !== 'unattributed_files') return <p class="empty">Loading...</p>
+  if (!reconData && tab !== 'unattributed_files') return <p className="empty">Loading...</p>
 
   switch (tab) {
     case 'orphan_eois': return <OrphanList items={reconData!.orphan_eois} reconAction={reconAction} />
@@ -188,13 +214,13 @@ function TabContent({ tab, reconData, adminFiles, reconAction, mergeValues, attr
     case 'stalled_projects': return <StalledList items={reconData!.stalled_projects} reconAction={reconAction} />
     case 'fuzzy_matches': return <FuzzyList items={reconData!.fuzzy_matches} reconAction={reconAction} />
     case 'panel_gaps': return <PanelGapList items={reconData!.panel_gaps} />
-    case 'duplicate_artists': return <DuplicateList items={reconData!.duplicate_artists} />
+    case 'duplicate_artists': return <DuplicateList items={reconData!.duplicate_artists} onMerge={reload} />
     case 'affiliation_variants': return <VariantList items={reconData!.affiliation_variants} actionType="merge_affiliation" mergeValues={mergeValues} reconAction={reconAction} />
     case 'identity_inconsistencies': return <VariantList items={reconData!.identity_inconsistencies} actionType="merge_identity" mergeValues={mergeValues} reconAction={reconAction} />
-    case 'alias_conflicts': return <AliasConflictList items={reconData!.alias_conflicts} />
+    case 'alias_conflicts': return <AliasConflictList items={reconData!.alias_conflicts} onAction={reload} />
     case 'location_variants': return <VariantList items={reconData!.location_variants} actionType="merge_location" mergeValues={mergeValues} reconAction={reconAction} />
     case 'unattributed_files': return <UnattributedList items={adminFiles} attributeFile={attributeFile} attributeFileSearch={attributeFileSearch} />
-    default: return <p class="empty">Unknown tab</p>
+    default: return <p className="empty">Unknown tab</p>
   }
 }
 
@@ -207,18 +233,18 @@ function OrphanList({ items, reconAction, showDeveloper }: {
   reconAction: (action: string, artistId: string, projectName: string) => void
   showDeveloper?: boolean
 }) {
-  if (!items.length) return <p class="empty">No items</p>
+  if (!items.length) return <p className="empty">No items</p>
   return (
     <>
       {items.map((item, i) => (
-        <div key={i} class="recon-item">
+        <div key={i} className="recon-item">
           {artistLink(item.artist_id, item.display_name)}
-          <span class="recon-meta">
+          <span className="recon-meta">
             {item.project_name}
             {showDeveloper && item.developer ? ` — ${item.developer}` : ''}
           </span>
-          <button class="btn btn-sm btn-primary" onClick={() => reconAction('link_eoi', item.artist_id, item.project_name)}>Link</button>
-          <button class="btn btn-sm" onClick={() => reconAction('dismiss', item.artist_id, '')}>Dismiss</button>
+          <button className="btn btn-sm btn-primary" onClick={() => reconAction('link_eoi', item.artist_id, item.project_name)}>Link</button>
+          <button className="btn btn-sm" onClick={() => reconAction('dismiss', item.artist_id, '')}>Dismiss</button>
         </div>
       ))}
     </>
@@ -229,15 +255,15 @@ function StalledList({ items, reconAction }: {
   items: ReconStalled[]
   reconAction: (action: string, artistId: string, projectName: string, projectIndex?: number, newStatus?: string) => void
 }) {
-  if (!items.length) return <p class="empty">No items</p>
+  if (!items.length) return <p className="empty">No items</p>
   return (
     <>
       {items.map((item, i) => (
-        <div key={i} class="recon-item">
+        <div key={i} className="recon-item">
           {artistLink(item.artist_id, item.display_name)}
-          <span class="recon-meta">{item.project_name} [{item.status}]</span>
-          <button class="btn btn-sm btn-primary" onClick={() => reconAction('advance_status', item.artist_id, '', item.project_index, 'completed')}>Complete</button>
-          <button class="btn btn-sm" onClick={() => reconAction('dismiss', item.artist_id, '')}>Dismiss</button>
+          <span className="recon-meta">{item.project_name} [{item.status}]</span>
+          <button className="btn btn-sm btn-primary" onClick={() => reconAction('advance_status', item.artist_id, '', item.project_index, 'completed')}>Complete</button>
+          <button className="btn btn-sm" onClick={() => reconAction('dismiss', item.artist_id, '')}>Dismiss</button>
         </div>
       ))}
     </>
@@ -248,16 +274,16 @@ function FuzzyList({ items, reconAction }: {
   items: ReconFuzzy[]
   reconAction: (action: string, artistId: string, projectName: string) => void
 }) {
-  if (!items.length) return <p class="empty">No items</p>
+  if (!items.length) return <p className="empty">No items</p>
   return (
     <>
       {items.map((item, i) => (
-        <div key={i} class="recon-item">
+        <div key={i} className="recon-item">
           {artistLink(item.artist_id, item.display_name)}
-          <span class="recon-meta">{item.source_name} &rarr; {item.match_name}</span>
-          <span class="recon-match-score">{Math.round(item.score * 100)}%</span>
-          <button class="btn btn-sm btn-primary" onClick={() => reconAction('link_eoi', item.artist_id, item.source_name)}>Link</button>
-          <button class="btn btn-sm" onClick={() => reconAction('dismiss', item.artist_id, '')}>Dismiss</button>
+          <span className="recon-meta">{item.source_name} &rarr; {item.match_name}</span>
+          <span className="recon-match-score">{Math.round(item.score * 100)}%</span>
+          <button className="btn btn-sm btn-primary" onClick={() => reconAction('link_eoi', item.artist_id, item.source_name)}>Link</button>
+          <button className="btn btn-sm" onClick={() => reconAction('dismiss', item.artist_id, '')}>Dismiss</button>
         </div>
       ))}
     </>
@@ -265,13 +291,13 @@ function FuzzyList({ items, reconAction }: {
 }
 
 function PanelGapList({ items }: { items: ReconPanelGap[] }) {
-  if (!items.length) return <p class="empty">No items</p>
+  if (!items.length) return <p className="empty">No items</p>
   return (
     <>
       {items.map((item, i) => (
-        <div key={i} class="recon-item">
+        <div key={i} className="recon-item">
           {artistLink(item.artist_id, item.display_name)}
-          <span class="recon-meta">{item.panel_count} panel(s), no projects</span>
+          <span className="recon-meta">{item.panel_count} panel(s), no projects</span>
         </div>
       ))}
     </>
@@ -282,16 +308,113 @@ function PanelGapList({ items }: { items: ReconPanelGap[] }) {
 // Data quality renderers
 // ---------------------------------------------------------------------------
 
-function DuplicateList({ items }: { items: ReconDuplicate[] }) {
-  if (!items.length) return <p class="empty">No items</p>
+function DuplicateList({ items, onMerge }: { items: ReconDuplicate[]; onMerge: () => void }) {
+  const [dismissed, setDismissed] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem('dismissed_pairs')
+      return raw ? new Set(JSON.parse(raw)) : new Set()
+    } catch { return new Set() }
+  })
+  const [merging, setMerging] = useState<string | null>(null)
+  const [autoMergePreview, setAutoMergePreview] = useState<{ pairs: { keep_name: string; remove_name: string; score: number; keep_completeness: number; remove_completeness: number }[]; merged: number; errors: string[] } | null>(null)
+  const [autoMerging, setAutoMerging] = useState(false)
+
+  const dismiss = (idA: string, idB: string) => {
+    const key = [idA, idB].sort().join('|')
+    const next = new Set(dismissed)
+    next.add(key)
+    setDismissed(next)
+    localStorage.setItem('dismissed_pairs', JSON.stringify([...next]))
+  }
+
+  const doMerge = async (keepId: string, removeId: string) => {
+    setMerging(`${keepId}-${removeId}`)
+    try {
+      await api.artists.merge(keepId, removeId)
+      onMerge()
+    } catch (e) {
+      alert(`Merge failed: ${e}`)
+    }
+    setMerging(null)
+  }
+
+  const previewAutoMerge = async () => {
+    setAutoMerging(true)
+    try {
+      const result = await api.artists.autoMerge(0.95, true)
+      setAutoMergePreview(result)
+    } catch (e) {
+      alert(`Auto-merge preview failed: ${e}`)
+    }
+    setAutoMerging(false)
+  }
+
+  const applyAutoMerge = async () => {
+    setAutoMerging(true)
+    try {
+      await api.artists.autoMerge(0.95, false)
+      setAutoMergePreview(null)
+      onMerge()
+    } catch (e) {
+      alert(`Auto-merge failed: ${e}`)
+    }
+    setAutoMerging(false)
+  }
+
+  const highConfCount = items.filter(i => i.score >= 0.95).length
+  const visible = items.filter(i => {
+    const key = [i.artist_id_a, i.artist_id_b].sort().join('|')
+    return !dismissed.has(key)
+  })
+
+  if (!items.length) return <p className="empty">No items</p>
+
   return (
     <>
-      {items.map((item, i) => (
-        <div key={i} class="recon-item">
-          <a class="clickable-name" href={`/artists-dashboard#${encodeURIComponent(item.artist_id_a)}`}>{item.name_a}</a>
-          <span class="recon-meta">&harr;</span>
-          <a class="clickable-name" href={`/artists-dashboard#${encodeURIComponent(item.artist_id_b)}`}>{item.name_b}</a>
-          <span class="recon-match-score">{Math.round(item.score * 100)}%</span>
+      {highConfCount > 0 && (
+        <div className="recon-item" style={{ background: 'var(--surface-raised)', borderRadius: '6px', padding: '8px 12px', marginBottom: '8px' }}>
+          <span style={{ fontWeight: 600 }}>{highConfCount} high-confidence pair{highConfCount > 1 ? 's' : ''} (&ge;95%)</span>
+          {!autoMergePreview ? (
+            <button className="btn btn-sm" onClick={previewAutoMerge} disabled={autoMerging} style={{ marginLeft: '12px' }}>
+              {autoMerging ? 'Loading\u2026' : 'Preview auto-merge'}
+            </button>
+          ) : (
+            <>
+              <span style={{ marginLeft: '12px', fontSize: '12px', color: 'var(--fg-secondary)' }}>
+                Will merge {autoMergePreview.pairs.length} pairs
+              </span>
+              <button className="btn btn-sm btn-primary" onClick={applyAutoMerge} disabled={autoMerging} style={{ marginLeft: '8px' }}>
+                {autoMerging ? 'Merging\u2026' : 'Apply'}
+              </button>
+              <button className="btn btn-sm" onClick={() => setAutoMergePreview(null)} style={{ marginLeft: '4px' }}>Cancel</button>
+            </>
+          )}
+        </div>
+      )}
+      {autoMergePreview && autoMergePreview.pairs.length > 0 && (
+        <div style={{ fontSize: '12px', marginBottom: '8px', padding: '4px 12px', background: 'var(--surface-sunken)', borderRadius: '4px' }}>
+          {autoMergePreview.pairs.map((p, i) => (
+            <div key={i}>Keep <strong>{p.keep_name}</strong> ({Math.round(p.keep_completeness * 100)}%) &larr; {p.remove_name} ({Math.round(p.remove_completeness * 100)}%)</div>
+          ))}
+        </div>
+      )}
+      {visible.map((item, i) => (
+        <div key={i} className="recon-item">
+          <a className="clickable-name" href={`/artists-dashboard#${encodeURIComponent(item.artist_id_a)}`}>{item.name_a}</a>
+          <span className="recon-meta">&harr;</span>
+          <a className="clickable-name" href={`/artists-dashboard#${encodeURIComponent(item.artist_id_b)}`}>{item.name_b}</a>
+          <span className="recon-match-score">{Math.round(item.score * 100)}%</span>
+          <button
+            className="btn btn-sm btn-primary"
+            disabled={merging !== null}
+            onClick={() => doMerge(item.artist_id_a, item.artist_id_b)}
+          >Keep "{item.name_a}"</button>
+          <button
+            className="btn btn-sm"
+            disabled={merging !== null}
+            onClick={() => doMerge(item.artist_id_b, item.artist_id_a)}
+          >Keep "{item.name_b}"</button>
+          <button className="btn btn-sm" onClick={() => dismiss(item.artist_id_a, item.artist_id_b)}>Not Dupes</button>
         </div>
       ))}
     </>
@@ -304,45 +427,103 @@ function VariantList({ items, actionType, mergeValues, reconAction }: {
   mergeValues: (action: string, oldValue: string, newValue: string) => void
   reconAction: (action: string, artistId: string, projectName: string) => void
 }) {
-  if (!items.length) return <p class="empty">No items</p>
+  if (!items.length) return <p className="empty">No items</p>
   return (
     <>
       {items.map((item, i) => (
-        <div key={i} class="recon-item">
-          <span class="recon-name">
+        <div key={i} className="recon-item">
+          <span className="recon-name">
             {item.value_a} <span style={{ color: 'var(--fg-disabled)', fontSize: '11px' }}>({item.count_a})</span>
           </span>
-          <span class="recon-meta">&harr;</span>
-          <span class="recon-name">
+          <span className="recon-meta">&harr;</span>
+          <span className="recon-name">
             {item.value_b} <span style={{ color: 'var(--fg-disabled)', fontSize: '11px' }}>({item.count_b})</span>
           </span>
-          <span class="recon-match-score">{Math.round(item.score * 100)}%</span>
-          <button class="btn btn-sm btn-primary" onClick={() => mergeValues(actionType, item.value_b, item.value_a)}>Keep "{item.value_a}"</button>
-          <button class="btn btn-sm" onClick={() => mergeValues(actionType, item.value_a, item.value_b)}>Keep "{item.value_b}"</button>
-          <button class="btn btn-sm" onClick={() => reconAction('dismiss', '', '')}>Dismiss</button>
+          <span className="recon-match-score">{Math.round(item.score * 100)}%</span>
+          <button className="btn btn-sm btn-primary" onClick={() => mergeValues(actionType, item.value_b, item.value_a)}>Keep "{item.value_a}"</button>
+          <button className="btn btn-sm" onClick={() => mergeValues(actionType, item.value_a, item.value_b)}>Keep "{item.value_b}"</button>
+          <button className="btn btn-sm" onClick={() => reconAction('dismiss', '', '')}>Dismiss</button>
         </div>
       ))}
     </>
   )
 }
 
-function AliasConflictList({ items }: { items: ReconAliasConflict[] }) {
-  if (!items.length) return <p class="empty">No items</p>
+function AliasConflictList({ items, onAction }: { items: ReconAliasConflict[]; onAction: () => void }) {
+  const [selected, setSelected] = useState<Record<number, string>>({})
+  const [acting, setActing] = useState(false)
+
+  const assignAlias = async (idx: number, item: ReconAliasConflict) => {
+    const toArtistId = selected[idx]
+    if (!toArtistId) return
+    setActing(true)
+    try {
+      // Remove from all others, assign to selected
+      for (const a of item.artists) {
+        if (a.artist_id !== toArtistId) {
+          await api.artists.resolveRecon({
+            action: 'assign_alias',
+            from_artist_id: a.artist_id,
+            to_artist_id: toArtistId,
+            name: item.shared_name,
+          })
+          break // Only need to move from one — they all share the same name
+        }
+      }
+      onAction()
+    } catch (e) {
+      alert(`Assign failed: ${e}`)
+    }
+    setActing(false)
+  }
+
+  const removeFromAll = async (item: ReconAliasConflict) => {
+    setActing(true)
+    try {
+      for (const a of item.artists) {
+        await api.artists.resolveRecon({
+          action: 'remove_alias',
+          artist_id: a.artist_id,
+          name: item.shared_name,
+        })
+      }
+      onAction()
+    } catch (e) {
+      alert(`Remove failed: ${e}`)
+    }
+    setActing(false)
+  }
+
+  if (!items.length) return <p className="empty">No items</p>
   return (
     <>
       {items.map((item, i) => (
-        <div key={i} class="recon-item">
-          <span class="recon-name" style={{ fontWeight: 600 }}>{item.shared_name}</span>
-          <span class="recon-meta">
-            shared by:{' '}
-            {item.artists.map((a, j) => (
-              <span key={a.artist_id}>
-                {j > 0 && ', '}
-                <a class="clickable-name" href={`/artists-dashboard#${encodeURIComponent(a.artist_id)}`}>{a.display_name}</a>
-                {' '}({a.type})
-              </span>
+        <div key={i} className="recon-item" style={{ flexWrap: 'wrap' }}>
+          <span className="recon-name" style={{ fontWeight: 600 }}>{item.shared_name}</span>
+          <span className="recon-meta" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            {item.artists.map((a) => (
+              <label key={a.artist_id} style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name={`alias-${i}`}
+                  checked={selected[i] === a.artist_id}
+                  onChange={() => setSelected(prev => ({ ...prev, [i]: a.artist_id }))}
+                />
+                <a className="clickable-name" href={`/artists-dashboard#${encodeURIComponent(a.artist_id)}`}>{a.display_name}</a>
+                <span style={{ fontSize: '11px', color: 'var(--fg-disabled)' }}>({a.type})</span>
+              </label>
             ))}
           </span>
+          <button
+            className="btn btn-sm btn-primary"
+            disabled={acting || !selected[i]}
+            onClick={() => assignAlias(i, item)}
+          >Assign</button>
+          <button
+            className="btn btn-sm"
+            disabled={acting}
+            onClick={() => removeFromAll(item)}
+          >Remove from all</button>
         </div>
       ))}
     </>
@@ -358,9 +539,9 @@ function UnattributedList({ items, attributeFile, attributeFileSearch }: {
   attributeFile: (fileId: string, artistId: string) => void
   attributeFileSearch: (fileId: string) => void
 }) {
-  if (!items.length) return <p class="empty">No unattributed files</p>
+  if (!items.length) return <p className="empty">No unattributed files</p>
   return (
-    <table class="ranking-table">
+    <table className="ranking-table">
       <thead>
         <tr>
           <th>File</th>
@@ -383,7 +564,7 @@ function UnattributedList({ items, attributeFile, attributeFileSearch }: {
             <td style={{ fontSize: '11px' }}>{f.file_type}</td>
             <td>
               {f.candidate_display_name ? (
-                <a class="clickable-name" href={`/artists-dashboard#${encodeURIComponent(f.candidate_artist_id!)}`}>
+                <a className="clickable-name" href={`/artists-dashboard#${encodeURIComponent(f.candidate_artist_id!)}`}>
                   {f.candidate_display_name}
                 </a>
               ) : (
@@ -393,9 +574,9 @@ function UnattributedList({ items, attributeFile, attributeFileSearch }: {
             <td>{f.match_score ? `${Math.round(f.match_score * 100)}%` : '—'}</td>
             <td style={{ whiteSpace: 'nowrap' }}>
               {f.candidate_artist_id && (
-                <button class="btn btn-sm btn-primary" onClick={() => attributeFile(f.file_id, f.candidate_artist_id!)}>Accept</button>
+                <button className="btn btn-sm btn-primary" onClick={() => attributeFile(f.file_id, f.candidate_artist_id!)}>Accept</button>
               )}{' '}
-              <button class="btn btn-sm" onClick={() => attributeFileSearch(f.file_id)}>Search</button>
+              <button className="btn btn-sm" onClick={() => attributeFileSearch(f.file_id)}>Search</button>
             </td>
           </tr>
         ))}
