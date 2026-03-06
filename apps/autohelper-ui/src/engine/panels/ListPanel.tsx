@@ -1,0 +1,225 @@
+import { useMemo, useCallback, useRef } from 'react';
+import { clsx } from 'clsx';
+
+import {
+    UniversalTableCore,
+    makeFlatRowModel,
+    type TableColumn,
+    type TableRow,
+} from '@ui/table-core';
+import type { Manifest, FieldDef } from '../types/manifest';
+import type { SubmissionRecord, ReviewState } from '../types/record';
+import { useEngine } from '../EngineContext';
+import { useStore } from 'zustand';
+import { useFilteredRecords } from '../hooks/useFilteredRecords';
+
+// ============================================================================
+// COLUMN BUILDER
+// ============================================================================
+
+function buildColumns(
+    manifest: Manifest,
+    reviewStates: Record<string, ReviewState>,
+): TableColumn[] {
+    const cols: TableColumn[] = [];
+
+    for (const [fieldId, fieldDef] of Object.entries(manifest.fields)) {
+        if (!fieldDef.column) continue;
+
+        cols.push({
+            id: fieldId,
+            header: fieldDef.label,
+            width: fieldDef.width ?? 'flex',
+            minWidth: 40,
+            resizable: true,
+            align: fieldDef.type === 'number' ? 'right' : 'left',
+
+            cell: (row: TableRow) => {
+                const record = row.data as SubmissionRecord;
+                const value = getCellValue(record, fieldId, fieldDef, reviewStates);
+                return formatCellDisplay(value, fieldDef, manifest);
+            },
+
+            sortKey: (row: TableRow) => {
+                const record = row.data as SubmissionRecord;
+                const value = getCellValue(record, fieldId, fieldDef, reviewStates);
+                if (value == null) return null;
+                if (typeof value === 'number') return value;
+                if (typeof value === 'string') return value;
+                if (Array.isArray(value)) return value.join(',');
+                return String(value);
+            },
+        });
+    }
+
+    return cols;
+}
+
+// ============================================================================
+// CELL VALUE HELPERS (unchanged from original)
+// ============================================================================
+
+function getCellValue(
+    record: SubmissionRecord,
+    fieldId: string,
+    fieldDef: FieldDef,
+    reviewStates: Record<string, ReviewState>,
+): unknown {
+    if (fieldDef.type === 'assignment' && fieldDef.group) {
+        return reviewStates[record.id]?.assignments[fieldDef.group] ?? [];
+    }
+    if (fieldId === 'rank') {
+        const rank = reviewStates[record.id]?.rank ?? record.fields[fieldId] ?? 0;
+        const n = typeof rank === 'number' ? rank : 0;
+        return n > 0 ? '\uD83D\uDC00'.repeat(Math.min(n, 4)) : '';
+    }
+    return record.fields[fieldId];
+}
+
+function formatCellDisplay(
+    value: unknown,
+    fieldDef: FieldDef,
+    manifest: Manifest,
+): React.ReactNode {
+    if (value === null || value === undefined) return (
+        <span className="text-ws-muted">{'\u2014'}</span>
+    );
+
+    if (fieldDef.type === 'assignment' && fieldDef.group) {
+        const arr = Array.isArray(value) ? value : [];
+        if (arr.length === 0) return <span className="text-ws-muted">{'\u2014'}</span>;
+        const group = manifest.assignmentGroups[fieldDef.group];
+        const text = arr.map((v) => {
+            const opt = group?.options.find((o) => o.value === v);
+            return opt ? (opt.emoji ? `${opt.emoji} ${opt.label}` : opt.label) : String(v);
+        }).join(', ');
+        return <span className="text-xs truncate">{text}</span>;
+    }
+
+    if (fieldDef.type === 'boolean') {
+        return <span className="text-xs">{value ? '\u2713' : ''}</span>;
+    }
+
+    return <span className="text-xs truncate">{String(value)}</span>;
+}
+
+// ============================================================================
+// ROW STYLE EVALUATOR (unchanged from original)
+// ============================================================================
+
+function evaluateRowRule(
+    rule: { field: string; condition: string; value?: unknown; className: string },
+    record: SubmissionRecord,
+    rs: ReviewState | undefined,
+): boolean {
+    let fieldValue: unknown;
+    const assignmentArr = rs?.assignments[rule.field];
+    if (assignmentArr !== undefined) {
+        if (rule.condition === 'equals') return assignmentArr.includes(rule.value as string);
+        if (rule.condition === 'notEquals') return !assignmentArr.includes(rule.value as string);
+        if (rule.condition === 'truthy') return assignmentArr.length > 0;
+        if (rule.condition === 'falsy') return assignmentArr.length === 0;
+        return false;
+    } else if (rule.field === 'confirmed') {
+        fieldValue = rs?.confirmed ?? false;
+    } else {
+        fieldValue = record.fields[rule.field];
+    }
+
+    switch (rule.condition) {
+        case 'equals': return fieldValue === rule.value;
+        case 'notEquals': return fieldValue !== rule.value;
+        case 'truthy': return !!fieldValue;
+        case 'falsy': return !fieldValue;
+        default: return false;
+    }
+}
+
+// ============================================================================
+// LIST PANEL
+// ============================================================================
+
+export function ListPanel() {
+    const { manifest, store, records } = useEngine();
+    const selectedId = useStore(store, (s) => s.selectedId);
+    const selectedIds = useStore(store, (s) => s.selectedIds);
+    const reviewStates = useStore(store, (s) => s.reviewStates);
+    const filters = useStore(store, (s) => s.filters);
+    const searchText = useStore(store, (s) => s.searchText);
+    const select = useStore(store, (s) => s.select);
+    const selectToggle = useStore(store, (s) => s.selectToggle);
+    const selectRange = useStore(store, (s) => s.selectRange);
+    const selectRangeAdd = useStore(store, (s) => s.selectRangeAdd);
+
+    const filteredRecords = useFilteredRecords(records, manifest, reviewStates, filters, searchText);
+    const orderedIds = useMemo(() => filteredRecords.map((r) => r.id), [filteredRecords]);
+
+    // Track last click event for modifier key detection
+    const lastClickEvent = useRef<MouseEvent | null>(null);
+
+    const columns = useMemo(
+        () => buildColumns(manifest, reviewStates),
+        [manifest, reviewStates]
+    );
+
+    const rowModel = useMemo(
+        () => makeFlatRowModel(filteredRecords),
+        [filteredRecords]
+    );
+
+    const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+    const rowStyles = manifest.rowStyles ?? [];
+
+    // Capture the native click event for modifier keys BEFORE it reaches the row handler
+    // (UniversalTableCore's onRowClick only passes rowId, not the event)
+    const handleNativeClick = useCallback((e: React.MouseEvent) => {
+        lastClickEvent.current = e.nativeEvent;
+    }, []);
+
+    const handleRowClick = useCallback((rowId: string) => {
+        const e = lastClickEvent.current;
+        if (e?.ctrlKey && e?.shiftKey) {
+            selectRangeAdd(rowId, orderedIds);
+        } else if (e?.shiftKey) {
+            selectRange(rowId, orderedIds);
+        } else if (e?.ctrlKey) {
+            selectToggle(rowId);
+        } else {
+            select(rowId);
+        }
+    }, [orderedIds, select, selectToggle, selectRange, selectRangeAdd]);
+
+    const getRowClassName = useCallback((row: TableRow) => {
+        const record = row.data as SubmissionRecord;
+        const rs = reviewStates[record.id];
+        const isSelected = selectedSet.has(record.id);
+        const isConfirmed = rs?.confirmed;
+
+        // Manifest-driven row style rules
+        const matchedStyles = rowStyles
+            .filter((rule) => evaluateRowRule(rule, record, rs))
+            .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+        const dynamicClass = matchedStyles.length > 0 ? matchedStyles[0].className : '';
+
+        return clsx(
+            'select-none',
+            isSelected && 'bg-blue-50 ring-1 ring-inset ring-blue-200',
+            !isSelected && isConfirmed && 'bg-green-50/60',
+            !isSelected && dynamicClass,
+        );
+    }, [reviewStates, selectedSet, rowStyles]);
+
+    return (
+        // onClickCapture fires in capture phase (before row onClick bubbles)
+        <div className="h-full" onClickCapture={handleNativeClick}>
+            <UniversalTableCore
+                rowModel={rowModel}
+                columns={columns}
+                compact
+                stickyHeader
+                onRowClick={handleRowClick}
+                getRowClassName={getRowClassName}
+            />
+        </div>
+    );
+}

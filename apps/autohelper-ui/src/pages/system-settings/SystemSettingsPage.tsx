@@ -63,7 +63,7 @@ function ServiceStatusCard() {
       <FieldRow label="Database">
         <StatusBadge ok={dbOk} label={dbOk ? 'Connected' : 'Unknown'} />
       </FieldRow>
-      {health?.version && <FieldRow label="Version">{String(health.version)}</FieldRow>}
+      {health?.version != null && <FieldRow label="Version">{String(health.version)}</FieldRow>}
     </CardShell>
   )
 }

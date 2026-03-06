@@ -8,10 +8,20 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "preact": "^10.25.0"
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "clsx": "catalog:",
+    "dockview": "^4.13.1",
+    "lucide-react": "catalog:",
+    "zod": "catalog:",
+    "zustand": "^4.5.7"
   },
   "devDependencies": {
-    "@preact/preset-vite": "^2.9.0",
+    "@vitejs/plugin-react": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"
   }
