@@ -30,11 +30,8 @@ function rebuildMenu(): void {
       ? [{ label: artistScanLabel, enabled: false } as Electron.MenuItemConstructorOptions]
       : []),
     { type: "separator" },
-    { label: "Settings", click: () => showWindow() },
-    {
-      label: "Artist Information",
-      click: () => showWindow("/artists-dashboard"),
-    },
+    { label: "Open Dashboard", click: () => showWindow("/") },
+    { label: "Settings", click: () => showWindow("/dashboard") },
     { type: "separator" },
     {
       label: "Exit",

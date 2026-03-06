@@ -49,7 +49,7 @@
     "setup:win": "pnpm build:all:win && pnpm migrate && pnpm seed:dev",
     "build:all:clean": "node scripts/clean-dist.mjs && pnpm run build:all",
     "build:all:clean:win": "node scripts/clean-dist.mjs && pnpm run build:all:win",
-    "dev:autohelper": "node -e \"process.chdir('apps/autohelper'); require('child_process').execFileSync('python',['-m','autohelper.main','--dev'],{stdio:'inherit'})\"",
+    "dev:autohelper": "mise run autohelper",
     "dev:desktop": "pnpm dev:desktop:autohelper",
     "dev:desktop:autohelper": "pnpm --filter autohelper-desktop dev:autohelper",
     "dev:desktop:autoart": "pnpm --filter autohelper-desktop dev:autoart",

@@ -3,5 +3,20 @@ python = "3.13"
 node = "24"
 
 [env]
-# Use a project-local venv for Python deps (pyinstaller, autohelper requirements)
 VIRTUAL_ENV = "{{config_root}}/apps/autohelper/.venv"
+_.path = ["{{config_root}}/apps/autohelper/.venv/Scripts"]
+_.file = ".env"
+
+[tasks.autohelper]
+description = "Start AutoHelper dev server"
+dir = "apps/autohelper"
+run = "python -m uvicorn autohelper.app:build_app --host 127.0.0.1 --port 8100 --reload --factory"
+
+[tasks."autohelper:venv"]
+description = "Create/update AutoHelper venv with Python 3.13"
+dir = "apps/autohelper"
+run = "python -m venv .venv && .venv/Scripts/pip install -e .[dev]"
+
+[tasks."autohelper:validate"]
+description = "Test ClickUp connection"
+run = "curl -s http://localhost:8100/clickup/validate"

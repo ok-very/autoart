@@ -91,3 +91,12 @@ apps/autohelper/_collected/
 
 # Serena MCP state
 .serena/
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Claude Code worktrees
+.claude/worktrees/
+
+# Test data (large local files)
+_test-data/

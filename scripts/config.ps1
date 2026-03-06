@@ -50,22 +50,41 @@ function Import-AutoArtEnv {
     }
 }
 
+function Stop-ProcessTree {
+    param(
+        [Parameter(Mandatory = $true)][int]$ParentId
+    )
+    # Recursively kill child processes before killing the parent
+    $children = Get-CimInstance Win32_Process -Filter "ParentProcessId = $ParentId" -ErrorAction SilentlyContinue
+    foreach ($child in $children) {
+        Stop-ProcessTree -ParentId $child.ProcessId
+    }
+    try {
+        Stop-Process -Id $ParentId -Force -ErrorAction SilentlyContinue
+    }
+    catch {
+        # Already dead
+    }
+}
+
 function Stop-ProcessOnPort {
     param(
         [Parameter(Mandatory = $true)][int]$Port
     )
 
+    # Collect ALL process IDs touching this port (Listen + Established),
+    # not just listeners — uvicorn --reload spawns child workers that hold connections.
     [array]$owningProcessIds = @()
 
     try {
-        $owningProcessIds = @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction Stop |
+        $owningProcessIds = @(Get-NetTCPConnection -LocalPort $Port -ErrorAction Stop |
             Select-Object -ExpandProperty OwningProcess -Unique)
     }
     catch {
         # Get-NetTCPConnection may not exist on older Windows/PS; fall back to netstat parsing
-        $netstatMatches = netstat -ano -p tcp | Select-String -Pattern (":$Port\s+LISTENING\s+(\d+)$")
+        $netstatMatches = netstat -ano -p tcp | Select-String -Pattern (":$Port\s+.*\s+(\d+)$")
         foreach ($line in $netstatMatches) {
-            if ($line.Line -match ":$Port\s+LISTENING\s+(\d+)$") {
+            if ($line.Line -match ":$Port\s+.*\s+(\d+)$") {
                 $owningProcessIds += [int]$Matches[1]
             }
         }
@@ -78,12 +97,25 @@ function Stop-ProcessOnPort {
     }
 
     foreach ($owningProcessId in $owningProcessIds) {
+        if ($owningProcessId -eq 0) { continue }
         try {
-            Stop-Process -Id $owningProcessId -Force -ErrorAction Stop
-            Write-Host ("[OK] Stopped process {0} on port {1}" -f $owningProcessId, $Port) -ForegroundColor Green
+            Stop-ProcessTree -ParentId $owningProcessId
+            Write-Host ("[OK] Stopped process tree {0} on port {1}" -f $owningProcessId, $Port) -ForegroundColor Green
         }
         catch {
             Write-Host ("[!] Could not stop process {0} on port {1}. {2}" -f $owningProcessId, $Port, $_.Exception.Message) -ForegroundColor Yellow
+        }
+    }
+
+    # Verify the port is actually free now
+    Start-Sleep -Milliseconds 500
+    $remaining = @(Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue |
+        Where-Object { $_.OwningProcess -ne 0 } |
+        Select-Object -ExpandProperty OwningProcess -Unique)
+    if ($remaining.Count -gt 0) {
+        Write-Host "[!] Port $Port still in use by PID(s): $($remaining -join ', '). Force-killing..." -ForegroundColor Yellow
+        foreach ($pid in $remaining) {
+            Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
         }
     }
 }

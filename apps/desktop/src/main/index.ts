@@ -36,7 +36,7 @@ export function setIsQuitting(value: boolean): void {
  * Show the main window, optionally navigating to a specific path.
  * @param path - URL path to load (default: "/dashboard")
  */
-export async function showWindow(path: string = "/dashboard"): Promise<void> {
+export async function showWindow(path: string = "/"): Promise<void> {
   const targetUrl = `${BASE_URL}${path}`;
 
   if (mainWindow && !mainWindow.isDestroyed()) {
