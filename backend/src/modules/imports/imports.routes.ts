@@ -40,7 +40,8 @@ const SessionIdParamSchema = z.object({
 
 const CreateConnectorSessionBodySchema = z.object({
     // TODO: Add 'asana', 'notion' when implemented
-    connectorType: z.enum(['monday']),
+    connectorType: z.enum(['monday', 'clickup']),
+    /** Monday: board ID. ClickUp: list ID. */
     boardId: z.string().min(1),
     targetProjectId: z.string().uuid().optional(),
 });

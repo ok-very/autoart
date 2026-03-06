@@ -14,7 +14,7 @@ import type {
     NewConnectionCredential,
 } from '../../db/schema.js';
 
-export type Provider = 'monday' | 'asana' | 'notion' | 'jira' | 'google' | 'microsoft' | 'autohelper';
+export type Provider = 'monday' | 'clickup' | 'asana' | 'notion' | 'jira' | 'google' | 'microsoft' | 'autohelper';
 
 // ============================================================================
 // CRUD OPERATIONS
@@ -133,6 +133,33 @@ export async function getMondayToken(userId?: string): Promise<string> {
     if (!envToken) {
         throw new Error(
             'No Monday API token found. Set MONDAY_API_TOKEN or MONDAY_API_KEY env var, or connect your account.'
+        );
+    }
+
+    return envToken;
+}
+
+/**
+ * Get ClickUp API token with fallback chain:
+ * 1. User-specific credential from DB
+ * 2. System-wide credential from DB
+ * 3. Environment variable CLICKUP_TOKEN or CLICKUP_API_TOKEN
+ */
+export async function getClickUpToken(userId?: string): Promise<string> {
+    const credential = await getCredential(userId ?? null, 'clickup');
+
+    if (credential) {
+        if (credential.expires_at && credential.expires_at < new Date()) {
+            console.warn('ClickUp API token expired, falling back to env var');
+        } else {
+            return credential.access_token;
+        }
+    }
+
+    const envToken = process.env.CLICKUP_TOKEN ?? process.env.CLICKUP_API_TOKEN;
+    if (!envToken) {
+        throw new Error(
+            'No ClickUp API token found. Set CLICKUP_TOKEN env var, or connect your account.'
         );
     }
 

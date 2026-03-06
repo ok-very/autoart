@@ -104,7 +104,7 @@ export async function createSession(params: {
  * Extend this type union when adding support for other connectors.
  */
 export async function createConnectorSession(params: {
-    connectorType: 'monday';
+    connectorType: 'monday' | 'clickup';
     connectorConfig: {
         boardId?: string;
         boardIds?: string[];

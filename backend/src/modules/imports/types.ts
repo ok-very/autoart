@@ -113,7 +113,7 @@ export interface ImportPlanContainer {
         /** External source identifier */
         externalId?: string;
         /** Source system type */
-        sourceType?: 'monday' | 'csv' | 'manual';
+        sourceType?: 'monday' | 'clickup' | 'csv' | 'manual';
         [key: string]: unknown;
     };
 }

@@ -14,3 +14,10 @@ export type {
     MondayColumnSchema,
     MondayBoardSchema,
 } from './monday-connector.js';
+
+export { ClickUpConnector } from './clickup-connector.js';
+export type {
+    ClickUpDataNode,
+    ClickUpColumnValue,
+    ClickUpListSchema,
+} from './clickup-connector.js';

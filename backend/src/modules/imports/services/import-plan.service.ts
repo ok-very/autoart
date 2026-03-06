@@ -16,8 +16,9 @@ import { generateClassifications, generateClassificationsForConnectorItems, extr
 import { getSession, PARSERS } from './import-sessions.service.js';
 import { getPlannedStatus, transitionStatusInTransaction } from './session-status.service.js';
 import { listDefinitions } from '../../records/records.service.js';
-import { getMondayToken } from '../connections.service.js';
+import { getMondayToken, getClickUpToken } from '../connections.service.js';
 import { MondayConnector } from '../connectors/monday-connector.js';
+import { ClickUpConnector } from '../connectors/clickup-connector.js';
 import type { MondayWorkspaceConfig } from '../monday/monday-config.types.js';
 import { interpretMondayData, inferBoardConfig } from '../monday/monday-domain-interpreter.js';
 import * as mondayWorkspaceService from '../monday/monday-workspace.service.js';
@@ -38,7 +39,10 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
     // Handle connector sessions
     if (session.parser_name.startsWith('connector:')) {
         if (session.parser_name === 'connector:monday') {
-            return generatePlanFromConnector(sessionId, session.created_by ?? undefined);
+            return generatePlanFromMondayConnector(sessionId, session.created_by ?? undefined);
+        }
+        if (session.parser_name === 'connector:clickup') {
+            return generatePlanFromClickUpConnector(sessionId, session.created_by ?? undefined);
         }
         throw new Error(`Connector ${session.parser_name} not supported for regeneration`);
     }
@@ -133,9 +137,26 @@ export async function generatePlan(sessionId: string): Promise<ImportPlan> {
 }
 
 /**
- * Generate a plan from a Monday.com connector session.
+ * Generate a plan from a connector session (dispatches by type).
  */
 export async function generatePlanFromConnector(
+    sessionId: string,
+    userId?: string
+): Promise<ImportPlan> {
+    const session = await getSession(sessionId);
+    if (!session) throw new Error(`Session ${sessionId} not found`);
+
+    if (session.parser_name === 'connector:clickup') {
+        return generatePlanFromClickUpConnector(sessionId, userId);
+    }
+    // Default to Monday for backwards compatibility
+    return generatePlanFromMondayConnector(sessionId, userId);
+}
+
+/**
+ * Generate a plan from a Monday.com connector session.
+ */
+async function generatePlanFromMondayConnector(
     sessionId: string,
     userId?: string
 ): Promise<ImportPlan> {
@@ -333,6 +354,164 @@ export async function generatePlanFromConnector(
             lockedSession.status as any,
             newStatus,
             hasUnresolved ? 'Plan has unresolved classifications' : 'Connector plan generated successfully'
+        );
+    });
+
+    return plan;
+}
+
+/**
+ * Generate a plan from a ClickUp connector session.
+ *
+ * Fetches tasks from a ClickUp list and converts them into an ImportPlan.
+ * Simpler than Monday since ClickUp has a flatter hierarchy (list → task → subtask).
+ */
+async function generatePlanFromClickUpConnector(
+    sessionId: string,
+    userId?: string
+): Promise<ImportPlan> {
+    const session = await getSession(sessionId);
+    if (!session) throw new Error(`Session ${sessionId} not found`);
+
+    const effectiveUserId = userId ?? session.created_by ?? undefined;
+
+    let config: { boardId?: string; listId?: string };
+    try {
+        config = typeof session.parser_config === 'string'
+            ? JSON.parse(session.parser_config)
+            : (session.parser_config as typeof config) ?? {};
+    } catch (err) {
+        logger.error({ sessionId, error: err }, '[import-plan] Failed to parse ClickUp connector config');
+        throw new Error(`Malformed connector config for session ${sessionId}`);
+    }
+
+    // ClickUp uses listId, but the generic connector interface uses boardId
+    const listId = config.listId ?? config.boardId;
+    if (!listId) throw new Error('No list ID specified in connector config');
+
+    const token = await getClickUpToken(effectiveUserId);
+    const connector = new ClickUpConnector(token);
+
+    // Collect all nodes from the list
+    const allNodes: import('../connectors/clickup-connector.js').ClickUpDataNode[] = [];
+    for await (const node of connector.traverseHierarchy(listId)) {
+        allNodes.push(node);
+    }
+
+    logger.info({ sessionId, listId, nodeCount: allNodes.length }, '[import-plan] Fetched ClickUp data');
+
+    // Convert ClickUp nodes to ImportPlan items
+    // List node → container, task nodes → items
+    const containers: ImportPlan['containers'] = [];
+    const items: ImportPlan['items'] = [];
+    const validationIssues: ImportPlan['validationIssues'] = [];
+
+    for (const node of allNodes) {
+        if (node.type === 'list') {
+            containers.push({
+                tempId: `clickup-list-${node.id}`,
+                type: 'process',
+                title: node.name,
+                parentTempId: null,
+                metadata: {
+                    externalId: node.id,
+                    sourceType: 'clickup',
+                    spaceId: node.metadata.spaceId,
+                    folderId: node.metadata.folderId,
+                },
+            });
+        } else if (node.type === 'task' || node.type === 'subtask') {
+            const fieldRecordings: Array<{ fieldName: string; value: unknown; renderHint?: string }> = [];
+
+            // Map custom field values to field recordings
+            for (const cv of node.columnValues) {
+                fieldRecordings.push({
+                    fieldName: cv.name,
+                    value: cv.value,
+                    renderHint: cv.type,
+                });
+            }
+
+            // Include status as a field recording
+            if (node.metadata.status) {
+                fieldRecordings.push({
+                    fieldName: 'status',
+                    value: node.metadata.status,
+                    renderHint: 'status',
+                });
+            }
+
+            // Include description
+            if (node.metadata.description) {
+                fieldRecordings.push({
+                    fieldName: 'description',
+                    value: node.metadata.description,
+                    renderHint: 'text',
+                });
+            }
+
+            items.push({
+                tempId: `clickup-task-${node.id}`,
+                title: node.name,
+                parentTempId: node.metadata.parentTaskId
+                    ? `clickup-task-${node.metadata.parentTaskId}`
+                    : `clickup-list-${node.metadata.listId}`,
+                metadata: {
+                    externalId: node.id,
+                    sourceType: 'clickup',
+                    url: node.metadata.url,
+                    status: node.metadata.status,
+                    priority: node.metadata.priority,
+                    tags: node.metadata.tags,
+                    isSubtask: node.type === 'subtask',
+                },
+                fieldRecordings,
+            });
+        }
+    }
+
+    // Generate classifications
+    const definitions = await listDefinitions({ definitionKind: 'record' });
+    const cachedClassifications = classificationCache.getCached(sessionId, items, definitions);
+    const classifications = cachedClassifications
+        ?? generateClassificationsForConnectorItems(items, definitions);
+
+    if (!cachedClassifications) {
+        classificationCache.setCached(sessionId, items, definitions, classifications);
+    }
+
+    extractAndStoreVocabulary(items, classifications);
+
+    const plan: ImportPlan = {
+        sessionId,
+        containers,
+        items,
+        validationIssues,
+        classifications,
+    };
+
+    const hasUnresolved = hasUnresolvedClassifications(plan);
+    const newStatus = getPlannedStatus(hasUnresolved);
+
+    await db.transaction().execute(async (trx) => {
+        const lockedSession = await trx
+            .selectFrom('import_sessions')
+            .select(['id', 'status'])
+            .where('id', '=', sessionId)
+            .forUpdate()
+            .executeTakeFirst();
+
+        if (!lockedSession) throw new Error(`Session ${sessionId} not found during plan creation`);
+
+        await trx.insertInto('import_plans').values({
+            session_id: sessionId,
+            plan_data: JSON.stringify(plan),
+            validation_issues: JSON.stringify(validationIssues),
+        }).execute();
+
+        await transitionStatusInTransaction(
+            trx, sessionId, lockedSession.status as any, newStatus,
+            hasUnresolved ? 'Plan has unresolved classifications' : 'ClickUp connector plan generated'
         );
     });
 

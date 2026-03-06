@@ -11,6 +11,8 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
+import { ClickUp } from '@autoart/clickup';
+
 import * as connectionsService from './connections.service.js';
 import { MondayClient } from './connectors/monday-client.js';
 
@@ -19,6 +21,10 @@ import { MondayClient } from './connectors/monday-client.js';
 // ============================================================================
 
 const MondayConnectBodySchema = z.object({
+    apiKey: z.string().min(1, 'API key is required'),
+});
+
+const ClickUpConnectBodySchema = z.object({
     apiKey: z.string().min(1, 'API key is required'),
 });
 
@@ -36,8 +42,9 @@ export async function connectionsRoutes(app: FastifyInstance) {
     }, async (request, reply) => {
         const userId = (request.user as { userId?: string })?.userId;
 
-        const [mondayConnected, googleConnected] = await Promise.all([
+        const [mondayConnected, clickupConnected, googleConnected] = await Promise.all([
             connectionsService.isProviderConnected(userId ?? null, 'monday'),
+            connectionsService.isProviderConnected(userId ?? null, 'clickup'),
             connectionsService.isProviderConnected(userId ?? null, 'google'),
         ]);
 
@@ -46,11 +53,9 @@ export async function connectionsRoutes(app: FastifyInstance) {
             ? await connectionsService.isProviderConnected(userId, 'autohelper')
             : false;
 
-        // Debug: log connection check result
-        console.log('[/connections] userId=%s autohelper=%s', userId, autohelperConnected);
-
         return reply.send({
             monday: { connected: mondayConnected },
+            clickup: { connected: clickupConnected },
             google: { connected: googleConnected },
             autohelper: {
                 connected: autohelperConnected,
@@ -300,6 +305,195 @@ export async function connectionsRoutes(app: FastifyInstance) {
         await connectionsService.deleteCredential(userId, 'google');
 
         return reply.send({ disconnected: true });
+    });
+
+    // ============================================================================
+    // CLICKUP API KEY
+    // ============================================================================
+
+    /**
+     * Connect ClickUp with API key
+     * Requires authentication
+     */
+    app.post('/connections/clickup', {
+        preHandler: app.authenticate
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
+        if (!userId) {
+            return reply.status(401).send({ error: 'Authentication required' });
+        }
+
+        const { apiKey } = ClickUpConnectBodySchema.parse(request.body);
+
+        // Validate the API key by making a test call
+        try {
+            const client = new ClickUp({ token: apiKey });
+            await client.tasks.get('test_validation_probe');
+        } catch (err) {
+            // 401/403 means invalid key. Anything else (404, etc.) means key works.
+            const message = (err as Error).message;
+            if (message.includes('401') || message.includes('403') || message.toLowerCase().includes('unauthorized')) {
+                return reply.status(400).send({
+                    error: 'Invalid API key',
+                    details: message,
+                });
+            }
+            // If we got a 404 or other non-auth error, the key is valid
+        }
+
+        await connectionsService.saveCredential({
+            user_id: userId,
+            provider: 'clickup',
+            access_token: apiKey,
+            refresh_token: null,
+            expires_at: null,
+            scopes: [],
+            metadata: {},
+        });
+
+        return reply.status(201).send({ connected: true });
+    });
+
+    /**
+     * Disconnect ClickUp
+     * Requires authentication
+     */
+    app.delete('/connections/clickup', {
+        preHandler: app.authenticate
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
+        if (!userId) {
+            return reply.status(401).send({ error: 'Authentication required' });
+        }
+
+        await connectionsService.deleteCredential(userId, 'clickup');
+
+        return reply.send({ connected: false });
+    });
+
+    /**
+     * Validate ClickUp API key without saving
+     */
+    app.post('/connections/clickup/validate', async (request, reply) => {
+        const { apiKey } = ClickUpConnectBodySchema.parse(request.body);
+
+        try {
+            const client = new ClickUp({ token: apiKey });
+            const { teams } = await client.spaces.getTeams();
+
+            return reply.send({
+                valid: true,
+                teams: teams.map(t => ({ id: t.id, name: t.name })),
+            });
+        } catch (err) {
+            return reply.send({
+                valid: false,
+                error: (err as Error).message,
+            });
+        }
+    });
+
+    /**
+     * List accessible ClickUp spaces for the current user
+     * Uses optional auth - can use env token as fallback
+     */
+    app.get('/connectors/clickup/spaces', {
+        preHandler: app.authenticateOptional
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
+
+        try {
+            const token = await connectionsService.getClickUpToken(userId);
+            const client = new ClickUp({ token });
+
+            const { teams } = await client.spaces.getTeams();
+            const allSpaces: Array<{
+                id: string;
+                name: string;
+                teamId: string;
+                teamName: string;
+            }> = [];
+
+            for (const team of teams) {
+                const { spaces } = await client.spaces.list(team.id);
+                for (const space of spaces) {
+                    allSpaces.push({
+                        id: space.id,
+                        name: space.name,
+                        teamId: team.id,
+                        teamName: team.name,
+                    });
+                }
+            }
+
+            return reply.send({ spaces: allSpaces });
+        } catch (err) {
+            if ((err as Error).message.includes('No ClickUp API token')) {
+                return reply.status(401).send({
+                    error: 'Not connected',
+                    message: 'Connect your ClickUp account in Settings → Integrations'
+                });
+            }
+            throw err;
+        }
+    });
+
+    /**
+     * List accessible ClickUp lists for a given space
+     * Uses optional auth - can use env token as fallback
+     */
+    app.get('/connectors/clickup/lists', {
+        preHandler: app.authenticateOptional
+    }, async (request, reply) => {
+        const userId = (request.user as { userId?: string })?.userId;
+        const { spaceId } = z.object({ spaceId: z.string().min(1) }).parse(request.query);
+
+        try {
+            const token = await connectionsService.getClickUpToken(userId);
+            const client = new ClickUp({ token });
+
+            const { folders } = await client.spaces.getFolders(spaceId);
+            const allLists: Array<{
+                id: string;
+                name: string;
+                folderId?: string;
+                folderName?: string;
+                taskCount: number;
+            }> = [];
+
+            // Lists inside folders
+            for (const folder of folders) {
+                for (const list of folder.lists) {
+                    allLists.push({
+                        id: list.id,
+                        name: list.name,
+                        folderId: folder.id,
+                        folderName: folder.name,
+                        taskCount: list.task_count ?? 0,
+                    });
+                }
+            }
+
+            // Folderless lists
+            const { lists } = await client.lists.listInSpace(spaceId);
+            for (const list of lists) {
+                allLists.push({
+                    id: list.id,
+                    name: list.name,
+                    taskCount: list.task_count ?? 0,
+                });
+            }
+
+            return reply.send({ lists: allLists });
+        } catch (err) {
+            if ((err as Error).message.includes('No ClickUp API token')) {
+                return reply.status(401).send({
+                    error: 'Not connected',
+                    message: 'Connect your ClickUp account in Settings → Integrations'
+                });
+            }
+            throw err;
+        }
     });
 
     // ============================================================================
