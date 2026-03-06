@@ -69,7 +69,7 @@ export function SubmissionsApp() {
     })();
 
     return (
-        <ModuleLayout module="image-sorting" activePage="review">
+        <ModuleLayout module="image-sorting" activePage="review" flush>
             {content}
         </ModuleLayout>
     );

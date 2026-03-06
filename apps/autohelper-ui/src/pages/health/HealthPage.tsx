@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'preact/hooks'
-import { Nav } from '@/components/Nav'
+import { useState, useEffect, useCallback } from 'react'
+import { ModuleLayout } from '@/components/ModuleLayout'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { GapPills } from '@/components/GapPills'
 import { ScoreBar } from '@/components/ScoreBar'
@@ -34,26 +34,25 @@ export function HealthPage() {
     : (stats ? stats.total - (stats.by_review_status?.approved ?? 0) : 0)
 
   return (
-    <>
-      <Nav active="health" />
+    <ModuleLayout module="artist-directory" activePage="health">
 
-      <header class="header">
+      <header className="header">
         <h1>Lists Health</h1>
-        <div class="header-actions">
-          <button class="btn btn-ghost" onClick={reload}>&#x27F3; Reload</button>
+        <div className="header-actions">
+          <button className="btn btn-ghost" onClick={reload}>&#x27F3; Reload</button>
         </div>
       </header>
 
       {stats && <StatsSection stats={stats} gapCount={gapCount} />}
 
-      <div class="health-grid">
+      <div className="health-grid">
         <RankingCard ranking={health?.ranking ?? []} />
         <GapAnalysisCard gaps={health?.gap_analysis ?? {}} />
         <BrokenCard items={health?.broken ?? []} onReload={reload} />
         <EnrichmentCard items={health?.enrichment ?? []} />
         <ReviewQueueCard items={health?.review_queue ?? []} onReload={reload} />
       </div>
-    </>
+    </ModuleLayout>
   )
 }
 
@@ -72,23 +71,23 @@ function StatsSection({ stats, gapCount }: { stats: ArtistStats; gapCount: numbe
   }
 
   return (
-    <div class="stats-section">
-      <div class="stat-cards">
+    <div className="stats-section">
+      <div className="stat-cards">
         <StatCard value={stats.total} label="Total Artists" />
         <StatCard value={`${Math.round(stats.avg_completeness * 100)}%`} label="Avg Completeness" />
         <StatCard value={gapCount} label="With Gaps" />
         <StatCard value={stats.needs_review ?? 0} label="Needs Review" />
       </div>
-      <div class="completeness-chart">
+      <div className="completeness-chart">
         {Object.entries(labels).map(([k, l]) => {
           const pct = Math.round((fields[k] ?? 0) * 100)
           return (
-            <div key={k} class="chart-row">
-              <span class="chart-label">{l}</span>
-              <div class="chart-bar-track">
-                <div class="chart-bar-fill" style={{ width: `${pct}%` }} />
+            <div key={k} className="chart-row">
+              <span className="chart-label">{l}</span>
+              <div className="chart-bar-track">
+                <div className="chart-bar-fill" style={{ width: `${pct}%` }} />
               </div>
-              <span class="chart-pct">{pct}%</span>
+              <span className="chart-pct">{pct}%</span>
             </div>
           )
         })}
@@ -99,9 +98,9 @@ function StatsSection({ stats, gapCount }: { stats: ArtistStats; gapCount: numbe
 
 function StatCard({ value, label }: { value: string | number; label: string }) {
   return (
-    <div class="stat-card">
-      <div class="stat-value">{value}</div>
-      <div class="stat-label">{label}</div>
+    <div className="stat-card">
+      <div className="stat-value">{value}</div>
+      <div className="stat-label">{label}</div>
     </div>
   )
 }
@@ -112,13 +111,13 @@ function StatCard({ value, label }: { value: string | number; label: string }) {
 
 function RankingCard({ ranking }: { ranking: HealthRankingItem[] }) {
   return (
-    <div class="health-card full-width">
+    <div className="health-card full-width">
       <h3>
         Completeness Ranking{' '}
         <span style={{ fontWeight: 400, fontSize: '11px', color: 'var(--fg-secondary)' }}>(worst first)</span>
       </h3>
       <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-        <table class="ranking-table">
+        <table className="ranking-table">
           <thead>
             <tr>
               <th>#</th>
@@ -130,13 +129,13 @@ function RankingCard({ ranking }: { ranking: HealthRankingItem[] }) {
           </thead>
           <tbody>
             {ranking.length === 0 ? (
-              <tr><td colSpan={5} class="empty">No artists scanned yet</td></tr>
+              <tr><td colSpan={5} className="empty">No artists scanned yet</td></tr>
             ) : (
               ranking.map((a, i) => (
                 <tr key={a.artist_id}>
                   <td>{i + 1}</td>
                   <td>
-                    <a class="clickable-name" href={`/artists-dashboard#${encodeURIComponent(a.artist_id)}`}>
+                    <a className="clickable-name" href={`/artists-dashboard#${encodeURIComponent(a.artist_id)}`}>
                       {a.display_name}
                     </a>
                   </td>
@@ -164,20 +163,20 @@ const GAP_LABELS: Record<string, string> = {
 
 function GapAnalysisCard({ gaps }: { gaps: Record<string, GapAnalysisField> }) {
   return (
-    <div class="health-card full-width">
+    <div className="health-card full-width">
       <h3>Gap Analysis</h3>
-      <div class="gap-grid">
+      <div className="gap-grid">
         {Object.keys(gaps).length === 0 ? (
-          <p class="empty">No data</p>
+          <p className="empty">No data</p>
         ) : (
           Object.entries(GAP_LABELS).map(([key, label]) => {
             const data = gaps[key] ?? { missing: 0, total: 0 }
             const pct = data.total > 0 ? Math.round(data.missing / data.total * 100) : 0
             return (
-              <div key={key} class="gap-field-card">
+              <div key={key} className="gap-field-card">
                 <h4>{label}</h4>
-                <div class="gap-count">{data.missing}</div>
-                <div class="gap-pct">{pct}% missing</div>
+                <div className="gap-count">{data.missing}</div>
+                <div className="gap-pct">{pct}% missing</div>
               </div>
             )
           })
@@ -198,10 +197,10 @@ function BrokenCard({ items, onReload }: { items: BrokenItem[]; onReload: () => 
   }
 
   return (
-    <div class="health-card">
+    <div className="health-card">
       <h3>Broken / Unindexed</h3>
       {items.length === 0 ? (
-        <p class="empty">No broken items</p>
+        <p className="empty">No broken items</p>
       ) : (
         items.map(b => (
           <div key={b.artist_id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0', borderBottom: '1px solid var(--border)', fontSize: '13px' }}>
@@ -209,7 +208,7 @@ function BrokenCard({ items, onReload }: { items: BrokenItem[]; onReload: () => 
               {b.display_name}{' '}
               <span style={{ color: 'var(--fg-disabled)', fontSize: '11px' }}>{b.reason}</span>
             </span>
-            <button class="btn btn-sm" onClick={() => rescan(b.artist_id)}>Rescan</button>
+            <button className="btn btn-sm" onClick={() => rescan(b.artist_id)}>Rescan</button>
           </div>
         ))
       )}
@@ -223,14 +222,14 @@ function BrokenCard({ items, onReload }: { items: BrokenItem[]; onReload: () => 
 
 function EnrichmentCard({ items }: { items: EnrichmentItem[] }) {
   return (
-    <div class="health-card">
+    <div className="health-card">
       <h3>Enrichment Opportunities</h3>
       {items.length === 0 ? (
-        <p class="empty">All artists well-enriched</p>
+        <p className="empty">All artists well-enriched</p>
       ) : (
         items.slice(0, 50).map(a => (
           <div key={a.artist_id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0', borderBottom: '1px solid var(--border)', fontSize: '13px' }}>
-            <a class="clickable-name" href={`/artists-dashboard#${encodeURIComponent(a.artist_id)}`} style={{ flex: 1 }}>
+            <a className="clickable-name" href={`/artists-dashboard#${encodeURIComponent(a.artist_id)}`} style={{ flex: 1 }}>
               {a.display_name}
             </a>
             <GapPills gaps={a.missing ?? []} />
@@ -252,12 +251,12 @@ function ReviewQueueCard({ items, onReload }: { items: ReviewQueueItem[]; onRelo
   }
 
   return (
-    <div class="health-card full-width">
+    <div className="health-card full-width">
       <h3>Review Queue</h3>
       {items.length === 0 ? (
-        <p class="empty">No items pending review</p>
+        <p className="empty">No items pending review</p>
       ) : (
-        <table class="ranking-table">
+        <table className="ranking-table">
           <thead>
             <tr><th>Artist</th><th>Status</th><th>Notes</th><th>Actions</th></tr>
           </thead>
@@ -265,16 +264,16 @@ function ReviewQueueCard({ items, onReload }: { items: ReviewQueueItem[]; onRelo
             {items.map(a => (
               <tr key={a.artist_id}>
                 <td>
-                  <a class="clickable-name" href={`/artists-dashboard#${encodeURIComponent(a.artist_id)}`}>
+                  <a className="clickable-name" href={`/artists-dashboard#${encodeURIComponent(a.artist_id)}`}>
                     {a.display_name}
                   </a>
                 </td>
-                <td><span class="status-badge badge-review">{a.review_status}</span></td>
+                <td><span className="status-badge badge-review">{a.review_status}</span></td>
                 <td style={{ fontSize: '12px', color: 'var(--fg-secondary)' }}>{a.note_count} note(s)</td>
                 <td style={{ whiteSpace: 'nowrap' }}>
-                  <button class="btn btn-sm btn-success" onClick={() => setStatus(a.artist_id, 'approved')}>Approve</button>{' '}
-                  <button class="btn btn-sm btn-warning" onClick={() => setStatus(a.artist_id, 'flagged')}>Flag</button>{' '}
-                  <button class="btn btn-sm btn-danger" onClick={() => setStatus(a.artist_id, 'rejected')}>Reject</button>
+                  <button className="btn btn-sm btn-success" onClick={() => setStatus(a.artist_id, 'approved')}>Approve</button>{' '}
+                  <button className="btn btn-sm btn-warning" onClick={() => setStatus(a.artist_id, 'flagged')}>Flag</button>{' '}
+                  <button className="btn btn-sm btn-danger" onClick={() => setStatus(a.artist_id, 'rejected')}>Reject</button>
                 </td>
               </tr>
             ))}

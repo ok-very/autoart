@@ -15,18 +15,18 @@ export function ScoreBar({ score, variant = 'inline' }: ScoreBarProps) {
 
   if (variant === 'detail') {
     return (
-      <div class="detail-score-bar">
-        <div class={`detail-score-fill score-${lvl}`} style={{ width: `${pct}%` }} />
+      <div className="detail-score-bar">
+        <div className={`detail-score-fill score-${lvl}`} style={{ width: `${pct}%` }} />
       </div>
     )
   }
 
   return (
-    <span class="score-cell">
-      <span class="score-bar">
-        <span class={`score-fill score-${lvl}`} style={{ width: `${pct}%` }} />
+    <span className="score-cell">
+      <span className="score-bar">
+        <span className={`score-fill score-${lvl}`} style={{ width: `${pct}%` }} />
       </span>
-      <span class="score-pct">{pct}%</span>
+      <span className="score-pct">{pct}%</span>
     </span>
   )
 }

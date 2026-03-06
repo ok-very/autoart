@@ -7,9 +7,9 @@ export function GapPills({ gaps }: GapPillsProps) {
     return <span style={{ color: 'var(--color-success)', fontSize: '11px' }}>Complete</span>
   }
   return (
-    <div class="gap-pills">
+    <div className="gap-pills">
       {gaps.map(g => (
-        <span key={g} class="gap-pill">{g}</span>
+        <span key={g} className="gap-pill">{g}</span>
       ))}
     </div>
   )

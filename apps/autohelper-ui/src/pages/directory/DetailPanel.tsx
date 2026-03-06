@@ -1,4 +1,4 @@
-import { useState, useRef } from 'preact/hooks'
+import { useState, useRef } from 'react'
 import { ScoreBar } from '@/components/ScoreBar'
 import { GapPills } from '@/components/GapPills'
 import { CategoryBadge } from '@/components/CategoryBadge'
@@ -101,27 +101,27 @@ export function DetailPanel({ manifest: m, bioText, onClose, onRefresh }: Detail
 
   return (
     <>
-      <div class="detail-overlay" onClick={onClose} />
-      <aside class="detail-panel">
-        <div class="detail-header">
-          <span class="detail-title">{id.display_name ?? m.artist_id}</span>
-          <button class="detail-close" onClick={onClose}>&times;</button>
+      <div className="detail-overlay" onClick={onClose} />
+      <aside className="detail-panel">
+        <div className="detail-header">
+          <span className="detail-title">{id.display_name ?? m.artist_id}</span>
+          <button className="detail-close" onClick={onClose}>&times;</button>
         </div>
-        <div class="detail-body">
+        <div className="detail-body">
           {/* Completeness */}
-          <div class="detail-section">
+          <div className="detail-section">
             <ScoreBar score={comp.score} variant="detail" />
             <GapPills gaps={comp.gaps ?? []} />
           </div>
 
           {/* Review notes */}
           {notes.length > 0 && (
-            <div class="detail-section">
+            <div className="detail-section">
               <h3>Review Notes</h3>
               {notes.map((n, i) => (
-                <div key={i} class="review-note">
+                <div key={i} className="review-note">
                   <span>{n}</span>
-                  <button class="btn btn-sm" onClick={() => resolveNote(i)}>Resolve</button>
+                  <button className="btn btn-sm" onClick={() => resolveNote(i)}>Resolve</button>
                 </div>
               ))}
             </div>
@@ -129,27 +129,27 @@ export function DetailPanel({ manifest: m, bioText, onClose, onRefresh }: Detail
 
           {/* AI enrichment */}
           {ai && (
-            <div class="detail-section ai-section">
+            <div className="detail-section ai-section">
               <h3>
                 AI Enrichment
-                <span class={`ai-confidence ai-${ai.confidence ?? 'med'}`}>{capitalize(ai.confidence ?? 'medium')}</span>
-                <span class="ai-model">{ai.model ?? ''}</span>
+                <span className={`ai-confidence ai-${ai.confidence ?? 'med'}`}>{capitalize(ai.confidence ?? 'medium')}</span>
+                <span className="ai-model">{ai.model ?? ''}</span>
               </h3>
-              {ai.bio_summary && <div class="ai-text">{ai.bio_summary}</div>}
+              {ai.bio_summary && <div className="ai-text">{ai.bio_summary}</div>}
               {ai.medium && <div style={{ fontSize: '13px', margin: '4px 0' }}><strong>Medium:</strong> {ai.medium}</div>}
               {ai.website && <div style={{ fontSize: '13px' }}><strong>Website:</strong> <a href={ai.website} target="_blank" style={{ color: 'var(--accent)' }}>{ai.website}</a></div>}
-              <div class="ai-disclaimer">AI-generated — verify before publishing</div>
+              <div className="ai-disclaimer">AI-generated — verify before publishing</div>
             </div>
           )}
 
           {/* Identity (editable) */}
-          <div class="detail-section">
+          <div className="detail-section">
             <h3>Identity</h3>
             <EditRow label="Name" value={displayName} onChange={setDisplayName} />
             <EditRow label="Pronouns" value={pronouns} onChange={setPronouns} placeholder="e.g. she/her" missing={!pronouns} />
-            <div class="edit-row">
-              <span class="edit-label">Career Stage</span>
-              <select class="edit-input" value={careerStage} onChange={e => setCareerStage((e.target as HTMLSelectElement).value)}>
+            <div className="edit-row">
+              <span className="edit-label">Career Stage</span>
+              <select className="edit-input" value={careerStage} onChange={e => setCareerStage((e.target as HTMLSelectElement).value)}>
                 <option value="">—</option>
                 <option value="emerging">Emerging</option>
                 <option value="mid-career">Mid-career</option>
@@ -169,38 +169,38 @@ export function DetailPanel({ manifest: m, bioText, onClose, onRefresh }: Detail
               <ReadRow key={type} label={capitalize(type.replace(/_/g, ' '))} value={names.join(', ')} secondary />
             ))}
 
-            <div class="detail-tags">
-              {(affsByType.nation ?? []).map(n => <span key={n} class="detail-tag identity-nation">{n}</span>)}
+            <div className="detail-tags">
+              {(affsByType.nation ?? []).map(n => <span key={n} className="detail-tag identity-nation">{n}</span>)}
               {Object.entries(locsByType).flatMap(([type, places]) =>
-                places.map(p => <span key={`${type}-${p}`} class={`detail-tag location-tag location-${type}`}>{p}</span>)
+                places.map(p => <span key={`${type}-${p}`} className={`detail-tag location-tag location-${type}`}>{p}</span>)
               )}
-              {(tags.identities ?? []).map(l => <span key={l} class="detail-tag identity-tag-self">{l}</span>)}
+              {(tags.identities ?? []).map(l => <span key={l} className="detail-tag identity-tag-self">{l}</span>)}
             </div>
           </div>
 
           {/* Contact (editable) */}
-          <div class="detail-section">
+          <div className="detail-section">
             <h3>Contact</h3>
             <EditRow label="Email" value={email} onChange={setEmail} type="email" placeholder="artist@example.com" missing={!email} />
             <EditRow label="Phone" value={phone} onChange={setPhone} placeholder="(604) 555-0100" missing={!phone} />
             <EditRow label="Website" value={website} onChange={setWebsite} type="url" placeholder="https://\u2026" missing={!website} />
             <div style={{ marginTop: '4px' }}>
-              <span class="edit-label" style={{ display: 'block', marginBottom: '2px' }}>Notes</span>
-              <textarea class="edit-input edit-textarea" value={contactNotes} onInput={e => setContactNotes((e.target as HTMLTextAreaElement).value)} placeholder="Any notes\u2026" />
+              <span className="edit-label" style={{ display: 'block', marginBottom: '2px' }}>Notes</span>
+              <textarea className="edit-input edit-textarea" value={contactNotes} onInput={e => setContactNotes((e.target as HTMLTextAreaElement).value)} placeholder="Any notes\u2026" />
             </div>
           </div>
 
           {/* Folders */}
           {fls.length > 0 && (
-            <div class="detail-section">
+            <div className="detail-section">
               <h3>Folders ({fls.length})</h3>
               {fls.map((fl, i) => (
-                <div key={i} class="folder-row">
+                <div key={i} className="folder-row">
                   <CategoryBadge category={fl.category} />
-                  {fl.nation && <span class="identity-tag identity-nation">{fl.nation}</span>}
-                  {fl.is_primary && <span class="folder-primary">(primary)</span>}
-                  <span class="folder-path">{fl.folder_path}</span>
-                  <button class="btn btn-sm btn-ghost" onClick={() => openFolderPath(fl.folder_path)} title="Open in Explorer" dangerouslySetInnerHTML={{ __html: ICO.folder }} />
+                  {fl.nation && <span className="identity-tag identity-nation">{fl.nation}</span>}
+                  {fl.is_primary && <span className="folder-primary">(primary)</span>}
+                  <span className="folder-path">{fl.folder_path}</span>
+                  <button className="btn btn-sm btn-ghost" onClick={() => openFolderPath(fl.folder_path)} title="Open in Explorer" dangerouslySetInnerHTML={{ __html: ICO.folder }} />
                 </div>
               ))}
             </div>
@@ -214,12 +214,12 @@ export function DetailPanel({ manifest: m, bioText, onClose, onRefresh }: Detail
 
           {/* EOIs */}
           {(eng.eois?.length ?? 0) > 0 && (
-            <div class="detail-section">
+            <div className="detail-section">
               <h3>EOIs ({eng.eois.length})</h3>
               {eng.eois.map((e, i) => (
-                <div key={i} class="engage-item">
-                  <span class="doc-tag">EOI</span>
-                  <span class="doc-link" onClick={() => openFile(e.file_path ?? '')}>
+                <div key={i} className="engage-item">
+                  <span className="doc-tag">EOI</span>
+                  <span className="doc-link" onClick={() => openFile(e.file_path ?? '')}>
                     {e.project_name ?? basename(e.file_path) ?? 'Unknown'}
                   </span>
                 </div>
@@ -229,14 +229,14 @@ export function DetailPanel({ manifest: m, bioText, onClose, onRefresh }: Detail
 
           {/* Concept Proposals */}
           {(eng.concept_proposals?.length ?? 0) > 0 && (
-            <div class="detail-section">
+            <div className="detail-section">
               <h3>Concept Proposals ({eng.concept_proposals.length})</h3>
               {eng.concept_proposals.map((p, i) => {
                 const parts = [p.project_name, p.developer].filter(Boolean)
                 return (
-                  <div key={i} class="engage-item">
-                    <span class="doc-tag">{p.date ?? '?'}</span>
-                    <span class="doc-link" onClick={() => openFile(p.file_path ?? '')}>
+                  <div key={i} className="engage-item">
+                    <span className="doc-tag">{p.date ?? '?'}</span>
+                    <span className="doc-link" onClick={() => openFile(p.file_path ?? '')}>
                       {parts.join(' \u2014 ') || basename(p.file_path) || 'Unknown'}
                     </span>
                   </div>
@@ -246,68 +246,68 @@ export function DetailPanel({ manifest: m, bioText, onClose, onRefresh }: Detail
           )}
 
           {/* Panel History */}
-          <div class="detail-section">
+          <div className="detail-section">
             <h3>Panel History</h3>
             <div style={{ fontSize: '13px', marginBottom: '4px' }}><strong>{eng.panel_count ?? 0}</strong> appearances</div>
             {(eng.panel_history ?? []).map((p, i) => (
-              <div key={i} class="engage-item">
-                <span class="doc-tag">{p.date ?? '?'}</span>
+              <div key={i} className="engage-item">
+                <span className="doc-tag">{p.date ?? '?'}</span>
                 <span style={{ fontSize: '13px' }}>{p.project ?? ''}</span>
                 {p.role && p.role !== 'selection_panel' && (
-                  <span class="doc-tag">{p.role.replace(/_/g, ' ')}</span>
+                  <span className="doc-tag">{p.role.replace(/_/g, ' ')}</span>
                 )}
               </div>
             ))}
             {showPanelForm ? (
               <PanelForm artistId={m.artist_id} onDone={() => { setShowPanelForm(false); onRefresh() }} onCancel={() => setShowPanelForm(false)} />
             ) : (
-              <button class="btn btn-sm" onClick={() => setShowPanelForm(true)}>+ Add Panel Entry</button>
+              <button className="btn btn-sm" onClick={() => setShowPanelForm(true)}>+ Add Panel Entry</button>
             )}
           </div>
 
           {/* Public Art Projects */}
-          <div class="detail-section">
+          <div className="detail-section">
             <h3>Public Art Projects</h3>
             {(eng.public_art_projects ?? []).map((p, i) => {
               const parts = [p.year, p.developer, p.project_name].filter(Boolean)
               return (
-                <div key={i} class="engage-item">
+                <div key={i} className="engage-item">
                   <span style={{ fontSize: '13px' }}>{parts.join(' \u2014 ')}</span>
-                  {p.status && <span class="doc-tag" style={{ color: statusColors[p.status] ?? 'var(--fg-secondary)' }}>{p.status}</span>}
+                  {p.status && <span className="doc-tag" style={{ color: statusColors[p.status] ?? 'var(--fg-secondary)' }}>{p.status}</span>}
                 </div>
               )
             })}
             {showProjectForm ? (
               <ProjectForm artistId={m.artist_id} onDone={() => { setShowProjectForm(false); onRefresh() }} onCancel={() => setShowProjectForm(false)} />
             ) : (
-              <button class="btn btn-sm" onClick={() => setShowProjectForm(true)}>+ Add Project</button>
+              <button className="btn btn-sm" onClick={() => setShowProjectForm(true)}>+ Add Project</button>
             )}
           </div>
 
           {/* Images */}
-          <div class="detail-section">
+          <div className="detail-section">
             <h3>Images</h3>
             <div style={{ fontSize: '13px' }}>{img.count ?? 0} image(s)</div>
             {(img.folder_paths ?? []).length > 0 && (
-              <div class="doc-link" onClick={openFolder}>
+              <div className="doc-link" onClick={openFolder}>
                 <span dangerouslySetInnerHTML={{ __html: ICO.folder }} /> Open image folder
               </div>
             )}
           </div>
 
           {/* Save bar */}
-          <div class="save-bar">
-            <button class="btn btn-primary" onClick={saveChanges} disabled={saving}>Save Changes</button>
+          <div className="save-bar">
+            <button className="btn btn-primary" onClick={saveChanges} disabled={saving}>Save Changes</button>
             <FeedbackMessage message={saveFeedback} isError={saveErr} />
           </div>
 
           {/* Actions */}
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
             <span style={{ flex: 1 }} />
-            <button class="btn btn-sm" onClick={openFolder}>
+            <button className="btn btn-sm" onClick={openFolder}>
               <span dangerouslySetInnerHTML={{ __html: ICO.folder }} /> Open Folder
             </button>
-            <button class="btn btn-sm" onClick={rescan}>Rescan</button>
+            <button className="btn btn-sm" onClick={rescan}>Rescan</button>
           </div>
         </div>
       </aside>
@@ -324,10 +324,10 @@ function EditRow({ label, value, onChange, type, placeholder, missing }: {
   type?: string; placeholder?: string; missing?: boolean
 }) {
   return (
-    <div class="edit-row">
-      <span class="edit-label">{label}</span>
+    <div className="edit-row">
+      <span className="edit-label">{label}</span>
       <input
-        class={`edit-input${missing ? ' missing-highlight' : ''}`}
+        className={`edit-input${missing ? ' missing-highlight' : ''}`}
         type={type ?? 'text'}
         value={value}
         onInput={e => onChange((e.target as HTMLInputElement).value)}
@@ -339,8 +339,8 @@ function EditRow({ label, value, onChange, type, placeholder, missing }: {
 
 function ReadRow({ label, value, secondary }: { label: string; value: string; secondary?: boolean }) {
   return (
-    <div class="edit-row">
-      <span class="edit-label">{label}</span>
+    <div className="edit-row">
+      <span className="edit-label">{label}</span>
       <span style={{ fontSize: '13px', color: secondary ? 'var(--fg-secondary)' : undefined }}>{value}</span>
     </div>
   )
@@ -351,18 +351,18 @@ function DocSection({ title, docs, openFile, bioText }: {
 }) {
   if (!docs?.length) return null
   return (
-    <div class="detail-section">
+    <div className="detail-section">
       <h3>{title} ({docs.length})</h3>
       {docs.map((d, i) => {
         const name = basename(d.file_path) || 'Unknown'
         return (
-          <div key={i} class={`doc-link${d.is_current ? ' current' : ''}`} onClick={() => openFile(d.file_path ?? '')} title={d.file_path ?? ''}>
-            <span class={`doc-tag${d.is_current ? ' current' : ' old'}`}>{d.is_current ? 'current' : 'old'}</span>
+          <div key={i} className={`doc-link${d.is_current ? ' current' : ''}`} onClick={() => openFile(d.file_path ?? '')} title={d.file_path ?? ''}>
+            <span className={`doc-tag${d.is_current ? ' current' : ' old'}`}>{d.is_current ? 'current' : 'old'}</span>
             {' '}{name}{d.date ? ` (${d.date})` : ''}
           </div>
         )
       })}
-      {title === 'Bios' && bioText && <div class="bio-content">{bioText}</div>}
+      {title === 'Bios' && bioText && <div className="bio-content">{bioText}</div>}
     </div>
   )
 }
@@ -382,7 +382,7 @@ function PanelForm({ artistId, onDone, onCancel }: { artistId: string; onDone: (
   }
 
   return (
-    <div class="inline-form">
+    <div className="inline-form">
       <input ref={dateRef} type="date" />
       <input ref={projectRef} type="text" placeholder="Project name" style={{ flex: 1 }} />
       <select ref={roleRef} style={{ padding: '4px 6px', fontSize: '13px', border: '1px solid var(--border)', borderRadius: '2px' }}>
@@ -391,8 +391,8 @@ function PanelForm({ artistId, onDone, onCancel }: { artistId: string; onDone: (
         <option value="cultural_advisor">Cultural Advisor</option>
         <option value="juror">Juror</option>
       </select>
-      <button class="btn btn-sm btn-primary" onClick={submit}>Add</button>
-      <button class="btn btn-sm" onClick={onCancel}>Cancel</button>
+      <button className="btn btn-sm btn-primary" onClick={submit}>Add</button>
+      <button className="btn btn-sm" onClick={onCancel}>Cancel</button>
     </div>
   )
 }
@@ -418,7 +418,7 @@ function ProjectForm({ artistId, onDone, onCancel }: { artistId: string; onDone:
   }
 
   return (
-    <div class="inline-form" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+    <div className="inline-form" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
       <div style={{ display: 'flex', gap: '6px' }}>
         <input ref={nameRef} type="text" placeholder="Project name*" style={{ flex: 1 }} />
         <input ref={devRef} type="text" placeholder="Developer" style={{ flex: 1 }} />
@@ -435,8 +435,8 @@ function ProjectForm({ artistId, onDone, onCancel }: { artistId: string; onDone:
         </select>
       </div>
       <div style={{ display: 'flex', gap: '6px' }}>
-        <button class="btn btn-sm btn-primary" onClick={submit}>Add</button>
-        <button class="btn btn-sm" onClick={onCancel}>Cancel</button>
+        <button className="btn btn-sm btn-primary" onClick={submit}>Add</button>
+        <button className="btn btn-sm" onClick={onCancel}>Cancel</button>
       </div>
     </div>
   )

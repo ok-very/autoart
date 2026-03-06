@@ -1,5 +1,5 @@
-import { render } from 'preact'
+import { createRoot } from 'react-dom/client'
 import { DirectoryPage } from '@/pages/directory/DirectoryPage'
 import '@/styles/shared.css'
 
-render(<DirectoryPage />, document.getElementById('app')!)
+createRoot(document.getElementById('app')!).render(<DirectoryPage />)

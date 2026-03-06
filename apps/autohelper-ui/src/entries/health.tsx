@@ -1,5 +1,5 @@
-import { render } from 'preact'
+import { createRoot } from 'react-dom/client'
 import { HealthPage } from '@/pages/health/HealthPage'
 import '@/styles/shared.css'
 
-render(<HealthPage />, document.getElementById('app')!)
+createRoot(document.getElementById('app')!).render(<HealthPage />)

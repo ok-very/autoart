@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'preact/hooks'
-import { Nav } from '@/components/Nav'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { ModuleLayout } from '@/components/ModuleLayout'
 import { FeedbackMessage } from '@/components/FeedbackMessage'
 import { api } from '@/lib/api'
 import type { AppConfig, Lexicon, ScanStatus } from '@/lib/types'
@@ -22,17 +22,16 @@ type LexiconTab = typeof LEXICON_TABS[number]['key']
 
 export function SettingsPage() {
   return (
-    <>
-      <Nav active="settings" />
-      <header class="header">
+    <ModuleLayout module="artist-directory" activePage="settings">
+      <header className="header">
         <h1>Artist Settings</h1>
       </header>
-      <div class="settings-grid">
+      <div className="settings-grid">
         <ConfigCard />
         <ScanCard />
       </div>
       <LexiconCard />
-    </>
+    </ModuleLayout>
   )
 }
 
@@ -93,38 +92,38 @@ function ConfigCard() {
   }
 
   return (
-    <div class="settings-card">
+    <div className="settings-card">
       <h3>Storage &amp; Scanning</h3>
-      <div class="setting-row">
-        <span class="setting-label">Storage Root</span>
+      <div className="setting-row">
+        <span className="setting-label">Storage Root</span>
         <div style={{ display: 'flex', gap: '6px', flex: 1 }}>
-          <input type="text" class="setting-input" value={storageRoot} onInput={e => setStorageRoot((e.target as HTMLInputElement).value)} placeholder="/path/to/artist/files" style={{ flex: 1 }} />
-          <button class="btn" onClick={() => browse(setStorageRoot)}>Browse</button>
+          <input type="text" className="setting-input" value={storageRoot} onInput={e => setStorageRoot((e.target as HTMLInputElement).value)} placeholder="/path/to/artist/files" style={{ flex: 1 }} />
+          <button className="btn" onClick={() => browse(setStorageRoot)}>Browse</button>
         </div>
       </div>
-      <div class="setting-row">
-        <span class="setting-label">Ground Truth CSV</span>
+      <div className="setting-row">
+        <span className="setting-label">Ground Truth CSV</span>
         <div style={{ display: 'flex', gap: '6px', flex: 1 }}>
-          <input type="text" class="setting-input" value={groundTruth} onInput={e => setGroundTruth((e.target as HTMLInputElement).value)} placeholder="/path/to/final_7450_full.csv" style={{ flex: 1 }} />
-          <button class="btn" onClick={() => browse(setGroundTruth)}>Browse</button>
+          <input type="text" className="setting-input" value={groundTruth} onInput={e => setGroundTruth((e.target as HTMLInputElement).value)} placeholder="/path/to/final_7450_full.csv" style={{ flex: 1 }} />
+          <button className="btn" onClick={() => browse(setGroundTruth)}>Browse</button>
         </div>
       </div>
-      <div class="setting-row">
-        <span class="setting-label">Enable Scanning</span>
-        <label class="toggle">
+      <div className="setting-row">
+        <span className="setting-label">Enable Scanning</span>
+        <label className="toggle">
           <input type="checkbox" checked={scanEnabled} onChange={e => setScanEnabled((e.target as HTMLInputElement).checked)} />
-          <span class="toggle-slider" />
+          <span className="toggle-slider" />
         </label>
       </div>
-      <div class="setting-row">
-        <span class="setting-label">Auto-Rescan on Change</span>
-        <label class="toggle">
+      <div className="setting-row">
+        <span className="setting-label">Auto-Rescan on Change</span>
+        <label className="toggle">
           <input type="checkbox" checked={scanOnChange} onChange={e => setScanOnChange((e.target as HTMLInputElement).checked)} />
-          <span class="toggle-slider" />
+          <span className="toggle-slider" />
         </label>
       </div>
       <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-        <button class="btn btn-primary" onClick={save} disabled={saving}>Save Config</button>
+        <button className="btn btn-primary" onClick={save} disabled={saving}>Save Config</button>
         <FeedbackMessage message={feedback} isError={feedbackErr} />
       </div>
     </div>
@@ -237,18 +236,18 @@ function ScanCard() {
   }, [lines])
 
   return (
-    <div class="settings-card">
+    <div className="settings-card">
       <h3>Scan Controls</h3>
       <div style={{ marginBottom: '8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-        <button class="btn btn-primary" onClick={triggerScan} disabled={scanning}>Scan All</button>
-        <button class="btn btn-warning" onClick={stopScan} disabled={!scanning}>Stop</button>
-        <span class="scan-status" style={{ marginLeft: '4px' }}>{status}</span>
+        <button className="btn btn-primary" onClick={triggerScan} disabled={scanning}>Scan All</button>
+        <button className="btn btn-warning" onClick={stopScan} disabled={!scanning}>Stop</button>
+        <span className="scan-status" style={{ marginLeft: '4px' }}>{status}</span>
       </div>
       {info && <div style={{ fontSize: '12px', color: 'var(--fg-secondary)', marginBottom: '8px' }}>{info}</div>}
       {showTerminal && (
-        <div ref={terminalRef} class="scan-terminal" style={{ display: 'block' }}>
+        <div ref={terminalRef} className="scan-terminal" style={{ display: 'block' }}>
           {lines.map((line, i) => (
-            <div key={i} class="scan-line">{line}</div>
+            <div key={i} className="scan-line">{line}</div>
           ))}
         </div>
       )}
@@ -354,7 +353,7 @@ function LexiconCard() {
     URL.revokeObjectURL(url)
   }
 
-  const importLexicon = (e: Event) => {
+  const importLexicon = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = (e.target as HTMLInputElement).files?.[0]
     if (!file) return
     const reader = new FileReader()
@@ -375,7 +374,7 @@ function LexiconCard() {
   }
 
   return (
-    <div class="settings-card full-width" style={{ marginBottom: '16px' }}>
+    <div className="settings-card full-width" style={{ marginBottom: '16px' }}>
       <h3>Lexicon Configuration</h3>
       <p style={{ fontSize: '12px', color: 'var(--fg-secondary)', marginBottom: '12px' }}>
         Edit the artist lexicon (category profiles, subfolder aliases, completeness weights, identity options, affiliation types, folder name fixes, multi-folder overrides).
@@ -385,7 +384,7 @@ function LexiconCard() {
         {LEXICON_TABS.map(t => (
           <button
             key={t.key}
-            class={`btn btn-ghost lexicon-tab${t.key === currentSection ? ' active' : ''}`}
+            className={`btn btn-ghost lexicon-tab${t.key === currentSection ? ' active' : ''}`}
             onClick={() => switchTab(t.key)}
           >
             {t.label}
@@ -395,7 +394,7 @@ function LexiconCard() {
 
       <div>
         <textarea
-          class={`json-editor${invalid ? ' invalid' : ''}`}
+          className={`json-editor${invalid ? ' invalid' : ''}`}
           rows={16}
           value={editorValue}
           onInput={e => setEditorValue((e.target as HTMLTextAreaElement).value)}
@@ -403,10 +402,10 @@ function LexiconCard() {
       </div>
 
       <div style={{ marginTop: '10px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-        <button class="btn btn-primary" onClick={save} disabled={saving}>Save Lexicon</button>
-        <button class="btn" onClick={reset}>Reset to Defaults</button>
-        <button class="btn" onClick={exportLexicon}>Export</button>
-        <label class="btn" style={{ margin: 0 }}>
+        <button className="btn btn-primary" onClick={save} disabled={saving}>Save Lexicon</button>
+        <button className="btn" onClick={reset}>Reset to Defaults</button>
+        <button className="btn" onClick={exportLexicon}>Export</button>
+        <label className="btn" style={{ margin: 0 }}>
           Import <input ref={fileInputRef} type="file" accept=".json" style={{ display: 'none' }} onChange={importLexicon} />
         </label>
         <FeedbackMessage message={feedback} isError={feedbackErr} />

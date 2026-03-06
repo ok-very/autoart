@@ -1,5 +1,5 @@
-import { render } from 'preact'
+import { createRoot } from 'react-dom/client'
 import { SettingsPage } from '@/pages/settings/SettingsPage'
 import '@/styles/shared.css'
 
-render(<SettingsPage />, document.getElementById('app')!)
+createRoot(document.getElementById('app')!).render(<SettingsPage />)

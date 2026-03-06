@@ -6,9 +6,11 @@ interface ModuleLayoutProps {
   module: string;
   activePage: string;
   children: ReactNode;
+  /** Skip .module-content padding/overflow for full-bleed layouts (e.g. Dockview) */
+  flush?: boolean;
 }
 
-export function ModuleLayout({ module, activePage, children }: ModuleLayoutProps) {
+export function ModuleLayout({ module, activePage, children, flush }: ModuleLayoutProps) {
   const config = MODULES[module];
   if (!config) return <>{children}</>;
 
@@ -20,9 +22,15 @@ export function ModuleLayout({ module, activePage, children }: ModuleLayoutProps
         settingsHref={config.settingsHref}
         activePage={activePage}
       />
-      <main className="module-content">
-        {children}
-      </main>
+      {flush ? (
+        <main style={{ flex: 1, minWidth: 0, height: '100%', overflow: 'hidden' }}>
+          {children}
+        </main>
+      ) : (
+        <main className="module-content">
+          {children}
+        </main>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'preact/hooks'
-import { Nav } from '@/components/Nav'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { CssSpinner } from '@/components/CssSpinner'
+import { ModuleLayout } from '@/components/ModuleLayout'
 import { CategoryBadge } from '@/components/CategoryBadge'
 import { ScoreBar } from '@/components/ScoreBar'
 import { GapPills } from '@/components/GapPills'
@@ -72,9 +73,9 @@ function DataIcons({ artist }: { artist: ArtistListItem }) {
     [ICO.image, artist.has_images, 'Images'],
   ]
   return (
-    <div class="data-icons">
+    <div className="data-icons">
       {items.map(([ico, has, title]) => (
-        <span key={title} class={`data-icon ${has ? 'has' : 'missing'}`} title={title} dangerouslySetInnerHTML={{ __html: ico }} />
+        <span key={title} className={`data-icon ${has ? 'has' : 'missing'}`} title={title} dangerouslySetInnerHTML={{ __html: ico }} />
       ))}
     </div>
   )
@@ -82,6 +83,7 @@ function DataIcons({ artist }: { artist: ArtistListItem }) {
 
 export function DirectoryPage() {
   const [allArtists, setAllArtists] = useState<ArtistListItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchRaw, setSearchRaw] = useState('')
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set())
   const [activeIdentities, setActiveIdentities] = useState<Set<string>>(new Set())
@@ -90,8 +92,11 @@ export function DirectoryPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detailData, setDetailData] = useState<{ manifest: ArtistManifest; bioText: string } | null>(null)
   const searchTimer = useRef<number | null>(null)
+  const [pageSize, setPageSize] = useState(100)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const loadArtists = useCallback(async () => {
+    setLoading(true)
     try {
       const data = await api.artists.list()
       const enriched = (Array.isArray(data) ? data : []).map(a => {
@@ -102,6 +107,7 @@ export function DirectoryPage() {
       })
       setAllArtists(enriched)
     } catch (e) { console.error('Artists:', e) }
+    finally { setLoading(false) }
   }, [])
 
   const reload = useCallback(async () => {
@@ -168,6 +174,13 @@ export function DirectoryPage() {
     return result
   }, [allArtists, searchRaw, activeCategories, activeIdentities, sortKey, sortDir])
 
+  // Pagination
+  const totalPages = pageSize === 0 ? 1 : Math.ceil(filtered.length / pageSize)
+  const visible = pageSize === 0 ? filtered : filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+
+  // Reset to page 1 when filters change
+  useEffect(() => { setCurrentPage(1) }, [searchRaw, activeCategories, activeIdentities, sortKey, sortDir])
+
   const togglePill = (key: string, type: 'category' | 'identity') => {
     const store = type === 'identity' ? activeIdentities : activeCategories
     const setter = type === 'identity' ? setActiveIdentities : setActiveCategories
@@ -212,51 +225,66 @@ export function DirectoryPage() {
     loadArtists()
   }
 
-  const onSearchInput = (e: Event) => {
+  const onSearchInput = (e: React.FormEvent<HTMLInputElement>) => {
     const val = (e.target as HTMLInputElement).value
     if (searchTimer.current) clearTimeout(searchTimer.current)
     searchTimer.current = window.setTimeout(() => setSearchRaw(val), 250)
   }
 
   const sortIcon = (key: SortKey) => {
-    if (key === sortKey) return <span class="sort-icon active">{sortDir === 1 ? '\u2191' : '\u2193'}</span>
-    return <span class="sort-icon">{'\u21C5'}</span>
+    if (key === sortKey) return <span className="sort-icon active">{sortDir === 1 ? '\u2191' : '\u2193'}</span>
+    return <span className="sort-icon">{'\u21C5'}</span>
   }
 
-  return (
-    <>
-      <Nav active="directory" />
+  if (loading && allArtists.length === 0) {
+    return (
+      <ModuleLayout module="artist-directory" activePage="directory">
+        <div className="loading-center">
+          <CssSpinner size="lg" />
+          <span>Loading artists...</span>
+        </div>
+      </ModuleLayout>
+    )
+  }
 
-      <header class="header">
+  const rangeStart = pageSize === 0 ? 1 : (currentPage - 1) * pageSize + 1
+  const rangeEnd = pageSize === 0 ? filtered.length : Math.min(currentPage * pageSize, filtered.length)
+
+  return (
+    <ModuleLayout module="artist-directory" activePage="directory">
+
+      <header className="header">
         <h1>Artist Directory</h1>
-        <div class="header-actions">
-          <button class="btn btn-ghost" onClick={reload} title="Reload data">&#x27F3; Reload</button>
+        <div className="header-actions">
+          <button className="btn btn-ghost" onClick={reload} title="Reload data">&#x27F3; Reload</button>
         </div>
       </header>
 
       {/* Search */}
-      <div class="toolbar">
+      <div className="toolbar">
         <input
           type="text"
-          class="search-input"
+          className="search-input"
           placeholder='Search: name, identity:tag, project:name, city:name, category:type, score:<40'
           onInput={onSearchInput}
           defaultValue={searchRaw}
         />
-        <button class="btn btn-ghost" onClick={clearFilters}>Clear</button>
-        <div class="toolbar-spacer" />
-        <span class="result-count">{filtered.length} artist{filtered.length !== 1 ? 's' : ''}</span>
+        <button className="btn btn-ghost" onClick={clearFilters}>Clear</button>
+        <div className="toolbar-spacer" />
+        <span className="result-count">
+          {filtered.length === 0 ? '0 artists' : `${rangeStart}\u2013${rangeEnd} of ${filtered.length} artist${filtered.length !== 1 ? 's' : ''}`}
+        </span>
       </div>
 
       {/* Pill filters */}
-      <div class="pill-filters">
+      <div className="pill-filters">
         {PILLS.map(p => {
           const store = p.type === 'identity' ? activeIdentities : activeCategories
           const isActive = store.has(p.key)
           return (
             <button
               key={p.key}
-              class={`pill${isActive ? ` active active-${p.key}` : ''}`}
+              className={`pill${isActive ? ` active active-${p.key}` : ''}`}
               onClick={() => togglePill(p.key, p.type)}
             >
               {p.label}
@@ -265,37 +293,57 @@ export function DirectoryPage() {
         })}
       </div>
 
+      {/* Pagination */}
+      <div className="pagination-bar">
+        <label>
+          Show:
+          <select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+            <option value={250}>250</option>
+            <option value={0}>All</option>
+          </select>
+        </label>
+        {pageSize > 0 && totalPages > 1 && (
+          <div className="pagination-nav">
+            <button className="btn btn-sm" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>Prev</button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <button className="btn btn-sm" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next</button>
+          </div>
+        )}
+      </div>
+
       {/* Table */}
-      <div class="main-layout">
-        <div class="table-wrap">
-          <table class="artist-table">
+      <div className="main-layout">
+        <div className="table-wrap">
+          <table className="artist-table">
             <thead>
               <tr>
-                <th class="sortable" onClick={() => handleSort('display_name')}>Artist {sortIcon('display_name')}</th>
+                <th className="sortable" onClick={() => handleSort('display_name')}>Artist {sortIcon('display_name')}</th>
                 <th>Categories</th>
-                <th class="sortable" onClick={() => handleSort('primary_identity')}>Identity {sortIcon('primary_identity')}</th>
-                <th class="sortable" onClick={() => handleSort('completeness')}>Score {sortIcon('completeness')}</th>
-                <th class="sortable" onClick={() => handleSort('gap_count')}>Gaps {sortIcon('gap_count')}</th>
+                <th className="sortable" onClick={() => handleSort('primary_identity')}>Identity {sortIcon('primary_identity')}</th>
+                <th className="sortable" onClick={() => handleSort('completeness')}>Score {sortIcon('completeness')}</th>
+                <th className="sortable" onClick={() => handleSort('gap_count')}>Gaps {sortIcon('gap_count')}</th>
                 <th>Data</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={6} class="empty">No artists match your search.</td></tr>
+              {visible.length === 0 ? (
+                <tr><td colSpan={6} className="empty">No artists match your search.</td></tr>
               ) : (
-                filtered.map(a => (
+                visible.map(a => (
                   <tr
                     key={a.artist_id}
-                    class={a.artist_id === selectedId ? 'selected' : ''}
+                    className={a.artist_id === selectedId ? 'selected' : ''}
                     onClick={() => openDetail(a.artist_id)}
                   >
                     <td>{a.display_name}</td>
                     <td>{(a.categories ?? []).map(c => <CategoryBadge key={c} category={c} />)}</td>
                     <td>
-                      <div class="identity-tags">
+                      <div className="identity-tags">
                         {a._all_identity.map(t => {
                           const isNation = (a.nations ?? []).includes(t)
-                          return <span key={t} class={`identity-tag ${isNation ? 'identity-nation' : 'identity-tag-self'}`}>{t}</span>
+                          return <span key={t} className={`identity-tag ${isNation ? 'identity-nation' : 'identity-tag-self'}`}>{t}</span>
                         })}
                       </div>
                     </td>
@@ -319,6 +367,6 @@ export function DirectoryPage() {
           />
         )}
       </div>
-    </>
+    </ModuleLayout>
   )
 }

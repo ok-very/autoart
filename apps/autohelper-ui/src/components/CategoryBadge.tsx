@@ -5,5 +5,5 @@ interface CategoryBadgeProps {
 }
 
 export function CategoryBadge({ category }: CategoryBadgeProps) {
-  return <span class={`badge badge-${category}`}>{capitalize(category)}</span>
+  return <span className={`badge badge-${category}`}>{capitalize(category)}</span>
 }

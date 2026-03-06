@@ -42,6 +42,12 @@ body {
   flex-direction: column;
 }
 
+/* Override module-layout for full-bleed Dockview */
+.module-layout {
+  height: 100vh;
+  min-height: 0;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: var(--ws-scrollbar-width, 8px);

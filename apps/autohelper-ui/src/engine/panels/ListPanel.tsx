@@ -17,9 +17,28 @@ import { useFilteredRecords } from '../hooks/useFilteredRecords';
 // COLUMN BUILDER
 // ============================================================================
 
+/** Sensible default widths when manifest doesn't specify */
+function defaultWidth(fieldDef: FieldDef): number | 'flex' {
+    switch (fieldDef.type) {
+        case 'number': return 60;
+        case 'boolean': return 50;
+        case 'enum': return 70;
+        case 'badge': return 60;
+        case 'assignment': return 120;
+        case 'string': return 140;
+        default: return 'flex';
+    }
+}
+
+interface StoreActions {
+    toggleAssignment: (recordId: string, groupId: string, value: string) => void;
+    setRank: (recordId: string, rank: number) => void;
+}
+
 function buildColumns(
     manifest: Manifest,
     reviewStates: Record<string, ReviewState>,
+    actions: StoreActions,
 ): TableColumn[] {
     const cols: TableColumn[] = [];
 
@@ -29,13 +48,68 @@ function buildColumns(
         cols.push({
             id: fieldId,
             header: fieldDef.label,
-            width: fieldDef.width ?? 'flex',
+            width: fieldDef.width ?? defaultWidth(fieldDef),
             minWidth: 40,
             resizable: true,
             align: fieldDef.type === 'number' ? 'right' : 'left',
 
             cell: (row: TableRow) => {
                 const record = row.data as SubmissionRecord;
+                const rs = reviewStates[record.id];
+                const locked = rs?.confirmed ?? false;
+
+                // Interactive rank cell
+                if (fieldId === 'rank') {
+                    const rank = rs?.rank ?? (typeof record.fields[fieldId] === 'number' ? record.fields[fieldId] as number : 0);
+                    return (
+                        <div className="flex items-center gap-0" onClick={(e) => e.stopPropagation()}>
+                            {[1, 2, 3, 4].map((n) => (
+                                <button
+                                    key={n}
+                                    onClick={() => !locked && actions.setRank(record.id, rank === n ? 0 : n)}
+                                    disabled={locked}
+                                    className={`text-sm leading-none transition-opacity ${locked ? 'cursor-default' : 'cursor-pointer hover:scale-110'} ${n <= rank ? 'opacity-100' : 'opacity-20 grayscale'}`}
+                                >
+                                    🐀
+                                </button>
+                            ))}
+                        </div>
+                    );
+                }
+
+                // Interactive assignment cell
+                if (fieldDef.type === 'assignment' && fieldDef.group) {
+                    const arr = rs?.assignments[fieldDef.group] ?? [];
+                    const group = manifest.assignmentGroups[fieldDef.group];
+                    if (!group) return <span className="text-ws-muted">{'\u2014'}</span>;
+
+                    return (
+                        <div className="flex flex-wrap items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+                            {group.options.map((opt) => {
+                                const active = arr.includes(opt.value);
+                                return (
+                                    <button
+                                        key={opt.value}
+                                        onClick={() => !locked && actions.toggleAssignment(record.id, fieldDef.group!, opt.value)}
+                                        disabled={locked}
+                                        className={clsx(
+                                            'px-1 rounded text-[10px] leading-tight transition-colors border',
+                                            locked ? 'cursor-default' : 'cursor-pointer',
+                                            active
+                                                ? 'bg-blue-100 border-blue-300 text-blue-800'
+                                                : 'bg-transparent border-transparent text-ws-muted opacity-40 hover:opacity-70',
+                                        )}
+                                        title={opt.description ?? opt.label}
+                                    >
+                                        {opt.emoji ?? opt.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    );
+                }
+
+                // Default: display-only
                 const value = getCellValue(record, fieldId, fieldDef, reviewStates);
                 return formatCellDisplay(value, fieldDef, manifest);
             },
@@ -151,15 +225,23 @@ export function ListPanel() {
     const selectRange = useStore(store, (s) => s.selectRange);
     const selectRangeAdd = useStore(store, (s) => s.selectRangeAdd);
 
+    const toggleAssignment = useStore(store, (s) => s.toggleAssignment);
+    const setRank = useStore(store, (s) => s.setRank);
+
     const filteredRecords = useFilteredRecords(records, manifest, reviewStates, filters, searchText);
     const orderedIds = useMemo(() => filteredRecords.map((r) => r.id), [filteredRecords]);
 
     // Track last click event for modifier key detection
     const lastClickEvent = useRef<MouseEvent | null>(null);
 
+    const storeActions = useMemo<StoreActions>(
+        () => ({ toggleAssignment, setRank }),
+        [toggleAssignment, setRank]
+    );
+
     const columns = useMemo(
-        () => buildColumns(manifest, reviewStates),
-        [manifest, reviewStates]
+        () => buildColumns(manifest, reviewStates, storeActions),
+        [manifest, reviewStates, storeActions]
     );
 
     const rowModel = useMemo(

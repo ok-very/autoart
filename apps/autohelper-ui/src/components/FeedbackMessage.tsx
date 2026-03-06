@@ -6,7 +6,7 @@ interface FeedbackMessageProps {
 export function FeedbackMessage({ message, isError }: FeedbackMessageProps) {
   if (!message) return null
   return (
-    <span class={`save-feedback ${isError ? 'save-err' : 'save-ok'}`}>
+    <span className={`save-feedback ${isError ? 'save-err' : 'save-ok'}`}>
       {message}
     </span>
   )

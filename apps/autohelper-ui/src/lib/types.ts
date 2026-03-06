@@ -337,6 +337,7 @@ export interface AppConfig {
   artist_ground_truth_csv: string
   artist_scan_enabled: boolean
   artist_scan_on_change: boolean
+  export_output_dir?: string
   [key: string]: unknown
 }
 
