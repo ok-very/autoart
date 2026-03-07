@@ -39,13 +39,20 @@ export function useImageMetrics(
 
         const viability: ViabilityResult[] = (pipeline.viabilityRules ?? []).map((rule) => {
             const metric = metrics.find((m) => m.tier.id === rule.metric);
-            const maxInches = metric
+            const longSide = metric
                 ? Math.max(metric.widthInches, metric.heightInches)
                 : 0;
+            const shortSide = metric
+                ? Math.min(metric.widthInches, metric.heightInches)
+                : 0;
+            let passed = longSide >= rule.minInches;
+            if (passed && rule.minShortInches != null) {
+                passed = shortSide >= rule.minShortInches;
+            }
             return {
                 rule,
-                passed: maxInches >= rule.minInches,
-                maxInches,
+                passed,
+                maxInches: longSide,
             };
         });
 

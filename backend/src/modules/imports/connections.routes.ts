@@ -579,6 +579,38 @@ export async function connectionsRoutes(app: FastifyInstance) {
     });
 
     /**
+     * Return OAuth connection statuses for the user linked by an AutoHelper key.
+     * Used by AutoHelper settings page to show Google/Microsoft/Monday status.
+     */
+    app.get('/connections/linked-status', async (request, reply) => {
+        const keyHeader = request.headers['x-autohelper-key'];
+        const key = Array.isArray(keyHeader) ? keyHeader[0] ?? '' : keyHeader ?? '';
+
+        if (!key) {
+            return reply.status(401).send({ error: 'Link key required' });
+        }
+
+        const userId = await connectionsService.validateLinkKey(key);
+        if (!userId) {
+            return reply.status(401).send({ error: 'Invalid link key' });
+        }
+
+        const [monday, clickup, google, microsoft] = await Promise.all([
+            connectionsService.isProviderConnected(userId, 'monday'),
+            connectionsService.isProviderConnected(userId, 'clickup'),
+            connectionsService.isProviderConnected(userId, 'google'),
+            connectionsService.isProviderConnected(userId, 'microsoft'),
+        ]);
+
+        return reply.send({
+            monday: { connected: monday },
+            clickup: { connected: clickup },
+            google: { connected: google },
+            microsoft: { connected: microsoft },
+        });
+    });
+
+    /**
      * Revoke the AutoHelper link key for the current user.
      * Requires authentication.
      */

@@ -7,6 +7,7 @@ import { FieldRow } from '@/components/settings/FieldRow'
 import { ConnectedValue } from '@/components/settings/ConnectedValue'
 import { FeedbackMessage } from '@/components/FeedbackMessage'
 import { api } from '@/lib/api'
+import type { IntegrationStatus } from '@/lib/api'
 
 export function ContactsSettingsPage() {
   return (
@@ -28,23 +29,44 @@ export function ContactsSettingsPage() {
 // Exchange Connection
 // ---------------------------------------------------------------------------
 
+function EnvBadge() {
+  return (
+    <span className="conn-badge ok" style={{ fontSize: '10px', padding: '1px 5px', letterSpacing: '0.05em' }}>
+      ENV
+    </span>
+  )
+}
+
 function ExchangeConnectionCard() {
   const [email, setEmail] = useState('')
   const [hasPassword, setHasPassword] = useState(false)
+  const [source, setSource] = useState<'env' | 'config' | 'none'>('none')
   const [feedback, setFeedback] = useState('')
   const [feedbackErr, setFeedbackErr] = useState(false)
   const [testing, setTesting] = useState(false)
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    api.config.get().then(cfg => {
-      setEmail((cfg.exchange_email as string) ?? '')
-      setHasPassword(Boolean(cfg.exchange_password))
+    Promise.all([
+      api.integrations.status().catch(() => null),
+      api.config.get().catch(() => ({})),
+    ]).then(([intStatus, cfg]) => {
+      const ex = intStatus?.exchange
+      if (ex) {
+        setEmail(ex.email.value)
+        setSource(ex.source)
+        setHasPassword(ex.configured && ex.source !== 'none')
+      } else {
+        // Fallback to config if integrations endpoint unavailable
+        setEmail(((cfg as Record<string, unknown>).exchange_email as string) ?? '')
+        setHasPassword(Boolean((cfg as Record<string, unknown>).exchange_password))
+      }
       setLoaded(true)
-    }).catch(() => setLoaded(true))
+    })
   }, [])
 
   const isConfigured = email.length > 0
+  const isEnv = source === 'env'
 
   const testConnection = async () => {
     setTesting(true)
@@ -71,6 +93,7 @@ function ExchangeConnectionCard() {
       if (r.ok) {
         setEmail('')
         setHasPassword(false)
+        setSource('none')
         setFeedback('\u2713 Cleared')
         setFeedbackErr(false)
       }
@@ -90,32 +113,41 @@ function ExchangeConnectionCard() {
       badge={<StatusBadge ok={isConfigured} label={isConfigured ? 'Configured' : 'Not configured'} />}
     >
       <FieldRow label="Email">
-        <ConnectedValue
-          value={email}
-          placeholder="user@example.com"
-          onSave={async (v) => {
-            const r = await api.config.save({ exchange_email: v })
-            if (r.ok) { setEmail(v); setFeedback('\u2713 Saved'); setFeedbackErr(false) }
-          }}
-          onClear={clear}
-        />
+        {isEnv ? (
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <span className="configured-value">{email}</span>
+            <EnvBadge />
+          </div>
+        ) : (
+          <ConnectedValue
+            value={email}
+            placeholder="user@example.com"
+            onSave={async (v) => {
+              const r = await api.config.save({ exchange_email: v })
+              if (r.ok) { setEmail(v); setSource('config'); setFeedback('\u2713 Saved'); setFeedbackErr(false) }
+            }}
+            onClear={clear}
+          />
+        )}
       </FieldRow>
 
-      <FieldRow label="Password">
-        <ConnectedValue
-          value={hasPassword ? 'set' : ''}
-          password
-          placeholder="Exchange password"
-          onSave={async (v) => {
-            const r = await api.config.save({ exchange_password: v })
-            if (r.ok) { setHasPassword(true); setFeedback('\u2713 Saved'); setFeedbackErr(false) }
-          }}
-          onClear={async () => {
-            const r = await api.config.save({ exchange_password: '' })
-            if (r.ok) { setHasPassword(false); setFeedback('\u2713 Cleared'); setFeedbackErr(false) }
-          }}
-        />
-      </FieldRow>
+      {!isEnv && (
+        <FieldRow label="Password">
+          <ConnectedValue
+            value={hasPassword ? 'set' : ''}
+            password
+            placeholder="Exchange password"
+            onSave={async (v) => {
+              const r = await api.config.save({ exchange_password: v })
+              if (r.ok) { setHasPassword(true); setFeedback('\u2713 Saved'); setFeedbackErr(false) }
+            }}
+            onClear={async () => {
+              const r = await api.config.save({ exchange_password: '' })
+              if (r.ok) { setHasPassword(false); setFeedback('\u2713 Cleared'); setFeedbackErr(false) }
+            }}
+          />
+        </FieldRow>
+      )}
 
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
         {isConfigured && (

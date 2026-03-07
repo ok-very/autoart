@@ -34,6 +34,7 @@ from autohelper.gui.dashboard_router import (
 from autohelper.modules.artists.router import router as artists_router
 from autohelper.modules.clickup.router import router as clickup_router
 from autohelper.modules.documents.router import router as documents_router
+from autohelper.modules.integrations.router import router as integrations_router
 from autohelper.modules.images.router import router as images_router
 from autohelper.sync import start_backend_poller, stop_backend_poller
 
@@ -227,6 +228,7 @@ def build_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(file_watch_router)
     app.include_router(artists_router)
     app.include_router(clickup_router)
+    app.include_router(integrations_router)
     app.include_router(documents_router)
     app.include_router(images_router)
     app.include_router(dashboard_router)

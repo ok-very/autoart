@@ -13,14 +13,19 @@ router = APIRouter(prefix="/clickup", tags=["clickup"])
 
 
 @router.get("/validate")
-async def clickup_validate() -> dict[str, str]:
+async def clickup_validate() -> dict[str, Any]:
     """Validate ClickUp connection and return workspace info."""
     try:
-        return await validate_connection()
+        info = await validate_connection()
+        return {
+            "ok": True,
+            "workspace": info["workspace_name"],
+            "workspace_id": info["workspace_id"],
+        }
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        return {"ok": False, "error": str(e)}
     except Exception as e:
-        raise HTTPException(status_code=502, detail=str(e)) from e
+        return {"ok": False, "error": str(e)}
 
 
 @router.post("/execute-manifest", response_model=ManifestExecutionResult)

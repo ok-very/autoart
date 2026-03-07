@@ -162,6 +162,15 @@ class AutoArtClient:
             logger.warning(f"Failed to fetch developers from AutoArt: {e}")
             return []
 
+    def get_linked_connection_status(self) -> dict[str, Any] | None:
+        """Fetch OAuth connection statuses from autoart for the linked user."""
+        if not self.link_key:
+            return None
+        try:
+            return self._request("GET", "/api/connections/linked-status")
+        except AutoArtClientError:
+            return None
+
     def clear_cache(self) -> None:
         """Clear cached data."""
         self._cached_projects = None

@@ -106,10 +106,11 @@
       { "id": "native_300",  "label": "Native @300dpi",  "dpi": 300, "scale": 1 },
       { "id": "native_250",  "label": "Native @250dpi",  "dpi": 250, "scale": 1 },
       { "id": "native_200",  "label": "Native @200dpi",  "dpi": 200, "scale": 1 },
-      { "id": "vinyl_150",   "label": "Vinyl @150dpi",    "dpi": 150, "scale": 1 }
+      { "id": "vinyl_150",   "label": "Vinyl @150dpi",    "dpi": 150, "scale": 1 },
+      { "id": "vinyl_100",   "label": "Vinyl @100dpi",    "dpi": 100, "scale": 1 }
     ],
     "viabilityRules": [
-      { "id": "vinyl_viable", "label": "Vinyl Viable (\u22654ft)", "metric": "vinyl_150", "minInches": 48 }
+      { "id": "vinyl_viable", "label": "Vinyl Viable (\u22653'\u00d74')", "metric": "vinyl_150", "minInches": 48, "minShortInches": 36 }
     ]
   },
 

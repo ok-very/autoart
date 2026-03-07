@@ -64,6 +64,8 @@ const ViabilityRuleSchema = z.object({
     metric: z.string(),
     /** Minimum inches on the long side */
     minInches: z.number(),
+    /** Minimum inches on the short side (optional) */
+    minShortInches: z.number().optional(),
 });
 
 const ImagePipelineSchema = z.object({

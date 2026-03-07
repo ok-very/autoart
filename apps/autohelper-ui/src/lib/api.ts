@@ -35,6 +35,33 @@ function put(path: string, body: unknown): Promise<Response> {
   })
 }
 
+// -- Integration status types --
+
+export interface IntegrationFieldStatus {
+  value: string
+  source: 'env' | 'config' | 'none'
+}
+
+export interface IntegrationStatus {
+  clickup: {
+    configured: boolean
+    source: 'env' | 'config' | 'none'
+    token_hint?: string | null
+    workspace_id: IntegrationFieldStatus
+    space_id: IntegrationFieldStatus
+    list_id: IntegrationFieldStatus
+  }
+  exchange: {
+    configured: boolean
+    source: 'env' | 'config' | 'none'
+    email: IntegrationFieldStatus
+  }
+  autoart: {
+    paired: boolean
+    connections?: Record<string, { connected: boolean }>
+  }
+}
+
 export const api = {
   artists: {
     list: (limit = 5000) =>
@@ -114,9 +141,13 @@ export const api = {
   },
 
   clickup: {
-    validate: () => fetchJson<{ ok: boolean; workspace?: string; error?: string }>('/clickup/validate'),
+    validate: () => fetchJson<{ ok: boolean; workspace?: string; workspace_id?: string; error?: string }>('/clickup/validate'),
     artistSync: (listId: string, dryRun: boolean, artistIds?: string[]) =>
       post(`/clickup/artist-sync?list_id=${encodeURIComponent(listId)}&dry_run=${dryRun}`, { artist_ids: artistIds ?? null }).then(r => r.json()),
+  },
+
+  integrations: {
+    status: () => fetchJson<IntegrationStatus>('/integrations/status'),
   },
 
   contacts: {

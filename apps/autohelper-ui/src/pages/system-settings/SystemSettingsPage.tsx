@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { ArrowLeft, Activity, Settings, MousePointerClick, Terminal, Link2 } from 'lucide-react'
+import { ArrowLeft, Activity, Settings, MousePointerClick, Terminal, Link2, Globe } from 'lucide-react'
 import { CardShell } from '@/components/settings/CardShell'
 import { StatusBadge } from '@/components/settings/StatusBadge'
 import { FieldRow } from '@/components/settings/FieldRow'
 import { ConnectedValue } from '@/components/settings/ConnectedValue'
 import { FeedbackMessage } from '@/components/FeedbackMessage'
 import { api } from '@/lib/api'
+import type { IntegrationStatus, IntegrationFieldStatus } from '@/lib/api'
 
 export function SystemSettingsPage() {
   return (
@@ -20,6 +21,7 @@ export function SystemSettingsPage() {
         <ServiceStatusCard />
         <GeneralSettingsCard />
         <ClickUpCard />
+        <OAuthConnectionsCard />
         <ConsoleCard />
         <PairingCard />
       </div>
@@ -186,10 +188,57 @@ function GeneralSettingsCard() {
 }
 
 // ---------------------------------------------------------------------------
+// Shared: EnvBadge + SourceAwareField
+// ---------------------------------------------------------------------------
+
+function EnvBadge() {
+  return (
+    <span className="conn-badge ok" style={{ fontSize: '10px', padding: '1px 5px', letterSpacing: '0.05em' }}>
+      ENV
+    </span>
+  )
+}
+
+function SourceAwareField({
+  field,
+  label,
+  placeholder,
+  configKey,
+  onSave,
+}: {
+  field: IntegrationFieldStatus
+  label: string
+  placeholder?: string
+  configKey: string
+  onSave: (key: string, value: string) => Promise<void>
+}) {
+  if (field.source === 'env') {
+    return (
+      <FieldRow label={label}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <span className="configured-value">{field.value}</span>
+          <EnvBadge />
+        </div>
+      </FieldRow>
+    )
+  }
+  return (
+    <FieldRow label={label}>
+      <ConnectedValue
+        value={field.value}
+        placeholder={placeholder}
+        onSave={v => onSave(configKey, v)}
+      />
+    </FieldRow>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // ClickUp Integration
 // ---------------------------------------------------------------------------
 
 function ClickUpCard() {
+  const [intStatus, setIntStatus] = useState<IntegrationStatus['clickup'] | null>(null)
   const [config, setConfig] = useState<Record<string, unknown>>({})
   const [connected, setConnected] = useState<boolean | null>(null)
   const [workspace, setWorkspace] = useState('')
@@ -199,19 +248,27 @@ function ClickUpCard() {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    api.config.get().then(cfg => {
-      setConfig(cfg)
-      const hasToken = Boolean(cfg.clickup_token)
-      if (hasToken) {
-        api.clickup.validate().then(v => {
-          setConnected(v.ok)
-          if (v.workspace) setWorkspace(v.workspace)
-        }).catch(() => setConnected(false))
+    // Load both integration status (for source detection) and config (for editable fields)
+    Promise.all([
+      api.integrations.status().catch(() => null),
+      api.config.get().catch(() => ({})),
+    ]).then(([status, cfg]) => {
+      setConfig(cfg as Record<string, unknown>)
+      if (status) {
+        setIntStatus(status.clickup)
+        if (status.clickup.configured) {
+          api.clickup.validate().then(v => {
+            setConnected(v.ok)
+            if (v.workspace) setWorkspace(v.workspace)
+          }).catch(() => setConnected(false))
+        } else {
+          setConnected(false)
+        }
       } else {
         setConnected(false)
       }
       setLoaded(true)
-    }).catch(() => setLoaded(true))
+    })
   }, [])
 
   const testConnection = async () => {
@@ -251,6 +308,8 @@ function ClickUpCard() {
 
   if (!loaded) return null
 
+  const source = intStatus?.source ?? 'none'
+
   return (
     <CardShell
       icon={<MousePointerClick size={20} />}
@@ -259,42 +318,35 @@ function ClickUpCard() {
       badge={connected !== null ? <StatusBadge ok={connected} label={connected ? 'Connected' : 'Not connected'} /> : undefined}
     >
       <FieldRow label="API Token">
-        <ConnectedValue
-          value={(config.clickup_token as string) ?? ''}
-          password
-          placeholder="pk_..."
-          onSave={v => saveField('clickup_token', v)}
-          onClear={async () => { await saveField('clickup_token', ''); setConnected(false) }}
-        />
+        {source === 'env' ? (
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <span className="configured-value" style={{ fontFamily: 'monospace', fontSize: '12px' }}>
+              {intStatus?.token_hint ?? '***'}
+            </span>
+            <EnvBadge />
+          </div>
+        ) : (
+          <ConnectedValue
+            value={(config.clickup_token as string) ?? ''}
+            password
+            placeholder="pk_..."
+            onSave={v => saveField('clickup_token', v)}
+            onClear={async () => { await saveField('clickup_token', ''); setConnected(false) }}
+          />
+        )}
       </FieldRow>
 
       {connected && workspace && (
         <FieldRow label="Workspace">{workspace}</FieldRow>
       )}
 
-      <FieldRow label="Workspace ID">
-        <ConnectedValue
-          value={String(config.clickup_workspace_id ?? '')}
-          placeholder="9014240887"
-          onSave={v => saveField('clickup_workspace_id', v)}
-        />
-      </FieldRow>
-
-      <FieldRow label="Space ID">
-        <ConnectedValue
-          value={String(config.clickup_space_id ?? '')}
-          placeholder="90141234567"
-          onSave={v => saveField('clickup_space_id', v)}
-        />
-      </FieldRow>
-
-      <FieldRow label="Template List ID">
-        <ConnectedValue
-          value={String(config.clickup_template_list_id ?? '')}
-          placeholder="901414366813"
-          onSave={v => saveField('clickup_template_list_id', v)}
-        />
-      </FieldRow>
+      {intStatus && (
+        <>
+          <SourceAwareField field={intStatus.workspace_id} label="Workspace ID" placeholder="9014240887" configKey="clickup_workspace_id" onSave={saveField} />
+          <SourceAwareField field={intStatus.space_id} label="Space ID" placeholder="90141234567" configKey="clickup_space_id" onSave={saveField} />
+          <SourceAwareField field={intStatus.list_id} label="Template List ID" placeholder="901414366813" configKey="clickup_list_id" onSave={saveField} />
+        </>
+      )}
 
       <FieldRow label="Template Sync">
         <label className="toggle">
@@ -377,6 +429,50 @@ function ArtistSyncRow({ listId, connected }: { listId: string; connected: boole
         <FeedbackMessage message={feedback} isError={feedbackErr} />
       </div>
     </FieldRow>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// OAuth Connections (via AutoArt pairing)
+// ---------------------------------------------------------------------------
+
+const OAUTH_PROVIDERS: { key: string; label: string }[] = [
+  { key: 'google', label: 'Google Workspace' },
+  { key: 'microsoft', label: 'Microsoft 365' },
+  { key: 'monday', label: 'Monday.com' },
+  { key: 'clickup', label: 'ClickUp (OAuth)' },
+]
+
+function OAuthConnectionsCard() {
+  const [connections, setConnections] = useState<Record<string, { connected: boolean }> | null>(null)
+  const [paired, setPaired] = useState(false)
+
+  useEffect(() => {
+    api.integrations.status()
+      .then(s => {
+        setPaired(s.autoart.paired)
+        if (s.autoart.connections) setConnections(s.autoart.connections)
+      })
+      .catch(() => {})
+  }, [])
+
+  if (!paired || !connections) return null
+
+  return (
+    <CardShell icon={<Globe size={20} />} iconBg="icon-blue" title="AutoArt Connections">
+      {OAUTH_PROVIDERS.map(({ key, label }) => {
+        const status = connections[key]
+        if (!status) return null
+        return (
+          <FieldRow key={key} label={label}>
+            <StatusBadge ok={status.connected} label={status.connected ? 'Connected' : 'Not connected'} />
+          </FieldRow>
+        )
+      })}
+      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+        Manage connections in AutoArt settings
+      </div>
+    </CardShell>
   )
 }
 
