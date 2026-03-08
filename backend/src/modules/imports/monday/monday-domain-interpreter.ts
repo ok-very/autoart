@@ -33,6 +33,7 @@ import type {
     MondayColumnSemanticRole,
 } from './monday-config.types.js';
 import { DEFAULT_INFERENCE_HEURISTICS as heuristics } from './monday-config.types.js';
+import { logger } from '@utils/logger.js';
 
 interface InterpreterContext {
     workspace: MondayWorkspaceConfig;
@@ -126,16 +127,20 @@ export function interpretMondayData(
     }
 
     // Phase 3: Create items
+    let itemsSkippedNoBoardId = 0;
+    let itemsSkippedBoardIgnore = 0;
+    let itemsSkippedGroupIgnore = 0;
+
     for (const itemNode of itemNodes) {
         const boardId = itemNode.metadata.boardId;
-        if (!boardId) continue;
+        if (!boardId) { itemsSkippedNoBoardId++; continue; }
 
         const boardConfig = ctx.boardConfigs.get(boardId);
-        if (!boardConfig || boardConfig.role === 'ignore') continue;
+        if (!boardConfig || boardConfig.role === 'ignore') { itemsSkippedBoardIgnore++; continue; }
 
         const groupKey = `${boardId}:${itemNode.metadata.groupId}`;
         const groupConfig = ctx.groupConfigs.get(groupKey);
-        if (groupConfig?.role === 'ignore') continue;
+        if (groupConfig?.role === 'ignore') { itemsSkippedGroupIgnore++; continue; }
 
         const columnConfigMap = ctx.columnConfigs.get(boardId);
 
@@ -151,6 +156,14 @@ export function interpretMondayData(
             pendingLinks.push(...links);
         }
     }
+
+    logger.debug({
+        sessionId,
+        totalItemNodes: itemNodes.length,
+        itemsCreated: items.length,
+        skipped: { noBoardId: itemsSkippedNoBoardId, boardIgnore: itemsSkippedBoardIgnore, groupIgnore: itemsSkippedGroupIgnore },
+        containers: containers.length,
+    }, '[monday-interpreter] Phase 3 item filter results');
 
     // Phase 4: Create subitems
     for (const subitemNode of subitemNodes) {

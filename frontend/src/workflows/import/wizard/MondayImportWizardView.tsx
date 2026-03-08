@@ -47,6 +47,14 @@ export function MondayImportWizardView({
 
     const { setImportSession: setContextImportSession } = useContextStore();
 
+    // Clear local overrides when the authoritative plan prop changes (e.g. after
+    // Step 2 regenerates the plan via generatePlan). Without this, a stale
+    // localPlanChanges from a previous ClassificationPanel save would shadow
+    // the freshly-generated plan.
+    useEffect(() => {
+        setLocalPlanChanges(null);
+    }, [plan]);
+
     // Derive effective plan from prop or local changes
     const localPlan = useMemo(() => {
         return localPlanChanges ?? plan;

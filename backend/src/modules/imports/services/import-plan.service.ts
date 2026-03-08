@@ -304,6 +304,20 @@ async function generatePlanFromMondayConnector(
         sessionId
     );
 
+    // Diagnostic: log pipeline throughput for classification debugging
+    const groupConfigSummary = workspaceConfig.boards.flatMap(b => b.groups).reduce(
+        (acc, g) => { acc[g.role] = (acc[g.role] || 0) + 1; return acc; },
+        {} as Record<string, number>
+    );
+    logger.info({
+        sessionId,
+        nodesTotal: allNodes.length,
+        nodesByType: { boards: allNodes.filter(n => n.type === 'board').length, groups: allNodes.filter(n => n.type === 'group').length, items: allNodes.filter(n => n.type === 'item').length, subitems: allNodes.filter(n => n.type === 'subitem').length },
+        planContainers: plan.containers.length,
+        planItems: plan.items.length,
+        groupConfigSummary,
+    }, '[import-plan] generatePlanFromConnector pipeline throughput');
+
     // 4. Generate classifications for Monday items (same as CSV imports)
     // This enables proper gating and schema matching for records
     const definitions = await listDefinitions({ definitionKind: 'record' });
@@ -316,6 +330,18 @@ async function generatePlanFromMondayConnector(
         plan.classifications = generateClassificationsForConnectorItems(plan.items, definitions);
         classificationCache.setCached(sessionId, plan.items, definitions, plan.classifications);
     }
+
+    // Diagnostic: log classification results
+    const classificationOutcomes = plan.classifications.reduce(
+        (acc, c) => { acc[c.outcome] = (acc[c.outcome] || 0) + 1; return acc; },
+        {} as Record<string, number>
+    );
+    logger.info({
+        sessionId,
+        totalClassifications: plan.classifications.length,
+        outcomes: classificationOutcomes,
+        cached: !!cachedClassifications,
+    }, '[import-plan] classification results');
 
     // Fire-and-forget vocabulary extraction from classified items
     extractAndStoreVocabulary(plan.items, plan.classifications);
